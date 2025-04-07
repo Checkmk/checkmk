@@ -464,18 +464,7 @@ COLOR_HEX = "#1e90ff"
             GraphTemplate(
                 id="name",
                 title="Title",
-                scalars=[],
-                conflicting_metrics=(),
-                optional_metrics=(),
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[
-                    MetricExpression(
-                        Metric("metric-name-1"),
-                        line_type="stack",
-                        title="Title",
-                    ),
+                scalars=[
                     MetricExpression(
                         Constant(value=10),
                         line_type="stack",
@@ -507,6 +496,18 @@ COLOR_HEX = "#1e90ff"
                         line_type="stack",
                         title="Maximum of Title",
                         color=COLOR_HEX,
+                    ),
+                ],
+                conflicting_metrics=(),
+                optional_metrics=(),
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricExpression(
+                        Metric("metric-name-1"),
+                        line_type="stack",
+                        title="Title",
                     ),
                     MetricExpression(
                         Sum([Metric("metric-name-6")]),
@@ -604,6 +605,16 @@ COLOR_HEX = "#1e90ff"
                 title="Title",
                 scalars=[
                     MetricExpression(
+                        Constant(value=10),
+                        line_type="line",
+                        title="Constant",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
+                        color=COLOR_HEX,
+                    ),
+                    MetricExpression(
                         WarningOf(Metric("metric-name-2")),
                         line_type="line",
                         title="Warning of Title",
@@ -636,16 +647,6 @@ COLOR_HEX = "#1e90ff"
                         Metric("metric-name-1"),
                         line_type="line",
                         title="Title",
-                    ),
-                    MetricExpression(
-                        Constant(value=10),
-                        line_type="line",
-                        title="Constant",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color=COLOR_HEX,
                     ),
                     MetricExpression(
                         Sum([Metric("metric-name-6")]),
@@ -732,6 +733,42 @@ COLOR_HEX = "#1e90ff"
             ),
             id="optional-conflicting",
         ),
+        pytest.param(
+            graphs_api.Graph(
+                name="name",
+                title=Title("Title"),
+                simple_lines=[
+                    metrics_api.Sum(Title("Sum"), COLOR, [metrics_api.WarningOf("metric-name")])
+                ],
+                optional=[],
+                conflicting=[],
+            ),
+            ["metric-name"],
+            GraphTemplate(
+                id="name",
+                title="Title",
+                range=None,
+                scalars=[
+                    MetricExpression(
+                        base=Sum(
+                            summands=[
+                                WarningOf(metric=Metric(name="metric-name", consolidation=None)),
+                            ]
+                        ),
+                        unit_spec=None,
+                        color="#1e90ff",
+                        line_type="line",
+                        title="Sum",
+                    ),
+                ],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[],
+            ),
+            id="sum-scalars",
+        ),
     ],
 )
 def test__parse_graph_from_api(
@@ -749,7 +786,7 @@ def test__parse_graph_from_api(
                 color="#000000",
             )
         )
-    assert _parse_graph_from_api(graph.name, graph) == expected_template
+    assert _parse_graph_from_api(graph.name, graph, mirrored=False) == expected_template
 
 
 @pytest.mark.parametrize(
@@ -868,14 +905,14 @@ def test__parse_graph_from_api(
                         title="Maximum of Title",
                     ),
                 ],
-                conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
-                optional_metrics=["metric-name-opt-l", "metric-name-opt-u"],
+                conflicting_metrics=["metric-name-confl-u", "metric-name-confl-l"],
+                optional_metrics=["metric-name-opt-u", "metric-name-opt-l"],
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
                     MetricExpression(Metric("metric-name-u1"), line_type="stack", title="Title"),
-                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-u2"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
                 ],
             ),
@@ -1176,7 +1213,7 @@ def test__parse_graph_plugin(
         (
             ["ramused", "swapused", "memused"],
             "check_mk-statgrab_mem",
-            ["METRIC_mem_lnx_total_used", "METRIC_mem_used", "METRIC_swap_used"],
+            ["METRIC_mem_lnx_total_used", "ram_swap_used"],
         ),
         (
             [
@@ -1975,7 +2012,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         # storage.py
         pytest.param(
             ["mem_used", "swap_used"],
-            ["METRIC_mem_used", "METRIC_swap_used"],
+            ["ram_swap_used"],
             id="ram_used_conflicting_metrics",
         ),
         pytest.param(

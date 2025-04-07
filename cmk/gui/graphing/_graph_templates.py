@@ -25,7 +25,6 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals import livestatus_query_bare
 
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
 
 from ._from_api import graphs_from_api
 from ._graph_specification import (
@@ -169,20 +168,32 @@ class GraphTemplate:
     metrics: Sequence[MetricExpression]
 
 
-def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
-    metrics = [parse_expression_from_api(l, "stack") for l in graph.compound_lines]
+def _parse_graph_from_api(id_: str, graph: graphs_api.Graph, *, mirrored: bool) -> GraphTemplate:
+    metrics: list[MetricExpression] = []
     scalars: list[MetricExpression] = []
+
+    for line in graph.compound_lines:
+        if (
+            parsed := parse_expression_from_api(
+                line,
+                "-stack" if mirrored else "stack",
+            )
+        ).is_scalar():
+            scalars.append(parsed)
+        else:
+            metrics.append(parsed)
+
     for line in graph.simple_lines:
-        match line:
-            case (
-                metrics_api.WarningOf()
-                | metrics_api.CriticalOf()
-                | metrics_api.MinimumOf()
-                | metrics_api.MaximumOf()
-            ):
-                scalars.append(parse_expression_from_api(line, "line"))
-            case _:
-                metrics.append(parse_expression_from_api(line, "line"))
+        if (
+            parsed := parse_expression_from_api(
+                line,
+                "-line" if mirrored else "line",
+            )
+        ).is_scalar():
+            scalars.append(parsed)
+        else:
+            metrics.append(parsed)
+
     return GraphTemplate(
         id=id_,
         title=_parse_title(graph),
@@ -199,43 +210,27 @@ def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
 def _parse_bidirectional_from_api(
     id_: str, bidirectional: graphs_api.Bidirectional
 ) -> GraphTemplate:
+    upper = _parse_graph_from_api(
+        bidirectional.upper.name,
+        bidirectional.upper,
+        mirrored=False,
+    )
+    lower = _parse_graph_from_api(
+        bidirectional.lower.name,
+        bidirectional.lower,
+        mirrored=True,
+    )
+
     ranges_min = []
     ranges_max = []
-    if bidirectional.upper.minimal_range is not None:
-        upper_range = _parse_minimal_range(bidirectional.upper.minimal_range)
-        ranges_min.append(upper_range.min)
-        ranges_max.append(upper_range.max)
-    if bidirectional.lower.minimal_range is not None:
-        lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
-        ranges_min.append(lower_range.min)
-        ranges_max.append(lower_range.max)
+    if upper.range is not None:
+        ranges_min.append(upper.range.min)
+        ranges_max.append(upper.range.max)
 
-    metrics = [
-        parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines
-    ] + [parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines]
-    scalars: list[MetricExpression] = []
-    for line in bidirectional.upper.simple_lines:
-        match line:
-            case (
-                metrics_api.WarningOf()
-                | metrics_api.CriticalOf()
-                | metrics_api.MinimumOf()
-                | metrics_api.MaximumOf()
-            ):
-                scalars.append(parse_expression_from_api(line, "line"))
-            case _:
-                metrics.append(parse_expression_from_api(line, "line"))
-    for line in bidirectional.lower.simple_lines:
-        match line:
-            case (
-                metrics_api.WarningOf()
-                | metrics_api.CriticalOf()
-                | metrics_api.MinimumOf()
-                | metrics_api.MaximumOf()
-            ):
-                scalars.append(parse_expression_from_api(line, "-line"))
-            case _:
-                metrics.append(parse_expression_from_api(line, "-line"))
+    if lower.range is not None:
+        ranges_min.append(lower.range.min)
+        ranges_max.append(lower.range.max)
+
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),
@@ -247,11 +242,11 @@ def _parse_bidirectional_from_api(
             if ranges_min and ranges_max
             else None
         ),
-        metrics=metrics,
-        scalars=scalars,
-        optional_metrics=(list(bidirectional.lower.optional) + list(bidirectional.upper.optional)),
+        metrics=list(upper.metrics) + list(lower.metrics),
+        scalars=list(upper.scalars) + list(lower.scalars),
+        optional_metrics=(list(bidirectional.upper.optional) + list(bidirectional.lower.optional)),
         conflicting_metrics=(
-            list(bidirectional.lower.conflicting) + list(bidirectional.upper.conflicting)
+            list(bidirectional.upper.conflicting) + list(bidirectional.lower.conflicting)
         ),
         consolidation_function=None,
         omit_zero_metrics=False,
@@ -289,7 +284,7 @@ def _parse_graph_plugin(
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
-            return _parse_graph_from_api(id_, template)
+            return _parse_graph_from_api(id_, template, mirrored=False)
         case graphs_api.Bidirectional():
             return _parse_bidirectional_from_api(id_, template)
         case _:

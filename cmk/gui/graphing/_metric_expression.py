@@ -127,6 +127,10 @@ class BaseMetricExpression(abc.ABC):
     def scalar_names(self) -> Iterator[ScalarName]:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def is_scalar(self) -> bool:
+        raise NotImplementedError()
+
 
 @dataclass(frozen=True)
 class Constant(BaseMetricExpression):
@@ -157,6 +161,9 @@ class Constant(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
 
+    def is_scalar(self) -> bool:
+        return True
+
 
 @dataclass(frozen=True)
 class Metric(BaseMetricExpression):
@@ -185,6 +192,9 @@ class Metric(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
+
+    def is_scalar(self) -> bool:
+        return False
 
 
 @dataclass(frozen=True)
@@ -222,6 +232,9 @@ class WarningOf(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield ScalarName(self.metric.name, "warn")
 
+    def is_scalar(self) -> bool:
+        return True
+
 
 @dataclass(frozen=True)
 class CriticalOf(BaseMetricExpression):
@@ -257,6 +270,9 @@ class CriticalOf(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield ScalarName(self.metric.name, "crit")
+
+    def is_scalar(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -294,6 +310,9 @@ class MinimumOf(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield ScalarName(self.metric.name, "min")
 
+    def is_scalar(self) -> bool:
+        return True
+
 
 @dataclass(frozen=True)
 class MaximumOf(BaseMetricExpression):
@@ -329,6 +348,9 @@ class MaximumOf(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield ScalarName(self.metric.name, "max")
+
+    def is_scalar(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -367,6 +389,9 @@ class Sum(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for s in self.summands for n in s.scalar_names())
 
+    def is_scalar(self) -> bool:
+        return all(s.is_scalar() for s in self.summands)
+
 
 @dataclass(frozen=True)
 class Product(BaseMetricExpression):
@@ -403,6 +428,9 @@ class Product(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for f in self.factors for n in f.scalar_names())
+
+    def is_scalar(self) -> bool:
+        return all(f.is_scalar() for f in self.factors)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -443,6 +471,9 @@ class Difference(BaseMetricExpression):
         yield from self.minuend.scalar_names()
         yield from self.subtrahend.scalar_names()
 
+    def is_scalar(self) -> bool:
+        return self.minuend.is_scalar() and self.subtrahend.is_scalar()
+
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction(BaseMetricExpression):
@@ -482,6 +513,9 @@ class Fraction(BaseMetricExpression):
         yield from self.dividend.scalar_names()
         yield from self.divisor.scalar_names()
 
+    def is_scalar(self) -> bool:
+        return self.dividend.is_scalar() and self.divisor.is_scalar()
+
 
 @dataclass(frozen=True)
 class Minimum(BaseMetricExpression):
@@ -515,6 +549,9 @@ class Minimum(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
+
 
 @dataclass(frozen=True)
 class Maximum(BaseMetricExpression):
@@ -547,6 +584,9 @@ class Maximum(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
+
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
 
 
 # Composed metric declarations:
@@ -596,6 +636,9 @@ class Percent(BaseMetricExpression):
         yield from self.percent_value.scalar_names()
         yield from self.base_value.scalar_names()
 
+    def is_scalar(self) -> bool:
+        return self.percent_value.is_scalar() and self.base_value.is_scalar()
+
 
 # Special metric declarations for custom graphs
 
@@ -631,6 +674,9 @@ class Average(BaseMetricExpression):
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
+
 
 @dataclass(frozen=True)
 class Merge(BaseMetricExpression):
@@ -660,6 +706,9 @@ class Merge(BaseMetricExpression):
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
+
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
 
 
 class ConditionalMetricExpression(abc.ABC):
@@ -1040,6 +1089,9 @@ class MetricExpression:
             line_type=line_type_mirror(self.line_type),
             title=self.title,
         )
+
+    def is_scalar(self) -> bool:
+        return self.base.is_scalar()
 
 
 def parse_legacy_expression(

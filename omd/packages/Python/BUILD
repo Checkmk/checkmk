@@ -126,7 +126,6 @@ pkg_files(
     prefix = "lib/python%s/" % PYTHON_MAJOR_DOT_MINOR,
 )
 
-#pkg_mklink(name, link_name, target, attributes, src, kwargs)
 [pkg_mklink(
     name = link_name,
     link_name = link_name,

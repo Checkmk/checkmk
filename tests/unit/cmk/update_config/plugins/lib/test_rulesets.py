@@ -119,7 +119,7 @@ def test_transform_wato_rulesets_params(
     )
     rulesets = RulesetCollection({rulespec_with_migration.name: ruleset})
 
-    rulesets_updater._transform_wato_rulesets_params(getLogger(), rulesets)
+    rulesets_updater.transform_wato_rulesets_params(getLogger(), rulesets)
 
     assert len(ruleset.get_rules()[0]) == 3
     assert ruleset.get_rules()[0][2].value == transformed_param_value
@@ -161,7 +161,7 @@ def test_transform_replaced_wato_rulesets_and_params(
         all_rulesets,
         {replaced_rulespec.name: rulespec_with_migration.name},
     )
-    rulesets_updater._transform_wato_rulesets_params(
+    rulesets_updater.transform_wato_rulesets_params(
         getLogger(),
         all_rulesets,
     )

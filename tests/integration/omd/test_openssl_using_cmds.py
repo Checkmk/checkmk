@@ -3,12 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+
 import pytest
 
 from tests.testlib.site import Site
 
 
-@pytest.mark.parametrize("cmd", ["ssh -V", "curl -V", "pdftoppm -v"])
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "ssh -V",
+        "curl -V",
+        "pdftoppm -v",
+        pytest.param(
+            "zypper",
+            marks=pytest.mark.skipif(
+                not os.environ.get("DISTRO", "").startswith("sles"), reason="Only relevant for SLES"
+            ),
+        ),
+    ],
+)
 def test_command(site: Site, cmd: str) -> None:
     """
     Ensures that commands using OpenSSL, such as ssh and curl, are working.

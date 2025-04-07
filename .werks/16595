@@ -1,0 +1,16 @@
+Title: Make zypper command work as site user on SLES 15
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1744016046
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+On SUSE Linux Enterprise Server 15 systems, the <code>zypper</code> command would crash with the following error message when executed as a site user:
+
+C+:
+zypper: symbol lookup error: /usr/lib64/libssh.so.4: undefined symbol: EVP_KDF_CTX_new_id, version OPENSSL_1_1_1d
+C-:
+
+This werk fixes that problem.

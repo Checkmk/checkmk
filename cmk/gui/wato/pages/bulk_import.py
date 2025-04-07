@@ -436,9 +436,9 @@ class ModeBulkImport(WatoMode):
         with html.form_context("upload", method="POST"):
             html.p(
                 _(
-                    "Using this page you can import several hosts at once into the choosen folder. You can "
+                    "Using this page you can import several hosts at once into the chosen folder. You can "
                     "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                    "into the textarea or simply enter a list of host names (one per line) to the textarea."
+                    "into the text area or simply enter a list of host names (one per line) to the text area."
                 )
             )
 

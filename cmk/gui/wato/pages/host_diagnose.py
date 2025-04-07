@@ -82,7 +82,7 @@ class ModeDiagHost(WatoMode):
             ("agent", _("Agent")),
             ("snmpv1", _("SNMPv1")),
             ("snmpv2", _("SNMPv2c")),
-            ("snmpv2_nobulk", _("SNMPv2c (without Bulkwalk)")),
+            ("snmpv2_nobulk", _("SNMPv2c (without bulk walk)")),
             ("snmpv3", _("SNMPv3")),
             ("traceroute", _("Traceroute")),
         ]
@@ -381,7 +381,7 @@ class ModeDiagHost(WatoMode):
                         ),
                         help=_(
                             "This variable allows to specify a timeout for the "
-                            "TCP connection to the Checkmk agent on a per-host-basis."
+                            "TCP connection to the Checkmk agent on a per-host-basis. "
                             "If the agent does not respond within this time, it is considered to be unreachable."
                         ),
                     ),

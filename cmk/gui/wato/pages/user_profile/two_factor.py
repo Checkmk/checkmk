@@ -642,7 +642,7 @@ class UserTwoFactorEnforce(ABCUserProfilePage):
         html.div("", id_="webauthn_message")
         html.show_warning(
             _(
-                "Your administrator has enforced two factor authentication for your account. Kindly register one of the following two factor mechanisms:"
+                "Your administrator has enforced two-factor authentication for your account. Kindly register one of the following two-factor mechanisms:"
             )
         )
         html.open_div(class_="two_factor_overview")

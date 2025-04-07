@@ -302,7 +302,7 @@ class ModeTags(ABCTagMode):
                         "new",
                         "hosttags",
                         _(
-                            "Each tag group will create one dropdown choice in the host configuration."
+                            "Each tag group will create one drop-down choice in the host configuration."
                         ),
                     ),
                     MenuItem(
@@ -570,7 +570,7 @@ class ModeTagUsage(ABCTagMode):
         if affected_hosts:
             _show_affected_hosts(affected_hosts)
 
-        table.cell(_("Used in rulesets"))
+        table.cell(_("Used in rule sets"))
         if affected_rulesets:
             _show_affected_rulesets(affected_rulesets)
 
@@ -619,7 +619,7 @@ class ModeTagUsage(ABCTagMode):
         if affected_hosts:
             _show_affected_hosts(affected_hosts)
 
-        table.cell(_("Used in rulesets"))
+        table.cell(_("Used in rule sets"))
         if affected_rulesets:
             _show_affected_rulesets(affected_rulesets)
 
@@ -925,7 +925,7 @@ def _rename_tags_after_confirmation(
 
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(operation, mode)
 
-        return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % (
+        return _("Modified folders: %d, modified hosts: %d, modified rule sets: %d") % (
             len(affected_folders),
             len(affected_hosts),
             len(affected_rulesets),
@@ -963,7 +963,7 @@ def _rename_tags_after_confirmation(
     if affected_rulesets:
         with output_funnel.plugged():
             html.write_text_permissive(
-                _("Rulesets that contain rules with references to the changed tags") + ":"
+                _("Rule sets that contain rules with references to the changed tags") + ":"
             )
             _show_affected_rulesets(affected_rulesets)
             message += HTML.without_escaping(output_funnel.drain())

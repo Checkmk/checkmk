@@ -2257,7 +2257,7 @@ class Folder(FolderProtocol):
         if self.path() == target_folder.path():
             raise MKUserError(
                 None,
-                _("Cannot move folder: A folder can not be moved to it's own parent folder."),
+                _("Cannot move folder: A folder cannot be moved to its own parent folder."),
             )
 
         if subfolder in parent_folder_chain(target_folder):
@@ -2482,7 +2482,7 @@ class Folder(FolderProtocol):
         if not allow_locked_deletion and (
             hosts := self._get_hosts_locked_by_quick_setup(host_names)
         ):
-            errors.extend(_("%s is locked by Quick setup.") % host_name for host_name in hosts)
+            errors.extend(_("%s is locked by quick setup.") % host_name for host_name in hosts)
 
         # 2. check if hosts have parents
         if hosts_with_children := self._get_parents_of_hosts(self.tree, host_names):

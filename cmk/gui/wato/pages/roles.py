@@ -222,7 +222,7 @@ class ModeRoleTwoFactor(WatoMode):
         self._role: UserRole = userroles.get_role(self._role_id)
 
     def title(self) -> str:
-        return _("Enforce two factor on %s role") % self._role_id
+        return _("Enforce two-factor on %s role") % self._role_id
 
     def page(self) -> None:
         request.get_ascii_input_mandatory("two_factor_enforce")
@@ -236,7 +236,7 @@ class ModeRoleTwoFactor(WatoMode):
             (
                 html.render_span(_("Warning:"), class_="underline")
                 + _(
-                    " Enforcing two factor for the %s role will terminate any current sessions for users who have this role but have not enabled any two factor."
+                    " Enforcing two-factor for the %s role will terminate any current sessions for users who have this role but have not enabled any two-factor."
                 )
                 % self._role.name
             ),
@@ -244,7 +244,7 @@ class ModeRoleTwoFactor(WatoMode):
         )
 
         show_confirm_cancel_dialog(
-            _("Enforce two factor on all users with %s role?") % self._role.name,
+            _("Enforce two-factor on all users with %s role?") % self._role.name,
             confirm_url,
             cancel_url,
             message,
@@ -371,12 +371,12 @@ class ModeEditRole(WatoMode):
         html.help(_("An alias or description of the role"))
         html.text_input("alias", self._role.alias, size=50)
 
-        forms.section(_("Enforce two factor authentication"))
+        forms.section(_("Enforce two-factor authentication"))
         html.help(
             _(
-                "If set enabled from a disabled state, all users with this role will be required to setup two factor authentication "
-                "and will be logout out of any current sessions if they have not enabled two factor. "
-                "'Enforce two factor authentication' in global settings will override this setting."
+                "If this setting is changed from disabled to enabled, all users with this role will be required to use a two-factor authentication "
+                "and will be logged out of any current sessions if they have not enabled two-factor. "
+                "'Enforce two-factor authentication' in global settings will override this setting."
             )
         )
         html.checkbox(

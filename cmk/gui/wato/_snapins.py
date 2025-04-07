@@ -131,7 +131,7 @@ class SetupSearch(ABCMegaMenuSearch):
         html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
         with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
-            tooltip = _("Search for menu entries, settings, hosts and rulesets.")
+            tooltip = _("Search for menu entries, settings, hosts and rule sets.")
             html.input(
                 id_=f"mk_side_search_field_{self.name}",
                 type_="text",

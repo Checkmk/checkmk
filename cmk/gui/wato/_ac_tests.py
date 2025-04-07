@@ -119,7 +119,7 @@ class ACTestPersistentConnections(ACTest):
             "for establishing the Livestatus connections. But you need to be aware that each "
             "Apache process that is running is keeping a persistent connection to each configured "
             "site via Livestatus open. This means you need to balance the maximum Apache "
-            "processes with the maximum parallel livestatus connections. Otherwise livestatus "
+            "processes with the maximum parallel Livestatus connections. Otherwise Livestatus "
             "requests will be blocked by existing and possibly idle connections."
         )
 
@@ -141,7 +141,7 @@ class ACTestPersistentConnections(ACTest):
                 state=ACResultState.WARN,
                 text=_(
                     "Persistent connections are nearly useless "
-                    "with Livestatus Proxy Daemon. Better disable it."
+                    "with Livestatus proxy daemon. Better disable it."
                 ),
                 site_id=site_id,
             )
@@ -154,7 +154,7 @@ class ACTestPersistentConnections(ACTest):
                 text=_(
                     "Either disable persistent connections or "
                     "carefully review maximum number of Apache processes and "
-                    "possible livestatus connections."
+                    "possible Livestatus connections."
                 ),
                 site_id=site_id,
             )
@@ -1847,7 +1847,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_(
-                    "No ruleset <b>State in case of restricted address mismatch</b> is configured"
+                    "No rule set <b>State in case of restricted address mismatch</b> is configured"
                 ),
                 site_id=site_id,
             )

@@ -54,11 +54,11 @@ class CertificateView:
         return {
             _("Subject Name"): self.subject.common_name or _("None"),
             _("Issuer Name"): self.issuer.common_name or _("None"),
-            _("Creation Date"): self.creation.isoformat(),
-            _("Expiration Date"): self.expiration.isoformat(),
+            _("Creation date"): self.creation.isoformat(),
+            _("Expiration date"): self.expiration.isoformat(),
             _("Fingerprint"): HTMLWriter.render_span(self.fingerprint[:17], title=self.fingerprint),
-            _("Key Type and Length"): self.key_type_length,
-            _("Stored Location"): str(self.stored_location),
+            _("Key type and length"): self.key_type_length,
+            _("Stored location"): str(self.stored_location),
             _("Purpose"): self.purpose or _("None"),
         }
 

@@ -234,7 +234,7 @@ class ModeObjectParameters(WatoMode):
         checkgroup = serviceinfo["checkgroup"]
 
         if (checktype := serviceinfo["checktype"]) in NOTDISPLAYABLE:
-            reason = _("Check parameters for checktype '%s' can not be displayed") % checktype
+            reason = _("Check parameters for check type '%s' can not be displayed") % checktype
         else:
             reason = _("This check is not configurable via Setup")
 
@@ -465,7 +465,7 @@ class ModeObjectParameters(WatoMode):
         html.open_tr()
 
         html.open_td(class_="reason")
-        html.i(_("Explicit, ruleset, discovered"))
+        html.i(_("Explicit, rule set, discovered"))
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
         html.write_html(
@@ -578,7 +578,7 @@ class ModeObjectParameters(WatoMode):
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
             html.write_text_permissive(
-                _("Timespecific parameters computed at %s")
+                _("Time specific parameters computed at %s")
                 % cmk.utils.render.date_and_time(computed_at)
             )
             html.br()

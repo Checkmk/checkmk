@@ -1222,7 +1222,7 @@ class DiscoveryPageRenderer:
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text_permissive(
-                    _("Timespecific parameters computed at %s")
+                    _("Time specific parameters computed at %s")
                     % cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"])
                 )
                 html.br()
@@ -1624,7 +1624,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Vanished clustered services - located on cluster host"),
                 help_text=_(
-                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "These services are mapped to a cluster host by a rule in one of the rule sets "
                     "<i>%s</i> or <i>%s</i>."
                 )
                 % (
@@ -1697,7 +1697,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Monitored clustered services - located on cluster host"),
                 help_text=_(
-                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "These services are mapped to a cluster host by a rule in one of the rule sets "
                     "<i>%s</i> or <i>%s</i>."
                 )
                 % (
@@ -1710,7 +1710,7 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Undecided clustered services"),
                 help_text=_(
-                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "These services are mapped to a cluster host by a rule in one of the rule sets "
                     "<i>%s</i> or <i>%s</i>."
                 )
                 % (
@@ -1737,7 +1737,7 @@ class DiscoveryPageRenderer:
                 help_text=_(
                     "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call classical check plug-ins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Checkmk. "
+                    "<i>Active checks</i> or implicitly by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),

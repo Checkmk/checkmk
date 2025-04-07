@@ -101,7 +101,7 @@ def perform_rename_hosts(
             this_host_actions.extend(_rename_host_as_cluster_node(cluster_hosts, oldname, newname))
             update_interface(_("Renaming host(s) in parents..."))
             this_host_actions.extend(_rename_parents(oldname, newname))
-            update_interface(_("Renaming host(s) in rulesets..."))
+            update_interface(_("Renaming host(s) in rule sets..."))
             this_host_actions.extend(_rename_host_in_rulesets(oldname, newname))
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):

@@ -278,7 +278,7 @@ class ModeParentScan(WatoMode):
             "select",
             "no",
             self._settings.select == "no",
-            _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>",
+            _("Skip hosts with non-empty parents (also if inherited)") + "<br>",
         )
         html.radiobutton(
             "select", "ignore", self._settings.select == "ignore", _("Scan all hosts") + "<br>"

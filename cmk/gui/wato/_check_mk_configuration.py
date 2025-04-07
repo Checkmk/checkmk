@@ -1620,7 +1620,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
                                     label=_("Directly show the action icon in the column"),
                                     help=_(
                                         "Makes the icon appear in the column instead "
-                                        "of the dropdown menu."
+                                        "of the drop-down menu."
                                     ),
                                     default_value=True,
                                 ),

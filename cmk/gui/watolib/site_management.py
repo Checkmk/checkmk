@@ -640,9 +640,9 @@ def add_changes_after_editing_broker_connection(
     sites: list[SiteId],
 ) -> LogMessage:
     change_message = (
-        _("Created new peer-to-peer broker connection id %s") % connection_id
+        _("Created new peer-to-peer broker connection ID %s") % connection_id
         if is_new_broker_connection
-        else _("Modified peer-to-peer broker connection id %s") % connection_id
+        else _("Modified peer-to-peer broker connection ID %s") % connection_id
     )
 
     add_change(

@@ -1746,7 +1746,7 @@ class ActivateChangesManager(ActivateChanges):
                 _(
                     "There are some changes made by your colleagues and you did not "
                     "confirm to activate these changes. In order to proceed, you will "
-                    "have to confirm the activation or ask you colleagues to activate "
+                    "have to confirm the activation or ask your colleagues to activate "
                     "these changes on their own."
                 ),
             )

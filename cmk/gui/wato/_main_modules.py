@@ -173,7 +173,9 @@ class MainModuleGlobalSettings(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Global settings for Checkmk, Multisite and the monitoring core.")
+        return _(
+            "Global settings for Checkmk, graphical user interface (GUI) and the monitoring core."
+        )
 
     @property
     def sort_index(self) -> int:
@@ -241,7 +243,7 @@ class MainModuleRuleSearch(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Search all rules and rulesets")
+        return _("Search all rules and rule sets")
 
     @property
     def sort_index(self) -> int:
@@ -275,7 +277,7 @@ class MainModulePredefinedConditions(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Use predefined conditions to centralize the coniditions of your rulesets.")
+        return _("Use predefined conditions to centralize the conditions of your rule sets.")
 
     @property
     def sort_index(self) -> int:
@@ -343,7 +345,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Manage Hard- and software inventory related rulesets")
+        return _("Manage hard- and software inventory related rule sets")
 
     @property
     def sort_index(self) -> int:
@@ -369,7 +371,7 @@ class MainModuleNetworkingServices(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("HTTP, TCP, Email, ...")
+        return _("HTTP, TCP, email, ...")
 
     @property
     def icon(self) -> Icon:
@@ -795,7 +797,7 @@ class MainModuleAnalyzeNotifications(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Analyze recent notifications with your current ruleset")
+        return _("Analyze recent notifications with your current rule set")
 
     @property
     def sort_index(self) -> int:
@@ -829,7 +831,7 @@ class MainModuleTestNotifications(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Test custom notifications with your current ruleset")
+        return _("Test custom notifications with your current rule set")
 
     @property
     def sort_index(self) -> int:
@@ -1359,7 +1361,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Configure agent access related settings using rulesets")
+        return _("Configure agent access related settings using rule sets")
 
     @property
     def sort_index(self) -> int:
@@ -1393,7 +1395,7 @@ class MainModuleSNMPRules(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Configure SNMP related settings using rulesets")
+        return _("Configure SNMP related settings using rule sets")
 
     @property
     def sort_index(self) -> int:

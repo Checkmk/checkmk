@@ -256,7 +256,7 @@ def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list
             if rule.value == name:
                 used_in.append(
                     (
-                        "{}: {}".format(_("Ruleset"), ruleset.title()),
+                        "{}: {}".format(_("Rule set"), ruleset.title()),
                         folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]),
                     )
                 )

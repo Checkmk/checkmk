@@ -94,7 +94,7 @@ class ModePasswords(SimpleListMode[Password]):
         if is_locked_by_quick_setup(entry.get("locked_by")):
             raise MKUserError(
                 "_delete",
-                _("Cannot delete %s because it's managed by Quick setup.")
+                _("Cannot delete %s because it is managed by quick setup.")
                 % self._mode_type.name_singular(),
             )
 
@@ -114,7 +114,7 @@ class ModePasswords(SimpleListMode[Password]):
         if is_locked_by_quick_setup(entry.get("locked_by")):
             html.icon_button(
                 url="",
-                title=_("%s can only be deleted via Quick setup")
+                title=_("%s can only be deleted via quick setup")
                 % self._mode_type.name_singular().title(),
                 icon="delete",
                 class_=["disabled"],

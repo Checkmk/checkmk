@@ -11,7 +11,6 @@ from typing import Sequence
 from pydantic import BaseModel, ValidationError
 
 from cmk.ccc import store
-from cmk.ccc.i18n import _
 
 from cmk.gui.background_job import (
     AlreadyRunningError,
@@ -22,6 +21,7 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.stage import (
@@ -66,10 +66,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 
-GUIDED_MODE_STRING = _("Guided mode")
-OVERVIEW_MODE_STRING = _("Overview mode")
-COMPLETE_BUTTON_ARIA_LABEL = _("Save")
-
 
 @dataclass
 class StageOverview:
@@ -85,15 +81,18 @@ class QuickSetupOverview:
     actions: list[Action]
     prev_button: Button
     mode: str = field(default="guided")
-    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
-    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
+    guided_mode_string: str = field(default=_("Guided mode"))
+    overview_mode_string: str = field(default=_("Overview mode"))
 
 
 def quick_setup_guided_mode(
     quick_setup: QuickSetup, prefill_data: ParsedFormData | None
 ) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
+
     return QuickSetupOverview(
+        guided_mode_string=_("Guided mode"),
+        overview_mode_string=_("Overview mode"),
         quick_setup_id=quick_setup.id,
         overviews=[
             StageOverview(
@@ -123,14 +122,14 @@ def quick_setup_guided_mode(
             Action(
                 id=action.id,
                 button=Button(
-                    label=action.label,
+                    label=translate_to_current_language(action.label),
                     icon=ButtonIcon(
                         name=action.icon.name,
                         rotate=action.icon.rotate,
                     )
                     if action.icon
                     else None,
-                    aria_label=COMPLETE_BUTTON_ARIA_LABEL,
+                    aria_label=_("Save"),
                 ),
                 load_wait_label=LOAD_WAIT_LABEL,
             )
@@ -158,8 +157,8 @@ class QuickSetupAllStages:
     stages: list[CompleteStage]
     actions: list[Action]
     mode: str = field(default="overview")
-    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
-    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
+    guided_mode_string: str = field(default=_("Guided mode"))
+    overview_mode_string: str = field(default=_("Overview mode"))
 
 
 def quick_setup_overview_mode(
@@ -168,6 +167,8 @@ def quick_setup_overview_mode(
 ) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
     return QuickSetupAllStages(
+        guided_mode_string=_("Guided mode"),
+        overview_mode_string=_("Overview mode"),
         quick_setup_id=quick_setup.id,
         stages=[
             CompleteStage(
@@ -202,14 +203,14 @@ def quick_setup_overview_mode(
             Action(
                 id=action.id,
                 button=Button(
-                    label=action.label,
+                    label=translate_to_current_language(action.label),
                     icon=ButtonIcon(
                         name=action.icon.name,
                         rotate=action.icon.rotate,
                     )
                     if action.icon
                     else None,
-                    aria_label=COMPLETE_BUTTON_ARIA_LABEL,
+                    aria_label=_("Save"),
                 ),
                 load_wait_label=LOAD_WAIT_LABEL,
             )

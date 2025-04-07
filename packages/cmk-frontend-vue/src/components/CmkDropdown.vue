@@ -10,6 +10,7 @@ import useClickOutside from '@/lib/useClickOutside'
 import FormRequired from '@/form/private/FormRequired.vue'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkSuggestions from './CmkSuggestions.vue'
+import { type Suggestions } from './CmkSuggestions.vue'
 
 export interface DropdownOption {
   name: string
@@ -24,11 +25,9 @@ const {
   noElementsText = '',
   requiredText = '',
   options,
-  showFilter,
   label
 } = defineProps<{
-  options: DropdownOption[]
-  showFilter: boolean
+  options: Suggestions
   inputHint?: string
   noResultsHint?: string
   disabled?: boolean
@@ -42,23 +41,25 @@ const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const dropdownButtonLabel = computed(() =>
-  options.length === 0
+  options.suggestions.length === 0
     ? noElementsText
-    : (options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint)
+    : (options.suggestions.find(({ name }) => name === selectedOption.value)?.title ?? inputHint)
 )
 
-const noChoiceAvailable = computed(() => options.length === 0)
+const noChoiceAvailable = computed(() => options.suggestions.length === 0)
 
 const suggestionsShown = ref(false)
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
 
 const filterString = ref('')
-const filteredOptions = ref<number[]>(options.map((_, index) => index))
-const selectedSuggestionOptionIndex: Ref<number | null> = ref(options.length > 0 ? 0 : null)
+const filteredOptions = ref<number[]>(options.suggestions.map((_, index) => index))
+const selectedSuggestionOptionIndex: Ref<number | null> = ref(
+  options.suggestions.length > 0 ? 0 : null
+)
 
 watch(filterString, (newFilterString) => {
-  filteredOptions.value = options
+  filteredOptions.value = options.suggestions
     .map((option, index) => ({
       option,
       index
@@ -75,7 +76,7 @@ function showSuggestions(): void {
       return
     }
     filterString.value = ''
-    filteredOptions.value = options.map((_, index) => index)
+    filteredOptions.value = options.suggestions.map((_, index) => index)
     selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     nextTick(() => {
@@ -136,7 +137,7 @@ function selectOption(option: DropdownOption): void {
       v-if="!!suggestionsShown"
       ref="suggestionsRef"
       role="option"
-      :suggestions="{ type: showFilter ? 'filtered' : 'fixed', suggestions: options }"
+      :suggestions="options"
       :no-results-hint="noResultsHint"
       @select="selectOption"
       @keydown.escape.prevent="hideSuggestions"

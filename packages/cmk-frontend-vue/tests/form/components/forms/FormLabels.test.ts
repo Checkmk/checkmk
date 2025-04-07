@@ -8,7 +8,7 @@ import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import userEvent from '@testing-library/user-event'
-import { Response } from '@/form/components/utils/autocompleter'
+import { Response } from '@/components/suggestions'
 
 const EXISTING_LABEL_KEY = 'existing_key'
 const EXISTING_LABEL_VALUE = 'existing_value'

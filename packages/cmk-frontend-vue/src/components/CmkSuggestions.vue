@@ -9,11 +9,7 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
-
-export interface Suggestion {
-  name: string
-  title: string
-}
+import { type Suggestion } from './suggestions'
 
 type SuggestionsFixed = {
   type: 'fixed'
@@ -25,7 +21,7 @@ type SuggestionsFiltered = {
   suggestions: Array<Suggestion>
 }
 
-type Suggestions = SuggestionsFixed | SuggestionsFiltered
+export type Suggestions = SuggestionsFixed | SuggestionsFiltered
 
 const {
   error = '',

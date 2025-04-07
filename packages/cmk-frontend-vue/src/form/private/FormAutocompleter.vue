@@ -10,12 +10,9 @@ import { X } from 'lucide-vue-next'
 import CmkSuggestions from '@/components/CmkSuggestions.vue'
 import useClickOutside from '@/lib/useClickOutside'
 import { useId } from '@/form/utils'
+import { type Suggestion, ErrorResponse } from '@/components/suggestions'
 
-import {
-  fetchSuggestions,
-  type Suggestion,
-  ErrorResponse
-} from '@/form/components/utils/autocompleter'
+import { fetchSuggestions } from '@/form/components/utils/autocompleter'
 
 const props = defineProps<{
   id?: string

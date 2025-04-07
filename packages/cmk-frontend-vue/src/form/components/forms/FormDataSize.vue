@@ -51,8 +51,7 @@ const magnitudeOptions = computed(() => {
   <CmkSpace size="small" />
   <CmkDropdown
     v-model:selected-option="value[1]"
-    :options="magnitudeOptions"
-    :show-filter="false"
+    :options="{ type: 'fixed', suggestions: magnitudeOptions }"
     :label="spec.i18n.choose_unit"
   />
   <FormValidation :validation="validation"></FormValidation>

@@ -34,11 +34,13 @@ const componentId = useId()
     /></FormLabel>
     <CmkDropdown
       v-model:selected-option="value"
-      :options="props.spec.elements"
+      :options="{
+        type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
+        suggestions: props.spec.elements
+      }"
       :input-hint="spec.input_hint || ''"
       :disabled="spec.frozen"
       :component-id="componentId"
-      :show-filter="props.spec.elements.length > 5"
       :no-elements-text="props.spec.no_elements_text || ''"
       :required-text="props.spec.i18n_base.required"
       :label="props.spec.label || props.spec.title"

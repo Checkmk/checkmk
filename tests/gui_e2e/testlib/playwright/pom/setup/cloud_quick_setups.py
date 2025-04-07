@@ -228,6 +228,9 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
             message=f"Expected '{folder_path}' to be selected in dropdown menu!",
         ).to_have_text(folder_path)
 
+    def _checkbox_service_in_row(self, row_name: str, name: str) -> Locator:
+        return self._get_row(row_name).get_by_text(name)
+
 
 class AWSConfigurationList(BaseQuickSetupConfigurationList):
     """Represent the page 'Amazon Web Services (AWS)', which lists the configuration setup.
@@ -292,9 +295,6 @@ class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         service_checkbox = self._checkbox_service_in_row("Global services", service)
         if service_checkbox.is_checked() != check:
             service_checkbox.click()
-
-    def _checkbox_service_in_row(self, row_name: str, name: str) -> Locator:
-        return self._get_row(row_name).get_by_text(name)
 
     # ----
 
@@ -419,3 +419,93 @@ class GCPAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
             self.check_service(entry, True)
         for entry in services.to_deactivate:
             self.check_service(entry, False)
+
+
+class AzureConfigurationList(BaseQuickSetupConfigurationList):
+    """Represent the page 'Microsoft Azure', which lists the configuration setup.
+
+    Accessible at,
+    Setup > Quick Setup > Microsoft Azure
+    """
+
+    suffix = "azure"
+    page_title = "Microsoft Azure"
+
+
+class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
+    """Represent the page 'Add Microsoft Azure configuration' to add a GCP
+    configuration.
+
+    Accessible at,
+    Setup > Quick Setup > Microsoft Azure
+        > Add Microsoft Azure configuration
+    """
+
+    suffix = "azure"
+    page_title = "Add Microsoft Azure configuration"
+
+    @override
+    def list_configuration_page(self) -> AzureConfigurationList:
+        return AzureConfigurationList(self.page)
+
+    @property
+    def button_proceed_from_stage_one(self) -> Locator:
+        return self._button_proceed_from_stage("Configure host and authority")
+
+    @property
+    def button_proceed_from_stage_two(self) -> Locator:
+        return self._button_proceed_from_stage("Configure services to monitor")
+
+    @property
+    def button_proceed_from_stage_three(self) -> Locator:
+        return self._button_proceed_from_stage("Review and test configuration")
+
+    @property
+    def button_proceed_from_stage_four(self) -> Locator:
+        return self._button_proceed_from_stage("Test configuration")
+
+    def check_service_to_monitor(self, service: str, check: bool) -> None:
+        service_checkbox = self._checkbox_service_in_row("Azure services to monitor", service)
+        if service_checkbox.is_checked() != check:
+            service_checkbox.click()
+
+    def specify_stage_one_details(
+        self, subscription_id: str, tenant_id: str, client_id: str, secret: str
+    ) -> None:
+        logger.info("Initialize stage-1 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
+        main_area.get_by_role("textbox", name="Subscription ID").fill(subscription_id)
+        main_area.get_by_role("textbox", name="Tenant ID / Directory ID").fill(tenant_id)
+        main_area.get_by_role("textbox", name="Client ID / Application ID").fill(client_id)
+
+        main_area.get_by_role("combobox", name="Choose password type").click()
+        main_area.get_by_role("option", name="Explicit").click()
+        main_area.get_by_role("textbox", name="explicit password").fill(secret)
+
+        main_area.get_by_role("combobox", name="Authority").click()
+        main_area.get_by_role("option", name="Global").click()
+
+    def specify_stage_two_details(self, host_name: str, site_name: str) -> None:
+        logger.info("Initialize stage-2 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Host name").fill(host_name)
+
+        main_area.get_by_role("combobox", name="Site selection").click()
+        main_area.get_by_role("option", name=f"{site_name} - Local site").click()
+
+        self._handle_folder_selection(
+            folder_name=self.folder_details.name,
+            parent_path=self.folder_details.parent,
+            create_new=self.folder_details.create_new,
+        )
+
+    def specify_stage_three_details(
+        self,
+        services_to_monitor: QuickSetupMultiChoice,
+    ) -> None:
+        logger.info("Initialize stage-3 details.")
+        for entry in services_to_monitor.to_activate:
+            self.check_service_to_monitor(entry, True)
+        for entry in services_to_monitor.to_deactivate:
+            self.check_service_to_monitor(entry, False)

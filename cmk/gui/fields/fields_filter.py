@@ -20,17 +20,17 @@ class FieldsFilter(ABC):
         return self.is_included(field_path)
 
     @abstractmethod
-    def is_included(self, field_path: str) -> bool: ...
+    def is_included(self, field_path: str | None = None) -> bool: ...
 
     @abstractmethod
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter | None": ...
+    def get_nested_fields(self, field_path: str) -> "FieldsFilter": ...
 
     @abstractmethod
     def apply(self, data: _T) -> _T: ...
 
 
 class _Included(FieldsFilter):
-    def is_included(self, field_path: str) -> bool:
+    def is_included(self, field_path: str | None = None) -> bool:
         return True
 
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
@@ -42,9 +42,12 @@ class _Included(FieldsFilter):
     def __repr__(self) -> str:
         return "Included"
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _Included)
+
 
 class _Excluded(FieldsFilter):
-    def is_included(self, field_path: str) -> bool:
+    def is_included(self, field_path: str | None = None) -> bool:
         return False
 
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
@@ -65,18 +68,37 @@ class _Excluded(FieldsFilter):
     def __repr__(self) -> str:
         return "Excluded"
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _Excluded)
+
 
 class _SpecificFieldsFilter(FieldsFilter, ABC):
     def __init__(self, fields: dict[str, FieldsFilter]) -> None:
         self.fields = fields
 
-    def get_nested_fields(self, field_path: str) -> "FieldsFilter | None":
-        key, _, remainder = field_path.partition(".")
-        if key not in self.fields:
-            return None
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, self.__class__) and self.fields == other.fields
 
-        nested = self.fields[key]
-        return nested.get_nested_fields(remainder) if remainder else nested
+    def is_included(self, field_path: str | None = None) -> bool:
+        if field_path is None:
+            # this is either _IncludeFields or _ExcludeFields which are both partially included
+            return True
+        nested = self.get_nested_fields(field_path)
+        # _Included and _IncludeFields are obviously included, _ExcludeFields is partially included
+        return not isinstance(nested, _Excluded)
+
+    def apply(self, data: _T) -> _T:
+        if isinstance(data, list):
+            return [self.apply(item) for item in data]
+        if isinstance(data, tuple):
+            return tuple(self.apply(item) for item in data)
+        if isinstance(data, dict):
+            return {
+                key: nested.apply(value)
+                for key, value in data.items()
+                if (nested := self.get_nested_fields(key)).is_included()
+            }
+        return data
 
 
 class _IncludeFields(_SpecificFieldsFilter):
@@ -88,21 +110,13 @@ class _IncludeFields(_SpecificFieldsFilter):
 
         super().__init__(fields)
 
-    def is_included(self, field_path: str) -> bool:
-        return self.get_nested_fields(field_path) is not None
+    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+        key, _, remainder = field_path.partition(".")
+        if key not in self.fields:
+            return _Excluded()
 
-    def apply(self, data: _T) -> _T:
-        if isinstance(data, list):
-            return [self.apply(item) for item in data]
-        if isinstance(data, tuple):
-            return tuple(self.apply(item) for item in data)
-        if isinstance(data, dict):
-            return {
-                key: nested.apply(value)
-                for key, value in data.items()
-                if (nested := self.get_nested_fields(key))
-            }
-        return data
+        nested = self.fields[key]
+        return nested.get_nested_fields(remainder) if remainder else nested
 
     def __repr__(self) -> str:
         fields = ", ".join(f"{key}={self.fields[key]!r}" for key in sorted(self.fields.keys()))
@@ -118,25 +132,13 @@ class _ExcludeFields(_SpecificFieldsFilter):
 
         super().__init__(fields)
 
-    def is_included(self, field_path: str) -> bool:
-        if nested := self.get_nested_fields(field_path):
-            return isinstance(nested, _ExcludeFields)  # partially included
+    def get_nested_fields(self, field_path: str) -> "FieldsFilter":
+        key, _, remainder = field_path.partition(".")
+        if key not in self.fields:
+            return _Included()
 
-        return True
-
-    def apply(self, data: _T) -> _T:
-        if isinstance(data, list):
-            return [self.apply(item) for item in data]
-        if isinstance(data, tuple):
-            return tuple(self.apply(item) for item in data)
-        if isinstance(data, dict):
-            return {
-                key: nested.apply(value) if nested else value
-                for key, value in data.items()
-                if (nested := self.get_nested_fields(key)) is None
-                or isinstance(nested, _ExcludeFields)
-            }
-        return data
+        nested = self.fields[key]
+        return nested.get_nested_fields(remainder) if remainder else nested
 
     def __repr__(self) -> str:
         fields = ", ".join(f"{key}={self.fields[key]!r}" for key in sorted(self.fields.keys()))

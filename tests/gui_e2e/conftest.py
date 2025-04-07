@@ -35,8 +35,6 @@ from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 
-pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
-
 # loading pom fixtures
 setup_fixtures = [notification_user]
 

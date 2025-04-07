@@ -80,7 +80,7 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules to configure the behaviour of monitored hosts.")
+        return _("Rules to configure the behavior of monitored hosts.")
 
 
 class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
@@ -164,7 +164,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configure SNMP related settings using rulesets")
+        return _("Configure SNMP related settings using rule sets")
 
 
 class RulespecGroupMonitoringAgents(RulespecGroup):
@@ -276,7 +276,7 @@ class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("Storage, Filesystems and Files")
+        return _("Storage, file systems and files")
 
 
 class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):

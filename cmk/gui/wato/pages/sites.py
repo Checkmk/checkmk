@@ -365,7 +365,7 @@ class ModeEditSite(WatoMode):
 
     def _validate_site_id(self, value, varprefix):
         if value in self._site_mgmt.load_sites():
-            raise MKUserError("id", _("This id is already being used by another connection."))
+            raise MKUserError("id", _("This ID is already being used by another connection."))
 
         # Checkmk creates NagVis backends for all sites: For each site it creates two backends:
         # a) [site_id]    - Livestatus connection to the sites core
@@ -405,8 +405,8 @@ class ModeEditSite(WatoMode):
                         "to the site to be established before the site is "
                         "considered to be unreachable. It is highly recommended to set a value "
                         "as low as possible here because this setting directly affects the GUI "
-                        "response time when the destionation is not reachable. When using the "
-                        "Livestatus Proxy Daemon the GUI connects to the local proxy, in this "
+                        "response time when the destination is not reachable. When using the "
+                        "Livestatus proxy daemon the GUI connects to the local proxy, in this "
                         "situation a lower value, like 2 seconds is recommended."
                     ),
                 ),
@@ -414,10 +414,10 @@ class ModeEditSite(WatoMode):
             (
                 "persist",
                 Checkbox(
-                    title=_("Persistent Connection"),
+                    title=_("Persistent connection"),
                     label=_("Use persistent connections"),
                     help=_(
-                        "If you enable persistent connections then Multisite will try to keep open "
+                        "If you enable persistent connections then the GUI will try to keep open "
                         "the connection to the remote sites. This brings a great speed up in high-latency "
                         "situations but locks a number of threads in the Livestatus module of the target site."
                     ),
@@ -429,11 +429,11 @@ class ModeEditSite(WatoMode):
                     title=_("URL prefix"),
                     size=60,
                     help=_(
-                        "The URL prefix will be prepended to links of addons like NagVis "
+                        "The URL prefix will be prepended to links of add-ons like NagVis "
                         "when a link to such applications points to a host or "
                         "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                         "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
-                        "configuration in your local system apache that proxies such URLs to the according remote site. "
+                        "configuration in your local system Apache that proxies such URLs to the according remote site. "
                         "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
                         "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
                     )
@@ -529,8 +529,8 @@ class ModeEditSite(WatoMode):
                     title=_("Disable remote configuration"),
                     label=_("Disable configuration via Setup on this site"),
                     help=_(
-                        "It is a good idea to disable access to Setup completely on the remote site. "
-                        "Otherwise a user who does not now about the replication could make local "
+                        "It is recommended to disable access to Setup completely on the remote site. "
+                        "Otherwise a user who does not know about the replication could make local "
                         "changes that are overridden at the next configuration activation."
                     ),
                 ),
@@ -1165,13 +1165,13 @@ class ModeDistributedMonitoring(WatoMode):
         encrypted_url = folder_preserving_link(
             [("mode", "site_livestatus_encryption"), ("site", site_id)]
         )
-        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
+        html.icon_button(encrypted_url, _("Show details about Livestatus encryption"), "encrypted")
 
         # The status is fetched asynchronously for all sites. Show a temporary loading icon.
         html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
         html.icon(
             "reload",
-            _("Fetching livestatus status"),
+            _("Fetching Livestatus status"),
             class_=["reloading", "replication_status_loading"],
         )
         html.close_div()

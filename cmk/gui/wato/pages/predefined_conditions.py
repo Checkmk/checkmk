@@ -128,9 +128,9 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         html.p(
             _(
                 "This module can be used to define conditions for Checkmk rules in a central place. "
-                "You can then refer to these conditions from different rulesets. Using these predefined "
+                "You can then refer to these conditions from different rule sets. Using these predefined "
                 "conditions may save you a lot of redundant conditions when you need them in multiple "
-                "rulesets."
+                "rule sets."
             )
         )
         super().page()

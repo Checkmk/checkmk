@@ -652,7 +652,7 @@ class ModeFolder(WatoMode):
         selected_host_names = get_hostnames_from_checkboxes(self._folder)
         if not selected_host_names:
             raise MKUserError(
-                None, _("Please select some hosts before doing bulk operations on hosts.")
+                None, _("Please select some hosts before doing bulk actions on hosts.")
             )
 
         # Move

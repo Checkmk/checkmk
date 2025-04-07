@@ -115,9 +115,9 @@ class SiteManagement:
             render=CascadingDropdown.Render.foldable,
             help=_(
                 "When connecting to remote site please make sure "
-                "that Livestatus over TCP is activated there. You can use UNIX sockets "
+                "that Livestatus over TCP is activated there. You can use Unix sockets "
                 "to connect to foreign sites on localhost. Please make sure that this "
-                "site has proper read and write permissions to the UNIX socket of the "
+                "site has proper read and write permissions to the Unix socket of the "
                 "foreign site."
             ),
         )
@@ -126,7 +126,7 @@ class SiteManagement:
     def livestatus_proxy_valuespec(cls):
         return FixedValue(
             value=None,
-            title=_("Use Livestatus Proxy Daemon"),
+            title=_("Use Livestatus proxy daemon"),
             totext=_("Connect directly (not available in CRE)"),
         )
 
@@ -145,7 +145,7 @@ class SiteManagement:
             ("tcp6", _("Connect via TCP (IPv6)"), cls._tcp_socket_valuespec(ipv6=True)),
             (
                 "unix",
-                _("Connect via UNIX socket"),
+                _("Connect via Unix socket"),
                 Dictionary(
                     elements=[
                         (
@@ -355,7 +355,7 @@ class SiteManagement:
         if is_new and cls.broker_connection_id_exists(connection_id):
             raise MKUserError(
                 None,
-                _("Connection id %s already exists.") % connection_id,
+                _("Connection ID %s already exists.") % connection_id,
             )
 
         old_connection_sites = {connection.connecter.site_id, connection.connectee.site_id}
@@ -389,7 +389,7 @@ class SiteManagement:
     def delete_broker_connection(cls, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
         broker_connections = cls.get_broker_connections()
         if connection_id not in broker_connections:
-            raise MKUserError(None, _("Unable to delete unknown connection id: %s") % connection_id)
+            raise MKUserError(None, _("Unable to delete unknown connection ID: %s") % connection_id)
 
         connection = broker_connections[connection_id]
         del broker_connections[connection_id]
@@ -456,16 +456,22 @@ class SiteManagement:
             multisiteurl = site_configuration.get("multisiteurl")
             if not site_configuration.get("multisiteurl"):
                 raise MKUserError(
-                    "multisiteurl", _("Please enter the Multisite URL of the remote site.")
+                    "multisiteurl",
+                    _("Please enter the graphical user interface (GUI) URL of the remote site."),
                 )
 
             if not multisiteurl.endswith("/check_mk/"):
-                raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
+                raise MKUserError(
+                    "multisiteurl",
+                    _("The graphical user interface (GUI) URL must end with /check_mk/"),
+                )
 
             if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
                 raise MKUserError(
                     "multisiteurl",
-                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."),
+                    _(
+                        "The graphical user interface (GUI) URL must begin with <tt>http://</tt> or <tt>https://</tt>."
+                    ),
                 )
 
             if site_configuration["socket"][0] == "local":
@@ -479,7 +485,7 @@ class SiteManagement:
             raise MKUserError(
                 "replication",
                 _(
-                    "You cannot disable the replication on this site. It is used in a broker peer to peer connection."
+                    "You cannot disable the replication on this site. It is used in a broker peer-to-peer connection."
                 ),
             )
 
@@ -551,7 +557,7 @@ class SiteManagement:
             raise MKUserError(
                 None,
                 _(
-                    "You cannot delete this connection. It is used in a broker peer to peer connection."
+                    "You cannot delete this connection. It is used in a broker peer-to-peer connection."
                 ),
             )
 

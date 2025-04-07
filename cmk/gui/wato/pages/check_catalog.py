@@ -371,7 +371,7 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
             "os",
             True,
             _("Operating systems"),
-            _("Plug-ins for operating systems, things like memory, CPU, filesystems, etc."),
+            _("Plug-ins for operating systems, things like memory, CPU, file systems, etc."),
         ),
         (
             "app",

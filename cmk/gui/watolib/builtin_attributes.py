@@ -419,8 +419,8 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             help=_(
                 "Configure the community to be used when contacting this host via SNMP v1/v2 or "
                 "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
-                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
-                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
+                "credentials of monitored host</a> rule set. Configuring a community here explicitly "
+                "overrides the community defined by a rule. Communication via SNMP v1 and v2c "
                 "is unencrypted. Consider using SNMP v3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
@@ -543,7 +543,7 @@ def validate_host_parents(host):
         if parent_name == host.name():
             raise MKUserError(
                 None,
-                _("You configured the host to be it's own parent, which is not allowed."),
+                _("You configured the host to be its own parent, which is not allowed."),
             )
 
         parent = Host.host(parent_name)
@@ -1551,8 +1551,8 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
 
     def _help_text(self) -> str:
         return _(
-            "Indicates that host is waiting for bulk discovery. It is set to True once it in queue."
-            "Removed after discovery is ended."
+            "This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be "
+            "removed after the discovery is ended."
         )
 
     def get_tag_groups(self, value):
@@ -1577,8 +1577,8 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return _(
             "Labels allow you to flexibly group your hosts in order to "
             "refer to them later at other places in Checkmk, e.g. in rule "
-            "chains.<br><b>Label format:</b>  key:value<br><br>Neither the "
-            "key nor the value can contain ‘:’.  CheckMK does not perform "
+            "chains.<br><b>Label format:</b> key:value<br><br>Neither the "
+            "key nor the value can contain ‘:’. Checkmk does not perform "
             "any other validation on the labels you use."
         )
 

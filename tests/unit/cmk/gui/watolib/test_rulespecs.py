@@ -110,7 +110,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch: MonkeyPatch) -> Non
 
 def _expected_rulespec_group_choices():
     expected = [
-        ("activechecks", "HTTP, TCP, Email, ..."),
+        ("activechecks", "HTTP, TCP, email, ..."),
         ("agent", "Access to agents"),
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
         ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
@@ -134,7 +134,7 @@ def _expected_rulespec_group_choices():
         ("monconf/networking", "&nbsp;&nbsp;\u2319 Networking"),
         ("monconf/os", "&nbsp;&nbsp;\u2319 Operating System Resources"),
         ("monconf/printers", "&nbsp;&nbsp;\u2319 Printers"),
-        ("monconf/storage", "&nbsp;&nbsp;\u2319 Storage, Filesystems and Files"),
+        ("monconf/storage", "&nbsp;&nbsp;\u2319 Storage, file systems and files"),
         (
             "monconf/environment",
             "&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.",
@@ -159,7 +159,7 @@ def _expected_rulespec_group_choices():
         ("static/networking", "&nbsp;&nbsp;⌙ Networking"),
         ("static/os", "&nbsp;&nbsp;⌙ Operating System Resources"),
         ("static/printers", "&nbsp;&nbsp;⌙ Printers"),
-        ("static/storage", "&nbsp;&nbsp;⌙ Storage, Filesystems and Files"),
+        ("static/storage", "&nbsp;&nbsp;⌙ Storage, file systems and files"),
         ("static/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
         ("vm_cloud_container", "VM, cloud, container"),
     ]

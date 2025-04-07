@@ -270,7 +270,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
                 _(
-                    "Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
+                    "Could not reload Livestatus proxy: %s. See web.log and liveproxyd.log "
                     "for further information."
                 )
                 % e

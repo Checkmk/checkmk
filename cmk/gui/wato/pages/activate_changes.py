@@ -240,7 +240,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         if not file_to_restore:
             raise MKUserError(None, _("There is no Setup snapshot to be restored."))
 
-        msg = _("Discarded pending changes (Restored %s)") % file_to_restore
+        msg = _("Discarded pending changes (restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
         _changes.add_change(

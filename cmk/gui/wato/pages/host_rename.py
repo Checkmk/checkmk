@@ -236,7 +236,7 @@ class ModeBulkRenameHost(WatoMode):
             warning += self._format_renamings_warning(
                 _(
                     "You cannot do this renaming since the following hosts are locked by "
-                    "Quick setup:"
+                    "quick setup:"
                 ),
                 locked_by_quick_setup,
             )
@@ -664,13 +664,13 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "piggyback-pig": _("Piggyback information for other hosts"),
         "autochecks": _("Disovered services of the host"),
         "host-labels": _("Disovered host labels of the host"),
-        "logwatch": _("Logfile information of logwatch plug-in"),
+        "logwatch": _("Log file information of logwatch plug-in"),
         "snmpwalk": _("A stored SNMP walk"),
-        "rrd": _("RRD databases with performance data"),
+        "rrd": _("RRD databases with metrics"),
         "rrdcached": _("RRD updates in journal of RRD Cache"),
         "pnpspool": _("Spool files of PNP4Nagios"),
         "history": _("Monitoring history entries (events and availability)"),
-        "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
+        "retention": _("The current monitoring state (including acknowledgments and downtimes)"),
         "inv": _("HW/SW Inventory"),
         "invarch": _("HW/SW Inventory history"),
         "uuid_link": _("UUID links for TLS-encrypting agent communication"),

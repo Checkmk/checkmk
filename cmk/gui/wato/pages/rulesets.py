@@ -363,7 +363,7 @@ class ABCRulesetMode(WatoMode):
 
         if not grouped_rulesets:
             if self._search_options:
-                msg = _("There are no rulesets or rules matching your search.")
+                msg = _("There are no rule sets or rules matching your search.")
             else:
                 msg = _("There are no rules defined in this folder.")
 
@@ -403,28 +403,28 @@ class ModeRuleSearch(ABCRulesetMode):
 
     def _set_title_help_and_doc_reference(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
-            self._title = _("Rule search: Deprecated rulesets")
+            self._title = _("Rule search: Deprecated rule sets")
             self._help = _(
-                "Here you can see a list of all deprecated rulesets (which are not used by Checkmk anymore). If "
+                "Here you can see a list of all deprecated rule sets (which are not used by Checkmk anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
-                "refer to the release notes or context help of the rulesets for details."
+                "refer to the release notes or context help of the rule sets for details."
             )
             self._doc_references: dict[DocReference, str] = {
                 DocReference.WATO_RULES_DEPCRECATED: _("Obsolete rule sets"),
             }
 
         elif self._page_type is PageType.IneffectiveRules:
-            self._title = _("Rule search: Rulesets with ineffective rules")
+            self._title = _("Rule search: Rule sets with ineffective rules")
             self._help = _(
-                "The following rulesets contain rules that do not match to any of the existing hosts."
+                "The following rule sets contain rules that do not match to any of the existing hosts."
             )
             self._doc_references = {
                 DocReference.WATO_RULES_INEFFECTIVE: _("Ineffective rules"),
             }
 
         elif self._page_type is PageType.UsedRulesets:
-            self._title = _("Rule search: Used rulesets")
-            self._help = _("Non-empty rulesets")
+            self._title = _("Rule search: Used rule sets")
+            self._help = _("Non-empty rule sets")
             self._doc_references = {
                 DocReference.WATO_RULES_IN_USE: _("Rule sets in use"),
             }
@@ -598,7 +598,7 @@ def _page_menu_entries_predefined_searches(
         )
 
     yield PageMenuEntry(
-        title=_("Unknown rulesets"),
+        title=_("Unknown rule sets"),
         icon_name={"icon": "rulesets", "emblem": "warning"},
         item=make_simple_link(makeuri_contextless(request, [("mode", "unknown_rulesets")])),
     )
@@ -821,7 +821,7 @@ class ModeEditRuleset(WatoMode):
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
         if not may_edit_ruleset(self._name):
-            raise MKAuthException(_("You are not permitted to access this ruleset."))
+            raise MKAuthException(_("You are not permitted to access this rule set."))
         if self._host:
             self._host.permissions.need_permission("read")
 
@@ -1123,7 +1123,7 @@ class ModeEditRuleset(WatoMode):
         action = request.get_ascii_input_mandatory("_action")
         if action == "delete":
             if is_locked_by_quick_setup(rule.locked_by):
-                raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
+                raise MKUserError(None, _("Cannot delete rules that are managed by quick setup."))
             ruleset.delete_rule(rule)
         elif action == "move_to":
             target_idx = request.get_integer_input_mandatory("_index")
@@ -1131,7 +1131,7 @@ class ModeEditRuleset(WatoMode):
                 flash(
                     _(
                         "This rule cannot be moved above rules that "
-                        "are defined as part of a Quick setup."
+                        "are defined as part of a quick setup."
                     ),
                     msg_type="warning",
                 )
@@ -1176,7 +1176,7 @@ class ModeEditRuleset(WatoMode):
             case "varies":
                 html.write_text_permissive(
                     _(
-                        "The match type is defined by the discovery ruleset type of the check plug-in."
+                        "The match type is defined by the discovery rule set type of the check plug-in."
                     )
                 )
             case "all" | "list":
@@ -1314,13 +1314,13 @@ class ModeEditRuleset(WatoMode):
         if is_locked_by_quick_setup(rule.locked_by):
             html.icon_button(
                 url="",
-                title=_("Rule cannot be moved, because it is managed by Quick setup"),
+                title=_("Rule cannot be moved, because it is managed by quick setup"),
                 icon="drag",
                 class_=["disabled"],
             )
             html.icon_button(
                 url="",
-                title=_("Rule can only be deleted via Quick setup"),
+                title=_("Rule can only be deleted via quick setup"),
                 icon="delete",
                 class_=["disabled"],
             )

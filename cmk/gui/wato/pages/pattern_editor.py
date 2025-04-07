@@ -102,16 +102,16 @@ class ModePatternEditor(WatoMode):
 
     @staticmethod
     def title_pattern_analyzer():
-        return _("Logfile pattern analyzer")
+        return _("Log file pattern analyzer")
 
     def title(self) -> str:
         if not self._hostname and not self._item:
             return self.title_pattern_analyzer()
         if not self._hostname:
-            return _("Logfile patterns of logfile %s on all hosts") % (self._item)
+            return _("Log file patterns of log file %s on all hosts") % (self._item)
         if not self._item:
-            return _("Logfile patterns of Host %s") % (self._hostname)
-        return _("Logfile patterns of logfile %s on host %s") % (self._item, self._hostname)
+            return _("Log file patterns of host %s") % (self._hostname)
+        return _("Log file patterns of log file %s on host %s") % (self._item, self._hostname)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -159,9 +159,9 @@ class ModePatternEditor(WatoMode):
     def page(self) -> None:
         html.help(
             _(
-                "On this page you can test the defined logfile patterns against a custom text, "
-                "for example a line from a logfile. Using this dialog it is possible to analyze "
-                "and debug your whole set of logfile patterns."
+                "On this page you can test the defined log file patterns against a custom text, "
+                "for example a line from a log file. Using this dialog it is possible to analyze "
+                "and debug your whole set of log file patterns."
             )
         )
 
@@ -173,7 +173,7 @@ class ModePatternEditor(WatoMode):
             forms.header(_("Try pattern match"))
             forms.section(_("Host name"))
             self._vs_host().render_input("host", self._hostname)
-            forms.section(_("Logfile"))
+            forms.section(_("Log file"))
             html.help(_("Here you need to insert the original file or pathname"))
             html.text_input("file", size=80)
             forms.section(_("Text to match"))
@@ -200,7 +200,7 @@ class ModePatternEditor(WatoMode):
             "logwatch_rules"
         )
 
-        html.h3(_("Logfile patterns"))
+        html.h3(_("Log file patterns"))
         if ruleset.is_empty():
             html.open_div(class_="info")
             html.write_text_permissive(
@@ -281,7 +281,7 @@ class ModePatternEditor(WatoMode):
                                     match_class = "match first"
                                     match_img = "checkmark"
                                     match_title = _(
-                                        "This logfile pattern matches first and will be used for "
+                                        "This log file pattern matches first and will be used for "
                                         "defining the state of the given line."
                                     )
                                     already_matched = True
@@ -290,12 +290,12 @@ class ModePatternEditor(WatoMode):
                                     match_class = "match"
                                     match_img = "checkmark_orange"
                                     match_title = _(
-                                        "This logfile pattern matches but another matched first."
+                                        "This log file pattern matches but another matched first."
                                     )
                             else:
                                 match_img = "hyphen"
                                 match_title = _(
-                                    "This logfile pattern does not match the given string."
+                                    "This log file pattern does not match the given string."
                                 )
                         else:
                             # rule does not match

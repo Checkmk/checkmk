@@ -280,7 +280,7 @@ class ModeDiagnostics(WatoMode):
                                     title=_(
                                         "If exceeded, an exception will appear. "
                                         "In extraordinary cases, consider calling "
-                                        "Support Diagnostics from command line "
+                                        "support diagnostics from command line "
                                         "(see inline help)."
                                     ),
                                     help=_(
@@ -397,11 +397,11 @@ class ModeDiagnostics(WatoMode):
                     totext="",
                     title=_("Checkmk Overview"),
                     help=_(
-                        "Checkmk Agent, Number, version and edition of sites, cluster host; "
+                        "Checkmk agent, number, version and edition of sites, cluster host; "
                         "number of hosts, services, CMK Helper, Live Helper, "
                         "Helper usage; state of daemons: Apache, Core, Crontab, "
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                        "(Agent plug-in mk_inventory needs to be installed)"
+                        "(agent plug-in mk_inventory needs to be installed)"
                     ),
                 ),
             ),

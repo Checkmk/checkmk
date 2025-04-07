@@ -1185,11 +1185,11 @@ class ModeEditUser(WatoMode):
             # see corresponding Setup rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
-                forms.section(_("ntopng Username"))
+                forms.section(_("ntopng username"))
                 self._lockable_input(ntop_username_attribute, "")
                 html.help(
                     _(
-                        "The corresponding username in ntopng of the current checkmk user. "
+                        "The corresponding username in ntopng of the current Checkmk user. "
                         "It is used, in case the user mapping to ntopng is configured to use this "
                         "custom attribute"
                     )
@@ -1315,7 +1315,7 @@ class ModeEditUser(WatoMode):
                     "<br>For accounts used by automation processes (such as fetching "
                     "data from views for further procession), set the method to "
                     "<u>secret</u>. The secret will be stored in a local file. Processes "
-                    "with read access to that file will be able to use Multisite as "
+                    "with read access to that file will be able to use the graphical user interface (GUI) as "
                     "a web service without any further configuration."
                 )
             )

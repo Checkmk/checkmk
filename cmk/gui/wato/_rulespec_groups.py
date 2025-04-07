@@ -80,7 +80,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("Storage, Filesystems and Files")
+        return _("Storage, file systems and files")
 
 
 class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
@@ -343,7 +343,7 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self) -> str:
-        return _("HTTP, TCP, Email, ...")
+        return _("HTTP, TCP, email, ...")
 
     @property
     def help(self):

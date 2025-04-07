@@ -113,11 +113,11 @@ class ABCModeDownloadAgents(WatoMode):
 
         titles = {
             "": _("Agents"),
-            "/plugins": _("Plugins"),
+            "/plugins": _("Plug-ins"),
             "/cfg_examples": _("Example Configurations"),
             "/cfg_examples/systemd": _("Example configuration for systemd"),
             "/windows": _("Windows Agent"),
-            "/windows/plugins": _("Plugins"),
+            "/windows/plugins": _("Plug-ins"),
             "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
             "/windows/cfg_examples": _("Example Configurations"),
             "/z_os": _("z/OS"),

@@ -9,7 +9,7 @@ import logging
 
 import cmk.utils.resulttype as result
 
-from cmk.gui.job_scheduler_client import JOB_SCHEDULER_BASE_URL, JobSchedulerClient, StartupError
+from cmk.gui.job_scheduler_client import JobSchedulerClient, StartupError
 
 from ._executor import AlreadyRunningError, JobExecutor
 from ._interface import JobTarget, SpanContextModel
@@ -41,7 +41,7 @@ class JobSchedulerExecutor(JobExecutor):
         origin_span_context: SpanContextModel,
     ) -> result.Result[None, StartupError | AlreadyRunningError]:
         r = self._client.post(
-            JOB_SCHEDULER_BASE_URL + "/start",
+            "start",
             json=StartRequest(
                 type_id=type_id,
                 job_id=job_id,
@@ -70,7 +70,7 @@ class JobSchedulerExecutor(JobExecutor):
 
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         r = self._client.post(
-            JOB_SCHEDULER_BASE_URL + "/terminate",
+            "terminate",
             json=TerminateRequest(job_id=job_id).model_dump(mode="json"),
         )
         if r.is_error():
@@ -79,7 +79,7 @@ class JobSchedulerExecutor(JobExecutor):
 
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         r = self._client.post(
-            JOB_SCHEDULER_BASE_URL + "/is_alive",
+            "is_alive",
             json=IsAliveRequest(job_id=job_id).model_dump(mode="json"),
         )
         if r.is_error():
@@ -88,7 +88,7 @@ class JobSchedulerExecutor(JobExecutor):
         return result.OK(IsAliveResponse.model_validate(response_data).is_alive)
 
     def health(self) -> HealthResponse:
-        r = self._client.get(JOB_SCHEDULER_BASE_URL + "/health")
+        r = self._client.get("health")
         if r.is_error():
             raise r.error
         response_data = r.ok.json()

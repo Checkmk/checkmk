@@ -757,7 +757,13 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
+        try:
+            return json.loads(
+                subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
+            )
+        except subprocess.CalledProcessError as e:
+            console.info(f"{_format_error(str(e.stderr))}\n")
+            return {}
 
 
 class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -777,7 +783,11 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
+        try:
+            return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
+        except subprocess.CalledProcessError as e:
+            console.info(f"{_format_error(str(e.stderr))}\n")
+            return {}
 
 
 class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -797,7 +807,11 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
+        try:
+            return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
+        except subprocess.CalledProcessError as e:
+            console.info(f"{_format_error(str(e.stderr))}\n")
+            return {}
 
 
 class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):

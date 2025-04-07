@@ -747,7 +747,13 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
+        try:
+            return json.loads(
+                subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
+            )
+        except subprocess.CalledProcessError as e:
+            console.info("%s\n", _format_error(str(e.stderr)))
+            return {}
 
 
 class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -767,7 +773,11 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
+        try:
+            return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
+        except subprocess.CalledProcessError as e:
+            console.info("%s\n", _format_error(str(e.stderr)))
+            return {}
 
 
 class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -782,12 +792,15 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Output of `mkp list --json`. "
-            "See the corresponding commandline help for more details."
+            "Output of `mkp list --json`. See the corresponding commandline help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
+        try:
+            return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
+        except subprocess.CalledProcessError as e:
+            console.info("%s\n", _format_error(str(e.stderr)))
+            return {}
 
 
 class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):

@@ -134,7 +134,7 @@ def main() {
             name: "Build Packages again",
             condition: true,
             raiseOnError: false,) {
-        smart_build(
+        build(
             job: "${base_folder}/build-cmk-packages",
             parameters: job_parameters
         );

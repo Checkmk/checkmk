@@ -103,6 +103,20 @@ def test_apply_exclude_filter() -> None:
     ) == [{"field2": {"field21": 21}, "field3": 3}, {"field4": 4}]
 
 
+def test_get_nested_fields_include_filter() -> None:
+    include = parse_fields_filter("(field1,field2(field22))")
+    assert include.get_nested_fields("field1") == make_filter(this_is="included")
+    assert include.get_nested_fields("field2") == parse_fields_filter("(field22)")
+    assert include.get_nested_fields("field3") == make_filter(this_is="excluded")
+
+
+def test_get_nested_fields_exclude_filter() -> None:
+    exclude = parse_fields_filter("!(field1,field2(field22))")
+    assert exclude.get_nested_fields("field1") == make_filter(this_is="excluded")
+    assert exclude.get_nested_fields("field2") == parse_fields_filter("!(field22)")
+    assert exclude.get_nested_fields("field3") == make_filter(this_is="included")
+
+
 def test_make_filter_empty_raises() -> None:
     with pytest.raises(ValueError):
         make_filter()

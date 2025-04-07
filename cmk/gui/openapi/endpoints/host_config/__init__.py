@@ -506,7 +506,7 @@ def _host_collection(
                     )
                     for host in hosts
                 ]
-                if value_filter
+                if value_filter.is_included()
                 else None
             ),
             "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],

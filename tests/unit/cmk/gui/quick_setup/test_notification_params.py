@@ -63,6 +63,7 @@ def set_quick_setup_params(triggering_events: TriggeringEvents) -> NotificationQ
             "exclude_service_groups_regex": ("match_id", ["my_id_regex$"]),
             "match_services": ["service1", "service2", "service3"],
             "exclude_services": ["service4", "service5", "service6"],
+            "check_type_plugin": ["check_mk", "local"],
         },
         "assignee_filters": {
             "contact_groups": ["cg1", "cg2", "cg3"],
@@ -72,7 +73,6 @@ def set_quick_setup_params(triggering_events: TriggeringEvents) -> NotificationQ
             "service_level": ("range", (0, 100)),
             "folder": "test",
             "sites": ["heute"],
-            "check_type_plugin": ["check_mk", "local"],
         },
         "ec_alert_filters": {
             "rule_ids": ["foo", "bar"],
@@ -140,7 +140,6 @@ def get_expected_event_rule(
         match_timeperiod=TimeperiodName("24X7"),
         match_plugin_output="some_plugin_output",
         match_notification_comment="some_comment",
-        match_checktype=["check_mk", "local"],
         match_contactgroups=["cg1", "cg2", "cg3"],
         match_contacts=["admin_user", "guest_user", "monitoring_user"],
         match_folder="test",
@@ -179,6 +178,7 @@ def get_expected_event_rule(
         event_rule["match_services"] = ["service1", "service2", "service3"]
         event_rule["match_exclude_services"] = ["service4", "service5", "service6"]
         event_rule["match_service_event"] = ["?r", "wc", "ur", "s", "as"]
+        event_rule["match_checktype"] = ["check_mk", "local"]
 
     if "host" in trigger_events:
         event_rule["match_host_event"] = ["?r", "du", "f", "x", "af"]

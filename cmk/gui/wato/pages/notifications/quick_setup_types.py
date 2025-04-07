@@ -65,6 +65,7 @@ class ServiceFilters(TypedDict):
     exclude_service_groups_regex: NotRequired[tuple[Literal["match_id", "match_alias"], list[str]]]
     match_services: NotRequired[list[str]]
     exclude_services: NotRequired[list[str]]
+    check_type_plugin: NotRequired[list[str]]
 
 
 class AssigneeFilters(TypedDict):
@@ -78,7 +79,6 @@ class GeneralFilters(TypedDict):
     ]
     folder: NotRequired[str]
     sites: NotRequired[list[str]]
-    check_type_plugin: NotRequired[list[str]]
 
 
 class BulkingParameters(TypedDict):

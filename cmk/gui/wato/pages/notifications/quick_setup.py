@@ -989,7 +989,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 ],
             ),
             Collapsible(
-                title="General filters",
+                title=_("General filters"),
                 items=[
                     FormSpecWrapper(
                         id=FormSpecId("general_filters"),

@@ -70,10 +70,9 @@ def test_discover_fortigate_sensors(
         pytest.param(
             STRING_TABLE,
             [
-                Result(state=State.OK, summary="5 sensors"),
+                Result(state=State.OK, summary="4 sensors"),
                 Result(state=State.OK, summary="3 OK"),
-                Result(state=State.OK, summary="2 with alarm"),
-                Result(state=State.CRIT, summary="PS1 Fan 1"),
+                Result(state=State.OK, summary="1 with alarm"),
                 Result(state=State.CRIT, summary="PS1 Status"),
             ],
             id="If one or more items have an alarm, the check state is CRIT.",
@@ -90,8 +89,12 @@ def test_discover_fortigate_sensors(
         ),
         pytest.param(
             [],
-            [Result(state=State.CRIT, summary="No sensors found")],
-            id="If the service has been discovered, but no data is fetched anymore, the service should be CRIT.",
+            [
+                Result(state=State.OK, summary="0 sensors"),
+                Result(state=State.OK, summary="0 OK"),
+                Result(state=State.OK, summary="0 with alarm"),
+            ],
+            id="If the service has been discovered, but no data is fetched anymore, the service is OK.",
         ),
     ],
 )

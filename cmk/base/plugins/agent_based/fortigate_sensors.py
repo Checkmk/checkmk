@@ -38,8 +38,10 @@ def parse_fortigate_sensors(string_table: StringTable) -> FortigateSensors:
     # We assume that sensors with value "0" are not connected and may be ignored.
     # The related MIB includes no other hint for that.
     return FortigateSensors(
-        total=sum(value != "0" or status != "0" for _name, value, status in string_table),
-        critical_sensors=tuple(name for name, value, status in string_table if status == "1"),
+        total=sum(value != "0" for _name, value, status in string_table),
+        critical_sensors=tuple(
+            name for name, value, status in string_table if value != "0" and status == "1"
+        ),
     )
 
 
@@ -49,10 +51,6 @@ def discover_fortigate_sensors(section: FortigateSensors) -> DiscoveryResult:
 
 
 def check_fortigate_sensors(section: FortigateSensors) -> CheckResult:
-    if section.total == 0:
-        yield Result(state=State.CRIT, summary="No sensors found")
-        return
-
     yield Result(state=State.OK, summary=f"{section.total} sensors")
     yield Result(state=State.OK, summary=f"{section.ok} OK")
     yield Result(state=State.OK, summary=f"{section.critical} with alarm")

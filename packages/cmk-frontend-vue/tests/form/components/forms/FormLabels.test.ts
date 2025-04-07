@@ -9,7 +9,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { renderFormWithData } from '../cmk-form-helper'
 import { watch } from 'vue'
 import userEvent from '@testing-library/user-event'
-import { Response } from '@/form/components/utils/autocompleter'
+import { Response } from '@/components/suggestions'
 
 vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred

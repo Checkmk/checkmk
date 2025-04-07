@@ -3,12 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+
 import type {
   Autocompleter,
   AutocompleterData
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { cmkFetch } from '@/lib/cmkFetch'
 import { CmkError } from '@/lib/error'
+
+import { ErrorResponse, Response } from '@/components/suggestions'
 
 interface MaybeApiError {
   result?: string
@@ -61,27 +64,6 @@ export async function fetchData<OutputType>(
     )
   }
   return ajaxResponse.result as OutputType
-}
-
-export class ErrorResponse {
-  error: string
-
-  constructor(error: string) {
-    this.error = error
-  }
-}
-
-export interface Suggestion {
-  name: string
-  title: string
-}
-
-export class Response {
-  choices: Array<Suggestion>
-
-  constructor(choices: Array<Suggestion>) {
-    this.choices = choices
-  }
 }
 
 type AjaxVsAutocompleterResponse = { choices: Array<[string, string]> }

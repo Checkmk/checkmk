@@ -20,8 +20,7 @@ const defaultEmpty3 = ref<string | null>(null)
 <template>
   <CmkDropdown
     v-model:selected-option="defaultSelected2"
-    :options="[{ name: 'init', title: 'single element' }]"
-    :show-filter="false"
+    :options="{ type: 'fixed', suggestions: [{ name: 'init', title: 'single element' }] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
@@ -31,11 +30,13 @@ const defaultEmpty3 = ref<string | null>(null)
   <CmkSpace />
   <CmkDropdown
     v-model:selected-option="defaultSelected"
-    :options="[
-      { name: 'init', title: 'selected by default' },
-      { name: '2', title: 'two' }
-    ]"
-    :show-filter="false"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: 'init', title: 'selected by default' },
+        { name: '2', title: 'two' }
+      ]
+    }"
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
@@ -45,11 +46,13 @@ const defaultEmpty3 = ref<string | null>(null)
   <CmkSpace />
   <CmkDropdown
     v-model:selected-option="defaultEmpty1"
-    :options="[
-      { name: '1', title: 'one' },
-      { name: '2', title: 'two' }
-    ]"
-    :show-filter="false"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: '1', title: 'one' },
+        { name: '2', title: 'two' }
+      ]
+    }"
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
@@ -58,8 +61,7 @@ const defaultEmpty3 = ref<string | null>(null)
   <CmkSpace />
   <CmkDropdown
     v-model:selected-option="defaultEmpty2"
-    :options="[]"
-    :show-filter="true"
+    :options="{ type: 'filtered', suggestions: [] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
@@ -69,12 +71,14 @@ const defaultEmpty3 = ref<string | null>(null)
   <CmkSpace />
   <CmkDropdown
     v-model:selected-option="defaultEmpty3"
-    :options="[
-      ...Array(20)
-        .fill(0)
-        .map((_, i) => ({ name: i.toString(), title: i.toString() }))
-    ]"
-    :show-filter="true"
+    :options="{
+      type: 'filtered',
+      suggestions: [
+        ...Array(20)
+          .fill(0)
+          .map((_, i) => ({ name: i.toString(), title: i.toString() }))
+      ]
+    }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
     component-id="some component id"

@@ -12,13 +12,15 @@ import { defineComponent, ref } from 'vue'
 test('dropdown shows options', async () => {
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
+      options: {
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
-      showFilter: true,
       label: 'some aria label'
     }
   })
@@ -27,16 +29,19 @@ test('dropdown shows options', async () => {
 
   await fireEvent.click(dropdown)
 
-  screen.getByText('Option 1')
+  await screen.findByText('Option 1')
 })
 
 test('dropdown updates selecedOption', async () => {
   let selectedOption: string | null = ''
   const props = {
-    options: [
-      { title: 'Option 1', name: 'option1' },
-      { title: 'Option 2', name: 'option2' }
-    ],
+    options: {
+      type: 'fixed' as const,
+      suggestions: [
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' }
+      ]
+    },
     selectedOption: null,
     inputHint: 'Select an option',
     showFilter: true,
@@ -50,7 +55,7 @@ test('dropdown updates selecedOption', async () => {
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
-  const option1 = screen.getByText('Option 1')
+  const option1 = await screen.findByText('Option 1')
   await fireEvent.click(option1)
 
   expect(selectedOption).toBe('option1')
@@ -63,11 +68,13 @@ test('dropdown updates selecedOption', async () => {
 test('dropdown shows and hides options', async () => {
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       label: 'some aria label'
@@ -78,7 +85,7 @@ test('dropdown shows and hides options', async () => {
   await fireEvent.click(dropdown)
 
   // Dropdown is open and options are visible
-  screen.getByText('Option 2')
+  await screen.findByText('Option 2')
 
   await fireEvent.click(screen.getByText('Option 1'))
 
@@ -91,11 +98,13 @@ test.each([{ showFilter: true }, { showFilter: false }])(
     let selectedOption: string | null = ''
     render(CmkDropdown, {
       props: {
-        options: [
-          { title: 'Option 1', name: 'option1' },
-          { title: 'Option 2', name: 'option2' }
-        ],
-        showFilter,
+        options: {
+          type: showFilter ? 'fixed' : 'filtered',
+          suggestions: [
+            { title: 'Option 1', name: 'option1' },
+            { title: 'Option 2', name: 'option2' }
+          ]
+        },
         selectedOption: null,
         inputHint: 'Select an option',
         'onUpdate:selectedOption': (option: string | null) => {
@@ -116,11 +125,13 @@ test('dropdown option selection via keyboard wraps', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -140,13 +151,15 @@ test('dropdown option keyboard selection with filtering wraps', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Bar', name: 'bar' },
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' },
-        { title: 'Foo', name: 'foo' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Bar', name: 'bar' },
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' },
+          { title: 'Foo', name: 'foo' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -166,11 +179,13 @@ test('dropdown option immediate focus and filtering', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -194,11 +209,13 @@ test('dropdown option immediate focus and filtering', async () => {
 test('dropdown shows required if requiredText is passed', async () => {
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       requiredText: 'required',
@@ -213,11 +230,13 @@ test('dropdown shows required if requiredText is passed', async () => {
 test('dropdown does not show required if requiredText is not passed', async () => {
   render(CmkDropdown, {
     props: {
-      options: [
-        { title: 'Option 1', name: 'option1' },
-        { title: 'Option 2', name: 'option2' }
-      ],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       label: 'some aria label'
@@ -231,25 +250,29 @@ test('dropdown does not show required if requiredText is not passed', async () =
 test('dropdown still clickable if only option is already selected', async () => {
   render(CmkDropdown, {
     props: {
-      options: [{ title: 'Option 1', name: 'option1' }],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [{ title: 'Option 1', name: 'option1' }]
+      },
       selectedOption: 'option1',
       label: 'some aria label'
     }
   })
 
-  const dropdown = screen.getByText('Option 1')
+  const dropdown = await screen.findByText('Option 1')
   await fireEvent.click(dropdown)
 
   // show it twice: once as current value and second time as the only value to choose.
-  expect(screen.queryAllByText('Option 1')).toHaveLength(2)
+  await waitFor(() => expect(screen.queryAllByText('Option 1')).toHaveLength(2))
 })
 
 test('dropdown clickable if only one option is available', async () => {
   render(CmkDropdown, {
     props: {
-      options: [{ title: 'Option 1', name: 'option1' }],
-      showFilter: true,
+      options: {
+        type: 'filtered',
+        suggestions: [{ title: 'Option 1', name: 'option1' }]
+      },
       selectedOption: null,
       inputHint: 'Select an option',
       label: 'some aria label'
@@ -259,7 +282,7 @@ test('dropdown clickable if only one option is available', async () => {
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await fireEvent.click(dropdown)
 
-  screen.getByText('Option 1')
+  await screen.findByText('Option 1')
 })
 
 test('dropdown doesnt interfere with tab order', async () => {
@@ -273,11 +296,10 @@ test('dropdown doesnt interfere with tab order', async () => {
       <div>
         <CmkDropdown
           :selected-option="selectedOption"
-          :options="[
+          :options="{type: 'filtered', suggestions: [
             { title: 'Option 1', name: 'option1' },
             { title: 'Option 2', name: 'option2' }
-          ]"
-          :show-filter="true"
+          ]}"
           label="some aria label in template"
           input-hint="Select an option"
           @update:selected-option="$emit('update:selectedOption', $event)"

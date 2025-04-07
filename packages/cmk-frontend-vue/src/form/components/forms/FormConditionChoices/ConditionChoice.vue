@@ -123,8 +123,7 @@ watch(selectedOperator, (operator) => {
   {{ group.title }}
   <CmkDropdown
     v-model:selected-option="selectedOperator"
-    :options="operatorChoices"
-    :show-filter="false"
+    :options="{ type: 'fixed', suggestions: operatorChoices }"
     :label="props.i18n.choose_operator"
   />
   <CmkSpace :size="'small'" />
@@ -145,19 +144,21 @@ watch(selectedOperator, (operator) => {
       <template #item-props="{ index, selectedValue }">
         <CmkDropdown
           :selected-option="selectedValue"
-          :options="[
-            ...props.group.conditions
-              .filter(({ name }) => name === selectedValue)
-              .map((condition) => ({
+          :options="{
+            type: remainingConditions.length > FILTER_SHOW_THRESHOLD - 1 ? 'filtered' : 'fixed',
+            suggestions: [
+              ...props.group.conditions
+                .filter(({ name }) => name === selectedValue)
+                .map((condition) => ({
+                  name: condition.name,
+                  title: condition.title
+                })),
+              ...remainingConditions.map((condition) => ({
                 name: condition.name,
                 title: condition.title
-              })),
-            ...remainingConditions.map((condition) => ({
-              name: condition.name,
-              title: condition.title
-            }))
-          ]"
-          :show-filter="remainingConditions.length > FILTER_SHOW_THRESHOLD - 1"
+              }))
+            ]
+          }"
           :label="props.i18n.choose_condition"
           @update:selected-option="(value) => updateMultiValue(index, value!)"
         />
@@ -167,8 +168,10 @@ watch(selectedOperator, (operator) => {
   <template v-else>
     <CmkDropdown
       :selected-option="selectedSingleValue"
-      :options="allValueChoices"
-      :show-filter="allValueChoices.length > FILTER_SHOW_THRESHOLD"
+      :options="{
+        type: allValueChoices.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
+        suggestions: allValueChoices
+      }"
       :label="props.i18n.choose_condition"
       @update:selected-option="(value) => updateValue(selectedOperator, value)"
     />

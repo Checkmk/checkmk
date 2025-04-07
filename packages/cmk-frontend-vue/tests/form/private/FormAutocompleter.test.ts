@@ -6,7 +6,7 @@
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
-import { Response } from '@/form/components/utils/autocompleter'
+import { Response } from '@/components/suggestions'
 import userEvent from '@testing-library/user-event'
 
 vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {

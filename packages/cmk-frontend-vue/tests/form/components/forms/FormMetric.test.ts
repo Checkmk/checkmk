@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Metric, Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { Response } from '@/form/components/utils/autocompleter'
+import { Response } from '@/components/suggestions'
 import FormMetric from '@/form/components/forms/FormMetric.vue'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { vi } from 'vitest'

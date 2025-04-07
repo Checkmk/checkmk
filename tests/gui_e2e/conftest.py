@@ -37,8 +37,6 @@ from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
 
-pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
-
 # loading pom fixtures
 setup_fixtures = [notification_user]
 

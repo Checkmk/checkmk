@@ -8,13 +8,17 @@ import datetime as dt
 
 from livestatus import MultiSiteConnection
 
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
-from cmk.gui.livestatus_utils.commands.utils import to_timestamp
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user as _user
+from cmk.livestatus_client.commands import (
+    ScheduleForcedHostCheck,
+    ScheduleForcedServiceCheck,
+)
 
 
 def force_schedule_host_check(
-    connection: MultiSiteConnection, host_name: str, check_time: dt.datetime
+    connection: MultiSiteConnection, host_name: HostName, check_time: dt.datetime
 ) -> None:
     """Schedule a forced active check of a particular host
 
@@ -45,15 +49,14 @@ def force_schedule_host_check(
 
     """
     _user.need_permission("action.reschedule")
-
-    return send_command(
-        connection, "SCHEDULE_FORCED_HOST_CHECK", [host_name, to_timestamp(check_time)]
+    connection.command_obj(
+        ScheduleForcedHostCheck(host_name=host_name, check_time=check_time), omd_site()
     )
 
 
 def force_schedule_service_check(
     connection: MultiSiteConnection,
-    host_name: str,
+    host_name: HostName,
     service_description: str,
     check_time: dt.datetime,
 ) -> None:
@@ -87,9 +90,11 @@ def force_schedule_service_check(
         ...     force_schedule_service_check(live,'example.com', 'CPU Load', _check_time)
     """
     _user.need_permission("action.reschedule")
-
-    return send_command(
-        connection,
-        "SCHEDULE_FORCED_SVC_CHECK",
-        [host_name, service_description, to_timestamp(check_time)],
+    connection.command_obj(
+        ScheduleForcedServiceCheck(
+            host_name=host_name,
+            description=service_description,
+            check_time=check_time,
+        ),
+        omd_site(),
     )

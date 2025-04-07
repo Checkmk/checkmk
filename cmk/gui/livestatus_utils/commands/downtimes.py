@@ -9,13 +9,21 @@ from typing import Literal
 
 from livestatus import MultiSiteConnection
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
-from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 from cmk.gui.logged_in import user as _user
+from cmk.livestatus_client.commands import (
+    Command,
+    DeleteHostDowntime,
+    DeleteServiceDowntime,
+    ModifyHostDowntime,
+    ModifyServiceDowntime,
+    ScheduleHostDowntime,
+    ScheduleServiceDowntime,
+)
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -81,7 +89,10 @@ def _del_host_downtime(
 
     """
 
-    return send_command(connection, DOWNTIME.DELETE_HOST, [downtime_id], site_id)
+    connection.command_obj(
+        DeleteHostDowntime(downtime_id=downtime_id),
+        site_id if site_id else omd_site(),
+    )
 
 
 def _del_service_downtime(
@@ -113,8 +124,10 @@ def _del_service_downtime(
         ...     _del_service_downtime(live, 1, "")
 
     """
-
-    return send_command(connection, DOWNTIME.DELETE_SERVICE, [downtime_id], site_id)
+    connection.command_obj(
+        DeleteServiceDowntime(downtime_id=downtime_id),
+        site_id if site_id else omd_site(),
+    )
 
 
 def delete_downtime(
@@ -216,7 +229,7 @@ def schedule_services_downtimes_with_query(
 def schedule_service_downtime(
     connection: MultiSiteConnection,
     site_id: SiteId | None,
-    host_name: str,
+    host_name: HostName,
     service_description: list[str] | str,
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -795,7 +808,7 @@ def _schedule_downtime(
     sites: MultiSiteConnection,
     command: LivestatusCommand,
     site_id: SiteId | None,
-    host_or_group: str,
+    host_or_group: HostName,
     service_description: str | None,
     start_time: dt.datetime,
     end_time: dt.datetime,
@@ -815,30 +828,37 @@ def _schedule_downtime(
     _user.need_permission("action.downtimes")
 
     recur_mode = _recur_mode(recur, duration)
-
+    cmd: Command
     if command == DOWNTIME.SCHEDULE_HOST:
-        params = [host_or_group]
+        cmd = ScheduleHostDowntime(
+            host_name=host_or_group,
+            start_time=start_time,
+            end_time=end_time,
+            recur_mode=recur_mode,
+            trigger_id=trigger_id,
+            duration=60 * duration,
+            user=user_id,
+            comment=comment,
+        )
     elif command == DOWNTIME.SCHEDULE_SERVICE:
         if not service_description:
             raise ValueError("Service name necessary.")
-        params = [host_or_group, service_description]
+        cmd = ScheduleServiceDowntime(
+            host_name=host_or_group,
+            start_time=start_time,
+            end_time=end_time,
+            recur_mode=recur_mode,
+            trigger_id=trigger_id,
+            duration=60 * duration,
+            user=user_id,
+            comment=comment,
+            description=service_description,
+        )
     else:
         raise ValueError(f"Unsupported command: {command}")
-
-    return send_command(
-        sites,
-        command,
-        [
-            *params,
-            to_timestamp(start_time),
-            to_timestamp(end_time),
-            recur_mode,
-            trigger_id,
-            60 * duration,  # duration is in minutes but livestatus is expecting seconds.,
-            user_id,
-            comment.replace("\n", ""),
-        ],
-        site_id,
+    sites.command_obj(
+        cmd,
+        site_id if site_id else omd_site(),
     )
 
 
@@ -949,18 +969,19 @@ def _modify_downtime(
 ) -> None:
     _user.need_permission("action.downtimes")
 
-    return send_command(
-        sites,
-        command,
-        [
-            downtime_id,
-            "",  # start_time (not used),
-            end_time,  # end_time,
-            "",  # recur_mode (not used),
-            "",  # trigger_id (not used),
-            "",  # duration (not used),
-            user_id,
-            comment.replace("\n", ""),
-        ],
-        site_id,
+    sites.command_obj(
+        ModifyHostDowntime(
+            downtime_id=downtime_id,
+            end_time=end_time,
+            user=user_id,
+            comment=comment,
+        )
+        if command == DOWNTIME.MODIFY_HOST
+        else ModifyServiceDowntime(
+            downtime_id=downtime_id,
+            end_time=end_time,
+            user=user_id,
+            comment=comment,
+        ),
+        site_id if site_id else omd_site(),
     )

@@ -6,14 +6,14 @@
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from time import time
 from typing import get_args, Literal
 
-from livestatus import lqencode, MultiSiteConnection, OnlySites
+from livestatus import MultiSiteConnection, OnlySites
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ccc.site import SiteId
 from cmk.gui.logged_in import user
+from cmk.livestatus_client.commands import ECChangeState, ECDelete, ECUpdate
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
@@ -120,10 +120,6 @@ def query_event_console() -> Query:
     )
 
 
-def send_command(connection: MultiSiteConnection, cmd: str, site: str) -> None:
-    connection.command(f"[{int(time())}] {cmd}", SiteId(site))
-
-
 def filter_event_table(
     event_id: int | None = None,
     event_ids: list[int] | None = None,
@@ -195,12 +191,20 @@ def update_and_acknowledge(
     new_phase: Literal["ack", "open"],
     site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
-    ack = "1" if new_phase == "ack" else "0"
+    ack = 1 if new_phase == "ack" else 0
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};{ack};{lqencode(change_comment)};{lqencode(change_contact)}"
-        send_command(connection, cmd, site)
+        ids = list(map(int, event_ids))
+        connection.command_obj(
+            ECUpdate(
+                event_ids=ids,
+                user=user.ident,
+                acknowledgement=ack,
+                comment=change_comment,
+                contact=change_contact,
+            ),
+            SiteId(site),
+        )
     return sites_with_ids
 
 
@@ -212,9 +216,11 @@ def change_state(
 ) -> Mapping[str, list[str]]:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_CHANGESTATE;{event_ids_joined};{user.ident};{states_ints_reversed[state]}"
-        send_command(connection, cmd, site)
+        ids = list(map(int, event_ids))
+        connection.command_obj(
+            ECChangeState(event_ids=ids, user=user.ident, state=states_ints_reversed[state]),
+            SiteId(site),
+        )
     return sites_with_ids
 
 
@@ -225,6 +231,5 @@ def archive_events(
 ) -> None:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
-        event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_DELETE;{event_ids_joined};{user.ident}"
-        send_command(connection, cmd, site)
+        ids = list(map(int, event_ids))
+        connection.command_obj(ECDelete(event_ids=ids, user=user.ident), SiteId(site))

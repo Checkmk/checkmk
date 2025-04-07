@@ -11,11 +11,16 @@ exports_files([
 
 py_library(
     name = "cmk-livestatus-client",
-    srcs = ["cmk/livestatus_client/__init__.py"],
+    srcs = [
+        "cmk/livestatus_client/__init__.py",
+        "cmk/livestatus_client/commands.py",
+    ],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
         "//packages/cmk-trace",
         requirement("opentelemetry-api"),
     ],

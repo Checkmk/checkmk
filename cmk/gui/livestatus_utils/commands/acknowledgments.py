@@ -8,12 +8,19 @@ import datetime as dt
 
 from livestatus import MultiSiteConnection
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
-from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.logged_in import user as _user
+from cmk.livestatus_client.commands import (
+    AcknowledgeHostProblem,
+    Acknowledgement,
+    AcknowledgeServiceProblem,
+    Command,
+    RemoveHostAcknowledgement,
+    RemoveServiceAcknowledgement,
+)
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
@@ -22,7 +29,7 @@ from cmk.utils.livestatus_helpers.tables import Hosts
 def _acknowledge_problem(
     connection: MultiSiteConnection,
     site_id: SiteId,
-    host_name: str,
+    host_name: HostName,
     service_description: str | None = None,
     *,
     sticky: bool = False,
@@ -47,40 +54,41 @@ def _acknowledge_problem(
         comment: Comment to be stored alongside the acknowledgement.
         expire_on: If set, the acknowledgement will expire at this time.
     """
-    params: list[str | int] = [
-        host_name,
-    ]
+
+    acknowledgement = Acknowledgement.STICKY if sticky else Acknowledgement.NORMAL
+    command: Command
     if service_description:
-        command: LivestatusCommand = "ACKNOWLEDGE_SVC_PROBLEM"
-        params.append(service_description)
-    else:
-        command = "ACKNOWLEDGE_HOST_PROBLEM"
-
-    acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
-    params.extend(
-        (
-            acknowledgement,
-            int(notify),
-            int(persistent),
-            user,
-            comment,
+        command = AcknowledgeServiceProblem(
+            host_name=host_name,
+            acknowledgement=acknowledgement,
+            notify=notify,
+            persistent=persistent,
+            user=user,
+            comment=comment,
+            description=service_description,
+            expire_on=expire_on,
         )
-    )
-    if expire_on is not None:
-        params.append(int(expire_on.timestamp()))
+    else:
+        command = AcknowledgeHostProblem(
+            host_name=host_name,
+            acknowledgement=acknowledgement,
+            notify=notify,
+            persistent=persistent,
+            user=user,
+            comment=comment,
+            expire_on=expire_on,
+        )
 
-    return send_command(
-        connection,
+    connection.command_obj(
         command,
-        params,
-        site_id=site_id,
+        site_id,
     )
 
 
 def remove_acknowledgement(
     connection: MultiSiteConnection,
     site_id: SiteId,
-    host_name: str,
+    host_name: HostName,
     service_description: str | None = None,
 ) -> None:
     """Remove an acknowledgement for a host or service problem.
@@ -91,26 +99,24 @@ def remove_acknowledgement(
         host_name: Host name for which this acknowledgement is for.
         service_description: Service name, if acknowledging a service problem.
     """
-    params: list[str | int] = [
-        host_name,
-    ]
+    command: Command
     if service_description:
-        command: LivestatusCommand = "REMOVE_SVC_ACKNOWLEDGEMENT"
-        params.append(service_description)
+        command = RemoveServiceAcknowledgement(
+            host_name=host_name,
+            description=service_description,
+        )
     else:
-        command = "REMOVE_HOST_ACKNOWLEDGEMENT"
+        command = RemoveHostAcknowledgement(host_name=host_name)
 
-    return send_command(
-        connection,
+    connection.command_obj(
         command,
-        params,
-        site_id=site_id,
+        site_id,
     )
 
 
 def acknowledge_service_problem(
     connection: MultiSiteConnection,
-    host_name: str,
+    host_name: HostName,
     service_description: str,
     sticky: bool = False,
     notify: bool = False,
@@ -142,7 +148,7 @@ def acknowledge_service_problem(
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.livestatus_utils.testing import mock_site
 
-        >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
+        >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;;"
         >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
@@ -231,7 +237,7 @@ def acknowledge_servicegroup_problem(
 
 def acknowledge_host_problem(
     connection: MultiSiteConnection,
-    host_name: str,
+    host_name: HostName,
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
@@ -261,7 +267,7 @@ def acknowledge_host_problem(
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.livestatus_utils.testing import mock_site
 
-        >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
+        >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;;"
         >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")

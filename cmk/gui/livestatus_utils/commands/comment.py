@@ -9,12 +9,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-from livestatus import Command, MultiSiteConnection
+from livestatus import MultiSiteConnection
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+from cmk.livestatus_client.commands import (
+    AddHostComment,
+    AddServiceComment,
+    DeleteHostComment,
+    DeleteServiceComment,
+)
 from cmk.utils.livestatus_helpers.expressions import QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
@@ -111,22 +116,6 @@ def get_comments(
     return results
 
 
-@dataclass(frozen=True)
-class AddHostComment(Command):
-    host_name: HostName
-    comment: str
-    user: UserId = UserId.builtin()
-    persistent: bool = False
-
-    @property
-    def name(self) -> str:
-        return "ADD_HOST_COMMENT"
-
-    @property
-    def args(self) -> list[Command.Arguments]:
-        return [self.host_name, self.persistent, self.user, self.comment]
-
-
 def add_host_comment_by_query(
     connection: MultiSiteConnection,
     query: QueryExpression,
@@ -151,6 +140,51 @@ def add_host_comment_by_query(
         )
 
 
+def add_host_comment(
+    connection: MultiSiteConnection,
+    host_name: HostName,
+    comment: str,
+    site_id: SiteId,
+    persistent: bool = False,
+    user: UserId = UserId.builtin(),
+) -> None:
+    """Add a comment for a particular host.
+
+    Args:
+        connection:
+            A livestatus connection object
+
+        host_name:
+            The host-name for which the comment is for
+
+        comment_txt:
+            The comment which will be stored for the host
+
+        site_id:
+            The site name
+
+        persistent:
+            If set, the comment will persist across program restarts until it is deleted manually.
+            If not set, the comment will be deleted the next time the Core is restarted.
+
+        user:
+
+    Examples:
+
+        >>> from cmk.gui.session import SuperUserContext
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> cmd = "COMMAND [...] ADD_HOST_COMMENT;example.com;0;;test"
+        >>> with simple_expect() as live, SuperUserContext():
+        ...     _ = live.expect_query(cmd, match_type="ellipsis")
+        ...     add_host_comment(live, 'example.com', 'test', "NO_SITE")
+
+    """
+    connection.command_obj(
+        AddHostComment(host_name=host_name, user=user, persistent=persistent, comment=comment),
+        site_id,
+    )
+
+
 def add_service_comment_by_query(
     connection: MultiSiteConnection,
     query: QueryExpression,
@@ -172,7 +206,7 @@ def add_service_comment_by_query(
 
 def add_service_comment(
     connection: MultiSiteConnection,
-    host_name: str,
+    host_name: HostName,
     service_description: str,
     comment_txt: str,
     site_id: SiteId,
@@ -215,10 +249,14 @@ def add_service_comment(
 
     """
 
-    send_command(
-        connection,
-        "ADD_SVC_COMMENT",
-        [host_name, service_description, int(persistent), user, comment_txt],
+    connection.command_obj(
+        AddServiceComment(
+            host_name=host_name,
+            description=service_description,
+            comment=comment_txt,
+            persistent=persistent,
+            user=user,
+        ),
         site_id,
     )
 
@@ -266,7 +304,10 @@ def delete_host_comment(
 
     """
 
-    send_command(connection, "DEL_HOST_COMMENT", [comment_id], site_id)
+    connection.command_obj(
+        DeleteHostComment(comment_id=comment_id),
+        site_id,
+    )
 
 
 def delete_service_comment(
@@ -295,4 +336,7 @@ def delete_service_comment(
 
     """
 
-    return send_command(connection, "DEL_SVC_COMMENT", [comment_id], site_id)
+    connection.command_obj(
+        DeleteServiceComment(comment_id=comment_id),
+        site_id,
+    )

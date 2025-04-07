@@ -264,7 +264,7 @@ def test_no_config_generation_on_certain_posts(
     live.expect_query("GET hosts\nColumns: state\nFilter: name = heute")
     live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     live.expect_query(
-        "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;2;1;0;test123-...;unittesting",
+        "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;2;1;0;test123-...;unittesting;",
         match_type="ellipsis",
     )
 

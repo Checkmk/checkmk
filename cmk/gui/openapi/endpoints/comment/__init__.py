@@ -241,14 +241,13 @@ def create_host_comment(params: Mapping[str, Any]) -> Response:
     match body["comment_type"]:
         case "host":
             site_id = utils.get_site_id_for_host(live_connection, body["host_name"])
-            live_connection.command_obj(
-                comment_cmds.AddHostComment(
-                    host_name=body["host_name"],
-                    user=user.ident,
-                    comment=body["comment"],
-                    persistent=body["persistent"],
-                ),
-                site_id,
+            comment_cmds.add_host_comment(
+                connection=live_connection,
+                host_name=body["host_name"],
+                user=user.ident,
+                site_id=site_id,
+                comment=body["comment"],
+                persistent=body["persistent"],
             )
 
         case "host_group":

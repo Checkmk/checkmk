@@ -130,6 +130,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.inventory.config")),
             imported.in_component(Component("cmk.inventory.paths")),
             imported.in_component(Component("cmk.inventory_ui")),
+            imported.in_component(Component("cmk.livestatus_client")),
         )
     )
 

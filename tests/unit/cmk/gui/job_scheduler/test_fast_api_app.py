@@ -133,7 +133,7 @@ def test_start() -> None:
             args=NoArgs().model_dump(mode="json"),
         )
         resp = client.post(
-            "/start",
+            "start",
             json=StartRequest(
                 type_id="HelloJob",
                 job_id="hi",
@@ -165,7 +165,7 @@ def test_start() -> None:
 def test_terminate() -> None:
     with _get_test_client(loaded_at=1337) as client:
         resp = client.post(
-            "/terminate", json=TerminateRequest(job_id="test").model_dump(mode="json")
+            "terminate", json=TerminateRequest(job_id="test").model_dump(mode="json")
         )
 
     assert resp.status_code == 200
@@ -174,7 +174,7 @@ def test_terminate() -> None:
 
 def test_is_alive() -> None:
     with _get_test_client(loaded_at=1337) as client:
-        resp = client.post("/is_alive", json=IsAliveRequest(job_id="test").model_dump(mode="json"))
+        resp = client.post("is_alive", json=IsAliveRequest(job_id="test").model_dump(mode="json"))
 
     assert resp.status_code == 200
     assert IsAliveResponse.model_validate(resp.json()).is_alive is True
@@ -182,7 +182,7 @@ def test_is_alive() -> None:
 
 def test_health_check() -> None:
     with _get_test_client(loaded_at=(loaded_at := 1337)) as client:
-        resp = client.get("/health")
+        resp = client.get("health")
 
     assert resp.status_code == 200
     response = HealthResponse.model_validate(resp.json())

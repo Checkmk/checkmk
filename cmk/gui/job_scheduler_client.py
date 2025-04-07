@@ -30,13 +30,13 @@ class JobSchedulerClient:
         self._session = requests.Session()
         self._session.mount(JOB_SCHEDULER_BASE_URL, _JobSchedulerAdapter())
 
-    def get(self, url: str) -> result.Result[requests.Response, StartupError]:
-        return self._request("GET", url)
+    def get(self, endpoint: str) -> result.Result[requests.Response, StartupError]:
+        return self._request("GET", f"{JOB_SCHEDULER_BASE_URL}/{endpoint}")
 
     def post(
-        self, url: str, json: dict[str, object]
+        self, endpoint: str, json: dict[str, object]
     ) -> result.Result[requests.Response, StartupError]:
-        return self._request("POST", url, json)
+        return self._request("POST", f"{JOB_SCHEDULER_BASE_URL}/{endpoint}", json)
 
     def _request(
         self, method: str, url: str, json: dict[str, object] | None = None

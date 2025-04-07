@@ -641,7 +641,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     title=Title("Connect to specific host"),
                     help_text=Help(
                         "You may enter any fully qualified domain name or valid "
-                        "IP address here if you need to a different server to connect to rather "
+                        "IP address here if you need to connect to a different server rather "
                         "than the one specified in the URL. The name must not contain any further "
                         "information, like port or protocol. You may use macros in "
                         "this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "

@@ -492,7 +492,7 @@ section_statgrab() {
             # since solaris_mem is under suspicion to be buggy.
             echo '<<<statgrab_mem>>>'
             # shellcheck disable=SC2196
-            grep "^(swap|mem)\." $statgrab_temporary_file | grep -v md | sed 's/ *= */ /'
+            grep -E "^(swap|mem)\." $statgrab_temporary_file | grep -v md | sed 's/ *= */ /'
         fi
 
     else

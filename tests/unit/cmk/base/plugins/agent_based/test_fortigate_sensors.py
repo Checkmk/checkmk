@@ -22,6 +22,8 @@ STRING_TABLE = [
     ["PS1 Temp 2", "-1", "0"],
     ["PS1 Fan 1", "0", "1"],
     ["PS1 Status", "9", "1"],
+    # arificially added line for full test coverage
+    ["Both Zeroes", "0", "0"],
 ]
 
 

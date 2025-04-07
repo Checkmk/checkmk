@@ -79,9 +79,10 @@ def load_and_transform(logger: Logger) -> AllRulesets:
         all_rulesets,
         REPLACED_RULESETS,
     )
-    _transform_wato_rulesets_params(
+    transform_wato_rulesets_params(
         logger,
         all_rulesets,
+        raise_errors=debug.enabled(),
     )
     return all_rulesets
 
@@ -192,10 +193,12 @@ def _transform_replaced_unknown_rulesets(
             all_rulesets.delete_unknown(folder_path, deprecated_unknown_ruleset_name)
 
 
-def _transform_wato_rulesets_params(
+def transform_wato_rulesets_params(
     logger: Logger,
     all_rulesets: RulesetCollection,
-) -> None:
+    raise_errors: bool = False,
+) -> Iterable[RulesetName]:
+    migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
         try:
             valuespec = ruleset.valuespec()
@@ -210,8 +213,9 @@ def _transform_wato_rulesets_params(
         for folder, folder_index, rule in ruleset.get_rules():
             try:
                 rule.value = valuespec.transform_value(rule.value)
+                migrated_rulesets.add(ruleset.name)
             except Exception as e:
-                if debug.enabled():
+                if raise_errors:
                     raise
                 logger.error(
                     "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
@@ -222,3 +226,4 @@ def _transform_wato_rulesets_params(
                     rule.value,
                     e,
                 )
+    return migrated_rulesets

@@ -47,6 +47,22 @@ class LoadedRuleSpec:
     edition_only: Edition
 
 
+def load_discovered_rule_specs(
+    discovered_plugins: DiscoveredPlugins[RuleSpec],
+) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
+    loaded_plugins = [
+        LoadedRuleSpec(rule_spec=plugin, edition_only=_get_edition_only(location.module))
+        for location, plugin in discovered_plugins.plugins.items()
+    ]
+    loaded = [
+        *loaded_plugins,
+        *generate_additional_plugins(discovered_plugins),
+    ]
+    # TODO:
+    #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
+    return discovered_plugins.errors, loaded
+
+
 def load_api_v1_rule_specs(
     raise_errors: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
@@ -54,20 +70,10 @@ def load_api_v1_rule_specs(
         PluginGroup.RULESETS, entry_point_prefixes(), raise_errors=raise_errors
     )
 
-    loaded_plugins = [
-        LoadedRuleSpec(rule_spec=plugin, edition_only=_get_edition_only(location.module))
-        for location, plugin in discovered_plugins.plugins.items()
-    ]
-    loaded = [
-        *loaded_plugins,
-        *_generate_additional_plugins(discovered_plugins),
-    ]
-    # TODO:
-    #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    return discovered_plugins.errors, loaded
+    return load_discovered_rule_specs(discovered_plugins)
 
 
-def _generate_additional_plugins(
+def generate_additional_plugins(
     discovered_plugins: DiscoveredPlugins[RuleSpec],
 ) -> Sequence[LoadedRuleSpec]:
     loaded: list[LoadedRuleSpec] = []

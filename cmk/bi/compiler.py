@@ -220,11 +220,7 @@ class BICompiler:
 
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
-            # Compile the raw tree
-            all_aggregations_by_id: dict[str, BIAggregation] = {
-                x.id: x for x in self._bi_packs.get_all_aggregations()
-            }
-            for aggregation in all_aggregations_by_id.values():
+            for aggregation in self._bi_packs.get_all_aggregations():
                 start = time.time()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 self._logger.debug(f"Compilation of {aggregation.id} took {time.time() - start:f}")

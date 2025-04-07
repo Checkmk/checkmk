@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_innovaphone import main
+from cmk.plugins.innovaphone.special_agent.agent_innovaphone import main
 
 if __name__ == "__main__":
     sys.exit(main())

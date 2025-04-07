@@ -421,7 +421,6 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: "Bazel Format"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_BAZEL_FILES
       DIR: "tests"
       COMMAND: "make --quiet test-format-bazel &> ${RESULTS}/bazel-prettier.txt"
       TEXT_ON_SKIP: "No Bazel files changed"

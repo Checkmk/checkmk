@@ -73,25 +73,36 @@ def _run_scheduler(
     logger.info("Stopped scheduler")
 
 
-def last_job_runs_file_path() -> Path:
+def _last_job_runs_file_path() -> Path:
     return Path(paths.var_dir) / "last_job_runs.mk"
 
 
-def load_last_job_runs() -> dict[str, datetime.datetime]:
+def _load_last_job_runs() -> dict[str, datetime.datetime]:
     return {
         ident: datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
         for ident, ts in store.load_object_from_file(
-            last_job_runs_file_path(),
+            _last_job_runs_file_path(),
             default={},
         ).items()
     }
 
 
-def save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
+def _save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
     store.save_object_to_file(
-        last_job_runs_file_path(),
+        _last_job_runs_file_path(),
         {ident: dt.timestamp() for ident, dt in runs.items()},
     )
+
+
+def reset_scheduling(job_id: str) -> None:
+    with store.locked(_last_job_runs_file_path()):
+        _save_last_job_runs(
+            {
+                ident: datetime
+                for ident, datetime in _load_last_job_runs().items()
+                if ident != job_id
+            }
+        )
 
 
 def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]) -> list[CronJob]:
@@ -166,10 +177,10 @@ def run_scheduled_jobs(
 ) -> None:
     logger.debug("Starting cron jobs")
 
-    with store.locked(last_job_runs_file_path()):
-        last_job_runs = load_last_job_runs()
+    with store.locked(_last_job_runs_file_path()):
+        last_job_runs = _load_last_job_runs()
         _run_scheduled_jobs(jobs, state, crash_report_callback, last_job_runs)
-        save_last_job_runs(last_job_runs)
+        _save_last_job_runs(last_job_runs)
 
     logger.debug("Finished all cron jobs")
 

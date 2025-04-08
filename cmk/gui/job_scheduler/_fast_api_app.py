@@ -15,8 +15,6 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from starlette.responses import Response
 
-from cmk.ccc import store
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobsHealth,
@@ -32,13 +30,8 @@ from cmk.gui.background_job import (
     TerminateRequest,
 )
 
-from ._scheduler import (
-    filter_running_jobs,
-    last_job_runs_file_path,
-    load_last_job_runs,
-    save_last_job_runs,
-    SchedulerState,
-)
+from ._scheduler import filter_running_jobs, SchedulerState
+from ._scheduler import reset_scheduling as reset_job_scheduling
 
 
 def get_application(
@@ -123,15 +116,8 @@ def get_application(
         )
 
     @app.post("/reset_scheduling")
-    async def reset_scheduling(request: Request, payload: dict[str, object]) -> None:
-        with store.locked(last_job_runs_file_path()):
-            save_last_job_runs(
-                {
-                    ident: datetime
-                    for ident, datetime in load_last_job_runs().items()
-                    if ident != payload["job_id"]
-                }
-            )
+    async def reset_scheduling(request: Request, payload: dict[str, str]) -> None:
+        reset_job_scheduling(payload["job_id"])
 
     return app
 

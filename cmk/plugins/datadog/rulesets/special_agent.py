@@ -473,7 +473,7 @@ def _migrate_service_levels(value: object) -> tuple[str, int]:
 
 
 def _format_name(name: str) -> str:
-    return name.replace("(", "").replace(")", "").replace(" ", "_").lower()
+    return name.replace("(", "").replace(")", "").replace(" ", "_").replace("-", "").lower()
 
 
 rule_spec_special_agent_datadog = SpecialAgent(

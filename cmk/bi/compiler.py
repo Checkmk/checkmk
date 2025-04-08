@@ -220,17 +220,19 @@ class BICompiler:
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
             for aggregation in self._bi_packs.get_all_aggregations():
-                start = time.time()
+                start = time.perf_counter()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
-                self._logger.debug(f"Compilation of {aggregation.id} took {time.time() - start:f}")
+                end = time.perf_counter()
+                self._logger.debug(f"Compilation of {aggregation.id} took {end - start:f}")
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
             for aggr_id, compiled_aggr in self._compiled_aggregations.items():
-                start = time.time()
+                start = time.perf_counter()
                 result = compiled_aggr.serialize()
+                end = time.perf_counter()
                 self._logger.debug(
                     "Schema dump %s took config took %f (%d branches)"
-                    % (aggr_id, time.time() - start, len(compiled_aggr.branches))
+                    % (aggr_id, end - start, len(compiled_aggr.branches))
                 )
                 self._save_data(path_compiled_aggregations.joinpath(aggr_id), result)
 

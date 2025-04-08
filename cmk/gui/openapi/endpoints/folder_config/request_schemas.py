@@ -94,6 +94,7 @@ class UpdateFolder(BaseSchema):
     }
 
     title = fields.String(
+        minLength=1,
         example="Virtual Servers.",
         required=False,
         description="The title of the folder. Used in the GUI.",

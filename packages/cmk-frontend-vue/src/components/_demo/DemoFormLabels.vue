@@ -46,10 +46,17 @@ const data = ref<StringMapping>({
   'cmk/os_name': 'Ubuntu'
 })
 
-async function interceptor() {
+async function interceptor({ request }: { request: Request }) {
+  const jsonData = (await request.formData()).get('request')
+  const query = JSON.parse(jsonData as string).value
+  const userProvided: Array<[string, string]> = []
+  if (/^[^:]+:[^:]+$/.test(query)) {
+    userProvided.push([query, query])
+  }
   return HttpResponse.json({
     result: {
       choices: [
+        ...userProvided,
         ['cmk/check_mk_server:yes', 'cmk/check_mk_server:yes'],
         ['cmk/os_family:linux', 'cmk/os_family:linux'],
         ['cmk/os_name:Ubuntu', 'cmk/os_name:Ubuntu'],
@@ -57,7 +64,7 @@ async function interceptor() {
         ['cmk/os_type:linux', 'cmk/os_type:linux'],
         ['cmk/os_version:22.04', 'cmk/os_version:22.04'],
         ['cmk/site:heute_cl', 'cmk/site:heute_cl']
-      ].filter((key) => key[0] !== data.value.ident)
+      ].filter((key) => key[0]?.includes(query))
     },
     result_code: 0,
     severity: 'success'

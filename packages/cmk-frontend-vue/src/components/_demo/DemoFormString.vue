@@ -111,4 +111,12 @@ const data = ref<string>('some thing')
   </span>
   <br />
   <input type="text" value="unrelated input field you can tab into" />
+  <br />
+  <select>
+    <option>asd</option>
+    <option>bsd</option>
+  </select>
+  <br />
+  <input type="text" value="unrelated input field you can tab into" />
+  <br />
 </template>

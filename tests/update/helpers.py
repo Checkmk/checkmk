@@ -124,7 +124,7 @@ def update_site(base_site: Site, target_package: CMKPackageInfo, interactive: bo
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
-    logger.info("Successfully updated '%s' > '%s'!", base_site.package, target_site.package)
+    logger.debug("Successfully updated '%s' > '%s'!", base_site.package, target_site.package)
 
     return target_site
 

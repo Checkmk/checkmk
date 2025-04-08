@@ -841,7 +841,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "netgear_temp",
         "netscaler_cpu",
         "netscaler_dnsrates",
-        "netscaler_ha",
         "netscaler_health",
         "netscaler_health_fan",
         "netscaler_health_temp",

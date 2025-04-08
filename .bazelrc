@@ -138,6 +138,8 @@ build --incompatible_strict_action_env
 build --enable_platform_specific_config
 build:linux --action_env=PATH="/usr/bin:/bin"
 build:linux --host_action_env=PATH="/usr/bin:/bin"
+build:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
+build:windows --host_action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 
 # Must be last
 try-import /etc/ci.bazelrc

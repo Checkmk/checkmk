@@ -56,6 +56,22 @@ class SetupHost(CmkPage):
     def _host_row(self, host_name: str) -> Locator:
         return self.main_area.locator(f"tr:has(td:has-text('{host_name}'))")
 
+    def perform_action_on_host(self, host_name: str, action: str) -> None:
+        """Perform an action on a host using the 'actions menu' / 'burger menu'.
+
+        Example of such an action,
+        + 'Delete host'
+        + 'Clone host'
+        """
+        host_row = self._host_row(host_name)
+        self.action_menu_button(host_name).click()
+        logger.info("Perform '%s' on the host: '%s' using 'burger menu'.", action, host_name)
+        host_row.locator("div#popup_menu").get_by_text(action).click()
+
+    def action_menu_button(self, host_name: str) -> Locator:
+        """Locator to the burger / action menu corresponding to a host."""
+        return self._host_row(host_name).get_by_role("link", name="Open the host action menu")
+
     def effective_parameters_button(self, host_name: str) -> Locator:
         return self._host_row(host_name).get_by_role("link", name="View the rule based effective")
 
@@ -191,7 +207,7 @@ class AddHost(CmkPage):
         logger.info("Fill in host details")
         self.host_name_text_field.fill(host.name)
         self.ipv4_address_checkbox.click()
-        self.ipv4_address_text_field.fill(host.ip)
+        self.ipv4_address_text_field.fill(host.ip if host.ip else "127.0.0.1")
 
         if host.agent_and_api_integration:
             self.agent_and_api_integration_checkbox.click()

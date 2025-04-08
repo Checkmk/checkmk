@@ -64,7 +64,7 @@ class HostDetails:
     def __init__(
         self,
         name: str,
-        ip: str,
+        ip: str | None = None,
         site: str | None = None,
         agent_and_api_integration: AgentAndApiIntegration | None = None,
         address_family: AddressFamily | None = None,

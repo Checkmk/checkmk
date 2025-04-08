@@ -5639,60 +5639,42 @@ def get_snmp_section_names() -> list[tuple[str, str]]:
     return sorted(section_choices)
 
 
-def migrate_snmp_fetch_interval(
-    param: object,
-) -> tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]:
-    match param:
-        case list() as sections, tuple(("cached", float())) | tuple(("uncached", None)) as interval:
-            return sections, interval
-        case None, int(minutes):
-            return [s for s, _n in get_snmp_section_names()], ("cached", float(minutes * 60))
-        case str(section), int(minutes):
-            # on this occasion: get rid of old "subsection" notion.
-            return [section.split(".", 1)[0]], ("cached", float(minutes * 60))
-
-    raise TypeError(param)
-
-
-def _valuespec_snmp_fetch_interval():
-    return Migrate(
-        valuespec=Tuple(
-            title=_("Fetch intervals for SNMP sections"),
-            help=_(
-                "This rule can be used to customize the data acquisition interval of SNMP based "
-                "sections. This can be useful for cases where fetching the data takes close to or "
-                "longer than the usual check interval or where it puts a lot of load on the target "
-                "device. Note that it is strongly recommended to also adjust the actual "
-                '<a href="wato.py?mode=edit_ruleset&varname=extra_service_conf%3Acheck_interval">check interval</a> '
-                "in such cases to a number at least as high as the number you choose in this rule. "
-                "This is especially important for counter-based checks such as the interface checks. A "
-                "check interval which is shorter then the interval for fetching the data might result "
-                "in misleading output (e.g. far too large interface throughputs) in such cases."
-            ),
-            elements=[
-                DualListChoice(
-                    title=_("Section"),
-                    help=_(
-                        "You can only configure section names here, but not choose individual "
-                        "check plug-ins. The reason for this is that the check plug-ins "
-                        "themselves are not aware whether or not they are processing SNMP based "
-                        "data."
-                    ),
-                    choices=get_snmp_section_names,
-                ),
-                CascadingDropdown(
-                    choices=[
-                        ("uncached", _("Fetch data every time"), FixedValue(None, totext="")),
-                        (
-                            "cached",
-                            _("Fetch data every"),
-                            TimeSpan(display=("minutes",), minvalue=1, default_value=1),
-                        ),
-                    ],
-                ),
-            ],
+def _valuespec_snmp_fetch_interval() -> Tuple:
+    return Tuple(
+        title=_("Fetch intervals for SNMP sections"),
+        help=_(
+            "This rule can be used to customize the data acquisition interval of SNMP based "
+            "sections. This can be useful for cases where fetching the data takes close to or "
+            "longer than the usual check interval or where it puts a lot of load on the target "
+            "device. Note that it is strongly recommended to also adjust the actual "
+            '<a href="wato.py?mode=edit_ruleset&varname=extra_service_conf%3Acheck_interval">check interval</a> '
+            "in such cases to a number at least as high as the number you choose in this rule. "
+            "This is especially important for counter-based checks such as the interface checks. A "
+            "check interval which is shorter then the interval for fetching the data might result "
+            "in misleading output (e.g. far too large interface throughputs) in such cases."
         ),
-        migrate=migrate_snmp_fetch_interval,
+        elements=[
+            DualListChoice(
+                title=_("Section"),
+                help=_(
+                    "You can only configure section names here, but not choose individual "
+                    "check plug-ins. The reason for this is that the check plug-ins "
+                    "themselves are not aware whether or not they are processing SNMP based "
+                    "data."
+                ),
+                choices=get_snmp_section_names,
+            ),
+            CascadingDropdown(
+                choices=[
+                    ("uncached", _("Fetch data every time"), FixedValue(None, totext="")),
+                    (
+                        "cached",
+                        _("Fetch data every"),
+                        TimeSpan(display=("minutes",), minvalue=1, default_value=1),
+                    ),
+                ],
+            ),
+        ],
     )
 
 

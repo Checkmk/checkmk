@@ -6,13 +6,14 @@
 import logging
 import socket
 import sys
+import traceback
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from fnmatch import fnmatch
 from typing import NamedTuple
 
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
+from smb.base import NotConnectedError, ProtocolError, SharedFile  # type: ignore[import]
 from smb.smb_structs import OperationFailure  # type: ignore[import]
 from smb.SMBConnection import SMBConnection  # type: ignore[import]
 
@@ -207,6 +208,11 @@ def connect(
     except (OSError, NotConnectedError):
         raise SMBShareAgentError(
             "Could not connect to the remote host. Check your ip address and remote name."
+        )
+    except ProtocolError as err:
+        raise SMBShareAgentError(
+            f"Stack trace:\n{traceback.format_exc()}"
+            f"Could not connect to the remote host. Protocol error occurred: {err}."
         )
 
     if not success:

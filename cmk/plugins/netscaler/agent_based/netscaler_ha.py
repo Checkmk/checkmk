@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from enum import Enum
+from typing import assert_never
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -19,66 +21,110 @@ from cmk.agent_based.v2 import (
 
 from .lib import SNMP_DETECT
 
-_CURRENT_STATE_TO_HUMAN_READABLE_AND_MONITORING_STATE = {
-    0: ("unknown", State.WARN),
+
+class HighAvailabilityMode(Enum):
+    STANDALONE = "0"
+    PRIMARY = "1"
+    SECONDARY = "2"
+    UNKNOWN = "3"
+
+    def to_human_readable(self) -> str:
+        match self:
+            case HighAvailabilityMode.STANDALONE:
+                return "standalone"
+            case HighAvailabilityMode.PRIMARY:
+                return "primary"
+            case HighAvailabilityMode.SECONDARY:
+                return "secondary"
+            case HighAvailabilityMode.UNKNOWN:
+                return "unknown"
+            case _:
+                assert_never(self)
+
+
+class Health(Enum):
+    UNKOWN = "0"
     # 1 Indicates that the node is in the process of becoming part of the high
     #   availability configuration.
-    1: ("initializing", State.WARN),
-    2: ("down", State.CRIT),  # undocumented
+    INITIALIZING = "1"
+    # undocumented
+    DOWN = "2"
     # 3 Indicates that the node is accessible and can function as either
     #   a primary or secondary node.
-    3: ("functional", State.OK),
+    FUNCTIONAL = "3"
     # 4 Indicates that one of the high availability monitored interfaces
     #   has failed because of a card or link failure. # This state triggers a
     #   failover.
-    4: ("some HA monitored interfaces failed", State.CRIT),
-    5: ("monitorFail", State.WARN),  # undocumented
-    6: ("monitorOK", State.WARN),  # undocumented
+    SOME_HA_MONITORED_INTERFACES_FAILED = "4"
+    # undocumented
+    MONITOR_FAIL = "5"
+    # undocumented
+    MONITOR_OK = "6"
     # 7 Indicates that all the interfaces of the node are
     #   unusable because the interfaces on which high
     #   availability monitoring is enabled are not connected
     #   or are manually disabled. This state triggers a failover.
-    7: ("all HA monitored interfaces failed", State.CRIT),
+    ALL_HA_MONITORED_INTERFACES_FAILED = "7"
     # 8 Indicates that the node is in listening mode. It does not
     #   participate in high availability transitions or transfer
     #   configuration from the peer node. This is a configured
     #   value, not a statistic.
-    8: ("configured to listening mode (dumb)", State.WARN),
+    CONFIGURED_LISTENING_MODE = "8"
     # 9 Indicates that the high availability status of the node has been
     #   manually disabled. Synchronization and propagation cannot take
     #   place between the peer nodes.
-    9: ("HA status manually disabled", State.WARN),
+    HA_STATUS_MANUALLY_DISABLED = "9"
     # 10 Indicates that the SSL card has failed. This state triggers a failover.
-    10: ("SSL card failed", State.CRIT),
+    SSL_CARD_FAILED = "10"
     # 11 Indicates that the route monitor has failed. This state triggers
     #    a failover.
-    11: ("route monitor has failed", State.CRIT),
-}
+    ROUTER_MONITORE_FAILED = "11"
 
-_PEER_STATE_TO_HUMAN_READABLE_AND_MONITORING_STATE = {
-    0: ("standalone", State.OK),
-    1: ("primary", State.OK),
-    2: ("secondary", State.OK),
-    3: ("unknown", State.WARN),
-}
+    def to_human_readable(self) -> str:
+        match self:
+            case Health.UNKOWN:
+                return "unknown"
+            case Health.INITIALIZING:
+                return "initializing"
+            case Health.DOWN:
+                return "down"
+            case Health.FUNCTIONAL:
+                return "functional"
+            case Health.SOME_HA_MONITORED_INTERFACES_FAILED:
+                return "some HA monitored interfaces failed"
+            case Health.MONITOR_FAIL:
+                return "monitorFail"
+            case Health.MONITOR_OK:
+                return "monitorOK"
+            case Health.ALL_HA_MONITORED_INTERFACES_FAILED:
+                return "all HA monitored interfaces failed"
+            case Health.CONFIGURED_LISTENING_MODE:
+                return "configured to listening mode (dumb)"
+            case Health.HA_STATUS_MANUALLY_DISABLED:
+                return "HA status manually disabled"
+            case Health.SSL_CARD_FAILED:
+                return "SSL card failed"
+            case Health.ROUTER_MONITORE_FAILED:
+                return "route monitor has failed"
+            case _:
+                assert_never(self)
 
 
 @dataclass(frozen=True, kw_only=True)
 class Section:
-    peer_state: int
-    current_status: int
-    current_state: int
+    our_ha_mode: HighAvailabilityMode
+    peer_ha_mode: HighAvailabilityMode
+    our_health: Health
 
 
 def parse_netscaler_ha(string_table: StringTable) -> Section | None:
-    return (
-        Section(
-            peer_state=int(string_table[0][0]),
-            current_status=int(string_table[0][1]),
-            current_state=int(string_table[0][2]),
-        )
-        if string_table
-        else None
+    if not string_table:
+        return None
+    first_row = string_table[0]
+    return Section(
+        our_ha_mode=HighAvailabilityMode(first_row[0]),
+        peer_ha_mode=HighAvailabilityMode(first_row[1]),
+        our_health=Health(first_row[2]),
     )
 
 
@@ -86,11 +132,11 @@ snmp_section_netscaler_ha = SimpleSNMPSection(
     name="netscaler_ha",
     parse_function=parse_netscaler_ha,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.5951.4.1.1.23",
+        base=".1.3.6.1.4.1.5951.4.1.1",
         oids=[
-            "3",
-            "23",
-            "24",
+            "6",  # sysHighAvailabilityMode
+            "23.3",  # haPeerState
+            "23.24",  # haCurState
         ],
     ),
     detect=SNMP_DETECT,
@@ -98,23 +144,23 @@ snmp_section_netscaler_ha = SimpleSNMPSection(
 
 
 def discover_netscaler_ha(section: Section) -> DiscoveryResult:
-    yield Service()
+    if section.our_ha_mode is not HighAvailabilityMode.STANDALONE:
+        yield Service()
 
 
 def check_netscaler_ha(section: Section) -> CheckResult:
-    if section.current_status == 0:
-        yield Result(state=State.OK, summary="System not setup for HA")
+    if section.our_ha_mode is HighAvailabilityMode.STANDALONE:
         return
 
-    self_description, self_state = _CURRENT_STATE_TO_HUMAN_READABLE_AND_MONITORING_STATE[
-        section.current_state
-    ]
-    peer_description, peer_state = _PEER_STATE_TO_HUMAN_READABLE_AND_MONITORING_STATE[
-        section.peer_state
-    ]
-
-    yield Result(state=self_state, summary=f"State: {self_description}")
-    yield Result(state=peer_state, summary=f"Neighbor: {peer_description}")
+    yield Result(
+        state=State.UNKNOWN if section.our_ha_mode is HighAvailabilityMode.UNKNOWN else State.OK,
+        summary=f"Failover mode: {section.our_ha_mode.to_human_readable()}",
+    )
+    yield _check_peer_mode(section.peer_ha_mode)
+    yield Result(
+        state=_health_to_monitoring_state(section.our_health),
+        summary=f"Health: {section.our_health.to_human_readable()}",
+    )
 
 
 check_plugin_netscaler_ha = CheckPlugin(
@@ -123,3 +169,53 @@ check_plugin_netscaler_ha = CheckPlugin(
     discovery_function=discover_netscaler_ha,
     check_function=check_netscaler_ha,
 )
+
+
+def _check_peer_mode(
+    peer_ha_mode: HighAvailabilityMode,
+) -> Result:
+    if peer_ha_mode is HighAvailabilityMode.STANDALONE:
+        return Result(
+            state=State.WARN,
+            summary="Peer is in standalone mode",
+        )
+    return Result(
+        state=State.OK
+        if peer_ha_mode
+        in {
+            HighAvailabilityMode.PRIMARY,
+            HighAvailabilityMode.SECONDARY,
+        }
+        else State.WARN,
+        summary=f"Peer failover mode: {peer_ha_mode.to_human_readable()}",
+    )
+
+
+def _health_to_monitoring_state(health: Health) -> State:
+    match health:
+        case Health.UNKOWN:
+            return State.WARN
+        case Health.INITIALIZING:
+            return State.WARN
+        case Health.DOWN:
+            return State.CRIT
+        case Health.FUNCTIONAL:
+            return State.OK
+        case Health.SOME_HA_MONITORED_INTERFACES_FAILED:
+            return State.CRIT
+        case Health.MONITOR_FAIL:
+            return State.WARN
+        case Health.MONITOR_OK:
+            return State.WARN
+        case Health.ALL_HA_MONITORED_INTERFACES_FAILED:
+            return State.CRIT
+        case Health.CONFIGURED_LISTENING_MODE:
+            return State.WARN
+        case Health.HA_STATUS_MANUALLY_DISABLED:
+            return State.WARN
+        case Health.SSL_CARD_FAILED:
+            return State.CRIT
+        case Health.ROUTER_MONITORE_FAILED:
+            return State.CRIT
+        case _:
+            assert_never(health)

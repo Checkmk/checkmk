@@ -576,17 +576,22 @@ def create_nagios_servicedefs(
             "check_command": transform_active_service_command(cfg, service_data),
             "active_checks_enabled": str(1),
         }
-        service_spec.update(
-            _to_nagios_core_attributes(
-                core_config.get_service_attributes(
-                    config_cache,
-                    hostname,
-                    service_data.description,
-                    active_service_labels,
-                    extra_icon=None,
-                )
+        service_attributes = _to_nagios_core_attributes(
+            core_config.get_service_attributes(
+                config_cache,
+                hostname,
+                service_data.description,
+                active_service_labels,
+                extra_icon=None,
             )
         )
+
+        service_labels[service_data.description] = dict(
+            get_labels_from_attributes(list(service_attributes.items()))
+        )
+
+        service_spec.update(service_attributes)
+
         service_spec.update(
             _extra_service_conf_of(
                 cfg, config_cache, hostname, service_data.description, active_service_labels

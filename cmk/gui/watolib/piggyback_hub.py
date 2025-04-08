@@ -13,6 +13,9 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
 
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 
@@ -100,7 +103,7 @@ def _read_stored_piggyback_hub_status() -> Mapping[SiteId, str]:
 def _store_piggyback_hub_status(sites_status: Mapping[SiteId, int]) -> None:
     with open(omd_root.joinpath(_REMOTE_PIGGYBACK_STATUS_RELPATH), "w") as f:
         for site, status in sites_status.items():
-            f.write(f"{site} {"on" if status == 0 else "off"}\n")
+            f.write(f"{site} {'on' if status == 0 else 'off'}\n")
 
 
 def changed_remote_piggyback_hub_status(sites_status: Mapping[SiteId, int]) -> set[SiteId]:
@@ -126,3 +129,26 @@ def changed_remote_piggyback_hub_status(sites_status: Mapping[SiteId, int]) -> s
         )
 
     return sites_changed
+
+
+def _validate_piggyback_hub_config(
+    settings_per_site: Mapping[SiteId, GlobalSettings], central_site_id: SiteId
+) -> None:
+    config_var_ident = "site_piggyback_hub"
+    central_enabled = dict(settings_per_site).pop(central_site_id)[config_var_ident]
+    if not central_enabled and any(
+        remote_config[config_var_ident] for remote_config in settings_per_site.values()
+    ):
+        raise MKUserError(
+            config_var_ident,
+            _(
+                "The piggyback-hub cannot be enabled for a remote site if it is disabled for the central site"
+            ),
+        )
+
+
+def validate_piggyback_hub_config(settings_per_site: Mapping[SiteId, GlobalSettings]) -> None:
+    if is_wato_slave_site():
+        return
+
+    _validate_piggyback_hub_config(settings_per_site, omd_site())

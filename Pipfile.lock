@@ -173,11 +173,11 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:22b3c35d6b2dae14990f6c1be2912bf23ffe50b220e708a28ab1bb92b1c730e5",
-                "sha256:eac191a0efb23bfa83fddf321b27b122b4ec847befa3091fa736a5c32c50d7b4"
+                "sha256:9b5b6d0223a1d38c37500e6971118c1e0f13f54951e6893968b38910bc9cda8f",
+                "sha256:f367aa07b5e3005fec2c1e184b882b0b039910733907d001c20fb08ebb8c0eb9"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.32.0"
+            "version": "==1.33.0"
         },
         "azure-identity": {
             "hashes": [
@@ -3328,11 +3328,11 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:22b3c35d6b2dae14990f6c1be2912bf23ffe50b220e708a28ab1bb92b1c730e5",
-                "sha256:eac191a0efb23bfa83fddf321b27b122b4ec847befa3091fa736a5c32c50d7b4"
+                "sha256:9b5b6d0223a1d38c37500e6971118c1e0f13f54951e6893968b38910bc9cda8f",
+                "sha256:f367aa07b5e3005fec2c1e184b882b0b039910733907d001c20fb08ebb8c0eb9"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.32.0"
+            "version": "==1.33.0"
         },
         "azure-mgmt-compute": {
             "hashes": [
@@ -3901,11 +3901,11 @@
                 "lua"
             ],
             "hashes": [
-                "sha256:4768a78240ca03af79f8922f0b6774efb52c6bf2d27d38a622da9a2a7e8abc8d",
-                "sha256:e19b2a72cb0d13edaae95637748cef569840866d0807d93f4d381571034d1388"
+                "sha256:38c7c17fba5d5522af9d980a8f74a4da9900a3441e8f25c0fe93ea4205d695d1",
+                "sha256:5e542200b945aa0a7afdc0396efefe3cdabab61bc0f41736cc45f68960255964"
             ],
             "markers": "python_version >= '3.7' and python_version < '4.0'",
-            "version": "==2.28.0"
+            "version": "==2.28.1"
         },
         "fastapi": {
             "hashes": [
@@ -5866,11 +5866,11 @@
         },
         "types-awscrt": {
             "hashes": [
-                "sha256:345ab84a4f75b26bfb816b249657855824a4f2d1ce5b58268c549f81fce6eccc",
-                "sha256:5826baf69ad5d29c76be49fc7df00222281fa31b14f99e9fb4492d71ec98fea5"
+                "sha256:7bcd649aedca3c41007ca5757096d3b3bdb454b73ca66970ddae6c2c2f541c8c",
+                "sha256:e11298750c99647f7f3b98d6d6d648790096cd32d445fd0d49a6041a63336c9a"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.24.2"
+            "version": "==0.25.7"
         },
         "types-beautifulsoup4": {
             "hashes": [

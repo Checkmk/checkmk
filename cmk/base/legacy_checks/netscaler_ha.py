@@ -9,10 +9,8 @@
 # .1.3.6.1.4.1.5951.4.1.1.23.23.0  1
 # .1.3.6.1.4.1.5951.4.1.1.23.24.0  3
 
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
+from cmk.plugins.netscaler.agent_based.netscaler_ha import Section
 
 check_info = {}
 
@@ -60,40 +58,28 @@ netscaler_ha_peer_mode = {
 }
 
 
-def inventory_netscaler_ha(info):
-    if info:
-        return [(None, None)]
-    return []
+def inventory_netscaler_ha(section: Section) -> list[tuple[None, None]]:
+    return [(None, None)]
 
 
-def check_netscaler_ha(_no_item, _no_params, info):
-    if info:
-        state = 0
-        peer_state, cur_status, cur_state = map(int, info[0])
-        if cur_status == 0:
-            infotext = "System not setup for HA"
-        else:
-            infotext = f"State: {netscaler_ha_cur_states[cur_state][0]}, Neighbour: {netscaler_ha_peer_mode[peer_state][0]}"
-            state = max(
-                netscaler_ha_cur_states[cur_state][1], netscaler_ha_peer_mode[peer_state][1]
-            )
+def check_netscaler_ha(
+    _no_item: object, _no_params: object, section: Section
+) -> tuple[int, str] | None:
+    state = 0
+    if section.current_status == 0:
+        infotext = "System not setup for HA"
+    else:
+        infotext = f"State: {netscaler_ha_cur_states[section.current_state][0]}, Neighbour: {netscaler_ha_peer_mode[section.peer_state][0]}"
+        state = max(
+            netscaler_ha_cur_states[section.current_state][1],
+            netscaler_ha_peer_mode[section.peer_state][1],
+        )
 
-        return state, infotext
-    return None
-
-
-def parse_netscaler_ha(string_table: StringTable) -> StringTable:
-    return string_table
+    return state, infotext
 
 
 check_info["netscaler_ha"] = LegacyCheckDefinition(
     name="netscaler_ha",
-    parse_function=parse_netscaler_ha,
-    detect=SNMP_DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.5951.4.1.1.23",
-        oids=["3", "23", "24"],
-    ),
     service_name="HA Node Status",
     discovery_function=inventory_netscaler_ha,
     check_function=check_netscaler_ha,

@@ -112,6 +112,9 @@ function selectOption(option: DropdownOption): void {
       }
     "
     class="cmk-dropdown"
+    :class="{
+      'cmk-dropdown-suggestions-shown': suggestionsShown
+    }"
   >
     <CmkButton
       :id="componentId"
@@ -153,10 +156,16 @@ function selectOption(option: DropdownOption): void {
   white-space: nowrap;
 }
 
+.cmk-dropdown-suggestions-shown {
+  .cmk-dropdown__button_arrow {
+    transform: rotate(180deg);
+  }
+}
+
 .cmk-dropdown__button {
   height: var(--form-field-height);
   margin: 0;
-  padding: 3px 2.5em 4px 6px;
+  padding: 3px 1.9em 4px 6px;
   vertical-align: baseline;
   background-color: var(--default-form-element-bg-color);
   border: none;
@@ -165,9 +174,12 @@ function selectOption(option: DropdownOption): void {
 
   .cmk-dropdown__button_arrow {
     position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 7px;
+    width: 0.7em;
+    /* This replicates the dropdown in checkmk, which useses select2 which
+       uses #888 as color by default. The color is not themed there, so we
+       also don't theme it. */
+    color: #888;
   }
 
   &:hover {
@@ -196,7 +208,7 @@ function selectOption(option: DropdownOption): void {
       background-color: var(--default-form-element-bg-color);
     }
     > .cmk-dropdown__button_arrow {
-      color: var(--font-color-dimmed);
+      opacity: 0.4;
     }
   }
 }

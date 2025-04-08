@@ -133,7 +133,6 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import (
-    changed_remote_piggyback_hub_status,
     validate_piggyback_hub_config,
 )
 from cmk.gui.watolib.site_management import (
@@ -1265,29 +1264,6 @@ class ModeDistributedMonitoring(WatoMode):
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
-    def _add_change_for_changed_piggyback_hub_status(
-        self,
-        sites: Mapping[SiteId, SiteConfiguration],
-        remote_status: Mapping[SiteId, ReplicationStatus],
-    ) -> None:
-        remote_piggyback_hub_status = {
-            site_id: ping_response.omd_status["piggyback-hub"]
-            for site_id in sites
-            if is_replication_enabled(sites[site_id])
-            and isinstance(ping_response := remote_status[site_id].response, PingResult)
-        }
-
-        # if piggyback-hub has been turned on on the remote site
-        # we need to sync changes to send the piggyback-hub configuration
-        turned_on = changed_remote_piggyback_hub_status(remote_piggyback_hub_status)
-        for site_id in turned_on:
-            _changes.add_change(
-                "piggyback-hub-turned-on",
-                _("Piggyback-hub turned on on remote site"),
-                domains=[ConfigDomainGUI()],
-                sites=[site_id],
-            )
-
     def page(self) -> PageResult:
         user.need_permission("wato.sites")
 
@@ -1309,8 +1285,6 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 ),
                 "message_broker": self._render_message_broker_status(site_id, site, remote_status),
             }
-
-        self._add_change_for_changed_piggyback_hub_status(sites, remote_status)
 
         return site_states
 

@@ -178,6 +178,29 @@ class Constant(BaseMetricExpression):
         return True
 
 
+def create_metric_operation_from_translated_metric(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    translated_metric: TranslatedMetric,
+    consolidation_function: GraphConsolidationFunction | None,
+) -> MetricOpRRDSource | MetricOpOperator:
+    metrics = [
+        MetricOpRRDSource(
+            site_id=site_id,
+            host_name=host_name,
+            service_name=service_name,
+            metric_name=pnp_cleanup(o.name),
+            consolidation_func_name=consolidation_function,
+            scale=o.scale,
+        )
+        for o in translated_metric.originals
+    ]
+    if len(metrics) > 1:
+        return MetricOpOperator(operator_name="MERGE", operands=metrics)
+    return metrics[0]
+
+
 @dataclass(frozen=True)
 class Metric(BaseMetricExpression):
     name: MetricName
@@ -215,20 +238,13 @@ class Metric(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
     ) -> MetricOpRRDSource | MetricOpOperator:
-        metrics = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=host_name,
-                service_name=service_name,
-                metric_name=pnp_cleanup(o.name),
-                consolidation_func_name=(self.consolidation or consolidation_function),
-                scale=o.scale,
-            )
-            for o in translated_metrics[self.name].originals
-        ]
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-        return metrics[0]
+        return create_metric_operation_from_translated_metric(
+            site_id,
+            host_name,
+            service_name,
+            translated_metrics[self.name],
+            self.consolidation or consolidation_function,
+        )
 
     @override
     def is_scalar(self) -> bool:

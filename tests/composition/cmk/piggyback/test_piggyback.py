@@ -270,7 +270,7 @@ def _piggybacked_service_gets_updated(
     # It should be quite fast, though
     for _retry in range(5):
         # check that the piggybacked source host has a new dataset
-        target_site.schedule_check(hostname_piggybacked, "Check_MK")
+        target_site.schedule_check(hostname_piggybacked, "Check_MK", wait_timeout=60)
         service_time = get_piggybacked_service_time(
             source_site, hostname_source, hostname_piggybacked
         )

@@ -55,7 +55,9 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
 
         # Stage 3: Execute validators of the element itself
         return compute_validation_errors(
-            self._validators(), parsed_value, self._to_disk(parsed_value)
+            self._validators(),
+            self._to_vue(raw_value, parsed_value)[1],
+            self._to_disk(parsed_value),
         )
 
     @final

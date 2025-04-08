@@ -64,11 +64,13 @@ def create_validation_error(
 
 def compute_validation_errors(
     validators: Sequence[Callable[[ModelT], object]],
-    parsed_value: Any,
+    replacement_value: Any,
     raw_value: Any,
 ) -> list[shared_type_defs.ValidationMessage]:
     return [
-        shared_type_defs.ValidationMessage(location=[], message=x, replacement_value=parsed_value)
+        shared_type_defs.ValidationMessage(
+            location=[], message=x, replacement_value=replacement_value
+        )
         for x in optional_validation(validators, raw_value)
         if x is not None
     ]

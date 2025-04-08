@@ -44,7 +44,7 @@ class BICompiler:
         self._sites_callback = sites_callback
         self._bi_configuration_file = bi_configuration_file
 
-        self._logger = logger.getChild("cmk.web.bi.compilation")
+        self._logger = logger.getChild("web.bi.compilation")
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")

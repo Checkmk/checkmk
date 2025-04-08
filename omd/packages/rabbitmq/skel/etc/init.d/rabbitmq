@@ -22,7 +22,6 @@ RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 2:2 +MIscs 32"
 # Control the number of arenas that the erlang memory allocator can use for multi-threaded applications
 MALLOC_ARENA_MAX="1"
 INITLOG="${RABBITMQ_LOG_BASE}/init.log"
-REMOTE_PIGGYBACK_HUB_STATES_FILE="${OMD_ROOT}/etc/check_mk/remote_piggyback_hub_status"
 
 services_needing_rabbitmq() {
     printf "%s\n" "piggyback-hub"
@@ -122,12 +121,8 @@ required_by_local_services() {
     return 1
 }
 
-required_by_remote_services() {
-    cut -d' ' -f2 "${REMOTE_PIGGYBACK_HUB_STATES_FILE}" 2>/dev/null | grep -q "on"
-}
-
 is_enabled() {
-    required_by_local_services || required_by_remote_services
+    required_by_local_services
 }
 
 is_enabled || exit 5

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
 from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
@@ -19,7 +18,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 
-from cmk.messaging.rabbitmq import rabbitmqctl_running
 from cmk.piggyback.hub import HostLocations, publish_persisted_locations
 
 _HOST_CHANGES = (
@@ -32,8 +30,6 @@ _HOST_CHANGES = (
     "piggyback-hub-turned-on",
     "cmk-update-config",
 )
-
-_REMOTE_PIGGYBACK_STATUS_RELPATH = "etc/check_mk/remote_piggyback_hub_status"
 
 
 def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) -> bool:
@@ -90,45 +86,6 @@ def _filter_for_enabled_piggyback_hub(
         for site_id, site_config in configured_sites.items()
         if _piggyback_hub_enabled(site_config, global_settings) is True
     }
-
-
-def _read_stored_piggyback_hub_status() -> Mapping[SiteId, str]:
-    try:
-        with open(omd_root.joinpath(_REMOTE_PIGGYBACK_STATUS_RELPATH), "r") as f:
-            return {SiteId(site): status for site, status in (line.split() for line in f)}
-    except FileNotFoundError:
-        return {}
-
-
-def _store_piggyback_hub_status(sites_status: Mapping[SiteId, int]) -> None:
-    with open(omd_root.joinpath(_REMOTE_PIGGYBACK_STATUS_RELPATH), "w") as f:
-        for site, status in sites_status.items():
-            f.write(f"{site} {'on' if status == 0 else 'off'}\n")
-
-
-def changed_remote_piggyback_hub_status(sites_status: Mapping[SiteId, int]) -> set[SiteId]:
-    previous_status = _read_stored_piggyback_hub_status()
-    _store_piggyback_hub_status(sites_status)
-
-    sites_changed = set()
-    for site, status in sites_status.items():
-        status_literal = "on" if status == 0 else "off"
-        if status_literal == "off" or previous_status.get(site, "off") == status_literal:
-            continue
-
-        # a site is "changed" if the current status is "on"
-        # and the previous status was "off" or not present
-        sites_changed.add(site)
-
-    if sites_changed and not rabbitmqctl_running():
-        subprocess.Popen(
-            ["omd", "start", "rabbitmq"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-    return sites_changed
 
 
 def _validate_piggyback_hub_config(

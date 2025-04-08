@@ -104,7 +104,6 @@ six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python
 python-dateutil = "==2.8.2"  # direct dependency
 pyyaml = "==6.0.1"  # needed by vcrpy
 wrapt = "==1.15.0"  # needed by vcrpy
-yarl = "==1.9.3"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl
 vcrpy = "==6.0.0"  # used by various unit tests to mock HTTP transactions in some special agents (only)
 cryptography = "==42.0.4"

@@ -353,7 +353,6 @@ CEE_UNUSED_PACKAGES = [
     "snmpsim-lextudio",
     "websocket-client",
     "wrapt",
-    "yarl",
 ]
 
 

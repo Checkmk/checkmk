@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import assert_never
+from typing import assert_never, Literal, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -143,19 +143,52 @@ snmp_section_netscaler_ha = SimpleSNMPSection(
 )
 
 
+class DiscoveredParams(TypedDict):
+    discovered_failover_mode: NotRequired[Literal["primary", "secondary", "unknown"]]
+
+
 def discover_netscaler_ha(section: Section) -> DiscoveryResult:
-    if section.our_ha_mode is not HighAvailabilityMode.STANDALONE:
-        yield Service()
+    match section.our_ha_mode:
+        case HighAvailabilityMode.STANDALONE:
+            return
+        case HighAvailabilityMode.PRIMARY:
+            yield Service(parameters=DiscoveredParams(discovered_failover_mode="primary"))
+        case HighAvailabilityMode.SECONDARY:
+            yield Service(parameters=DiscoveredParams(discovered_failover_mode="secondary"))
+        case HighAvailabilityMode.UNKNOWN:
+            yield Service(parameters=DiscoveredParams(discovered_failover_mode="unknown"))
+        case _:
+            assert_never(section.our_ha_mode)
 
 
-def check_netscaler_ha(section: Section) -> CheckResult:
-    if section.our_ha_mode is HighAvailabilityMode.STANDALONE:
-        return
-
-    yield Result(
-        state=State.UNKNOWN if section.our_ha_mode is HighAvailabilityMode.UNKNOWN else State.OK,
-        summary=f"Failover mode: {section.our_ha_mode.to_human_readable()}",
+class CheckParams(DiscoveredParams):
+    failover_monitoring: (
+        tuple[
+            Literal["disabled"],
+            # unused, just needed due to CascadingSingleChoice form spec
+            None,
+        ]
+        | tuple[
+            Literal["use_discovered_failover_mode"],
+            # unused, just needed due to CascadingSingleChoice form spec
+            None,
+        ]
+        | tuple[Literal["explicit_failover_mode"], Literal["primary", "secondary"]]
     )
+
+
+def check_netscaler_ha(params: CheckParams, section: Section) -> CheckResult:
+    match section.our_ha_mode:
+        case HighAvailabilityMode.STANDALONE:
+            return
+        case HighAvailabilityMode.UNKNOWN:
+            yield Result(
+                state=State.UNKNOWN,
+                summary="Failover mode: unknown",
+            )
+        case _:
+            yield _check_our_failover_mode(section.our_ha_mode, params)
+
     yield _check_peer_mode(section.peer_ha_mode)
     yield Result(
         state=_health_to_monitoring_state(section.our_health),
@@ -168,6 +201,8 @@ check_plugin_netscaler_ha = CheckPlugin(
     service_name="HA Node Status",
     discovery_function=discover_netscaler_ha,
     check_function=check_netscaler_ha,
+    check_ruleset_name="netscaler_ha",
+    check_default_parameters=CheckParams(failover_monitoring=("disabled", None)),
 )
 
 
@@ -189,6 +224,85 @@ def _check_peer_mode(
         else State.WARN,
         summary=f"Peer failover mode: {peer_ha_mode.to_human_readable()}",
     )
+
+
+def _check_our_failover_mode(
+    our_failover_mode: Literal[HighAvailabilityMode.PRIMARY, HighAvailabilityMode.SECONDARY],
+    params: CheckParams,
+) -> Result:
+    if params["failover_monitoring"][0] == "disabled":
+        return Result(
+            state=State.OK,
+            summary=f"Failover mode: {our_failover_mode.to_human_readable()}",
+        )
+    if params["failover_monitoring"][0] == "use_discovered_failover_mode":
+        return _check_our_failover_mode_against_discovered(
+            our_failover_mode,
+            params.get("discovered_failover_mode"),
+        )
+    if params["failover_monitoring"][0] == "explicit_failover_mode":
+        expected_failover_mode = _parse_configured_or_discovered_failover_mode(
+            params["failover_monitoring"][1]
+        )
+        return (
+            Result(
+                state=State.OK,
+                summary=f"Failover mode: {our_failover_mode.to_human_readable()}",
+            )
+            if our_failover_mode is expected_failover_mode
+            else Result(
+                state=State.CRIT,
+                summary=f"Failover mode: {our_failover_mode.to_human_readable()}, expected: {expected_failover_mode.to_human_readable()}",
+            )
+        )
+    assert_never(params["failover_monitoring"])
+
+
+def _check_our_failover_mode_against_discovered(
+    our_failover_mode: Literal[HighAvailabilityMode.PRIMARY, HighAvailabilityMode.SECONDARY],
+    discovered_failover_mode: Literal["primary", "secondary", "unknown"] | None,
+) -> Result:
+    if not discovered_failover_mode:
+        return Result(
+            state=State.UNKNOWN,
+            summary="Failover monitoring is configured to use the discovered failover mode, "
+            "but no discovered failover mode is available. Please re-discover.",
+        )
+    expected_failover_mode = _parse_configured_or_discovered_failover_mode(discovered_failover_mode)
+    if expected_failover_mode is HighAvailabilityMode.UNKNOWN:
+        return Result(
+            state=State.UNKNOWN,
+            summary="Failover monitoring is configured to use the discovered failover mode, "
+            f"but the failover mode was {expected_failover_mode.to_human_readable()} when the last discovery ran. "
+            "Please re-discover.",
+        )
+    return (
+        Result(
+            state=State.OK,
+            summary=f"Failover mode: {our_failover_mode.to_human_readable()}",
+        )
+        if our_failover_mode is expected_failover_mode
+        else Result(
+            state=State.CRIT,
+            summary=f"Failover mode: {our_failover_mode.to_human_readable()}, failover detected",
+        )
+    )
+
+
+def _parse_configured_or_discovered_failover_mode(
+    value: Literal["primary", "secondary", "unknown"],
+) -> Literal[
+    HighAvailabilityMode.PRIMARY, HighAvailabilityMode.SECONDARY, HighAvailabilityMode.UNKNOWN
+]:
+    match value:
+        case "primary":
+            return HighAvailabilityMode.PRIMARY
+        case "secondary":
+            return HighAvailabilityMode.SECONDARY
+        case "unknown":
+            return HighAvailabilityMode.UNKNOWN
+        case _:
+            assert_never(value)
 
 
 def _health_to_monitoring_state(health: Health) -> State:

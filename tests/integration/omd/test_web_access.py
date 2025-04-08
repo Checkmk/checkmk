@@ -86,8 +86,8 @@ def test_cmk_agents_access(site: Site) -> None:
 
 def test_cmk_local_agents_access(site: Site) -> None:
     web = CMKWebSession(site)
-    body = web.get("/%s/check_mk/local/agents" % site.id).text
-    assert "Index of" in body
+    body = web.get("/%s/check_mk/local/agents" % site.id, expected_code=404).text
+    assert "Not Found" in body
 
 
 def test_plugin_apis_access(site: Site) -> None:

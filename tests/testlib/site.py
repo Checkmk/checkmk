@@ -1815,6 +1815,7 @@ class SiteFactory:
         site = self.get_existing_site(test_site.id)
 
         _assert_tmpfs(site, base_version)
+        _assert_nagvis_server(target_version)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1880,6 +1881,7 @@ class SiteFactory:
         site = self.get_existing_site(site.id)
 
         _assert_tmpfs(site, base_version)
+        _assert_nagvis_server(target_version)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -2108,6 +2110,13 @@ class PythonHelper:
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
             yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
+
+
+def _assert_nagvis_server(version: CMKVersion) -> None:
+    nagvis_server_path = Path(
+        f"/opt/omd/versions/{version.omd_version()}/share/nagvis/htdocs/server/core/classes"
+    )
+    assert nagvis_server_path.exists()
 
 
 def _assert_tmpfs(site: Site, version: CMKVersion) -> None:

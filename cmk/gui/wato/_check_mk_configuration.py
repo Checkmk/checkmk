@@ -20,7 +20,6 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, get_languages
 from cmk.gui.logged_in import user
@@ -68,9 +67,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
-from cmk.gui.watolib.check_mk_automations import (
-    get_section_information as get_section_information_automation,
-)
+from cmk.gui.watolib.check_mk_automations import get_section_information_cached
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
@@ -5636,13 +5633,8 @@ ServiceDescriptionTranslationRulespec = HostRulespec(
 )
 
 
-@request_memoize()
-def get_section_information() -> Mapping[str, Mapping[str, str]]:
-    return get_section_information_automation().section_infos
-
-
 def get_snmp_section_names() -> list[tuple[str, str]]:
-    sections = get_section_information()
+    sections = get_section_information_cached()
     section_choices = {(s["name"], s["name"]) for s in sections.values() if s["type"] == "snmp"}
     return sorted(section_choices)
 

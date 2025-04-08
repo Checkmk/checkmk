@@ -141,7 +141,7 @@ impl LevelsStrategy {
     pub fn cmp<T: PartialOrd>(&self, x: &T, y: &T) -> bool {
         match self {
             Self::Upper => PartialOrd::ge(x, y),
-            Self::Lower => PartialOrd::lt(x, y),
+            Self::Lower => PartialOrd::le(x, y),
         }
     }
 }

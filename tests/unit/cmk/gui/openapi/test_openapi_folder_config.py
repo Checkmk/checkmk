@@ -567,6 +567,28 @@ def test_openapi_update_with_invalid_attribute_folder(
     )
 
 
+def test_openapi_update_with_invalid_title(
+    clients: ClientRegistry,
+) -> None:
+    clients.Folder.create(
+        folder_name="new_folder",
+        title="foo",
+        parent="~",
+    )
+
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        title="",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.Folder.edit(
+        folder_name="~new_folder",
+        update_attributes={"labels": "do_not_update:title"},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_bulk_actions_folders(clients: ClientRegistry) -> None:
     clients.Folder.create(

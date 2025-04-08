@@ -170,7 +170,10 @@ def configure_host_and_authority() -> QuickSetupStage:
         actions=[
             QuickSetupStageAction(
                 id=ActionId("action"),
-                custom_validators=[qs_validators.validate_host_name_doesnt_exists],
+                custom_validators=[
+                    qs_validators.validate_host_name_doesnt_exists,
+                    qs_validators.validate_host_path_permissions,
+                ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure services to monitor"),
             ),

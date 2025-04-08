@@ -11,6 +11,7 @@ import subprocess
 import traceback
 import warnings as warnings_module
 from collections.abc import Iterable, Mapping, Sequence
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import lru_cache
@@ -24,6 +25,7 @@ from livestatus import SiteId
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
@@ -43,8 +45,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import TrustedCertificateAuthorities
+from cmk.gui.site_config import configured_sites, is_wato_slave_site
+from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib import config_domain_name
@@ -56,6 +58,7 @@ from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
+from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 from cmk.crypto.certificate import Certificate, CertificatePEM
@@ -563,6 +566,35 @@ def pid_from_file(pid_file: Path) -> ProcessId | None:
         return None
 
 
+def finalize_specifically_set_settings(
+    global_settings: GlobalSettings, site_specific_settings: GlobalSettings
+) -> GlobalSettings:
+    return {**global_settings, **site_specific_settings}
+
+
+def finalize_all_settings(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings: GlobalSettings,
+) -> GlobalSettings:
+    return {
+        **default_globals,
+        **finalize_specifically_set_settings(global_settings, site_specific_settings),
+    }
+
+
+def finalize_all_settings_per_site(
+    default_globals: GlobalSettings,
+    global_settings: GlobalSettings,
+    site_specific_settings_per_site: Mapping[SiteId, GlobalSettings],
+) -> Mapping[SiteId, GlobalSettings]:
+    final_settings_per_site = {
+        site_id: finalize_all_settings(default_globals, global_settings, site_conf)
+        for site_id, site_conf in site_specific_settings_per_site.items()
+    }
+    return final_settings_per_site
+
+
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -590,12 +622,41 @@ class ConfigDomainOMD(ABCConfigDomain):
     def default_globals(self) -> Mapping[str, Any]:
         return self._from_omd_config(self._load_site_config())
 
+    def save(
+        self,
+        settings: GlobalSettings,
+        site_specific: bool = False,
+        custom_site_path: str | None = None,
+    ) -> None:
+        piggyback_hub_config_var_ident = "site_piggyback_hub"
+        # custom_site_path is used for snapshot creation for activate changes, we don't reliably
+        # know for which site the settings are being stored here, but they should already be
+        # validated at this point
+        if piggyback_hub_config_var_ident in settings and not custom_site_path:
+            site_specific_settings = {
+                site_id: deepcopy(site_conf.get("globals", {}))
+                for site_id, site_conf in configured_sites().items()
+            }
+            if site_specific:
+                global_settings = self.load()
+                site_specific_settings[omd_site()] = dict(settings)
+            else:
+                global_settings = settings
+
+            validate_piggyback_hub_config(
+                finalize_all_settings_per_site(
+                    self.get_all_default_globals(), global_settings, site_specific_settings
+                )
+            )
+
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
+
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
-        omd_settings = {}
-        omd_settings.update(self._to_omd_config(self.load()))
-        omd_settings.update(self._to_omd_config(self.load_site_globals()))
+        omd_settings = finalize_specifically_set_settings(
+            self._to_omd_config(self.load()), self._to_omd_config(self.load_site_globals())
+        )
 
         config_change_commands: list[str] = []
         self._logger.debug("Set omd config: %r" % omd_settings)

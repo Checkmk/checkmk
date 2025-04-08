@@ -11,6 +11,7 @@ import socket
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
+from copy import deepcopy
 from multiprocessing import JoinableQueue, Process
 from typing import Any, assert_never, cast, Literal, NamedTuple, overload
 from urllib.parse import urlparse
@@ -62,6 +63,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import (
+    configured_sites,
     get_replication_site_id,
     has_wato_slave_sites,
     is_replication_enabled,
@@ -101,6 +103,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
+from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
@@ -116,7 +119,11 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariableGroup,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
+from cmk.gui.watolib.config_domains import (
+    ConfigDomainGUI,
+    ConfigDomainLiveproxy,
+    finalize_all_settings_per_site,
+)
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
@@ -125,7 +132,10 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.piggyback_hub import changed_remote_piggyback_hub_status
+from cmk.gui.watolib.piggyback_hub import (
+    changed_remote_piggyback_hub_status,
+    validate_piggyback_hub_config,
+)
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -1611,9 +1621,24 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             return None
 
         if varname in self._current_settings:
-            self._current_settings[varname] = not self._current_settings[varname]
+            new_value = not self._current_settings[varname]
         else:
-            self._current_settings[varname] = not def_value
+            new_value = not def_value
+
+        if varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
+            site_specific_settings = {
+                site_id: deepcopy(site_conf.get("globals", {}))
+                for site_id, site_conf in configured_sites().items()
+            }
+            site_specific_settings[self._site_id][varname] = new_value
+
+            validate_piggyback_hub_config(
+                finalize_all_settings_per_site(
+                    self._default_values, self._global_settings, site_specific_settings
+                )
+            )
+
+        self._current_settings[varname] = new_value
 
         msg = _("Changed site specific configuration variable %s to %s.") % (
             varname,
@@ -1707,7 +1732,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def title(self) -> str:
         return _("Site-specific global configuration for %s") % self._site_id
 
-    def _affected_sites(self) -> list[SiteId]:
+    def _affected_sites(self):
         return [self._site_id]
 
     def _save(self) -> None:

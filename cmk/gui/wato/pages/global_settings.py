@@ -9,6 +9,7 @@ settings"""
 
 import abc
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
+from copy import deepcopy
 from typing import Any, Final
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -37,6 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.site_config import configured_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -45,6 +47,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
+from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -52,10 +55,15 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainCore
+from cmk.gui.watolib.config_domains import (
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    finalize_all_settings_per_site,
+)
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -355,6 +363,12 @@ class ABCEditGlobalSettingMode(WatoMode):
             if not transactions.check_transaction():
                 return None
 
+            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
+                default_settings = ABCConfigDomain.get_all_default_globals()
+                self._validate_update_piggyback_hub_config(
+                    default_settings[self._varname], default_settings
+                )
+
             try:
                 del self._current_settings[self._varname]
             except KeyError:
@@ -366,6 +380,11 @@ class ABCEditGlobalSettingMode(WatoMode):
         else:
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
+
+            if self._varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
+                self._validate_update_piggyback_hub_config(
+                    new_value, ABCConfigDomain.get_all_default_globals()
+                )
 
             current = self._current_settings.get(self._varname)
             self._current_settings[self._varname] = new_value
@@ -393,6 +412,26 @@ class ABCEditGlobalSettingMode(WatoMode):
         )
 
         return redirect(self._back_url())
+
+    def _validate_update_piggyback_hub_config(
+        self, new_value: bool, default_settings: GlobalSettings
+    ) -> None:
+        site_specific_settings = {
+            site_id: deepcopy(site_conf.get("globals", {}))
+            for site_id, site_conf in configured_sites().items()
+        }
+        global_settings = dict(deepcopy(self._global_settings))
+        if (sites := self._affected_sites()) is not None:
+            for site_id in sites:
+                site_specific_settings[site_id][self._varname] = new_value
+        else:
+            global_settings[self._varname] = new_value
+
+        validate_piggyback_hub_config(
+            finalize_all_settings_per_site(
+                default_settings, global_settings, site_specific_settings
+            )
+        )
 
     @abc.abstractmethod
     def _back_url(self) -> str:

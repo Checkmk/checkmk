@@ -12,10 +12,14 @@ import FormEdit from '@/form/components/FormEdit.vue'
 import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
 
-async function interceptor() {
+async function interceptor({ request }: { request: Request }) {
+  const jsonData = (await request.formData()).get('request')
+  const query = JSON.parse(jsonData as string).value
   return HttpResponse.json({
     result: {
       choices: [
+        [query, query],
+        ['three', 'three'],
         ['two', 'two'],
         ['one', 'one']
       ]

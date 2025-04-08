@@ -31,6 +31,7 @@ def test_registered_automations() -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
+        "analyze-host-rule-effectiveness",
         "analyze-host-rule-matches",
         "analyze-service-rule-matches",
         "get-services-labels",

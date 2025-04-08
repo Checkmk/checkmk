@@ -49,6 +49,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.check_mk_automations import (
+    analyze_host_rule_effectiveness,
     analyze_host_rule_matches,
     analyze_service_rule_matches,
 )
@@ -1298,28 +1299,14 @@ class Rule:
         )
 
     def is_ineffective(self) -> bool:
-        """Whether or not this rule does not match at all
+        """Whether this rule does not match at all
 
         Interesting: This has always tried host matching. Whether or not a service ruleset
         does not match any service has never been tested. Probably because this would be
         too expensive."""
-        hosts = Host.all()
-        for host_name in hosts.keys():
-            if self._matches_host_conditions(host_name):
-                return False
-        return True
-
-    def _matches_host_conditions(self, hostname: HostName) -> bool:
-        """Whether or not the given host matches this rule
-        This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return bool(
-            list(
-                analyze_host_rule_matches(
-                    hostname,
-                    [self.to_single_base_ruleset()],
-                ).results.values()
-            )[0]
-        )
+        # TODO: For better performance do not make an automation call per rule but some bulk call
+        # for the whole rule set.
+        return not analyze_host_rule_effectiveness([self.to_single_base_ruleset()]).results[self.id]
 
     def matches_search(
         self,

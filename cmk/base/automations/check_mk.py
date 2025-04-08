@@ -76,6 +76,7 @@ from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
     AnalyseServiceResult,
+    AnalyzeHostRuleEffectivenessResult,
     AnalyzeHostRuleMatchesResult,
     AnalyzeServiceRuleMatchesResult,
     AutodiscoveryResult,
@@ -1974,6 +1975,56 @@ class AutomationAnalyzeServiceRuleMatches(Automation):
 
 
 automations.register(AutomationAnalyzeServiceRuleMatches())
+
+
+class AutomationAnalyzeHostRuleEffectiveness(Automation):
+    cmd = "analyze-host-rule-effectiveness"
+    needs_config = True
+    needs_checks = False
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loading_result: config.LoadingResult | None,
+    ) -> AnalyzeHostRuleEffectivenessResult:
+        # We read the list of rules from stdin since it could be too much for the command line
+        match_rules = ast.literal_eval(sys.stdin.read())
+
+        if loading_result is None:
+            loading_result = load_config(discovery_rulesets=())
+        config_cache = loading_result.config_cache
+        ruleset_matcher = config_cache.ruleset_matcher
+
+        hosts_config = config_cache.hosts_config
+        labels_of_host = config_cache.label_manager.labels_of_host
+        host_names = list(
+            filter(
+                config_cache.is_online,
+                itertools.chain(
+                    hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts
+                ),
+            )
+        )
+
+        return AnalyzeHostRuleEffectivenessResult(
+            {
+                rules[0]["id"]: any(
+                    True
+                    for host_name in host_names
+                    for _ in ruleset_matcher.get_host_values(host_name, rules, labels_of_host)
+                )
+                # The caller needs to get one result per rule. For this reason we can not just use
+                # the list of rules with the ruleset matching functions but have to execute rule
+                # matching for the rules individually. If we would use the provided list of rules,
+                # then the not matching rules would not be represented in the result and we would
+                # not know which matched value is related to which rule.
+                for rules in match_rules
+            }
+        )
+
+
+automations.register(AutomationAnalyzeHostRuleEffectiveness())
 
 
 class ABCDeleteHosts:

@@ -394,6 +394,18 @@ result_type_registry.register(AnalyzeServiceRuleMatchesResult)
 
 
 @dataclass
+class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
+    results: dict[str, bool]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-host-rule-effectiveness"
+
+
+result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
+
+
+@dataclass
 class DeleteHostsResult(ABCAutomationResult):
     @staticmethod
     def automation_call() -> str:

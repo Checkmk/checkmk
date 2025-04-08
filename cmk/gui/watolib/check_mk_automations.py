@@ -348,6 +348,15 @@ def analyze_service_rule_matches(
     )
 
 
+def analyze_host_rule_effectiveness(
+    rules: Sequence[Sequence[RuleSpec]],
+) -> results.AnalyzeHostRuleEffectivenessResult:
+    return _deserialize(
+        _automation_serialized("analyze-host-rule-effectiveness", args=[], indata=rules),
+        results.AnalyzeHostRuleEffectivenessResult,
+    )
+
+
 def delete_hosts(
     site_id: SiteId,
     host_names: Sequence[HostName],

@@ -55,6 +55,22 @@ interface CheckMKTagifyData extends Tagify.BaseTagData {
     state: TagifyState;
 }
 
+export async function confirm_on_form_leave(
+    container: HTMLElement,
+    _: Record<string, string>,
+) {
+    window.addEventListener("beforeunload", enable_beforeunload);
+    container.addEventListener("submit", disable_beforeunload);
+}
+
+function enable_beforeunload(event: Event) {
+    event.preventDefault();
+}
+
+function disable_beforeunload() {
+    window.removeEventListener("beforeunload", enable_beforeunload);
+}
+
 export function enable_dynamic_form_elements(
     container: HTMLElement | null = null,
 ) {

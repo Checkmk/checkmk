@@ -408,6 +408,7 @@ class HTMLGenerator(HTMLWriter):
         onsubmit: str | None = None,
         add_transid: bool = True,
         require_confirmation: RequireConfirmation | None = None,
+        confirm_on_leave: bool = False,
         only_close: bool = False,
     ) -> typing.Iterator[None]:
         html.begin_form(
@@ -417,6 +418,7 @@ class HTMLGenerator(HTMLWriter):
             onsubmit=onsubmit,
             add_transid=add_transid,
             require_confirmation=require_confirmation,
+            confirm_on_leave=confirm_on_leave,
         )
 
         try:
@@ -435,6 +437,7 @@ class HTMLGenerator(HTMLWriter):
         onsubmit: str | None = None,
         add_transid: bool = True,
         require_confirmation: RequireConfirmation | None = None,
+        confirm_on_leave: bool = False,
     ) -> None:
         self.form_name = name
         self.form_vars = []
@@ -448,16 +451,32 @@ class HTMLGenerator(HTMLWriter):
             action = requested_file_name(self.request) + ".py"
 
         enctype: EncType = "multipart/form-data"
-        self.open_form(
-            id_="form_%s" % name,
-            name=name,
-            class_=name,
-            action=action,
-            method=method,
-            onsubmit=onsubmit,
-            data_cmk_form_confirmation=data_cmk_form_confirmation,
-            enctype=enctype if method.lower() == "post" else None,
-        )
+
+        if confirm_on_leave:
+            html.open_ts_container(
+                container="form",
+                id_="form_%s" % name,
+                function_name="confirm_on_form_leave",
+                name=name,
+                class_=name,
+                action=action,
+                method=method,
+                onsubmit=onsubmit,
+                data_cmk_form_confirmation=data_cmk_form_confirmation,
+                enctype=enctype if method.lower() == "post" else None,
+            )
+        else:
+            self.open_form(
+                id_="form_%s" % name,
+                name=name,
+                class_=name,
+                action=action,
+                method=method,
+                onsubmit=onsubmit,
+                data_cmk_form_confirmation=data_cmk_form_confirmation,
+                enctype=enctype if method.lower() == "post" else None,
+            )
+
         if hasattr(session, "session_info"):
             self.hidden_field("_csrf_token", session.session_info.csrf_token)
 

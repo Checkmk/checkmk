@@ -9,6 +9,7 @@ import {insert_before} from "@/modules/layout";
 import {lock_and_redirect} from "@/modules/sites";
 import {render_qr_code} from "@/modules/qrcode_rendering";
 import {render_stats_table} from "@/modules/tracking_display";
+import {confirm_on_form_leave} from "@/modules/forms";
 
 type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
@@ -23,6 +24,7 @@ const callable_functions: {[name: string]: CallableFunction} = {
     insert_before: insert_before,
     lock_and_redirect: lock_and_redirect,
     fix_simplebar_scroll_to_id_in_chrome: fix_simplebar_scroll_to_id_in_chrome,
+    confirm_on_form_leave: confirm_on_form_leave,
 };
 
 export function init_callable_ts_functions(element: Element | Document) {

@@ -35,7 +35,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 
 from cmk.base import config
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, ObjectAttributes, PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 from cmk import trace
@@ -64,6 +64,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
@@ -75,6 +76,7 @@ class MonitoringCore(abc.ABC):
         self._create_config(
             config_path,
             config_cache,
+            service_name_config,
             ip_address_of,
             licensing_handler,
             plugins,
@@ -88,6 +90,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        service_name_config: PassiveServiceNameConfig,
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
@@ -261,6 +264,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
@@ -292,6 +296,7 @@ def do_create_config(
             _create_core_config(
                 core,
                 config_cache,
+                service_name_config,
                 plugins,
                 discovery_rules,
                 ip_address_of,
@@ -386,6 +391,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
@@ -406,6 +412,7 @@ def _create_core_config(
         core.create_config(
             config_path,
             config_cache,
+            service_name_config,
             plugins,
             discovery_rules,
             ip_address_of,

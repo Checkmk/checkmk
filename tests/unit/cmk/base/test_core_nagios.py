@@ -443,6 +443,7 @@ def test_dump_precompiled_hostcheck(
 
     host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
+        config_cache.make_passive_service_name_config(),
         config_path,
         hostname,
         plugins=_make_plugins_for_test(),
@@ -567,7 +568,15 @@ def test_create_nagios_servicedefs_active_check(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
+        cfg,
+        config_cache,
+        config_cache.make_passive_service_name_config(),
+        {},
+        hostname,
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     assert outfile.getvalue() == expected_result
@@ -598,7 +607,15 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
+        cfg,
+        config_cache,
+        config_cache.make_passive_service_name_config(),
+        {},
+        hostname,
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     config_snippet = outfile.getvalue()
@@ -714,6 +731,7 @@ def test_create_nagios_servicedefs_with_warnings(
     core_nagios.create_nagios_servicedefs(
         cfg,
         config_cache,
+        config_cache.make_passive_service_name_config(),
         {},
         HostName("my_host"),
         host_attrs,
@@ -778,7 +796,15 @@ def test_create_nagios_servicedefs_omit_service(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
+        cfg,
+        config_cache,
+        config_cache.make_passive_service_name_config(),
+        {},
+        hostname,
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     assert outfile.getvalue() == expected_result
@@ -839,7 +865,15 @@ def test_create_nagios_servicedefs_invalid_args(
     license_counter = Counter("services")
 
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
+        cfg,
+        config_cache,
+        config_cache.make_passive_service_name_config(),
+        {},
+        hostname,
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     assert error_message == capsys.readouterr().err
@@ -920,7 +954,15 @@ def test_create_nagios_config_commands(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of
+        cfg,
+        config_cache,
+        config_cache.make_passive_service_name_config(),
+        {},
+        hostname,
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of,
     )
     core_nagios.create_nagios_config_commands(cfg)
 

@@ -72,6 +72,7 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        service_name_config: config.PassiveServiceNameConfig,
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
@@ -81,7 +82,12 @@ class NagiosCore(core_config.MonitoringCore):
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
-            config_path, plugins.check_plugins, licensing_handler, passwords, ip_address_of
+            config_path,
+            service_name_config,
+            plugins.check_plugins,
+            licensing_handler,
+            passwords,
+            ip_address_of,
         )
         store.save_text_to_file(
             plugin_index.make_index_file(Path(config_path)),
@@ -89,6 +95,7 @@ class NagiosCore(core_config.MonitoringCore):
         )
         self._precompile_hostchecks(
             config_path,
+            service_name_config,
             plugins,
             discovery_rules,
             precompile_mode=(
@@ -99,6 +106,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _create_core_config(
         self,
         config_path: VersionedConfigPath,
+        service_name_config: config.PassiveServiceNameConfig,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
@@ -119,6 +127,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_buffer,
             config_path,
             self._config_cache,
+            service_name_config,
             plugins,
             hostnames=sorted(
                 {
@@ -137,6 +146,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
+        service_name_config: config.PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         *,
@@ -148,6 +158,7 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
+            service_name_config,
             plugins,
             discovery_rules,
             precompile_mode=precompile_mode,
@@ -201,6 +212,7 @@ def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
+    service_name_config: config.PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
@@ -215,7 +227,14 @@ def create_config(
     all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
         all_notify_host_configs[hostname] = _create_nagios_config_host(
-            cfg, config_cache, plugins, hostname, passwords, licensing_counter, ip_address_of
+            cfg,
+            config_cache,
+            service_name_config,
+            plugins,
+            hostname,
+            passwords,
+            licensing_counter,
+            ip_address_of,
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -247,6 +266,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    service_name_config: config.PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     stored_passwords: Mapping[str, str],
@@ -267,6 +287,7 @@ def _create_nagios_config_host(
         service_labels=create_nagios_servicedefs(
             cfg,
             config_cache,
+            service_name_config,
             plugins,
             hostname,
             host_attrs,
@@ -409,6 +430,7 @@ def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServ
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    service_name_config: config.PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     host_attrs: ObjectAttributes,
@@ -457,7 +479,10 @@ def create_nagios_servicedefs(
         return result
 
     host_check_table = config_cache.check_table(
-        hostname, plugins, config_cache.make_service_configurer(plugins)
+        hostname,
+        plugins,
+        config_cache.make_service_configurer(plugins, service_name_config),
+        service_name_config,
     )
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
@@ -544,6 +569,7 @@ def create_nagios_servicedefs(
     for service_data in config_cache.active_check_services(
         hostname,
         host_attrs,
+        service_name_config.final_service_name_config,
         ip_address_of,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
@@ -617,11 +643,6 @@ def create_nagios_servicedefs(
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)
-    translations = config.get_service_translations(
-        config_cache.ruleset_matcher,
-        config_cache.label_manager.labels_of_host,
-        hostname,
-    )
     if custchecks:
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:
@@ -631,8 +652,8 @@ def create_nagios_servicedefs(
             #                              If this is missing, we create a passive check
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
-            description = config.get_final_service_description(
-                entry["service_description"], translations
+            description = service_name_config.final_service_name_config.finalize(
+                entry["service_description"], hostname, config_cache.label_manager.labels_of_host
             )
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

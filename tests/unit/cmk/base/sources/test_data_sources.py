@@ -58,7 +58,11 @@ def _make_sources(
         hostname,
         ipaddress,
         IPStackConfig.IPv4,
-        fetcher_factory=config_cache.fetcher_factory(config_cache.make_service_configurer({})),
+        fetcher_factory=config_cache.fetcher_factory(
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
+        ),
         snmp_fetcher_config=SNMPFetcherConfig(
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,

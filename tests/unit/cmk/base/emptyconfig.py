@@ -10,4 +10,9 @@ EMPTYCONFIG = LoadedConfigFragment(
     discovery_rules={},
     checkgroup_parameters={},
     service_rule_groups=set(),
+    service_descriptions={},
+    service_description_translation=(),
+    use_new_descriptions_for=(),
+    nagios_illegal_chars="",
+    cmc_illegal_chars="",
 )

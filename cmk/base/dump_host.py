@@ -48,6 +48,7 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
+    PassiveServiceNameConfig,
 )
 from cmk.base.sources import SNMPFetcherConfig, Source
 
@@ -127,6 +128,7 @@ def print_(txt: str) -> None:
 
 def dump_host(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
@@ -239,7 +241,7 @@ def dump_host(
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
             fetcher_factory=config_cache.fetcher_factory(
-                config_cache.make_service_configurer(plugins.check_plugins)
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(
@@ -302,7 +304,8 @@ def dump_host(
         config_cache.check_table(
             hostname,
             plugins.check_plugins,
-            config_cache.make_service_configurer(plugins.check_plugins),
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            service_name_config,
         ).values(),
         key=lambda s: s.description,
     ):

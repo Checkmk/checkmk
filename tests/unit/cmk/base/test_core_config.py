@@ -75,6 +75,7 @@ def test_do_create_config_nagios(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
+        core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
@@ -102,6 +103,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
+        core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,

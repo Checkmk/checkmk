@@ -26,7 +26,7 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 
-from cmk.base.config import FilterMode, HostCheckTable, service_description
+from cmk.base.config import FilterMode, HostCheckTable
 
 
 @dataclasses.dataclass(frozen=True)
@@ -65,12 +65,12 @@ def test_cluster_ignores_nodes_parameters(
     )
     ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
 
     def service_description_callback(
         hostname: HostName, check_plugin_name: CheckPluginName, item: str | None
     ) -> ServiceName:
-        return service_description(
-            config_cache.ruleset_matcher,
+        return service_name_config.make_name(
             config_cache.label_manager.labels_of_host,
             hostname,
             check_plugin_name,
@@ -96,6 +96,7 @@ def test_cluster_ignores_nodes_parameters(
         cluster,
         agent_based_plugins.check_plugins,
         service_configurer=service_configurer,
+        service_name_config=service_name_config,
     )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),
@@ -161,11 +162,16 @@ def test_check_table_enforced_vs_discovered_precedence(
         ],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
     check_plugins = agent_based_plugins.check_plugins
-    service_configurer = config_cache.make_service_configurer(check_plugins)
+    service_configurer = config_cache.make_service_configurer(check_plugins, service_name_config)
 
-    node_services = config_cache.check_table(node, check_plugins, service_configurer)
-    cluster_services = config_cache.check_table(cluster, check_plugins, service_configurer)
+    node_services = config_cache.check_table(
+        node, check_plugins, service_configurer, service_name_config
+    )
+    cluster_services = config_cache.check_table(
+        cluster, check_plugins, service_configurer, service_name_config
+    )
 
     assert len(node_services) == 1
     assert len(cluster_services) == 2
@@ -524,17 +530,25 @@ def test_check_table(
     )
 
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
 
     assert set(
         config_cache.check_table(
             hostname,
             agent_based_plugins.check_plugins,
-            config_cache.make_service_configurer(agent_based_plugins.check_plugins),
+            config_cache.make_service_configurer(
+                agent_based_plugins.check_plugins, service_name_config
+            ),
+            service_name_config,
             filter_mode=filter_mode,
         ),
     ) == set(expected_result)
     for key, value in config_cache.check_table(
-        hostname, {}, config_cache.make_service_configurer({}), filter_mode=filter_mode
+        hostname,
+        {},
+        config_cache.make_service_configurer({}, service_name_config),
+        service_name_config,
+        filter_mode=filter_mode,
     ).items():
         assert key in expected_result
         assert expected_result[key] == value
@@ -589,13 +603,15 @@ def test_check_table_of_mgmt_boards(
     )
 
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
 
     assert (
         list(
             config_cache.check_table(
                 hostname,
                 {},
-                config_cache.make_service_configurer({}),
+                config_cache.make_service_configurer({}, service_name_config),
+                service_name_config,
             ).keys()
         )
         == expected_result
@@ -626,11 +642,15 @@ def test_check_table__static_checks_win(
     )
     ts.set_autochecks(hostname, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
 
     chk_table = config_cache.check_table(
         hostname,
         agent_based_plugins.check_plugins,
-        config_cache.make_service_configurer(agent_based_plugins.check_plugins),
+        config_cache.make_service_configurer(
+            agent_based_plugins.check_plugins, service_name_config
+        ),
+        service_name_config,
     )
 
     # assert check table is populated as expected

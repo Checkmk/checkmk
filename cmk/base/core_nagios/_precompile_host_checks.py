@@ -47,7 +47,13 @@ from cmk.checkengine.plugins import (
 )
 
 import cmk.base.utils
-from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
+from cmk.base.config import (
+    ConfigCache,
+    FilterMode,
+    lookup_ip_address,
+    PassiveServiceNameConfig,
+    save_packed_config,
+)
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_special_agents
@@ -116,6 +122,7 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     *,
@@ -141,6 +148,7 @@ def precompile_hostchecks(
             )
             host_check = dump_precompiled_hostcheck(
                 config_cache,
+                service_name_config,
                 config_path,
                 hostname,
                 plugins,
@@ -161,6 +169,7 @@ def precompile_hostchecks(
 
 def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     config_path: VersionedConfigPath,
     hostname: HostName,
     plugins: AgentBasedPlugins,
@@ -169,7 +178,7 @@ def dump_precompiled_hostcheck(
     precompile_mode: PrecompileMode,
 ) -> str:
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
-        config_cache, hostname, plugins
+        config_cache, service_name_config, hostname, plugins
     )
 
     # IP addresses
@@ -242,19 +251,24 @@ def dump_precompiled_hostcheck(
 
 def _make_needed_plugins_locations(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> tuple[  # we need `list` for the weird template replacement technique
     list[PluginLocation],
     list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
 ]:
-    needed_agent_based_plugins = _get_needed_plugins(config_cache, hostname, plugins)
+    needed_agent_based_plugins = _get_needed_plugins(
+        config_cache, service_name_config, hostname, plugins
+    )
 
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
             # we're deduplicating later.
-            needed_agent_based_plugins.extend(_get_needed_plugins(config_cache, node, plugins))
+            needed_agent_based_plugins.extend(
+                _get_needed_plugins(config_cache, service_name_config, node, plugins)
+            )
 
     needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
 
@@ -276,6 +290,7 @@ def _make_needed_plugins_locations(
 
 def _get_needed_plugins(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     host_name: HostName,
     agent_based_plugins: AgentBasedPlugins,
 ) -> list[CheckPlugin | InventoryPlugin]:
@@ -292,7 +307,10 @@ def _get_needed_plugins(
             for name in config_cache.check_table(
                 host_name,
                 agent_based_plugins.check_plugins,
-                config_cache.make_service_configurer(agent_based_plugins.check_plugins),
+                config_cache.make_service_configurer(
+                    agent_based_plugins.check_plugins, service_name_config
+                ),
+                service_name_config,
                 filter_mode=FilterMode.INCLUDE_CLUSTERED,
                 skip_ignored=False,
             ).needed_check_names()

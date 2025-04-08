@@ -614,6 +614,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
+    service_name_config = config_cache.make_passive_service_name_config()
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
@@ -654,7 +655,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ipaddress,
             ip_stack_config,
             fetcher_factory=config_cache.fetcher_factory(
-                config_cache.make_service_configurer(plugins.check_plugins)
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
@@ -787,11 +788,16 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
         hosts = all_hosts
 
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(hosts)
+    service_name_config = config_cache.make_passive_service_name_config()
     for hostname in sorted(hosts - all_hosts):
         sys.stderr.write(f"unknown host: {hostname}\n")
     for hostname in sorted(hosts & all_hosts):
         cmk.base.dump_host.dump_host(
-            config_cache, plugins, hostname, simulation_mode=config.simulation_mode
+            config_cache,
+            service_name_config,
+            plugins,
+            hostname,
+            simulation_mode=config.simulation_mode,
         )
 
 
@@ -1237,9 +1243,10 @@ def mode_flush(hosts: list[HostName]) -> None:
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
     hosts_config = config_cache.hosts_config
+    service_name_config = config_cache.make_passive_service_name_config()
 
     effective_host_callback = config.AutochecksConfigurer(
-        config_cache, plugins.check_plugins
+        config_cache, plugins.check_plugins, service_name_config
     ).effective_host
 
     if not hosts:
@@ -1386,6 +1393,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         sys.stdout,
         next(VersionedConfigPath.current()),
         config_cache,
+        config_cache.make_passive_service_name_config(),
         plugins.check_plugins,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
@@ -1441,6 +1449,7 @@ def mode_update() -> None:
             do_create_config(
                 core=create_core(config.monitoring_core),
                 config_cache=loading_result.config_cache,
+                service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
                 ip_address_of=ip_address_of,
@@ -1499,6 +1508,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
     )
     cmk.base.core.do_restart(
         loading_result.config_cache,
+        loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
         plugins,
@@ -1554,6 +1564,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
     )
     cmk.base.core.do_reload(
         loading_result.config_cache,
+        loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
         plugins,
@@ -1843,7 +1854,10 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
 
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
+    service_name_config = config_cache.make_passive_service_name_config()
+    autochecks_config = config.AutochecksConfigurer(
+        config_cache, plugins.check_plugins, service_name_config
+    )
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
         loading_result.config_cache.label_manager.labels_of_host,
@@ -1853,7 +1867,9 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+        ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1925,7 +1941,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
                 ),
                 autochecks_config=autochecks_config,
                 enforced_services=config_cache.enforced_services_table(
-                    hostname, plugins.check_plugins
+                    hostname, plugins.check_plugins, service_name_config
                 ),
             )
         check_results = [
@@ -2136,6 +2152,8 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         loading_result.loaded_config.discovery_rules,
     )
     hosts_config = config.make_hosts_config()
+    service_name_config = config_cache.make_passive_service_name_config()
+
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
@@ -2168,7 +2186,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+        ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2345,7 +2365,11 @@ def run_checking(
         itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         CheckPluginName,
     )
-    service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
+
+    service_name_config = config_cache.make_passive_service_name_config()
+    service_configurer = config_cache.make_service_configurer(
+        plugins.check_plugins, service_name_config
+    )
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
@@ -2428,7 +2452,7 @@ def run_checking(
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(
-                    hostname, plugins.check_plugins, service_configurer
+                    hostname, plugins.check_plugins, service_configurer, service_name_config
                 ),
                 run_plugin_names=run_plugin_names,
                 get_check_period=lambda service_name,
@@ -2543,6 +2567,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
     hosts_config = config.make_hosts_config()
+    service_name_config = config_cache.make_passive_service_name_config()
 
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
@@ -2570,7 +2595,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+        ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2812,6 +2839,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     plugins = load_checks()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
     config_cache = config.load(discovery_rulesets).config_cache
+    service_name_config = (
+        config_cache.make_passive_service_name_config()
+    )  # not obvious to me why/if we *really* need this
 
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -2821,7 +2851,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+        ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

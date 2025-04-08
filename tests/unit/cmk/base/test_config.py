@@ -59,6 +59,7 @@ from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
+    FinalServiceNameConfig,
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import CheckingConfig
@@ -286,7 +287,11 @@ def test_host_folder_matching(
 
     config_cache = ts.apply(monkeypatch)
     assert (
-        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._agent_port(hostname)
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
+        )._agent_port(hostname)
         == result
     )
 
@@ -883,7 +888,11 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._agent_port(hostname)
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
+        )._agent_port(hostname)
         == result
     )
 
@@ -911,9 +920,11 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._tcp_connect_timeout(
-            hostname
-        )
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
+        )._tcp_connect_timeout(hostname)
         == result
     )
 
@@ -942,9 +953,11 @@ def test_encryption_handling(
     )
     config_cache = ts.apply(monkeypatch)
     assert (
-        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._encryption_handling(
-            hostname
-        )
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
+        )._encryption_handling(hostname)
         is result
     )
 
@@ -974,7 +987,9 @@ def test_symmetric_agent_encryption(
     config_cache = ts.apply(monkeypatch)
     assert (
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer({})
+            config_cache.make_service_configurer(
+                {}, config_cache.make_passive_service_name_config()
+            )
         )._symmetric_agent_encryption(hostname)
         is result
     )
@@ -1545,7 +1560,12 @@ def test_host_config_static_checks(
             ],
         },
     )
-    assert ts.apply(monkeypatch).enforced_services_table(hostname, {}) == result
+    assert (
+        ts.apply(monkeypatch).enforced_services_table(
+            hostname, {}, ts.config_cache.make_passive_service_name_config()
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -1841,9 +1861,12 @@ def test_get_sorted_check_table_no_cmc(
             "description D": ["description A", "description F"],
         }.get(descr, []),
     )
-
+    service_name_config = config_cache.make_passive_service_name_config()
     services = config_cache.configured_services(
-        host_name, {}, config_cache.make_service_configurer({})
+        host_name,
+        {},
+        config_cache.make_service_configurer({}, service_name_config),
+        service_name_config,
     )
     assert [s.description for s in services] == [
         "description F",  #
@@ -1875,6 +1898,7 @@ def test_resolve_service_dependencies_cyclic(
         }.get(descr, []),
     )
 
+    service_name_config = config_cache.make_passive_service_name_config()
     with pytest.raises(
         MKGeneralException,
         match=re.escape(
@@ -1885,7 +1909,10 @@ def test_resolve_service_dependencies_cyclic(
         ),
     ):
         config_cache.configured_services(
-            HostName("MyHost"), {}, config_cache.make_service_configurer({})
+            HostName("MyHost"),
+            {},
+            config_cache.make_service_configurer({}, service_name_config),
+            service_name_config,
         )
 
 
@@ -3181,8 +3208,17 @@ def test_check_table_cluster_merging_enforced_and_discovered(
         [AutocheckEntry(CheckPluginName("check1"), "item", {}, {})],
     )
     config_cache = ts.apply(monkeypatch)
+    service_name_config = config_cache.make_passive_service_name_config()
 
-    assert config_cache.check_table(CN, {}, config_cache.make_service_configurer({})) == expected
+    assert (
+        config_cache.check_table(
+            CN,
+            {},
+            config_cache.make_service_configurer({}, service_name_config),
+            service_name_config,
+        )
+        == expected
+    )
 
 
 def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
@@ -3249,6 +3285,7 @@ def test_get_active_service_data_crash(
         config_cache.active_check_services(
             host_name,
             config_cache.get_host_attributes(host_name, lambda *a, **kw: None),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             lambda *a, **kw: None,
             {},
             Path(),

@@ -249,6 +249,7 @@ def _aggregate_check_table_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     skip_ignored: bool,
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
@@ -275,7 +276,12 @@ def _aggregate_check_table_services(
             yield from (
                 s
                 for s in _get_clustered_services(
-                    config_cache, host_name, get_autochecks, configure_autochecks, plugins
+                    config_cache,
+                    service_name_config,
+                    host_name,
+                    get_autochecks,
+                    configure_autochecks,
+                    plugins,
                 )
                 if sfilter.keep(s)
             )
@@ -290,7 +296,9 @@ def _aggregate_check_table_services(
 
     yield from (
         svc
-        for _, svc in config_cache.enforced_services_table(host_name, plugins).values()
+        for _, svc in config_cache.enforced_services_table(
+            host_name, plugins, service_name_config
+        ).values()
         if sfilter.keep(svc)
     )
 
@@ -316,7 +324,12 @@ def _aggregate_check_table_services(
         s
         # ... this adds it for node2
         for s in _get_services_from_cluster_nodes(
-            config_cache, host_name, get_autochecks, configure_autochecks, plugins
+            config_cache,
+            service_name_config,
+            host_name,
+            get_autochecks,
+            configure_autochecks,
+            plugins,
         )
         if sfilter.keep(s)
         # ... and this condition prevents it from being added on node3
@@ -380,6 +393,7 @@ class _ServiceFilter:
 
 def _get_services_from_cluster_nodes(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     node_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -390,12 +404,18 @@ def _get_services_from_cluster_nodes(
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
         yield from _get_clustered_services(
-            config_cache, cluster, get_autochecks, configure_autochecks, plugins
+            config_cache,
+            service_name_config,
+            cluster,
+            get_autochecks,
+            configure_autochecks,
+            plugins,
         )
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     cluster_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
@@ -411,8 +431,7 @@ def _get_clustered_services(
         def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
             if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
-            service_name = service_description(
-                config_cache.ruleset_matcher,
+            service_name = service_name_config.make_name(
                 config_cache.label_manager.labels_of_host,
                 node_name,
                 entry.check_plugin_name,
@@ -444,7 +463,7 @@ def _get_clustered_services(
 
     yield from merge_enforced_services(
         {
-            node_name: config_cache.enforced_services_table(node_name, plugins)
+            node_name: config_cache.enforced_services_table(node_name, plugins, service_name_config)
             for node_name in nodes
         },
         # similiar to appears_on_cluster, but we don't check for ignored services
@@ -578,6 +597,13 @@ class LoadedConfigFragment:
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     service_rule_groups: set[str]
+    service_descriptions: Mapping[str, str]
+    service_description_translation: Sequence[
+        RuleSpec[cmk.utils.translations.TranslationOptionsSpec]
+    ]
+    use_new_descriptions_for: Container[str]
+    nagios_illegal_chars: str
+    cmc_illegal_chars: str
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -667,6 +693,11 @@ def _perform_post_config_loading_actions(
         discovery_rules=discovery_settings,
         checkgroup_parameters=checkgroup_parameters,
         service_rule_groups=service_rule_groups,
+        service_descriptions=service_descriptions,
+        service_description_translation=service_description_translation,
+        use_new_descriptions_for=use_new_descriptions_for,
+        nagios_illegal_chars=nagios_illegal_chars,
+        cmc_illegal_chars=cmc_illegal_chars,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1121,7 +1152,7 @@ def _get_old_cmciii_temp_description(item: Item) -> tuple[ServiceName, None]:
     return f"{parts[1]} {parts[0]}.{parts[2]}-Temperature", None
 
 
-_old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item]]] = {
+_OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item]]] = {
     "aix_memory": lambda item: ("Memory used", item),
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
@@ -1216,7 +1247,7 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
 
 
 def _make_service_description_cb(
-    matcher: RulesetMatcher,
+    passive_service_name_config: PassiveServiceNameConfig,
     labels_of_host: Callable[[HostName], Labels],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
@@ -1226,8 +1257,7 @@ def _make_service_description_cb(
     """
 
     def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return service_description(
-            matcher,
+        return passive_service_name_config.make_name(
             labels_of_host,
             hostname,
             check_plugin_name,
@@ -1243,45 +1273,56 @@ def _make_service_description_cb(
     return callback
 
 
-def service_description(
-    matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
-    hostname: HostName,
-    check_plugin_name: CheckPluginName,
-    *,
-    service_name_template: str | None,
-    item: Item,
-) -> ServiceName:
-    if service_name_template is None:
-        return (
-            f"Unimplemented check {check_plugin_name} / {item}"
-            if item
-            else f"Unimplemented check {check_plugin_name}"
+class PassiveServiceNameConfig:
+    def __init__(
+        self,
+        final_service_name_config: FinalServiceNameConfig,
+        user_defined_service_names: Mapping[str, str],
+        use_new_names_for: Container[str],
+    ):
+        self.final_service_name_config: Final = final_service_name_config
+        self.user_defined_service_names: Final = user_defined_service_names
+        self.use_new_names_for: Final = use_new_names_for
+
+    def make_name(
+        self,
+        labels_of_host: Callable[[HostName], Labels],
+        host_name: HostName,
+        check_plugin_name: CheckPluginName,
+        *,
+        service_name_template: str | None,
+        item: Item,
+    ) -> ServiceName:
+        if service_name_template is None:
+            return (
+                f"Unimplemented check {check_plugin_name} / {item}"
+                if item
+                else f"Unimplemented check {check_plugin_name}"
+            )
+
+        return self.final_service_name_config.finalize(
+            _format_item_with_template(
+                *self._get_service_description_template_and_item(
+                    check_plugin_name, service_name_template, item
+                )
+            ),
+            host_name,
+            labels_of_host,
         )
 
-    return get_final_service_description(
-        _format_item_with_template(
-            *_get_service_description_template_and_item(
-                check_plugin_name, service_name_template, item
-            )
-        ),
-        get_service_translations(matcher, labels_of_host, hostname),
-    )
+    def _get_service_description_template_and_item(
+        self, plugin_name: CheckPluginName, service_name_template: str, item: Item
+    ) -> tuple[ServiceName, Item]:
+        plugin_name_str = str(plugin_name)
 
+        # use user-supplied service name, if available
+        if descr_format := self.user_defined_service_names.get(plugin_name_str):
+            return descr_format, item
 
-def _get_service_description_template_and_item(
-    plugin_name: CheckPluginName, service_name_template: str, item: Item
-) -> tuple[ServiceName, Item]:
-    plugin_name_str = str(plugin_name)
-
-    # use user-supplied service name, if available
-    if descr_format := service_descriptions.get(plugin_name_str):
-        return descr_format, item
-
-    old_descr = _old_service_descriptions.get(plugin_name_str)
-    if old_descr is None or plugin_name_str in use_new_descriptions_for:
-        return service_name_template, item
-    return old_descr(item)
+        old_descr = _OLD_SERVICE_DESCRIPTIONS.get(plugin_name_str)
+        if old_descr is None or plugin_name_str in self.use_new_names_for:
+            return service_name_template, item
+        return old_descr(item)
 
 
 def _format_item_with_template(template: str, item: Item) -> str:
@@ -1301,28 +1342,68 @@ def _format_item_with_template(template: str, item: Item) -> str:
         return f"{template} {item or ''}".strip()
 
 
-def get_final_service_description(
-    description: ServiceName, translations: cmk.utils.translations.TranslationOptions
-) -> ServiceName:
-    # Note: at least strip the service name.
-    # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
-    # and trailing spaces in the configuration file.
-    description = (
-        cmk.utils.translations.translate_service_description(translations, description).strip()
-        if translations
-        else description.strip()
-    )
+class FinalServiceNameConfig:
+    def __init__(
+        self,
+        matcher: RulesetMatcher,
+        illegal_chars: str,
+        translations: Sequence[RuleSpec[cmk.utils.translations.TranslationOptionsSpec]],
+    ) -> None:
+        self.matcher: Final = matcher
+        self.illegal_chars: Final = illegal_chars
+        self.translations: Final = translations
 
-    # Sanitize: remove illegal characters from a service name
-    cache = cache_manager.obtain_cache("final_service_description")
-    with contextlib.suppress(KeyError):
-        return cache[description]
+    def finalize(
+        self,
+        description: ServiceName,
+        host_name: HostName,
+        labels_of_host: Callable[[HostName], Labels],
+    ) -> ServiceName:
+        translations = self._get_service_translations(labels_of_host, host_name)
+        # Note: at least strip the service name.
+        # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
+        # and trailing spaces in the configuration file.
+        description = (
+            cmk.utils.translations.translate_service_description(translations, description).strip()
+            if translations
+            else description.strip()
+        )
 
-    illegal_chars = cmc_illegal_chars if is_cmc() else nagios_illegal_chars
+        # Sanitize: remove illegal characters from a service name
+        cache = cache_manager.obtain_cache("final_service_description")
+        with contextlib.suppress(KeyError):
+            return cache[description]
 
-    return cache.setdefault(
-        description, "".join(c for c in description if c not in illegal_chars).rstrip("\\")
-    )
+        return cache.setdefault(
+            description, "".join(c for c in description if c not in self.illegal_chars).rstrip("\\")
+        )
+
+    def _get_service_translations(
+        self,
+        labels_of_host: Callable[[HostName], Labels],
+        hostname: HostName,
+    ) -> cmk.utils.translations.TranslationOptions:
+        translations_cache = cache_manager.obtain_cache("service_description_translations")
+        with contextlib.suppress(KeyError):
+            return translations_cache[hostname]
+
+        rules = self.matcher.get_host_values(hostname, self.translations, labels_of_host)
+        translations: cmk.utils.translations.TranslationOptions = {}
+        for rule in rules[::-1]:
+            if "case" in rule:
+                translations["case"] = rule["case"]
+            if "drop_domain" in rule:
+                translations["drop_domain"] = rule["drop_domain"]
+            if "regex" in rule:
+                translations["regex"] = list(
+                    set(translations.get("regex", [])) | set(rule["regex"])
+                )
+            if "mapping" in rule:
+                translations["mapping"] = list(
+                    set(translations.get("mapping", [])) | set(rule["mapping"])
+                )
+
+        return translations_cache.setdefault(hostname, translations)
 
 
 # TODO: Make this use the generic "rulesets" functions
@@ -1390,30 +1471,6 @@ def get_piggyback_translations(
     for rule in rules[::-1]:
         translations.update(rule)
     return translations
-
-
-def get_service_translations(
-    matcher: RulesetMatcher, labels_of_host: Callable[[HostName], Labels], hostname: HostName
-) -> cmk.utils.translations.TranslationOptions:
-    translations_cache = cache_manager.obtain_cache("service_description_translations")
-    with contextlib.suppress(KeyError):
-        return translations_cache[hostname]
-
-    rules = matcher.get_host_values(hostname, service_description_translation, labels_of_host)
-    translations: cmk.utils.translations.TranslationOptions = {}
-    for rule in rules[::-1]:
-        if "case" in rule:
-            translations["case"] = rule["case"]
-        if "drop_domain" in rule:
-            translations["drop_domain"] = rule["drop_domain"]
-        if "regex" in rule:
-            translations["regex"] = list(set(translations.get("regex", [])) | set(rule["regex"]))
-        if "mapping" in rule:
-            translations["mapping"] = list(
-                set(translations.get("mapping", [])) | set(rule["mapping"])
-            )
-
-    return translations_cache.setdefault(hostname, translations)
 
 
 def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
@@ -1705,9 +1762,13 @@ class AutochecksConfigurer:
     """Implementation of the autochecks configuration"""
 
     def __init__(
-        self, config_cache: ConfigCache, check_plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        config_cache: ConfigCache,
+        check_plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_name_config: PassiveServiceNameConfig,
     ) -> None:
         self._config_cache = config_cache
+        self.service_name_config: Final = service_name_config
         self._label_manager = config_cache.label_manager
         self._check_plugins = check_plugins
 
@@ -1729,8 +1790,7 @@ class AutochecksConfigurer:
         return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
-        return service_description(
-            self._config_cache.ruleset_matcher,
+        return self.service_name_config.make_name(
             self._label_manager.labels_of_host,
             host_name,
             entry.check_plugin_name,
@@ -1845,8 +1905,23 @@ class ConfigCache:
         )
         return self
 
+    def make_passive_service_name_config(self) -> PassiveServiceNameConfig:
+        return PassiveServiceNameConfig(
+            FinalServiceNameConfig(
+                matcher=self.ruleset_matcher,
+                illegal_chars=self._loaded_config.cmc_illegal_chars
+                if is_cmc()
+                else self._loaded_config.nagios_illegal_chars,
+                translations=self._loaded_config.service_description_translation,
+            ),
+            user_defined_service_names=self._loaded_config.service_descriptions,
+            use_new_names_for=self._loaded_config.use_new_descriptions_for,
+        )
+
     def make_service_configurer(
-        self, check_plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        check_plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_name_config: PassiveServiceNameConfig,
     ) -> ServiceConfigurer:
         # This function is not part of the checkengine, because it still has
         # hidden dependencies to the loaded config in the global scope of this module.
@@ -1859,7 +1934,9 @@ class ConfigCache:
             ),
             check_plugins,
             _make_service_description_cb(
-                self.ruleset_matcher, self.label_manager.labels_of_host, check_plugins
+                service_name_config,
+                self.label_manager.labels_of_host,
+                check_plugins,
             ),
             self.effective_host,
             lambda host_name, service_name, discovered_labels: self.label_manager.labels_of_service(
@@ -2007,6 +2084,7 @@ class ConfigCache:
         self,
         plugins: AgentBasedPlugins,
         service_configurer: ServiceConfigurer,
+        service_name_config: PassiveServiceNameConfig,
         hostname: HostName,
         *,
         selected_sections: SectionNameCollection,
@@ -2022,6 +2100,7 @@ class ConfigCache:
                             hostname,
                             plugins.check_plugins,
                             service_configurer,
+                            service_name_config,
                             filter_mode=FilterMode.INCLUDE_CLUSTERED,
                             skip_ignored=True,
                         ).needed_check_names()
@@ -2070,6 +2149,7 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
+        service_name_config: PassiveServiceNameConfig,
         *,
         use_cache: bool = True,
         filter_mode: FilterMode = FilterMode.NONE,
@@ -2085,6 +2165,7 @@ class ConfigCache:
             services=_aggregate_check_table_services(
                 hostname,
                 config_cache=self,
+                service_name_config=service_name_config,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
                 get_autochecks=self.autochecks_manager.get_autochecks,
@@ -2103,10 +2184,11 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
+        service_name_config: PassiveServiceNameConfig,
     ) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            self.check_table(hostname, plugins, service_configurer).values(),
+            self.check_table(hostname, plugins, service_configurer, service_name_config).values(),
             key=lambda service: service.description,
         )
 
@@ -2115,8 +2197,9 @@ class ConfigCache:
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
+        service_name_config: PassiveServiceNameConfig,
     ) -> Sequence[ConfiguredService]:
-        services = self._sorted_services(hostname, plugins, service_configurer)
+        services = self._sorted_services(hostname, plugins, service_configurer, service_name_config)
         if is_cmc():
             return services
 
@@ -2147,6 +2230,7 @@ class ConfigCache:
         self,
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_name_config: PassiveServiceNameConfig,
     ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
@@ -2169,8 +2253,7 @@ class ConfigCache:
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=service_description(
-                            self.ruleset_matcher,
+                        description=service_name_config.make_name(
                             self.label_manager.labels_of_host,
                             hostname,
                             check_plugin_name,
@@ -2559,6 +2642,7 @@ class ConfigCache:
         self,
         host_name: HostName,
         host_attrs: ObjectAttributes,
+        final_service_name_config: FinalServiceNameConfig,
         ip_address_of: IPLookup,
         passwords: Mapping[str, str],
         password_store_file: Path,
@@ -2597,11 +2681,8 @@ class ConfigCache:
                 ip_address_of,
             ),
             http_proxies,
-            lambda x: get_final_service_description(
-                x,
-                get_service_translations(
-                    self.ruleset_matcher, self.label_manager.labels_of_host, host_name
-                ),
+            lambda x: final_service_name_config.finalize(
+                x, host_name, self.label_manager.labels_of_host
             ),
             passwords,
             password_store_file,
@@ -4295,12 +4376,14 @@ class FetcherFactory:
             source_type,
             backend_override=fetcher_config.backend_override,
         )
+        passive_service_name_config = self._config_cache.make_passive_service_name_config()
         return SNMPFetcher(
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
                     plugins,
                     self._service_configurer,
+                    passive_service_name_config,
                     host_name,
                     selected_sections=fetcher_config.selected_sections,
                 ),

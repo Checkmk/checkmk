@@ -27,7 +27,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 import cmk.base.nagios_utils
 from cmk.base import core_config
-from cmk.base.config import ConfigCache, ConfiguredIPLookup
+from cmk.base.config import ConfigCache, ConfiguredIPLookup, PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
 
 from cmk import trace
@@ -58,6 +58,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
@@ -70,6 +71,7 @@ def do_reload(
 ) -> None:
     do_restart(
         config_cache,
+        service_name_config,
         ip_address_of,
         core,
         plugins,
@@ -84,6 +86,7 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
@@ -101,6 +104,7 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
+                service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,
                 ip_address_of=ip_address_of,

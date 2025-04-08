@@ -398,6 +398,11 @@ def get_section_information() -> results.GetSectionInformationResult:
     )
 
 
+@request_memoize()
+def get_section_information_cached() -> Mapping[str, Mapping[str, str]]:
+    return get_section_information().section_infos
+
+
 def scan_parents(
     site_id: SiteId,
     host_name: HostName,

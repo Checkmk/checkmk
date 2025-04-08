@@ -45,15 +45,29 @@ impl ClapPubKeyAlgorithm {
 
 fn parse_levels<F, T1, T2, U>(strat: LevelsStrategy, lvl: Vec<T1>, mut conv: F) -> Levels<U>
 where
-    T1: std::fmt::Debug,
+    T1: std::fmt::Debug + Clone,
     T2: std::fmt::Debug + std::convert::From<T1>,
-    U: Clone + std::default::Default + std::cmp::PartialOrd,
+    U: Clone + std::default::Default + std::cmp::PartialOrd + std::fmt::Debug,
     F: FnMut(T2) -> U,
 {
     let lvl: [_; 2] = lvl.try_into().expect("invalid arg count");
+    let lvl_orig = lvl.clone();
     let mut lvl = lvl.map(|x| conv(x.into()));
-    let Ok(lvl) = Levels::try_new(strat, mem::take(&mut lvl[0]), mem::take(&mut lvl[1])) else {
-        check::bail_out("invalid args")
+    let Ok(lvl) = Levels::try_new(
+        strat.clone(),
+        mem::take(&mut lvl[0]),
+        mem::take(&mut lvl[1]),
+    ) else {
+        check::bail_out(match strat {
+            LevelsStrategy::Upper => format!(
+                "invalid args: WARN must be smaller than or equal to CRIT but got {:?} {:?}",
+                lvl_orig[0], lvl_orig[1]
+            ),
+            LevelsStrategy::Lower => format!(
+                "invalid args: WARN must be larger than or equal to CRIT but got {:?} {:?}",
+                lvl_orig[0], lvl_orig[1]
+            ),
+        })
     };
     lvl
 }

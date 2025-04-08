@@ -12,7 +12,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.netscaler import SNMP_DETECT
+from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 
 check_info = {}
 

@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.netscaler_tcp_conns import check, discover, parse, Section
+from cmk.plugins.netscaler.agent_based.netscaler_tcp_conns import check, discover, parse, Section
 
 
 def test_parse() -> None:

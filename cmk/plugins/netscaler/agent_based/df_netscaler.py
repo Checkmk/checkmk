@@ -23,7 +23,8 @@ from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlocks,
 )
-from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+from .lib import SNMP_DETECT
 
 #
 # Example Output:

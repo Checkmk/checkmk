@@ -19,7 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+from .lib import SNMP_DETECT
 
 netscaler_vserver_states = {
     "0": (1, "unknown"),

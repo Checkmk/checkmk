@@ -16,7 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+from .lib import SNMP_DETECT
 
 # example SNMP output:
 #

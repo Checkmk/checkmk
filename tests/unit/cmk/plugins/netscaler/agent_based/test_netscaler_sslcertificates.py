@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import netscaler_sslcertificates
+from cmk.plugins.netscaler.agent_based import netscaler_sslcertificates
 
 PARAMS = {
     "age_levels": (30, 10),

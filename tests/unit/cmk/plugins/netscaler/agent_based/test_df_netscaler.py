@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.df_netscaler as dfn
+import cmk.plugins.netscaler.agent_based.df_netscaler as dfn
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 

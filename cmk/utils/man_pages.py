@@ -226,7 +226,7 @@ CATALOG_TITLES: Final = {
     "oracle": "ORACLE Database",
     "orion": "ORION",
     "os": "Operating Systems",
-    "otel": "OpenTelemetry (Experimental)",
+    "otel": "OpenTelemetry (experimental)",
     "palo_alto": "Palo Alto Networks",
     "pandacom": "Pan Dacom",
     "papouch": "PAPOUCH",

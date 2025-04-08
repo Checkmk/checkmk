@@ -17,7 +17,7 @@ from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegra
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
-from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties, SetupHost
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -124,3 +124,44 @@ def test_filter_hosts_with_host_labels(
     assert sorted(host_search_page.found_hosts.all_inner_texts()) == sorted(
         [host.name for host in expected_hosts_list]
     ), "Unexpected host names after applying label filter."
+
+
+@pytest.fixture(name="host_to_be_deleted", scope="function")
+def fixture_host_to_be_deleted(test_site: Site) -> Iterator[list[HostDetails]]:
+    """Create a host using REST-API, which is deleted in the test-case."""
+    hosts = []
+    hosts.append(
+        HostDetails(
+            name="delete_me",
+            site=test_site.id,
+            agent_and_api_integration=AgentAndApiIntegration.no_agent,
+            address_family=AddressFamily.no_ip,
+        )
+    )
+    with create_and_delete_hosts(hosts, test_site, allow_foreign_changes=True):
+        # 'hosts' is mutable; tests/fixtures using this fixture CAN adapt its value.
+        yield hosts
+
+
+def test_delete_host_row(
+    dashboard_page: Dashboard, host_to_be_deleted: list[HostDetails], test_site: Site
+) -> None:
+    """Validate deletion of a host using the burger menu."""
+    setup_host = SetupHost(dashboard_page.page)
+    main_area = setup_host.main_area.locator()
+    # 'pop' prevents the host from being deleted (again) in teardown of fixture
+    host_details = host_to_be_deleted.pop()
+
+    # action
+    setup_host.perform_action_on_host(host_details.name, "Delete host")
+    # validation
+    expect(
+        main_area.get_by_role("dialog", name=re.compile(f"Delete host.*{host_details.name}")),
+        message=f"Missing message to confirm deletion of host: {host_details.name}!",
+    ).to_be_visible()
+    main_area.get_by_role("button", name="Remove").click()
+    expect(
+        main_area.get_by_text(host_details.name),
+        message=f"Deleted host: '{host_details.name}' is still visible!",
+    ).to_have_count(0)
+    test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

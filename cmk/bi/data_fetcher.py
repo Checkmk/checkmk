@@ -81,7 +81,6 @@ class BIStructureFetcher:
         # The key may be a pattern / regex, so `str` is the correct type for the key.
         self._hosts: dict[str, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
-        self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
 
         self._site_cache_prefix = "bi_site_cache"
         self._path_site_structure_data = Path(get_cache_dir(), "site_structure_data")

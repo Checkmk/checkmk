@@ -96,15 +96,6 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Activează această opțiune"
 
-msgid ""
-" An identifier of your choice. This identifier is used by the Checkmk checks "
-"to access and identify the single values. The identifier needs to be unique "
-"within a group of VALUETYPES."
-msgstr ""
-" Un identificator la alegere. Acest identificator este utilizat de "
-"verificările Checkmk pentru a accesa și identifica valorile unice. "
-"Identificatorul trebuie să fie unic în cadrul unui grup de VALUETYPES."
-
 #, python-format
 msgid ""
 " Enforcing two factor for the %s role will terminate any current sessions "
@@ -4655,6 +4646,10 @@ msgstr "Adrese IPv4 suplimentare"
 msgid "Additional IPv6 addresses"
 msgstr "Adrese IPv6 suplimentare"
 
+#, fuzzy
+msgid "Additional Plug-ins, local checks and MRPE configurations"
+msgstr "Plugin-uri, verificări locale și MRPE pentru utilizatorii non-root"
+
 msgid "Additional agent labels to send during registration"
 msgstr ""
 "Etichete suplimentare pentru agenți care trebuie trimise în timpul "
@@ -6561,7 +6556,7 @@ msgstr "O cale absolută către un certificat CA"
 #, fuzzy
 msgid ""
 "An absolute path to the configuration file (in case of MRPE) or to a "
-"directory in case of local / plug-in"
+"directory in case of local / plugin"
 msgstr ""
 "O cale absolută către fișierul de configurare (în cazul MRPE) sau către un "
 "director în cazul plugin-ului local / plugin"
@@ -6623,6 +6618,16 @@ msgstr ""
 "Un identificator trebuie să fie format numai din litere, cifre, dolari, "
 "subliniere, liniuță, punct și at. Acesta trebuie să înceapă cu o literă, o "
 "cifră, un dolar sau o subliniere."
+
+#, fuzzy
+msgid ""
+"An identifier of your choice. This identifier is used by the Checkmk checks "
+"to access and identify the single values. The identifier needs to be unique "
+"within a group of VALUETYPES."
+msgstr ""
+" Un identificator la alegere. Acest identificator este utilizat de "
+"verificările Checkmk pentru a accesa și identifica valorile unice. "
+"Identificatorul trebuie să fie unic în cadrul unui grup de VALUETYPES."
 
 msgid ""
 "An internal error occured while processing your request. You can report this "
@@ -12547,10 +12552,6 @@ msgstr "Checkmk agent / integrări API"
 msgid "Checkmk agent connection mode"
 msgstr "Modul de conectare a agentului Checkmk"
 
-#, fuzzy
-msgid "Checkmk agent local directory"
-msgstr "Checkmk Agent Local-Directory"
-
 msgid "Checkmk agent network service (Linux)"
 msgstr "Serviciul de rețea al agentului Checkmk (Linux)"
 
@@ -12560,10 +12561,6 @@ msgstr "Serviciul de rețea al agentului Checkmk (Solaris)"
 #, fuzzy
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmk agent plugins"
-
-#, fuzzy
-msgid "Checkmk agent plug-ins directory"
-msgstr "Checkmk Agent Plugins-Directorat"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -19632,6 +19629,14 @@ msgid "Directory (tenant) ID"
 msgstr "ID de director (chiriaș)"
 
 #, fuzzy
+msgid "Directory containing agent plugins"
+msgstr "Implementați plugin-ul agentului nvidia_smi"
+
+#, fuzzy
+msgid "Directory containing local checks"
+msgstr "Setați numărul de încercări pentru pluginuri și verificări locale"
+
+#, fuzzy
 msgid "Directory for Checkmk agent"
 msgstr "Monitorizare prin intermediul agentului Checkmk"
 
@@ -26653,6 +26658,10 @@ msgid "General display options"
 msgstr "Opțiuni generale de afișare"
 
 msgid "General error"
+msgstr "Eroare generală"
+
+#, fuzzy
+msgid "General filters"
 msgstr "Eroare generală"
 
 msgid "General information"
@@ -39052,10 +39061,6 @@ msgstr "MIB-uri livrate cu Checkmk"
 msgid "MISSING '%s'"
 msgstr "MISSING '%s'"
 
-#, fuzzy
-msgid "MK Remote Plug-in Executor (MRPE)"
-msgstr "MK Remote Plugin Executor (MRPE)"
-
 msgid ""
 "MK SQL plugin may use different monitoring backends. In some cases you may "
 "want to use ODBC backend: typical use cases are firewall problems, "
@@ -48875,6 +48880,10 @@ msgstr "Calea de acces la fișierul Cert Key"
 msgid "Path to Certificate key file"
 msgstr "Calea de acces la fișierul cu cheia de certificat"
 
+#, fuzzy
+msgid "Path to MRPE configuration file"
+msgstr "Fișiere de configurare Pretty-Print"
+
 msgid "Path to PostGreSQL binary"
 msgstr ""
 
@@ -50665,10 +50674,6 @@ msgstr ""
 msgid "Plug-ins that directly check networking protocols like HTTP or IMAP"
 msgstr ""
 "Plugin-uri care verifică direct protocoale de rețea precum HTTP sau IMAP"
-
-#, fuzzy
-msgid "Plug-ins, local checks and MRPE for non-root users"
-msgstr "Plugin-uri, verificări locale și MRPE pentru utilizatorii non-root"
 
 msgid "Plugin"
 msgstr "Plugin"
@@ -71177,16 +71182,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in allows you to let users keep their own plugins, local scripts "
-"and MRPE configuration, which will be run by the agent with the permissions "
-"of that user."
-msgstr ""
-"Acest plugin vă permite să permiteți utilizatorilor să își păstreze "
-"propriile plugin-uri, scripturi locale și configurația MRPE, care vor fi "
-"rulate de către agent cu permisiunile utilizatorului respectiv."
-
-#, fuzzy
-msgid ""
 "This plug-in can be used to check the remaining life time of SSL "
 "certificates that are contained in JAVA JAR files. The tool <tt>jarsigner -"
 "verify</tt> is being called for that purpose."
@@ -72556,6 +72551,16 @@ msgstr ""
 "creată direct în cadrul fiecărei reguli. Gestionarii de alerte sunt "
 "scripturi care trebuie să fie puse în directorul <tt>local/share/check_mk/"
 "agents/linux/alert_handlers</tt> și făcute executabile."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to let users keep their own agent plugins, local "
+"scripts and MK Remote Plugin Executor (MRPE) configuration, which will be "
+"run by the agent with the permissions of the specified user."
+msgstr ""
+"Acest plugin vă permite să permiteți utilizatorilor să își păstreze "
+"propriile plugin-uri, scripturi locale și configurația MRPE, care vor fi "
+"rulate de către agent cu permisiunile utilizatorului respectiv."
 
 #, fuzzy
 msgid ""
@@ -88931,6 +88936,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Checkmk agent local directory"
+#~ msgstr "Checkmk Agent Local-Directory"
+
+#, fuzzy
+#~ msgid "Checkmk agent plug-ins directory"
+#~ msgstr "Checkmk Agent Plugins-Directorat"
+
+#, fuzzy
+#~ msgid "MK Remote Plug-in Executor (MRPE)"
+#~ msgstr "MK Remote Plugin Executor (MRPE)"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Site-uri autorizate"

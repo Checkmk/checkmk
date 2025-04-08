@@ -98,15 +98,6 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Activar esta opção"
 
-msgid ""
-" An identifier of your choice. This identifier is used by the Checkmk checks "
-"to access and identify the single values. The identifier needs to be unique "
-"within a group of VALUETYPES."
-msgstr ""
-" Um identificador à sua escolha. Este identificador é utilizado pelas "
-"verificações Checkmk para aceder e identificar os valores individuais. O "
-"identificador tem de ser único dentro de um grupo de VALUETYPES."
-
 #, python-format
 msgid ""
 " Enforcing two factor for the %s role will terminate any current sessions "
@@ -4648,6 +4639,10 @@ msgstr "Endereços IPv4 adicionais"
 msgid "Additional IPv6 addresses"
 msgstr "Endereços IPv6 adicionais"
 
+#, fuzzy
+msgid "Additional Plug-ins, local checks and MRPE configurations"
+msgstr "Plugins, verificações locais e MRPE para usuários não-rooticiais"
+
 msgid "Additional agent labels to send during registration"
 msgstr "Etiquetas de agente adicionais a enviar durante o registo"
 
@@ -6557,7 +6552,7 @@ msgstr "Um caminho absoluto para um certificado CA"
 #, fuzzy
 msgid ""
 "An absolute path to the configuration file (in case of MRPE) or to a "
-"directory in case of local / plug-in"
+"directory in case of local / plugin"
 msgstr ""
 "Um caminho absoluto para o nome do arquivo (no caso de MRPE) ou para um "
 "diretório, no caso de local / plugin"
@@ -6620,6 +6615,16 @@ msgstr ""
 "Um identificador só pode ser constituído por letras, dígitos, dólar, "
 "sublinhado, traço, ponto e arroba. Tem de começar por uma letra, um dígito, "
 "um dólar ou um sublinhado."
+
+#, fuzzy
+msgid ""
+"An identifier of your choice. This identifier is used by the Checkmk checks "
+"to access and identify the single values. The identifier needs to be unique "
+"within a group of VALUETYPES."
+msgstr ""
+" Um identificador à sua escolha. Este identificador é utilizado pelas "
+"verificações Checkmk para aceder e identificar os valores individuais. O "
+"identificador tem de ser único dentro de um grupo de VALUETYPES."
 
 msgid ""
 "An internal error occured while processing your request. You can report this "
@@ -12532,10 +12537,6 @@ msgstr "Agentes Checkmk / integrações de API"
 msgid "Checkmk agent connection mode"
 msgstr "Modo de ligação do agente Checkmk"
 
-#, fuzzy
-msgid "Checkmk agent local directory"
-msgstr "Checkmk Agente de Direção Local"
-
 msgid "Checkmk agent network service (Linux)"
 msgstr "Serviço de rede do agente Checkmk (Linux)"
 
@@ -12545,10 +12546,6 @@ msgstr "Serviço de rede do agente Checkmk (Solaris)"
 #, fuzzy
 msgid "Checkmk agent plug-ins"
 msgstr "Plugins de agente Checkmk"
-
-#, fuzzy
-msgid "Checkmk agent plug-ins directory"
-msgstr "Checkmk Agent Plugins-Directory"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -19604,6 +19601,14 @@ msgid "Directory (tenant) ID"
 msgstr "ID do directório (inquilino)"
 
 #, fuzzy
+msgid "Directory containing agent plugins"
+msgstr "Implantar o plug-in do agente nvidia_smi"
+
+#, fuzzy
+msgid "Directory containing local checks"
+msgstr "Definir nova contagem de tentativas para plugins e verificações locais"
+
+#, fuzzy
 msgid "Directory for Checkmk agent"
 msgstr "Monitor via Checkmk Agent"
 
@@ -26609,6 +26614,10 @@ msgid "General display options"
 msgstr "Opções de exibição geral"
 
 msgid "General error"
+msgstr "Erro geral"
+
+#, fuzzy
+msgid "General filters"
 msgstr "Erro geral"
 
 msgid "General information"
@@ -38980,10 +38989,6 @@ msgstr "MIBs enviados com Checkmk"
 msgid "MISSING '%s'"
 msgstr "MISSING '%s"
 
-#, fuzzy
-msgid "MK Remote Plug-in Executor (MRPE)"
-msgstr "Executor de Plugin Remoto MK (MRPE)"
-
 msgid ""
 "MK SQL plugin may use different monitoring backends. In some cases you may "
 "want to use ODBC backend: typical use cases are firewall problems, "
@@ -48778,6 +48783,10 @@ msgstr "Caminho para o ficheiro Cert Key"
 msgid "Path to Certificate key file"
 msgstr "Caminho para o ficheiro da chave de certificado"
 
+#, fuzzy
+msgid "Path to MRPE configuration file"
+msgstr "Arquivos de configuração Pretty-Print"
+
 msgid "Path to PostGreSQL binary"
 msgstr ""
 
@@ -50569,10 +50578,6 @@ msgstr ""
 #, fuzzy
 msgid "Plug-ins that directly check networking protocols like HTTP or IMAP"
 msgstr "Plugins que verificam diretamente protocolos de rede como HTTP ou IMAP"
-
-#, fuzzy
-msgid "Plug-ins, local checks and MRPE for non-root users"
-msgstr "Plugins, verificações locais e MRPE para usuários não-rooticiais"
 
 msgid "Plugin"
 msgstr "Plugin"
@@ -70923,16 +70928,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in allows you to let users keep their own plugins, local scripts "
-"and MRPE configuration, which will be run by the agent with the permissions "
-"of that user."
-msgstr ""
-"Este plugin permite que os usuários mantenham seus próprios plugins, scripts "
-"locais e configuração MRPE, que serão executados pelo agente com as "
-"permissões desse usuário."
-
-#, fuzzy
-msgid ""
 "This plug-in can be used to check the remaining life time of SSL "
 "certificates that are contained in JAVA JAR files. The tool <tt>jarsigner -"
 "verify</tt> is being called for that purpose."
@@ -72277,6 +72272,16 @@ msgstr ""
 "criado directamente em cada regra. Os manipuladores de alertas são scripts "
 "que precisam de ser colocados no directório <tt>local/share/check_mk/agents/"
 "linux/alert_handlers</tt> e tornados executáveis."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to let users keep their own agent plugins, local "
+"scripts and MK Remote Plugin Executor (MRPE) configuration, which will be "
+"run by the agent with the permissions of the specified user."
+msgstr ""
+"Este plugin permite que os usuários mantenham seus próprios plugins, scripts "
+"locais e configuração MRPE, que serão executados pelo agente com as "
+"permissões desse usuário."
 
 #, fuzzy
 msgid ""
@@ -88644,6 +88649,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Checkmk agent local directory"
+#~ msgstr "Checkmk Agente de Direção Local"
+
+#, fuzzy
+#~ msgid "Checkmk agent plug-ins directory"
+#~ msgstr "Checkmk Agent Plugins-Directory"
+
+#, fuzzy
+#~ msgid "MK Remote Plug-in Executor (MRPE)"
+#~ msgstr "Executor de Plugin Remoto MK (MRPE)"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Sites autorizados"

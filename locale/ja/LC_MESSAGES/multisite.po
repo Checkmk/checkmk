@@ -94,15 +94,6 @@ msgstr ""
 msgid " Activate this option"
 msgstr " このオプションを有効にする"
 
-msgid ""
-" An identifier of your choice. This identifier is used by the Checkmk checks "
-"to access and identify the single values. The identifier needs to be unique "
-"within a group of VALUETYPES."
-msgstr ""
-" 任意の識別子。この識別子は、Checkmkチェックが単一の値にアクセスし、識別する"
-"ために使用されます。識別子はVALUETYPESのグループ内で一意である必要がありま"
-"す。"
-
 #, python-format
 msgid ""
 " Enforcing two factor for the %s role will terminate any current sessions "
@@ -4430,6 +4421,10 @@ msgstr "追加のIPv4アドレス"
 msgid "Additional IPv6 addresses"
 msgstr "追加のIPv6アドレス"
 
+#, fuzzy
+msgid "Additional Plug-ins, local checks and MRPE configurations"
+msgstr "root以外のユーザー向けのプラグイン、ローカルチェック、MRPE"
+
 msgid "Additional agent labels to send during registration"
 msgstr "登録時に送信するエージェントラベルの追加"
 
@@ -6205,9 +6200,10 @@ msgstr ""
 msgid "An absolute path to a CA certificate"
 msgstr "CA証明書への絶対パス"
 
+#, fuzzy
 msgid ""
 "An absolute path to the configuration file (in case of MRPE) or to a "
-"directory in case of local / plug-in"
+"directory in case of local / plugin"
 msgstr ""
 "構成ファイル（MRPE の場合）への絶対パス、またはローカル / プラグインの場合は"
 "ディレクトリへの絶対パス"
@@ -6265,6 +6261,16 @@ msgstr ""
 "識別子は、文字、数字、ドル、アンダースコア、ダッシュ、ドット、プラス、アット"
 "のみで構成されなければならない。また、文字、数字、ドル、アンダースコアで始め"
 "なければならない。"
+
+#, fuzzy
+msgid ""
+"An identifier of your choice. This identifier is used by the Checkmk checks "
+"to access and identify the single values. The identifier needs to be unique "
+"within a group of VALUETYPES."
+msgstr ""
+" 任意の識別子。この識別子は、Checkmkチェックが単一の値にアクセスし、識別する"
+"ために使用されます。識別子はVALUETYPESのグループ内で一意である必要がありま"
+"す。"
 
 msgid ""
 "An internal error occured while processing your request. You can report this "
@@ -11892,9 +11898,6 @@ msgstr "Checkmkエージェント/API統合"
 msgid "Checkmk agent connection mode"
 msgstr "Checkmkエージェント接続モード"
 
-msgid "Checkmk agent local directory"
-msgstr "Checkmkエージェントローカルディレクトリ"
-
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmkエージェントネットワークサービス(Linux)"
 
@@ -11903,9 +11906,6 @@ msgstr "Checkmkエージェントネットワークサービス(Solaris)"
 
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmkエージェントプラグイン"
-
-msgid "Checkmk agent plug-ins directory"
-msgstr "Checkmkエージェントプラグイン-ディレクトリ"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -18640,6 +18640,14 @@ msgid "Directory (tenant) ID"
 msgstr "ディレクトリ(テナント)ID"
 
 #, fuzzy
+msgid "Directory containing agent plugins"
+msgstr "nvidia_smi エージェントプラグインをデプロイする"
+
+#, fuzzy
+msgid "Directory containing local checks"
+msgstr "プラグインとローカルチェックのリトライ回数を設定する"
+
+#, fuzzy
 msgid "Directory for Checkmk agent"
 msgstr "Checkmkエージェントを介して監視する"
 
@@ -25356,6 +25364,10 @@ msgid "General display options"
 msgstr "一般的な表示オプション"
 
 msgid "General error"
+msgstr "一般的なエラー"
+
+#, fuzzy
+msgid "General filters"
 msgstr "一般的なエラー"
 
 msgid "General information"
@@ -37220,9 +37232,6 @@ msgstr "Checkmkに同梱されているMIB"
 msgid "MISSING '%s'"
 msgstr "%s' がありません"
 
-msgid "MK Remote Plug-in Executor (MRPE)"
-msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
-
 msgid ""
 "MK SQL plugin may use different monitoring backends. In some cases you may "
 "want to use ODBC backend: typical use cases are firewall problems, "
@@ -46665,6 +46674,10 @@ msgstr "Cert Keyファイルへのパス"
 msgid "Path to Certificate key file"
 msgstr "証明書キーファイルへのパス"
 
+#, fuzzy
+msgid "Path to MRPE configuration file"
+msgstr "Pretty-コンフィギュレーションファイルを印刷します"
+
 msgid "Path to PostGreSQL binary"
 msgstr "PostGreSQLバイナリへのパス"
 
@@ -48338,9 +48351,6 @@ msgstr ""
 
 msgid "Plug-ins that directly check networking protocols like HTTP or IMAP"
 msgstr "HTTPやIMAPなどのネットワークプロトコルを直接チェックするプラグイン"
-
-msgid "Plug-ins, local checks and MRPE for non-root users"
-msgstr "root以外のユーザー向けのプラグイン、ローカルチェック、MRPE"
 
 msgid "Plugin"
 msgstr "プラグイン"
@@ -67820,14 +67830,6 @@ msgstr ""
 "クスと時間範囲を提供します。注意して使用してください。"
 
 msgid ""
-"This plug-in allows you to let users keep their own plugins, local scripts "
-"and MRPE configuration, which will be run by the agent with the permissions "
-"of that user."
-msgstr ""
-"このプラグインを使用すると、独自のプラグイン、ローカルスクリプト、MRPEの設定"
-"をユーザーが保持することができます。"
-
-msgid ""
 "This plug-in can be used to check the remaining life time of SSL "
 "certificates that are contained in JAVA JAR files. The tool <tt>jarsigner -"
 "verify</tt> is being called for that purpose."
@@ -69079,6 +69081,15 @@ msgstr ""
 "成されます。アラートハンドラーはスクリプトで、<tt>local/share/check_mk/"
 "agents/linux/alert_handlers</tt>ディレクトリに置き、実行可能にする必要があり"
 "ます。"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to let users keep their own agent plugins, local "
+"scripts and MK Remote Plugin Executor (MRPE) configuration, which will be "
+"run by the agent with the permissions of the specified user."
+msgstr ""
+"このプラグインを使用すると、独自のプラグイン、ローカルスクリプト、MRPEの設定"
+"をユーザーが保持することができます。"
 
 msgid ""
 "This ruleset allows you to restrict notifications of host problems to "
@@ -84433,6 +84444,15 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Checkmk agent local directory"
+#~ msgstr "Checkmkエージェントローカルディレクトリ"
+
+#~ msgid "Checkmk agent plug-ins directory"
+#~ msgstr "Checkmkエージェントプラグイン-ディレクトリ"
+
+#~ msgid "MK Remote Plug-in Executor (MRPE)"
+#~ msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
 
 #~ msgid "Authorized sites"
 #~ msgstr "認定サイト"

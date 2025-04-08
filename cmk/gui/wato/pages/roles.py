@@ -350,11 +350,16 @@ class ModeEditRole(WatoMode):
         return url
 
     def page(self) -> None:
-        with html.form_context("role", method="POST"):
+        with html.form_context(
+            "role",
+            method="POST",
+            confirm_on_leave=True,
+        ):
             self._page_form()
 
     def _page_form(self) -> None:
         search = get_search_expression()
+
         # ID
         forms.header(_("Basic properties"), css="wide")
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)

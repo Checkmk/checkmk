@@ -56,6 +56,7 @@ KnownTSFunction = typing.Literal[
     "insert_before",
     "lock_and_redirect",
     "fix_simplebar_scroll_to_id_in_chrome",
+    "confirm_on_form_leave",
 ]
 
 

@@ -1919,6 +1919,7 @@ class SiteFactory:
         site = self.get_existing_site(test_site.id)
 
         _assert_tmpfs(site, base_package.version)
+        _assert_nagvis_server(target_package)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1988,6 +1989,7 @@ class SiteFactory:
         site = self.get_existing_site(site.id)
 
         _assert_tmpfs(site, base_package.version)
+        _assert_nagvis_server(target_package)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -2247,6 +2249,13 @@ def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
         assert "counters" in tmp_dirs
         assert "piggyback" in tmp_dirs
         assert "piggyback_sources" in tmp_dirs
+
+
+def _assert_nagvis_server(package: CMKPackageInfo) -> None:
+    nagvis_server_path = Path(
+        f"/opt/omd/versions/{str(package)}/share/nagvis/htdocs/server/core/classes"
+    )
+    assert nagvis_server_path.exists()
 
 
 def tracing_config_from_env(env: Mapping[str, str]) -> TracingConfig:

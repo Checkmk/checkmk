@@ -16,6 +16,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
+    QSHostPath,
     QSSiteSelection,
     UniqueBundleIDStr,
 )
@@ -25,6 +26,10 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _create_diag_special_agent_input,
     _find_id_in_form_data,
 )
+from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
+    existing_folder_from_path,
+    normalize_folder_path_str,
+)
 from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -33,7 +38,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree, Host
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -138,4 +143,38 @@ def validate_host_name_doesnt_exists(
             % (host_name, host.folder().alias_path())
         ]
 
+    return []
+
+
+def validate_host_path_permissions(
+    _quick_setup_id: QuickSetupId,
+    stages_form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
+) -> GeneralStageErrors:
+    host_path = _find_id_in_form_data(stages_form_data, QSHostPath)
+    assert host_path is not None
+
+    sanitized_folder_path = normalize_folder_path_str(host_path)
+    if folder := existing_folder_from_path(sanitized_folder_path):
+        has_permissions = folder.permissions.may("write")
+    else:
+        # If the folder does not exist, we need to check if the user has permissions to create it
+        # in the potential parent folder
+        folder = folder_tree().root_folder()
+        for title in sanitized_folder_path.split("/"):
+            name = _normalize_folder_name(title)
+            potential_sub_folder = folder.subfolder_by_title(title) or folder.subfolder(name)
+            if potential_sub_folder is None:
+                break
+            folder = potential_sub_folder
+        has_permissions = folder.permissions.may("write")
+
+    if not has_permissions:
+        return [
+            _(
+                "You do not have permission to create a new host in the folder %s. "
+                "Please choose a different folder."
+            )
+            % (folder.alias_path())
+        ]
     return []

@@ -135,8 +135,9 @@ build --incompatible_strict_action_env
 #       `git`, etc.
 #       Also note that in some distro specific exceptions we force tools to be located in
 #       `/usr/bin` (by symlinking) when building the build images
-build --action_env=PATH="/usr/bin:/bin"
-build --host_action_env=PATH="/usr/bin:/bin"
+build --enable_platform_specific_config
+build:linux --action_env=PATH="/usr/bin:/bin"
+build:linux --host_action_env=PATH="/usr/bin:/bin"
 
 # Must be last
 try-import /etc/ci.bazelrc

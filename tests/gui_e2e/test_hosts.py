@@ -12,11 +12,8 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.host_details import (
-    AddressFamily,
-    AgentAndApiIntegration,
-    HostDetails,
-)
+from tests.gui_e2e.testlib.common import create_and_delete_hosts
+from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
@@ -84,7 +81,6 @@ def test_reschedule(host: HostProperties) -> None:
 
 @pytest.fixture(name="hosts_with_labels")
 def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[HostDetails], str]]:
-    site = test_site
     label_key = "label_key"
     label_value_foo = "foo"
     label_value_bar = "bar"
@@ -92,12 +88,11 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
     bar_label_hosts = []
     faker = Faker()
 
-    logger.info("Create hosts with labels via API")
     for i in range(8):
         host_details = HostDetails(
             name=f"test_host_{faker.unique.first_name()}",
             ip="127.0.0.1",
-            site=site.id,
+            site=test_site.id,
             agent_and_api_integration=AgentAndApiIntegration.no_agent,
             address_family=AddressFamily.ip_v4_only,
         )
@@ -107,18 +102,8 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
         else:
             host_details.labels = {label_key: label_value_bar}
             bar_label_hosts.append(host_details)
-        test_site.openapi.hosts.create(
-            host_details.name,
-            attributes=host_details.rest_api_attributes(),
-        )
-    site.activate_changes_and_wait_for_core_reload()
-
-    yield foo_label_hosts, f"{label_key}:{label_value_foo}"
-
-    logger.info("Delete all hosts via API")
-    for host in foo_label_hosts + bar_label_hosts:
-        site.openapi.hosts.delete(host.name)
-    site.activate_changes_and_wait_for_core_reload()
+    with create_and_delete_hosts(foo_label_hosts + bar_label_hosts, test_site):
+        yield foo_label_hosts, f"{label_key}:{label_value_foo}"
 
 
 def test_filter_hosts_with_host_labels(

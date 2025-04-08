@@ -49,6 +49,7 @@ HERE
 _set_agent_user_permissions() {
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/agent"
+    chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/local"
     chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
 }
 

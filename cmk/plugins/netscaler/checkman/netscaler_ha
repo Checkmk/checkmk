@@ -4,17 +4,23 @@ catalog: app/netscaler
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the high availability status of Citrix Netscaler
- Loadbalacing Appliances operating in a cluster setup. It uses snmp and the
- NS-ROOT-MIB to access the {haPeerState}, {haCurStatus} and {haCurState}
- OIDs from the nsHighAvailabilityGroup.
+ This check monitors the high-availability (HA) status of Citrix Netscaler
+ load balancing appliances operating in a cluster setup. The check monitors
+ the following aspects:
 
- The check is in the state OK when the system is not setup for ha, or
- {haCurState} is up/funtional. It is in the state WARN when the system is
- manually configured not to participate in a HA cluster, or initializing to
- become a cluster member, or when {haCurState} is {monitorFAIL}, {monitorOK},
- or {unkown} because these states are not documented in the MIB. It is
- critical in other states {haCurState} can be.
+ - Health of the HA node.
+
+ - Failover mode (primary/secondary) of the HA node. If the failover mode
+   is unknown, the plugin goes UNKN. In case the appliance does not operate
+   in HA mode anymore, the plugin goes stale. Furthermore, the plugin can
+   alert on failovers. This behavior is configurable. Users can choose to
+   ignore failovers, which is the default, to compare against the failover
+   mode at the point in time of the last service discovery or to expliclity
+   configure the expected failover mode.
+
+ - Failover mode of the peer HA node. The plugin alerts if the failover mode
+   of the peer node is unknown or if the peer node reports that it operates
+   in standalone mode.
 
 discovery:
- One service is created for each host.
+ One service is created for each host that operates in high-availability mode.

@@ -35,6 +35,13 @@ def test_parse_esx_vsphere_counters() -> None:
             ["sys.resourceMemConsumed", "host/vim/vmvisor/vmsupport", "0#0", "kiloBytes"],
             ["sys.resourceMemConsumed", "host/vim/vmvisor/vvold", "9192#9192", "kiloBytes"],
             ["net.macaddress", "vmnic4", "64:51:06:f0:c5:d0", "mac"],
+            ["gpu.mem.reserved", "gpu1", "2219712#2219712", "kiloBytes"],
+            ["gpu.mem.total", "gpu1", "23580672#23580672", "kiloBytes"],
+            ["gpu.mem.usage", "gpu1", "941#941", "percent"],
+            ["gpu.mem.used", "gpu1", "2219712#2219712", "kiloBytes"],
+            ["gpu.power.used", "gpu1", "24#24", "watt"],
+            ["gpu.temperature", "gpu1", "37#37", "celsius"],
+            ["gpu.utilization", "gpu1", "42#42", "percent"],
         ]
     ) == {
         "disk.numberReadAveraged": {
@@ -64,6 +71,13 @@ def test_parse_esx_vsphere_counters() -> None:
             "host/vim/vmvisor/vmsupport": [(["0", "0"], "kiloBytes")],
             "host/vim/vmvisor/vvold": [(["9192", "9192"], "kiloBytes")],
         },
+        "gpu.mem.reserved": {"gpu1": [(["2219712", "2219712"], "kiloBytes")]},
+        "gpu.mem.total": {"gpu1": [(["23580672", "23580672"], "kiloBytes")]},
+        "gpu.mem.usage": {"gpu1": [(["941", "941"], "percent")]},
+        "gpu.mem.used": {"gpu1": [(["2219712", "2219712"], "kiloBytes")]},
+        "gpu.power.used": {"gpu1": [(["24", "24"], "watt")]},
+        "gpu.temperature": {"gpu1": [(["37", "37"], "celsius")]},
+        "gpu.utilization": {"gpu1": [(["42", "42"], "percent")]},
     }
 
 

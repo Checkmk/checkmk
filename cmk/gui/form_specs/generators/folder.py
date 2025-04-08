@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Callable, Sequence
+
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -10,7 +12,9 @@ from cmk.rulesets.v1.form_specs import DefaultValue
 
 
 def create_full_path_folder_choice(
-    title: Title, help_text: Help | None
+    title: Title,
+    help_text: Help | None,
+    custom_validate: Sequence[Callable[[str], object]] | None = None,
 ) -> SingleChoiceExtended[str]:
     choices = folder_tree().folder_choices_fulltitle()
     return SingleChoiceExtended[str](
@@ -24,4 +28,5 @@ def create_full_path_folder_choice(
             for choice in choices
         ],
         prefill=DefaultValue(""),
+        custom_validate=custom_validate,
     )

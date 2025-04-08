@@ -14,10 +14,16 @@ from cmk.gui.form_specs.vue.visitors._registry import get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
+
+
+def folder_is_writable(name: str) -> None:
+    if not folder_tree().all_folders()[name].permissions.may("write"):
+        raise ValidationError(Message("You do not have write permission for this folder."))
 
 
 def get_folder_slidein_schema() -> Catalog:
@@ -37,6 +43,7 @@ def get_folder_slidein_schema() -> Catalog:
                         parameter_form=create_full_path_folder_choice(
                             title=Title("Parent folder"),
                             help_text=Help("Select the parent folder"),
+                            custom_validate=[folder_is_writable],
                         ),
                         required=True,
                     ),

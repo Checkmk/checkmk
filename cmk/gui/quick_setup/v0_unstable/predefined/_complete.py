@@ -31,6 +31,10 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_passwords_from_form_data,
     _find_id_in_form_data,
 )
+from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
+    existing_folder_from_path,
+    normalize_folder_path_str,
+)
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import site_is_local
@@ -72,69 +76,14 @@ class DCDHook:
     ] = lambda *_args: []
 
 
-def _normalize_folder_path_str(folder_path: str) -> str:
-    r"""Normalizes a folder representation
-
-    Args:
-        folder_id:
-            A representation of a folder.
-
-    Examples:
-
-        >>> _normalize_folder_path_str("\\")
-        ''
-
-        >>> _normalize_folder_path_str("~")
-        ''
-
-        >>> _normalize_folder_path_str("/foo/bar")
-        'foo/bar'
-
-        >>> _normalize_folder_path_str("\\foo\\bar")
-        'foo/bar'
-
-        >>> _normalize_folder_path_str("~foo~bar")
-        'foo/bar'
-
-        >>> _normalize_folder_path_str("/foo/bar/")
-        'foo/bar'
-
-    Returns:
-        The normalized representation.
-
-    """
-
-    if folder_path in ["/", "~", "\\", ""]:
-        return ""
-
-    prev = folder_path
-    separators = ["\\", "~"]
-    while True:
-        for sep in separators:
-            folder_path = folder_path.replace(sep, "/")
-        if prev == folder_path:
-            break
-        prev = folder_path
-    if len(folder_path) > 1 and folder_path.endswith("/"):
-        folder_path = folder_path[:-1]
-
-    if folder_path.startswith("/"):
-        folder_path = folder_path[1:]
-
-    return folder_path
-
-
 def sanitize_folder_path(folder_path: str) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
-    tree = folder_tree()
-    sanitized_folder_path = _normalize_folder_path_str(folder_path)
-    if sanitized_folder_path == "":
-        return tree.root_folder()
-    if sanitized_folder_path in tree.all_folders():
-        return tree.all_folders()[sanitized_folder_path]
+    sanitized_folder_path = normalize_folder_path_str(folder_path)
+    if folder := existing_folder_from_path(sanitized_folder_path):
+        return folder
 
-    folder = tree.root_folder()
+    folder = folder_tree().root_folder()
     for title in sanitized_folder_path.split("/"):
         name = _normalize_folder_name(title)
         folder = (

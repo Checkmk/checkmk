@@ -26,6 +26,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ServiceInterest,
 )
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -74,3 +75,64 @@ def group_services_by_interest(
         else:
             others.append(check_preview_entry)
     return check_preview_entry_by_service_interest, others
+
+
+def normalize_folder_path_str(folder_path: str) -> str:
+    r"""Normalizes a folder representation
+
+    Args:
+        folder_path:
+            A representation of a folder.
+
+    Examples:
+
+        >>> normalize_folder_path_str("\\")
+        ''
+
+        >>> normalize_folder_path_str("~")
+        ''
+
+        >>> normalize_folder_path_str("/foo/bar")
+        'foo/bar'
+
+        >>> normalize_folder_path_str("\\foo\\bar")
+        'foo/bar'
+
+        >>> normalize_folder_path_str("~foo~bar")
+        'foo/bar'
+
+        >>> normalize_folder_path_str("/foo/bar/")
+        'foo/bar'
+
+    Returns:
+        The normalized representation.
+
+    """
+
+    if folder_path in ["/", "~", "\\", ""]:
+        return ""
+
+    prev = folder_path
+    separators = ["\\", "~"]
+    while True:
+        for sep in separators:
+            folder_path = folder_path.replace(sep, "/")
+        if prev == folder_path:
+            break
+        prev = folder_path
+    if len(folder_path) > 1 and folder_path.endswith("/"):
+        folder_path = folder_path[:-1]
+
+    if folder_path.startswith("/"):
+        folder_path = folder_path[1:]
+
+    return folder_path
+
+
+def existing_folder_from_path(sanitized_folder_path: str) -> Folder | None:
+    tree = folder_tree()
+    if sanitized_folder_path == "":
+        return tree.root_folder()
+    if sanitized_folder_path in tree.all_folders():
+        return tree.all_folders()[sanitized_folder_path]
+    return None

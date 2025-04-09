@@ -59,7 +59,10 @@ export async function confirm_on_form_leave(
     container: HTMLElement,
     _: Record<string, string>,
 ) {
-    window.addEventListener("beforeunload", enable_beforeunload);
+    container.addEventListener("change", () => {
+        window.addEventListener("beforeunload", enable_beforeunload);
+    });
+
     container.addEventListener("submit", disable_beforeunload);
 }
 

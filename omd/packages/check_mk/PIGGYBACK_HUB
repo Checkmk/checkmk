@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Alias: Start daemon for the piggyback-hub
-# Menu: Addons
+# Menu: Distributed Monitoring
 # Description:
 #  This option enables the piggyback-hub.
 #  It will distribute piggybacked sections to other remote sites

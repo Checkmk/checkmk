@@ -34,6 +34,7 @@ from cmk.utils.notify_types import (
     SpectrumPluginModel,
     SplunkPluginModel,
 )
+from cmk.utils.password_store import Password
 
 import cmk.gui.exceptions
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -42,6 +43,7 @@ from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
     NotificationRuleConfigFile,
 )
+from cmk.gui.watolib.password_store import PasswordStore
 
 from cmk.update_config.plugins.actions.migrate_notifications import (
     MigrateNotifications,
@@ -67,6 +69,23 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
         return NotificationParameterID(f"<uuid-{current_id}>")
 
     monkeypatch.setattr(sample_config, "new_notification_parameter_id", patch)
+
+
+PW_STORE_KEY = "from_store"
+PW_STORE = Password(
+    title="title",
+    password="password",
+    comment="comment",
+    docu_url="docu_url",
+    owned_by=None,
+    shared_with=[],
+)
+
+
+@pytest.fixture(autouse=True)
+def make_pw_store_user_independent(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(PasswordStore, "filter_usable_entries", lambda self, entries: entries)
+    monkeypatch.setattr(PasswordStore, "load_for_reading", lambda path: {PW_STORE_KEY: PW_STORE})
 
 
 def migrate_parameters(rule_config: list[EventRule]) -> dict[str, NotificationParameterSpec]:
@@ -249,7 +268,7 @@ CISCO_WEBEX_TEAMS_PASSWORD_STORE_RULE_CONFIG: Final = [
         notify_plugin=(
             "cisco_webex_teams",
             CiscoPluginModel(
-                webhook_url=("store", "password_1"),
+                webhook_url=("store", PW_STORE_KEY),
                 url_prefix={"automatic": "https"},  # type: ignore[typeddict-item]
                 ignore_ssl=True,
                 proxy_url=("no_proxy", None),  # type: ignore[typeddict-item]
@@ -259,7 +278,6 @@ CISCO_WEBEX_TEAMS_PASSWORD_STORE_RULE_CONFIG: Final = [
 ]
 
 
-@pytest.mark.skip(reason="Still investigating how to use correct FormSpec for Passwordstoremix")
 def test_migrate_cisco_webex_teams_password_store_notification_parameter() -> None:
     value = migrate_parameters(CISCO_WEBEX_TEAMS_PASSWORD_STORE_RULE_CONFIG)
     expected = {
@@ -273,7 +291,7 @@ def test_migrate_cisco_webex_teams_password_store_notification_parameter() -> No
                 "parameter_properties": {
                     "webhook_url": (
                         "store",
-                        "password_1",
+                        PW_STORE_KEY,
                     ),
                     "url_prefix": ("automatic_https", None),
                     "ignore_ssl": True,
@@ -285,7 +303,6 @@ def test_migrate_cisco_webex_teams_password_store_notification_parameter() -> No
     assert value == expected
 
 
-@pytest.mark.skip(reason="Still investigating how to use correct FormSpec for Passwordstoremix")
 def test_migrate_cisco_webex_teams_password_store_notification_plugin() -> None:
     migrate_parameters(CISCO_WEBEX_TEAMS_PASSWORD_STORE_RULE_CONFIG)
 

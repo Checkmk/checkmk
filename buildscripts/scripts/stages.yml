@@ -667,6 +667,5 @@ STAGES:
     - NAME: "Enforced package build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE
       DIR: ""
-      JENKINS_API_ACCESS: true
       COMMAND: "scripts/run-uvenv ci-artifacts --credentials url_env=JENKINS_URL,username_env=JENKINS_USERNAME,password_env=JENKINS_PASSWORD --log-level info validate checkmk/master/builders/build-cmk-distro-package --params=DISTRO=ubuntu-22.04,VERSION=daily,EDITION=enterprise,CUSTOM_GIT_REF=${PATCHSET_REVISION}"
       TEXT_ON_SKIP: "No package dependencies changed"

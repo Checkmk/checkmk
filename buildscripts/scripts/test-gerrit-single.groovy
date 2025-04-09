@@ -9,7 +9,6 @@ def main() {
         "CIPARAM_ENV_VARS",
         "CIPARAM_ENV_VAR_LIST_STR",
         "CIPARAM_SEC_VAR_LIST_STR",
-        "CIPARAM_JENKINS_API_ACCESS",
         "CIPARAM_COMMAND",
         "CIPARAM_RESULT_CHECK_FILE_PATTERN",
         "CIPARAM_BAZEL_LOCKS_AMOUNT",
@@ -33,13 +32,6 @@ def main() {
         sec_var_list = params.CIPARAM_SEC_VAR_LIST_STR.split("#");
         credentials = sec_var_list.collect{string(credentialsId: it, variable: it)}
     }
-    if (params.JENKINS_API_ACCESS) {
-        credentials.add(usernamePassword(
-            credentialsId: 'jenkins-api-token',
-            usernameVariable: 'JENKINS_USERNAME',
-            passwordVariable: 'JENKINS_PASSWORD'
-        ))
-    }
     def result_dir = "${params.CIPARAM_RESULT_CHECK_FILE_PATTERN.split('/')[0]}";
     def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}");
     def cmd_status = 1; // be sure to fail, in case of other failures
@@ -54,7 +46,6 @@ def main() {
         |env_var_list.......................|${env_var_list}|
         |SEC_VAR_LIST.......................|${params.CIPARAM_SEC_VAR_LIST_STR}|
         |sec_var_list.......................|${sec_var_list}|
-        |JENKINS_API_ACCESS.................|${params.JENKINS_API_ACCESS}|
         |CIPARAM_COMMAND....................|${params.CIPARAM_COMMAND}|
         |extended_cmd.......................|${extended_cmd}|
         |CIPARAM_RESULT_CHECK_FILE_PATTERN..|${params.CIPARAM_RESULT_CHECK_FILE_PATTERN}|

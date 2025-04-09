@@ -41,7 +41,6 @@ class StageInfo(TypedDict, total=False):
     ENV_VARS: Vars
     ENV_VAR_LIST: Sequence[str]
     SEC_VAR_LIST: Sequence[str]
-    JENKINS_API_ACCESS: bool
     BAZEL_LOCKS_AMOUNT: int
     COMMAND: str
     TEXT_ON_SKIP: str
@@ -115,7 +114,6 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         DIR=str(raw_stage.get("DIR", "")),
         ENV_VARS={str(k): str(v) for k, v in raw_stage.get("ENV_VARS", {}).items()},
         SEC_VAR_LIST=list(raw_stage.get("SEC_VAR_LIST", [])),
-        JENKINS_API_ACCESS=bool(raw_stage.get("JENKINS_API_ACCESS", False)),
         BAZEL_LOCKS_AMOUNT=int(raw_stage.get("BAZEL_LOCKS_AMOUNT", -1)),
         COMMAND=str(raw_stage["COMMAND"]).replace("\n", ";"),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
@@ -161,7 +159,6 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         DIR=replace_variables(in_data["DIR"], env_vars),
         ENV_VARS={k: replace_variables(v, env_vars) for k, v in in_data["ENV_VARS"].items()},
         SEC_VAR_LIST=list(in_data["SEC_VAR_LIST"]),
-        JENKINS_API_ACCESS=in_data.get("JENKINS_API_ACCESS", False),
         BAZEL_LOCKS_AMOUNT=int(replace_variables(str(in_data["BAZEL_LOCKS_AMOUNT"]), env_vars)),
         COMMAND=replace_variables(in_data["COMMAND"], env_vars),
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
@@ -180,7 +177,6 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             DIR=stage.get("DIR", ""),
             ENV_VAR_LIST=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
             SEC_VAR_LIST=list(stage.get("SEC_VAR_LIST", [])),
-            JENKINS_API_ACCESS=stage.get("JENKINS_API_ACCESS", False),
             BAZEL_LOCKS_AMOUNT=int(stage.get("BAZEL_LOCKS_AMOUNT", -1)),
             COMMAND=stage["COMMAND"],
             RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],

@@ -135,7 +135,6 @@ def main() {
                                 CIPARAM_ENV_VARS: item.ENV_VARS,
                                 CIPARAM_ENV_VAR_LIST_STR: env_var_list_str,
                                 CIPARAM_SEC_VAR_LIST_STR: sec_var_list_str,
-                                CIPARAM_JENKINS_API_ACCESS: item.JENKINS_API_ACCESS,
                                 CIPARAM_COMMAND: independent_command,
                                 CIPARAM_RESULT_CHECK_FILE_PATTERN: item.RESULT_CHECK_FILE_PATTERN,
                                 CIPARAM_BAZEL_LOCKS_AMOUNT: item.BAZEL_LOCKS_AMOUNT,

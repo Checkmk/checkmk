@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-04-08 08:30+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -94,10 +94,10 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Aktiviere diese Option"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-" Enforcing two factor for the %s role will terminate any current sessions "
-"for users who have this role but have not enabled any two factor."
+" Enforcing two-factor for the %s role will terminate any current sessions "
+"for users who have this role but have not enabled any two-factor."
 msgstr ""
 " Die Erzwingung des Zweifaktorverfahrens für die Rolle %s beendet alle "
 "laufenden Sitzungen von Benutzern, die diese Rolle haben, aber kein "
@@ -644,6 +644,10 @@ msgstr "%s pro Host"
 msgid "%s can only be deleted via Quick setup"
 msgstr "%s kann nur durch Quick Setup gelöscht werden"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via quick setup"
+msgstr "%s kann nur durch Quick Setup gelöscht werden"
+
 #, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
@@ -667,8 +671,8 @@ msgstr "%s wurde gelöscht."
 msgid "%s instances"
 msgstr "%s Instanzen"
 
-#, python-format
-msgid "%s is locked by Quick setup."
+#, fuzzy, python-format
+msgid "%s is locked by quick setup."
 msgstr "%s ist durch Quick Setup gesperrt."
 
 #, python-format
@@ -6569,7 +6573,8 @@ msgstr "Analysiere Patterns"
 msgid "Analyze recent notifications"
 msgstr "Analysiere aktuelle Benachrichtigungen"
 
-msgid "Analyze recent notifications with your current ruleset"
+#, fuzzy
+msgid "Analyze recent notifications with your current rule set"
 msgstr ""
 "Analysieren Sie die letzten Benachrichtigungen mit Ihrem aktuellen Regelsatz"
 
@@ -11010,6 +11015,10 @@ msgstr ""
 "Man kann keine Makros definieren, die Standard Einträge \"CUSTOMER_ID\" oder "
 "\"CUSTOMER_NAME\" überschreiben"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it is managed by quick setup."
+msgstr "Kann %s nicht löschen, da es von Quick Setup verwaltet wird."
+
 #, python-format
 msgid "Cannot delete %s because it's managed by Quick setup."
 msgstr "Kann %s nicht löschen, da es von Quick Setup verwaltet wird."
@@ -11018,6 +11027,11 @@ msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Kann Prozess nicht löschen. Der Prozess kann nicht gestoppt werden."
 
 msgid "Cannot delete rules that are managed by Quick setup."
+msgstr ""
+"Sie können keine Rollen löschen, die durch \"Quick Setup\" verwaltet werden."
+
+#, fuzzy
+msgid "Cannot delete rules that are managed by quick setup."
 msgstr ""
 "Sie können keine Rollen löschen, die durch \"Quick Setup\" verwaltet werden."
 
@@ -11151,8 +11165,8 @@ msgstr ""
 "Ordner kann nicht verschoben werden: Ein Ordner kann nicht in einen anderen "
 "Ordner innerhalb seiner selbst verschoben werden."
 
-msgid ""
-"Cannot move folder: A folder can not be moved to it's own parent folder."
+#, fuzzy
+msgid "Cannot move folder: A folder cannot be moved to its own parent folder."
 msgstr ""
 "Ordner kann nicht verschoben werden: Ein Ordner kann nicht in seinen eigenen "
 "übergeordneten Ordner verschoben werden."
@@ -11891,8 +11905,8 @@ msgstr "Check-Parameter"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "Check-Parameter und andere Konfigurationsvariablen für Hosts"
 
-#, python-format
-msgid "Check parameters for checktype '%s' can not be displayed"
+#, fuzzy, python-format
+msgid "Check parameters for check type '%s' can not be displayed"
 msgstr "Check-Parameter für den Check-Typ '%s' können nicht angezeigt werden"
 
 msgid "Check period"
@@ -12133,6 +12147,18 @@ msgstr "Checkmk-Agent Netzwerkdienst (Solaris)"
 
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmk-Agentenplugins"
+
+#, fuzzy
+msgid ""
+"Checkmk agent, number, version and edition of sites, cluster host; number of "
+"hosts, services, CMK Helper, Live Helper, Helper usage; state of daemons: "
+"Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+"(agent plug-in mk_inventory needs to be installed)"
+msgstr ""
+"Checkmk-Agent, Anzahl, Version und Edition der Instanzen, Cluster-Host; "
+"Anzahl der Hosts, Dienste, CMK-Helper, Live-Helper, Helper-Auslastung; "
+"Zustand der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
+"MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -13917,7 +13943,8 @@ msgstr "Google Cloud Plattform (GCP) Monitoring in Checkmk konfigurieren"
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
 
-msgid "Configure SNMP related settings using rulesets"
+#, fuzzy
+msgid "Configure SNMP related settings using rule sets"
 msgstr "Konfigurieren Sie SNMP-bezogene Einstellungen mithilfe von Regelsätzen"
 
 msgid ""
@@ -13936,7 +13963,8 @@ msgstr "Konfiguriere eine Log-Datei-Sektion"
 msgid "Configure access permissions to NagVis maps."
 msgstr "Zugangsberechtigungen für NagVis-Karten konfigurieren."
 
-msgid "Configure agent access related settings using rulesets"
+#, fuzzy
+msgid "Configure agent access related settings using rule sets"
 msgstr ""
 "Konfigurieren von agentenzugriffsbezogenen Einstellungen mithilfe von "
 "Regelsätzen"
@@ -14103,6 +14131,23 @@ msgstr ""
 "Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI. Geben Sie "
 "den Namen der Instanz mit an. Wird für den Link zu Checkmk aus Jira heraus "
 "verwendet."
+
+#, fuzzy, python-format
+msgid ""
+"Configure the community to be used when contacting this host via SNMP v1/v2 "
+"or v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+"credentials of monitored host</a> rule set. Configuring a community here "
+"explicitly overrides the community defined by a rule. Communication via SNMP "
+"v1 and v2c is unencrypted. Consider using SNMP v3 for a higher level of "
+"security."
+msgstr ""
+"Konfigurieren Sie die Community, die verwendet werden soll, wenn dieser Host "
+"über SNMP v1/v2 oder v3 kontaktiert wird. Sie können die SNMP-Community auch "
+"über den Regelsatz <a href='%s'>SNMP Zugangsdaten des überwachten Hosts</a> "
+"konfigurieren. Wenn Sie hier explizit eine Community konfigurieren, wird die "
+"durch eine Regel definierte Community außer Kraft gesetzt. Die Kommunikation "
+"über SNMP v1 und v2c ist nicht verschlüsselt. Erwägen Sie die Verwendung von "
+"SNMP v3, um ein höheres Maß an Sicherheit zu erreichen."
 
 #, python-format
 msgid ""
@@ -14476,7 +14521,8 @@ msgstr "Verbindung über TCP (IPv4)"
 msgid "Connect via TCP (IPv6)"
 msgstr "Verbindung über TCP (IPv6)"
 
-msgid "Connect via UNIX socket"
+#, fuzzy
+msgid "Connect via Unix socket"
 msgstr "Verbinde über Unix Socket"
 
 msgid "Connect without password"
@@ -14509,6 +14555,10 @@ msgstr ""
 
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
+
+#, fuzzy, python-format
+msgid "Connection ID %s already exists."
+msgstr "Die Verbindungs-ID %s existiert bereits."
 
 msgid "Connection buildup"
 msgstr "Verbindungsaufbau"
@@ -15254,9 +15304,9 @@ msgstr ""
 "DCD konnte nicht neu geladen werden: Er läuft nicht. Siehe web.log für "
 "weitere Informationen."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log for "
+"Could not reload Livestatus proxy: %s. See web.log and liveproxyd.log for "
 "further information."
 msgstr ""
 "Der Livestatus-Proxy konnte nicht neu geladen werden: %s. Weitere "
@@ -15780,8 +15830,8 @@ msgstr "Neue Benachrichtigungsregel wurde erstellt"
 msgid "Created new notification rule for user %s"
 msgstr "Neue Benachrichtigungsregel für Benutzer %s erstellt"
 
-#, python-format
-msgid "Created new peer-to-peer broker connection id %s"
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection ID %s"
 msgstr "Neue Verbindungs-ID für Peer-to-peer Broker %s erzeugt"
 
 #, python-format
@@ -15842,7 +15892,8 @@ msgstr "Erstellung"
 msgid "Creation / Locking"
 msgstr "Erstellung / Sperrung"
 
-msgid "Creation Date"
+#, fuzzy
+msgid "Creation date"
 msgstr "Erstelldatum"
 
 msgid "Creation of gateway hosts"
@@ -19207,8 +19258,8 @@ msgstr ""
 "Wiederherstellung des Passwortes anmelden kann. Benachrichtigungen sind von "
 "dieser Einstellung nicht betroffen."
 
-#, python-format
-msgid "Discarded pending changes (Restored %s)"
+#, fuzzy, python-format
+msgid "Discarded pending changes (restored %s)"
 msgstr "Aufgelaufene Änderungen verworfen (%s wiederhergestellt)"
 
 msgid "Discontinue counting after time has elapsed"
@@ -21073,8 +21124,9 @@ msgstr ""
 msgid "Each service monitors on Robot Framework tests.\n"
 msgstr "Jeder Service überwacht Robot Framework tests.\n"
 
+#, fuzzy
 msgid ""
-"Each tag group will create one dropdown choice in the host configuration."
+"Each tag group will create one drop-down choice in the host configuration."
 msgstr ""
 "Jede Merkmal-Gruppe erstellt eine Drop-down-Auswahl in der Host-"
 "Konfiguration."
@@ -21538,9 +21590,10 @@ msgstr ""
 "Namen genau entspricht. Beispiel: <tt>srv.*p</tt> passt auf <tt>srv4711p</"
 "tt> aber nicht auf <tt>xsrv4711p2</tt>. "
 
+#, fuzzy
 msgid ""
 "Either disable persistent connections or carefully review maximum number of "
-"Apache processes and possible livestatus connections."
+"Apache processes and possible Livestatus connections."
 msgstr ""
 "Deaktivieren Sie entweder dauerhafte Verbindungen oder überprüfen Sie "
 "sorgfältig die maximale Anzahl von Apache-Prozessen und möglichen Livestatus-"
@@ -22191,12 +22244,16 @@ msgstr "\"Mehr anzeigen\" erzwingen"
 msgid "Enforce two factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung erzwingen"
 
-#, python-format
-msgid "Enforce two factor on %s role"
+#, fuzzy
+msgid "Enforce two-factor authentication"
+msgstr "Zwei-Faktor-Authentifizierung erzwingen"
+
+#, fuzzy, python-format
+msgid "Enforce two-factor on %s role"
 msgstr "Zwei-Faktor-Authentifizierung für die %s Rolle erzwingen"
 
-#, python-format
-msgid "Enforce two factor on all users with %s role?"
+#, fuzzy, python-format
+msgid "Enforce two-factor on all users with %s role?"
 msgstr ""
 "Zwei-Faktor-Authentifizierung für alle Benutzer mit der %s Rolle erzwingen?"
 
@@ -23318,7 +23375,8 @@ msgstr "Erwarteter Zustand"
 msgid "Expected update interval"
 msgstr "Erwartetes Updateintervall"
 
-msgid "Expiration Date"
+#, fuzzy
+msgid "Expiration date"
 msgstr "Ablaufdatum"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
@@ -23415,7 +23473,8 @@ msgstr "Explizite Tablesspaces"
 msgid "Explicit vertical range"
 msgstr "Expliziter vertikaler Bereich"
 
-msgid "Explicit, ruleset, discovered"
+#, fuzzy
+msgid "Explicit, rule set, discovered"
 msgstr "Explizit, Regelsatz, erkannt"
 
 msgid "Explicitly map Node Exporter host"
@@ -24190,7 +24249,8 @@ msgstr "Ermittle %s von %s / %s"
 msgid "Fetching '%s'..."
 msgstr "Ermittle '%s'..."
 
-msgid "Fetching livestatus status"
+#, fuzzy
+msgid "Fetching Livestatus status"
 msgstr "Abrufen des Livestatusstatus"
 
 msgid "Fetching message broker status"
@@ -25964,7 +26024,10 @@ msgstr "Globale Einstellung"
 msgid "Global settings"
 msgstr "Globale Einstellungen"
 
-msgid "Global settings for Checkmk, Multisite and the monitoring core."
+#, fuzzy
+msgid ""
+"Global settings for Checkmk, graphical user interface (GUI) and the "
+"monitoring core."
 msgstr ""
 "Globale Einstellungen für Checkmk, grafische Benutzeroberfläche (GUI) und "
 "den Monitoring-Kern."
@@ -26594,7 +26657,8 @@ msgstr "Zu überwachende HTTP Webdienst-Endpunkte"
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S) Loadbalancer"
 
-msgid "HTTP, TCP, Email, ..."
+#, fuzzy
+msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-Mail, ..."
 
 msgid "HTTP: Active Requests"
@@ -27419,11 +27483,12 @@ msgstr ""
 "Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Instanzen zu "
 "verifizieren."
 
+#, fuzzy
 msgid ""
-"Here you can see a list of all deprecated rulesets (which are not used by "
+"Here you can see a list of all deprecated rule sets (which are not used by "
 "Checkmk anymore). If you have defined some rules here, you might have to "
 "migrate the rules to their successors. Please refer to the release notes or "
-"context help of the rulesets for details."
+"context help of the rule sets for details."
 msgstr ""
 "Hier finden Sie eine Liste von allen veralteten Regelsätzen (die von Checkmk "
 "nicht mehr verwendet werden). Falls Sie hier einige Regeln definiert haben, "
@@ -30511,9 +30576,10 @@ msgstr ""
 "Wenn diese Option aktiviert ist, enthalten die Service-Details den "
 "Benutzernamen des Prozessverantwortlichen."
 
+#, fuzzy
 msgid ""
 "If exceeded, an exception will appear. In extraordinary cases, consider "
-"calling Support Diagnostics from command line (see inline help)."
+"calling support diagnostics from command line (see inline help)."
 msgstr ""
 "Bei Überschreitung erscheint eine Exception. In Ausnahmefällen können Sie "
 "die Support Diagnostics über die Befehlszeile aufrufen (siehe Inline-Hilfe)."
@@ -30642,18 +30708,6 @@ msgstr ""
 "Wenn Sektionen nicht abgerufen werden können oder sehr lange dauern, können "
 "Sie sie so konfigurieren, dass sie weniger oft oder gar nicht abgerufen "
 "werden."
-
-msgid ""
-"If set enabled from a disabled state, all users with this role will be "
-"required to setup two factor authentication and will be logout out of any "
-"current sessions if they have not enabled two factor. 'Enforce two factor "
-"authentication' in global settings will override this setting."
-msgstr ""
-"Wenn diese Einstellung von deaktiviert auf aktiviert gesetzt wird, müssen "
-"alle Benutzer mit dieser Rolle eine Zwei-Faktor-Authentifizierung einstellen "
-"und werden aus allen laufenden Sitzungen ausgeloggt, wenn sie Zwei-Faktor "
-"nicht aktiviert haben. Die Option \"Zwei-Faktor-Authentifizierung erzwingen"
-"\" in den globalen Einstellungen überschreibt diese Einstellung."
 
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -31063,6 +31117,19 @@ msgstr ""
 "WARN- oder CRIT-Level einstellen, um zu prüfen, ob das Delta der letzten "
 "Minute um X Prozent höher ist als das durchschnittliche Delta."
 
+#, fuzzy
+msgid ""
+"If this setting is changed from disabled to enabled, all users with this "
+"role will be required to use a two-factor authentication and will be logged "
+"out of any current sessions if they have not enabled two-factor. 'Enforce "
+"two-factor authentication' in global settings will override this setting."
+msgstr ""
+"Wenn diese Einstellung von deaktiviert auf aktiviert gesetzt wird, müssen "
+"alle Benutzer mit dieser Rolle eine Zwei-Faktor-Authentifizierung einstellen "
+"und werden aus allen laufenden Sitzungen ausgeloggt, wenn sie Zwei-Faktor "
+"nicht aktiviert haben. Die Option \"Zwei-Faktor-Authentifizierung erzwingen"
+"\" in den globalen Einstellungen überschreibt diese Einstellung."
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "Wenn der Wert ein Tupel ist, muss er die Länge zwei haben."
 
@@ -31399,11 +31466,12 @@ msgstr ""
 "Problemen solange benachrichtigt (in Intervallen) bis das Problem quittiert "
 "wurde."
 
+#, fuzzy
 msgid ""
-"If you enable persistent connections then Multisite will try to keep open "
-"the connection to the remote sites. This brings a great speed up in high-"
-"latency situations but locks a number of threads in the Livestatus module of "
-"the target site."
+"If you enable persistent connections then the GUI will try to keep open the "
+"connection to the remote sites. This brings a great speed up in high-latency "
+"situations but locks a number of threads in the Livestatus module of the "
+"target site."
 msgstr ""
 "Wenn Sie dauernde Verbindung einschalten, dann wird die graphische "
 "Benutzeroberfläche (GUI) versuchen die Verbindung zu den Remote-Instanzen "
@@ -31805,6 +31873,7 @@ msgstr ""
 "Schnittstelle nicht mit der erwarteten Geschwindigkeit arbeitet (z.B. 8Gbit/"
 "s an Stelle von 16Gbit/s)."
 
+#, fuzzy
 msgid ""
 "If you want the user to be able to login then specify a password here. Users "
 "without a login make sense if they are monitoring contacts that are just "
@@ -31812,7 +31881,8 @@ msgid ""
 "accounts used by automation processes (such as fetching data from views for "
 "further procession), set the method to <u>secret</u>. The secret will be "
 "stored in a local file. Processes with read access to that file will be able "
-"to use Multisite as a web service without any further configuration."
+"to use the graphical user interface (GUI) as a web service without any "
+"further configuration."
 msgstr ""
 "Wenn Sie möchten, dass sich der Benutzer anmelden kann, geben Sie hier ein "
 "Passwort an. Benutzer ohne Login sind sinnvoll, wenn es sich um Monitoring-"
@@ -32923,14 +32993,6 @@ msgstr "Zu durchsuchende Indexe, Standardwert ist \"*\", d.h. alle Indexe."
 
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
-
-msgid ""
-"Indicates that host is waiting for bulk discovery. It is set to True once it "
-"in queue.Removed after discovery is ended."
-msgstr ""
-"Dies zeigt an, dass der Host auf eine Sammelerkennung wartet. Es wird auf "
-"True gesetzt, sobald der Host in der Warteschlange steht. Nach Beendigung "
-"der Erkennung wird es wieder entfernt."
 
 msgid "Indices"
 msgstr "Indizes"
@@ -34147,16 +34209,6 @@ msgstr ""
 "Es ist nicht sinnvoll, für Aufhebungsregeln eine Konfiguration für "
 "Sammelalarme zu erstellen."
 
-msgid ""
-"It is a good idea to disable access to Setup completely on the remote site. "
-"Otherwise a user who does not now about the replication could make local "
-"changes that are overridden at the next configuration activation."
-msgstr ""
-"Es ist ratsam, auf der Remote-Instanz den direkten Zugriff auf das Setup zu "
-"deaktivieren. Andernfalls könnte ein Benutzer, der die Replikation nicht "
-"kennt, lokale Änderungen machen, die bei der nächsten "
-"Konfigurationsaktivierung überschrieben werden."
-
 msgid "It is not allowed to change the ID of an existing rule."
 msgstr "Die ID einer bestehenden Regel darf nicht verändert werden."
 
@@ -34216,6 +34268,17 @@ msgstr ""
 "Sie Laufzeitstatistiken über die zuletzt verarbeitete Seite erhalten. Wenn "
 "der Profiling-Modus per Anfrage aktiviert wird, muss die HTTP-Variable "
 "<tt>_profile</tt> in den Abfrageparametern angegeben werden."
+
+#, fuzzy
+msgid ""
+"It is recommended to disable access to Setup completely on the remote site. "
+"Otherwise a user who does not know about the replication could make local "
+"changes that are overridden at the next configuration activation."
+msgstr ""
+"Es ist ratsam, auf der Remote-Instanz den direkten Zugriff auf das Setup zu "
+"deaktivieren. Andernfalls könnte ein Benutzer, der die Replikation nicht "
+"kennt, lokale Änderungen machen, die bei der nächsten "
+"Konfigurationsaktivierung überschrieben werden."
 
 msgid ""
 "It is recommended to enable TLS as soon as possible by running the "
@@ -34681,9 +34744,6 @@ msgstr "Schlüssel"
 msgid "Key ID"
 msgstr "Schlüssel-ID"
 
-msgid "Key Type and Length"
-msgstr "Typ und Länge des Schlüssels"
-
 msgid "Key pair will be generated when you save."
 msgstr "Schlüsselpaar wird beim Speichern generiert."
 
@@ -34692,6 +34752,10 @@ msgstr "Passphrase des Schlüssels"
 
 msgid "Key to sign with"
 msgstr "Signaturschlüssel"
+
+#, fuzzy
+msgid "Key type and length"
+msgstr "Typ und Länge des Schlüssels"
 
 msgid ""
 "Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
@@ -34973,10 +35037,11 @@ msgstr "Beschriftungsoptionen"
 msgid "Labels"
 msgstr "Labels"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk "
 "does not perform any other validation on the labels you use."
 msgstr ""
 "Mit Labels können Sie Ihre Hosts flexibel gruppieren, um später an anderen "
@@ -36930,6 +36995,34 @@ msgstr "Alle Meldungen im Syslogformat in Log-Dateien schreiben"
 msgid "Log backup"
 msgstr "Log-Backup"
 
+#, fuzzy
+msgid "Log file"
+msgstr "Logdateien"
+
+#, fuzzy
+msgid "Log file information of logwatch plug-in"
+msgstr "Informationen zu Log-Dateien des Logwatch-Plugins"
+
+#, fuzzy
+msgid "Log file pattern analyzer"
+msgstr "Log-Datei-Pattern Analyse"
+
+#, fuzzy
+msgid "Log file patterns"
+msgstr "Log-Datei-Patterns"
+
+#, fuzzy, python-format
+msgid "Log file patterns of host %s"
+msgstr "Log-Datei-Patterns auf Host %s"
+
+#, fuzzy, python-format
+msgid "Log file patterns of log file %s on all hosts"
+msgstr "Patterns der Log-Datei %s auf allen Rechnern"
+
+#, fuzzy, python-format
+msgid "Log file patterns of log file %s on host %s"
+msgstr "Patterns der Log-Datei %s auf Host %s"
+
 msgid "Log files"
 msgstr "Logdateien"
 
@@ -37106,26 +37199,11 @@ msgstr "Log-Datei"
 msgid "Logfile Grouping"
 msgstr "Log-Dateigruppierung"
 
-msgid "Logfile information of logwatch plug-in"
-msgstr "Informationen zu Log-Dateien des Logwatch-Plugins"
-
 msgid "Logfile pattern analyzer"
 msgstr "Log-Datei-Pattern Analyse"
 
 msgid "Logfile patterns"
 msgstr "Log-Datei-Patterns"
-
-#, python-format
-msgid "Logfile patterns of Host %s"
-msgstr "Log-Datei-Patterns auf Host %s"
-
-#, python-format
-msgid "Logfile patterns of logfile %s on all hosts"
-msgstr "Patterns der Log-Datei %s auf allen Rechnern"
-
-#, python-format
-msgid "Logfile patterns of logfile %s on host %s"
-msgstr "Patterns der Log-Datei %s auf Host %s"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
@@ -38027,9 +38105,6 @@ msgstr "Verwalten"
 msgid "Manage All Scheduled Reports"
 msgstr "Alle geplanten Berichte verwalten"
 
-msgid "Manage Hard- and software inventory related rulesets"
-msgstr "Verwalten von Hard- und Softwareinventar-bezogenen Regelsätzen"
-
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB-Verbindungen verwalten"
 
@@ -38080,6 +38155,10 @@ msgstr ""
 
 msgid "Manage extension packages (MKPs)"
 msgstr "Erweiterungspakete (MKPs) verwalten"
+
+#, fuzzy
+msgid "Manage hard- and software inventory related rule sets"
+msgstr "Verwalten von Hard- und Softwareinventar-bezogenen Regelsätzen"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Länger laufende Prozesse der Checkmk-GUI verwalten"
@@ -40014,16 +40093,16 @@ msgstr "Modifizierte BI Regel %s"
 msgid "Modified NFS data"
 msgstr "Veränderte NFS-Daten"
 
-#, python-format
-msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
+#, fuzzy, python-format
+msgid "Modified folders: %d, modified hosts: %d, modified rule sets: %d"
 msgstr "Veränderte Ordner: %d, veränderte Hosts: %d, veränderte Regelsätze: %d"
 
 #, python-format
 msgid "Modified host %s."
 msgstr "Host %s geändert."
 
-#, python-format
-msgid "Modified peer-to-peer broker connection id %s"
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection ID %s"
 msgstr "Verbindungs-ID %s des Peer-to-peer Brokers wurde geändert"
 
 #, python-format
@@ -42139,14 +42218,15 @@ msgstr "Keine Zeilen für Aktionen ausgewählt."
 msgid "No rule match"
 msgstr "Keine übereinstimmende Regel"
 
-msgid "No rules found."
-msgstr "Keine Regeln gefunden."
-
+#, fuzzy
 msgid ""
-"No ruleset <b>State in case of restricted address mismatch</b> is configured"
+"No rule set <b>State in case of restricted address mismatch</b> is configured"
 msgstr ""
 "Es ist kein Regelsatz <b>Zustand bei fehlender Übereinstimmung der Adresse</"
 "b> konfiguriert"
+
+msgid "No rules found."
+msgstr "Keine Regeln gefunden."
 
 msgid "No scan has been started yet."
 msgstr "Bisher wurde noch kein Scan gestartet."
@@ -42346,7 +42426,8 @@ msgstr "Non-Multicast"
 msgid "Non-compliant devices"
 msgstr "Nicht-vorschriftsmäßiges Gerät"
 
-msgid "Non-empty rulesets"
+#, fuzzy
+msgid "Non-empty rule sets"
 msgstr "Nicht leere Regelsätze"
 
 msgid "Non-heap memory committed"
@@ -44144,10 +44225,11 @@ msgstr ""
 "Wenn Sie ein reines Agenten-Monitoring konfigurieren, sollten Sie auch das "
 "Attribut \"%s\" auf \"%s\" setzen."
 
+#, fuzzy
 msgid ""
-"On this page you can test the defined logfile patterns against a custom "
-"text, for example a line from a logfile. Using this dialog it is possible to "
-"analyze and debug your whole set of logfile patterns."
+"On this page you can test the defined log file patterns against a custom "
+"text, for example a line from a log file. Using this dialog it is possible "
+"to analyze and debug your whole set of log file patterns."
 msgstr ""
 "Auf dieser Seite können Sie die definierten Log-Datei-Patterns gegen einen "
 "benutzerdefinierten Text, z.B. eine Zeile aus einer Log-Datei, testen. Mit "
@@ -47506,25 +47588,28 @@ msgstr "Berechtigte Kontaktgruppen"
 msgid "Persistent (long)"
 msgstr "Dauerhaft (lang)"
 
-msgid "Persistent Connection"
-msgstr "Bestehende Verbindung"
-
 msgid "Persistent Volume Claim name"
 msgstr "Dauerhafter Volume Claim Name"
 
 msgid "Persistent Volume Claims"
 msgstr "Dauerhafte Volume Claims"
 
+#, fuzzy
+msgid "Persistent connection"
+msgstr "Persistente Verbindungen"
+
 msgid "Persistent connections"
 msgstr "Persistente Verbindungen"
 
+#, fuzzy
 msgid ""
-"Persistent connections are nearly useless with Livestatus Proxy Daemon. "
+"Persistent connections are nearly useless with Livestatus proxy daemon. "
 "Better disable it."
 msgstr ""
 "Persistente Verbindungen sind nahezu nutzlos, wenn Sie den Livestatus Proxy "
 "Deamon einsetzen. Deaktivieren Sie diese besser."
 
+#, fuzzy
 msgid ""
 "Persistent connections may be a configuration to improve the performance of "
 "the GUI, but be aware that you really need to tune your system to make it "
@@ -47534,7 +47619,7 @@ msgid ""
 "But you need to be aware that each Apache process that is running is keeping "
 "a persistent connection to each configured site via Livestatus open. This "
 "means you need to balance the maximum Apache processes with the maximum "
-"parallel livestatus connections. Otherwise livestatus requests will be "
+"parallel Livestatus connections. Otherwise Livestatus requests will be "
 "blocked by existing and possibly idle connections."
 msgstr ""
 "Dauerhafte Verbindungen können eine Konfiguration sein, um die Leistung der "
@@ -48024,11 +48109,6 @@ msgid "Please enter an automation secret of at least 10 characters."
 msgstr ""
 "Bitte geben Sie ein Automatisierungspasswort mit mindestens 10 Zeichen ein."
 
-msgid "Please enter the Multisite URL of the remote site."
-msgstr ""
-"Bitte geben Sie die URL der graphischen Benutzeroberfläche (GUI) der Remote-"
-"Instanz ein."
-
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
 "execute. If the plug-in you like to execute is located in either <tt>~/local/"
@@ -48048,6 +48128,12 @@ msgstr "Bitte geben Sie das Datum im Format JJJJ-MM-TT HH:mm:ss ein."
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "Bitte Datum im Format YYYY-MM-DD eigeben."
+
+#, fuzzy
+msgid "Please enter the graphical user interface (GUI) URL of the remote site."
+msgstr ""
+"Bitte geben Sie die URL der graphischen Benutzeroberfläche (GUI) der Remote-"
+"Instanz ein."
 
 #, python-format
 msgid "Please first create some <a href='%s'>contact groups</a>"
@@ -48269,7 +48355,8 @@ msgid "Please select at least one or more regions to continue."
 msgstr ""
 "Bitte wählen Sie mindestens eine oder mehrere Regionen aus, um fortzufahren."
 
-msgid "Please select some hosts before doing bulk operations on hosts."
+#, fuzzy
+msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr ""
 "Bitte ein paar Hosts auswählen bevor Sie Stapelaufgaben auf Hosts ausführen."
 
@@ -48555,6 +48642,10 @@ msgstr "Plugin-Ausgabe"
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin-Ausgabe wenn keine Updates vorhanden sind"
 
+#, fuzzy
+msgid "Plug-ins"
+msgstr "Plugin"
+
 msgid "Plug-ins directory"
 msgstr "Plugin-Verzeichnis"
 
@@ -48565,8 +48656,9 @@ msgstr ""
 "Plugins für lokale Agentenerweiterungen oder allgemeine Kommunikation mit "
 "dem Agenten"
 
+#, fuzzy
 msgid ""
-"Plug-ins for operating systems, things like memory, CPU, filesystems, etc."
+"Plug-ins for operating systems, things like memory, CPU, file systems, etc."
 msgstr ""
 "Plugins für Betriebssysteme, Dinge wie Speicher, CPU, Dateisysteme, etc."
 
@@ -48594,9 +48686,6 @@ msgstr "Plugin"
 
 msgid "Plugin output"
 msgstr "Plugin-Ausgabe"
-
-msgid "Plugins"
-msgstr "Plugins"
 
 msgid "Pod"
 msgstr "Pod"
@@ -49905,7 +49994,8 @@ msgstr "RRD-Konsolidierung"
 msgid "RRD data aggregated"
 msgstr "Aggregierte RRD Daten"
 
-msgid "RRD databases with performance data"
+#, fuzzy
+msgid "RRD databases with metrics"
 msgstr "RRD-Datenbank mit Metriken"
 
 msgid ""
@@ -51328,7 +51418,8 @@ msgstr "Umbenennung von Host(s) in Benachrichtigungsregeln..."
 msgid "Renaming host(s) in parents..."
 msgstr "Host(s) in Parents umbenennen..."
 
-msgid "Renaming host(s) in rulesets..."
+#, fuzzy
+msgid "Renaming host(s) in rule sets..."
 msgstr "Umbenennung von Host(s) in Regelsätzen..."
 
 msgid "Renaming host(s): Update UUID links..."
@@ -52510,10 +52601,12 @@ msgstr "Regelbaum"
 msgid "Rule activation"
 msgstr "Regelaktivierung"
 
-msgid "Rule can only be deleted via Quick setup"
+#, fuzzy
+msgid "Rule can only be deleted via quick setup"
 msgstr "Regel kann nur durch Quick Setup gelöscht werden"
 
-msgid "Rule cannot be moved, because it is managed by Quick setup"
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by quick setup"
 msgstr ""
 "Regel kann nicht verschoben werden, da sie von Quick Setup verwaltet wird"
 
@@ -52591,17 +52684,29 @@ msgstr "Darstellung der Regel: %s"
 msgid "Rule search"
 msgstr "Regelsuche"
 
-msgid "Rule search: Deprecated rulesets"
+#, fuzzy
+msgid "Rule search: Deprecated rule sets"
 msgstr "Regelsuche: Veraltete Regelsätze"
 
-msgid "Rule search: Rulesets with ineffective rules"
+#, fuzzy
+msgid "Rule search: Rule sets with ineffective rules"
 msgstr "Regelsuche: Regelsätze mit nicht wirksamen Regeln"
 
-msgid "Rule search: Used rulesets"
+#, fuzzy
+msgid "Rule search: Used rule sets"
 msgstr "Regelsuche: Verwendete Regelsätze"
+
+#, fuzzy
+msgid "Rule set"
+msgstr "Regelsatz"
 
 msgid "Rule sets in use"
 msgstr "Genutzte Regelsätze"
+
+#, fuzzy
+msgid "Rule sets that contain rules with references to the changed tags"
+msgstr ""
+"Regelsätze, die Regeln enthalten, die sich auf geänderte Merkmale beziehen"
 
 msgid "Rule title"
 msgstr "Titel der Regel"
@@ -52686,7 +52791,8 @@ msgstr ""
 "konfiguriert werden oder Attribute wie Labels oder Host-Merkmale können den "
 "Services zugewiesen werden."
 
-msgid "Rules to configure the behaviour of monitored hosts."
+#, fuzzy
+msgid "Rules to configure the behavior of monitored hosts."
 msgstr "Regeln um das Verhalten von überwachten Hosts zu konfigurieren."
 
 msgid ""
@@ -52712,10 +52818,6 @@ msgstr "Name des Regelsatzes"
 msgid "Rulesets"
 msgstr "Regelsätze"
 
-msgid "Rulesets that contain rules with references to the changed tags"
-msgstr ""
-"Regelsätze, die Regeln enthalten, die sich auf geänderte Merkmale beziehen"
-
 msgid "Run Quick Setup Action"
 msgstr "Quick Setup Aktion ausführen"
 
@@ -52736,7 +52838,8 @@ msgstr ""
 msgid "Run as"
 msgstr "Führe aus als"
 
-msgid "Run as user (empty = root):"
+#, fuzzy
+msgid "Run as user (empty = agent user):"
 msgstr "Als Benutzer ausführen (leer = root):"
 
 msgid "Run asynchronous plug-ins in parallel"
@@ -53269,7 +53372,8 @@ msgstr "SNMPv1/2-Community"
 msgid "SNMPv2c"
 msgstr "SNMPv2c"
 
-msgid "SNMPv2c (without Bulkwalk)"
+#, fuzzy
+msgid "SNMPv2c (without bulk walk)"
 msgstr "SNMPv2c (ohne Bulkwalk)"
 
 msgid "SNMPv3"
@@ -53632,7 +53736,8 @@ msgstr "Suche %s"
 msgid "Search all entries one level below the base DN"
 msgstr "Alle Einträge eine Ebene unter Basis DN suchen"
 
-msgid "Search all rules and rulesets"
+#, fuzzy
+msgid "Search all rules and rule sets"
 msgstr "Suche nach allen Regeln und Regelsätzen"
 
 msgid "Search available options"
@@ -53690,7 +53795,8 @@ msgstr ""
 "Nach nicht wirksamen Regeln suchen (die auf keinen Host oder Service "
 "zutreffen)"
 
-msgid "Search for menu entries, settings, hosts and rulesets."
+#, fuzzy
+msgid "Search for menu entries, settings, hosts and rule sets."
 msgstr "Suche nach Menüeinträgen, Einstellungen, Hosts und Regelsätzen."
 
 msgid "Search for not deprecated rulesets"
@@ -56126,7 +56232,8 @@ msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonten den Alias"
 msgid "Show details"
 msgstr "Details anzeigen"
 
-msgid "Show details about livestatus encryption"
+#, fuzzy
+msgid "Show details about Livestatus encryption"
 msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
 msgid "Show dynamic"
@@ -57021,11 +57128,12 @@ msgstr "Übrige Meldungen überspringen, eine kritische Meldung erstellen"
 msgid "Skip exceeding messages, create one warning message"
 msgstr "Übrige Meldungen überspringen, eine Warnmeldung erstellen"
 
-msgid "Skip hosts hosts with non-empty parents (also if inherited)"
-msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
-
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr "Hosts mit expliziten Parent-Zuordnungen überspringen (auch wenn leer)"
+
+#, fuzzy
+msgid "Skip hosts with non-empty parents (also if inherited)"
+msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
 msgid "Skip preexisting log messages"
 msgstr "Bereits existierende Mitteilungen überspringen"
@@ -59699,7 +59807,8 @@ msgstr "Auslastung des Storageprozessors"
 msgid "Storage space used"
 msgstr "Belegter Platz im Storage"
 
-msgid "Storage, Filesystems and Files"
+#, fuzzy
+msgid "Storage, file systems and files"
 msgstr "Speicher, Dateisysteme und Dateien"
 
 msgid "Store"
@@ -59729,7 +59838,8 @@ msgstr "Speichergröße"
 msgid "Store the secret in cleartext"
 msgstr "Speichere das Geheimnis im Klartext"
 
-msgid "Stored Location"
+#, fuzzy
+msgid "Stored location"
 msgstr "Gespeicherter Ort"
 
 msgid "Stored messages"
@@ -60964,7 +61074,8 @@ msgstr "Prüfe Verbindung"
 msgid "Test connection to host"
 msgstr "Verbindung zum Host testen"
 
-msgid "Test custom notifications with your current ruleset"
+#, fuzzy
+msgid "Test custom notifications with your current rule set"
 msgstr ""
 "Testen Sie benutzerdefinierte Benachrichtigungen mit Ihrem aktuellen "
 "Regelsatz"
@@ -61727,17 +61838,6 @@ msgstr ""
 "Der MSSQL Instanzname, der Tablespace-Name und der Backup-Typ, jeweils "
 "getrennt durch ein Leerzeichen."
 
-msgid "The Multisite URL must end with /check_mk/"
-msgstr ""
-"URL der graphischen Benutzeroberfläche (GUI) muss mit <tt>/check_mk/</tt> "
-"enden"
-
-msgid ""
-"The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."
-msgstr ""
-"URLs der graphischen Benutzeroberflächen (GUI) müssen mit <tt>http://</tt> "
-"oder <tt>https://</tt> beginnen."
-
 msgid "The Number of the power Phase."
 msgstr "Nummer der Stromphase."
 
@@ -61855,13 +61955,13 @@ msgstr "Die URL der Zielseite, auf die der Link des Elements verweisen soll."
 msgid "The URL prefix must end with a slash."
 msgstr "URL Präfix muss mit <tt>/</tt> abgeschlossen werden."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The URL prefix will be prepended to links of addons like NagVis when a link "
+"The URL prefix will be prepended to links of add-ons like NagVis when a link "
 "to such applications points to a host or service on that site. You can "
 "either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> or "
 "a relative URL like <tt>/mysite/</tt>. When using relative prefixes you "
-"needed a mod_proxy configuration in your local system apache that proxies "
+"needed a mod_proxy configuration in your local system Apache that proxies "
 "such URLs to the according remote site. Please refer to the <a target=_blank "
 "href='%s'>online documentation</a> for details. The prefix should end with a "
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
@@ -62683,8 +62783,9 @@ msgid "The content of this file %s could not be processed successfully: %s"
 msgstr ""
 "Der Inhalt dieser Datei %s konnte nicht erfolgreich verarbeitet werden: %s"
 
+#, fuzzy
 msgid ""
-"The corresponding username in ntopng of the current checkmk user. It is "
+"The corresponding username in ntopng of the current Checkmk user. It is "
 "used, in case the user mapping to ntopng is configured to use this custom "
 "attribute"
 msgstr ""
@@ -62769,7 +62870,8 @@ msgstr ""
 msgid "The current livestatus usage is %.2f%%"
 msgstr "Die aktuelle Auslastung von Livestatus ist %.2f%%"
 
-msgid "The current monitoring state (including acknowledgements and downtimes)"
+#, fuzzy
+msgid "The current monitoring state (including acknowledgments and downtimes)"
 msgstr ""
 "Der aktuelle Monitoring-Zustand (inklusive Quittierungen und Wartungszeiten)"
 
@@ -63216,8 +63318,9 @@ msgstr ""
 "Die folgenden Platzhalter werden durch die Werte des aktuellen Ereignisses "
 "ersetzt:"
 
+#, fuzzy
 msgid ""
-"The following rulesets contain rules that do not match to any of the "
+"The following rule sets contain rules that do not match to any of the "
 "existing hosts."
 msgstr ""
 "Die folgenden Regelsätze enthalten Regel, die auf keinen existierenden Host "
@@ -63345,6 +63448,20 @@ msgstr "Die Graph-Spezifikation fehlt"
 #, python-format
 msgid "The graph template id '%s' is disabled"
 msgstr "Die Graphenvorlage id '%s' ist deaktiviert"
+
+#, fuzzy
+msgid ""
+"The graphical user interface (GUI) URL must begin with <tt>http://</tt> or "
+"<tt>https://</tt>."
+msgstr ""
+"URLs der graphischen Benutzeroberflächen (GUI) müssen mit <tt>http://</tt> "
+"oder <tt>https://</tt> beginnen."
+
+#, fuzzy
+msgid "The graphical user interface (GUI) URL must end with /check_mk/"
+msgstr ""
+"URL der graphischen Benutzeroberfläche (GUI) muss mit <tt>/check_mk/</tt> "
+"enden"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
@@ -63930,8 +64047,10 @@ msgid "The match is case sensitive."
 msgstr ""
 "Die Suche wird unter Beachtung von Groß- und Kleinschreibung ausgeführt."
 
+#, fuzzy
 msgid ""
-"The match type is defined by the discovery ruleset type of the check plug-in."
+"The match type is defined by the discovery rule set type of the check plug-"
+"in."
 msgstr ""
 "Der Match-Typ wird durch den Typ des Erkennungsregelsatzes des Check-Plugins "
 "definiert."
@@ -64441,9 +64560,9 @@ msgstr "Die nächsten "
 msgid "The next..."
 msgstr "Die nächsten..."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The node <b>%s</b> does not exist  (must be a host that is configured via "
+"The node <b>%s</b> does not exist (must be a host that is configured via "
 "Setup)"
 msgstr ""
 "Der Knoten <b>%s</b> ist nicht vorhanden (muss ein in Setup konfigurierter "
@@ -66302,22 +66421,24 @@ msgstr ""
 msgid "There are no passwords defined for this selection yet."
 msgstr "Es sind noch keine Passwörter für diese Auswahl definiert."
 
+#, fuzzy
+msgid "There are no rule sets or rules matching your search."
+msgstr "Für diese Regeln oder Regelsätze, die den Suchkriterien entsprechen."
+
 msgid "There are no rules defined in this folder."
 msgstr "In diesem Ordner wurden noch keine Regeln definiert."
 
 msgid "There are no rules defined in this set."
 msgstr "In diesem Regelsatz wurden noch keine Regeln definiert."
 
-msgid "There are no rulesets or rules matching your search."
-msgstr "Für diese Regeln oder Regelsätze, die den Suchkriterien entsprechen."
-
 msgid "There are no time periods defined yet."
 msgstr "Bisher wurden noch keine Zeitperioden definiert."
 
+#, fuzzy
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes on their own."
+"activation or ask your colleagues to activate these changes on their own."
 msgstr ""
 "Es gibt einige Änderungen, die von Ihren Kollegen vorgenommen wurden und "
 "deren Aktivierung Sie nicht bestätigt haben. Um fortfahren zu können, müssen "
@@ -66603,10 +66724,10 @@ msgstr ""
 "Regelsatz <i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> "
 "deaktiviert worden."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"These services are mapped to a cluster host by a rule in one of the rulesets "
-"<i>%s</i> or <i>%s</i>."
+"These services are mapped to a cluster host by a rule in one of the rule "
+"sets <i>%s</i> or <i>%s</i>."
 msgstr ""
 "Diese Services werden einem Cluster-Host durch eine Regel in einem der "
 "Regelsätze <i>%s</i> oder <i>%s</i> zugewiesen."
@@ -66641,7 +66762,18 @@ msgstr ""
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plug-ins. They have been added by a rule in "
-"the section <i>Active checks</i> or implicitely by Checkmk. These services "
+"the section <i>Active checks</i> or implicitly by Checkmk."
+msgstr ""
+"Diese Services nutzen nicht den Checkmk-Agenten oder die SNMP-Maschine von "
+"Checkmk sondern rufen aktiv klassische Check-Plugins auf. Sie wurden mit "
+"einer Regel im Abschnitt <i>Aktive Checks</i> hinzugefügt oder implizit von "
+"Checkmk erzeugt."
+
+#, fuzzy
+msgid ""
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
+"actively call classical check plug-ins. They have been added by a rule in "
+"the section <i>Active checks</i> or implicitly by Checkmk. These services "
 "have been disabled by creating a rule in the rule set <i>Disabled services</"
 "i> oder <i>Disabled checks</i>."
 msgstr ""
@@ -66650,16 +66782,6 @@ msgstr ""
 "Regel im Abschnitt <i>Aktive Checks</i> oder implizit von Checkmk "
 "hinzugefügt. Diese Services wurden durch eine Regel in den Regelsätzen "
 "<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
-
-msgid ""
-"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
-"actively call classical check plug-ins. They have been added by a rule in "
-"the section <i>Active checks</i> or implicitly by Checkmk."
-msgstr ""
-"Diese Services nutzen nicht den Checkmk-Agenten oder die SNMP-Maschine von "
-"Checkmk sondern rufen aktiv klassische Check-Plugins auf. Sie wurden mit "
-"einer Regel im Abschnitt <i>Aktive Checks</i> hinzugefügt oder implizit von "
-"Checkmk erzeugt."
 
 msgid ""
 "These services had been added to the monitoring by a previous discovery but "
@@ -66836,6 +66958,10 @@ msgstr "Diese ID existiert bereits."
 
 msgid "This ID can not be used as custom attribute"
 msgstr "Diese ID kann nicht als benutzerdefiniertes Attribut verwendet werden"
+
+#, fuzzy
+msgid "This ID is already being used by another connection."
+msgstr "Diese ID wird bereits von einer anderen Verbindung verwendet."
 
 msgid "This ID is already in use. Please choose another one."
 msgstr "Diese ID wird bereits verwendet. Bitte wählen Sie eine andere."
@@ -67609,8 +67735,15 @@ msgstr "Der Zustand dieses Hosts oszilliert"
 msgid "This host is stale"
 msgstr "Dieser Hostzustand ist veraltet"
 
-msgid "This id is already being used by another connection."
-msgstr "Diese ID wird bereits von einer anderen Verbindung verwendet."
+#, fuzzy
+msgid ""
+"This indicates that the host is waiting for a bulk discovery. It is set to "
+"True once the host is in the queue. It will be removed after the discovery "
+"is ended."
+msgstr ""
+"Dies zeigt an, dass der Host auf eine Sammelerkennung wartet. Es wird auf "
+"True gesetzt, sobald der Host in der Warteschlange steht. Nach Beendigung "
+"der Erkennung wird es wieder entfernt."
 
 msgid "This information is available as environment variables"
 msgstr "Diese Informationen sind als Umgebungsvariablen verfügbar"
@@ -67861,23 +67994,26 @@ msgstr "Dieses Protokoll"
 msgid "This log file"
 msgstr "Diese Logdatei"
 
-msgid "This logfile contains no unacknowledged messages."
-msgstr "Diese Log-Datei enthält keine nicht-quittierten Meldungen."
-
-msgid "This logfile pattern does not match the given string."
+#, fuzzy
+msgid "This log file pattern does not match the given string."
 msgstr "Dieses Log-Datei-Pattern entspricht nicht deer gegebenen Zeichenkette."
 
-msgid "This logfile pattern matches but another matched first."
+#, fuzzy
+msgid "This log file pattern matches but another matched first."
 msgstr ""
 "Dieses Log-Datei-Pattern trifft zu - allerdings gibt es ein anderes, das "
 "vorher zutrifft."
 
+#, fuzzy
 msgid ""
-"This logfile pattern matches first and will be used for defining the state "
+"This log file pattern matches first and will be used for defining the state "
 "of the given line."
 msgstr ""
 "Dieses Log-Datei-Pattern wird als erstes angewendet und wird dazu benutzt "
 "den Zustand der betreffenden Zeile zu setzen."
+
+msgid "This logfile contains no unacknowledged messages."
+msgstr "Diese Log-Datei enthält keine nicht-quittierten Meldungen."
 
 msgid ""
 "This match only makes sense for custom notifications. When a user creates a "
@@ -67939,11 +68075,12 @@ msgid "This might take some time and involves a core restart..."
 msgstr ""
 "Das kann etwas dauern und erfordert einen Neustart des Monitoring Cores..."
 
+#, fuzzy
 msgid ""
 "This module can be used to define conditions for Checkmk rules in a central "
-"place. You can then refer to these conditions from different rulesets. Using "
-"these predefined conditions may save you a lot of redundant conditions when "
-"you need them in multiple rulesets."
+"place. You can then refer to these conditions from different rule sets. "
+"Using these predefined conditions may save you a lot of redundant conditions "
+"when you need them in multiple rule sets."
 msgstr ""
 "Mit diesem Modul können an zentraler Stelle Bedingungen für Checkmk-Regeln "
 "definiert werden. Sie können sich dann aus verschiedenen Regelsätzen auf "
@@ -69472,8 +69609,9 @@ msgstr ""
 "zum Abholen der Daten, kann in solchen Fällen zu irreführenden Ausgaben "
 "führen (z. B. viel zu große Schnittstellendurchsätze)."
 
+#, fuzzy
 msgid ""
-"This rule cannot be moved above rules that are defined as part of a Quick "
+"This rule cannot be moved above rules that are defined as part of a quick "
 "setup."
 msgstr ""
 "Diese Regel kann nicht über Regeln verschoben werden, die als Teil eines "
@@ -70349,12 +70487,13 @@ msgstr ""
 "Kills und Antwort-Timeouts kommen. Werte im Bereich von 100-500 MB sollten "
 "in den meisten Fällen funktionieren."
 
+#, fuzzy
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
 "established before the site is considered to be unreachable. It is highly "
 "recommended to set a value as low as possible here because this setting "
-"directly affects the GUI response time when the destionation is not "
-"reachable. When using the Livestatus Proxy Daemon the GUI connects to the "
+"directly affects the GUI response time when the destination is not "
+"reachable. When using the Livestatus proxy daemon the GUI connects to the "
 "local proxy, in this situation a lower value, like 2 seconds is recommended."
 msgstr ""
 "Hiermit wird die Zeit eingestellt, wie lange die GUI darauf wartet, dass "
@@ -70661,10 +70800,11 @@ msgstr ""
 "werden, um durch den Setup-Ordner gefilterte Ansichten zu öffnen. Es "
 "funktioniert eigenständig, ohne Interaktion mit einem anderen Snapin."
 
+#, fuzzy
 msgid ""
 "This snap-in shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
-"of Multisite."
+"of the graphical user interface (GUI)."
 msgstr ""
 "Dieses Snapin zeigt eine Baumansicht Ihrer Hosts auf der Grundlage ihrer "
 "Merkmalsklassifizierungen. Sie können die zu verwendenden Merkmale in Ihren "
@@ -70755,9 +70895,10 @@ msgstr "Dieser Wert kann in Berichten als $CUSTOMER_NAME$ verwendet werden."
 msgid "This value differs between the selected hosts."
 msgstr "Wert ist unterschiedlich zwischen ausgewählten Hosts."
 
+#, fuzzy
 msgid ""
 "This variable allows to specify a timeout for the TCP connection to the "
-"Checkmk agent on a per-host-basis.If the agent does not respond within this "
+"Checkmk agent on a per-host-basis. If the agent does not respond within this "
 "time, it is considered to be unreachable."
 msgstr ""
 "Mit dieser Variable kann eine Zeitüberschreitung für die TCP-Verbindung zum "
@@ -71504,6 +71645,10 @@ msgstr "Zeit seitdem das Sidecar das letzte Mal von graylog gesehen wurde"
 msgid "Time specific check parameter #%d"
 msgstr "Zeitabhängiger Prüfparameter #%d"
 
+#, fuzzy, python-format
+msgid "Time specific parameters computed at %s"
+msgstr "Zeitspezifische Parameter, berechnet zu %s"
+
 msgid "Time spent collecting garbage"
 msgstr "Zeitaufwand für Müllsammeln"
 
@@ -71743,10 +71888,6 @@ msgstr "Zeitspanne oder Dauer in Sekunden"
 
 msgid "Timespan since last Go garbage collection cycle"
 msgstr "Zeitspanne seit dem letzten \"Go garbage collection\"-Zyklus"
-
-#, python-format
-msgid "Timespecific parameters computed at %s"
-msgstr "Zeitspezifische Parameter, berechnet zu %s"
 
 msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
 msgstr "Zeitstempel (JJJJ-MM-TT HH:mm:ss)"
@@ -74749,8 +74890,8 @@ msgstr "Authentifizierungsanfrage kann nicht erstellt werden"
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Gruppe kann nicht gelöscht werden, da sie noch in Benutzung ist: %s"
 
-#, python-format
-msgid "Unable to delete unknown connection id: %s"
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection ID: %s"
 msgstr "Unbekannte Instanz-ID %s kann nicht gelöscht werden"
 
 #, python-format
@@ -75110,6 +75251,10 @@ msgstr "Unbekannter Metriktyp %s"
 
 msgid "Unknown paths"
 msgstr "Unbekannte Pfade"
+
+#, fuzzy
+msgid "Unknown rule sets"
+msgstr "Unbekannte Regelsätze"
 
 #, python-format
 msgid "Unknown rule with ID %s"
@@ -76269,6 +76414,10 @@ msgstr "LDAPS (SSL) verwenden"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatus Proxy Daemon verwenden"
 
+#, fuzzy
+msgid "Use Livestatus proxy daemon"
+msgstr "Livestatus Proxy Daemon verwenden"
+
 msgid "Use Odbc backend if plugin deployed on Windows"
 msgstr "Odbc-Backend verwenden, wenn das Plugin unter Windows eingesetzt wird"
 
@@ -76566,8 +76715,9 @@ msgstr "Einsteckbares Authentifizierungsmodul verwenden"
 msgid "Use port name as service name"
 msgstr "Portnamen als Service-Namen verwenden"
 
+#, fuzzy
 msgid ""
-"Use predefined conditions to centralize the coniditions of your rulesets."
+"Use predefined conditions to centralize the conditions of your rule sets."
 msgstr ""
 "Verwenden Sie vordefinierte Bedingungen, um die Konditionen Ihrer Regelsätze "
 "zu zentralisieren."
@@ -77120,7 +77270,8 @@ msgstr "Genutzte Host-Merkmale"
 msgid "Used in BI aggregate"
 msgstr "Verwendet in BI Aggregation"
 
-msgid "Used in rulesets"
+#, fuzzy
+msgid "Used in rule sets"
 msgstr "Verwendet in Regelsätzen"
 
 msgid ""
@@ -77516,11 +77667,12 @@ msgstr ""
 "Mit Hilfe dieser Option können Sie den global konfigurierten Service-Check "
 "Timeout überschreiben."
 
+#, fuzzy
 msgid ""
-"Using this page you can import several hosts at once into the choosen "
-"folder. You can choose a CSV file from your workstation to be uploaded, "
-"paste a CSV files contents into the textarea or simply enter a list of host "
-"names (one per line) to the textarea."
+"Using this page you can import several hosts at once into the chosen folder. "
+"You can choose a CSV file from your workstation to be uploaded, paste a CSV "
+"files contents into the text area or simply enter a list of host names (one "
+"per line) to the text area."
 msgstr ""
 "Mit dieser Seite können Sie mehrere Hosts auf einmal in den gewählten Ordner "
 "importieren. Sie können eine CSV-Datei von Ihrem Arbeitsplatz auswählen, die "
@@ -79377,11 +79529,12 @@ msgstr ""
 "aktivieren. Weitere Informationen finden Sie unter <a href=\"werk.py?"
 "werk=7017\">werk #7017</a>."
 
+#, fuzzy
 msgid ""
 "When connecting to remote site please make sure that Livestatus over TCP is "
-"activated there. You can use UNIX sockets to connect to foreign sites on "
+"activated there. You can use Unix sockets to connect to foreign sites on "
 "localhost. Please make sure that this site has proper read and write "
-"permissions to the UNIX socket of the foreign site."
+"permissions to the Unix socket of the foreign site."
 msgstr ""
 "Achten Sie darauf, dass Livestatus über TCP aktiviert ist, bevor Sie sich "
 "mit einer Remote-Instanz verbinden. Auf localhost können auch Unix Sockets "
@@ -81297,6 +81450,10 @@ msgstr ""
 msgid "You are not logged into the remote site."
 msgstr "Sie sind an der Remote-Instanz nicht angemeldet."
 
+#, fuzzy
+msgid "You are not permitted to access this rule set."
+msgstr "Sie sind nicht berechtigt, auf diesen Regelsatz zuzugreifen."
+
 msgid "You are not permitted to access this ruleset."
 msgstr "Sie sind nicht berechtigt, auf diesen Regelsatz zuzugreifen."
 
@@ -82359,8 +82516,9 @@ msgstr ""
 "Sie können die <a href=\"%s\">Hostsuche</a> verwenden, um eine Liste der "
 "Hosts zu erhalten."
 
+#, fuzzy
 msgid ""
-"You cannot delete this connection. It is used in a broker peer to peer "
+"You cannot delete this connection. It is used in a broker peer-to-peer "
 "connection."
 msgstr ""
 "Sie können diese Verbindung nicht löschen. Sie wird für eine Broker Peer-to-"
@@ -82391,9 +82549,10 @@ msgstr "Sie können diese Zeitperiode nicht löschen."
 msgid "You cannot delete your own account!"
 msgstr "Ihren eigenen Zugang können Sie nicht löschen!"
 
+#, fuzzy
 msgid ""
-"You cannot disable the replication on this site. It is used in a broker peer "
-"to peer connection."
+"You cannot disable the replication on this site. It is used in a broker peer-"
+"to-peer connection."
 msgstr ""
 "Sie können die Replikation auf dieser Instanz nicht deaktivieren. Sie wird "
 "für eine Broker Peer-to-peer-Verbindung genutzt."
@@ -82413,8 +82572,9 @@ msgstr ""
 "Sie können die Umbenennung hier nicht durchführen, da die folgenden Host-"
 "Namen damit kollidieren würden:"
 
+#, fuzzy
 msgid ""
-"You cannot do this renaming since the following hosts are locked by Quick "
+"You cannot do this renaming since the following hosts are locked by quick "
 "setup:"
 msgstr ""
 "Sie können die Umbenennung nicht durchführen, da die folgenden Hosts von "
@@ -82492,7 +82652,8 @@ msgstr ""
 msgid "You cannot use weekday names (%s) in exceptions"
 msgstr "Namen von Wochentagen (%s) können nicht in Exceptions verwendet werden"
 
-msgid "You configured the host to be it's own parent, which is not allowed."
+#, fuzzy
+msgid "You configured the host to be its own parent, which is not allowed."
 msgstr ""
 "Sie haben den Host als seinen eigenen Parent Host konfiguriert. Das ist "
 "nicht erlaubt."
@@ -83099,9 +83260,10 @@ msgstr "Ihre WebAuthn-Anmeldedaten werden bereits benutzt"
 msgid "Your account has been accessed using a backup code."
 msgstr "Auf Ihr Konto wurde mit einem Backup-Code zugegriffen."
 
+#, fuzzy
 msgid ""
-"Your administrator has enforced two factor authentication for your account. "
-"Kindly register one of the following two factor mechanisms:"
+"Your administrator has enforced two-factor authentication for your account. "
+"Kindly register one of the following two-factor mechanisms:"
 msgstr ""
 "Ihr Administrator hat für Ihr Konto eine Zwei-Faktor-Authentifizierung "
 "erzwungen. Registrieren Sie bitte einen der folgenden Zwei-Faktor-"
@@ -84826,9 +84988,6 @@ msgstr "Benachrichtigungen innerhalb der letzten"
 msgid "ntopng Admin User"
 msgstr "ntopng Benutzer mit Administrator Rechten"
 
-msgid "ntopng Username"
-msgstr "ntopng Benutzername"
-
 msgid "ntopng connection parameters (chargeable add-on)"
 msgstr "ntopng Verbindungsparameter (kostenpflichtiges Add-on)"
 
@@ -84845,6 +85004,10 @@ msgstr "ntopng Integration ist in den globalen Einstellungen nicht aktiviert."
 
 msgid "ntopng integration is only available in CEE"
 msgstr "Die ntopng Integration ist nur in der CEE verfügbar"
+
+#, fuzzy
+msgid "ntopng username"
+msgstr "ntopng Benutzername"
 
 msgid "ntopng username to acquire data for"
 msgstr "ntopng-Benutzername, für den Daten geholt werden sollen"
@@ -85666,6 +85829,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Persistent Connection"
+#~ msgstr "Bestehende Verbindung"
+
+#~ msgid "Plugins"
+#~ msgstr "Plugins"
 
 #~ msgid "Checkmk agent local directory"
 #~ msgstr "Lokales Verzeichnis des Checkmk-Agent"

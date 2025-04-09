@@ -94,10 +94,10 @@ msgstr ""
 msgid " Activate this option"
 msgstr " このオプションを有効にする"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-" Enforcing two factor for the %s role will terminate any current sessions "
-"for users who have this role but have not enabled any two factor."
+" Enforcing two-factor for the %s role will terminate any current sessions "
+"for users who have this role but have not enabled any two-factor."
 msgstr ""
 " %s のロールに2要素を適用すると、このロールを持ちながら2要素を有効にしていな"
 "いユーザーの現在のセッションがすべて終了します。"
@@ -626,6 +626,10 @@ msgstr "ホスト別の %s"
 msgid "%s can only be deleted via Quick setup"
 msgstr "%s クイックセットアップでのみ削除可能"
 
+#, fuzzy, python-format
+msgid "%s can only be deleted via quick setup"
+msgstr "%s クイックセットアップでのみ削除可能"
+
 #, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
@@ -648,8 +652,8 @@ msgstr "%sは削除されました。"
 msgid "%s instances"
 msgstr "%s インスタンス"
 
-#, python-format
-msgid "%s is locked by Quick setup."
+#, fuzzy, python-format
+msgid "%s is locked by quick setup."
 msgstr "%s はクイックセットアップでロックされています。"
 
 #, fuzzy, python-format
@@ -6376,7 +6380,8 @@ msgstr "パターンを分析する"
 msgid "Analyze recent notifications"
 msgstr "最近の通知の分析"
 
-msgid "Analyze recent notifications with your current ruleset"
+#, fuzzy
+msgid "Analyze recent notifications with your current rule set"
 msgstr "現在のルールセットで最近の通知を分析する"
 
 #, fuzzy
@@ -10813,6 +10818,10 @@ msgstr ""
 "デフォルトの\"CUSTOMER_ID\" または \"CUSTOMER_NAME\"を上書きするマクロを定義"
 "できません"
 
+#, fuzzy, python-format
+msgid "Cannot delete %s because it is managed by quick setup."
+msgstr "クイックセットアップで管理されているため、%s を削除できません。"
+
 #, python-format
 msgid "Cannot delete %s because it's managed by Quick setup."
 msgstr "クイックセットアップで管理されているため、%s を削除できません。"
@@ -10821,6 +10830,10 @@ msgid "Cannot delete job. Job cannot be stopped."
 msgstr "ジョブを削除できません。ジョブを停止することはできません。"
 
 msgid "Cannot delete rules that are managed by Quick setup."
+msgstr "クイックセットアップで管理されているルールは削除できません。"
+
+#, fuzzy
+msgid "Cannot delete rules that are managed by quick setup."
 msgstr "クイックセットアップで管理されているルールは削除できません。"
 
 #, python-format
@@ -10944,8 +10957,8 @@ msgstr ""
 "フォルダを移動できません: フォルダをそれ自体のフォルダに移動することはできま"
 "せん。"
 
-msgid ""
-"Cannot move folder: A folder can not be moved to it's own parent folder."
+#, fuzzy
+msgid "Cannot move folder: A folder cannot be moved to its own parent folder."
 msgstr ""
 "フォルダを移動できません:フォルダをそれ自体の親フォルダに移動することはできま"
 "せん。"
@@ -11673,7 +11686,7 @@ msgid "Check parameters and other configuration variables for hosts"
 msgstr "ホストのパラメーターおよびその他の構成変数を確認する"
 
 #, python-format
-msgid "Check parameters for checktype '%s' can not be displayed"
+msgid "Check parameters for check type '%s' can not be displayed"
 msgstr ""
 
 msgid "Check period"
@@ -11906,6 +11919,18 @@ msgstr "Checkmkエージェントネットワークサービス(Solaris)"
 
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmkエージェントプラグイン"
+
+#, fuzzy
+msgid ""
+"Checkmk agent, number, version and edition of sites, cluster host; number of "
+"hosts, services, CMK Helper, Live Helper, Helper usage; state of daemons: "
+"Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+"(agent plug-in mk_inventory needs to be installed)"
+msgstr ""
+"Checkmkエージェント, 数, サイトのバージョンとエディション, クラスターホスト; "
+"ホスト数, サービス数, CMKヘルパー, Liveヘルパー, ヘルパー使用率; デーモンの状"
+"態: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+"(エージェントプラグインmk_inventoryをインストールする必要があります)"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -13641,7 +13666,8 @@ msgstr "Amazon Web Services (AWS)監視"
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Amazon Web Services (AWS)監視"
 
-msgid "Configure SNMP related settings using rulesets"
+#, fuzzy
+msgid "Configure SNMP related settings using rule sets"
 msgstr "ルールセットを使用してSNMP関連の設定を設定する"
 
 msgid ""
@@ -13660,7 +13686,8 @@ msgstr "ログファイルセクションを構成する"
 msgid "Configure access permissions to NagVis maps."
 msgstr "NagVisマップへのアクセス許可を構成します。"
 
-msgid "Configure agent access related settings using rulesets"
+#, fuzzy
+msgid "Configure agent access related settings using rule sets"
 msgstr "ルールセットを使用してエージェントアクセス関連の設定を構成する"
 
 msgid "Configure agents"
@@ -13821,6 +13848,20 @@ msgid ""
 msgstr ""
 "モニタリング Web-GUI のベース URL をここで設定します。サイト名を含めてくださ"
 "い。jiraからcheck_mkを出すためのリンクに使用します。"
+
+#, fuzzy, python-format
+msgid ""
+"Configure the community to be used when contacting this host via SNMP v1/v2 "
+"or v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+"credentials of monitored host</a> rule set. Configuring a community here "
+"explicitly overrides the community defined by a rule. Communication via SNMP "
+"v1 and v2c is unencrypted. Consider using SNMP v3 for a higher level of "
+"security."
+msgstr ""
+"SNMP v1/v2またはv3を介してこのホストに接続するときに使用するコミュニティを構"
+"成できます。<a href=\"%s\">SNMPコミュニティ</a>ルールセットを使用してSNMPコ"
+"ミュニティを構成することも可能です。ホストの作成時にコミュニティを設定する"
+"と、ルールで定義されたコミュニティが上書きされます。"
 
 #, fuzzy, python-format
 msgid ""
@@ -14164,7 +14205,8 @@ msgstr "TCP経由で接続(IPv4)"
 msgid "Connect via TCP (IPv6)"
 msgstr "TCP経由で接続(IPv6)"
 
-msgid "Connect via UNIX socket"
+#, fuzzy
+msgid "Connect via Unix socket"
 msgstr "UNIXソケット経由で接続"
 
 msgid "Connect without password"
@@ -14196,6 +14238,10 @@ msgstr "接続 '%s' が見つかりません：変更の適用をしてくださ
 
 msgid "Connection ID"
 msgstr "接続ID"
+
+#, fuzzy, python-format
+msgid "Connection ID %s already exists."
+msgstr "接続 ID%s はすでに存在します。"
 
 msgid "Connection buildup"
 msgstr "コネクションの構築"
@@ -14925,9 +14971,9 @@ msgstr ""
 "DCDをリロードできませんでした: %s 。詳細については、web.logを参照してくださ"
 "い。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log for "
+"Could not reload Livestatus proxy: %s. See web.log and liveproxyd.log for "
 "further information."
 msgstr ""
 "Livestatusプロキシをリロードできませんでした:%s。詳細については、web.logおよ"
@@ -15450,7 +15496,7 @@ msgid "Created new notification rule for user %s"
 msgstr "ユーザー %sの新しい通知ルールを作成しました"
 
 #, fuzzy, python-format
-msgid "Created new peer-to-peer broker connection id %s"
+msgid "Created new peer-to-peer broker connection ID %s"
 msgstr "サイト%sへの新しい接続を作成しました"
 
 #, python-format
@@ -15512,7 +15558,7 @@ msgid "Creation / Locking"
 msgstr "作成/ロック"
 
 #, fuzzy
-msgid "Creation Date"
+msgid "Creation date"
 msgstr "作成時間"
 
 msgid "Creation of gateway hosts"
@@ -18868,8 +18914,8 @@ msgstr ""
 "パスワードを無効にすると、ユーザーは元のパスワードを保持したままログインでき"
 "なくなります。通知はこの設定の影響を受けません。"
 
-#, python-format
-msgid "Discarded pending changes (Restored %s)"
+#, fuzzy, python-format
+msgid "Discarded pending changes (restored %s)"
 msgstr "保留中の変更を破棄しました(%s を復元しました)"
 
 msgid "Discontinue counting after time has elapsed"
@@ -20713,8 +20759,9 @@ msgstr ""
 msgid "Each service monitors on Robot Framework tests.\n"
 msgstr "各サービスはロボット・フレームワークのテストを監視する。\n"
 
+#, fuzzy
 msgid ""
-"Each tag group will create one dropdown choice in the host configuration."
+"Each tag group will create one drop-down choice in the host configuration."
 msgstr ""
 "各タググループは、ホスト設定で1つのドロップダウンの選択肢を作成します。"
 
@@ -21177,9 +21224,10 @@ msgstr ""
 "* p </tt>は<tt> srv4711p </tt>と一致しますが、<tt> xsrv4711p2 </tt>とは一致し"
 "ません。 "
 
+#, fuzzy
 msgid ""
 "Either disable persistent connections or carefully review maximum number of "
-"Apache processes and possible livestatus connections."
+"Apache processes and possible Livestatus connections."
 msgstr ""
 "持続的接続を無効にするか、apacheプロセスの最大数と可能なlivestatus接続を注意"
 "深く確認してください。"
@@ -21822,12 +21870,16 @@ msgstr "もっと表示を強制する"
 msgid "Enforce two factor authentication"
 msgstr "2要素認証の解除"
 
-#, python-format
-msgid "Enforce two factor on %s role"
+#, fuzzy
+msgid "Enforce two-factor authentication"
+msgstr "2要素認証の解除"
+
+#, fuzzy, python-format
+msgid "Enforce two-factor on %s role"
 msgstr "%s ロールで 2 要素を強制"
 
-#, python-format
-msgid "Enforce two factor on all users with %s role?"
+#, fuzzy, python-format
+msgid "Enforce two-factor on all users with %s role?"
 msgstr "%s ロールを持つ全ユーザーに二要素認証を強制しますか？"
 
 msgid "Enforced service"
@@ -22919,7 +22971,7 @@ msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
 #, fuzzy
-msgid "Expiration Date"
+msgid "Expiration date"
 msgstr "登録状態"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
@@ -23019,7 +23071,8 @@ msgstr "明示的な表領域"
 msgid "Explicit vertical range"
 msgstr "明示的な垂直範囲"
 
-msgid "Explicit, ruleset, discovered"
+#, fuzzy
+msgid "Explicit, rule set, discovered"
 msgstr "明示的、ルールセット、発見"
 
 msgid "Explicitly map Node Exporter host"
@@ -23807,7 +23860,8 @@ msgstr "%s / %s の %s をフェッチしています"
 msgid "Fetching '%s'..."
 msgstr "'%s'をフェッチしています..."
 
-msgid "Fetching livestatus status"
+#, fuzzy
+msgid "Fetching Livestatus status"
 msgstr "Livestatusのステータスを取得"
 
 #, fuzzy
@@ -25547,7 +25601,10 @@ msgstr "グローバル設定"
 msgid "Global settings"
 msgstr "グローバル設定"
 
-msgid "Global settings for Checkmk, Multisite and the monitoring core."
+#, fuzzy
+msgid ""
+"Global settings for Checkmk, graphical user interface (GUI) and the "
+"monitoring core."
 msgstr "Checkmk、マルチサイト、およびモニタリングコアのグローバル設定。"
 
 #, python-format
@@ -26180,7 +26237,8 @@ msgstr "監視するHTTPウェブサービスのエンドポイント"
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S)ロードバランサー"
 
-msgid "HTTP, TCP, Email, ..."
+#, fuzzy
+msgid "HTTP, TCP, email, ..."
 msgstr "HTTP、TCP、Eメール、..。"
 
 #, fuzzy
@@ -26979,11 +27037,12 @@ msgstr ""
 "CheckmkサイトへのHTTPS接続を確認するためにエージェントアップデーターによって"
 "使用されます。"
 
+#, fuzzy
 msgid ""
-"Here you can see a list of all deprecated rulesets (which are not used by "
+"Here you can see a list of all deprecated rule sets (which are not used by "
 "Checkmk anymore). If you have defined some rules here, you might have to "
 "migrate the rules to their successors. Please refer to the release notes or "
-"context help of the rulesets for details."
+"context help of the rule sets for details."
 msgstr ""
 "ここでは、すべての非推奨ルールセット (Checkmk で使用されなくなったもの) のリ"
 "ストを見ることができます。ここでルールを定義した場合、そのルールを後継ルール"
@@ -30308,9 +30367,10 @@ msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr "有効な場合、サービスの詳細にはプロセス所有者のユーザー名が含まれます。"
 
+#, fuzzy
 msgid ""
 "If exceeded, an exception will appear. In extraordinary cases, consider "
-"calling Support Diagnostics from command line (see inline help)."
+"calling support diagnostics from command line (see inline help)."
 msgstr ""
 "超えると例外が表示されます。特別なケースでは、コマンドラインからサポート診断"
 "を呼び出すことを検討してください（インラインヘルプを参照）。"
@@ -30423,13 +30483,6 @@ msgid ""
 msgstr ""
 "レポートの生成に時間がかかる場合は、バックグラウンドジョブで非同期に生成され"
 "るようにレポートを構成できます。"
-
-msgid ""
-"If set enabled from a disabled state, all users with this role will be "
-"required to setup two factor authentication and will be logout out of any "
-"current sessions if they have not enabled two factor. 'Enforce two factor "
-"authentication' in global settings will override this setting."
-msgstr ""
 
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -30807,6 +30860,13 @@ msgstr ""
 "と比較されます。WARN または CRIT レベルを設定して、最後の分のデルタが平均のデ"
 "ルタより X パーセント高いかどうかを確認することができます。"
 
+msgid ""
+"If this setting is changed from disabled to enabled, all users with this "
+"role will be required to use a two-factor authentication and will be logged "
+"out of any current sessions if they have not enabled two-factor. 'Enforce "
+"two-factor authentication' in global settings will override this setting."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "valueがタプルである場合、長さは2である必要があります。"
 
@@ -31129,11 +31189,12 @@ msgstr ""
 "定期的な通知を有効にすると、問題が発生している間、サービスの状態は、問題が確"
 "認されるまで定期的に送信されます。"
 
+#, fuzzy
 msgid ""
-"If you enable persistent connections then Multisite will try to keep open "
-"the connection to the remote sites. This brings a great speed up in high-"
-"latency situations but locks a number of threads in the Livestatus module of "
-"the target site."
+"If you enable persistent connections then the GUI will try to keep open the "
+"connection to the remote sites. This brings a great speed up in high-latency "
+"situations but locks a number of threads in the Livestatus module of the "
+"target site."
 msgstr ""
 "持続的接続を有効にすると、マルチサイトはリモートサイトへの接続をオープンした"
 "ままにしようとします。これは高遅延の状況下で大きなスピードアップをもたらしま"
@@ -31515,6 +31576,7 @@ msgstr ""
 "い場合(たとえば、16Gbit/sではなく8Gbit/sで動作している場合)にチェックは警告に"
 "なります。"
 
+#, fuzzy
 msgid ""
 "If you want the user to be able to login then specify a password here. Users "
 "without a login make sense if they are monitoring contacts that are just "
@@ -31522,7 +31584,8 @@ msgid ""
 "accounts used by automation processes (such as fetching data from views for "
 "further procession), set the method to <u>secret</u>. The secret will be "
 "stored in a local file. Processes with read access to that file will be able "
-"to use Multisite as a web service without any further configuration."
+"to use the graphical user interface (GUI) as a web service without any "
+"further configuration."
 msgstr ""
 "ユーザーがログインできるようにする場合は、ここでパスワードを指定します。ログ"
 "インしていないユーザーは、通知に使用されるだけの連絡先を監視している場合に意"
@@ -32589,14 +32652,6 @@ msgstr ""
 
 msgid "Indexspace wasted"
 msgstr "インデックススペースが無駄になります"
-
-#, fuzzy
-msgid ""
-"Indicates that host is waiting for bulk discovery. It is set to True once it "
-"in queue.Removed after discovery is ended."
-msgstr ""
-"最後の一括検出が失敗したかどうか。一度失敗するとTrueが設定され、それ以降に検"
-"出が成功すると解除されます。"
 
 msgid "Indices"
 msgstr "インデックス"
@@ -33817,15 +33872,6 @@ msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr "ルールをキャンセルするための一括設定を追加することは意味がありません。"
 
-msgid ""
-"It is a good idea to disable access to Setup completely on the remote site. "
-"Otherwise a user who does not now about the replication could make local "
-"changes that are overridden at the next configuration activation."
-msgstr ""
-"リモートサイトでセットアップへのアクセスを完全に無効にすることをお勧めしま"
-"す。そうしないと、レプリケーションについて今は知らないユーザーが、次の構成の"
-"アクティブ化でオーバーライドされるローカル変更を行う可能性があります。"
-
 msgid "It is not allowed to change the ID of an existing rule."
 msgstr "既存のルールのIDを変更することは許可されていません。"
 
@@ -33882,6 +33928,16 @@ msgstr ""
 "す。リクエストによって有効にされた場合、クエリパラメータに HTTP 変数 "
 "<tt>_profile</tt> を与えることによって、プロファイリングモードが有効になりま"
 "す。"
+
+#, fuzzy
+msgid ""
+"It is recommended to disable access to Setup completely on the remote site. "
+"Otherwise a user who does not know about the replication could make local "
+"changes that are overridden at the next configuration activation."
+msgstr ""
+"リモートサイトでセットアップへのアクセスを完全に無効にすることをお勧めしま"
+"す。そうしないと、レプリケーションについて今は知らないユーザーが、次の構成の"
+"アクティブ化でオーバーライドされるローカル変更を行う可能性があります。"
 
 msgid ""
 "It is recommended to enable TLS as soon as possible by running the "
@@ -34373,9 +34429,6 @@ msgstr "キー"
 msgid "Key ID"
 msgstr "キーID"
 
-msgid "Key Type and Length"
-msgstr ""
-
 msgid "Key pair will be generated when you save."
 msgstr "保存するとキーペアが生成されます。"
 
@@ -34384,6 +34437,9 @@ msgstr "キーパスフレーズ"
 
 msgid "Key to sign with"
 msgstr "署名するための鍵"
+
+msgid "Key type and length"
+msgstr ""
 
 msgid ""
 "Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
@@ -34665,10 +34721,11 @@ msgstr "ラベル付けオプション"
 msgid "Labels"
 msgstr "ラベル"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk "
 "does not perform any other validation on the labels you use."
 msgstr ""
 "ラベルにより、ホストを柔軟にグループ化し、ルールチェーンなどCheckmkの他の場所"
@@ -36587,6 +36644,34 @@ msgstr "すべてのメッセージをsyslogのようなログファイルに記
 msgid "Log backup"
 msgstr "ログバックアップ"
 
+#, fuzzy
+msgid "Log file"
+msgstr "ログファイル"
+
+#, fuzzy
+msgid "Log file information of logwatch plug-in"
+msgstr "logwatchプラグインのログファイル情報"
+
+#, fuzzy
+msgid "Log file pattern analyzer"
+msgstr "ログファイルパターンアナライザー"
+
+#, fuzzy
+msgid "Log file patterns"
+msgstr "ログファイルパターン"
+
+#, fuzzy, python-format
+msgid "Log file patterns of host %s"
+msgstr "ホスト %s のログファイルパターン"
+
+#, fuzzy, python-format
+msgid "Log file patterns of log file %s on all hosts"
+msgstr "すべてのホストでのログファイル%sのログファイルパターン"
+
+#, fuzzy, python-format
+msgid "Log file patterns of log file %s on host %s"
+msgstr "ホスト%s上のログファイル%sのログファイルパターン"
+
 msgid "Log files"
 msgstr "ログファイル"
 
@@ -36754,26 +36839,11 @@ msgstr "ログファイル"
 msgid "Logfile Grouping"
 msgstr "ログファイルのグループ化"
 
-msgid "Logfile information of logwatch plug-in"
-msgstr "logwatchプラグインのログファイル情報"
-
 msgid "Logfile pattern analyzer"
 msgstr "ログファイルパターンアナライザー"
 
 msgid "Logfile patterns"
 msgstr "ログファイルパターン"
-
-#, python-format
-msgid "Logfile patterns of Host %s"
-msgstr "ホスト %s のログファイルパターン"
-
-#, python-format
-msgid "Logfile patterns of logfile %s on all hosts"
-msgstr "すべてのホストでのログファイル%sのログファイルパターン"
-
-#, python-format
-msgid "Logfile patterns of logfile %s on host %s"
-msgstr "ホスト%s上のログファイル%sのログファイルパターン"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
@@ -37664,9 +37734,6 @@ msgstr "管理する"
 msgid "Manage All Scheduled Reports"
 msgstr "すべてのスケジュールされたレポートを管理する"
 
-msgid "Manage Hard- and software inventory related rulesets"
-msgstr "ハードおよびソフトウェアインベントリ関連のルールセットを管理する"
-
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDBコネクションの管理"
 
@@ -37715,6 +37782,10 @@ msgstr "イベントコンソールのイベント分類と相関ルールを管
 
 msgid "Manage extension packages (MKPs)"
 msgstr "拡張パッケージの管理(MKPs)"
+
+#, fuzzy
+msgid "Manage hard- and software inventory related rule sets"
+msgstr "ハードおよびソフトウェアインベントリ関連のルールセットを管理する"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Checkmk GUIで長時間実行されるタスクを管理する"
@@ -39646,8 +39717,8 @@ msgstr "変更されたBIルール%s"
 msgid "Modified NFS data"
 msgstr "変更されたNFSデータ"
 
-#, python-format
-msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
+#, fuzzy, python-format
+msgid "Modified folders: %d, modified hosts: %d, modified rule sets: %d"
 msgstr ""
 "変更されたフォルダー:%d、変更されたホスト:%d、変更されたルールセット:%d"
 
@@ -39656,7 +39727,7 @@ msgid "Modified host %s."
 msgstr "変更されたホスト %s。"
 
 #, fuzzy, python-format
-msgid "Modified peer-to-peer broker connection id %s"
+msgid "Modified peer-to-peer broker connection ID %s"
 msgstr "変更されたサイト接続 %s"
 
 #, python-format
@@ -41821,14 +41892,15 @@ msgstr "アクションを実行するために選択された行はありませ
 msgid "No rule match"
 msgstr "ルールマッチなし"
 
-msgid "No rules found."
-msgstr "ルールが見つかりません。"
-
+#, fuzzy
 msgid ""
-"No ruleset <b>State in case of restricted address mismatch</b> is configured"
+"No rule set <b>State in case of restricted address mismatch</b> is configured"
 msgstr ""
 "ルールセット<b>アドレスの不一致が制限されている場合の状態</b>は構成されていま"
 "せん"
+
+msgid "No rules found."
+msgstr "ルールが見つかりません。"
 
 msgid "No scan has been started yet."
 msgstr "スキャンはまだ開始されていません。"
@@ -42031,7 +42103,8 @@ msgstr "非マルチキャスト"
 msgid "Non-compliant devices"
 msgstr "非準拠デバイス"
 
-msgid "Non-empty rulesets"
+#, fuzzy
+msgid "Non-empty rule sets"
 msgstr "空でないルールセット"
 
 msgid "Non-heap memory committed"
@@ -43809,10 +43882,11 @@ msgstr ""
 "エージェントのみの監視を設定する場合は、\"%s\" 属性を \"%s\" に設定することも"
 "できます。"
 
+#, fuzzy
 msgid ""
-"On this page you can test the defined logfile patterns against a custom "
-"text, for example a line from a logfile. Using this dialog it is possible to "
-"analyze and debug your whole set of logfile patterns."
+"On this page you can test the defined log file patterns against a custom "
+"text, for example a line from a log file. Using this dialog it is possible "
+"to analyze and debug your whole set of log file patterns."
 msgstr ""
 "このページでは、カスタムテキスト（例えばログファイルからの行）に対して定義さ"
 "れたログファイルパターンをテストすることができます。このダイアログを使用し"
@@ -47304,25 +47378,28 @@ msgstr "許可された連絡先グループ"
 msgid "Persistent (long)"
 msgstr "永続的(長い)"
 
-msgid "Persistent Connection"
-msgstr "持続的接続"
-
 msgid "Persistent Volume Claim name"
 msgstr "持続的なボリューム要求名"
 
 msgid "Persistent Volume Claims"
 msgstr "持続的なボリューム要求"
 
+#, fuzzy
+msgid "Persistent connection"
+msgstr "持続的接続"
+
 msgid "Persistent connections"
 msgstr "持続的接続"
 
+#, fuzzy
 msgid ""
-"Persistent connections are nearly useless with Livestatus Proxy Daemon. "
+"Persistent connections are nearly useless with Livestatus proxy daemon. "
 "Better disable it."
 msgstr ""
 "永続的な接続は、Livestatusプロキシデーモンではほとんど役に立ちません。無効に"
 "することをお勧めします。"
 
+#, fuzzy
 msgid ""
 "Persistent connections may be a configuration to improve the performance of "
 "the GUI, but be aware that you really need to tune your system to make it "
@@ -47332,7 +47409,7 @@ msgid ""
 "But you need to be aware that each Apache process that is running is keeping "
 "a persistent connection to each configured site via Livestatus open. This "
 "means you need to balance the maximum Apache processes with the maximum "
-"parallel livestatus connections. Otherwise livestatus requests will be "
+"parallel Livestatus connections. Otherwise Livestatus requests will be "
 "blocked by existing and possibly idle connections."
 msgstr ""
 "持続的接続はGUIのパフォーマンスを向上させるための設定かもしれませんが、適切に"
@@ -47819,10 +47896,6 @@ msgstr "サイト %s のエイリアス名または説明を入力してくだ�
 msgid "Please enter an automation secret of at least 10 characters."
 msgstr "10文字以上のオートメーションの秘密を入力してください。"
 
-#, fuzzy
-msgid "Please enter the Multisite URL of the remote site."
-msgstr "スレーブサイトのマルチサイトURLを入力してください。"
-
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
 "execute. If the plug-in you like to execute is located in either <tt>~/local/"
@@ -47840,6 +47913,10 @@ msgstr "YYYY-MM-DD HH:mm:ss の形式で日付を入力してください。"
 
 msgid "Please enter the date in the format YYYY-MM-DD."
 msgstr "YYYY-MM-DDの形式で日付を入力してください。"
+
+#, fuzzy
+msgid "Please enter the graphical user interface (GUI) URL of the remote site."
+msgstr "スレーブサイトのマルチサイトURLを入力してください。"
 
 #, python-format
 msgid "Please first create some <a href='%s'>contact groups</a>"
@@ -48047,7 +48124,8 @@ msgstr "最低1つの指標を選択してください"
 msgid "Please select at least one or more regions to continue."
 msgstr "少なくとも1つ以上の地域を選択してください。"
 
-msgid "Please select some hosts before doing bulk operations on hosts."
+#, fuzzy
+msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr "ホストで一括操作を行う前に、いくつかのホストを選択してください。"
 
 msgid "Please select the destination folder"
@@ -48320,6 +48398,10 @@ msgstr "プラグイン出力"
 msgid "Plug-in output in case of absent updates"
 msgstr "更新がない場合のプラグイン出力"
 
+#, fuzzy
+msgid "Plug-ins"
+msgstr "プラグイン"
+
 msgid "Plug-ins directory"
 msgstr "プラグインディレクトリ"
 
@@ -48329,8 +48411,9 @@ msgid ""
 msgstr ""
 "ローカルエージェント拡張または一般的なエージェントとの通信用のプラグイン"
 
+#, fuzzy
 msgid ""
-"Plug-ins for operating systems, things like memory, CPU, filesystems, etc."
+"Plug-ins for operating systems, things like memory, CPU, file systems, etc."
 msgstr ""
 "オペレーティングシステム用のプラグイン、メモリ、CPU、ファイルシステムなど。"
 
@@ -48358,9 +48441,6 @@ msgstr "プラグイン"
 #, fuzzy
 msgid "Plugin output"
 msgstr "プラグイン出力"
-
-msgid "Plugins"
-msgstr "プラグイン"
 
 msgid "Pod"
 msgstr "ポッド"
@@ -49671,7 +49751,8 @@ msgstr "RRDの統合"
 msgid "RRD data aggregated"
 msgstr "集計されたRRDデータ"
 
-msgid "RRD databases with performance data"
+#, fuzzy
+msgid "RRD databases with metrics"
 msgstr "パフォーマンスデータを含むRRDデータベース"
 
 msgid ""
@@ -51115,7 +51196,8 @@ msgstr "通知ルールのホスト名変更…"
 msgid "Renaming host(s) in parents..."
 msgstr "親ホストの名称変更..."
 
-msgid "Renaming host(s) in rulesets..."
+#, fuzzy
+msgid "Renaming host(s) in rule sets..."
 msgstr "ルールセット内のホスト名変更…"
 
 msgid "Renaming host(s): Update UUID links..."
@@ -52296,10 +52378,12 @@ msgstr "ルールツリー"
 msgid "Rule activation"
 msgstr "ルールのアクティブ化"
 
-msgid "Rule can only be deleted via Quick setup"
-msgstr ""
+#, fuzzy
+msgid "Rule can only be deleted via quick setup"
+msgstr "%s クイックセットアップでのみ削除可能"
 
-msgid "Rule cannot be moved, because it is managed by Quick setup"
+#, fuzzy
+msgid "Rule cannot be moved, because it is managed by quick setup"
 msgstr ""
 "ルールはクイックセットアップで管理されているため、移動することはできません"
 
@@ -52375,17 +52459,28 @@ msgstr "ルール表示 :%s"
 msgid "Rule search"
 msgstr "ルール検索"
 
-msgid "Rule search: Deprecated rulesets"
+#, fuzzy
+msgid "Rule search: Deprecated rule sets"
 msgstr "ルール検索:非推奨のルールセット"
 
-msgid "Rule search: Rulesets with ineffective rules"
+#, fuzzy
+msgid "Rule search: Rule sets with ineffective rules"
 msgstr "ルール検索：効果のないルールを含むルールセット"
 
-msgid "Rule search: Used rulesets"
+#, fuzzy
+msgid "Rule search: Used rule sets"
 msgstr "ルール検索：使用中のルールセット"
+
+#, fuzzy
+msgid "Rule set"
+msgstr "ルールセット"
 
 msgid "Rule sets in use"
 msgstr "使用中のルールセット"
+
+#, fuzzy
+msgid "Rule sets that contain rules with references to the changed tags"
+msgstr "変更されたタグへの参照を含むルールを含むルールセット"
 
 msgid "Rule title"
 msgstr "ルールタイトル"
@@ -52466,7 +52561,8 @@ msgstr ""
 "アクティブなチェックの実行時間を構成したり、ラベルやタグなどの属性をサービス"
 "に割り当てたりすることができます。"
 
-msgid "Rules to configure the behaviour of monitored hosts."
+#, fuzzy
+msgid "Rules to configure the behavior of monitored hosts."
 msgstr "監視対象ホストの動作を構成するためのルール。"
 
 msgid ""
@@ -52489,9 +52585,6 @@ msgstr "ルールセット名"
 
 msgid "Rulesets"
 msgstr "ルールセット"
-
-msgid "Rulesets that contain rules with references to the changed tags"
-msgstr "変更されたタグへの参照を含むルールを含むルールセット"
 
 #, fuzzy
 msgid "Run Quick Setup Action"
@@ -52516,7 +52609,8 @@ msgstr ""
 msgid "Run as"
 msgstr "として実行"
 
-msgid "Run as user (empty = root):"
+#, fuzzy
+msgid "Run as user (empty = agent user):"
 msgstr "ユーザーとして実行(empty = root):"
 
 msgid "Run asynchronous plug-ins in parallel"
@@ -53074,7 +53168,8 @@ msgstr "SNMPv1/2コミュニティ"
 msgid "SNMPv2c"
 msgstr "SNMPv2c"
 
-msgid "SNMPv2c (without Bulkwalk)"
+#, fuzzy
+msgid "SNMPv2c (without bulk walk)"
 msgstr "SNMPv2c(Bulkwalkなし)"
 
 msgid "SNMPv3"
@@ -53437,7 +53532,8 @@ msgstr "%s を検索"
 msgid "Search all entries one level below the base DN"
 msgstr "ベースDNの1レベル下のすべてのエントリを検索します"
 
-msgid "Search all rules and rulesets"
+#, fuzzy
+msgid "Search all rules and rule sets"
 msgstr "すべてのルールとルールセットを検索する"
 
 #, fuzzy
@@ -53492,7 +53588,8 @@ msgstr "%s 未満のホストを検索"
 msgid "Search for ineffective rules (not matching any host or service)"
 msgstr "効果のないルールを検索する(ホストまたはサービスと一致しない)"
 
-msgid "Search for menu entries, settings, hosts and rulesets."
+#, fuzzy
+msgid "Search for menu entries, settings, hosts and rule sets."
 msgstr "メニューエントリ、設定、ホスト、およびルールセットを検索します。"
 
 msgid "Search for not deprecated rulesets"
@@ -55901,7 +55998,8 @@ msgstr "設定された場合説明を表示、以外はエイリアス"
 msgid "Show details"
 msgstr "詳細を表示"
 
-msgid "Show details about livestatus encryption"
+#, fuzzy
+msgid "Show details about Livestatus encryption"
 msgstr "ライブステータス暗号化に関する詳細を表示する"
 
 msgid "Show dynamic"
@@ -56783,11 +56881,12 @@ msgstr "過剰なメッセージはスキップし、重要なメッセージは
 msgid "Skip exceeding messages, create one warning message"
 msgstr "超過メッセージをスキップし、警告メッセージを1つ作成します"
 
-msgid "Skip hosts hosts with non-empty parents (also if inherited)"
-msgstr "空でない親を持つホストホストをスキップします(継承されている場合も)"
-
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr "明示的な親定義を持つホストをスキップします(空の場合でも)"
+
+#, fuzzy
+msgid "Skip hosts with non-empty parents (also if inherited)"
+msgstr "空でない親を持つホストホストをスキップします(継承されている場合も)"
 
 msgid "Skip preexisting log messages"
 msgstr "既存のログメッセージをスキップする"
@@ -59374,7 +59473,8 @@ msgstr "ストレージプロセッサの使用率"
 msgid "Storage space used"
 msgstr "使用したストレージスペース"
 
-msgid "Storage, Filesystems and Files"
+#, fuzzy
+msgid "Storage, file systems and files"
 msgstr "ストレージ、ファイルシステム、ファイル"
 
 msgid "Store"
@@ -59403,7 +59503,7 @@ msgid "Store the secret in cleartext"
 msgstr "事前共有したシークレット"
 
 #, fuzzy
-msgid "Stored Location"
+msgid "Stored location"
 msgstr "システムの場所"
 
 msgid "Stored messages"
@@ -60657,7 +60757,8 @@ msgstr "テスト接続"
 msgid "Test connection to host"
 msgstr "ホストへの接続をテストします"
 
-msgid "Test custom notifications with your current ruleset"
+#, fuzzy
+msgid "Test custom notifications with your current rule set"
 msgstr "現在のルールセットでカスタム通知をテストする"
 
 msgid "Test event generated and sent to Event Console."
@@ -61368,15 +61469,6 @@ msgstr ""
 "MSSQLインスタンス名、テーブルスペース名、およびバックアップタイプ。それぞれス"
 "ペースで区切られます。"
 
-msgid "The Multisite URL must end with /check_mk/"
-msgstr "マルチサイトURLは /check_mk/で終わる必要があります"
-
-msgid ""
-"The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."
-msgstr ""
-"マルチサイトのURLは <tt>http://</tt>または<tt>https://</tt>で始まる必要があり"
-"ます。"
-
 msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
 
@@ -61483,13 +61575,13 @@ msgstr "要素のリンクがリンクする必要のあるターゲットペー
 msgid "The URL prefix must end with a slash."
 msgstr "URLプレフィックスはスラッシュで終了する必要があります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The URL prefix will be prepended to links of addons like NagVis when a link "
+"The URL prefix will be prepended to links of add-ons like NagVis when a link "
 "to such applications points to a host or service on that site. You can "
 "either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> or "
 "a relative URL like <tt>/mysite/</tt>. When using relative prefixes you "
-"needed a mod_proxy configuration in your local system apache that proxies "
+"needed a mod_proxy configuration in your local system Apache that proxies "
 "such URLs to the according remote site. Please refer to the <a target=_blank "
 "href='%s'>online documentation</a> for details. The prefix should end with a "
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
@@ -62236,8 +62328,9 @@ msgstr "コンテンツ要素 \"%s, %s\" はレンダリングできません: %
 msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "このファイル%s の内容は正常に処理できませんでした：%s"
 
+#, fuzzy
 msgid ""
-"The corresponding username in ntopng of the current checkmk user. It is "
+"The corresponding username in ntopng of the current Checkmk user. It is "
 "used, in case the user mapping to ntopng is configured to use this custom "
 "attribute"
 msgstr ""
@@ -62317,7 +62410,8 @@ msgstr ""
 msgid "The current livestatus usage is %.2f%%"
 msgstr "現在のライブステータスの使用量は %.2f%% です"
 
-msgid "The current monitoring state (including acknowledgements and downtimes)"
+#, fuzzy
+msgid "The current monitoring state (including acknowledgments and downtimes)"
 msgstr "現在の監視状態(確認応答とダウンタイムを含む)"
 
 #, python-format
@@ -62718,8 +62812,9 @@ msgid ""
 "The following macros will be substituted by value from the actual event:"
 msgstr "次のマクロは、実際のイベントの値に置き換えられます。"
 
+#, fuzzy
 msgid ""
-"The following rulesets contain rules that do not match to any of the "
+"The following rule sets contain rules that do not match to any of the "
 "existing hosts."
 msgstr ""
 "次のルールセットには、既存のどのホストとも一致しないルールが含まれています。"
@@ -62841,6 +62936,18 @@ msgstr "グラフの仕様がありません"
 #, python-format
 msgid "The graph template id '%s' is disabled"
 msgstr "グラフテンプレートID' %s 'は無効です"
+
+#, fuzzy
+msgid ""
+"The graphical user interface (GUI) URL must begin with <tt>http://</tt> or "
+"<tt>https://</tt>."
+msgstr ""
+"マルチサイトのURLは <tt>http://</tt>または<tt>https://</tt>で始まる必要があり"
+"ます。"
+
+#, fuzzy
+msgid "The graphical user interface (GUI) URL must end with /check_mk/"
+msgstr "マルチサイトURLは /check_mk/で終わる必要があります"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
@@ -63364,8 +63471,10 @@ msgstr "大文字と小文字は区別されません。"
 msgid "The match is case sensitive."
 msgstr "大文字と小文字を区別して実行されます。"
 
+#, fuzzy
 msgid ""
-"The match type is defined by the discovery ruleset type of the check plug-in."
+"The match type is defined by the discovery rule set type of the check plug-"
+"in."
 msgstr ""
 "マッチタイプは、チェックプラグインのディスカバリルールセットタイプによって定"
 "義されます。"
@@ -63840,9 +63949,9 @@ msgstr "次 "
 msgid "The next..."
 msgstr "次は..."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The node <b>%s</b> does not exist  (must be a host that is configured via "
+"The node <b>%s</b> does not exist (must be a host that is configured via "
 "Setup)"
 msgstr ""
 "<b>%s</b> というノードは存在しません  (セットアップで設定されたホストである必"
@@ -65574,14 +65683,15 @@ msgstr ""
 msgid "There are no passwords defined for this selection yet."
 msgstr "この選択にはまだ要素が定義されていません。"
 
+#, fuzzy
+msgid "There are no rule sets or rules matching your search."
+msgstr "検索に一致するルールセットやルールはありません。"
+
 msgid "There are no rules defined in this folder."
 msgstr "このフォルダにはルールが定義されていません。"
 
 msgid "There are no rules defined in this set."
 msgstr "このセットで定義されているルールはありません。"
-
-msgid "There are no rulesets or rules matching your search."
-msgstr "検索に一致するルールセットやルールはありません。"
 
 msgid "There are no time periods defined yet."
 msgstr "まだ定義されている期間はありません。"
@@ -65590,7 +65700,7 @@ msgstr "まだ定義されている期間はありません。"
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
 "activate these changes. In order to proceed, you will have to confirm the "
-"activation or ask you colleagues to activate these changes on their own."
+"activation or ask your colleagues to activate these changes on their own."
 msgstr ""
 "同僚によって行われたいくつかの変更があり、これらの変更をアクティブ化すること"
 "を確認していません。続行するには、アクティブ化を確認するか、同僚にこれらの変"
@@ -65845,10 +65955,10 @@ msgstr ""
 "これらのサービスは検出されていますが、ルールセット<i>無効なサービス</i>または"
 "<i>無効なチェック</i>でルールを作成することにより無効になっています。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"These services are mapped to a cluster host by a rule in one of the rulesets "
-"<i>%s</i> or <i>%s</i>."
+"These services are mapped to a cluster host by a rule in one of the rule "
+"sets <i>%s</i> or <i>%s</i>."
 msgstr ""
 "これらのサービスは、ルールセット <i>%s</i> または <i>%s</i>いずれかのルールに"
 "よってクラスタホストにマッピングされます。"
@@ -65878,20 +65988,6 @@ msgstr ""
 "れらは、ルールセット<i>無効なサービス</i>または<i>無効なチェック</i>にルール"
 "を作成することにより無効化されます。"
 
-#, fuzzy
-msgid ""
-"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
-"actively call classical check plug-ins. They have been added by a rule in "
-"the section <i>Active checks</i> or implicitely by Checkmk. These services "
-"have been disabled by creating a rule in the rule set <i>Disabled services</"
-"i> oder <i>Disabled checks</i>."
-msgstr ""
-"これらのサービスは、CheckmkエージェントまたはCheckmk-SNMPエンジンを使用しませ"
-"んが、従来のチェックプラグインをアクティブに呼び出します。これらは、セクショ"
-"ン<i>アクティブチェック</i>のルールによって、またはCheckmkによって暗黙的に追"
-"加されています。これらのサービスは、ルールセット<i>無効なサービス</i>または"
-"<i>無効なチェック</i>でルールを作成することによって無効化されています。"
-
 msgid ""
 "These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plug-ins. They have been added by a rule in "
@@ -65901,6 +65997,20 @@ msgstr ""
 "んが、従来のチェックプラグインをアクティブに呼び出します。これらは、セクショ"
 "ン<i>アクティブチェック</i>のルールによって、またはCheckmkによって暗黙的に追"
 "加されています。"
+
+#, fuzzy
+msgid ""
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
+"actively call classical check plug-ins. They have been added by a rule in "
+"the section <i>Active checks</i> or implicitly by Checkmk. These services "
+"have been disabled by creating a rule in the rule set <i>Disabled services</"
+"i> oder <i>Disabled checks</i>."
+msgstr ""
+"これらのサービスは、CheckmkエージェントまたはCheckmk-SNMPエンジンを使用しませ"
+"んが、従来のチェックプラグインをアクティブに呼び出します。これらは、セクショ"
+"ン<i>アクティブチェック</i>のルールによって、またはCheckmkによって暗黙的に追"
+"加されています。これらのサービスは、ルールセット<i>無効なサービス</i>または"
+"<i>無効なチェック</i>でルールを作成することによって無効化されています。"
 
 msgid ""
 "These services had been added to the monitoring by a previous discovery but "
@@ -66071,6 +66181,10 @@ msgstr "このIDはすでに存在します。"
 
 msgid "This ID can not be used as custom attribute"
 msgstr "このIDはカスタム属性として使用できません"
+
+#, fuzzy
+msgid "This ID is already being used by another connection."
+msgstr "このIDはすでに他の接続で使用されています。"
 
 msgid "This ID is already in use. Please choose another one."
 msgstr "このIDはすでに使用されています。別のものを選択してください。"
@@ -66795,8 +66909,14 @@ msgstr "このホストはフラッピングしています"
 msgid "This host is stale"
 msgstr "このホストは古くなっています"
 
-msgid "This id is already being used by another connection."
-msgstr "このIDはすでに他の接続で使用されています。"
+#, fuzzy
+msgid ""
+"This indicates that the host is waiting for a bulk discovery. It is set to "
+"True once the host is in the queue. It will be removed after the discovery "
+"is ended."
+msgstr ""
+"最後の一括検出が失敗したかどうか。一度失敗するとTrueが設定され、それ以降に検"
+"出が成功すると解除されます。"
 
 msgid "This information is available as environment variables"
 msgstr "この情報は、環境変数として利用可能です"
@@ -67029,22 +67149,25 @@ msgstr "このログ"
 msgid "This log file"
 msgstr "このログファイル"
 
-msgid "This logfile contains no unacknowledged messages."
-msgstr "このログファイルには、未確認のメッセージは含まれていません。"
-
-msgid "This logfile pattern does not match the given string."
+#, fuzzy
+msgid "This log file pattern does not match the given string."
 msgstr "このログファイルパターンは、指定された文字列と一致しません。"
 
-msgid "This logfile pattern matches but another matched first."
+#, fuzzy
+msgid "This log file pattern matches but another matched first."
 msgstr ""
 "このログファイルパターンは一致しますが、別のパターンが最初に一致します。"
 
+#, fuzzy
 msgid ""
-"This logfile pattern matches first and will be used for defining the state "
+"This log file pattern matches first and will be used for defining the state "
 "of the given line."
 msgstr ""
 "このログファイルパターンは最初に一致し、指定された行の状態を定義するために使"
 "用されます。"
+
+msgid "This logfile contains no unacknowledged messages."
+msgstr "このログファイルには、未確認のメッセージは含まれていません。"
 
 msgid ""
 "This match only makes sense for custom notifications. When a user creates a "
@@ -67099,11 +67222,12 @@ msgstr ""
 msgid "This might take some time and involves a core restart..."
 msgstr "これには時間がかかり、コアの再起動が必要になる場合があります..."
 
+#, fuzzy
 msgid ""
 "This module can be used to define conditions for Checkmk rules in a central "
-"place. You can then refer to these conditions from different rulesets. Using "
-"these predefined conditions may save you a lot of redundant conditions when "
-"you need them in multiple rulesets."
+"place. You can then refer to these conditions from different rule sets. "
+"Using these predefined conditions may save you a lot of redundant conditions "
+"when you need them in multiple rule sets."
 msgstr ""
 "このモジュールを使用して、中央部でCheckmkルールの条件を定義できます。次に、さ"
 "まざまなルールセットからこれらの条件を参照できます。これらの事前定義された条"
@@ -68540,8 +68664,9 @@ msgstr ""
 "り短いチェック間隔では、誤解を招く出力 (例: 大きすぎるインターフェイスのス"
 "ループット) が発生する可能性があります。"
 
+#, fuzzy
 msgid ""
-"This rule cannot be moved above rules that are defined as part of a Quick "
+"This rule cannot be moved above rules that are defined as part of a quick "
 "setup."
 msgstr ""
 "このルールは、クイックセットアップの一部として定義されたルールの上に移動する"
@@ -69361,12 +69486,13 @@ msgstr ""
 "ルや応答タイムアウトのようなCMCの問題を引き起こすかもしれません。   ほとんど"
 "の場合、100-500MBの範囲で動作するはずです。"
 
+#, fuzzy
 msgid ""
 "This sets the time that the GUI waits for a connection to the site to be "
 "established before the site is considered to be unreachable. It is highly "
 "recommended to set a value as low as possible here because this setting "
-"directly affects the GUI response time when the destionation is not "
-"reachable. When using the Livestatus Proxy Daemon the GUI connects to the "
+"directly affects the GUI response time when the destination is not "
+"reachable. When using the Livestatus proxy daemon the GUI connects to the "
 "local proxy, in this situation a lower value, like 2 seconds is recommended."
 msgstr ""
 "これは、サイトが到達不能であると見なされる前に、GUIがサイトへの接続が確立され"
@@ -69645,10 +69771,11 @@ msgstr ""
 "セットアップフォルダでフィルタリングされたビューを開くために使用できます。他"
 "のスナップインと相互作用することなくスタンドアロンで動作します。"
 
+#, fuzzy
 msgid ""
 "This snap-in shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
-"of Multisite."
+"of the graphical user interface (GUI)."
 msgstr ""
 "このスナップインはタグの分類に基づいてホストのツリービューを表示します。どの"
 "タグを使うかはMultisiteのグローバル設定で設定できます。"
@@ -69732,9 +69859,10 @@ msgstr "この値は、レポートでは$CUSTOMER_NAME$として使用するこ
 msgid "This value differs between the selected hosts."
 msgstr "この値は、選択したホスト間で異なります。"
 
+#, fuzzy
 msgid ""
 "This variable allows to specify a timeout for the TCP connection to the "
-"Checkmk agent on a per-host-basis.If the agent does not respond within this "
+"Checkmk agent on a per-host-basis. If the agent does not respond within this "
 "time, it is considered to be unreachable."
 msgstr ""
 "この変数を使用すると、ホストごとにCheckmkエージェントへのTCP接続のタイムアウ"
@@ -70464,6 +70592,10 @@ msgstr "サイドカーがgraylogによって最後に見られてからの時�
 msgid "Time specific check parameter #%d"
 msgstr "時間固有のチェックパラメータ #%d"
 
+#, fuzzy, python-format
+msgid "Time specific parameters computed at %s"
+msgstr "%s で計算された時間固有のパラメーター"
+
 msgid "Time spent collecting garbage"
 msgstr "ゴミ収集に費やした時間"
 
@@ -70699,10 +70831,6 @@ msgstr "タイムスパンまたは期間(秒単位)"
 
 msgid "Timespan since last Go garbage collection cycle"
 msgstr "最後のガベージコレクションサイクルからの時間"
-
-#, python-format
-msgid "Timespecific parameters computed at %s"
-msgstr "%s で計算された時間固有のパラメーター"
 
 msgid "Timestamp (YYYY-MM-DD HH:mm:ss)"
 msgstr "タイムスタンプ (YYYY-MM-DD HH:mm:ss)"
@@ -73698,7 +73826,7 @@ msgid "Unable to delete group. It is still in use by: %s"
 msgstr "グループを削除できません。まだ使用中です: %s"
 
 #, fuzzy, python-format
-msgid "Unable to delete unknown connection id: %s"
+msgid "Unable to delete unknown connection ID: %s"
 msgstr "不明なサイトIDを削除できません:%s"
 
 #, python-format
@@ -74050,6 +74178,10 @@ msgstr "不明なメトリックのタイプ %s"
 
 msgid "Unknown paths"
 msgstr "不明なパス"
+
+#, fuzzy
+msgid "Unknown rule sets"
+msgstr "不明なユーザー"
 
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
@@ -75216,6 +75348,10 @@ msgstr "LDAPS(SSL)を使用する"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
 
+#, fuzzy
+msgid "Use Livestatus proxy daemon"
+msgstr "Livestatusプロキシデーモンを使用する"
+
 msgid "Use Odbc backend if plugin deployed on Windows"
 msgstr ""
 
@@ -75508,8 +75644,9 @@ msgstr "プラグ可能な認証モジュールを使用する"
 msgid "Use port name as service name"
 msgstr "サービス名としてポート名を使用する"
 
+#, fuzzy
 msgid ""
-"Use predefined conditions to centralize the coniditions of your rulesets."
+"Use predefined conditions to centralize the conditions of your rule sets."
 msgstr "事前定義された条件を使用して、ルールセットの条件を一元化します。"
 
 msgid "Use procedure call instead of SQL statement"
@@ -76036,7 +76173,8 @@ msgstr "使用されたホストタグ"
 msgid "Used in BI aggregate"
 msgstr "BIアグリゲートで使用"
 
-msgid "Used in rulesets"
+#, fuzzy
+msgid "Used in rule sets"
 msgstr "ルールセットで使用"
 
 msgid ""
@@ -76430,11 +76568,12 @@ msgstr ""
 "このオプションを使用すると、個々のサービスのチェックタイムアウトのグローバル"
 "に構成された設定を上書きできます。"
 
+#, fuzzy
 msgid ""
-"Using this page you can import several hosts at once into the choosen "
-"folder. You can choose a CSV file from your workstation to be uploaded, "
-"paste a CSV files contents into the textarea or simply enter a list of host "
-"names (one per line) to the textarea."
+"Using this page you can import several hosts at once into the chosen folder. "
+"You can choose a CSV file from your workstation to be uploaded, paste a CSV "
+"files contents into the text area or simply enter a list of host names (one "
+"per line) to the text area."
 msgstr ""
 "このページを使用すると、選択したフォルダーに一度に複数のホストをインポートで"
 "きます。ワークステーションからアップロードするCSVファイルを選択するか、CSV"
@@ -78394,11 +78533,12 @@ msgstr ""
 "に手動で構成する必要があります。詳細については、<a href=\"werk.py?"
 "werk=7017\">werk #7017</a>をご覧ください。"
 
+#, fuzzy
 msgid ""
 "When connecting to remote site please make sure that Livestatus over TCP is "
-"activated there. You can use UNIX sockets to connect to foreign sites on "
+"activated there. You can use Unix sockets to connect to foreign sites on "
 "localhost. Please make sure that this site has proper read and write "
-"permissions to the UNIX socket of the foreign site."
+"permissions to the Unix socket of the foreign site."
 msgstr ""
 "リモートサイトに接続するときは、Livestatus overTCPがそこでアクティブになって"
 "いることを確認してください。UNIXソケットを使用して、ローカルホスト上の外部サ"
@@ -80224,6 +80364,10 @@ msgstr ""
 msgid "You are not logged into the remote site."
 msgstr "リモートサイトにログインしていません。"
 
+#, fuzzy
+msgid "You are not permitted to access this rule set."
+msgstr "このルールセットにアクセスすることは許可されていません。"
+
 msgid "You are not permitted to access this ruleset."
 msgstr "このルールセットにアクセスすることは許可されていません。"
 
@@ -81199,7 +81343,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"You cannot delete this connection. It is used in a broker peer to peer "
+"You cannot delete this connection. It is used in a broker peer-to-peer "
 "connection."
 msgstr "ローカルサイトへの接続を削除することはできません。"
 
@@ -81222,10 +81366,11 @@ msgstr "この期間は削除できません。"
 msgid "You cannot delete your own account!"
 msgstr "自分のアカウントを削除することはできません！"
 
+#, fuzzy
 msgid ""
-"You cannot disable the replication on this site. It is used in a broker peer "
-"to peer connection."
-msgstr ""
+"You cannot disable the replication on this site. It is used in a broker peer-"
+"to-peer connection."
+msgstr "ローカルサイトへの接続を削除することはできません。"
 
 msgid "You cannot do replication with the local site."
 msgstr "ローカルサイトでレプリケーションを行うことはできません。"
@@ -81240,7 +81385,7 @@ msgstr "次のホスト名が衝突するため、この名前変更を行うこ
 
 #, fuzzy
 msgid ""
-"You cannot do this renaming since the following hosts are locked by Quick "
+"You cannot do this renaming since the following hosts are locked by quick "
 "setup:"
 msgstr "次のホスト名が衝突するため、この名前変更を行うことはできません。"
 
@@ -81308,7 +81453,8 @@ msgstr "サイト自体をステータスホストのサイトとして使用す
 msgid "You cannot use weekday names (%s) in exceptions"
 msgstr "例外で平日の名前 (%s) を使用することはできません"
 
-msgid "You configured the host to be it's own parent, which is not allowed."
+#, fuzzy
+msgid "You configured the host to be its own parent, which is not allowed."
 msgstr ""
 "ホストをそれ自身の親になるように構成しましたが、これは許可されていません。"
 
@@ -81889,8 +82035,8 @@ msgid "Your account has been accessed using a backup code."
 msgstr ""
 
 msgid ""
-"Your administrator has enforced two factor authentication for your account. "
-"Kindly register one of the following two factor mechanisms:"
+"Your administrator has enforced two-factor authentication for your account. "
+"Kindly register one of the following two-factor mechanisms:"
 msgstr ""
 
 msgid "Your central site is incompatible with this remote site"
@@ -83603,9 +83749,6 @@ msgstr "最後の内の通知"
 msgid "ntopng Admin User"
 msgstr "ntopng管理者ユーザー"
 
-msgid "ntopng Username"
-msgstr "ntopngユーザー名"
-
 msgid "ntopng connection parameters (chargeable add-on)"
 msgstr "ntopng接続パラメータ（有料アドオン）"
 
@@ -83622,6 +83765,10 @@ msgstr "ntopng統合は、グローバル設定ではアクティブ化されま
 
 msgid "ntopng integration is only available in CEE"
 msgstr "ntopng統合はCEEでのみ利用可能です"
+
+#, fuzzy
+msgid "ntopng username"
+msgstr "ntopngユーザー名"
 
 msgid "ntopng username to acquire data for"
 msgstr "データを取得用のntopngユーザー名"
@@ -84444,6 +84591,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Persistent Connection"
+#~ msgstr "持続的接続"
+
+#~ msgid "Plugins"
+#~ msgstr "プラグイン"
 
 #~ msgid "Checkmk agent local directory"
 #~ msgstr "Checkmkエージェントローカルディレクトリ"

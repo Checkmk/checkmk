@@ -6,13 +6,12 @@
 
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
     DictElement,
     Dictionary,
-    FixedValue,
     migrate_to_password,
     Password,
     String,
@@ -44,14 +43,6 @@ def _parameter_form() -> Dictionary:
                     migrate=migrate_to_password,
                 ),
             ),
-            "no_cert_check": DictElement(
-                required=False,
-                parameter_form=FixedValue(
-                    value=True,
-                    title=Title("Disable SSL certificate validation"),
-                    label=Label("SSL certificate validation is disabled"),
-                ),
-            ),
             "certificate_validation": DictElement(
                 required=True,
                 parameter_form=BooleanChoice(
@@ -60,20 +51,21 @@ def _parameter_form() -> Dictionary:
                 ),
             ),
         },
-        migrate=_migrate_certification,
+        migrate=migrate_cert_check,
     )
 
 
-def _migrate_certification(params: object) -> Mapping[str, object]:
-    match params:
-        case {"no_cert_check": cert_value, **rest}:
-            return {
-                "certificate_validation": not cert_value,
-                **{str(k): v for k, v in rest.items()},
-            }
-        case dict():
-            return {**params, "certificate_validation": True}
-    raise TypeError(f"Invalid parameters: {params!r}")
+def migrate_cert_check(params: object) -> Mapping[str, object]:
+    if not isinstance(params, dict):
+        raise TypeError(f"Invalid parameters: {params!r}")
+    return {
+        "username": params["username"],
+        "password": params["password"],
+        "certificate_validation": params.get(
+            "certificate_validation",
+            not params.get("no-cert-check", False),
+        ),
+    }
 
 
 rule_spec_special_agent_ucs_bladecenter = SpecialAgent(

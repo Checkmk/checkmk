@@ -2,13 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from typing import Any, MutableMapping
 
 from marshmallow import INCLUDE, post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import LDAPConnectionID, Timestamp
+from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.custom_fields import LDAPConnectionSuffix
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.userdb import get_ldap_connections, UserRolesConfigFile
@@ -691,7 +691,13 @@ class LDAPRoleElementRequest(BaseSchema):
         return data
 
 
-class LDAPEnableGroupsToRoles(BaseSchema):
+class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
+    class ValueTypedDict:
+        value_type = LDAPRoleElementRequest
+
+    class Meta:
+        unknown = INCLUDE
+
     handle_nested = fields.Boolean(
         required=False,
         description="Once you enable this option, this plug-in will not only handle direct group "

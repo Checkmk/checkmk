@@ -107,6 +107,8 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
 
 
 def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
+    _assert_git_tags_available()
+
     list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < 8800:
@@ -139,6 +141,21 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
             for entry in list_of_offenders
         )
     )
+
+
+def _assert_git_tags_available() -> None:
+    # By the time writing, we had more than 700 tags in the git repo
+    assert (
+        len(
+            subprocess.check_output(
+                ["git", "tag", "--list"],
+                cwd=repo_path(),
+            )
+            .decode()
+            .split("\n")
+        )
+        > 700
+    ), "The amount of found git tags looks suspicous low. Please check if there is an issue with your checkout"
 
 
 @functools.lru_cache

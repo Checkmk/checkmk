@@ -29,18 +29,12 @@ from ._payload import (
 )
 from ._utils import APP_NAME, ReceivingProcess
 
-VERBOSITY_MAP = {
-    0: logging.INFO,
-    1: 15,
-    2: logging.DEBUG,
-}
-
 
 @dataclass
 class Arguments:
     foreground: bool
     debug: bool
-    verbosity: int
+    log_level: int
     pid_file: str
     log_file: str
     omd_root: str
@@ -72,11 +66,11 @@ def handle_received_config(
 def _parse_arguments(argv: list[str]) -> Arguments:
     parser = argparse.ArgumentParser(description="Piggyback Hub daemon")
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Enable verbose output, twice for more details",
+        "--log-level",
+        dest="log_level",
+        default="NOTSET",
+        choices=["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"],
+        help="Override the configured logging level",
     )
     parser.add_argument(
         "-g",
@@ -93,8 +87,8 @@ def _parse_arguments(argv: list[str]) -> Arguments:
     args = parser.parse_args(argv[1:])
     return Arguments(
         foreground=args.foreground,
-        verbosity=args.verbose,
         debug=args.debug,
+        log_level=logging.getLevelNamesMapping()[args.log_level],
         pid_file=args.pid_file,
         log_file=args.log_file,
         omd_root=args.omd_root,
@@ -112,9 +106,8 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
     logger.addHandler(handler)
 
-    level = VERBOSITY_MAP[min(args.verbosity, 2)]
-    logger.setLevel(level)
-    set_logging_level(level)
+    logger.setLevel(args.log_level)
+    set_logging_level(args.log_level)
 
     return logger
 

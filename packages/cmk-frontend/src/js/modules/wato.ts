@@ -398,13 +398,25 @@ function toggle_test_notification_options(hide_options: boolean) {
             return;
         }
 
+        const service_choice_selection = document.getElementById(
+            "general_opts_p_on_service_hint",
+        ) as HTMLSelectElement;
         if (hide_options) {
             add_class(service_choice_tr, "hidden");
             add_class(service_states_tr, "hidden");
+
+            if (service_choice_selection) {
+                service_choice_selection.disabled = true;
+            }
             remove_class(host_states_tr, "hidden");
         } else {
             remove_class(service_choice_tr, "hidden");
             remove_class(service_states_tr, "hidden");
+
+            if (service_choice_selection) {
+                service_choice_selection.disabled = false;
+            }
+
             add_class(host_states_tr, "hidden");
         }
     }

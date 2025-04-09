@@ -13,7 +13,7 @@ from pprint import pformat
 from re import Pattern
 from typing import NamedTuple
 
-from playwright.sync_api import Error, expect, Frame, Locator, Page
+from playwright.sync_api import Error, expect, Frame, FrameLocator, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
@@ -87,6 +87,9 @@ class LocatorHelper(ABC):
 
     def get_attribute_label(self, attribute: str) -> Locator:
         return self.locator(f"#attr_{attribute} label")
+
+    def get_frame_locator(self, frame_selector: str) -> FrameLocator:
+        return self.page.frame_locator(frame_selector)
 
     def click_and_wait(
         self,

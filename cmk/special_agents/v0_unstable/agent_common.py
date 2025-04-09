@@ -171,6 +171,9 @@ def special_agent_main(
     the correct return code it's hard to test in unit tests.
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process.
+
+    Watch out!
+    This will crash unless `parse_arguments` implements the `--debug` and `--verbose` options.
     """
     if apply_password_store_hack:
         cmk.utils.password_store.replace_passwords()

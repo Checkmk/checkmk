@@ -13,7 +13,7 @@ def build_make_target(edition, cross_edition_target="") {
                 case 'cce':
                 case 'cme':
                     // from CEE to CCE or CME
-                    return prefix + "cross-edition-" + cross_edition_target + suffix;
+                    return prefix + "cross-edition-cee-to-" + cross_edition_target + suffix;
                 default:
                     return prefix + "cee" + suffix;
             }

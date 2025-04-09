@@ -38,8 +38,8 @@ SYSTEM_TESTS := \
     test-update-cce \
     test-update-cme \
     test-update-cse \
-    test-update-cross-edition-cce \
-    test-update-cross-edition-cme \
+    test-update-cross-edition-cee-to-cce \
+    test-update-cross-edition-cee-to-cme \
     test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \
@@ -313,11 +313,11 @@ test-update-cse:
 	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
 	--session-timeout 5400
 
-test-update-cross-edition-cce: # from CEE to CCE
+test-update-cross-edition-cee-to-cce: # from CEE to CCE
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cme: # from CEE to CME
+test-update-cross-edition-cee-to-cme: # from CEE to CME
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 

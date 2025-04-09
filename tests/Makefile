@@ -315,6 +315,14 @@ test-update-cross-edition-cme: # from CEE to CME
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
+test-update-cross-edition-cre-to-cee: # from CRE to CEE
+	EDITION=cre $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
+
+test-update-cross-edition-cre-to-cce: # from CRE to CCE
+	EDITION=cre $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
+
 test-schemathesis-openapi:
 	SCHMATHESIS_PROFILE=ci $(PYTEST) -T schemathesis_openapi $(realpath schemathesis_openapi) \
 	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \

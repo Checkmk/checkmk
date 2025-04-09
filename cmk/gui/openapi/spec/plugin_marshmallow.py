@@ -104,19 +104,20 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)
 
-        if isinstance(schema.value_type, FieldWrapper):
-            properties = field_properties(schema.value_type.field)
-        elif isinstance(schema.value_type, Schema) or (
-            isinstance(schema.value_type, type) and issubclass(schema.value_type, Schema)
+        if isinstance(schema.ValueTypedDict.value_type, FieldWrapper):
+            properties = field_properties(schema.ValueTypedDict.value_type.field)
+        elif isinstance(schema.ValueTypedDict.value_type, Schema) or (
+            isinstance(schema.ValueTypedDict.value_type, type)
+            and issubclass(schema.ValueTypedDict.value_type, Schema)
         ):
-            schema_instance = common.resolve_schema_instance(schema.value_type)
+            schema_instance = common.resolve_schema_instance(schema.ValueTypedDict.value_type)
             schema_key = common.make_schema_key(schema_instance)
             if schema_key not in self.refs:
-                component_name = self.schema_name_resolver(schema.value_type)
+                component_name = self.schema_name_resolver(schema.ValueTypedDict.value_type)
                 self.spec.components.schema(component_name, schema=schema_instance)
             properties = self.get_ref_dict(schema_instance)
         else:
-            raise RuntimeError(f"Unsupported value_type: {schema.value_type}")
+            raise RuntimeError(f"Unsupported value_type: {schema.ValueTypedDict.value_type}")
 
         return {
             "type": "object",

@@ -201,9 +201,12 @@ class BaseUserAttributes(BaseSchema):
 
 
 class CustomUserAttributes(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(
-        base.String(description="Each tag is a mapping of string to string", validate=ensure_string)
-    )
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(
+            base.String(
+                description="Each tag is a mapping of string to string", validate=ensure_string
+            )
+        )
 
     @post_load
     def _valid(self, user_attributes: dict[str, Any], **kwargs: Any) -> dict[str, Any]:

@@ -125,19 +125,29 @@ class FieldWrapper:
         self.field = field
 
 
+class ValueTypedDictMeta:
+    value_type: type[Schema] | FieldWrapper
+
+
 class ValueTypedDictSchema(BaseSchema):
     """A schema where you can define the type for a dict's values
 
     Attributes:
-        value_type:
-            the Schema for the dict's values
+        ValueTypedDict:
+            value_type:
+                the Schema for the dict's values
 
     """
 
-    value_type: type[Schema] | FieldWrapper
+    class Meta:
+        unknown = INCLUDE
+
+    # The value_type attribute was moved to a separate class so that
+    # it is not taken as a regular field by Marshmallow.
+    ValueTypedDict: ValueTypedDictMeta
 
     @classmethod
-    def field(cls, field: ma_fields.Field) -> FieldWrapper:
+    def wrap_field(cls, field: ma_fields.Field) -> FieldWrapper:
         return FieldWrapper(field)
 
     def _convert_with_schema(self, data, schema_func):
@@ -151,12 +161,14 @@ class ValueTypedDictSchema(BaseSchema):
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
+            target_field = self.fields[key] if key in self.fields else field
+
             try:
-                field._validate(value)
+                target_field._validate(value)
             except ValidationError as exc:
                 raise ValidationError({key: exc.messages}) from exc
             try:
-                result[key] = field.serialize(obj=data, attr=key)
+                result[key] = target_field.serialize(obj=data, attr=key)
             except ValueError as exc:
                 raise ValidationError(str(exc), field_name=key)
         return result
@@ -166,11 +178,12 @@ class ValueTypedDictSchema(BaseSchema):
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
+            target_field = self.fields[key] if key in self.fields else field
             try:
-                field._validate(value)
+                target_field._validate(value)
             except ValidationError as exc:
                 raise ValidationError({key: exc.messages}) from exc
-            result[key] = field.deserialize(value=value, data=data, attr=key)
+            result[key] = target_field.deserialize(value=value, data=data, attr=key)
         return result
 
     def load(self, data, *, many=None, partial=None, unknown=None):
@@ -182,16 +195,31 @@ class ValueTypedDictSchema(BaseSchema):
         if not isinstance(data, dict):
             raise ValidationError(f"Data type is invalid: {data}", field_name="_schema")
 
-        if isinstance(self.value_type, FieldWrapper):
-            result = self._serialize_field(data, field=self.value_type.field)
-        elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, Schema)
+        static_fields: dict[str, object] = {}
+        dynamic_fields: dict[str, object] = {}
+
+        for key, value in data.items():
+            target = static_fields if key in self.fields else dynamic_fields
+            target[key] = value
+
+        # Load static definition
+        result = super().load(static_fields, many=many, partial=partial, unknown=unknown)
+
+        # Load dynamic definition
+        if isinstance(self.ValueTypedDict.value_type, FieldWrapper):
+            result.update(
+                self._serialize_field(dynamic_fields, field=self.ValueTypedDict.value_type.field)
+            )
+
+        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (
+            isinstance(self.ValueTypedDict.value_type, type)
+            and issubclass(self.ValueTypedDict.value_type, Schema)
         ):
-            schema = common.resolve_schema_instance(self.value_type)
-            result = self._convert_with_schema(data, schema_func=schema.load)
+            schema = common.resolve_schema_instance(self.ValueTypedDict.value_type)
+            result.update(self._convert_with_schema(dynamic_fields, schema_func=schema.load))
         else:
             raise ValidationError(
-                f"Data type is not known: {type(self.value_type)} {self.value_type}"
+                f"Data type is not known: {type(self.ValueTypedDict.value_type)} {self.ValueTypedDict.value_type}"
             )
 
         if self._hooks[POST_LOAD]:
@@ -210,13 +238,26 @@ class ValueTypedDictSchema(BaseSchema):
         if self._hooks[PRE_DUMP]:
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
-        if isinstance(self.value_type, FieldWrapper):
-            result = self._deserialize_field(obj, field=self.value_type.field)
-        elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, Schema)
+        static_fields: dict[str, object] = {}
+        dynamic_fields: dict[str, object] = {}
+
+        for key, value in obj.items():
+            target = static_fields if key in self.fields else dynamic_fields
+            target[key] = value
+
+        result = super().dump(static_fields, many=many)
+
+        if isinstance(self.ValueTypedDict.value_type, FieldWrapper):
+            result.update(
+                self._deserialize_field(dynamic_fields, field=self.ValueTypedDict.value_type.field)
+            )
+
+        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (
+            isinstance(self.ValueTypedDict.value_type, type)
+            and issubclass(self.ValueTypedDict.value_type, Schema)
         ):
-            schema = common.resolve_schema_instance(self.value_type)
-            result = self._convert_with_schema(obj, schema_func=schema.dump)
+            schema = common.resolve_schema_instance(self.ValueTypedDict.value_type)
+            result.update(self._convert_with_schema(dynamic_fields, schema_func=schema.dump))
         else:
             raise ValidationError(f"Data type is not known: {type(obj)}")
 

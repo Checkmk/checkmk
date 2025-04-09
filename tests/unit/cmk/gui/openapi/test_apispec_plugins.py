@@ -84,25 +84,43 @@ class MovieSchema(Schema):
 
 
 class MovieDictSchema(ValueTypedDictSchema):
-    value_type = MovieSchema
+    class ValueTypedDict:
+        value_type = MovieSchema
 
 
 class CustomTagDictSchema(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(
-        fields.String(
-            description="Tag value here",
-            pattern="foo|bar",
-            required=True,
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(
+            fields.String(
+                description="Tag value here",
+                pattern="foo|bar",
+                required=True,
+            )
         )
-    )
 
 
 class IntegerDictSchema(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(fields.Integer())
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(fields.Integer())
 
 
 class EmailSchema(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(fields.Email())
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(fields.Email())
+
+
+class EmailWithStaticFieldSchema(ValueTypedDictSchema):
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(fields.Email())
+
+    owner = fields.Email(required=True, description="The owner of the contact")
+
+
+class MovieWithStaticFieldSchema(ValueTypedDictSchema):
+    class ValueTypedDict:
+        value_type = MovieSchema
+
+    best_movie = fields.Nested(MovieSchema, description="The best movie ever made")
 
 
 @pytest.fixture(name="spec", scope="function")
@@ -181,3 +199,35 @@ def test_typed_dictionary_failed_validation(
     schema = schema_class()
     with pytest.raises(ValidationError):
         schema.load(in_data)
+
+
+def test_static_fields_and_wrapped_field() -> None:
+    schema = EmailWithStaticFieldSchema()
+    src_data = {"owner": "owner@example.com", "extra": "extra@example.com"}
+
+    result = schema.load(src_data)
+    assert result == src_data
+    assert schema.dump(result) == src_data
+
+
+def test_static_fields_and_schema() -> None:
+    schema = MovieWithStaticFieldSchema()
+
+    best_movie = {
+        "title": "Back to the future",
+        "director": "Robert Zemeckis",
+        "year": 1985,
+    }
+
+    src_data: dict = {"best_movie": best_movie}
+    src_data.update(MOVIES)
+
+    result = schema.load(src_data)
+    assert set(result) == set(src_data)
+    assert schema.dump(result) == src_data
+
+
+def test_invalid_data_type() -> None:
+    schema = MovieDictSchema()
+    with pytest.raises(ValidationError):
+        schema.load("invalid_data")

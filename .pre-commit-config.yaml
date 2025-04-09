@@ -110,16 +110,7 @@ repos:
             entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
-<<<<<<< HEAD   (4d979c Fix 'reset scheduling' during 'cmk-update-config')
-          - id: flake8
-            name: Check flake8
-            entry: scripts/check-flake8
-            language: script
-            types: [file, python]
-            verbose: true
-=======
             require_serial: true
->>>>>>> CHANGE (db0cd4 require_serial: true on pre-commit-hooks)
           - id: unittest
             name: unittests
             entry: scripts/run-unittests

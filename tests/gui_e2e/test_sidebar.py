@@ -40,3 +40,51 @@ def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
     dashboard_page.press_keyboard(Keys.Enter)
 
     dashboard_page.main_area.check_page_title("CPU inventory of all hosts")
+
+
+def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
+    """Tests the addition of the NagVis snapin to the sidebar and verifies its functionality.
+
+    This test performs the following steps:
+    1. Adds the NagVis snapin to the sidebar.
+    2. Verifies that the NagVis snapin is visible in the sidebar.
+    3. Ensures that no error message is displayed in the NagVis snapin.
+    4. Confirms that the "edit" button in the NagVis snapin is visible and clickable.
+    5. Clicks the "edit" button and verifies that the NagVis frame is loaded.
+    """
+
+    snapin_id = "snapin_container_nagvis_maps"
+
+    # add nagvis snapin to the sidebar
+    dashboard_page.goto_add_sidebar_element()
+    dashboard_page.main_area.locator(f"div.snapinadder:has(div#{snapin_id})").click()
+    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
+
+    # check that the nagvis snapin is visible in the sidebar
+    navgis_maps_snapin_container = dashboard_page.locator(
+        f"div#check_mk_sidebar >> div#{snapin_id}"
+    )
+    navgis_maps_snapin_container.wait_for(state="visible")
+
+    # Wait for the loading spinner to disappear
+    navgis_maps_snapin_container.locator("div#snapin_nagvis_maps >> div.loading").wait_for(
+        state="detached"
+    )
+
+    # Check that the nagvis snapin has no error message
+    nagvis_maps_error_message = navgis_maps_snapin_container.locator("div.message.error")
+    assert not nagvis_maps_error_message.is_visible(), (
+        "Nagvis error message is visible, but should not be. "
+        f"Error message: '{nagvis_maps_error_message.inner_text()}'"
+    )
+
+    # Check that the nagvis snapin edit button is visible and clickable
+    nagvis_maps_edit_button = navgis_maps_snapin_container.locator("div.footnotelink >> a")
+    assert nagvis_maps_edit_button.is_visible(), "Nagvis 'edit' button is not visible"
+
+    nagvis_maps_edit_button.click()
+
+    # Check that the nagvis edit frame is loaded
+    dashboard_page.get_frame_locator("div#content_area >> iframe").locator(
+        "div#header >> img[alt='NagVis']"
+    ).wait_for(state="visible")

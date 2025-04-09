@@ -425,11 +425,12 @@ function Start-BinarySigning {
     Write-Host "Success binary signing" -foreground Green
 }
 
+# TODO(sk): remove the function as deprecated after switch to bazel signing
 function Start-Ps1Signing {
-    if ($argSign -ne $true) {
-        Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
-        return
-    }
+    Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
+    return
+
+    # code below is a reference for bazel signing
 
     Write-Host "Ps1 signing..." -ForegroundColor White
 
@@ -652,7 +653,6 @@ try {
         $argAttached = $true
     }
     Start-BinarySigning
-    Start-Ps1Signing
     Start-BazelSigning
     Start-ArtifactUploading
     Start-MsiPatching

@@ -146,41 +146,31 @@ new_local_repository(
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
-OCB_VERSION = "0.113.0"
-
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
     sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
-    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.113.0/ocb_0.113.0_linux_amd64",
 )
-
-SHFMT_VERSION = "v3.10.0"
 
 http_file(
     name = "shfmt",
     executable = True,
     sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
     urls = [
-        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
-        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+        "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64",
+        UPSTREAM_MIRROR_URL + "/shfmt_v3.10.0_linux_amd64",
     ],
 )
-
-TAPLO_VERSION = "0.9.3"
 
 http_file(
     name = "taplo.gz",
     sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
     urls = [
-        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
-        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
+        "https://github.com/tamasfe/taplo/releases/download/0.9.3/taplo-full-linux-x86.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-0.9.3.gz",
     ],
 )
-
-PATCH_VERSION = "2.7.6"
-
-PATCH_FILENAME = "patch-" + PATCH_VERSION + ".tar.gz"
 
 http_archive(
     name = "patch",
@@ -199,14 +189,12 @@ http_archive(
         "//omd/packages/patch/patches:fix-segfault-mangled-rename.patch.dif",
     ],
     sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
-    strip_prefix = "patch-" + PATCH_VERSION,
+    strip_prefix = "patch-2.7.6",
     urls = [
-        "https://ftp.gnu.org/gnu/patch/patch-" + PATCH_FILENAME,
-        UPSTREAM_MIRROR_URL + PATCH_FILENAME,
+        "https://ftp.gnu.org/gnu/patch/patch-patch-2.7.6.tar.gz",
+        UPSTREAM_MIRROR_URL + "patch-2.7.6.tar.gz",
     ],
 )
-
-SHELLCHECK_VERSION = "v0.10.0"
 
 http_archive(
     name = "shellcheck",
@@ -216,10 +204,10 @@ exports_files([
 ])
 """,
     sha256 = "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87",
-    strip_prefix = "shellcheck-" + SHELLCHECK_VERSION,
+    strip_prefix = "shellcheck-v0.10.0",
     urls = [
-        "https://github.com/koalaman/shellcheck/releases/download/" + SHELLCHECK_VERSION + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
-        UPSTREAM_MIRROR_URL + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+        "https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.x86_64.tar.xz",
+        UPSTREAM_MIRROR_URL + "/shellcheck-v0.10.0.linux.x86_64.tar.xz",
     ],
 )
 
@@ -246,14 +234,11 @@ use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 use_repo(multitool, "multitool")
 
-# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
-PYTHON_VERSION = "3.12.3"
-
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     is_default = True,
     # We can specify the exact version.
-    python_version = PYTHON_VERSION,
+    python_version = "3.12.3",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
@@ -264,7 +249,7 @@ pip.parse(
         "CC": "gcc-13",
     },
     hub_name = "cmk_requirements",
-    python_version = PYTHON_VERSION,
+    python_version = "3.12.3",
     requirements_by_platform = {
         "@//:requirements.txt": "linux_*",
     },

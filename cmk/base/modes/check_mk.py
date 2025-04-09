@@ -1251,9 +1251,6 @@ def mode_flush(hosts: list[HostName]) -> None:
             }
         )
 
-    effective_host_callback = config.AutochecksConfigurer(
-        config_cache, plugins.check_plugins
-    ).effective_host
     for host in hosts:
         print_("%-20s: " % host)
         flushed = False
@@ -2144,6 +2141,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
         file_cache_options = FileCacheOptions(disabled=True, use_outdated=False)
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
     else:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
@@ -2154,14 +2152,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
-
-    hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
-    if not hostnames:
-        # In case of discovery without host restriction, use the cache file
-        # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        file_cache_options = dataclasses.replace(file_cache_options, use_outdated=True)
-    else:
-        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(

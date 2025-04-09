@@ -41,6 +41,7 @@ class StageInfo(TypedDict, total=False):
     DIR: str
     ENV_VARS: Mapping[str, str]
     ENV_VAR_LIST: Sequence[str]
+    GIT_FETCH_TAGS: bool
     COMMAND: str
     TEXT_ON_SKIP: str
     SKIPPED: str
@@ -112,6 +113,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         ONLY_WHEN_NOT_EMPTY=str(raw_stage.get("ONLY_WHEN_NOT_EMPTY", "")),
         DIR=str(raw_stage.get("DIR", "")),
         ENV_VARS={str(k): str(v) for k, v in raw_stage.get("ENV_VARS", {}).items()},
+        GIT_FETCH_TAGS=bool(raw_stage.get("GIT_FETCH_TAGS", False)),
         COMMAND=str(raw_stage["COMMAND"]),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
@@ -150,6 +152,7 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         ONLY_WHEN_NOT_EMPTY=replace_variables(in_data["ONLY_WHEN_NOT_EMPTY"], env_vars),
         DIR=replace_variables(in_data["DIR"], env_vars),
         ENV_VARS={k: replace_variables(v, env_vars) for k, v in in_data["ENV_VARS"].items()},
+        GIT_FETCH_TAGS=in_data.get("GIT_FETCH_TAGS", False),
         COMMAND=replace_variables(in_data["COMMAND"], env_vars),
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
         RESULT_CHECK_TYPE=replace_variables(in_data["RESULT_CHECK_TYPE"], env_vars),
@@ -166,6 +169,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             NAME=stage["NAME"],
             DIR=stage.get("DIR", ""),
             ENV_VAR_LIST=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
+            GIT_FETCH_TAGS=stage.get("GIT_FETCH_TAGS", False),
             COMMAND=stage["COMMAND"],
             RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],
             RESULT_CHECK_FILE_PATTERN=stage["RESULT_CHECK_FILE_PATTERN"],

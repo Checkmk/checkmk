@@ -22,7 +22,7 @@ const validationErrors = computed((): ValidationMessages => {
 })
 
 //This will set a starting value on the quick setup component for this form spec
-emit('update', formSpecId, internal)
+emit('update', formSpecId, internal.value)
 
 watch(
   internal,

@@ -5,6 +5,7 @@
 
 from typing import Any
 
+from marshmallow import post_dump
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import fields as gui_fields
@@ -545,15 +546,26 @@ class LDAPGroupsToRoles(LDAPCheckbox):
     guest = fields.List(fields.Nested(LDAPRoleElement))
     user = fields.List(fields.Nested(LDAPRoleElement))
 
+    @post_dump(pass_original=True)
+    def _include_other_user_roles(
+        self,
+        result_data: dict[str, Any],
+        original_data: dict[str, Any],
+        *,
+        many: bool = False,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
 
-def ldap_group_to_roles_schema() -> type[LDAPGroupsToRoles]:
-    return LDAPGroupsToRoles.from_dict(
-        {
-            name: fields.List(fields.Nested(LDAPRoleElement))
-            for name in UserRolesConfigFile().load_for_reading()
-        },
-        name="LDAPGroupsToRolesWithCustomRoles",
-    )
+        if not original_data:
+            return result_data
+
+        userroles = UserRolesConfigFile().load_for_reading()
+        for role, value in original_data.items():
+            if role in userroles:
+                result_data[role] = value
+
+        return result_data
 
 
 class LDAPSyncPlugins(BaseSchema):
@@ -639,22 +651,35 @@ class LDAPSyncPlugins(BaseSchema):
         "group in LDAP. The specified group name must match the common name (CN) of the LDAP group.",
     )
     groups_to_roles = fields.Nested(
-        ldap_group_to_roles_schema(),
+        LDAPGroupsToRoles,
         description="Configures the roles of the user depending on its group memberships in LDAP.",
     )
+
+    @post_dump(pass_original=True)
+    def _include_custom_user_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: dict[str, Any],
+        *,
+        many: bool = False,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        if not original_data:
+            return result_data
+
+        custom_attributes = [name for name, attr in get_user_attributes() if attr.is_custom()]
+        for field, value in original_data.items():
+            if field in custom_attributes:
+                result_data[field] = value
+
+        return result_data
 
 
 class CustomSyncPlugin(LDAPCheckbox):
     attribute_to_sync = fields.String(
         description="A custom user attribute.",
-    )
-
-
-def ldap_sync_plugin_schema() -> type[LDAPSyncPlugins]:
-    custom_attributes = [name for name, attr in get_user_attributes() if attr.is_custom()]
-    return LDAPSyncPlugins.from_dict(
-        {name: fields.Nested(CustomSyncPlugin) for name in custom_attributes},
-        name="LDAPSyncPluginsWithCustomAttributes",
     )
 
 
@@ -677,7 +702,7 @@ class LDAPConnectionConfig(BaseSchema):
     ldap_connection = fields.Nested(LDAPConnection)
     users = fields.Nested(LDAPUsers)
     groups = fields.Nested(LDAPGroups)
-    sync_plugins = fields.Nested(ldap_sync_plugin_schema)
+    sync_plugins = fields.Nested(LDAPSyncPlugins)
     other = fields.Nested(LDAPOther)
 
 

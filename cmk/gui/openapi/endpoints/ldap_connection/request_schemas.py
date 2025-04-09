@@ -692,9 +692,6 @@ class LDAPRoleElementRequest(BaseSchema):
 
 
 class LDAPEnableGroupsToRoles(BaseSchema):
-    class Meta:
-        unknown = INCLUDE
-
     handle_nested = fields.Boolean(
         required=False,
         description="Once you enable this option, this plug-in will not only handle direct group "
@@ -769,9 +766,6 @@ class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
 
 
 class LDAPSyncPluginsRequest(BaseSchema):
-    class Meta:
-        unknown = INCLUDE
-
     alias = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
         description="Enables and populates the alias attribute of the Setup user by synchronizing an "
@@ -870,6 +864,7 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     groups_to_roles = fields.Nested(
         LDAPGroupsToRolesSelector,
+        unknown=INCLUDE,
         description="Configures the roles of the user depending on its group memberships in LDAP. "
         "Please note: Additionally the user is assigned to the Default Roles. Deactivate them if unwanted.",
         load_default={"state": "disabled"},
@@ -994,6 +989,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
     )
     sync_plugins = fields.Nested(
         LDAPSyncPluginsRequest,
+        unknown=INCLUDE,
         description="The LDAP sync plug-ins configuration",
         example={},
         load_default={},

@@ -1221,8 +1221,12 @@ void livestatus_parse_argument(Logger *logger, std::string_view param_name,
     } else if (param_name == "licensed_state_file"sv) {
         fl_paths.licensed_state_file = param_value;
     } else if (param_name == "pnp_path"sv) {
-        fl_paths.rrd_multiple_directory =
-            check_path("RRD multiple directory", param_value);
+        // The Nagios RRD metric file path begins with a symbolic link (/omd),
+        // which must be resolved to its real path because RRDtool does not
+        // handle symbolic links properly when processing flush commands in
+        // rrdcached
+        fl_paths.rrd_multiple_directory = std::filesystem::canonical(
+            check_path("RRD multiple directory", param_value));
     } else if (param_name == "data_encoding"sv) {
         if (param_value == "utf8") {
             fl_data_encoding = Encoding::utf8;

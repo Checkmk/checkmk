@@ -9,6 +9,7 @@ def main() {
         "CIPARAM_ENV_VARS",
         "CIPARAM_ENV_VAR_LIST_STR",
         "CIPARAM_SEC_VAR_LIST_STR",
+        "CIPARAM_GIT_FETCH_TAGS",
         "CIPARAM_COMMAND",
         "CIPARAM_RESULT_CHECK_FILE_PATTERN",
         "CIPARAM_BAZEL_LOCKS_AMOUNT",
@@ -52,6 +53,25 @@ def main() {
         |result_dir.........................|${result_dir}|
         |===================================================
         """.stripMargin());
+
+    smart_stage(
+        name: "Fetch git tags",
+        condition: params.CIPARAM_GIT_FETCH_TAGS,
+    ) {
+        dir("${checkout_dir}") {
+            withCredentials([
+                sshUserPrivateKey(
+                    credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+                    keyFileVariable: 'KEYFILE')]
+            ) {
+                withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
+                    // Since checkmk_ci:df2be57e we don't have the tags available anymore in the checkout
+                    // however the werk tests heavily rely on them, so fetch them here
+                    sh("git fetch origin 'refs/tags/*:refs/tags/*'")
+                }
+            }
+        }
+    }
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {

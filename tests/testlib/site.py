@@ -1932,10 +1932,6 @@ class SiteFactory:
 
         restart_httpd()
 
-        assert site.version.version == target_package.version.version, (
-            "Version mismatch during update!"
-        )
-        assert site.edition.short == target_package.edition.short, "Edition mismatch during update!"
         return site
 
     def update_as_site_user(
@@ -2001,12 +1997,6 @@ class SiteFactory:
         logger.info("Site %s is up", site.id)
 
         restart_httpd()
-
-        assert site.version.version == target_package.version.version, (
-            "Version mismatch during update!"
-        )
-        assert site.edition.short == target_package.edition.short, "Edition mismatch during update!"
-
         site.openapi.changes.activate_and_wait_for_completion()
 
         return site

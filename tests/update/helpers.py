@@ -126,6 +126,10 @@ def update_site(base_site: Site, target_package: CMKPackageInfo, interactive: bo
 
     logger.debug("Successfully updated '%s' > '%s'!", base_site.package, target_site.package)
 
+    assert str(target_package) in target_site.check_output(["omd", "version"]), (
+        "Edition and/or version mismatch during update!"
+    )
+
     return target_site
 
 

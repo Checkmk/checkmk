@@ -128,6 +128,10 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
         "Successfully updated '%s' > '%s'!", base_site.version.version, target_site.version.version
     )
 
+    omd_version_stdout = target_site.check_output(["omd", "version"])
+    assert target_version.version in omd_version_stdout, "Version mismatch during update!"
+    assert target_version.edition.short in omd_version_stdout, "Edition mismatch during update!"
+
     return target_site
 
 

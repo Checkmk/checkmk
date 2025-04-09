@@ -5,6 +5,7 @@
 """Modes for managing notification configuration"""
 
 import abc
+import enum
 import json
 import re
 import time
@@ -1478,6 +1479,11 @@ class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
         ).result
 
 
+class NotificationTestType(enum.StrEnum):
+    host = "host_test"
+    service = "svc_test"
+
+
 class ModeTestNotifications(ModeNotifications):
     def __init__(self) -> None:
         super().__init__()
@@ -1605,13 +1611,18 @@ class ModeTestNotifications(ModeNotifications):
 
         if self._test_notification_ongoing():
             if transactions.check_transaction():
-                context, dispatch = self._context_and_dispatch_from_vars()
+                context, dispatch, test_type = self._infos_from_vars()
                 return redirect(
-                    mode_url(
-                        "test_notifications",
-                        test_notification="1",
-                        test_context=json.dumps(context),
-                        dispatch=dispatch or "",
+                    makeuri(
+                        request,
+                        [
+                            ("mode", "test_notifications"),
+                            ("test_notification", "1"),
+                            ("test_context", json.dumps(context)),
+                            ("dispatch", dispatch or ""),
+                            ("test_type", test_type),
+                        ],
+                        filename="wato.py",
                     )
                 )
 
@@ -1853,6 +1864,18 @@ class ModeTestNotifications(ModeNotifications):
         table.row(css=["notification_context hidden"])
 
     def _render_test_notifications(self) -> None:
+        if self._test_notification_ongoing() or request.var("test_notification"):
+            general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
+            advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
+            notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
+        else:
+            general_test_options = self._get_default_options(
+                request.var("host_name"),
+                request.var("service_name"),
+            )
+            advanced_test_options = ""
+            notify_plugin = {}
+
         self._ensure_correct_default_test_options()
 
         with html.form_context("test_notifications", method="POST"):
@@ -1860,10 +1883,10 @@ class ModeTestNotifications(ModeNotifications):
             self._vs_test_on_options()
             self._vs_general_test_options().render_input_as_form(
                 "general_opts",
-                self._get_default_options(request.var("host_name"), request.var("service_name")),
+                general_test_options,
             )
-            self._vs_notify_plugin().render_input("notify_plugin", {})
-            self._vs_advanced_test_options().render_input("advanced_opts", "")
+            self._vs_notify_plugin().render_input("notify_plugin", notify_plugin)
+            self._vs_advanced_test_options().render_input("advanced_opts", advanced_test_options)
             html.hidden_fields()
             forms.end()
 
@@ -1883,7 +1906,7 @@ class ModeTestNotifications(ModeNotifications):
             "_test_service_notifications"
         )
 
-    def _context_and_dispatch_from_vars(self) -> tuple[dict[str, Any], str | None]:
+    def _infos_from_vars(self) -> tuple[dict[str, Any], str | None, str]:
         general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
         self._vs_general_test_options().validate_value(general_test_options, "general_opts")
 
@@ -1896,6 +1919,7 @@ class ModeTestNotifications(ModeNotifications):
         }
 
         notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
+        self._vs_notify_plugin().validate_value(notify_plugin, "notify_plugin")
         dispatch = None
         if notify_plugin:
             method, parameter_id = notify_plugin["notify_plugin"]
@@ -1920,7 +1944,9 @@ class ModeTestNotifications(ModeNotifications):
             context["HOSTSTATE"] = "UP"
 
         notification_nr = str(advanced_test_options["notification_nr"])
+        test_type = NotificationTestType.host
         if service_desc := general_test_options.get("on_service_hint"):
+            test_type = NotificationTestType.service
             if not service_desc:
                 raise MKUserError(None, _("Please provide a service."))
 
@@ -1962,7 +1988,7 @@ class ModeTestNotifications(ModeNotifications):
         else:
             context["HOSTOUTPUT"] = plugin_output
 
-        return context, dispatch
+        return context, dispatch, test_type
 
     def _add_missing_host_context(self, context: NotificationContext) -> None:
         """We don't want to transport all possible informations via HTTP vars
@@ -2242,11 +2268,15 @@ class ModeTestNotifications(ModeNotifications):
         return {}
 
     def _ensure_correct_default_test_options(self) -> None:
-        if request.has_var("_test_service_notifications"):
+        test_type = request.var("test_type")
+        if (
+            request.has_var("_test_service_notifications")
+            or test_type == NotificationTestType.service
+        ):
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
             )
-        elif request.has_var("_test_host_notifications"):
+        elif request.has_var("_test_host_notifications") or test_type == NotificationTestType.host:
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host", true);'
             )

@@ -15,9 +15,11 @@
 if [ -n "${MK_INSTALLDIR}" ]; then
     HOMEDIR="${MK_INSTALLDIR}/runtime/controller"
     CONTROLLER_BINARY="${MK_INSTALLDIR}/package/bin/cmk-agent-ctl"
+    AUTO_REGISTRATION_CONFIG="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
 else
     HOMEDIR="/var/lib/cmk-agent"
     CONTROLLER_BINARY="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
+    AUTO_REGISTRATION_CONFIG="${HOMEDIR}/pre_configured_connections.json"
 fi
 
 USER_COMMENT="Checkmk agent system user"
@@ -33,17 +35,19 @@ HERE
 _allow_legacy_pull() {
     if [ -x "${CONTROLLER_BINARY}" ]; then
         "${CONTROLLER_BINARY}" delete-all --enable-insecure-connections
-    else
+    elif which cmk-agent-ctl >/dev/null 2>&1; then
         cmk-agent-ctl delete-all --enable-insecure-connections
     fi
 }
 
 _issue_legacy_pull_warning() {
-    cat <<HERE
+    [ -x "${CONTROLLER_BINARY}" ] && [ ! -e "${AUTO_REGISTRATION_CONFIG}" ] && {
+        cat <<HERE
 
 WARNING: The agent controller is operating in an insecure mode! To secure the connection run \`cmk-agent-ctl register\`.
 
 HERE
+    }
 }
 
 _set_agent_user_permissions() {

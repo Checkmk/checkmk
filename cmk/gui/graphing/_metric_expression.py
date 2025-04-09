@@ -106,12 +106,6 @@ class EvaluationError:
     metric_name: str = ""
 
 
-@dataclass(frozen=True)
-class ScalarName:
-    metric_name: str
-    scalar_name: Literal["warn", "crit", "min", "max"]
-
-
 class BaseMetricExpression(abc.ABC):
     @abc.abstractmethod
     def ident(self) -> str: ...
@@ -124,9 +118,6 @@ class BaseMetricExpression(abc.ABC):
 
     @abc.abstractmethod
     def metric_names(self) -> Iterable[str]: ...
-
-    @abc.abstractmethod
-    def scalar_names(self) -> Iterable[ScalarName]: ...
 
     @abc.abstractmethod
     def to_metric_operation(
@@ -172,10 +163,6 @@ class Constant(BaseMetricExpression):
         yield from ()
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from ()
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -218,10 +205,6 @@ class Metric(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield self.name
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from ()
 
     @override
     def to_metric_operation(
@@ -288,10 +271,6 @@ class WarningOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield ScalarName(self.metric.name, "warn")
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -345,10 +324,6 @@ class CriticalOf(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield ScalarName(self.metric.name, "crit")
 
     @override
     def to_metric_operation(
@@ -406,10 +381,6 @@ class MinimumOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield ScalarName(self.metric.name, "min")
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -463,10 +434,6 @@ class MaximumOf(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield ScalarName(self.metric.name, "max")
 
     @override
     def to_metric_operation(
@@ -523,10 +490,6 @@ class Sum(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield from (n for s in self.summands for n in s.metric_names())
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for s in self.summands for n in s.scalar_names())
 
     @override
     def to_metric_operation(
@@ -593,10 +556,6 @@ class Product(BaseMetricExpression):
         yield from (n for f in self.factors for n in f.metric_names())
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for f in self.factors for n in f.scalar_names())
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -660,11 +619,6 @@ class Difference(BaseMetricExpression):
     def metric_names(self) -> Generator[str]:
         yield from self.minuend.metric_names()
         yield from self.subtrahend.metric_names()
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from self.minuend.scalar_names()
-        yield from self.subtrahend.scalar_names()
 
     @override
     def to_metric_operation(
@@ -738,11 +692,6 @@ class Fraction(BaseMetricExpression):
         yield from self.divisor.metric_names()
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from self.dividend.scalar_names()
-        yield from self.divisor.scalar_names()
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -809,10 +758,6 @@ class Minimum(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for o in self.operands for n in o.scalar_names())
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -871,10 +816,6 @@ class Maximum(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for o in self.operands for n in o.scalar_names())
 
     @override
     def to_metric_operation(
@@ -939,10 +880,6 @@ class Average(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for o in self.operands for n in o.scalar_names())
-
-    @override
     def to_metric_operation(
         self,
         site_id: SiteId,
@@ -998,10 +935,6 @@ class Merge(BaseMetricExpression):
     @override
     def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
-
-    @override
-    def scalar_names(self) -> Generator[ScalarName]:
-        yield from (n for o in self.operands for n in o.scalar_names())
 
     @override
     def to_metric_operation(

@@ -10,6 +10,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
+from tests.gui_e2e.testlib.common import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.combined_graph import CombinedGraphsServiceSearch
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
         pytest.param(
             HostDetails(
                 name=f"test_host_{Faker().first_name()}",
-                ip="127.0.0.1",
+                ip=LOCALHOST_IPV4,
                 agent_and_api_integration=AgentAndApiIntegration.no_agent,
                 snmp=SNMP.no_snmp,
             )

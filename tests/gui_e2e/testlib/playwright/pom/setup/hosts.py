@@ -10,6 +10,7 @@ from urllib.parse import quote_plus
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.gui_e2e.testlib.common import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
@@ -200,7 +201,7 @@ class AddHost(CmkPage):
         logger.info("Fill in host details")
         self.host_name_text_field.fill(host.name)
         self.ipv4_address_checkbox.click()
-        self.ipv4_address_text_field.fill(host.ip if host.ip else "127.0.0.1")
+        self.ipv4_address_text_field.fill(host.ip if host.ip else LOCALHOST_IPV4)
 
         if host.agent_and_api_integration:
             self.agent_and_api_integration_checkbox.click()

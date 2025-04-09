@@ -17,6 +17,7 @@ from faker import Faker
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.gui_e2e.testlib.common import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.plugin import (
@@ -235,7 +236,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
             "host_name": host_name,
             "folder": "/",
             "attributes": {
-                "ipaddress": "127.0.0.1",
+                "ipaddress": LOCALHOST_IPV4,
                 "tag_agent": "cmk-agent",
             },
         }

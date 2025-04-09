@@ -11,6 +11,7 @@ from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
+LOCALHOST_IPV4 = "127.0.0.1"
 
 
 @contextmanager

@@ -257,6 +257,7 @@ STAGES:
     - NAME: 'Python Werks Test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_WERK_FILES
       DIR: 'tests'
+      GIT_FETCH_TAGS: true
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
       COMMAND: "make test-werks-docker"

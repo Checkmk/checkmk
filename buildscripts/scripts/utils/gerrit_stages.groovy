@@ -40,6 +40,25 @@ def create_stage(Map args, time_stage_started) {
         println("CMD: ${args.COMMAND}");
         def cmd_status;
 
+        smart_stage(
+            name: "Fetch git tags",
+            condition: args.GIT_FETCH_TAGS,
+        ) {
+            dir("${checkout_dir}") {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+                        keyFileVariable: 'KEYFILE')]
+                ) {
+                    withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
+                        // Since checkmk_ci:df2be57e we don't have the tags available anymore in the checkout
+                        // however the werk tests heavily rely on them, so fetch them here
+                        sh("git fetch origin 'refs/tags/*:refs/tags/*'")
+                    }
+                }
+            }
+        }
+
         withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
             withEnv(args.ENV_VAR_LIST) {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {

@@ -22,7 +22,8 @@ from typing import Any
 
 import urllib3
 
-import cmk.utils.password_store
+from cmk.utils.password_store import lookup as lookup_stored_passwords
+from cmk.utils.password_store.hack import resolve_password_hack
 
 from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
 
@@ -175,6 +176,9 @@ def special_agent_main(
     Watch out!
     This will crash unless `parse_arguments` implements the `--debug` and `--verbose` options.
     """
-    if apply_password_store_hack:
-        cmk.utils.password_store.replace_passwords()
-    return _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])
+    argv = sys.argv[1:] if argv is None else argv
+    return _special_agent_main_core(
+        parse_arguments,
+        main_fn,
+        resolve_password_hack(argv, lookup_stored_passwords) if apply_password_store_hack else argv,
+    )

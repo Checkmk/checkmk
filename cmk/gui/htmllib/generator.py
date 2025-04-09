@@ -187,7 +187,15 @@ class HTMLWriter:
 
     @staticmethod
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return render_element("script", HTML.without_escaping(code), **attrs)
+        # We can not use the regular html.escape since it escapes with HTML entities, which
+        # are not interpreted properly in script. Using the unicode escape sequences seems to
+        # have the desired effect.
+        # In case it turns out that it has unwanted side effects, we may finally have to get rid of
+        # the inline scripts, which would be a great idea anyways, but is quite some effort.
+        def escape_for_script(code: str) -> str:
+            return code.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+
+        return render_element("script", HTML.without_escaping(escape_for_script(code)), **attrs)
 
     def final_javascript(self, code: FinalJavaScript) -> None:
         self._final_javascript.append(code)

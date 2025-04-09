@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from dataclasses import dataclass
 
 from cmk.gui.htmllib.html import html
@@ -51,21 +52,21 @@ class FilterRange(Filter):
         html.tr("", id_=self._filter_range_config.column, css=["range_input"])
         html.close_table()
         html.javascript(
-            f"""
-            cmk.nodevis.utils.render_input_range(
-                    cmk.d3.select("#{self._filter_range_config.column}"),
-                    {{
-                        'id': "{self._filter_range_config.column}",
-                        'title': "",
-                        'step': {self._filter_range_config.step},
-                        'min': {self._filter_range_config.min},
-                        'max': {self._filter_range_config.max},
-                        'default_value': {self._filter_range_config.default},
-                    }},
-                    {actual_value},
-                    ()=>{{}}
-                    )
-        """,
+            "cmk.nodevis.utils.render_input_range(cmk.d3.select(%s), %s, %s)"
+            % (
+                json.dumps(f"#{self._filter_range_config.column}"),
+                json.dumps(
+                    {
+                        "id": self._filter_range_config.column,
+                        "title": "",
+                        "step": self._filter_range_config.step,
+                        "min": self._filter_range_config.min,
+                        "max": self._filter_range_config.max,
+                        "default_value": self._filter_range_config.default,
+                    },
+                ),
+                json.dumps(actual_value),
+            ),
             data_cmk_execute_after_replace="",
         )
 

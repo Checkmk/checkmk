@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # ruff: noqa: A005
 
-import functools
 import json
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -31,23 +30,7 @@ def patch_json(json_module: ModuleType) -> Iterator[None]:
     # replacement:
     json_module.JSONEncoder.default = _default
 
-    # And here we go for another dirty JSON hack. We often use he JSON we produce for adding it to HTML
-    # tags and the JSON produced by json.dumps() can not directly be added to <script> tags in a save way.
-    # TODO: This is something which should be realized by using a custom JSONEncoder. The slash encoding
-    # is not necessary when the resulting string is not added to HTML content, but there is no problem
-    # to apply it to all encoded strings.
-    # We make this a function which is called on import-time because mypy fell into an endless-loop
-    # due to changes outside this scope.
-    orig_func = json_module.encoder.encode_basestring_ascii
-
-    @functools.wraps(orig_func)
-    def _escaping_wrapper(s):
-        return orig_func(s).replace("/", "\\/")
-
-    json_module.encoder.encode_basestring_ascii = _escaping_wrapper
-
     try:
         yield
     finally:
-        json_module.encoder.encode_basestring_ascii = orig_func
         json_module.JSONEncoder.default = _default.default  # type: ignore[attr-defined]

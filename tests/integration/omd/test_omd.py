@@ -2,8 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import tempfile
+from pathlib import Path
 
-from tests.testlib.site import Site
+from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import run
+from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 
 def test_run_omd(site: Site) -> None:
@@ -98,6 +102,35 @@ def test_run_omd_status_bare(site: Site) -> None:
         raise excp
 
 
+def test_run_omd_backup_and_omd_restore(site: Site) -> None:
+    """
+    Test the 'omd backup' and 'omd restore' commands.
+
+    This test creates a backup of the current site and then restores it with a new name.
+    """
+    site_factory = SiteFactory(
+        package=CMKPackageInfo(version_from_env(), edition_from_env()),
+        enforce_english_gui=False,
+        prefix="",
+    )
+    restored_site_name = "restored_site"
+    restored_site = None
+    backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
+    try:
+        run(["omd", "backup", site.id, str(backup_path)], sudo=True, check=True)
+        assert backup_path.stat().st_size > 0, "Backup file was not created."
+
+        run(["omd", "restore", restored_site_name, str(backup_path)], sudo=True, check=True)
+        restored_site = site_factory.get_existing_site(restored_site_name)
+        assert restored_site.exists(), "Restored site does not exist."
+        assert restored_site.is_running(), "Restored site is not running."
+    finally:
+        if backup_path.exists():
+            run(["rm", "-rf", str(backup_path)], sudo=True)
+        if restored_site is not None and restored_site.exists():
+            restored_site.rm()
+
+
 # TODO: Add tests for these modes (also check -h of each mode)
 # omd update                      Update site to other version of OMD
 # omd start      [SERVICE]        Start services of one or all sites
@@ -108,8 +141,6 @@ def test_run_omd_status_bare(site: Site) -> None:
 # omd config     ...              Show and set site configuration parameters
 # omd diff       ([RELBASE])      Shows differences compared to the original version files
 # omd umount                      Umount ramdisk volumes of site(s)
-# omd backup     [SITE] [-|ARCHIVE_PATH] Create a backup tarball of a site, writing it to a file or stdout
-# omd restore    [SITE] [-|ARCHIVE_PATH] Restores the backup of a site to an existing site or creates a new site
 #
 # General Options:
 # -V <version>                    set specific version, useful in combination with update/create

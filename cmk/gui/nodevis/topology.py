@@ -544,6 +544,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
             return -1
         state_map = {
             0: 0,
+            1: 2,
             2: 3,
         }
         return state_map.get(extra_info["state"], 3)

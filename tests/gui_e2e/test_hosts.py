@@ -12,7 +12,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.common import create_and_delete_hosts
+from tests.gui_e2e.testlib.common import create_and_delete_hosts, LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
@@ -28,7 +28,7 @@ pytestmark = pytest.mark.xfail(reason="CMK-22540; Flake while activating changes
 def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
     _host = HostProperties(
         dashboard_page.page,
-        HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
+        HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
     )
     yield _host
     if int(os.getenv("CLEANUP", "1")) == 1:
@@ -52,7 +52,7 @@ def test_create_and_delete_a_host(dashboard_page: Dashboard) -> None:
     # create Host
     host = HostProperties(
         dashboard_page.page,
-        host=HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
+        host=HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
     )
     # validate
     host.main_menu.monitor_all_hosts.click()
@@ -91,7 +91,7 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
     for i in range(8):
         host_details = HostDetails(
             name=f"test_host_{faker.unique.first_name()}",
-            ip="127.0.0.1",
+            ip=LOCALHOST_IPV4,
             site=test_site.id,
             agent_and_api_integration=AgentAndApiIntegration.no_agent,
             address_family=AddressFamily.ip_v4_only,

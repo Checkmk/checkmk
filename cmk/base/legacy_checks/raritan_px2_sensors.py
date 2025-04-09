@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_temp,
@@ -11,7 +15,7 @@ from cmk.base.check_legacy_includes.raritan import (
     parse_raritan_sensors,
 )
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.raritan import DETECT_RARITAN
 
@@ -89,6 +93,33 @@ def discover_raritan_px2_sensors_humidity(parsed):
     return inventory_raritan_sensors(parsed, "humidity")
 
 
+def check_raritan_sensors_humidity(
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    section: Mapping[str, Mapping[str, Any]],
+) -> LegacyCheckResult:
+    if (sensor := section.get(item)) is None:
+        return None
+
+    humidity_value, crit_lower, warn_lower, crit, warn = sensor["sensor_data"]
+
+    if "levels" in params:
+        warn, crit = params["levels"]
+    if "levels_lower" in params:
+        warn_lower, crit_lower = params["levels_lower"]
+
+    yield check_humidity(
+        humidity=humidity_value,
+        params={
+            "levels": (warn, crit),
+            "levels_lower": (warn_lower, crit_lower),
+        },
+    )
+
+    state, state_readable = sensor["state"]
+    yield state, f"Device status: {state_readable}"
+
+
 # .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
@@ -104,7 +135,8 @@ check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_humidity,
-    check_function=check_raritan_sensors,
+    check_function=check_raritan_sensors_humidity,
+    check_ruleset_name="humidity",
 )
 
 

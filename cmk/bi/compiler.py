@@ -52,9 +52,7 @@ class BICompiler:
         path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
         self._redis_client: Redis[str] | None = None
-        self._setup()
 
-    def _setup(self) -> None:
         self._bi_packs = BIAggregationPacks(self._bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback)
         self.bi_searcher = BISearcher()

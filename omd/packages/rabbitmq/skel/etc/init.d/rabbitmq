@@ -25,7 +25,7 @@ INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 REMOTE_PIGGYBACK_HUB_STATES_FILE="${OMD_ROOT}/etc/check_mk/remote_piggyback_hub_status"
 
 services_needing_rabbitmq() {
-    printf "%s\n" "piggyback_hub"
+    printf "%s\n" "piggyback-hub"
 }
 
 getpid() {

@@ -5,19 +5,25 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import SlideIn from '@/components/SlideIn.vue'
-import type { Catalog, Dictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
-
 import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
-import { ref } from 'vue'
+import type {
+  Catalog,
+  Dictionary,
+  DictionaryElement,
+  String,
+  Topic,
+  TopicElement
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const data = ref<Record<string, Record<string, unknown>>>({
-  some_topic_id: { element_name: 'string content' }
+  some_topic_id: { some_topic_element: { element_name: 'string content' } }
 })
 
 const scrollOpen = ref<boolean>(false)
@@ -34,7 +40,7 @@ const catalog = ref<Catalog>({
       title: 'some_topic_title',
       elements: [
         {
-          name: 'element_name',
+          name: 'some_topic_element',
           required: true,
           default_value: {},
           type: 'topic_element',
@@ -55,18 +61,23 @@ const catalog = ref<Catalog>({
                 group: null,
                 parameter_form: {
                   type: 'string',
+                  label: 'string label',
+                  input_hint: 'string input hint',
                   title: 'string title',
                   help: 'some string help',
+                  field_size: 'MEDIUM',
+                  i18n_base: { required: 'required' },
+                  autocompleter: null,
                   validators: []
-                }
-              }
+                } as String
+              } as DictionaryElement
             ],
             layout: 'one_column',
             groups: []
           } as Dictionary
-        }
+        } as TopicElement
       ]
-    }
+    } as Topic
   ],
   i18n_base: { required: 'required' }
 })
@@ -81,7 +92,7 @@ const catalog = ref<Catalog>({
       <CmkButtonCancel @click="open = false">cancel</CmkButtonCancel>
     </div>
     <div class="content">
-      <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="[]" />
+      <FormEdit v-model:data="data" :spec="catalog" :backend-validation="[]" />
     </div>
   </SlideIn>
   <pre>{{ data }}</pre>
@@ -92,7 +103,6 @@ const catalog = ref<Catalog>({
     :header="{ title: 'some title', closeButton: true }"
     @close="scrollOpen = false"
   >
-    <input />
     <div v-for="i in 100" :key="i">{{ i }} <br /></div>
   </SlideIn>
 </template>

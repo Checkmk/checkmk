@@ -596,6 +596,21 @@ class RulesetOptimizer:
             if matched_by_tags is not None:
                 return matched_by_tags
 
+        return self._all_matching_hosts_match_cache.setdefault(
+            cache_id,
+            self._all_matching_hosts_computation(
+                valid_hosts, hostlist, tag_conditions, label_groups, labels_of_host
+            ),
+        )
+
+    def _all_matching_hosts_computation(
+        self,
+        valid_hosts: set[HostName],
+        hostlist: HostOrServiceConditions | None,
+        tag_conditions: Mapping[TagGroupID, TagCondition],
+        label_groups: LabelGroups,
+        labels_of_host: Callable[[HostName], Labels],
+    ) -> set[HostName]:
         matching: set[HostName] = set()
         only_specific_hosts = (
             hostlist is not None
@@ -642,7 +657,6 @@ class RulesetOptimizer:
 
                 matching.add(hostname)
 
-        self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
     @staticmethod

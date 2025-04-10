@@ -249,7 +249,7 @@ def _valuespec_special_agents_azure():
                 (
                     "filter_tags",
                     CascadingDropdown(
-                        title=("Filter tags imported as host/service labels"),
+                        title=("Filter Azure tags imported as host/service labels"),
                         choices=[
                             (
                                 "filter_tags",

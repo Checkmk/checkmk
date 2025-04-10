@@ -186,10 +186,11 @@ describe('FormAutocompleter', () => {
       expect(screen.getByText('OS Linux')).toBeInTheDocument()
     })
 
+    const toBeRemoved = waitForElementToBeRemoved(() => screen.getByText('OS Windows'))
     await userEvent.type(input, 'linux')
 
     // suggestions are filtered, so windows should go away
-    await waitForElementToBeRemoved(() => screen.getByText('OS Windows'))
+    await toBeRemoved
 
     // lets choose the only element in the list
     await userEvent.keyboard('[ArrowDown][Enter]')

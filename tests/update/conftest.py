@@ -77,7 +77,7 @@ def _setup_host(site: Site, hostname: str, ip_address: str) -> Generator[None]:
         site.openapi.hosts.create(
             hostname=hostname, attributes={"ipaddress": ip_address, "tag_agent": "cmk-agent"}
         )
-        site.activate_changes_and_wait_for_core_reload()
+        site.openapi.changes.activate_and_wait_for_completion()
 
         bulk_discover_and_schedule(site, hostname)
         yield

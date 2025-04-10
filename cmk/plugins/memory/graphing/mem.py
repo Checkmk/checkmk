@@ -71,13 +71,13 @@ metric_mem_lnx_cached = Metric(
     name="mem_lnx_cached",
     title=Title("Cached memory"),
     unit=UNIT_BYTES,
-    color=Color.BLUE,
+    color=Color.DARK_CYAN,
 )
 metric_mem_lnx_buffers = Metric(
     name="mem_lnx_buffers",
     title=Title("Buffered memory"),
     unit=UNIT_BYTES,
-    color=Color.CYAN,
+    color=Color.LIGHT_CYAN,
 )
 metric_sreclaimable = Metric(
     name="sreclaimable",
@@ -180,12 +180,12 @@ graph_mem_absolute_2 = Graph(
         CriticalOf("mem_used"),
     ),
     compound_lines=(
+        "mem_used",
+        "mem_free",
         "sreclaimable",
         "mem_lnx_cached",
         "mem_lnx_buffers",
         "swap_cached",
-        "mem_free",
-        "mem_used",
     ),
     optional=("swap_cached", "sreclaimable"),
 )

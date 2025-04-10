@@ -3,13 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+import pytest
+
 from cmk.agent_based.v2 import (
+    GetRateError,
     Metric,
     Result,
     Service,
     State,
 )
-from cmk.plugins.smart.agent_based.smart_ata import _check_smart_ata, discover_smart_ata
+from cmk.plugins.smart.agent_based.smart_ata import (
+    _check_command_timeout,
+    _check_smart_ata,
+    discover_smart_ata,
+)
 from cmk.plugins.smart.agent_based.smart_posix import (
     ATAAll,
     ATADevice,
@@ -115,4 +123,74 @@ def test_check_smart_ata_stat() -> None:
         Metric("harddrive_pending_sectors", 0.0),
         Result(state=State.OK, summary="UDMA CRC errors: 0"),
         Metric("harddrive_udma_crc_errors", 0.0),
+    ]
+
+
+def test_check_command_timeout() -> None:
+    # Real life example
+    # {"id":188,"name":"Command_Timeout","value":100,"worst":100,"thresh":0,"when_failed":"","flags":{"value":50,"string":"-O--CK ","prefailure":false,"updated_online":true,"performance":false,"error_rate":false,"event_count":true,"auto_keep":true},"raw":{"value":92,"string":"92"}}
+    disk = ATAAll(
+        device=ATADevice(protocol="ATA", name="/dev/sda"),
+        ata_smart_attributes=ATATable(
+            table=[
+                ATATableEntry(
+                    id=188,
+                    name="Command_Timeout",
+                    value=100,
+                    thresh=0,
+                    raw=ATARawValue(value=92),
+                ),
+            ]
+        ),
+        temperature=Temperature(current=38),
+    )
+    value_store: dict[str, object] = {}
+    with pytest.raises(GetRateError):
+        _check_results = list(_check_command_timeout(disk, value_store, 1.0)) == []
+    assert list(_check_command_timeout(disk, value_store, 2.0)) == [
+        Result(state=State.OK, summary="Command Timeout Counter: 92"),
+        Metric("harddrive_cmd_timeouts", 92.0),
+    ]
+
+
+def test_check_command_timeout_critical() -> None:
+    disk = ATAAll(
+        device=ATADevice(protocol="ATA", name="/dev/sda"),
+        ata_smart_attributes=ATATable(
+            table=[
+                ATATableEntry(
+                    id=188,
+                    name="Command_Timeout",
+                    value=100,
+                    thresh=0,
+                    raw=ATARawValue(value=92),
+                ),
+            ]
+        ),
+        temperature=Temperature(current=38),
+    )
+    disk_second = ATAAll(
+        device=ATADevice(protocol="ATA", name="/dev/sda"),
+        ata_smart_attributes=ATATable(
+            table=[
+                ATATableEntry(
+                    id=188,
+                    name="Command_Timeout",
+                    value=100,
+                    thresh=0,
+                    raw=ATARawValue(value=94),
+                ),
+            ]
+        ),
+        temperature=Temperature(current=38),
+    )
+    value_store: dict[str, object] = {}
+    with pytest.raises(GetRateError):
+        _check_results = list(_check_command_timeout(disk, value_store, 1.0)) == []
+    assert list(_check_command_timeout(disk_second, value_store, 2.0)) == [
+        Result(
+            state=State.CRIT,
+            summary="Command Timeout Counter: 94 (counter increased more than 100 counts / h (!!))",
+        ),
+        Metric("harddrive_cmd_timeouts", 94.0),
     ]

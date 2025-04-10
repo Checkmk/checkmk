@@ -206,7 +206,7 @@ def _check_command_timeout(
             yield Result(
                 state=State.CRIT,
                 summary=f"Command Timeout Counter: {command_timeout_counter.raw.value} "
-                "(counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!))",
+                f"(counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!))",
             )
         else:
             yield Result(

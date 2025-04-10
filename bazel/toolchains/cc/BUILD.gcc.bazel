@@ -21,8 +21,6 @@ licenses(["notice"])
 
 exports_files(glob(["bin/**"]))
 
-# Directory-based rules in this toolchain only referece things in
-# lib/ or include/ subdirectories.
 directory(
     name = "toolchain_root",
     srcs = glob([
@@ -37,9 +35,14 @@ subdirectory(
     path = "x86_64-buildroot-linux-gnu/include",
 )
 
+directory(
+    name = "x86_64-buildroot-linux-gnu",
+    srcs = ["lib/gcc/x86_64-buildroot-linux-gnu/13.3.0"],
+)
+
 subdirectory(
     name = "include-x86_64-buildroot-linux-gnu",
-    parent = ":toolchain_root",
+    parent = ":x86_64-buildroot-linux-gnu",
     path = "lib/gcc/x86_64-buildroot-linux-gnu/13.3.0/include",
 )
 
@@ -51,7 +54,6 @@ filegroup(
     ],
 )
 
-# Various supporting files needed to run the linker.
 filegroup(
     name = "linker_builtins",
     data = glob([
@@ -62,10 +64,6 @@ filegroup(
     ]),
 )
 
-# Some toolchain distributions use busybox-style handling of tools, so things
-# like `g++` just redirect to a different binary. This glob catches this
-# binary if it's included in the distribution, and is a no-op if the multicall
-# binary doesn't exist.
 filegroup(
     name = "multicall_support_files",
     srcs = glob([

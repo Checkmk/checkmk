@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import assert_never, cast, Literal, NewType, Self
+from typing import assert_never, cast, Literal, NewType, Self, TypedDict
 
 import cmk.ccc.debug
 from cmk.ccc.crash_reporting import (
@@ -255,7 +255,20 @@ def _create_cmc_rrd_info_file(spec: RRDSpec) -> None:
 
 _RRDFileConfig = tuple[_RRAConfig, _Seconds, _RRDHeartbeat]
 _RRDServices = Mapping[_RRDServiceName, list[_RRDFormat]]
-RRDXMLInfo = dict
+
+
+class DataSource(TypedDict):
+    name: str
+    rrdfile: str
+    ds: str
+    rrd_storage_type: str
+
+
+class RRDXMLInfo(TypedDict):
+    ds: Sequence[DataSource]
+    host: str
+    service: str
+    rrdfile: str
 
 
 class RRDConverter:
@@ -445,7 +458,9 @@ class RRDConverter:
         # characters. We cannot savely put our variablenames into the RRDs.
         # So we do it like PNP and use 1, 2, 3... as DS names and keep the
         # actual real names in a separate file with the extension ".info"
-        _create_cmc_rrd_info_file(RRDSpec("cmc_single", self._hostname, servicedesc, metric_names))
+        _create_cmc_rrd_info_file(
+            RRDSpec("cmc_single", self._hostname, servicedesc, [(n, None) for n in metric_names])
+        )
         console.verbose(f"..{tty.bold}{tty.green}converted.{tty.normal}")
         console.debug(f"    (rrdtool create {' '.join(args)})")
 
@@ -635,33 +650,28 @@ class RRDConverter:
 
 
 def _parse_pnp_xml_file(xml_path: str) -> RRDXMLInfo:
-    root = ET.parse(xml_path).getroot()
-    if root is None:
+    if (root := ET.parse(xml_path).getroot()) is None:
         raise TypeError()
-
-    ds = [
-        {
-            "name": _text_attr(child, "NAME"),
-            "rrdfile": _text_attr(child, "RRDFILE"),
-            "ds": _text_attr(child, "DS"),
-            "rrd_storage_type": _text_attr(child, "RRD_STORAGE_TYPE"),
-        }
-        for child in root.iter("DATASOURCE")
-    ]
-
-    return {
-        "ds": ds,
-        "host": _text_attr(root, "NAGIOS_AUTH_HOSTNAME"),
-        "service": _text_attr(root, "NAGIOS_AUTH_SERVICEDESC"),
-        "rrdfile": _text_attr(root, "NAGIOS_RRDFILE") or "",
-    }
+    return RRDXMLInfo(
+        ds=[
+            DataSource(
+                name=_text_attr(child, "NAME"),
+                rrdfile=_text_attr(child, "RRDFILE"),
+                ds=_text_attr(child, "DS"),
+                rrd_storage_type=_text_attr(child, "RRD_STORAGE_TYPE"),
+            )
+            for child in root.iter("DATASOURCE")
+        ],
+        host=_text_attr(root, "NAGIOS_AUTH_HOSTNAME"),
+        service=_text_attr(root, "NAGIOS_AUTH_SERVICEDESC"),
+        rrdfile=_text_attr(root, "NAGIOS_RRDFILE"),
+    )
 
 
-def _text_attr(node: ET.Element, attr_name: str) -> str | None:
-    attr = node.find(attr_name)
-    if attr is None:
+def _text_attr(node: ET.Element, attr_name: str) -> str:
+    if (attr := node.find(attr_name)) is None:
         raise AttributeError()
-    return attr.text
+    return "" if attr.text is None else attr.text
 
 
 def _render_rrd_size(x: int | float) -> str:

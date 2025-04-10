@@ -128,9 +128,6 @@ def resolve_password_hack(
 ) -> list[str]:
     argv = list(input_argv)
 
-    if len(argv) < 2:
-        return argv  # command line too short
-
     if not [a for a in argv if a.startswith("--pwstore")]:
         return argv  # no password store in use
 
@@ -141,7 +138,7 @@ def resolve_password_hack(
 
     # Extract first argument and parse it
 
-    pwstore_args = argv.pop(1).split("=", 1)[1]
+    pwstore_args = argv.pop(0).split("=", 1)[1]
 
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
@@ -159,7 +156,7 @@ def resolve_password_hack(
             _bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
-            arg = argv[num_arg]
+            arg = argv[num_arg - 1]
         except IndexError:
             _bail_out("pwstore: Argument %d does not exist" % num_arg)
 
@@ -168,7 +165,7 @@ def resolve_password_hack(
         except ValueError as exc:
             _bail_out(f"pwstore: {exc}")
 
-        argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
+        argv[num_arg - 1] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
     return argv
 
@@ -220,4 +217,4 @@ def apply_password_hack(
 # Many third party plugins rely on it, so we must not change it.
 # One day, when we have a more official versioned API we can hopefully remove it.
 def replace_passwords() -> None:
-    sys.argv[:] = resolve_password_hack(sys.argv, lookup)
+    sys.argv[1:] = resolve_password_hack(sys.argv[1:], lookup)

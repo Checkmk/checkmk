@@ -1784,3 +1784,20 @@ class TreeOrArchiveStore(TreeStore):
         target_dir.mkdir(parents=True, exist_ok=True)
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
+
+
+def load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
+    if not (cached_data := store.load_object_from_file(cached_file, default=None)):
+        return None
+    new, changed, removed, raw_delta_tree = cached_data
+    return new, changed, removed, deserialize_delta_tree(raw_delta_tree)
+
+
+def save_delta_cache(
+    cached_file: Path, cached_data: tuple[int, int, int, ImmutableDeltaTree]
+) -> None:
+    new, changed, removed, delta_tree = cached_data
+    store.save_text_to_file(
+        cached_file,
+        repr((new, changed, removed, serialize_delta_tree(delta_tree))),
+    )

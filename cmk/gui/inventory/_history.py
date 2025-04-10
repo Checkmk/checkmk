@@ -7,18 +7,17 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
-    deserialize_delta_tree,
     ImmutableDeltaTree,
     ImmutableTree,
+    load_delta_cache,
     load_tree,
+    save_delta_cache,
     SDFilterChoice,
-    serialize_delta_tree,
 )
 
 from cmk.gui.i18n import _
@@ -272,20 +271,15 @@ class _CachedDeltaTreeLoader:
 
     def get_cached_entry(self) -> HistoryEntry | None:
         try:
-            cached_data = store.load_object_from_file(self._path, default=None)
+            cached_data = load_delta_cache(self._path)
         except MKGeneralException:
             return None
 
         if cached_data is None:
             return None
 
-        new, changed, removed, raw_delta_tree = cached_data
-        return self._make_history_entry(
-            new,
-            changed,
-            removed,
-            deserialize_delta_tree(raw_delta_tree),
-        )
+        new, changed, removed, delta_tree = cached_data
+        return self._make_history_entry(new, changed, removed, delta_tree)
 
     def get_calculated_or_store_entry(
         self,
@@ -298,10 +292,7 @@ class _CachedDeltaTreeLoader:
         changed = delta_stats["changed"]
         removed = delta_stats["removed"]
         if new or changed or removed:
-            store.save_text_to_file(
-                self._path,
-                repr((new, changed, removed, serialize_delta_tree(delta_tree))),
-            )
+            save_delta_cache(self._path, (new, changed, removed, delta_tree))
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None
 

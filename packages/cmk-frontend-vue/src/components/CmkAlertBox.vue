@@ -46,9 +46,9 @@ const alertClass = computed(() => {
 </script>
 
 <template>
-  <div class="cmk-alert-box" :class="alertClass" :style="{ maxWidth: 'fit-content' }">
+  <div class="cmk-alert-box" :class="alertClass">
     <CmkIcon :name="alertIconName" variant="inline" size="large" />
-    <div>
+    <div class="content">
       <slot />
     </div>
   </div>
@@ -64,7 +64,7 @@ const alertClass = computed(() => {
   border-radius: var(--border-radius);
   margin: 12px 0;
 
-  div {
+  & > .content {
     margin-left: 7px;
   }
 

@@ -33,6 +33,12 @@ export class CmkFetchResponse {
     this.requestOptions = requestOptions
   }
 
+  /**
+   * Raise any fatal error.
+   *
+   * This should end the program flow if the response is not ok, please
+   * test for any possibly expected errors before.
+   */
   async raiseForStatus() {
     if (this.response.status >= 200 && this.response.status <= 299) {
       return
@@ -44,8 +50,10 @@ export class CmkFetchResponse {
     // tries to extract intresting context from a response, and packs this as a CmkError
     const context: Array<string> = []
 
+    let message = 'Error in fetch response'
+
     context.push(
-      `${this.requestOptions?.method || 'get'} ${this.response.url}\n${this.response.status}: ${this.response.statusText}`
+      `${this.requestOptions?.method || 'GET'} ${this.response.url}\nSTATUS ${this.response.status}: ${this.response.statusText}`
     )
 
     if (this.jsonReturned !== null) {
@@ -57,11 +65,11 @@ export class CmkFetchResponse {
       const detail = (this.jsonReturned as MaybeRestApiError).detail
       const title = (this.jsonReturned as MaybeRestApiError).title
       if (detail && title) {
-        context.push(`${title}: ${detail}`)
+        message = `${title}: ${detail}`
       }
     }
 
-    return new CmkFetchError('Error in fetch response', cause, context.join('\n\n'))
+    return new CmkFetchError(message, cause, context.join('\n\n'))
   }
 
   // we keep the json definition of original fetch

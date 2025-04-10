@@ -611,7 +611,6 @@ class RulesetOptimizer:
         label_groups: LabelGroups,
         labels_of_host: Callable[[HostName], Labels],
     ) -> set[HostName]:
-        matching: set[HostName] = set()
         only_specific_hosts = (
             hostlist is not None
             and not isinstance(hostlist, dict)
@@ -619,43 +618,41 @@ class RulesetOptimizer:
         )
 
         if hostlist == []:
-            pass  # Empty host list -> Nothing matches
+            return set()  # Empty host list -> Nothing matches
 
-        elif not tag_conditions and not label_groups and not hostlist:
+        if not tag_conditions and not label_groups and not hostlist:
             # If no tags are specified and the hostlist only include @all (all hosts)
-            matching = valid_hosts
+            return valid_hosts
 
-        elif (
-            not tag_conditions and not label_groups and only_specific_hosts and hostlist is not None
-        ):
+        if not tag_conditions and not label_groups and only_specific_hosts and hostlist is not None:
             # If no tags are specified and there are only specific hosts we already have the matches
-            matching = valid_hosts.intersection(hostlist)
+            return valid_hosts.intersection(hostlist)
 
+        # If the rule has only exact host restrictions, we can thin out the list of hosts to check
+        if only_specific_hosts and hostlist is not None:
+            hosts_to_check = valid_hosts.intersection(hostlist)
         else:
-            # If the rule has only exact host restrictions, we can thin out the list of hosts to check
-            if only_specific_hosts and hostlist is not None:
-                hosts_to_check = valid_hosts.intersection(hostlist)
-            else:
-                hosts_to_check = valid_hosts
+            hosts_to_check = valid_hosts
 
-            for hostname in hosts_to_check:
-                # When no tag matching is requested, do not filter by tags. Accept all hosts
-                # and filter only by hostlist
-                if tag_conditions and not matches_host_tags(
-                    self._host_tags[hostname],
-                    tag_conditions,
-                ):
+        matching: set[HostName] = set()
+        for hostname in hosts_to_check:
+            # When no tag matching is requested, do not filter by tags. Accept all hosts
+            # and filter only by hostlist
+            if tag_conditions and not matches_host_tags(
+                self._host_tags[hostname],
+                tag_conditions,
+            ):
+                continue
+
+            if label_groups:
+                host_labels = labels_of_host(hostname)
+                if not matches_labels(host_labels, label_groups):
                     continue
 
-                if label_groups:
-                    host_labels = labels_of_host(hostname)
-                    if not matches_labels(host_labels, label_groups):
-                        continue
+            if not matches_host_name(hostlist, hostname):
+                continue
 
-                if not matches_host_name(hostlist, hostname):
-                    continue
-
-                matching.add(hostname)
+            matching.add(hostname)
 
         return matching
 

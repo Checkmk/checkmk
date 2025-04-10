@@ -21,7 +21,7 @@ import { useFormEditDispatcher } from '@/form/private'
 import { useId } from '@/form/utils'
 import { immediateWatch } from '@/lib/watch'
 import FormLabel from '@/form/private/FormLabel.vue'
-import FormIndent from '@/form/private/FormIndent.vue'
+import FormIndent from '@/components/CmkIndent.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice

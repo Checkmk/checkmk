@@ -20,7 +20,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
-import FormIndent from '@/form/private/FormIndent.vue'
+import FormIndent from '@/components/CmkIndent.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'

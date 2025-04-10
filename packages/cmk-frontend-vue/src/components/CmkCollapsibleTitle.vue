@@ -16,7 +16,7 @@ interface CollapsibleTitleProps {
   open: boolean
 
   /**@property {string} help_text - Help text to display next to the title */
-  help_text: string | null
+  help_text?: string | null
 }
 
 defineProps<CollapsibleTitleProps>()
@@ -24,12 +24,12 @@ defineEmits(['toggleOpen'])
 </script>
 
 <template>
-  <button class="qs-collapsible-title" @click="$emit('toggleOpen')">
+  <button class="cmk-collapsible-title" @click="$emit('toggleOpen')">
     <span
-      class="qs-collapsible-title__chevron"
-      :class="`qs-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"
+      class="cmk-collapsible-title__chevron"
+      :class="`cmk-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"
     />
-    <span class="qs-collapsible-title__text">
+    <span class="cmk-collapsible-title__text">
       {{ title }}
     </span>
     <HelpText v-if="help_text" :help="help_text" />
@@ -37,7 +37,7 @@ defineEmits(['toggleOpen'])
 </template>
 
 <style scoped>
-.qs-collapsible-title {
+.cmk-collapsible-title {
   position: relative;
   margin-left: 0;
   padding-left: 0;
@@ -50,16 +50,16 @@ defineEmits(['toggleOpen'])
   }
 }
 
-.qs-collapsible-title__text {
+.cmk-collapsible-title__text {
   color: var(--font-color);
   font-weight: var(--font-weight-bold);
 }
 
-.qs-collapsible-title ::v-deep(.help-text__trigger) {
+.cmk-collapsible-title ::v-deep(.help-text__trigger) {
   margin-left: var(--spacing);
 }
 
-.qs-collapsible-title__chevron {
+.cmk-collapsible-title__chevron {
   display: inline-block;
   width: 8px;
   margin-right: var(--spacing-half);
@@ -78,7 +78,7 @@ defineEmits(['toggleOpen'])
     vertical-align: top;
   }
 
-  &.qs-collapsible-title__chevron--bottom {
+  &.cmk-collapsible-title__chevron--bottom {
     padding-left: 3px;
 
     &:before {
@@ -88,7 +88,7 @@ defineEmits(['toggleOpen'])
     }
   }
 
-  &.qs-collapsible-title__chevron--right:before {
+  &.cmk-collapsible-title__chevron--right:before {
     top: 4px;
     left: 0;
     margin-bottom: 16px;

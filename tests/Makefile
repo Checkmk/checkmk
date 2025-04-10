@@ -33,6 +33,7 @@ SYSTEM_TESTS := \
     test-integration \
     test-integration-redfish \
     test-composition \
+    test-update-cre \
     test-update-cee \
     test-update-cce \
     test-update-cse \
@@ -289,6 +290,10 @@ test-composition:
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
+
+test-update-cre:
+	EDITION=cre $(PYTEST) -T update $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
+	--session-timeout 5400
 
 test-update-cee:
 	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \

@@ -1446,13 +1446,13 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
 
 def main_module_from_rulespec_group_name(
-    group_name: str,
+    main_group_name: str,
     main_module_reg: MainModuleRegistry,
 ) -> ABCMainModule:
     return main_module_reg[
         makeuri_contextless_rulespec_group(
             request,
-            group_name,
+            main_group_name,
         )
     ]()
 

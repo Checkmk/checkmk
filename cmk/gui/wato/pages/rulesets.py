@@ -17,6 +17,8 @@ from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import escape_regex_chars
@@ -153,6 +155,8 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
+    RulespecGroup,
+    RulespecSubGroup,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
@@ -633,8 +637,13 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
+        if self._group_name is None:
+            raise MKGeneralException("Group name is not set")
+        rule_group = get_rulegroup(self._group_name)
         main_module = main_module_from_rulespec_group_name(
-            str(self._group_name),
+            rule_group.main_group().name
+            if isinstance(rule_group, RulespecSubGroup)
+            else rule_group.name,
             main_module_registry,
         )
         yield BreadcrumbItem(
@@ -663,14 +672,12 @@ class ModeRulesetGroup(ABCRulesetMode):
         return all_rulesets
 
     def _set_title_help_and_doc_reference(self) -> None:
-        if self._group_name == "static":
-            rulegroup = get_rulegroup("static")
-        else:
-            rulegroup = get_rulegroup(self._group_name)
-        self._title, self._help, self._doc_references = (
-            rulegroup.title,
-            rulegroup.help,
-            rulegroup.doc_references,
+        if self._group_name is None:
+            raise MKGeneralException("Group name is not set")
+        rulegroup = get_rulegroup(self._group_name)
+        self._title, self._help = (rulegroup.title, rulegroup.help)
+        self._doc_references = (
+            rulegroup.doc_references if isinstance(rulegroup, RulespecGroup) else {}
         )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

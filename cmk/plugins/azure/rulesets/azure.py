@@ -424,7 +424,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
         ),
         "filter_tags": DictElement(
             parameter_form=CascadingSingleChoice(
-                title=Title("Filter tags imported as host/service labels"),
+                title=Title("Filter Azure tags imported as host/service labels"),
                 help_text=Help(
                     "Enable this option to import Azure tags as host/service labels. "
                     "The imported tags are added as host labels for resource groups and "

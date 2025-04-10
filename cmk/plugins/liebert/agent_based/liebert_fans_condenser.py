@@ -30,7 +30,7 @@ def check_liebert_fans_condenser(
         return
     yield from check_levels_v1(
         value,
-        metric_name="filehandler_perc",
+        metric_name="fan_perc",
         levels_lower=params.get("levels_lower"),
         levels_upper=params["levels"],
         render_func=lambda x: f"{x:.2f} {unit}",

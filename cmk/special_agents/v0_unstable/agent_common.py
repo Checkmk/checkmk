@@ -143,7 +143,8 @@ def _special_agent_main_core(
         sys.executable,
     )
 
-    logging.debug("args: %r", args.__dict__)
+    # Don't log args here, it may contain secrets.
+    # logging.debug("args: %r", args.__dict__)
 
     try:
         return main_fn(args)

@@ -472,7 +472,7 @@ def _command_disable_outdated(
 
 def _command_update_active(
     site_context: SiteContext,
-    _args: argparse.Namespace,
+    args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
 ) -> int:
@@ -496,7 +496,36 @@ def _command_update_active(
         parse_version=site_context.parse_version,
     )
     site_context.post_package_change_actions([*uninstalled, *installed])
+    _writeout_uninstalled_packages(uninstalled, site_context.version, args.json)
     return 0
+
+
+def _writeout_uninstalled_packages(
+    uninstalled: Sequence[Manifest],
+    site_version: str,
+    use_json: bool,
+) -> None:
+    """Print information about uninstalled packages in either JSON or text format."""
+    if use_json:
+        for manifest in uninstalled:
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "name": manifest.name,
+                        "version": manifest.version,
+                        "version_usable_until": manifest.version_usable_until,
+                        "message": f"Disabled due to incompatible version requirements ({manifest.version_usable_until} < {site_version})",
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+    else:
+        for manifest in uninstalled:
+            sys.stdout.write(
+                f"Disabled {manifest.name} ({manifest.version}) due to incompatible "
+                f"version requirements ({manifest.version_usable_until} < {site_version})\n"
+            )
 
 
 def _args_package_id(
@@ -767,7 +796,7 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
         subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)
     )
     _add_command(
-        subparsers, "update-active", _no_args, partial(_command_update_active, site_context)
+        subparsers, "update-active", _args_show_all, partial(_command_update_active, site_context)
     )
 
     return parser.parse_args(argv)

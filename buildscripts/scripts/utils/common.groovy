@@ -74,13 +74,16 @@ provide_clone = { repo_name, credentials_id ->
 withCredentialFileAtLocation = {Map args, Closure body ->
     body.resolveStrategy = Closure.OWNER_FIRST;
     body.delegate = [:];
+    def cp_cmd = onWindows ? "pwsh -c cp" : "cp"
+    def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
+
     try {
         withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
-                cmd_output("cp ${SECRET_LOCATION} ${args.location}");
+                cmd_output("${cp_cmd} ${SECRET_LOCATION} ${args.location}");
                 body();
         }
         return true;
     } finally {
-        cmd_output("rm -f ${args.location}");
+        cmd_output("${rm_cmd} ${args.location}");
     }
 };

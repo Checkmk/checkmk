@@ -2003,7 +2003,7 @@ class Folder(FolderProtocol):
             else:
                 reason += " " + _("But you are not a member of any contact group.")
         reason += " " + _(
-            "You may enter the folder as you might have permission on a subfolders, though."
+            "You may enter the folder as you might have permission on a subfolder, though."
         )
         raise MKAuthException(reason)
 

@@ -23,7 +23,7 @@ from cmk.utils.structured_data import (
 
 from cmk.gui.i18n import _
 
-from ._tree import _get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
+from ._tree import get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
 
 
 @dataclass(frozen=True)
@@ -149,7 +149,7 @@ def _get_history(
     history: list[HistoryEntry] = []
     filters = (
         make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+        if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
 

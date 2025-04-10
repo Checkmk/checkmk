@@ -154,7 +154,7 @@ def _load_tree_from_file(
 
 
 @request_memoize()
-def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
+def get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     """
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
@@ -201,7 +201,7 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
 
     merged_tree = inventory_tree.merge(status_data_tree)
-    if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
+    if isinstance(permitted_paths := get_permitted_inventory_paths(), list):
         return merged_tree.filter(make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree

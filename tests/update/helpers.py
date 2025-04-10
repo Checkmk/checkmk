@@ -209,6 +209,22 @@ def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo])
     assert base_ok_services.issubset(target_ok_services), err_msg
 
 
+def check_core_reinit(site: Site) -> None:
+    """reinitialize (reload, then restart) the core and check the output"""
+
+    # reload the core and check the output (see CMK-20653)
+    logger.info("Reloading the core...")
+    ret_reload = site.run(["cmk", "--reload", "--debug"])
+    assert ret_reload.returncode == 0 and not ret_reload.stderr, "Reloading the core failed!"
+    assert get_site_status(site) == "running", "Invalid service status after reloading!"
+
+    # restart the core and check the output (see CMK-20653)
+    logger.info("Restarting the core...")
+    ret_restart = site.run(["cmk", "--restart", "--debug"])
+    assert ret_restart.returncode == 0 and not ret_restart.stderr, "Restarting the core failed!"
+    assert get_site_status(site) == "running", "Invalid service status after restarting!"
+
+
 def bulk_discover_and_schedule(site: Site, hostname: str) -> None:
     """Run service bulk discovery for a single host (ignoring errors), activate changes and schedule checks."""
     logger.debug("Discovering services and waiting for completion...")

@@ -8,13 +8,12 @@ from collections.abc import Iterator
 from urllib.parse import quote_plus
 
 import pytest
-from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
-from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import GlobalSettings
+from tests.gui_e2e.testlib.playwright.pom.password_policy import PasswordPolicy
 from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)
@@ -46,38 +45,16 @@ def set_number_of_character_groups_password_policy(
     This fixture uses indirect pytest parametrization to define the number of character groups.
     """
 
-    def _navigate_to_password_policy() -> None:
-        _setting_name = "Password policy for local accounts"
-        logger.info("Navigate to '%s' setting page", _setting_name)
-        settings_page.search_settings(_setting_name)
-        settings_page.setting_link(_setting_name).click()
-        dashboard_page.page.wait_for_url(
-            url=re.compile(quote_plus("varname=password_policy")), wait_until="load"
-        )
-        expect(dashboard_page.main_area.locator(num_groups_label)).to_be_visible()
-
-    num_groups_label = "label[for='cb_ve_p_num_groups_USE']"
-    num_groups_input = "input[name='ve_p_num_groups']"
-    save_btn = "#suggestions >> text=Save"
-
     # enable the policy
-    settings_page = GlobalSettings(dashboard_page.page)
-    _navigate_to_password_policy()
+    password_policy_page = PasswordPolicy(dashboard_page.page)
+    password_policy_page.set_the_number_of_character_groups(request.param)
 
-    logger.info("Set the number of character groups to %s", request.param)
-    dashboard_page.main_area.locator(num_groups_label).click()
-    dashboard_page.main_area.locator(num_groups_input).fill(request.param)
-    dashboard_page.main_area.locator(save_btn).click()
     _ = Dashboard(dashboard_page.page)
 
     yield
 
-    settings_page.navigate()
-    _navigate_to_password_policy()
-
-    logger.info("Reset the password policy")
-    dashboard_page.main_area.locator(num_groups_label).click()
-    dashboard_page.main_area.locator(save_btn).click()
+    password_policy_page.navigate()
+    password_policy_page.disable_the_number_of_charachter_groups()
 
 
 def change_user_password_and_check_success(

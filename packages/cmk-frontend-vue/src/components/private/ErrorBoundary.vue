@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, computed, type Ref } from 'vue'
-import CmkAlertBox from '../CmkAlertBox.vue'
-import CmkButton from '../CmkButton.vue'
 import { formatError } from '@/lib/error.ts'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import CmkIndent from '@/components/CmkIndent.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 
-const details = ref<boolean>(false)
+const showDetails = ref<boolean>(false)
 
-const errorMessage = computed<string>(() => {
+const detailMessage = computed<string>(() => {
   const error = props.error.value
   if (error === null) {
     return ''
@@ -24,16 +27,32 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 
 <template>
   <CmkAlertBox v-if="props.error.value !== null" variant="error">
-    <div>
-      An unknown error occurred.<br />
-      Refresh the page to try again. If the problem persists, reach out to the Checkmk support.
-    </div>
-    <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
-    <div v-else>
-      <pre>{{ errorMessage }}</pre>
-    </div>
+    <p>An unexpected error occurred:</p>
+    <CmkIndent>
+      <CmkHtml :html="props.error.value.message" />
+    </CmkIndent>
+    <p>Refresh the page to try again. If the problem persists, reach out to the Checkmk support.</p>
+    <CmkCollapsibleTitle
+      :title="'Details'"
+      :open="showDetails"
+      @toggle-open="() => (showDetails = !showDetails)"
+    />
+    <CmkCollapsible :open="showDetails">
+      <CmkIndent>
+        <pre>{{ detailMessage }}</pre>
+      </CmkIndent>
+    </CmkCollapsible>
   </CmkAlertBox>
   <div v-else style="height: 100%">
     <slot></slot>
   </div>
 </template>
+
+<style scoped>
+pre {
+  white-space: pre-wrap;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+</style>

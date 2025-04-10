@@ -22,15 +22,15 @@ test('ErrorBoundary shows full stack', async () => {
   spy.mockRestore()
 
   // we now see a unspecific error message:
-  screen.getByText('An unknown error occurred.', { exact: false })
+  screen.getByText('An unexpected error occurred', { exact: false })
 
   // and click the button for more details:
-  const details = screen.getByRole<HTMLButtonElement>('button', { name: 'Show details' })
+  const details = screen.getByRole<HTMLButtonElement>('button', { name: 'Details' })
   await fireEvent.click(details)
 
   // and make sure we see the whole error trace now:
-  screen.getByText('something happened in code we can not control', { exact: false })
+  await screen.findByText('something happened in code we can not control', { exact: false })
   screen.getByText('DemoError: internal error handler, but keeps', { exact: false })
   screen.getByText('DemoErrorContext', { exact: false })
-  screen.getByText('this is a cmk error', { exact: false })
+  screen.getAllByText('this is a cmk error', { exact: false })
 })

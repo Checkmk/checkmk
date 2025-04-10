@@ -111,7 +111,7 @@ def main() {
                                 }
                                 catch (Exception e) {
                                     print("DEBUG: Catch exception: ${e}, trying to copy bazel jvm log");
-                                    sh(script: "cp -r ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out ${result_dir}/ || true", returnStatus: true);
+                                    sh(script: "cp -r ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out ${checkout_dir}/${result_dir}/ || true", returnStatus: true);
                                     throw e;
                                 }
                             }

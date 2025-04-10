@@ -243,7 +243,7 @@ class BICompiler:
         )
 
     def _cleanup_vanished_aggregations(self) -> None:
-        valid_aggregations = list(self._compiled_aggregations.keys())
+        valid_aggregations = self._compiled_aggregations.keys()
         for path_object in path_compiled_aggregations.iterdir():
             if path_object.is_dir():
                 continue

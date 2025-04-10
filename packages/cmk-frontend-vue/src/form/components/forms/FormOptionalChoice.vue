@@ -12,7 +12,7 @@ import { watch, ref } from 'vue'
 import { immediateWatch } from '../../../lib/watch'
 import HelpText from '@/components/HelpText.vue'
 import { useFormEditDispatcher } from '@/form/private'
-import FormIndent from '@/form/private/FormIndent.vue'
+import FormIndent from '@/components/CmkIndent.vue'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice

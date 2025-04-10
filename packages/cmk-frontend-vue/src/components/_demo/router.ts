@@ -31,6 +31,7 @@ import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
+import DemoCmkCollapsibles from './DemoCmkCollapsibles.vue'
 import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -122,6 +123,11 @@ const routes: Route[] = [
     path: '/cmk_html',
     name: 'CmkHtml',
     component: DemoCmkHtml
+  },
+  {
+    path: '/cmk_collapsible',
+    name: 'CmkCollapsible',
+    component: DemoCmkCollapsibles
   },
   {
     path: '/cmk_dialog',

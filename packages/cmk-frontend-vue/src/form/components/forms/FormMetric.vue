@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormString from './FormString.vue'
 import { computed, ref } from 'vue'
-import FormIndent from '@/form/private/FormIndent.vue'
+import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{

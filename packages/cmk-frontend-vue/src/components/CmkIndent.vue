@@ -12,13 +12,13 @@ const LINE_OVERHANG = '5px'
 </script>
 
 <template>
-  <div :class="{ 'form-indent': indent }">
+  <div :class="{ 'cmk-indent': indent }">
     <slot />
   </div>
 </template>
 
 <style scoped>
-.form-indent {
+.cmk-indent {
   --line-overhang: v-bind(LINE_OVERHANG);
   float: none;
   margin-left: 6px;
@@ -30,7 +30,7 @@ const LINE_OVERHANG = '5px'
   border-left: 2px solid var(--ux-theme-5);
 }
 
-.form-indent:empty {
+.cmk-indent:empty {
   margin: 0;
   padding: 0;
 }

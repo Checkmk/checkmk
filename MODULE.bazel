@@ -66,7 +66,7 @@ git_override(
 git_override(
     module_name = "bazel_clang_tidy",
     # No tags, no releases.  Live on head.
-    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    commit = "a965fb4cb5286812643e205a5f0db8927107b120",
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
 

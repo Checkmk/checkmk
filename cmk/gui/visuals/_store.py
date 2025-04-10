@@ -460,10 +460,15 @@ def available(
 ) -> dict[VisualName, TVisual]:
     visuals: dict[VisualName, TVisual] = {}
     for n, _visuals in available_by_owner(what, all_visuals).items():
-        for u, v in _visuals.items():
-            if user.id == u:
+        for u, v in sorted(_visuals.items()):
+            # Built-in
+            if u == UserId.builtin():
                 visuals[n] = v
-            if u == UserId.builtin() and n not in visuals:
+            # Other users
+            if u != UserId.builtin() and u != user.id:
+                visuals[n] = v
+            # Own
+            if user.id == u:
                 visuals[n] = v
     return visuals
 
@@ -514,10 +519,10 @@ def available_by_owner(  # pylint: disable=too-many-branches
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
-    if user.may("general.see_user_" + what):
+    if user.may("general.see_user_" + what) and n not in visuals:
         for (u, n), visual in all_visuals.items():
             # Is there a built-in visual with the same name? If yes, honor permissions.
-            if n not in visuals and published_to_user(visual) and not restricted_visual(n):
+            if published_to_user(visual) and not restricted_visual(n):
                 visuals.setdefault(n, {})
                 visuals[n][u] = visual
 

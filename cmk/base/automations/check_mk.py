@@ -780,9 +780,14 @@ def _execute_discovery(
                 check_plugins=plugins.check_plugins,
             ),
             autochecks_config=autochecks_config,
-            enforced_services=config_cache.enforced_services_table(
-                host_name, plugins=plugins.check_plugins, service_name_config=service_name_config
-            ),
+            enforced_services={
+                sid: service
+                for sid, (_ruleset_name, service) in config_cache.enforced_services_table(
+                    host_name,
+                    plugins=plugins.check_plugins,
+                    service_name_config=service_name_config,
+                ).items()
+            },
             on_error=on_error,
         )
     return CheckPreview(

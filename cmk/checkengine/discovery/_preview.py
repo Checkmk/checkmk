@@ -15,7 +15,6 @@ from cmk.utils import tty
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item
 from cmk.utils.timeperiod import timeperiod_active
@@ -57,8 +56,8 @@ __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
 class CheckPreviewEntry:
     check_source: str
     check_plugin_name: str
-    ruleset_name: RulesetName | None
-    discovery_ruleset_name: RulesetName | None
+    ruleset_name: str | None
+    discovery_ruleset_name: str | None
     item: Item
     old_discovered_parameters: Mapping[str, object]
     new_discovered_parameters: Mapping[str, object]
@@ -100,7 +99,7 @@ def get_check_preview(
     check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     autochecks_config: AutochecksConfig,
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
-    enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
+    enforced_services: Mapping[ServiceID, ConfiguredService],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -209,7 +208,7 @@ def get_check_preview(
                 providers=providers,
                 found_on_nodes=[h],
             )
-            for _ruleset_name, service in enforced_services.values()
+            for service in enforced_services.values()
         ]
         for h, entries in grouped_services_by_host.items()
     }

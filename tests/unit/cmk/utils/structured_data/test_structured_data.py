@@ -14,6 +14,8 @@ import pytest
 
 from tests.testlib.common.repo import repo_path
 
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _deserialize_retention_interval,
@@ -913,8 +915,25 @@ def test_filter_tree_mixed() -> None:
     )
 
 
-def _get_tree_store() -> TreeStore:
-    return TreeStore(
+class _TreeStore:
+    def __init__(self, tree_dir: Path) -> None:
+        self._tree_dir = tree_dir
+
+    def load(self, *, host_name: HostName) -> ImmutableTree:
+        return (
+            deserialize_tree(raw_tree)
+            if (
+                raw_tree := store.load_object_from_file(
+                    self._tree_dir / str(host_name),
+                    default=None,
+                )
+            )
+            else ImmutableTree()
+        )
+
+
+def _get_tree_store() -> _TreeStore:
+    return _TreeStore(
         repo_path() / "tests" / "unit" / "cmk" / "utils" / "structured_data" / "tree_test_data"
     )
 

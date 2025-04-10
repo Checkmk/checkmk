@@ -4,7 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
+import {
+  computed,
+  ref,
+  toValue,
+  type Ref,
+  watch,
+  provide,
+  readonly,
+  onBeforeUnmount,
+  onMounted,
+  nextTick
+} from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 import { CmkError, CmkSimpleError, formatError } from '@/lib/error.ts'
 import {
@@ -54,6 +65,7 @@ const props = withDefaults(defineProps<QuickSetupAppProps>(), {
 const loadedAllStages = ref(false)
 const showQuickSetup = ref(false)
 const preventLeaving = ref(false)
+const mounted = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | DetailedError | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
@@ -311,7 +323,7 @@ const save = async (buttonId: string) => {
   }
 
   try {
-    preventLeaving.value = false
+    handlePreventLeaving(false)
     const data = await saveOrEditQuickSetup(
       props.quick_setup_id,
       buttonId,
@@ -347,7 +359,10 @@ const update = (index: number, value: StageData) => {
 
   stages.value[index]!.user_input = clonedValue
   formData.value[index] = clonedValue
-  preventLeaving.value = true
+
+  if (mounted.value) {
+    handlePreventLeaving(true)
+  }
 }
 
 const clearErrors = () => {
@@ -357,6 +372,32 @@ const clearErrors = () => {
     stage.form_spec_errors = {}
   }
 }
+
+const handlePreventLeaving = (prevent: boolean) => {
+  preventLeaving.value = prevent
+  if (prevent) {
+    window.addEventListener('beforeunload', handleBrowserDialog)
+  } else {
+    window.removeEventListener('beforeunload', handleBrowserDialog)
+  }
+}
+
+const handleBrowserDialog = (event: BeforeUnloadEvent) => {
+  if (preventLeaving.value) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
+
+onMounted(async () => {
+  await nextTick(() => {
+    mounted.value = true
+  })
+})
+
+onBeforeUnmount(() => {
+  handlePreventLeaving(false)
+})
 
 //
 //
@@ -502,7 +543,6 @@ const hideWaitIcon = computed(
 const quickSetupHook = useWizard(stages.value.length, props.mode)
 
 showQuickSetup.value = true
-preventLeaving.value = false
 </script>
 
 <template>

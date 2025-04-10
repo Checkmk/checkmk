@@ -97,17 +97,7 @@ def page_dashboard() -> None:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
 
-    # If no owner is set, prioritize the user's own dashboard over the builtin ones
-    owner = (
-        o
-        if (o := request.get_validated_type_input(UserId, "owner")) is not None
-        else (
-            user.id
-            if user.id and user.id in get_permitted_dashboards_by_owners().get(name, [])
-            else UserId.builtin()
-        )
-    )
-    draw_dashboard(name, owner)
+    draw_dashboard(name)
 
 
 def _get_default_dashboard_name() -> str:
@@ -132,7 +122,7 @@ def _get_default_dashboard_name() -> str:
 
 
 # Actual rendering function
-def draw_dashboard(name: DashboardName, owner: UserId) -> None:
+def draw_dashboard(name: DashboardName) -> None:
     mode = "display"
     if request.var("edit") == "1":
         mode = "edit"
@@ -144,7 +134,8 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
     permitted_dashboards = get_permitted_dashboards()
     board = load_dashboard(permitted_dashboards, name)
 
-    if mode == "edit" and board["owner"] == UserId.builtin():
+    owner = board["owner"]
+    if mode == "edit" and owner == UserId.builtin():
         # Trying to edit a built-in dashboard results in doing a copy
         all_dashboards = get_all_dashboards()
         active_user = user.id
@@ -1154,10 +1145,10 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
 def ajax_dashlet() -> None:
     """Render the inner HTML of a dashlet"""
     name = request.get_ascii_input_mandatory("name", "")
-    owner = request.get_validated_type_input_mandatory(UserId, "owner", UserId.builtin())
     if not name:
         raise MKUserError("name", _("The name of the dashboard is missing."))
 
+    owner = request.get_validated_type_input_mandatory(UserId, "owner")
     try:
         board = get_permitted_dashboards_by_owners()[name][owner]
     except KeyError:

@@ -67,6 +67,8 @@ git_override(
     module_name = "bazel_clang_tidy",
     # No tags, no releases.  Live on head.
     commit = "a965fb4cb5286812643e205a5f0db8927107b120",
+    patch_strip = 1,
+    patches = ["//bazel/patches:bazel_clang_tidy-gcc_install_dir.patch"],
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
 

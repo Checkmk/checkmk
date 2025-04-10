@@ -1,0 +1,113 @@
+diff --git a/BUILD b/BUILD
+index eaec502..fa7ebc8 100644
+--- a/BUILD
++++ b/BUILD
+@@ -33,3 +33,14 @@ label_flag(
+     build_setting_default = ":clang_tidy_additional_deps_default",
+     visibility = ["//visibility:public"],
+ )
++
++filegroup(
++    name = "clang_tidy_gcc_install_dir_default",
++    srcs = [],
++)
++
++label_flag(
++    name = "clang_tidy_gcc_install_dir",
++    build_setting_default = ":clang_tidy_gcc_install_dir_default",
++    visibility = ["//visibility:public"],
++)
+diff --git a/README.md b/README.md
+index a1afea0..0203d31 100644
+--- a/README.md
++++ b/README.md
+@@ -85,6 +85,40 @@ build:clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=@local_config_cc//:
+ This aspect is not executed on external targets. To exclude other targets,
+ users may tag a target with `no-clang-tidy` or `noclangtidy`.
+ 
++### use with non-system gcc
++
++Create a label to the installation dir of your gcc toolchain, for example with
++skylib's `directory`.
++
++```py
++# BUILD file for gcc
++load("@bazel_skylib//rules/directory:directory.bzl", "directory")
++
++package(default_visibility = ["//visibility:public"])
++
++directory(
++    name = "toolchain_root",
++    srcs = glob([
++        "lib/**",
++        "x86_64-buildroot-linux-gnu/include/**",
++    ]),
++)
++
++directory(
++    name = "x86_64-buildroot-linux-gnu",
++    srcs = ["lib/gcc/x86_64-buildroot-linux-gnu/13.3.0"],
++)
++
++```
++
++then add the toolchain as an additional dependency and set the `clang_tidy_gcc_install_dir` option
++
++```text
++build:clang-tidy --@bazel_clang_tidy//:clang_tidy_gcc_install_dir=@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu
++build:clang-tidy --@bazel_clang_tidy//:clang_tidy_additional_deps=@gcc-linux-x86_64//:toolchain_root
++```
++
++
+ ## Features
+ 
+ - Run clang-tidy on any C/C++ target
+diff --git a/clang_tidy/clang_tidy.bzl b/clang_tidy/clang_tidy.bzl
+index b9cc5bb..cd1b461 100644
+--- a/clang_tidy/clang_tidy.bzl
++++ b/clang_tidy/clang_tidy.bzl
+@@ -5,6 +5,7 @@ def _run_tidy(
+         ctx,
+         wrapper,
+         exe,
++        gcc_install_dir,
+         additional_deps,
+         config,
+         flags,
+@@ -51,6 +52,12 @@ def _run_tidy(
+     # start args passed to the compiler
+     args.add("--")
+ 
++    if len(gcc_install_dir.files.to_list()) >= 2:
++        fail("clang_tidy_gcc_install_dir must contain at most one directory")
++
++    for dir in gcc_install_dir.files.to_list():
++        args.add("--gcc-install-dir=%s" % dir.path)
++
+     ctx.actions.run(
+         inputs = inputs,
+         outputs = [outfile],
+@@ -206,6 +213,7 @@ def _clang_tidy_aspect_impl(target, ctx):
+ 
+     wrapper = ctx.attr._clang_tidy_wrapper.files_to_run
+     exe = ctx.attr._clang_tidy_executable
++    gcc_install_dir = ctx.attr._clang_tidy_gcc_install_dir
+     additional_deps = ctx.attr._clang_tidy_additional_deps
+     config = ctx.attr._clang_tidy_config.files.to_list()[0]
+ 
+@@ -230,6 +238,7 @@ def _clang_tidy_aspect_impl(target, ctx):
+             ctx,
+             wrapper,
+             exe,
++            gcc_install_dir,
+             additional_deps,
+             config,
+             c_flags if is_c_translation_unit(src, ctx.rule.attr.tags) else cxx_flags,
+@@ -253,6 +262,7 @@ clang_tidy_aspect = aspect(
+         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
+         "_clang_tidy_wrapper": attr.label(default = Label("//clang_tidy:clang_tidy")),
+         "_clang_tidy_executable": attr.label(default = Label("//:clang_tidy_executable")),
++        "_clang_tidy_gcc_install_dir": attr.label(default = Label("//:clang_tidy_gcc_install_dir")),
+         "_clang_tidy_additional_deps": attr.label(default = Label("//:clang_tidy_additional_deps")),
+         "_clang_tidy_config": attr.label(default = Label("//:clang_tidy_config")),
+     },

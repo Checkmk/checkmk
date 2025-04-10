@@ -350,6 +350,7 @@ def _from_address_element(is_cse: bool) -> DictElement[Any]:
                     parameter_form=String(
                         title=Title("Email address"),
                         custom_validate=[ValidateEmailAddress()],
+                        field_size=FieldSize.LARGE,
                     ),
                 ),
                 "display_name": DictElement(
@@ -376,6 +377,7 @@ def _reply_to() -> DictElement[Any]:
                     parameter_form=String(
                         title=Title("Email address"),
                         custom_validate=[ValidateEmailAddress()],
+                        field_size=FieldSize.LARGE,
                     ),
                 ),
                 "display_name": DictElement(

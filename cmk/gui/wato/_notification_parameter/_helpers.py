@@ -18,6 +18,7 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
+    FieldSize,
     FixedValue,
     String,
 )
@@ -166,6 +167,7 @@ def _get_url_prefix_setting(
                     parameter_form=String(
                         prefill=DefaultValue(local_site_url()),
                         custom_validate=[Url([UrlProtocol.HTTP, UrlProtocol.HTTPS])],
+                        field_size=FieldSize.LARGE,
                     ),
                 ),
             ],

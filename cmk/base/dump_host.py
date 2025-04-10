@@ -40,7 +40,6 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins
 
-import cmk.base.core
 from cmk.base import sources
 from cmk.base.config import (
     ConfigCache,
@@ -48,8 +47,8 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
-    PassiveServiceNameConfig,
 )
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
 
 

@@ -37,9 +37,9 @@ from cmk.utils.timeperiod import add_builtin_timeperiods
 from cmk.checkengine.plugin_backend import get_check_plugin, plugin_index
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 
-import cmk.base.utils
 from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import (
     AbstractServiceID,
     CoreCommand,
@@ -72,7 +72,7 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        service_name_config: config.PassiveServiceNameConfig,
+        service_name_config: PassiveServiceNameConfig,
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
@@ -106,7 +106,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _create_core_config(
         self,
         config_path: VersionedConfigPath,
-        service_name_config: config.PassiveServiceNameConfig,
+        service_name_config: PassiveServiceNameConfig,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
@@ -146,7 +146,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
-        service_name_config: config.PassiveServiceNameConfig,
+        service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         *,
@@ -212,7 +212,7 @@ def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
-    service_name_config: config.PassiveServiceNameConfig,
+    service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
@@ -266,7 +266,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: config.PassiveServiceNameConfig,
+    service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     stored_passwords: Mapping[str, str],
@@ -430,7 +430,7 @@ def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServ
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    service_name_config: config.PassiveServiceNameConfig,
+    service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     host_attrs: ObjectAttributes,

@@ -35,7 +35,8 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 
 from cmk.base import config
-from cmk.base.config import ConfigCache, ObjectAttributes, PassiveServiceNameConfig
+from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 from cmk import trace

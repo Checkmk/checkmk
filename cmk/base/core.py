@@ -16,7 +16,6 @@ import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 
-import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils import ip_lookup, tty
 from cmk.utils.hostaddress import HostName
@@ -25,9 +24,9 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.checkengine.plugins import AgentBasedPlugins
 
-import cmk.base.nagios_utils
 from cmk.base import core_config
-from cmk.base.config import ConfigCache, ConfiguredIPLookup, PassiveServiceNameConfig
+from cmk.base.config import ConfigCache, ConfiguredIPLookup
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
 
 from cmk import trace

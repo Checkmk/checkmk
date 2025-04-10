@@ -179,13 +179,12 @@ from cmk.base.checkers import (
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
-    FinalServiceNameConfig,
     handle_ip_lookup_failure,
     lookup_mgmt_board_ip_address,
-    PassiveServiceNameConfig,
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
+from cmk.base.configlib.servicename import FinalServiceNameConfig, PassiveServiceNameConfig
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump

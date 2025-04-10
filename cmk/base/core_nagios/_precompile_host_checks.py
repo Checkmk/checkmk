@@ -46,14 +46,13 @@ from cmk.checkengine.plugins import (
     SectionPlugin,
 )
 
-import cmk.base.utils
 from cmk.base.config import (
     ConfigCache,
     FilterMode,
     lookup_ip_address,
-    PassiveServiceNameConfig,
     save_packed_config,
 )
+from cmk.base.configlib.servicename import PassiveServiceNameConfig
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_special_agents

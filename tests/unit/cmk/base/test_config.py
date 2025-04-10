@@ -59,11 +59,11 @@ from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
-    FinalServiceNameConfig,
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
+from cmk.base.configlib.servicename import FinalServiceNameConfig
 from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition

@@ -296,23 +296,15 @@ def test_openapi_host_tag_with_only_one_option(
     assert host.json["extensions"]["attributes"]["alias"] == "foobar"
     assert host.json["extensions"]["attributes"]["tag_group_id999"] == "pod"
 
-    # TODO: CMK-10899
-    # error = wsgi_app.put(
-    #     base + "/objects/host_config/example.com",
-    #     headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
-    #     content_type="application/json",
-    #     status=200,
-    #     params=json.dumps(
-    #         {
-    #             "attributes": {
-    #                 "tag_group_id999": "poddy",  # non-existing choice
-    #             }
-    #         }
-    #     ),
-    # )
-    #
-    # assert error.json["detail"].startswith("These fields have problems")
-    # assert error.json["fields"] == {"attributes": {"tag_group_id999": ["Unknown field."]}}
+    res = clients.HostConfig.edit(
+        host_name="example.com",
+        attributes={"tag_group_id999": "poddy"},  # non-existing choice
+        expect_ok=False,
+    )
+
+    res.assert_status_code(400)
+    assert res.json["detail"].startswith("These fields have problems")
+    assert res.json["fields"]["attributes"][0].startswith("Invalid value for tag-group")
 
     clients.HostConfig.edit(
         host_name="example.com", attributes={"alias": "foobar", "tag_group_id999": None}

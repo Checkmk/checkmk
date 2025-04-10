@@ -40,7 +40,7 @@ from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.base import BaseSchema, MultiNested
+from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
@@ -736,7 +736,20 @@ def validate_custom_host_attributes(
     return host_attributes
 
 
-class CustomHostAttributesAndTagGroups(BaseSchema):
+class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
+    class ValueTypedDict:
+        value_type = ValueTypedDictSchema.wrap_field(
+            base.String(
+                description=(
+                    "The property name must be\n\n"
+                    " * A custom host attribute\n"
+                    " * A custom tag group starting with `tag_`\n"
+                ),
+                required=True,
+                allow_none=True,
+            ),
+        )
+
     class Meta:
         unknown = marshmallow.INCLUDE
 

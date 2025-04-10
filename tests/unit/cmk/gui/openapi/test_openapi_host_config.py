@@ -1087,15 +1087,16 @@ def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegi
 
 
 def test_openapi_host_config_attributes_as_string_crash_regression(clients: ClientRegistry) -> None:
+    attributes = "{'ipaddress':'192.168.0.123'}"  # note that this is a str
     resp = clients.HostConfig.create(
         folder="/",
         host_name="example.com",
-        attributes="{'ipaddress':'192.168.0.123'}",  # note that this is a str
+        attributes=attributes,
         expect_ok=False,
     )
     resp.assert_status_code(400)
 
-    resp.json["fields"]["attributes"]["_schema"] == ["Invalid input type."]
+    resp.json["fields"]["attributes"] == [f"Data type is invalid: {attributes}"]
 
 
 @pytest.mark.usefixtures("with_host")

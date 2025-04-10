@@ -46,7 +46,7 @@ const dropdownButtonLabel = computed(() =>
     : (options.suggestions.find(({ name }) => name === selectedOption.value)?.title ?? inputHint)
 )
 
-const noChoiceAvailable = computed(() => options.suggestions.length === 0)
+const multipleChoicesAvailable = computed(() => options.suggestions.length !== 0)
 
 const suggestionsShown = ref(false)
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
@@ -70,7 +70,7 @@ watch(filterString, (newFilterString) => {
 })
 
 function showSuggestions(): void {
-  if (!disabled && !noChoiceAvailable.value) {
+  if (!disabled && multipleChoicesAvailable.value) {
     suggestionsShown.value = !suggestionsShown.value
     if (!suggestionsShown.value) {
       return
@@ -125,7 +125,7 @@ function selectOption(option: DropdownOption): void {
       class="cmk-dropdown__button"
       :class="{
         disabled,
-        no_choices: noChoiceAvailable,
+        no_choices: !multipleChoicesAvailable,
         no_value: selectedOption === null
       }"
       @click.prevent="showSuggestions"

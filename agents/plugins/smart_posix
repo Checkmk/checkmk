@@ -21,8 +21,12 @@ main() {
         exit
     fi
     echo "<<<smart_posix_all:sep(0)>>>"
-    smartctl --scan | awk '{print $1}' | while read -r DEVICE; do
-        smartctl --all --json=c "$DEVICE"
+    smartctl --scan | while IFS= read -r line; do
+        # Extract the part before the '#'
+        device_info=$(echo "$line" | cut -d '#' -f 1 | xargs)
+
+        # Run smartctl with the extracted device information
+        smartctl --all --json=c $device_info
         printf "\n"
     done
 }

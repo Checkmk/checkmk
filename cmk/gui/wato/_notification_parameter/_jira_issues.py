@@ -159,6 +159,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                         title=Title("Host custom field ID"),
                         help_text=Help("The numerical Jira custom field ID for host problems."),
                         field_size=FieldSize.SMALL,
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
                 ),
                 "service_customid": DictElement(
@@ -167,6 +168,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                         title=Title("Service custom field ID"),
                         help_text=Help("The numerical Jira custom field ID for service problems."),
                         field_size=FieldSize.SMALL,
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
                 ),
                 "site_customid": DictElement(

@@ -84,17 +84,24 @@ def main() {
                     withEnv(env_var_list) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                             dir(params.CIPARAM_DIR) {
-                                // be very carefull here. Setting quantity to 0 or null, takes all available resources
-                                if (bazel_locks_amount >= 1) {
-                                    lock(
-                                        label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
-                                        quantity: bazel_locks_amount,
-                                        resource : null
-                                    ) {
+                                try {
+                                    // be very carefull here. Setting quantity to 0 or null, takes all available resources
+                                    if (bazel_locks_amount >= 1) {
+                                        lock(
+                                            label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
+                                            quantity: bazel_locks_amount,
+                                            resource : null
+                                        ) {
+                                            cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                                        }
+                                    } else {
                                         cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
                                     }
-                                } else {
-                                    cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
+                                }
+                                catch (Exception e) {
+                                    print("DEBUG: Catch exception: ${e}, trying to copy bazel jvm log");
+                                    sh(script: "cp -r ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out ${result_dir}/ || true", returnStatus: true);
+                                    throw e;
                                 }
                             }
 

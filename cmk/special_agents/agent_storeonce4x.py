@@ -52,7 +52,7 @@ class StoreOnceOauth2Session(Requester):
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # We need to use LegacyClient due to grant_type==password
-        self._client = LegacyApplicationClient(None)
+        self._client = LegacyApplicationClient("")
         self._client.prepare_request_body(username=self._user, password=self._secret)
         self._oauth_session = OAuth2Session(
             self._user,

@@ -44,8 +44,14 @@ def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
     state = data.get("Status", {"Health": "Unknown"})
     result_state, state_text = redfish_health_state(state)
     message = f"System with SerialNr: {data.get('SerialNumber')}, has State: {state_text}"
+    details = None
 
-    yield Result(state=State(result_state), summary=message)
+    if service_tag := (
+        data.get("Oem", {}).get("Dell", {}).get("DellSystem", {}).get("ChassisServiceTag")
+    ):
+        details = f"Service Tag: {service_tag}"
+
+    yield Result(state=State(result_state), summary=message, details=details)
 
 
 check_plugin_redfish_system = CheckPlugin(

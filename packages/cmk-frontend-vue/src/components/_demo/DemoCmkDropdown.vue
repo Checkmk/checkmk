@@ -167,7 +167,26 @@ const defaultEmpty8 = ref<string | null>(null)
     required-text="required"
     label="some label"
   />
-  <h2>element names that are very long</h2>
+  <h2>Queried dropdown with unselectable as first element</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty3"
+    :options="{
+      type: 'callback-filtered',
+      querySuggestions: async (_) => {
+        return new Response([
+          { name: null, title: 'unselectable' },
+          { name: 'two', title: 'two' },
+          { name: 'three', title: 'three' },
+          { name: 'four', title: 'four' }
+        ])
+      }
+    }"
+    input-hint="long dropdown"
+    no-results-hint="no results hint"
+    required-text="required"
+    label="some label"
+  />
+  <h2>element names that are very very long</h2>
   <CmkDropdown
     v-model:selected-option="defaultEmpty8"
     :options="{

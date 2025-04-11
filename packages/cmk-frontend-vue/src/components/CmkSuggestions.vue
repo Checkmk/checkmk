@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, nextTick, useTemplateRef, computed, ref } from 'vue'
+import { nextTick, useTemplateRef, computed, ref, type Ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
@@ -45,30 +45,35 @@ const showFilter = computed<boolean>(() => {
 })
 
 const emit = defineEmits<{
-  select: [suggestion: Suggestion]
+  'request-close-suggestions': []
   blur: []
 }>()
 
+const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const error = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
 const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
+const firstSelectableIndex = ref(0)
 
 const filteredSuggestions = ref<Array<Suggestion>>([])
-const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means no selection, (no selectable elements)
+const highlightedOption: Ref<Suggestion | null> = ref(null) // null means no selection, (no selectable elements)
 
-function isSuggestionSelected(suggestion: Suggestion): boolean {
-  if (currentlySelectedElement.value === null) {
-    return false
+function isSuggestionHighlighted(suggestion: Suggestion, index: number): boolean {
+  if (
+    index === firstSelectableIndex.value &&
+    (highlightedOption.value === null || highlightedOption.value.name === null)
+  ) {
+    return true
   }
-  return suggestion.name === currentlySelectedElement.value?.name
+  return suggestion.name === highlightedOption.value?.name
 }
 
 function scrollCurrentlySelectedIntoView(): void {
   if (suggestionRefs.value === null) {
     return
   }
-  const index = findSuggestionAsIndex(filteredSuggestions.value, currentlySelectedElement.value)
+  const index = findSuggestionAsIndex(filteredSuggestions.value, highlightedOption.value)
   if (index === null) {
     return
   }
@@ -122,8 +127,19 @@ immediateWatch(
     } else {
       error.value = ''
       filteredSuggestions.value = result.choices
-      currentlySelectedElement.value = null
+      highlightedOption.value = null
       selectSibilingElement(0)
+    }
+
+    firstSelectableIndex.value = filteredSuggestions.value.findIndex((s) => s.name !== null)
+
+    const selectedFilteredSuggestion = filteredSuggestions.value.filter(
+      (s: Suggestion) => s.name === selectedOption.value && selectedOption.value !== null
+    )
+    if (selectedFilteredSuggestion.length === 1 && newFilterString.value === '') {
+      highlightedOption.value = selectedFilteredSuggestion[0] || null
+    } else {
+      highlightedOption.value = filteredSuggestions.value[0] || null
     }
   },
   { deep: 2 }
@@ -131,17 +147,23 @@ immediateWatch(
 
 function onKeyEnter(event: InputEvent): void {
   event.stopPropagation()
-  if (currentlySelectedElement.value === null) {
-    return
+  if (highlightedOption.value === null) {
+    selectSibilingElement(0)
   }
-  selectSuggestion(currentlySelectedElement.value)
+  selectSuggestion(highlightedOption.value)
+
+  if (highlightedOption.value?.name === selectedOption.value) {
+    emit('request-close-suggestions')
+  }
 }
 
-function selectSuggestion(suggestion: Suggestion) {
-  if (suggestion.name === null) {
+function selectSuggestion(suggestion: Suggestion | null) {
+  if (suggestion?.name === null) {
+    selectSibilingElement(0)
+    selectedOption.value = highlightedOption.value?.name || null
     return
   }
-  emit('select', suggestion)
+  selectedOption.value = suggestion?.name || null
 }
 
 function selectSibilingElement(direction: number) {
@@ -150,15 +172,14 @@ function selectSibilingElement(direction: number) {
   )
 
   if (!selectableElements.length) {
-    currentlySelectedElement.value = null
+    highlightedOption.value = null
     return
   }
 
-  const currentIndex =
-    findSuggestionAsIndex(selectableElements, currentlySelectedElement.value) ?? 0
+  const currentIndex = findSuggestionAsIndex(selectableElements, highlightedOption.value) ?? 0
 
-  currentlySelectedElement.value =
-    selectableElements[wrap(currentIndex + direction, selectableElements.length)] || null
+  highlightedOption.value =
+    selectableElements[wrap(currentIndex + direction, filteredSuggestions.value.length)] || null
 }
 
 function wrap(index: number, length: number): number {
@@ -214,6 +235,8 @@ defineExpose({
     class="cmk-suggestions"
     role="listbox"
     @keydown.enter.prevent="onKeyEnter"
+    @keydown.tab.prevent="onKeyEnter"
+    @keydown.escape.prevent="emit('request-close-suggestions')"
     @keydown.down.prevent="selectNextElement"
     @keydown.up.prevent="selectPreviousElement"
   >
@@ -231,13 +254,13 @@ defineExpose({
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
       <li
-        v-for="suggestion in filteredSuggestions"
+        v-for="(suggestion, index) in filteredSuggestions"
         ref="suggestionRefs"
         tabindex="-1"
         :role="role"
         :class="{
           selectable: suggestion.name !== null,
-          selected: isSuggestionSelected(suggestion)
+          selected: isSuggestionHighlighted(suggestion, index)
         }"
         @click="selectSuggestion(suggestion)"
       >

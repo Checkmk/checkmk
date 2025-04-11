@@ -2088,10 +2088,10 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.labels(xyz_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
     } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.labels(test_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
@@ -2119,7 +2119,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.labels(test_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
         "äzzzz": "eeeeez",
     } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.label_sources(test_host) == {

@@ -24,7 +24,6 @@ from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
-    BuiltinHostLabelsStore,
     DiscoveredHostLabelsStore,
     HostLabel,
     LabelGroups,
@@ -149,6 +148,7 @@ class LabelManager(NamedTuple):
     host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
+    builtin_host_labels: Mapping[HostName, Labels]
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -183,7 +183,6 @@ class RulesetMatcher:
         all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
-        builtin_host_labels_store: BuiltinHostLabelsStore,
     ) -> None:
         super().__init__()
 
@@ -195,7 +194,6 @@ class RulesetMatcher:
             all_configured_hosts,
             clusters_of,
             nodes_of,
-            builtin_host_labels_store,
         )
         self.labels_of_host = self.ruleset_optimizer.labels_of_host
         self.labels_of_service = self.ruleset_optimizer.labels_of_service
@@ -473,7 +471,6 @@ class RulesetOptimizer:
         all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
-        builtin_host_labels_store: BuiltinHostLabelsStore,
     ) -> None:
         super().__init__()
         self.__labels_of_host: dict[HostName, Labels] = {}
@@ -483,7 +480,6 @@ class RulesetOptimizer:
         self._host_paths = host_paths
         self._clusters_of = clusters_of
         self._nodes_of = nodes_of
-        self._builtin_host_labels_store = builtin_host_labels_store
 
         self._all_configured_hosts = all_configured_hosts
 
@@ -513,11 +509,6 @@ class RulesetOptimizer:
 
         # TODO: Clean this one up?
         self._initialize_host_lookup()
-
-    def set_builtin_host_labels_store(
-        self, builtin_host_labels_store: BuiltinHostLabelsStore
-    ) -> None:
-        self._builtin_host_labels_store = builtin_host_labels_store
 
     def clear_ruleset_caches(self) -> None:
         self.__host_ruleset_cache.clear()
@@ -881,8 +872,8 @@ class RulesetOptimizer:
         labels: dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
-        labels.update(self._builtin_labels_of_host())
         labels.update(self._label_manager.explicit_host_labels.get(hostname, {}))
+        labels.update(self._label_manager.builtin_host_labels.get(hostname, {}))
         return self.__labels_of_host.setdefault(hostname, labels)
 
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
@@ -891,7 +882,12 @@ class RulesetOptimizer:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "discovered" for k in self._builtin_labels_of_host()})
+        labels.update(
+            {
+                k: "discovered"
+                for k in self._label_manager.builtin_host_labels.get(hostname, {}).keys()
+            }
+        )
         labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
         labels.update(
             {
@@ -913,12 +909,6 @@ class RulesetOptimizer:
             else merge_cluster_labels([DiscoveredHostLabelsStore(node).load() for node in nodes])
         )
         return {l.name: l.value for l in host_labels}
-
-    def _builtin_labels_of_host(self) -> Labels:
-        return {
-            label_id: label["value"]
-            for label_id, label in self._builtin_host_labels_store.load().items()
-        }
 
     def labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
         """Returns the effective set of service labels from all available sources

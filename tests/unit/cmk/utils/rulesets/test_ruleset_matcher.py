@@ -14,7 +14,6 @@ from pytest import MonkeyPatch
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import BuiltinHostLabelsStore
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     matches_tag_condition,
@@ -91,15 +90,6 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         },
         "options": {},
     },
-    # test overwritten builtin label match
-    {
-        "id": "id1",
-        "value": "some_other_site",
-        "condition": {
-            "host_label_groups": [("and", [("and", "cmk/site:some_site")])],
-        },
-        "options": {},
-    },
     # test implicit AND and unicode value match
     {
         "id": "id2",
@@ -140,30 +130,28 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     "hostname, expected_result",
     [
         (HostName("host1"), ["os_linux", "abc", "BLA"]),
-        (HostName("host2"), ["some_other_site", "hu", "BLA"]),
-        (HostName("host3"), ["hu", "BLA"]),
+        (HostName("host2"), ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_host_values_labels(
     hostname: HostName, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
-        host_tags={HostName("host1"): {}, HostName("host2"): {}, HostName("host3"): {}},
+        host_tags={HostName("host1"): {}, HostName("host2"): {}},
         host_paths={},
         label_manager=LabelManager(
             explicit_host_labels={
                 HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
-                HostName("host2"): {"cmk/site": "some_site"},
-                HostName("host3"): {},
+                HostName("host2"): {},
             },
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
-        all_configured_hosts=frozenset([HostName("host1"), HostName("host2"), HostName("host3")]),
+        all_configured_hosts=frozenset([HostName("host1"), HostName("host2")]),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert list(matcher.get_host_values(hostname, ruleset=host_label_ruleset)) == expected_result
@@ -197,11 +185,11 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
                 },
             ],
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset([test_host, xyz_host]),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert not ruleset_matcher.labels_of_service(xyz_host, "CPU load")
@@ -230,11 +218,11 @@ def test_labels_of_service_discovered_labels() -> None:
             discovered_labels_of_service=(
                 lambda host_name, *args, **kw: {"äzzzz": "eeeeez"} if host_name == test_host else {}
             ),
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset([test_host]),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     service_description = "CPU load"
@@ -262,6 +250,7 @@ def test_basic_get_host_values() -> None:
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset(
             [
@@ -273,7 +262,6 @@ def test_basic_get_host_values() -> None:
         ),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert not list(matcher.get_host_values(HostName("abc"), ruleset=ruleset))
@@ -304,6 +292,7 @@ def test_basic_get_host_values_subfolders() -> None:
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset(
             [
@@ -316,7 +305,6 @@ def test_basic_get_host_values_subfolders() -> None:
         ),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert not list(matcher.get_host_values(HostName("xyz"), ruleset=ruleset))
@@ -383,6 +371,7 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset(
             [
@@ -394,7 +383,6 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
         ),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert not matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset)
@@ -461,6 +449,7 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset(
             [
@@ -472,7 +461,6 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
         ),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
 
     assert matcher.get_host_bool_value(HostName("abc"), ruleset=binary_ruleset) is False
@@ -587,6 +575,7 @@ def test_ruleset_matcher_get_host_values_tags(
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
+            builtin_host_labels={},
         ),
         all_configured_hosts=frozenset(
             [
@@ -597,7 +586,6 @@ def test_ruleset_matcher_get_host_values_tags(
         ),
         clusters_of={},
         nodes_of={},
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
     )
     assert list(matcher.get_host_values(hostname, ruleset=tag_ruleset)) == expected_result
 

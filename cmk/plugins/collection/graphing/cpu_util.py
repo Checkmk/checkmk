@@ -427,7 +427,7 @@ graph_cpu_utilization_6_guest = graphs.Graph(
                 "user",
                 "system",
                 "io_wait",
-                "cpu_util_steal",
+                "cpu_util_guest",
             ],
         ),
     ],

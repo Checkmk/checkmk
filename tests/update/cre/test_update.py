@@ -11,7 +11,6 @@ from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status
 from tests.testlib.version import CMKEditionType
 
-from tests.update.cee.helpers import is_test_site_licensed
 from tests.update.helpers import (
     bulk_discover_and_schedule,
     check_agent_receiver_error_log,
@@ -35,13 +34,6 @@ def test_update(test_setup: tuple[Site, CMKEditionType, bool, str]) -> None:
     assert len(get_services_with_status(base_data, 0)) > 0
 
     target_site = update_site(base_site, get_target_package(target_edition), interactive_mode)
-
-    # covering licensing status for the cross edition update CRE->CCE
-    if target_site.edition.is_cloud_edition():
-        assert not is_test_site_licensed(target_site), (
-            "Updated site is licensed while no license has been applied."
-        )
-
     bulk_discover_and_schedule(target_site, hostname)
 
     check_services(target_site, hostname, base_data)

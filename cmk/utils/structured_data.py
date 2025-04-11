@@ -1756,13 +1756,25 @@ class TreeStore:
         return self._tree_dir / f"{host_name}.gz"
 
 
+@dataclass(frozen=True)
+class HistoryPath:
+    path: Path
+    timestamp: int | None
+
+
+@dataclass(frozen=True)
+class History:
+    paths: Sequence[HistoryPath]
+    corrupted: Sequence[Path]
+
+
 class TreeOrArchiveStore(TreeStore):
     def __init__(self, tree_dir: Path | str, archive: Path | str) -> None:
         super().__init__(tree_dir)
         self._archive_dir = Path(archive)
 
     def load_previous(self, *, host_name: HostName) -> ImmutableTree:
-        if (tree_file := self._tree_file(host_name=host_name)).exists():
+        if (tree_file := self._tree_file(host_name)).exists():
             return load_tree(tree_file)
 
         try:
@@ -1784,6 +1796,30 @@ class TreeOrArchiveStore(TreeStore):
         target_dir.mkdir(parents=True, exist_ok=True)
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
+
+    def history(self, *, host_name: HostName) -> History:
+        try:
+            archive_file_paths = sorted((self._archive_dir / str(host_name)).iterdir())
+        except FileNotFoundError:
+            return History(paths=[], corrupted=[])
+
+        paths = []
+        corrupted = []
+        for file_path in archive_file_paths:
+            try:
+                paths.append(HistoryPath(path=file_path, timestamp=int(file_path.name)))
+            except FileNotFoundError:
+                pass
+            except ValueError:
+                corrupted.append(file_path)
+
+        tree_file = self._tree_file(host_name)
+        try:
+            paths.append(HistoryPath(path=tree_file, timestamp=int(tree_file.stat().st_mtime)))
+        except FileNotFoundError:
+            pass
+
+        return History(paths=paths, corrupted=corrupted)
 
 
 def load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:

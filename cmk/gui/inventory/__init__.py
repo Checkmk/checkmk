@@ -42,7 +42,6 @@ from ._history import (
     FilterInventoryHistoryPathsError,
     get_history,
     HistoryEntry,
-    InventoryHistoryPath,
     load_delta_tree,
     load_latest_delta_tree,
 )
@@ -67,7 +66,6 @@ __all__ = [
     "get_short_inventory_filepath",
     "has_inventory",
     "HistoryEntry",
-    "InventoryHistoryPath",
     "InventoryPath",
     "load_delta_tree",
     "load_filtered_and_merged_tree",

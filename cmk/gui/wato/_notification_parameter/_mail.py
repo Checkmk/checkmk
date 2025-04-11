@@ -407,7 +407,7 @@ def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
             value=True,
             label=Label(
                 "A separate notification is "
-                "send to every recipient. Recipients "
+                "sent to every recipient. Recipients "
                 "cannot see which other recipients "
                 "were notified."
             ),

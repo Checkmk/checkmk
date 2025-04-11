@@ -2,6 +2,12 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Collect functions & objects, which use `CMKOpenApiSession` to interact with the Checkmk site.
+
+Such helper functions & objects can be used to setup and teardown the UI tests.
+So as to reduce the time it takes to execute the tests.
+"""
+
 import logging
 import os
 from collections.abc import Iterator

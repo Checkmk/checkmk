@@ -12,7 +12,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.common import create_and_delete_hosts, LOCALHOST_IPV4
+from tests.gui_e2e.testlib.api_helpers import create_and_delete_hosts, LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch

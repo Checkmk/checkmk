@@ -92,6 +92,46 @@ metric_privileged = metrics.Metric(
     color=metrics.Color.CYAN,
 )
 
+perfometer_user_system_io_wait_cpu_util_guest_cpu_util_steal = perfometers.Perfometer(
+    name="user_system_io_wait_cpu_util_guest_cpu_util_steal",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Closed(100.0),
+    ),
+    segments=[
+        "user",
+        "system",
+        "io_wait",
+        "cpu_util_guest",
+        "cpu_util_steal",
+    ],
+)
+perfometer_user_system_io_wait_cpu_util_guest = perfometers.Perfometer(
+    name="user_system_io_wait_cpu_util_guest",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Closed(100.0),
+    ),
+    segments=[
+        "user",
+        "system",
+        "io_wait",
+        "cpu_util_guest",
+    ],
+)
+perfometer_user_system_io_wait_cpu_util_steal = perfometers.Perfometer(
+    name="user_system_io_wait_cpu_util_steal",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Closed(100.0),
+    ),
+    segments=[
+        "user",
+        "system",
+        "io_wait",
+        "cpu_util_steal",
+    ],
+)
 perfometer_user_system_idle_nice = perfometers.Perfometer(
     name="user_system_idle_nice",
     focus_range=perfometers.FocusRange(

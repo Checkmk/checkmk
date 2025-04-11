@@ -672,13 +672,13 @@ graph_info["cpu_utilization_6_guest"] = {
         ("io_wait", "stack"),
         ("cpu_util_guest", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,cpu_util_steal,+,+,+#7fff00", "line", _l("Total")),
+        ("user,system,io_wait,cpu_util_guest,+,+,+#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "util",
     ],
     "omit_zero_metrics": True,
-    "range": (0, "user,system,io_wait,cpu_util_steal,+,+,+,100,MAX"),
+    "range": (0, "user,system,io_wait,cpu_util_guest,+,+,+,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 

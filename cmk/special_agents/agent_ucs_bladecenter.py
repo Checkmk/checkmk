@@ -414,16 +414,16 @@ class Server:
         self._communicate(ET.Element("aaaLogout", attrib=attributes))
 
     def _get_bios_unit_name_from_dn(self, xml_object: ET.Element) -> str:
-        dn = self._get_attribute_data(xml_object, "dn")
+        if (dn := self._get_attribute_data(xml_object, "dn")) is None:
+            raise ValueError("'dn' not found in XML object")
         return "/".join(dn.split("/")[0:2])
 
     def get_model_info(self) -> Mapping[str, str]:
         logging.debug("Server.get_model_info: Get model info")
         return {
-            self._get_bios_unit_name_from_dn(bios_unit): self._get_attribute_data(
-                bios_unit, "model"
-            ).split("-")[0]
+            self._get_bios_unit_name_from_dn(bios_unit): value.split("-")[0]
             for bios_unit in self._get_class_data("biosUnit")
+            if (value := self._get_attribute_data(bios_unit, "model")) is not None
         }
 
     def get_data_from_entities(
@@ -475,7 +475,7 @@ class Server:
                     data.setdefault(header, []).append((class_id, xml_data))
         return data
 
-    def _get_attribute_data(self, xml_object: ET.Element, attribute: str) -> str:
+    def _get_attribute_data(self, xml_object: ET.Element, attribute: str) -> str | None:
         logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
         attribute_data = xml_object.attrib.get(attribute)
         if attribute_data:
@@ -488,10 +488,12 @@ class Server:
         logging.debug(
             "Server._get_attribute_data: Try getting attribute '%s' (lower)", attribute_lower
         )
+        logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
-        raise ValueError("No such attribute '%s'" % attribute)
+        logging.debug("Server._get_attribute_data: nothing found")
+        return None
 
     def _get_class_data(self, class_id: str) -> list[ET.Element]:
         """

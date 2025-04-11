@@ -30,6 +30,8 @@ def discovery_redfish_drives(section: RedfishAPIData) -> DiscoveryResult:
     for key in section.keys():
         if section[key].get("Status", {}).get("State") == "Absent":
             continue
+        if not section[key]["Name"]:
+            continue
         item = section[key].get("Id", "0") + "-" + section[key]["Name"]
         yield Service(item=item)
 

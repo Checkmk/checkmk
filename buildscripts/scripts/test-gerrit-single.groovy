@@ -95,25 +95,39 @@ def main() {
                     withEnv(env_var_list) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                             dir(params.CIPARAM_DIR) {
-                                try {
-                                    // be very carefull here. Setting quantity to 0 or null, takes all available resources
-                                    if (bazel_locks_amount >= 1) {
-                                        lock(
-                                            label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
-                                            quantity: bazel_locks_amount,
-                                            resource : null
-                                        ) {
-                                            cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
-                                        }
-                                    } else {
+                                // be very carefull here. Setting quantity to 0 or null, takes all available resources
+                                if (bazel_locks_amount >= 1) {
+                                    lock(
+                                        label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
+                                        quantity: bazel_locks_amount,
+                                        resource : null
+                                    ) {
                                         cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
                                     }
+                                } else {
+                                    cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
                                 }
-                                catch (Exception e) {
-                                    print("DEBUG: Catch exception: ${e}, trying to copy bazel jvm log");
-                                    sh(script: "cp -r ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out ${checkout_dir}/${result_dir}/ || true", returnStatus: true);
-                                    throw e;
-                                }
+                            }
+
+                            def jvm_out_path = sh(
+                                script: "echo ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out",
+                                returnStdout: true
+                            ).trim();
+                            if (sh(script: "ls ${jvm_out_path}", returnStatus: true) == 0 && cmd_status != 0) {
+                                print("DEBUG: Trying to copy bazel jvm log");
+                                sh(script: "cp ${jvm_out_path} ${checkout_dir}/${result_dir}/", returnStatus: true);
+                                mail(
+                                    to: "timotheus.bachinger@checkmk.com",  // TODO: Add the commmiter
+                                    cc: "",
+                                    bcc: "",
+                                    from: "\"CI\" <${JENKINS_MAIL}>",
+                                    replyTo: "${TEAM_CI_MAIL}",
+                                    subject: "[jvm out found!]",
+                                    body: ("""
+                                                |Job link:
+                                                |    ${build_url}
+                                                |""".stripMargin()),
+                                );
                             }
 
                             archiveArtifacts(

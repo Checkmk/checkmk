@@ -467,19 +467,7 @@ def _create_graph_recipe_from_template(
             graph_template.range,
             translated_metrics,
         ),
-        horizontal_rules=[
-            HorizontalRule(
-                value=evaluated.value,
-                rendered_value=user_specific_unit(
-                    evaluated.unit_spec,
-                    user,
-                    active_config,
-                ).formatter.render(evaluated.value),
-                color=evaluated.color,
-                title=evaluated.title,
-            )
-            for evaluated in graph_template.scalars
-        ],
+        horizontal_rules=graph_template.scalars,
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
         specification=specification,
@@ -559,7 +547,7 @@ def _graph_title_expression_to_metric_expression(
 def _evaluate_scalars(
     metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[Evaluated]:
+) -> Sequence[HorizontalRule]:
     results = []
     for metric_expression in metric_expressions:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
@@ -568,7 +556,18 @@ def _evaluate_scalars(
             if result.error.metric_name:
                 continue
             return []
-        results.append(result.ok)
+        results.append(
+            HorizontalRule(
+                value=result.ok.value,
+                rendered_value=user_specific_unit(
+                    result.ok.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render(result.ok.value),
+                color=result.ok.color,
+                title=result.ok.title,
+            )
+        )
     return results
 
 
@@ -576,7 +575,7 @@ def _evaluate_scalars(
 class EvaluatedGraphTemplate:
     id: str
     title: str
-    scalars: Sequence[Evaluated]
+    scalars: Sequence[HorizontalRule]
     consolidation_function: GraphConsolidationFunction
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool

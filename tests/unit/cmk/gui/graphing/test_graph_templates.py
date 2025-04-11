@@ -52,8 +52,7 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
-from cmk.gui.logged_in import user
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -845,18 +844,8 @@ def test_horizontal_rules_from_thresholds(
         check_command,
         registered_metrics,
     )
-    assert [
-        HorizontalRule(
-            value=e.value,
-            rendered_value=user_specific_unit(
-                e.unit_spec,
-                user,
-                active_config,
-            ).formatter.render(e.value),
-            color=e.color,
-            title=e.title,
-        )
-        for e in _evaluate_scalars(
+    assert (
+        _evaluate_scalars(
             [
                 MetricExpression(
                     WarningOf(Metric("one")),
@@ -876,7 +865,8 @@ def test_horizontal_rules_from_thresholds(
             ],
             translated_metrics,
         )
-    ] == result
+        == result
+    )
 
 
 def test_duplicate_graph_templates() -> None:
@@ -2209,27 +2199,17 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="METRIC_predict_foo",
                     title="",
                     scalars=[
-                        Evaluated(
-                            WarningOf(metric=Metric("predict_foo")),
-                            1.0,
-                            ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            "#ffd000",
-                            "line",
-                            "Warning",
+                        HorizontalRule(
+                            value=1.0,
+                            rendered_value="1",
+                            color="#ffd000",
+                            title="Warning",
                         ),
-                        Evaluated(
-                            CriticalOf(metric=Metric("predict_foo")),
-                            2.0,
-                            ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            "#ff3232",
-                            "line",
-                            "Critical",
+                        HorizontalRule(
+                            value=2.0,
+                            rendered_value="2",
+                            color="#ff3232",
+                            title="Critical",
                         ),
                     ],
                     consolidation_function="max",
@@ -2253,27 +2233,17 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="METRIC_predict_lower_foo",
                     title="",
                     scalars=[
-                        Evaluated(
-                            WarningOf(metric=Metric("predict_lower_foo")),
-                            3.0,
-                            ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            "#ffd000",
-                            "line",
-                            "Warning",
+                        HorizontalRule(
+                            value=3.0,
+                            rendered_value="3",
+                            color="#ffd000",
+                            title="Warning",
                         ),
-                        Evaluated(
-                            CriticalOf(metric=Metric("predict_lower_foo")),
-                            4.0,
-                            ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            "#ff3232",
-                            "line",
-                            "Critical",
+                        HorizontalRule(
+                            value=4.0,
+                            rendered_value="4",
+                            color="#ff3232",
+                            title="Critical",
                         ),
                     ],
                     consolidation_function="max",

@@ -20,7 +20,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Final
 
 import requests
 import urllib3
@@ -374,6 +374,7 @@ class Server:
         username: str,
         password: str,
         cert_check: bool | str,
+        debug: bool,
     ) -> None:
         self._url = "https://%s/nuova" % hostname
         self._username = username
@@ -381,6 +382,7 @@ class Server:
         self._session = requests.Session()
         self._verify_ssl = bool(cert_check)
         self._cookie: str | None = None
+        self.debug: Final = debug
 
         if isinstance(cert_check, str):
             self._session.mount(self._url, HostnameValidationAdapter(cert_check))
@@ -446,7 +448,7 @@ class Server:
                     xml_objects = self._get_class_data(class_id)
                 except CommunicationException as e:
                     logging.debug("Server.get_data_from_entities: Failed to get data")
-                    if debug():
+                    if self.debug:
                         raise CommunicationException(e)
                     continue  # skip entity
 
@@ -531,28 +533,21 @@ class Server:
             response = self._session.post(
                 self._url, headers=headers, data=xml_string, verify=self._verify_ssl
             )
-        except requests.ConnectionError as e:
-            logging.debug("Server._communicate: PostError: '%s'", e)
-            raise CommunicationException(e)
         except Exception as e:
-            logging.debug("Server._communicate: PostError (other exception): '%s'", e)
-            raise CommunicationException(e)
+            logging.debug("Server._communicate: PostError: '%r'", e)
+            raise
 
         content = response.content
         logging.debug(
             "Server._communicate: Got response content: '%s' (%s)", content, response.status_code
         )
 
-        try:
-            root = ET.fromstring(content)
-        except ET.ParseError as e:
-            logging.debug("Server._communicate: ParseError: '%s'", e)
-            raise CommunicationException(e)
+        root = ET.fromstring(content)
 
         errors = root.attrib.get("errorDescr")
         if errors:
             logging.debug("Server._communicate: Errors found: '%s'", errors)
-            if debug():
+            if self.debug:
                 raise CommunicationException(errors)
         return root
 
@@ -566,11 +561,6 @@ class Server:
 #   |                      |_| |_| |_|\__,_|_|_| |_|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def debug() -> bool:
-    """Do not depend on argument parsing here."""
-    return "-d" in sys.argv[1:] or "--debug" in sys.argv[1:]
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -589,20 +579,17 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--cert-server-name",
         help="Use this server name for TLS certificate validation.",
     )
-    parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Be more verbose in logging.")
+    parser.add_argument("-d", "--debug", action="store_true", help="Raise python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
     parser.add_argument("-p", "--password", required=True, help="The password.")
     parser.add_argument("hostname")
     return parser.parse_args(argv)
 
 
-def setup_logging(opt_debug: bool) -> None:
+def setup_logging(verbose: bool) -> None:
     fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
-    if opt_debug:
-        lvl = logging.DEBUG
-    else:
-        lvl = logging.INFO
-    logging.basicConfig(level=lvl, format=fmt)
+    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO, format=fmt)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -611,40 +598,35 @@ def main(argv: Sequence[str] | None = None) -> int:
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
-    setup_logging(args.debug)
-    handle = Server(args.hostname, args.username, args.password, not args.no_cert_check)
+    setup_logging(args.verbose)
+    handle = Server(args.hostname, args.username, args.password, not args.no_cert_check, args.debug)
     try:
         handle.login()
-    except CommunicationException as e:
-        logging.debug("Login failed: '%s'", e)
-        return 1
     except Exception as e:
-        logging.debug("Login failed (other exception): '%s'", e)
+        sys.stderr.write(f"Login failed: {e!r}\n")
+        if args.debug:
+            raise
         return 1
 
     model_info: Mapping[str, str] = {}
     try:
         model_info = handle.get_model_info()
-    except (CommunicationException, IndexError) as e:
-        logging.debug("Failed to get model info: '%s'", e)
-        handle.logout()
-        return 1
     except Exception as e:
-        logging.debug("Failed to get model info (other exception): '%s'", e)
+        sys.stderr.write(f"Failed to get model info: {e!r}\n")
         handle.logout()
+        if args.debug:
+            raise
         return 1
 
     entities: Entities = B_SERIES_ENTITIES + C_SERIES_ENTITIES
 
     try:
         data = handle.get_data_from_entities(entities, model_info)
-    except CommunicationException as e:
-        logging.debug("Failed getting entity data: '%s'", e)
-        handle.logout()
-        return 1
     except Exception as e:
-        logging.debug("Failed getting entity data (other exception): '%s'", e)
+        sys.stderr.write(f"Failed getting entity data: {e!r}\n")
         handle.logout()
+        if args.debug:
+            raise
         return 1
 
     # some sections should always be in agent output, even if there is no data from the server

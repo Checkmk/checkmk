@@ -32,6 +32,7 @@ def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
                 item_name = line[0]
                 item_data = {
                     "instance": sid_instance,
+                    "state_name": "connected",  # otherwise we'd have no version
                     "version": line[2],
                 }
             # always discover "Status", even if we don't have an error now
@@ -49,13 +50,16 @@ register.agent_section(
 
 def _check_sap_hana_status_data(data):
     state_name = data["state_name"]
-    if state_name.lower() == "ok":
+    if state_name.lower() in ("ok", "connected"):
         cur_state = State.OK
     elif state_name.lower() in ["unknown", "error"]:
         cur_state = State.CRIT
     else:
         cur_state = State.WARN
-    return cur_state, f"Status: {state_name}, Details: {data['message']}"
+    summary = f"Status: {state_name}"
+    if "message" in data:
+        summary += f", Details: {data['message']}"
+    return cur_state, summary
 
 
 def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryResult:

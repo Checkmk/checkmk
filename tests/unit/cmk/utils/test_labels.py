@@ -75,24 +75,26 @@ class TestLabelManager:
             explicit_host_labels={
                 HostName("horst"): {
                     "prio-1": "explicit-value",
+                    "prio-2": "explicit-value",
                 }
             },
-            get_builtin_host_labels=lambda: {
-                "prio-1": "builtin-value",
-                "prio-2": "builtin-value",
+            builtin_host_labels={
+                HostName("horst"): {
+                    "prio-1": "builtin-value",
+                },
             },
         )
 
         assert label_manager.labels_of_host(HostName("horst")) == {
-            "prio-1": "explicit-value",
-            "prio-2": "builtin-value",
+            "prio-1": "builtin-value",
+            "prio-2": "explicit-value",
             "prio-3": "ruleset-value",
             "prio-4": "discovered-value",
         }
         # I am not sure this is right. But namespaces are disjoint, so it might not matter
         assert label_manager.label_sources_of_host(HostName("horst")) == {
-            "prio-1": "explicit",
-            "prio-2": "ruleset",
+            "prio-1": "discovered",
+            "prio-2": "explicit",
             "prio-3": "ruleset",
             "prio-4": "discovered",
         }
@@ -108,7 +110,7 @@ class TestLabelManager:
             ),
             nodes_of={},
             explicit_host_labels={},
-            get_builtin_host_labels=lambda: {},
+            builtin_host_labels={},
         )
 
         assert label_manager.labels_of_service(test_host, "CPU load", {}) == {
@@ -133,7 +135,7 @@ class TestLabelManager:
             ),
             nodes_of={},
             explicit_host_labels={},
-            get_builtin_host_labels=lambda: {},
+            builtin_host_labels={},
         )
 
         service_description = "CPU load"

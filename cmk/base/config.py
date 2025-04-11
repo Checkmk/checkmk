@@ -36,6 +36,8 @@ from typing import (
     TypeVar,
 )
 
+from livestatus import SiteId
+
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -1635,6 +1637,10 @@ class ConfigCache:
                 )
             ),
         )
+        builtin_host_labels = {
+            hostname: get_builtin_host_labels(_site_of_host(hostname))
+            for hostname in self.hosts_config
+        }
         self.label_manager = LabelManager(
             LabelConfig(
                 self.ruleset_matcher,
@@ -1643,7 +1649,7 @@ class ConfigCache:
             ),
             self._nodes_cache,
             host_labels,
-            get_builtin_host_labels=get_builtin_host_labels,
+            builtin_host_labels=builtin_host_labels,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -2279,10 +2285,7 @@ class ConfigCache:
             return True
 
         # hosts without a site: tag belong to all sites
-        return (
-            ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site)
-            == distributed_wato_site
-        )
+        return _site_of_host(host_name) == distributed_wato_site
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(
@@ -3909,6 +3912,12 @@ class ConfigCache:
                 )
             )
         )
+
+
+def _site_of_host(host_name: HostName) -> SiteId:
+    return SiteId(
+        ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site or omd_site())
+    )
 
 
 def access_globally_cached_config_cache() -> ConfigCache:

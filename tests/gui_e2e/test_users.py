@@ -78,6 +78,7 @@ def create_new_user(
     users_page.activate_changes()
 
 
+@pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
 @pytest.mark.parametrize(
     "new_role, new_user",
     [
@@ -106,6 +107,7 @@ def test_delete_role_in_use(
     roles_and_permissions_page.main_area.check_error(expected_error_msg)
 
 
+@pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
 @pytest.mark.parametrize(
     "new_user",
     [

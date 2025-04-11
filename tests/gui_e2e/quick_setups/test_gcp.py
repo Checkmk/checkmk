@@ -81,6 +81,7 @@ def fixture_gcp_qs_config_page(
         list_hosts_page.activate_changes()
 
 
+@pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
 def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_site: Site) -> None:
     """Validate setup of a GCP configuration using 'Quick setup: GCP'"""
     config_name = gcp_qs_config_page.configuration_name

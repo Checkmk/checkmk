@@ -50,6 +50,7 @@ from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
     execute,
+    get_processes_by_cmdline,
     is_containerized,
     makedirs,
     PExpectDialog,
@@ -1159,6 +1160,20 @@ class Site:
             logger.warning("The site %s is still running, sleeping... (round %d)", self.id, i)
             sys.stdout.flush()
             time.sleep(0.2)
+
+        # let's ensure, that no more processes for the site are running (CMK-21668)
+        # all site processes will be for some file below /omd/sites/<site_id>
+        site_procs = get_processes_by_cmdline(f"omd/sites/{self.id}")
+        if site_procs:
+            logger.warning(
+                "processes still running after stopping the site %s (only first 10):", self.id
+            )
+            for proc in site_procs[:10]:
+                logger.warning("  [%s] %s: %s", proc.pid, proc.info["name"], proc.info["cmdline"])
+            raise AssertionError(
+                "Site '%s' has still %d processes running after stopping!"
+                % (self.id, len(site_procs))
+            )
 
     def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)

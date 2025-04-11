@@ -23,6 +23,7 @@ from stat import filemode
 from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
+import psutil
 import yaml
 
 from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
@@ -257,6 +258,26 @@ def execute(
 
     with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.Popen(cmd_, **kwargs)
+
+
+def get_processes_by_cmdline(cmdline_pattern: str) -> list[psutil.Process]:
+    """Return a list of currently running processes matching the given command line pattern.
+
+    NOTE: only processes with a non-empty command line are considered.
+
+    Args:
+        cmdline_pattern (str): some substring or regex pattern (via re.search) of the command line.
+    Returns:
+        list[psutil.Process]:
+    """
+    processes = []
+    for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"]):
+        if not proc.info["cmdline"]:
+            continue
+        full_cmdline = " ".join(proc.info["cmdline"])
+        if cmdline_pattern in full_cmdline or re.search(cmdline_pattern, full_cmdline):
+            processes.append(proc)
+    return processes
 
 
 def _add_trace_context(

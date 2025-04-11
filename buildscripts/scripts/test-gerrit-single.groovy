@@ -75,9 +75,6 @@ def main() {
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-            inside_container() {
-                sh("buildscripts/scripts/ensure-workspace-integrity");
-            }
             sh("""
                 rm -rf ${result_dir}
                 mkdir -p ${result_dir}

@@ -48,10 +48,6 @@ def main() {
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-
-            inside_container() {
-                sh("buildscripts/scripts/ensure-workspace-integrity");
-            }
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);

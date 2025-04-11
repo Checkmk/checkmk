@@ -99,7 +99,11 @@ translation_tcp_conn_stats_datapower_tcp = translations.Translation(
 
 translation_fileinfo = translations.Translation(
     name="fileinfo",
-    check_commands=[translations.PassiveCheck("fileinfo")],
+    check_commands=[
+        translations.PassiveCheck("fileinfo"),
+        translations.PassiveCheck("filestats_single"),
+        translations.PassiveCheck("filestats"),
+    ],
     translations={"size": translations.RenameTo("file_size")},
 )
 

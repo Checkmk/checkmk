@@ -307,6 +307,7 @@ tr:last-of-type > td > .form-dictionary--one_column > .form-dictionary__group_el
     font-weight: bold;
     word-wrap: break-word;
     white-space: normal;
+    min-height: 21px;
   }
 }
 

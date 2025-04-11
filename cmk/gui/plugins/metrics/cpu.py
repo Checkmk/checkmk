@@ -216,7 +216,7 @@ metric_info["engine_cpu_util"] = {
 }
 
 metric_info["util_numcpu_as_max"] = {
-    "title": _l("CPU utilization"),
+    "title": _l("CPU utilization (Windows, Netapp)"),
     "unit": "%",
     "color": "#7fff00",
 }

@@ -63,7 +63,7 @@ class DeviceStatus:
             status=str(row["status"]),
             last_reported=cls._parse_last_reported(str(row["lastReportedAt"])),
             power_supplies={
-                raw_power_supply["slot"]: PowerSupply(
+                str(raw_power_supply["slot"]): PowerSupply(
                     raw_power_supply["model"],
                     raw_power_supply["serial"],
                     raw_power_supply["status"],

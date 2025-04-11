@@ -15,9 +15,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Service,
     State,
+    TableRow,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+# Note: the power supply data used here is the example body from https://developer.cisco.com/meraki/api-v1/get-organization-devices-statuses/
 _STRING_TABLE = [
     [
         (
@@ -25,8 +27,9 @@ _STRING_TABLE = [
             '"publicIp": "123.123.123.1", "networkId": "N_24329156", "status": "online",'
             '"lastReportedAt": "2000-01-14T00:00:00.090210Z", "lanIp": "1.2.3.4",'
             '"gateway": "1.2.3.5", "ipType": "dhcp", "primaryDns": "8.8.8.8",'
-            '"secondaryDns": "8.8.4.4", "productType": "wireless",'
-            '"components": {"powerSupplies": []}, "model": "MR34",'
+            '"secondaryDns": "8.8.4.4", "productType": "wireless", "components": {"powerSupplies":'
+            '[{"slot": 1, "serial": "QABC-1234-5678", "model": "PWR-MS320-1025WAC",'
+            '"status": "powering", "poe": {"unit": "watts", "maximum": 740}}]}, "model": "MR34",'
             '"tags": ["tag1", "tag2"]}]'
         ),
     ]
@@ -106,3 +109,61 @@ def test_check_device_status(string_table: StringTable, expected_results: Sequen
             )
             == expected_results
         )
+
+
+@pytest.mark.parametrize(
+    ("string_table", "expected_services"),
+    [
+        (
+            _STRING_TABLE,
+            [Service(item="1")],
+        ),
+        (
+            _STRING_TABLE_OFFLINE,
+            [],
+        ),
+    ],
+)
+def test_discover_device_status_ps(
+    string_table: StringTable, expected_services: Sequence[Service]
+) -> None:
+    assert (
+        list(
+            cisco_meraki_org_device_status.discover_device_status_ps(
+                cisco_meraki_org_device_status.parse_device_status(string_table)
+            )
+        )
+        == expected_services
+    )
+
+
+def test_check_device_status_ps() -> None:
+    assert list(
+        cisco_meraki_org_device_status.check_device_status_ps(
+            "1",
+            {},
+            cisco_meraki_org_device_status.parse_device_status(_STRING_TABLE),
+        )
+    ) == [
+        Result(state=State.OK, summary="Status: powering"),
+        Result(state=State.OK, notice="PoE: 740 watts maximum"),
+    ]
+
+
+def test_inventory_power_supplies() -> None:
+    assert list(
+        cisco_meraki_org_device_status.inventory_power_supplies(
+            cisco_meraki_org_device_status.parse_device_status(_STRING_TABLE),
+        )
+    ) == [
+        TableRow(
+            path=["hardware", "components", "psus"],
+            key_columns={"serial": "QABC-1234-5678"},
+            inventory_columns={
+                "model": "PWR-MS320-1025WAC",
+                "location": "Slot 1",
+                "manufacturer": "Cisco Meraki",
+            },
+            status_columns={},
+        )
+    ]

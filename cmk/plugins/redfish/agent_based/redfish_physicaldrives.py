@@ -27,6 +27,12 @@ agent_section_redfish_physicaldrives = AgentSection(
 
 
 def _item_names(section: RedfishAPIData) -> dict:
+    """
+    Create a dictionary with the item name as key and the data as value.
+    The item name is created by concatenating the controller ID and the
+    Location or Name of the drive.
+    If the Location is empty, the Name is used.
+    """
     new_data = {}
     for _key, data in section.items():
         loc = data.get("Location")

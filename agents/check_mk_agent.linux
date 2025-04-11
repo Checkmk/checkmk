@@ -1287,114 +1287,11 @@ section_veritas_cluster() {
 }
 
 section_omd_core() {
-    (
-        cd /omd/sites || return
-
-        # The files within a site are site-user writable! Therefore we must not use them!
-        # The version files are only root writable so we can use them instead.
-        site_version() {
-            printf "%s" "$(realpath "${1}/version" | sed 's|.*/||')"
-        }
-
-        site_cmd() {
-            # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
-            # bin might point anywhere -> priv escalation.
-            printf "/omd/versions/%s/bin/%s" "$(site_version "${1}")" "${2}"
-        }
-
-        site_lib() {
-            printf "/omd/versions/%s/lib" "$(site_version "${1}")"
-        }
-
-        waitmax_for_unixcat_with_site_ld_library_path() {
-            LD_LIBRARY_PATH="$(site_lib "${2}"):${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
-        }
-
-        echo '<<<livestatus_status:sep(59)>>>'
-        for site in *; do
-            if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
-                echo "[${site}]"
-                echo "GET status" |
-                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "live"
-            fi
-        done
-
-        echo '<<<livestatus_ssl_certs:sep(124)>>>'
-        for site in *; do
-            echo "[${site}]"
-            for PEM_PATH in "/omd/sites/${site}/etc/ssl/ca.pem" "/omd/sites/${site}/etc/ssl/sites/${site}.pem"; do
-                if [ -f "${PEM_PATH}" ]; then
-                    CERT_DATE=$(openssl x509 -enddate -noout -in "${PEM_PATH}" | sed 's/notAfter=//')
-                    echo "${PEM_PATH}|$(date --date="${CERT_DATE}" --utc +%s)"
-                fi
-            done
-        done
-
-        echo '<<<mkeventd_status:sep(0)>>>'
-        for site in *; do
-            if [ -S "/omd/sites/${site}/tmp/run/mkeventd/status" ]; then
-                echo "[\"${site}\"]"
-                (echo "GET status" && echo "OutputFormat: json") |
-                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "mkeventd/status"
-            fi
-        done
-
-        echo '<<<cmk_site_statistics:sep(59)>>>'
-        for site in *; do
-            if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
-                echo "[${site}]"
-                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
-GET hosts
-Stats: state = 0
-Stats: scheduled_downtime_depth = 0
-StatsAnd: 2
-Stats: state = 1
-Stats: scheduled_downtime_depth = 0
-StatsAnd: 2
-Stats: state = 2
-Stats: scheduled_downtime_depth = 0
-StatsAnd: 2
-Stats: scheduled_downtime_depth > 0
-Filter: custom_variable_names < _REALNAME
-LimitString
-                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
-GET services
-Stats: state = 0
-Stats: scheduled_downtime_depth = 0
-Stats: host_scheduled_downtime_depth = 0
-Stats: host_state = 0
-Stats: host_has_been_checked = 1
-StatsAnd: 5
-Stats: scheduled_downtime_depth > 0
-Stats: host_scheduled_downtime_depth > 0
-StatsOr: 2
-Stats: scheduled_downtime_depth = 0
-Stats: host_scheduled_downtime_depth = 0
-Stats: host_state != 0
-StatsAnd: 3
-Stats: state = 1
-Stats: scheduled_downtime_depth = 0
-Stats: host_scheduled_downtime_depth = 0
-Stats: host_state = 0
-Stats: host_has_been_checked = 1
-StatsAnd: 5
-Stats: state = 3
-Stats: scheduled_downtime_depth = 0
-Stats: host_scheduled_downtime_depth = 0
-Stats: host_state = 0
-Stats: host_has_been_checked = 1
-StatsAnd: 5
-Stats: state = 2
-Stats: scheduled_downtime_depth = 0
-Stats: host_scheduled_downtime_depth = 0
-Stats: host_state = 0
-Stats: host_has_been_checked = 1
-StatsAnd: 5
-Filter: host_custom_variable_names < _REALNAME
-LimitString
-            fi
-        done
-    )
+    for sitedir in /omd/sites/*; do
+        site_version="$(basename "$(realpath "${sitedir}/version")")"
+        site=${sitedir#/omd/sites/}
+        sudo --non-interactive --user="${site}" "/omd/versions/${site-version}/bin/cmk-monitor-core"
+    done
 }
 
 section_mkbackup() {

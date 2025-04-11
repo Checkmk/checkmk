@@ -47,9 +47,13 @@ def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
 
     yield Result(state=State(result_state), summary=message)
     try:
-        service_tag = data.get("Oem", {}).get("Dell", {}).get("DellSystem", {}).get("ChassisServiceTag")
+        service_tag = (
+            data.get("Oem", {}).get("Dell", {}).get("DellSystem", {}).get("ChassisServiceTag")
+        )
         if service_tag:
-            yield Result(state=State(0), notice="placeholder text", details=f"Service Tag: {service_tag}")
+            yield Result(
+                state=State(0), notice="placeholder text", details=f"Service Tag: {service_tag}"
+            )
     except AttributeError:
         pass
 

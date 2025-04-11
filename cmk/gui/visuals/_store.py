@@ -519,16 +519,22 @@ def available_by_owner(
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
-    if user.may("general.see_user_" + what) and visual_name not in visuals:
+    if user.may("general.see_user_" + what):
         for (user_id, visual_name), visual in all_visuals.items():
             # Is there a built-in visual with the same name? If yes, honor permissions.
-            if published_to_user(visual) and not restricted_visual(visual_name):
+            if (
+                visual_name not in visuals
+                and published_to_user(visual)
+                and not restricted_visual(visual_name)
+            ):
                 visuals.setdefault(visual_name, {})
                 visuals[visual_name][user_id] = visual
 
     # 5. packaged visuals
-    if user.may("general.see_packaged_" + what) and visual_name not in visuals:
+    if user.may("general.see_packaged_" + what):
         for (user_id, visual_name), visual in all_visuals.items():
+            if visual_name in visuals:
+                continue
             if not visual["packaged"]:
                 continue
             if not restricted_packaged_visual(visual_name):

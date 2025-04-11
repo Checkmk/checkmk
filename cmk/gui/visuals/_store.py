@@ -459,17 +459,17 @@ def available(
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, TVisual]:
     visuals: dict[VisualName, TVisual] = {}
-    for n, _visuals in available_by_owner(what, all_visuals).items():
-        for u, v in sorted(_visuals.items()):
+    for visual_name, _visuals in available_by_owner(what, all_visuals).items():
+        for user_id, visual in sorted(_visuals.items()):
             # Built-in
-            if u == UserId.builtin():
-                visuals[n] = v
+            if user_id == UserId.builtin():
+                visuals[visual_name] = visual
             # Other users
-            if u != UserId.builtin() and u != user.id:
-                visuals[n] = v
+            if user_id != UserId.builtin() and user_id != user.id:
+                visuals[visual_name] = visual
             # Own
-            if user.id == u:
-                visuals[n] = v
+            if user.id == user_id:
+                visuals[visual_name] = visual
     return visuals
 
 
@@ -492,48 +492,48 @@ def available_by_owner(
 
     # 1. user's own visuals, if allowed to edit visuals
     if user.may("general.edit_" + what):
-        for (u, n), visual in all_visuals.items():
-            if u == user.id:
-                visuals.setdefault(n, {})
-                visuals[n][u] = visual
+        for (user_id, visual_name), visual in all_visuals.items():
+            if user_id == user.id:
+                visuals.setdefault(visual_name, {})
+                visuals[visual_name][user_id] = visual
 
     # 2. visuals of special users allowed to globally override built-in visuals
-    for (u, n), visual in all_visuals.items():
+    for (user_id, visual_name), visual in all_visuals.items():
         # Honor original permissions for the current user
         if (
-            n not in visuals
+            visual_name not in visuals
             and published_to_user(visual)
-            and user_may(u, "general.force_" + what)
+            and user_may(user_id, "general.force_" + what)
             and user.may("general.see_user_" + what)
-            and not restricted_visual(n)
+            and not restricted_visual(visual_name)
         ):
-            visuals.setdefault(n, {})
-            visuals[n][u] = visual
+            visuals.setdefault(visual_name, {})
+            visuals[visual_name][user_id] = visual
 
     # 3. Built-in visuals, if allowed.
-    for (u, n), visual in all_visuals.items():
-        if u == UserId.builtin() and user.may(f"{permprefix}.{n}"):
-            visuals.setdefault(n, {})
-            visuals[n][u] = visual
+    for (user_id, visual_name), visual in all_visuals.items():
+        if user_id == UserId.builtin() and user.may(f"{permprefix}.{visual_name}"):
+            visuals.setdefault(visual_name, {})
+            visuals[visual_name][user_id] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
-    if user.may("general.see_user_" + what) and n not in visuals:
-        for (u, n), visual in all_visuals.items():
+    if user.may("general.see_user_" + what) and visual_name not in visuals:
+        for (user_id, visual_name), visual in all_visuals.items():
             # Is there a built-in visual with the same name? If yes, honor permissions.
-            if published_to_user(visual) and not restricted_visual(n):
-                visuals.setdefault(n, {})
-                visuals[n][u] = visual
+            if published_to_user(visual) and not restricted_visual(visual_name):
+                visuals.setdefault(visual_name, {})
+                visuals[visual_name][user_id] = visual
 
     # 5. packaged visuals
-    if user.may("general.see_packaged_" + what) and n not in visuals:
-        for (u, n), visual in all_visuals.items():
+    if user.may("general.see_packaged_" + what) and visual_name not in visuals:
+        for (user_id, visual_name), visual in all_visuals.items():
             if not visual["packaged"]:
                 continue
-            if not restricted_packaged_visual(n):
-                visuals.setdefault(n, {})
-                visuals[n][u] = visual
+            if not restricted_packaged_visual(visual_name):
+                visuals.setdefault(visual_name, {})
+                visuals[visual_name][user_id] = visual
 
     return visuals
 

@@ -46,11 +46,20 @@ _STRING_TABLE_OFFLINE = [
 
 
 @pytest.mark.parametrize(
+    "empty_string_table",
+    [
+        [],
+        [[]],
+        [[""]],
+    ],
+)
+def test_parse_device_status_can_handle_empty_data(empty_string_table: StringTable) -> None:
+    assert not cisco_meraki_org_device_status.parse_device_status(empty_string_table)
+
+
+@pytest.mark.parametrize(
     "string_table, expected_services",
     [
-        ([], []),
-        ([[]], []),
-        ([[""]], []),
         (
             _STRING_TABLE,
             [
@@ -66,40 +75,24 @@ _STRING_TABLE_OFFLINE = [
 def test_discover_device_status(
     string_table: StringTable, expected_services: Sequence[Service]
 ) -> None:
-    section = cisco_meraki_org_device_status.parse_device_status(string_table)
+    section = _parse_and_assert_not_none(string_table)
     assert sorted(expected_services) == sorted(
         cisco_meraki_org_device_status.discover_device_status(section)
     )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_results",
-    [
-        ([], []),
-        ([[]], []),
-        ([[""]], []),
-        (
-            _STRING_TABLE,
-            [
-                Result(state=State.OK, summary="Status: online"),
-                Result(state=State.OK, summary="Time since last report: 23 hours 59 minutes"),
-                Metric("last_reported", 86399.90979003906),
-            ],
-        ),
-    ],
-)
-def test_check_device_status(string_table: StringTable, expected_results: Sequence[Result]) -> None:
-    section = cisco_meraki_org_device_status.parse_device_status(string_table)
+def test_check_device_status() -> None:
     with time_machine.travel(datetime.datetime(2000, 1, 15, tzinfo=ZoneInfo("UTC"))):
-        assert (
-            list(
-                cisco_meraki_org_device_status.check_device_status(
-                    cisco_meraki_org_device_status.Parameters(),
-                    section,
-                )
+        assert list(
+            cisco_meraki_org_device_status.check_device_status(
+                cisco_meraki_org_device_status.Parameters(),
+                section=_parse_and_assert_not_none(_STRING_TABLE),
             )
-            == expected_results
-        )
+        ) == [
+            Result(state=State.OK, summary="Status: online"),
+            Result(state=State.OK, summary="Time since last report: 23 hours 59 minutes"),
+            Metric("last_reported", 86399.90979003906),
+        ]
 
 
 @pytest.mark.parametrize(
@@ -121,7 +114,7 @@ def test_discover_device_status_ps(
     assert (
         list(
             cisco_meraki_org_device_status.discover_device_status_ps(
-                cisco_meraki_org_device_status.parse_device_status(string_table)
+                _parse_and_assert_not_none(string_table)
             )
         )
         == expected_services
@@ -133,7 +126,7 @@ def test_check_device_status_ps() -> None:
         cisco_meraki_org_device_status.check_device_status_ps(
             "1",
             {},
-            cisco_meraki_org_device_status.parse_device_status(_STRING_TABLE),
+            _parse_and_assert_not_none(_STRING_TABLE),
         )
     ) == [
         Result(state=State.OK, summary="Status: powering"),
@@ -144,7 +137,7 @@ def test_check_device_status_ps() -> None:
 def test_inventory_power_supplies() -> None:
     assert list(
         cisco_meraki_org_device_status.inventory_power_supplies(
-            cisco_meraki_org_device_status.parse_device_status(_STRING_TABLE),
+            _parse_and_assert_not_none(_STRING_TABLE),
         )
     ) == [
         TableRow(
@@ -158,3 +151,11 @@ def test_inventory_power_supplies() -> None:
             status_columns={},
         )
     ]
+
+
+def _parse_and_assert_not_none(
+    string_table: StringTable,
+) -> cisco_meraki_org_device_status.DeviceStatus:
+    section = cisco_meraki_org_device_status.parse_device_status(string_table)
+    assert section
+    return section

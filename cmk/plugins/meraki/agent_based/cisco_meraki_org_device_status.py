@@ -96,9 +96,8 @@ agent_section_cisco_meraki_org_device_status = AgentSection(
 )
 
 
-def discover_device_status(section: DeviceStatus | None) -> DiscoveryResult:
-    if section:
-        yield Service()
+def discover_device_status(section: DeviceStatus) -> DiscoveryResult:
+    yield Service()
 
 
 _STATUS_MAP = {
@@ -114,10 +113,7 @@ class Parameters(TypedDict, total=False):
     last_reported_upper_levels: tuple[int, int]
 
 
-def check_device_status(params: Parameters, section: DeviceStatus | None) -> CheckResult:
-    if not section:
-        return
-
+def check_device_status(params: Parameters, section: DeviceStatus) -> CheckResult:
     if (raw_state := params.get("status_map", {}).get(section.status)) is None:
         state = State(_STATUS_MAP[section.status])
     else:
@@ -146,17 +142,15 @@ check_plugin_cisco_meraki_org_device_status = CheckPlugin(
 )
 
 
-def discover_device_status_ps(section: DeviceStatus | None) -> DiscoveryResult:
-    if not section:
-        return
+def discover_device_status_ps(section: DeviceStatus) -> DiscoveryResult:
     for slot in section.power_supplies:
         yield Service(item=slot)
 
 
 def check_device_status_ps(
-    item: str, params: Mapping[str, int], section: DeviceStatus | None
+    item: str, params: Mapping[str, int], section: DeviceStatus
 ) -> CheckResult:
-    if not section or (power_supply := section.power_supplies.get(item)) is None:
+    if (power_supply := section.power_supplies.get(item)) is None:
         return
 
     if power_supply.status.lower() == "powering":
@@ -186,10 +180,7 @@ check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(
 )
 
 
-def inventory_power_supplies(section: DeviceStatus | None) -> InventoryResult:
-    if not section:
-        return
-
+def inventory_power_supplies(section: DeviceStatus) -> InventoryResult:
     for slot, power_supply in section.power_supplies.items():
         yield TableRow(
             path=["hardware", "components", "psus"],

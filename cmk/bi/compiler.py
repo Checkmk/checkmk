@@ -72,9 +72,6 @@ class BICompiler:
                     return compiled_aggregation, branch
         return None
 
-    def cleanup(self) -> None:
-        self._compiled_aggregations.clear()
-
     def load_compiled_aggregations(self) -> None:
         try:
             self._check_compilation_status()

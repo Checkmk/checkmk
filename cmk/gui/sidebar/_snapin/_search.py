@@ -46,7 +46,6 @@ from cmk.gui.type_defs import (
     ViewName,
 )
 from cmk.gui.utils.labels import (
-    encode_labels_for_http,
     encode_labels_for_livestatus,
     filter_http_vars_for_simple_label_group,
     Label,
@@ -1264,9 +1263,6 @@ class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
 
     def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
         yield from (self._input_to_key_value(inpt) for inpt in user_inputs)
-
-    def _user_inputs_to_http(self, user_inputs: Iterable[str]) -> str:
-        return encode_labels_for_http(self._user_inputs_to_labels(user_inputs))
 
     def get_livestatus_filters(
         self,

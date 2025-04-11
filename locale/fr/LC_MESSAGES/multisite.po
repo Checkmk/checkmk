@@ -50378,6 +50378,13 @@ msgstr ""
 "href=\"%s\">Escape HTML in service output</a> ou <a href=\"%s\">Escape HTML "
 "in host output</a> au lieu de <a href=\"%s\">disabling escaping globally</a>"
 
+#, fuzzy, python-format
+msgid "Please contact the Checkmk sales team at %s and renew your license."
+msgstr ""
+"Veuillez contacter l'équipe de vente de Checkmk à %s et renouveler votre "
+"licence. Si vous avez acheté votre licence par l'intermédiaire d'un %s, "
+"veuillez le contacter."
+
 #, python-format
 msgid ""
 "Please contact the Checkmk sales team at %s and renew your license. If you "
@@ -87213,12 +87220,6 @@ msgstr ""
 #, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
-msgstr ""
-
-#, python-format
-msgid ""
-"Your license has been suspended. Please contact the Checkmk sales team at "
-"%s. "
 msgstr ""
 
 msgid ""

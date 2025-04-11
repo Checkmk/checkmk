@@ -49566,6 +49566,13 @@ msgstr ""
 "\"%s\">Escape HTML nell'output dell'host</a> invece di <a href=\"%s"
 "\">disabilitare l'escape a livello globale</a>"
 
+#, fuzzy, python-format
+msgid "Please contact the Checkmk sales team at %s and renew your license."
+msgstr ""
+"Si prega di contattare il team commerciale di Checkmk al numero %s per "
+"rinnovare la licenza. Se la licenza è stata acquistata tramite %s, si prega "
+"di contattarli."
+
 #, python-format
 msgid ""
 "Please contact the Checkmk sales team at %s and renew your license. If you "
@@ -85658,14 +85665,6 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr ""
 
-#, fuzzy, python-format
-msgid ""
-"Your license has been suspended. Please contact the Checkmk sales team at "
-"%s. "
-msgstr ""
-"Se si desidera continuare a utilizzare Checkmk, acquistare una licenza con "
-"supporto %s o contattare il team commerciale di Checkmk al numero %s."
-
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -88123,6 +88122,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Your license has been suspended. Please contact the Checkmk sales team at "
+#~ "%s. "
+#~ msgstr ""
+#~ "Se si desidera continuare a utilizzare Checkmk, acquistare una licenza "
+#~ "con supporto %s o contattare il team commerciale di Checkmk al numero %s."
 
 #~ msgid "Persistent Connection"
 #~ msgstr "Connessione persistente"

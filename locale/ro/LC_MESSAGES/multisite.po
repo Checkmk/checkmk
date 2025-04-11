@@ -50042,6 +50042,13 @@ msgstr ""
 "<a href=\"%s\">Escape HTML în ieșirea gazdei</a> în loc de <a href=\"%s"
 "\">dezactivarea scăpării la nivel global</a>."
 
+#, fuzzy, python-format
+msgid "Please contact the Checkmk sales team at %s and renew your license."
+msgstr ""
+"Vă rugăm să contactați echipa de vânzări Checkmk la %s și să vă reînnoiți "
+"licența. Dacă v-ați achiziționat licența prin intermediul unui %s, vă rugăm "
+"să îl contactați."
+
 #, python-format
 msgid ""
 "Please contact the Checkmk sales team at %s and renew your license. If you "
@@ -86566,14 +86573,6 @@ msgstr ""
 "Permisul dumneavoastră a fost suspendat. Vă rugăm să contactați echipa de "
 "vânzări Checkmk la %s."
 
-#, fuzzy, python-format
-msgid ""
-"Your license has been suspended. Please contact the Checkmk sales team at "
-"%s. "
-msgstr ""
-"Permisul dumneavoastră a fost suspendat. Vă rugăm să contactați echipa de "
-"vânzări Checkmk la %s."
-
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -89069,6 +89068,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Your license has been suspended. Please contact the Checkmk sales team at "
+#~ "%s. "
+#~ msgstr ""
+#~ "Permisul dumneavoastră a fost suspendat. Vă rugăm să contactați echipa de "
+#~ "vânzări Checkmk la %s."
 
 #~ msgid "Persistent Connection"
 #~ msgstr "Conexiune persistentă"

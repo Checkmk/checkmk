@@ -49986,6 +49986,12 @@ msgstr ""
 "a> of <a href=\"%s\">Scherm HTML in hostuitvoer</a> te configureren in "
 "plaats van <a href=\"%s\">Schermen globaal</a> uit te schakelen"
 
+#, fuzzy, python-format
+msgid "Please contact the Checkmk sales team at %s and renew your license."
+msgstr ""
+"Neem contact op met het Checkmk verkoopteam op %s en vernieuw uw licentie. "
+"Als u uw licentie hebt gekocht via een %s, neem dan contact met hen op."
+
 #, python-format
 msgid ""
 "Please contact the Checkmk sales team at %s and renew your license. If you "
@@ -86384,12 +86390,6 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr ""
 
-#, fuzzy, python-format
-msgid ""
-"Your license has been suspended. Please contact the Checkmk sales team at "
-"%s. "
-msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
-
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -88880,6 +88880,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Your license has been suspended. Please contact the Checkmk sales team at "
+#~ "%s. "
+#~ msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
 
 #~ msgid "Persistent Connection"
 #~ msgstr "Persistente verbinding"

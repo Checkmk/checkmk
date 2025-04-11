@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-24 22:50+0000\n"
+"PO-Revision-Date: 2025-04-10 17:39+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -7468,7 +7468,7 @@ msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
 
 msgid "Automatically delete hosts without open telemetry data"
-msgstr "Open telemetryデータなしでホストを自動的に削除します"
+msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
 
 msgid "Automatically delete hosts without piggyback data"
 msgstr "ピギーバックデータなしでホストを自動的に削除します"
@@ -47790,6 +47790,12 @@ msgstr ""
 "HTML in host output</a>を<a href=\"%s\">disabling escaping globally</a>の代わ"
 "りに、ホストまたはサービスルールセットに構成することを検討してください"
 
+#, fuzzy, python-format
+msgid "Please contact the Checkmk sales team at %s and renew your license."
+msgstr ""
+"%sのCheckmk営業チームに連絡して、ライセンスを更新してください。ライセンスを%s"
+"で購入した場合はそちらに連絡してください。"
+
 #, python-format
 msgid ""
 "Please contact the Checkmk sales team at %s and renew your license. If you "
@@ -82141,12 +82147,6 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr "ライセンスが停止されました。Checkmk営業チーム%sまでご連絡ください。"
 
-#, python-format
-msgid ""
-"Your license has been suspended. Please contact the Checkmk sales team at "
-"%s. "
-msgstr "ライセンスが停止されました。Checkmk営業チーム%s までご連絡ください。 "
-
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -84591,6 +84591,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, python-format
+#~ msgid ""
+#~ "Your license has been suspended. Please contact the Checkmk sales team at "
+#~ "%s. "
+#~ msgstr ""
+#~ "ライセンスが停止されました。Checkmk営業チーム%s までご連絡ください。 "
 
 #~ msgid "Persistent Connection"
 #~ msgstr "持続的接続"

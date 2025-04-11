@@ -17,12 +17,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     deserialize_tree,
     ImmutableTree,
-    load_tree,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
     SDNodeName,
     SDPath,
+    TreeStore,
 )
 
 from cmk.gui import userdb
@@ -140,17 +140,16 @@ def _load_tree_from_file(
     """Load data of a host, cache it in the current HTTP request"""
     if not host_name:
         return ImmutableTree()
+
     if "/" in host_name:
         # just for security reasons
         return ImmutableTree()
-    return load_tree(
-        Path(
-            cmk.utils.paths.inventory_output_dir
-            if tree_type == "inventory"
-            else cmk.utils.paths.status_data_dir
-        )
-        / host_name
-    )
+
+    match tree_type:
+        case "inventory":
+            return TreeStore(cmk.utils.paths.inventory_output_dir).load(host_name=host_name)
+        case "status_data":
+            return TreeStore(cmk.utils.paths.status_data_dir).load(host_name=host_name)
 
 
 @request_memoize()

@@ -85,12 +85,22 @@ public:
     virtual ~Handler() { setFormatter(std::unique_ptr<Formatter>()); }
     virtual void publish(const LogRecord &record) = 0;
 
+    // NOTE: We should actually avoid using the deprecated atomic_{load,store}
+    // functions and use std::atomic<std::shared_ptr<Formatter>> below, see:
+    // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2869r2.pdf. In
+    // a nutshell: These functions are deprecated in C++20 and will be removed
+    // in C++26. The C++ headers from g++-14 already contain the deprecation.
+    // Alas, the libc++ we pull in via our toolchain doesn't have support the
+    // non-deprecated stuff yet. :-/
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
     [[nodiscard]] std::shared_ptr<Formatter> getFormatter() const {
         return std::atomic_load(&_formatter);
     }
     void setFormatter(std::unique_ptr<Formatter> formatter) {
         std::atomic_store(&_formatter, std::shared_ptr(std::move(formatter)));
     }
+#pragma GCC diagnostic pop
 
 private:
     std::shared_ptr<Formatter> _formatter{std::make_shared<SimpleFormatter>()};

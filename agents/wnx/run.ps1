@@ -254,7 +254,7 @@ function Build-MSI {
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
 
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building MSI, error code is $LASTEXITCODE" -ErrorAction Stop
     }

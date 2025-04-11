@@ -6,7 +6,7 @@
 <!-- IMPORTANT: Code below is executed ONLY during manual compilation
 just to signal that real build script was not called -->
 <?define ProductVersion = "2.0.0.0"?>
-<?endif ?>
+<?endif?>
 
 <?define CompanyName = "Checkmk GmbH"?>
 <?include version.wxi ?>
@@ -22,6 +22,12 @@ just to signal that real build script was not called -->
 <!-- IMPORTANT NOTE 3: String below must start from 'Checkmk monitoring agent service - ', grep client to find why-->
 <?define ServiceDescription = "Checkmk monitoring agent service - 2.5"?>
 <?define ServiceStart = "demand"?>
+
+<?ifdef $(env.EncryptedPluginsFolder) ?>
+<?define EncryptedPluginsFolder = $(env.EncryptedPluginsFolder)?>
+<?else?>
+<?define EncryptedPluginsFolder = "..\..\windows\plugins"?>
+<?endif?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
@@ -288,25 +294,25 @@ just to signal that real build script was not called -->
                 <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" DiskId="1" />
             </Component>
             <Component Id="cmpBFADA0486A248D40B4365D85892EA124" Guid="{E51579A8-1B54-44F1-8939-9152B23D3ACC}">
-                <File Id="fil9D136F6EB743B60B3992FF7285F8B14D" KeyPath="yes" Source="..\..\windows\plugins\arcserve_backup.ps1" DiskId="1" />
+                <File Id="fil9D136F6EB743B60B3992FF7285F8B14D" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\arcserve_backup.ps1" DiskId="1" />
             </Component>
             <Component Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" Guid="{B212E12B-A293-47C3-9960-E1CD3CD1F3D6}">
-                <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="..\..\windows\plugins\citrix_farm.ps1" DiskId="1" />
+                <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\citrix_farm.ps1" DiskId="1" />
             </Component>
             <Component Id="cmp2DF2BCC24714445B8B3083E2D1DF9CC9" Guid="{B0EDC6E3-D8F0-4C3B-BF9E-E0E536B890DC}">
-                <File Id="filD3405C32F50F40E88CE956124F10B103" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.ps1" DiskId="1"  />
+                <File Id="filD3405C32F50F40E88CE956124F10B103" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\citrix_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpABBC9DF796FC09C181EC9B2D01A62525" Guid="{24BE0241-312F-45D9-B547-9C536CD69C12}">
-                <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="..\..\windows\plugins\citrix_xenapp.ps1" DiskId="1"  />
+                <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\citrix_xenapp.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" Guid="{46C91E1B-97E0-4261-94FA-2DD6B6651EDC}">
-                <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms.ps1" DiskId="1"  />
+                <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
-                <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms_guestinfos.ps1" DiskId="1"  />
+                <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms_guestinfos.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp139D49E9FB5840048B28A161D1AC903D" Guid="{1CE43602-C0DC-4A8D-A6BD-93E7B0146E65}">
-                <File Id="fil8E8D55BD121B46CE8FEADE51980298A8" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.ps1" DiskId="1"  />
+                <File Id="fil8E8D55BD121B46CE8FEADE51980298A8" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\kaspersky_av_client.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" Guid="{DEA3C541-D345-4147-8A46-8FF86DAEE966}">
                 <File Id="fil6C23EA1FD057C5625D316AB8C9864258" KeyPath="yes" Source="..\..\windows\plugins\mcafee_av_client.bat" DiskId="1"  />
@@ -321,16 +327,16 @@ just to signal that real build script was not called -->
                 <File Id="filB97B2F57BA81438AA42B66E517D7B43B" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp9DAE4EE702B9428A9A8FC7C22093867A" Guid="{80B17983-F7E7-45C5-8F3F-86035AD864F2}">
-                <File Id="fil8C84C09B518344F39B6A4AF606223161" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.ps1" DiskId="1"  />
+                <File Id="fil8C84C09B518344F39B6A4AF606223161" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\mk_mysql.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" Guid="{EDC7B756-0182-48BA-85D5-9016B4797E7E}">
-                <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="..\..\windows\plugins\mk_oracle.ps1" DiskId="1"  />
+                <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\mk_oracle.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp06FAFC985397646477170C3A9EC578DF" Guid="{2F712A51-EB09-4BB6-B17B-F7ADC24D61E8}">
-                <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="..\..\windows\plugins\msexch_dag.ps1" DiskId="1"  />
+                <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\msexch_dag.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" Guid="{EC4BE995-16D5-48CE-BDD9-B7870D56A087}">
-                <File Id="filFAAA245C81E32BBF2AC489BF7B676C55" KeyPath="yes" Source="..\..\windows\plugins\msexch_database.ps1" DiskId="1"  />
+                <File Id="filFAAA245C81E32BBF2AC489BF7B676C55" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\msexch_database.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" Guid="{6FC09D3B-BC7D-4CD9-9877-42800C61A2CE}">
                 <File Id="filF71A5557521BC78DCADD3FBD0A4664FD" KeyPath="yes" Source="..\..\windows\plugins\mssql.vbs" DiskId="1"  />
@@ -339,13 +345,13 @@ just to signal that real build script was not called -->
                 <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
             </Component>
             <Component Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" Guid="{C5EB0C29-A3DB-46B9-8C36-2399178A6C6F}">
-                <File Id="fil0071C3D02B87474E923658217B2F323B" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.ps1" DiskId="1"  />
+                <File Id="fil0071C3D02B87474E923658217B2F323B" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\rds_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpC5A956A870678ABFCA74D5813DD79858" Guid="{536A7F3B-ED66-412B-8688-E27521D31207}">
                 <File Id="fil939214DE697F4A3FEF7A1E5E8138BD31" KeyPath="yes" Source="..\..\windows\plugins\rstcli.bat" DiskId="1"  />
             </Component>
             <Component Id="cmpC7E325AEAF544AE491303C332363D403" Guid="{767D056E-0C49-464F-AE1D-B86A8C706090}">
-                <File Id="fil39FCA609D48668F872A8A406140D08E5" KeyPath="yes" Source="..\..\windows\plugins\sansymphony.ps1" DiskId="1"  />
+                <File Id="fil39FCA609D48668F872A8A406140D08E5" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\sansymphony.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp616C56CB91563F336410622442A506DD" Guid="{C5DE0D82-10FC-47C3-984D-BFA1934BB5C6}">
                 <File Id="filD5C8E30BCE07EF0B0B0DD7CC7971FB60" KeyPath="yes" Source="..\..\windows\plugins\storcli.bat" DiskId="1"  />
@@ -354,28 +360,28 @@ just to signal that real build script was not called -->
                 <File Id="filB7EA8E8A131B2E0E6A82607467136876" KeyPath="yes" Source="..\..\windows\plugins\tsm_checks.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp3670A4519398D9520126C6DC345E0E50" Guid="{3AAFCA53-D68E-4E07-B432-467858C7E327}">
-                <File Id="fil5662B4A07F89026B3C146D5EE4504E02" KeyPath="yes" Source="..\..\windows\plugins\veeam_backup_status.ps1" DiskId="1"  />
+                <File Id="fil5662B4A07F89026B3C146D5EE4504E02" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\veeam_backup_status.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp601FE4ED2C2FD3F546593475F9666973" Guid="{06DB2D8D-BCAE-4078-855B-29C1F7144BFA}">
                 <File Id="filEF6F805C99D9377D6BF80FE6B7E011F6" KeyPath="yes" Source="..\..\windows\plugins\windows_broadcom_bonding.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" Guid="{C7694E56-009B-49B8-B846-8DF3FBBE1385}">
-                <File Id="fil87F308F055FD29281552B9E7CA175107" KeyPath="yes" Source="..\..\windows\plugins\windows_if.ps1" DiskId="1"  />
+                <File Id="fil87F308F055FD29281552B9E7CA175107" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_if.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpDA3AA5A21788961EA252DF4F86230677" Guid="{178B1BD1-2F7E-46C0-BA10-EE030F027FBD}">
                 <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp58B593286B37436B9B814D441B0350EE" Guid="{37E3122F-A09F-4693-BB22-6EC92F670A44}">
-                <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.ps1" DiskId="1"  />
+                <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_multipath.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" Guid="{1669BE8A-ED8E-45A9-891C-ED0F1D479CA1}">
-                <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="..\..\windows\plugins\windows_os_bonding.ps1" DiskId="1"  />
+                <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_os_bonding.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
-                <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
+                <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_tasks.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" Guid="{B79990AF-326A-4186-B942-F20F87331BDE}">
-                <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.ps1" DiskId="1"  />
+                <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_updates.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
                 <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
@@ -387,7 +393,7 @@ just to signal that real build script was not called -->
                 <File Id="filFBD6D6657D952271E70BBABB024D2F08" KeyPath="yes" Source="..\..\windows\plugins\win_license.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp11787B278B3DC312240FABB58B837C20" Guid="{768D5B88-D421-4C7A-96B4-436FF9C1F390}">
-                <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="..\..\windows\plugins\win_printers.ps1" DiskId="1"  />
+                <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\win_printers.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpD065F5D090988C41C559F2AAD37A744F" Guid="{379B00CD-2EF9-4EB2-9F97-AF325EC9814C}">
                 <File Id="fil0F589A3A337908339F3BFAE265EAF22C" KeyPath="yes" Source="..\..\windows\plugins\wmic_if.bat" DiskId="1"  />

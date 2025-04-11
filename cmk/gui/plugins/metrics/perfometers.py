@@ -399,6 +399,30 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
+        "segments": ["user", "system", "io_wait", "cpu_util_guest", "cpu_util_steal"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["user", "system", "io_wait", "cpu_util_guest"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["user", "system", "io_wait", "cpu_util_steal"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
         "segments": ["user", "system", "idle", "nice"],
         "total": 100.0,
     }

@@ -16,7 +16,7 @@ from cmk.utils.structured_data import deserialize_tree, serialize_tree
 from cmk.gui.inventory._history import get_history, load_delta_tree, load_latest_delta_tree
 
 
-def test_get_history_empty() -> None:
+def test_get_history_empty(request_context: None) -> None:
     history, corrupted_history_files = get_history(HostName("inv-host"))
 
     assert len(history) == 0
@@ -114,7 +114,7 @@ def test_get_history(request_context: None) -> None:
         assert delta_cache_filename == expected_delta_cache_filename
 
 
-def test_get_history_corrupted_files() -> None:
+def test_get_history_corrupted_files(request_context: None) -> None:
     hostname = HostName("inv-host")
     archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
     archive_dir.mkdir(parents=True, exist_ok=True)
@@ -152,7 +152,7 @@ def test_load_delta_tree(
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_load_delta_tree_no_such_timestamp() -> None:
+def test_load_delta_tree_no_such_timestamp(request_context: None) -> None:
     hostname = HostName("inv-host")
     with pytest.raises(MKGeneralException) as e:
         load_delta_tree(hostname, -1)
@@ -164,17 +164,11 @@ def test_load_latest_delta_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
     search_timestamp = int(Path(cmk.utils.paths.inventory_output_dir, hostname).stat().st_mtime)
 
-    delta_tree, corrupted_history_files = load_delta_tree(
-        hostname,
-        search_timestamp,
-    )
+    delta_tree, corrupted_history_files = load_delta_tree(hostname, search_timestamp)
 
     assert delta_tree is not None
     assert len(corrupted_history_files) == 0
-
-    delta_tree_2 = load_latest_delta_tree(hostname)
-
-    assert delta_tree_2 is not None
+    assert load_latest_delta_tree(hostname) is not None
 
 
 def test_load_latest_delta_tree_no_archive_and_inv_tree(request_context: None) -> None:

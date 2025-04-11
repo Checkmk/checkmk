@@ -38,8 +38,6 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec, _xml
 from ._history import (
-    FilteredInventoryHistoryPaths,
-    FilterInventoryHistoryPathsError,
     get_history,
     HistoryEntry,
     load_delta_tree,
@@ -60,8 +58,6 @@ from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_pat
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 __all__ = [
-    "FilteredInventoryHistoryPaths",
-    "FilterInventoryHistoryPathsError",
     "get_history",
     "get_short_inventory_filepath",
     "has_inventory",

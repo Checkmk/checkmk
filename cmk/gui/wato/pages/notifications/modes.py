@@ -3440,6 +3440,7 @@ class ABCNotificationParameterMode(WatoMode):
                             param["general"]["description"]
                             for paramId, param in method_parameters.items()
                         ],
+                        "_clone",
                     )
                 except KeyError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification parameter")

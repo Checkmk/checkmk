@@ -81,7 +81,7 @@ metric_util_average = metrics.Metric(
 )
 metric_util_numcpu_as_max = metrics.Metric(
     name="util_numcpu_as_max",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (Windows)"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.GREEN,
 )

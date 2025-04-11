@@ -357,7 +357,6 @@ _ALLOWED_DUPLICATES = {
     "Available capacity": {"emcvnx_avail_capacity", "capacity_perc"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
-    "CPU utilization": {"util_numcpu_as_max", "util"},
     "Cluster utilization": {
         "kube_cpu_cluster_allocatable_utilization",
         "kube_memory_cluster_allocatable_utilization",

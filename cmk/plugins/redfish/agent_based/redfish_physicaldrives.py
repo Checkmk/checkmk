@@ -67,11 +67,13 @@ def check_redfish_physicaldrives(item: str, section: RedfishAPIData) -> CheckRes
             disc_msg = (
                 f"{disc_msg}, Media Life Left: {int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
             )
+            yield Metric("media_life_left", int(data.get("PredictedMediaLifeLeftPercent")))
         elif data.get("SSDEnduranceUtilizationPercentage"):
             disc_msg = (
                 f"{disc_msg}, SSD Utilization: "
                 f"{int(data.get('SSDEnduranceUtilizationPercentage', 0))}%"
             )
+            yield Metric("ssd_utilization", int(data.get("SSDEnduranceUtilizationPercentage")))
     yield Result(state=State(0), summary=disc_msg)
 
     dev_state, dev_msg = redfish_health_state(data.get("Status", {}))

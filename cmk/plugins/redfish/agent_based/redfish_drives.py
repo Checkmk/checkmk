@@ -8,6 +8,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Metric,
     Result,
     Service,
     State,
@@ -28,6 +29,8 @@ agent_section_redfish_drives = AgentSection(
 def discovery_redfish_drives(section: RedfishAPIData) -> DiscoveryResult:
     for key in section.keys():
         if section[key].get("Status", {}).get("State") == "Absent":
+            continue
+        if not section[key]["Name"]:
             continue
         item = section[key].get("Id", "0") + "-" + section[key]["Name"]
         yield Service(item=item)
@@ -52,6 +55,7 @@ def check_redfish_drives(item: str, section: RedfishAPIData) -> CheckResult:
             disc_msg = (
                 f"{disc_msg}, Media Life Left: {int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
             )
+            yield Metric("media_life_left", int(data.get("PredictedMediaLifeLeftPercent")))
         else:
             disc_msg = f"{disc_msg}, no SSD Media information available"
 

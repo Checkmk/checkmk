@@ -10,12 +10,17 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, NamedTuple, Self
 
+# add for label discovery support
+from typing import Optional
+
 from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import regex
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    HostLabel,
     render,
     Result,
     RuleSetType,
@@ -288,9 +293,9 @@ class UnitStatus:
             memory=memory,
             number_of_tasks=number_of_tasks,
         )
-
-
-@dataclass(frozen=True)
+# why frozen = False
+# -> dataclasses.FrozenInstanceError: cannot assign to field 'auto_label
+@dataclass(frozen=False)
 class UnitEntry:
     name: str
     loaded_status: str  # LOAD   = Reflects whether the unit definition was properly loaded.
@@ -308,6 +313,8 @@ class UnitEntry:
     cpu_seconds: CpuTimeSeconds | None = None
     memory: Memory | None = None
     number_of_tasks: int | None = None
+    auto_label: Optional[bool] = False
+    explicit_labels: Optional[list] = None
 
     @classmethod
     def _parse_name_and_unit_type(cls, raw: str) -> None | tuple[str, UnitTypes]:
@@ -505,8 +512,26 @@ def parse(string_table: StringTable) -> Section | None:
     status_details = _parse_status(iter(sections["status"]))
     return _parse_all(iter(sections["all"]), enabled_status_collection, status_details)
 
+def labeldiscovery_systemd_units(params: Sequence[Mapping[str, Any]], section: Section):
+    filtered_units = [
+        unit_entry
+        for unit_entry in section.services.values()
+        if not regex("^check-mk-agent@.+").match(unit_entry.name)
+    ]
+    for unit in _systemd_units_for_discovery(params, filtered_units):
+        # for service in discovery_systemd_units_services(params, section):
+        if unit.auto_label:
+            yield HostLabel(f"cmk/systemd/{unit.name}", "true")
 
-agent_section_systemd_units = AgentSection(name="systemd_units", parse_function=parse)
+        if unit.explicit_labels:
+            for k, v in unit.explicit_labels.items():
+                yield HostLabel(str(k), str(v))
+
+agent_section_systemd_units = AgentSection(name="systemd_units", parse_function=parse,
+    host_label_ruleset_name="discovery_systemd_units_services",
+    host_label_function=labeldiscovery_systemd_units,
+    host_label_default_parameters={"names": ["(never discover)^"]},
+    host_label_ruleset_type=RuleSetType.ALL,)
 
 #   .--units---------------------------------------------------------------.
 #   |                                    _ _                               |
@@ -529,15 +554,22 @@ def discovery_systemd_units_services(
     yield from discovery_systemd_units(params, filtered_services)
 
 
+
 def discovery_systemd_units_sockets(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
     yield from discovery_systemd_units(params, list(section.sockets.values()))
 
 
-def discovery_systemd_units(
-    params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
+def discovery_systemd_units_sockets(
+    params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
+    yield from discovery_systemd_units(params, list(section.sockets.values()))
+
+
+def _systemd_units_for_discovery(
+    params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
+) -> Sequence[UnitEntry]:
     def regex_match(what: Sequence[str], name: str) -> bool:
         if not what:
             return True
@@ -554,7 +586,6 @@ def discovery_systemd_units(
         if not rule_states:
             return True
         return any(s in (None, state) for s in rule_states)
-
     # defaults are always last and empty to apeace the new api
     for unit in units:
         for settings in params:
@@ -566,10 +597,17 @@ def discovery_systemd_units(
                 and regex_match(names, unit.name)
                 and state_match(states, unit.active_status)
             ):
-                yield Service(item=unit.name)
-                continue
+                if settings.get("host_labels_auto", False):
+                    unit.auto_label = True
+                if settings.get("host_labels_explicit", None):
+                    unit.explicit_labels = settings.get("host_labels_explicit")
+                yield unit
 
-
+def discovery_systemd_units(
+    params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
+) -> DiscoveryResult:
+    for unit in _systemd_units_for_discovery(params, units):
+        yield Service(item=unit.name)
 def check_systemd_services(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from check_systemd_units(item, params, section.services)
 

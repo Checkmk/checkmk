@@ -10,7 +10,7 @@ from urllib.parse import quote_plus
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.gui_e2e.testlib.common import LOCALHOST_IPV4
+from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage

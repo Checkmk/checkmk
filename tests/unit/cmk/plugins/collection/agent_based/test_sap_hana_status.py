@@ -13,11 +13,19 @@ from cmk.plugins.lib.sap_hana import ParsedSection
 ITEM = "H90 33"
 SECTION = {
     "Status %s" % ITEM: {"instance": ITEM, "message": "Yes", "state_name": "OK"},
-    "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
+    "Version %s" % ITEM: {
+        "state_name": "connected",
+        "instance": ITEM,
+        "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
+    },
 }
 SECTION_WARNING = {
     "Status %s" % ITEM: {"instance": ITEM, "message": "Yes", "state_name": "WARNING"},
-    "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
+    "Version %s" % ITEM: {
+        "state_name": "connected",
+        "instance": ITEM,
+        "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
+    },
 }
 SECTION_ERROR = {
     "Status %s" % ITEM: {
@@ -43,11 +51,13 @@ SECTION_ERROR = {
             {
                 "Status H62 10": {"instance": "H62 10", "message": "Yes", "state_name": "OK"},
                 "Version H62 10": {
+                    "state_name": "connected",
                     "instance": "H62 10",
                     "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
                 },
                 "Status H90 33": {"instance": "H90 33", "message": "Yes", "state_name": "OK"},
                 "Version H90 33": {
+                    "state_name": "connected",
                     "instance": "H90 33",
                     "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
                 },

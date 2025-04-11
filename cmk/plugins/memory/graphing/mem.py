@@ -24,6 +24,7 @@ from cmk.graphing.v1.perfometers import Closed, FocusRange, Open, Perfometer
 
 UNIT_BYTES = Unit(IECNotation("B"), StrictPrecision(2))
 UNIT_NUMBER = Unit(DecimalNotation(""))
+UNIT_PERCENTAGE = Unit(DecimalNotation("%"))
 
 metric_mem_used = Metric(
     name="mem_used",
@@ -86,12 +87,7 @@ metric_sreclaimable = Metric(
     color=Color.ORANGE,
 )
 
-perfometer_mem_used = Perfometer(
-    name="mem_used",
-    focus_range=FocusRange(Closed(0), Closed("mem_total")),
-    segments=["mem_used"],
-)
-perfometer_mem_used_mem_used = Perfometer(
+perfometer_mem_used_perc = Perfometer(
     name="mem_used_perc",
     focus_range=FocusRange(
         Closed(0),
@@ -100,8 +96,8 @@ perfometer_mem_used_mem_used = Perfometer(
     segments=[
         Fraction(
             Title(""),
-            UNIT_NUMBER,
-            Color.GRAY,
+            UNIT_PERCENTAGE,
+            Color.BLUE,
             dividend=Product(
                 Title(""),
                 UNIT_NUMBER,
@@ -123,25 +119,14 @@ perfometer_mem_used_mem_used = Perfometer(
         )
     ],
 )
-perfometer_mem_used = Perfometer(
-    name="mem_used",
-    focus_range=FocusRange(
-        Closed(0),
-        Closed(
-            MaximumOf(
-                "mem_used",
-                Color.GRAY,
-            )
-        ),
-    ),
+perfometer_mem_used_total = Perfometer(
+    name="mem_used_total",
+    focus_range=FocusRange(Closed(0), Closed("mem_total")),
     segments=["mem_used"],
 )
 perfometer_mem_used = Perfometer(
     name="mem_used",
-    focus_range=FocusRange(
-        Closed(0),
-        Open(2000000000),
-    ),
+    focus_range=FocusRange(Closed(0), Open(2000000000)),
     segments=["mem_used"],
 )
 

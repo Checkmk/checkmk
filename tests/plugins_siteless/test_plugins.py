@@ -25,6 +25,7 @@ from tests.plugins_siteless.helpers import (
     store_services_states,
     summarizer,
 )
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
@@ -81,7 +82,7 @@ def test_checks_executor(
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.ConfigCache(config.LoadedConfigFragment()).initialize()
+    config_cache = config.ConfigCache(EMPTYCONFIG).initialize()
 
     # make sure logwatch doesn't crash
     config._globally_cache_config_cache(config_cache)

@@ -10,12 +10,15 @@ ensuring a controlled environment for testing.
 
 import uuid
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from pytest import MonkeyPatch
 
 from tests.testlib.utils import get_standard_linux_agent_output
+
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -26,7 +29,7 @@ from cmk.checkengine.discovery import AutochecksManager
 from cmk.checkengine.plugins import AutocheckEntry
 
 from cmk.base import config
-from cmk.base.config import ConfigCache, LoadedConfigFragment
+from cmk.base.config import ConfigCache
 
 
 class _AutochecksMocker(AutochecksManager):
@@ -46,7 +49,7 @@ class Scenario:
         # It seems that we are subjected to some dark edition magic here
         # that will make this sometimes return a CMEConfigCache instance
         return config._create_config_cache(
-            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+            replace(EMPTYCONFIG, checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
         )
 
     def __init__(self, site_id: str = "unit") -> None:
@@ -209,7 +212,7 @@ class CEEScenario(Scenario):
 
     def _get_config_cache(self) -> config.CEEConfigCache:
         return config.CEEConfigCache(
-            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+            replace(EMPTYCONFIG, checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
         )
 
     def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:

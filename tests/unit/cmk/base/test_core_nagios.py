@@ -19,6 +19,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 
@@ -557,7 +559,7 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     hostname = HostName("my_host")
-    config_cache = config._create_config_cache(config.LoadedConfigFragment())
+    config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
@@ -702,7 +704,7 @@ def test_create_nagios_servicedefs_with_warnings(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache(config.LoadedConfigFragment())
+    config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -767,7 +769,7 @@ def test_create_nagios_servicedefs_omit_service(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache(config.LoadedConfigFragment())
+    config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
@@ -826,7 +828,7 @@ def test_create_nagios_servicedefs_invalid_args(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
 
-    config_cache = config._create_config_cache(config.LoadedConfigFragment())
+    config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
@@ -906,7 +908,7 @@ def test_create_nagios_config_commands(
     )
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache(config.LoadedConfigFragment())
+    config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     ip_address_of = config.ConfiguredIPLookup(

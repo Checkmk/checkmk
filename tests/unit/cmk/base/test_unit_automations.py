@@ -8,6 +8,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition, edition
 
@@ -22,7 +24,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-from cmk.base.config import LoadedConfigFragment, LoadingResult
+from cmk.base.config import LoadingResult
 
 
 def test_registered_automations() -> None:
@@ -101,7 +103,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     assert automation.execute(
         ["test-host"],
         AgentBasedPlugins.empty(),
-        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
+        LoadingResult(loaded_config=EMPTYCONFIG, config_cache=config_cache),
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
@@ -144,7 +146,7 @@ def test_service_labels(monkeypatch):
     assert automation.execute(
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),
-        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
+        LoadingResult(loaded_config=EMPTYCONFIG, config_cache=config_cache),
     ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},

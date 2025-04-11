@@ -575,13 +575,9 @@ class LoadedConfigFragment:
     (compare cmk/base/default_config/base ...)
     """
 
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]] = dataclasses.field(
-        default_factory=dict
-    )
-    checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
-        dataclasses.field(default_factory=dict)
-    )
-    service_rule_groups: set[str] = dataclasses.field(default_factory=set)
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
+    checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    service_rule_groups: set[str]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

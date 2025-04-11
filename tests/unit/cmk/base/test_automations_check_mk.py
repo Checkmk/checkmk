@@ -9,6 +9,8 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.ccc.debug
 
 import cmk.utils.resulttype as result
@@ -23,7 +25,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import config, core_config
 from cmk.base.automations import check_mk
-from cmk.base.config import ConfigCache, LoadedConfigFragment
+from cmk.base.config import ConfigCache
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
@@ -65,7 +67,7 @@ class TestAutomationDiagHost:
     @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
-        loaded_config = LoadedConfigFragment()
+        loaded_config = EMPTYCONFIG
         assert check_mk.AutomationDiagHost().execute(
             args,
             AgentBasedPlugins.empty(),
@@ -201,7 +203,7 @@ def test_automation_active_check(
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.ConfigCache(config.LoadedConfigFragment())
+    config_cache = config.ConfigCache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
@@ -210,7 +212,7 @@ def test_automation_active_check(
             active_check_args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
-                loaded_config=config.LoadedConfigFragment(),
+                loaded_config=EMPTYCONFIG,
                 config_cache=config_cache,
             ),
         )
@@ -269,7 +271,7 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    loaded_config = LoadedConfigFragment()
+    loaded_config = EMPTYCONFIG
     config_cache = config.ConfigCache(loaded_config)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 

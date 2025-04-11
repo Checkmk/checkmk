@@ -16,16 +16,17 @@ from unittest.mock import mock_open, patch
 import pytest
 import requests
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import livestatus
 
 import cmk.utils.paths
 
 from cmk.base import diagnostics
-from cmk.base.config import LoadedConfigFragment
 
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
-    return diagnostics.DiagnosticsDump(LoadedConfigFragment())
+    return diagnostics.DiagnosticsDump(EMPTYCONFIG)
 
 
 @pytest.fixture(autouse=True)
@@ -145,7 +146,7 @@ def test_diagnostics_element_general_content(
 
 
 def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(LoadedConfigFragment())
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(EMPTYCONFIG)
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (

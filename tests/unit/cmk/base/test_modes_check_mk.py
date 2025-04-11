@@ -7,6 +7,8 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 
@@ -31,7 +33,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_config_load(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        loaded_config = config.LoadedConfigFragment()
+        loaded_config = EMPTYCONFIG
         monkeypatch.setattr(
             config,
             config.load.__name__,

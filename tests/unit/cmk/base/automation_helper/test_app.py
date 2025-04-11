@@ -17,6 +17,8 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.common.utils import wait_until
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 from cmk.ccc.version import Version
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -36,7 +38,7 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
-from cmk.base.config import ConfigCache, LoadedConfigFragment, LoadingResult
+from cmk.base.config import ConfigCache, LoadingResult
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -238,7 +240,7 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
 
 
 def test_health_check(cache: Cache) -> None:
-    loaded_config = LoadedConfigFragment()
+    loaded_config = EMPTYCONFIG
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,

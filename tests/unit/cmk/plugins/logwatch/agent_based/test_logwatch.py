@@ -10,6 +10,8 @@ from collections.abc import Iterable
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 from cmk.base import config
 
 from cmk.agent_based.v2 import Result, Service, State
@@ -168,7 +170,7 @@ def test_check_single(
     monkeypatch.setattr(
         config,
         config.access_globally_cached_config_cache.__name__,
-        lambda: config.ConfigCache(config.LoadedConfigFragment()),
+        lambda: config.ConfigCache(EMPTYCONFIG),
     )
     monkeypatch.setattr(
         logwatch_,

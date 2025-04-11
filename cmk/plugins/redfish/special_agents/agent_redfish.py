@@ -453,8 +453,10 @@ def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
             vendor_data = Vendor(name="HPE", expand_string="?$expand=.")
             if vendor_string in ["Hp"]:
                 vendor_data.expand_string = ""
-            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
+            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", [])
             if manager_data:
+                manager_data = manager_data[0]
+            if isinstance(manager_data, dict):
                 vendor_data.version = manager_data.get("ManagerType")
                 if vendor_data.version is None:
                     vendor_data.version = (

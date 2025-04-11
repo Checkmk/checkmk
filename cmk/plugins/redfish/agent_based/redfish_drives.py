@@ -8,6 +8,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Metric,
     Result,
     Service,
     State,
@@ -52,6 +53,7 @@ def check_redfish_drives(item: str, section: RedfishAPIData) -> CheckResult:
             disc_msg = (
                 f"{disc_msg}, Media Life Left: {int(data.get('PredictedMediaLifeLeftPercent', 0))}%"
             )
+            yield Metric("media_life_left", int(data.get("PredictedMediaLifeLeftPercent")))
         else:
             disc_msg = f"{disc_msg}, no SSD Media information available"
 

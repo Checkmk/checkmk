@@ -45,6 +45,7 @@ import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import LegacyValueSpec
@@ -3412,6 +3413,13 @@ class ABCNotificationParameterMode(WatoMode):
             if self._clone_id and not request.var("_clear"):
                 try:
                     self._parameter = deepcopy(method_parameters[self._clone_id])
+                    self._parameter["general"]["description"] = unique_clone_increment_suggestion(
+                        self._parameter["general"]["description"],
+                        [
+                            param["general"]["description"]
+                            for paramId, param in method_parameters.items()
+                        ],
+                    )
                 except KeyError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
             else:
@@ -3770,6 +3778,8 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     def title(self) -> str:
         if self._new:
+            if self._clone_id:
+                return _("Clone %s notification parameter") % self._method_name()
             return _("Add %s notification parameter") % self._method_name()
         return _("Edit %s notification parameter #%s") % (self._method_name(), self._edit_nr)
 

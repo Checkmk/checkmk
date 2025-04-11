@@ -87,7 +87,7 @@ def _run_mockup_raritan_server(tmp_dump_dir: Path) -> Iterator[int]:
 
 @pytest.fixture(scope="session", name="tmp_dump_dir")
 def _make_dump_dir(tmpdir_factory: pytest.TempdirFactory) -> Iterator[Path]:
-    dump_dir = tmpdir_factory.mktemp("dumps")
+    dump_dir = Path(tmpdir_factory.mktemp("dumps"))
     try:
         yield dump_dir
     finally:

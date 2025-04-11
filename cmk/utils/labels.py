@@ -12,10 +12,9 @@ from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -196,8 +195,8 @@ class DiscoveredHostLabelsStore:
         self._store.write_obj({l.name: l.to_dict() for l in labels})
 
 
-def get_builtin_host_labels(site: SiteId) -> Labels:
-    return {"cmk/site": site}
+def get_builtin_host_labels() -> Labels:
+    return {"cmk/site": omd_site()}
 
 
 # Label group specific types
@@ -253,11 +252,11 @@ class LabelManager:
         label_config: ABCLabelConfig,
         nodes_of: Mapping[HostName, Sequence[HostName]],
         explicit_host_labels: Mapping[HostName, Labels],
-        builtin_host_labels: Mapping[HostName, Labels],
+        get_builtin_host_labels: Callable[[], Labels],
     ) -> None:
         self._nodes_of: Final = nodes_of
         self._label_config: Final = label_config
-        self._builtin_host_labels: Final = builtin_host_labels
+        self._get_builtin_host_labels: Final = get_builtin_host_labels
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
 
         self.__labels_of_host: dict[HostName, Labels] = {}
@@ -267,8 +266,8 @@ class LabelManager:
 
         1. Discovered labels
         2. Ruleset "Host labels"
-        3. Explicit labels (via host/folder config)
-        4. Builtin labels
+        3. Builtin labels
+        4. Explicit labels (via host/folder config)
 
         Last one wins.
         """
@@ -280,8 +279,8 @@ class LabelManager:
             {
                 **self._discovered_labels_of_host(hostname),
                 **self._label_config.host_labels(hostname),
+                **self._get_builtin_host_labels(),
                 **self.explicit_host_labels.get(hostname, {}),
-                **self._builtin_host_labels[hostname],
             },
         )
 
@@ -291,9 +290,9 @@ class LabelManager:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
+        labels.update({k: "discovered" for k in self._get_builtin_host_labels()})
         labels.update({k: "ruleset" for k in self._label_config.host_labels(hostname)})
         labels.update({k: "explicit" for k in self.explicit_host_labels.get(hostname, {}).keys()})
-        labels.update({k: "discovered" for k in self._builtin_host_labels[hostname]})
         return labels
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:

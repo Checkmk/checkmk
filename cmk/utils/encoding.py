@@ -6,7 +6,6 @@
 
 import base64
 import json
-import typing
 
 
 def ensure_str_with_fallback(value: str | bytes, *, encoding: str, fallback: str) -> str:
@@ -18,7 +17,7 @@ def ensure_str_with_fallback(value: str | bytes, *, encoding: str, fallback: str
         return value.decode(fallback)
 
 
-def json_encode(value: typing.Any) -> str:
+def json_encode(value: object) -> str:
     r"""Encode a value to JSON
 
 

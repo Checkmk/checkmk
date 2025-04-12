@@ -9355,6 +9355,10 @@ msgstr "CPU使用率(95パーセンタイル)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU使用率(99パーセンタイル)"
 
+#, fuzzy
+msgid "CPU utilization (Windows, Netapp)"
+msgstr "CPU使用率(平均)"
+
 msgid "CPU utilization (average)"
 msgstr "CPU使用率(平均)"
 

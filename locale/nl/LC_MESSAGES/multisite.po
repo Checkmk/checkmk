@@ -9803,6 +9803,10 @@ msgstr "CPU-gebruik (95e percentiel)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-gebruik (99e percentiel)"
 
+#, fuzzy
+msgid "CPU utilization (Windows, Netapp)"
+msgstr "CPU-gebruik (gemiddeld)"
+
 msgid "CPU utilization (average)"
 msgstr "CPU-gebruik (gemiddeld)"
 

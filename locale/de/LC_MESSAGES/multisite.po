@@ -2478,8 +2478,9 @@ msgstr ""
 "Ein Scheduler-Job ist ein Objekt in einer Oracle-Datenbank, das mit einem "
 "Cronjob unter Unix verglichen werden kann."
 
+#, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "Jeder Empfänger erhält eine separate Benachrichtigung. Empfänger können "
@@ -10631,6 +10632,10 @@ msgstr "CPU-Auslastung (95te Percentile)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-Auslastung (99te Percentile)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "CPU-Auslastung"
+
 msgid "CPU utilization (average)"
 msgstr "CPU-Auslastung (Durchschnitt)"
 
@@ -13078,6 +13083,10 @@ msgstr "Klone %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "%s für Paketierung klonen"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "%s Parameter für Benachrichtigung hinzufügen"
 
 msgid "Clone SLA"
 msgstr "Klone SLA"
@@ -22578,6 +22587,10 @@ msgstr "Fehler in Ansicht: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "Fehler bei der Darstellung von Elementtyp '%s'"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "Fehler bei der Darstellung von Elementtyp '%s'"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -23539,6 +23552,17 @@ msgid "Extension"
 msgstr "Erweiterung"
 
 msgid "Extension package files"
+msgstr "Erweiterungspaketdateien"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "Erweiterungspaketdateien"
 
 msgid "Extension packages"
@@ -82584,6 +82608,14 @@ msgstr ""
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "Sie haben den nicht vorhandenen Host '%s' als Parent festgelegt."
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"Ein Host mit dem Namen %s existiert bereits im Ordner %s. Bitte wählen Sie "
+"einen anderen Host-Namen."
+
 msgid "You do not have the permissions to design this graph."
 msgstr "Sie haben nicht die Berechtigungen, diesen Graphen zu bearbeiten."
 
@@ -82906,9 +82938,9 @@ msgstr ""
 "und Groß- und Kleinschreibung beachtet werden muss. Die alternativen Namen "
 "müssen also genau so angegeben werden, wie sie im Zertifikat definiert sind."
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "Sie können den Ordner betreten, das Sie eventuell auf Unterordnern "
 "Berechtigungen haben."

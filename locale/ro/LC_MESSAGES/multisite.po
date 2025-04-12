@@ -2487,7 +2487,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "O notificare separată este trimisă fiecărui destinatar. Destinatarii nu pot "
@@ -11045,6 +11045,10 @@ msgstr "Utilizare CPU (percentila 95)"
 msgid "CPU utilization (99th percentile)"
 msgstr "Utilizare CPU (percentila 99)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "Utilizare CPU"
+
 msgid "CPU utilization (average)"
 msgstr "Utilizare CPU (medie)"
 
@@ -13526,6 +13530,10 @@ msgstr "Clonă %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "Clonați %s pentru ambalare"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "Adăugați o regulă de notificare"
 
 msgid "Clone SLA"
 msgstr "Clonarea SLA"
@@ -23369,6 +23377,10 @@ msgstr "Eroare de afișare a vizualizării: %s."
 msgid "Error while rendering element type '%s'"
 msgstr "Eroare la redarea elementului de tip '%s'"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "Eroare la redarea elementului de tip '%s'"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -24356,6 +24368,17 @@ msgid "Extension"
 msgstr "Extensie"
 
 msgid "Extension package files"
+msgstr "Fișiere de pachete de extensie"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "Fișiere de pachete de extensie"
 
 msgid "Extension packages"
@@ -85889,6 +85912,14 @@ msgstr "Ați configurat gazda să fie propriul părinte, ceea ce nu este permis.
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "Ați definit gazda inexistentă '%s' ca părinte."
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"O gazdă cu numele <b><tt>%s</tt></b> există deja în folderul <a href=\"%s\">"
+"%s</a>."
+
 msgid "You do not have the permissions to design this graph."
 msgstr "Nu aveți permisiunea de a proiecta acest grafic."
 
@@ -86186,9 +86217,9 @@ msgid ""
 "defined in the certificate."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "Totuși, puteți introduce dosarul ca și cum ați avea permisiunea de a accesa "
 "un subdosar."

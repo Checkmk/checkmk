@@ -2467,7 +2467,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "Uma notificação separada é enviada a cada destinatário. Os recebedores não "
@@ -11020,6 +11020,10 @@ msgstr "Utilização da CPU (percentil 95)"
 msgid "CPU utilization (99th percentile)"
 msgstr "Utilização da CPU (percentil 99)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "utilização da CPU"
+
 msgid "CPU utilization (average)"
 msgstr "Utilização da CPU (média)"
 
@@ -13508,6 +13512,10 @@ msgstr "Clone %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "Clonar %s para empacotamento"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "Adicionar regra de notificação"
 
 msgid "Clone SLA"
 msgstr "Clone SLA"
@@ -23325,6 +23333,10 @@ msgstr "Erro ao mostrar vista: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "Erro ao renderizar elementos do tipo '%s'"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "Erro ao renderizar elementos do tipo '%s'"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -24302,6 +24314,17 @@ msgid "Extension"
 msgstr "Extensão"
 
 msgid "Extension package files"
+msgstr "Ficheiros de pacotes de extensão"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "Ficheiros de pacotes de extensão"
 
 msgid "Extension packages"
@@ -85620,6 +85643,14 @@ msgstr ""
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "Você definiu o hospedeiro inexistente '%s' como um pai."
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"Já existe um hospedeiro com o nome <b><tt>%s</tt></b> na pasta <a href=\"%s"
+"\">%s</a>."
+
 msgid "You do not have the permissions to design this graph."
 msgstr "Você não tem as permissões para desenhar este gráfico."
 
@@ -85911,9 +85942,9 @@ msgid ""
 "defined in the certificate."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "No entanto, você pode entrar na pasta como pode ter permissão em uma "
 "subpastas."

@@ -2374,8 +2374,9 @@ msgstr ""
 "スケジューラージョブは、UNIX上のcronジョブと比較できるORACLEデータベース内の"
 "オブジェクトです。"
 
+#, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "すべての受信者に個別の通知が送信されます。受信者は、他のどの受信者に通知され"
@@ -10448,6 +10449,10 @@ msgstr "CPU使用率(95パーセンタイル)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU使用率(99パーセンタイル)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "CPU使用率"
+
 msgid "CPU utilization (average)"
 msgstr "CPU使用率(平均)"
 
@@ -12804,6 +12809,10 @@ msgstr "クローン %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "パッケージ用のクローン %s"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "%s 通知パラメータを追加"
 
 msgid "Clone SLA"
 msgstr "クローンSLA"
@@ -22191,6 +22200,10 @@ msgstr "ビューの表示中にエラーが発生しました: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "要素タイプ '%s'のレンダリング中にエラーが発生しました"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "要素タイプ '%s'のレンダリング中にエラーが発生しました"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -23149,6 +23162,17 @@ msgid "Extension"
 msgstr "拡張"
 
 msgid "Extension package files"
+msgstr "拡張パッケージファイル"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "拡張パッケージファイル"
 
 msgid "Extension packages"
@@ -81468,6 +81492,14 @@ msgstr ""
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "存在しないホスト '%s'を親として定義しました。"
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"%sという名前のホストは、フォルダー%sに既に存在します。別のホスト名をにしてく"
+"ださい。"
+
 msgid "You do not have the permissions to design this graph."
 msgstr "このグラフを設計する権限がありません。"
 
@@ -81774,9 +81806,9 @@ msgstr ""
 "い。よって、代替名は証明書で定義されているとおりに正確に指定する必要がありま"
 "す。"
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "ただし、サブフォルダーに対するアクセス許可がある場合は、フォルダーに入ること"
 "ができます。"

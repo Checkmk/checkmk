@@ -2455,7 +2455,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "Una notifica separata viene inviata ad ogni destinatario. I destinatari non "
@@ -10920,6 +10920,10 @@ msgstr "Utilizzo della CPU (95° percentile)"
 msgid "CPU utilization (99th percentile)"
 msgstr "Utilizzo della CPU (99° percentile)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "Utilizzo della CPU"
+
 msgid "CPU utilization (average)"
 msgstr "Utilizzo della CPU (media)"
 
@@ -13384,6 +13388,10 @@ msgstr "Clone %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "Clonare %s per l'impacchettamento"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "Aggiungere una regola di notifica"
 
 msgid "Clone SLA"
 msgstr "Clone SLA"
@@ -23124,6 +23132,10 @@ msgstr "Errore che mostra la vista: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "Errore durante il rendering del tipo di elemento \"%s"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "Errore durante il rendering del tipo di elemento \"%s"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -24107,6 +24119,17 @@ msgid "Extension"
 msgstr "Estensione"
 
 msgid "Extension package files"
+msgstr "File del pacchetto di estensione"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "File del pacchetto di estensione"
 
 msgid "Extension packages"
@@ -84991,6 +85014,14 @@ msgstr ""
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "Hai definito l'host inesistente '%s' come genitore."
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"Un host con il nome <b><tt>%s</tt></b> esiste già nella cartella <a href=\"%s"
+"\">%s</a>."
+
 msgid "You do not have the permissions to design this graph."
 msgstr "Non hai i permessi per disegnare questo grafico."
 
@@ -85283,9 +85314,9 @@ msgid ""
 "defined in the certificate."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "Potete entrare nella cartella come se aveste il permesso su una "
 "sottocartella, però."

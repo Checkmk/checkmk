@@ -2465,7 +2465,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"A separate notification is send to every recipient. Recipients cannot see "
+"A separate notification is sent to every recipient. Recipients cannot see "
 "which other recipients were notified."
 msgstr ""
 "Naar elke ontvanger wordt een afzonderlijke kennisgeving gestuurd. De "
@@ -11020,6 +11020,10 @@ msgstr "CPU-gebruik (95e percentiel)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-gebruik (99e percentiel)"
 
+#, fuzzy
+msgid "CPU utilization (Windows)"
+msgstr "CPU-gebruik"
+
 msgid "CPU utilization (average)"
 msgstr "CPU-gebruik (gemiddeld)"
 
@@ -13506,6 +13510,10 @@ msgstr "Kloon %s"
 #, python-format
 msgid "Clone %s for packaging"
 msgstr "Kloon %s voor verpakking"
+
+#, fuzzy, python-format
+msgid "Clone %s notification parameter"
+msgstr "Meldingsregel toevoegen"
 
 msgid "Clone SLA"
 msgstr "Kloon SLA"
@@ -23326,6 +23334,10 @@ msgstr "Fout bij het bekijken: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "Fout bij het renderen van element type '%s'"
 
+#, fuzzy, python-format
+msgid "Error while running migration script: %s"
+msgstr "Fout bij het renderen van element type '%s'"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -24309,6 +24321,17 @@ msgid "Extension"
 msgstr "Uitbreiding"
 
 msgid "Extension package files"
+msgstr "Uitbreiding pakketbestanden"
+
+#, python-format
+msgid ""
+"Extension package installed, but ruleset migration failed. You can disable "
+"this mkp and see the complete error message running this command on the "
+"command line: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Extension package installed."
 msgstr "Uitbreiding pakketbestanden"
 
 msgid "Extension packages"
@@ -85717,6 +85740,14 @@ msgstr ""
 msgid "You defined the non-existing host '%s' as a parent."
 msgstr "Je hebt de niet bestaande host '%s' als een ouder gedefinieerd."
 
+#, fuzzy, python-format
+msgid ""
+"You do not have permission to create a new host in the folder %s. Please "
+"choose a different folder."
+msgstr ""
+"Een host met de naam <b><tt>%s</tt></b> bestaat al in de map <a href=\"%s\">"
+"%s</a>."
+
 msgid "You do not have the permissions to design this graph."
 msgstr "U hebt niet de rechten om deze grafiek te ontwerpen."
 
@@ -86009,9 +86040,9 @@ msgid ""
 "defined in the certificate."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You may enter the folder as you might have permission on a subfolders, "
-"though."
+"You may enter the folder as you might have permission on a subfolder, though."
 msgstr ""
 "U mag de map wel invoeren zoals u misschien rechten heeft op een submap."
 

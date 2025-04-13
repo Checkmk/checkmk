@@ -582,26 +582,32 @@ class RulesetOptimizer:
         except KeyError:
             pass
 
-        # Thin out the valid hosts further. If the rule is located in a folder
-        # we only need the intersection of the folders hosts and the previously determined valid_hosts
-        valid_hosts = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
+        # Determine match candidates.
+        # If the rule is located in a folder we only need the hosts in that folder.
+        hosts_in_rule_scope = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
 
         if tag_conditions and host_conditions is None and not label_conditions:
             # TODO: Labels could also be optimized like the tags
-            matched_by_tags = self._match_hosts_by_tags(cache_id, valid_hosts, tag_conditions)
+            matched_by_tags = self._match_hosts_by_tags(
+                cache_id, hosts_in_rule_scope, tag_conditions
+            )
             if matched_by_tags is not None:
                 return matched_by_tags
 
         return self._all_matching_hosts_match_cache.setdefault(
             cache_id,
             self._all_matching_hosts_computation(
-                valid_hosts, host_conditions, tag_conditions, label_conditions, labels_of_host
+                hosts_in_rule_scope,
+                host_conditions,
+                tag_conditions,
+                label_conditions,
+                labels_of_host,
             ),
         )
 
     def _all_matching_hosts_computation(
         self,
-        valid_hosts: set[HostName],
+        hosts_in_rule_scope: set[HostName],
         host_conditions: HostOrServiceConditions | None,
         tag_conditions: Mapping[TagGroupID, TagCondition],
         label_conditions: LabelGroups,
@@ -618,7 +624,7 @@ class RulesetOptimizer:
 
         if not tag_conditions and not label_conditions and not host_conditions:
             # If no tags are specified and the hostlist only include @all (all hosts)
-            return valid_hosts
+            return hosts_in_rule_scope
 
         if (
             not tag_conditions
@@ -627,13 +633,13 @@ class RulesetOptimizer:
             and host_conditions is not None
         ):
             # If no tags are specified and there are only specific hosts we already have the matches
-            return valid_hosts.intersection(host_conditions)
+            return hosts_in_rule_scope.intersection(host_conditions)
 
         # If the rule has only exact host restrictions, we can thin out the list of hosts to check
         if only_specific_hosts and host_conditions is not None:
-            hosts_to_check = valid_hosts.intersection(host_conditions)
+            hosts_to_check = hosts_in_rule_scope.intersection(host_conditions)
         else:
-            hosts_to_check = valid_hosts
+            hosts_to_check = hosts_in_rule_scope
 
         matching: set[HostName] = set()
         for hostname in hosts_to_check:

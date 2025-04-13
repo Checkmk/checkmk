@@ -582,22 +582,12 @@ class RulesetOptimizer:
         except KeyError:
             pass
 
-        # Determine match candidates.
-        # If the rule is located in a folder we only need the hosts in that folder.
-        hosts_in_rule_scope = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
-
-        if tag_conditions and host_conditions is None and not label_conditions:
-            # TODO: Labels could also be optimized like the tags
-            matched_by_tags = self._match_hosts_by_tags(
-                cache_id, hosts_in_rule_scope, tag_conditions
-            )
-            if matched_by_tags is not None:
-                return matched_by_tags
-
         return self._all_matching_hosts_match_cache.setdefault(
             cache_id,
             self._all_matching_hosts_computation(
-                hosts_in_rule_scope,
+                # Determine match candidates.
+                # If the rule is located in a folder we only need the hosts in that folder.
+                self._get_hosts_within_folder(rule_path, with_foreign_hosts),
                 host_conditions,
                 tag_conditions,
                 label_conditions,
@@ -613,6 +603,12 @@ class RulesetOptimizer:
         label_conditions: LabelGroups,
         labels_of_host: Callable[[HostName], Labels],
     ) -> set[HostName]:
+        if tag_conditions and host_conditions is None and not label_conditions:
+            # TODO: Labels could also be optimized like the tags
+            matched_by_tags = self._match_hosts_by_tags(hosts_in_rule_scope, tag_conditions)
+            if matched_by_tags is not None:
+                return matched_by_tags
+
         only_specific_hosts = (
             host_conditions is not None
             and not isinstance(host_conditions, dict)
@@ -701,7 +697,6 @@ class RulesetOptimizer:
     # (positive, negative, ...). Make it work with the new tag group based "$or" handling.
     def _match_hosts_by_tags(
         self,
-        cache_id: tuple[_ConditionCacheID, bool],
         valid_hosts: set[HostName],
         tag_conditions: Mapping[TagGroupID, TagCondition],
     ) -> set[HostName] | None:
@@ -739,7 +734,6 @@ class RulesetOptimizer:
                 ] and not negative_match_tags.intersection(self._host_tags[hostname]):
                     matching.add(hostname)
 
-            self._all_matching_hosts_match_cache[cache_id] = matching
             return matching
 
         # With shared folders
@@ -756,7 +750,6 @@ class RulesetOptimizer:
             ] and not negative_match_tags.intersection(self._host_tags[hostname]):
                 matching.update(hosts_with_same_tag)
 
-        self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
     def _filter_hosts_with_same_tags_as_host(

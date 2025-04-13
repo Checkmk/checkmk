@@ -211,15 +211,7 @@ class RulesetMatcher:
     ) -> Sequence[TRuleValue]:
         """Returns a generator of the values of the matched rules."""
 
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self.ruleset_optimizer.all_processed_hosts()
-
-        optimized_ruleset: Mapping[HostName | HostAddress, Sequence[TRuleValue]] = (
-            self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts, labels_of_host)
-        )
-
-        return optimized_ruleset.get(hostname, [])
+        return self.ruleset_optimizer.get_host_ruleset(hostname, ruleset, labels_of_host)
 
     def get_service_bool_value(
         self,
@@ -314,9 +306,8 @@ class RulesetMatcher:
         labels_of_host: Callable[[HostName], Labels],
     ) -> Iterator[TRuleValue]:
         """Returns a generator of the values of the matched rules"""
-        with_foreign_hosts = host_name not in self.ruleset_optimizer.all_processed_hosts()
         optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, labels_of_host
+            host_name, ruleset, labels_of_host
         )
 
         for (
@@ -422,10 +413,6 @@ class RulesetOptimizer:
         self.__host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
-    def all_processed_hosts(self) -> frozenset[HostName]:
-        """Returns a set of all processed hosts"""
-        return self._all_processed_hosts
-
     def set_all_processed_hosts(self, all_processed_hosts: set[HostName]) -> None:
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
@@ -463,10 +450,10 @@ class RulesetOptimizer:
 
     def get_host_ruleset(
         self,
+        host_name: HostName,
         ruleset: Sequence[RuleSpec[TRuleValue]],
-        with_foreign_hosts: bool,
         labels_of_host: Callable[[HostName], Labels],
-    ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
+    ) -> Sequence[TRuleValue]:
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
         ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
@@ -482,16 +469,23 @@ class RulesetOptimizer:
 
             return host_values
 
-        cache_id = id(ruleset), with_foreign_hosts
-        with contextlib.suppress(KeyError):
-            return self.__host_ruleset_cache[cache_id]
+        # When the requested host is part of the local sites configuration,
+        # then use only the sites hosts for processing the rules
+        with_foreign_hosts = host_name not in self._all_processed_hosts
 
-        return self.__host_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
+        cache_id = id(ruleset), with_foreign_hosts
+        try:
+            optimized_ruleset = self.__host_ruleset_cache[cache_id]
+        except KeyError:
+            optimized_ruleset = self.__host_ruleset_cache.setdefault(
+                cache_id, _impl(ruleset, with_foreign_hosts)
+            )
+        return optimized_ruleset.get(host_name, [])
 
     def get_service_ruleset(
         self,
+        host_name: HostName,
         ruleset: Sequence[RuleSpec[TRuleValue]],
-        with_foreign_hosts: bool,
         labels_of_host: Callable[[HostName], Labels],
     ) -> PreprocessedServiceRuleset[TRuleValue]:
         def _impl(
@@ -530,6 +524,8 @@ class RulesetOptimizer:
                     )
                 )
             return new_rules
+
+        with_foreign_hosts = host_name not in self._all_processed_hosts
 
         cache_id = id(ruleset), with_foreign_hosts
         with contextlib.suppress(KeyError):

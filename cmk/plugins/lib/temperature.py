@@ -570,7 +570,7 @@ def aggregate_temperature_results(
     params: TempParamDict,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-    """This function checks a list of temperature values against specified levels and issues a warn/cirt
+    """This function checks a list of temperature values against specified levels and issues a warn/crit
     message. Levels can be supplied by the user or the device. The user has the possibility to configure
     the preferred levels. Additionally, it is possible to check temperature trends. All internal
     computations are done in Celsius.

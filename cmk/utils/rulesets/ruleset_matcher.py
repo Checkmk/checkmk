@@ -562,16 +562,16 @@ class RulesetOptimizer:
     ) -> set[HostName]:
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
-        hostlist = condition.get("host_name")
+        host_conditions = condition.get("host_name")
         tag_conditions: Mapping[TagGroupID, TagCondition] = condition.get("host_tags", {})
-        label_groups: LabelGroups = condition.get("host_label_groups", [])
+        label_conditions: LabelGroups = condition.get("host_label_groups", [])
         rule_path = condition.get("host_folder", "/")
 
         cache_id = (
             RulesetOptimizer._condition_cache_id(
-                hostlist,
+                host_conditions,
                 tag_conditions,
-                label_groups,
+                label_conditions,
                 rule_path,
             ),
             with_foreign_hosts,
@@ -586,7 +586,7 @@ class RulesetOptimizer:
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
         valid_hosts = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
 
-        if tag_conditions and hostlist is None and not label_groups:
+        if tag_conditions and host_conditions is None and not label_conditions:
             # TODO: Labels could also be optimized like the tags
             matched_by_tags = self._match_hosts_by_tags(cache_id, valid_hosts, tag_conditions)
             if matched_by_tags is not None:
@@ -595,38 +595,43 @@ class RulesetOptimizer:
         return self._all_matching_hosts_match_cache.setdefault(
             cache_id,
             self._all_matching_hosts_computation(
-                valid_hosts, hostlist, tag_conditions, label_groups, labels_of_host
+                valid_hosts, host_conditions, tag_conditions, label_conditions, labels_of_host
             ),
         )
 
     def _all_matching_hosts_computation(
         self,
         valid_hosts: set[HostName],
-        hostlist: HostOrServiceConditions | None,
+        host_conditions: HostOrServiceConditions | None,
         tag_conditions: Mapping[TagGroupID, TagCondition],
-        label_groups: LabelGroups,
+        label_conditions: LabelGroups,
         labels_of_host: Callable[[HostName], Labels],
     ) -> set[HostName]:
         only_specific_hosts = (
-            hostlist is not None
-            and not isinstance(hostlist, dict)
-            and all(not isinstance(x, dict) for x in hostlist)
+            host_conditions is not None
+            and not isinstance(host_conditions, dict)
+            and all(not isinstance(x, dict) for x in host_conditions)
         )
 
-        if hostlist == []:
+        if host_conditions == []:
             return set()  # Empty host list -> Nothing matches
 
-        if not tag_conditions and not label_groups and not hostlist:
+        if not tag_conditions and not label_conditions and not host_conditions:
             # If no tags are specified and the hostlist only include @all (all hosts)
             return valid_hosts
 
-        if not tag_conditions and not label_groups and only_specific_hosts and hostlist is not None:
+        if (
+            not tag_conditions
+            and not label_conditions
+            and only_specific_hosts
+            and host_conditions is not None
+        ):
             # If no tags are specified and there are only specific hosts we already have the matches
-            return valid_hosts.intersection(hostlist)
+            return valid_hosts.intersection(host_conditions)
 
         # If the rule has only exact host restrictions, we can thin out the list of hosts to check
-        if only_specific_hosts and hostlist is not None:
-            hosts_to_check = valid_hosts.intersection(hostlist)
+        if only_specific_hosts and host_conditions is not None:
+            hosts_to_check = valid_hosts.intersection(host_conditions)
         else:
             hosts_to_check = valid_hosts
 
@@ -640,12 +645,12 @@ class RulesetOptimizer:
             ):
                 continue
 
-            if label_groups:
+            if label_conditions:
                 host_labels = labels_of_host(hostname)
-                if not matches_labels(host_labels, label_groups):
+                if not matches_labels(host_labels, label_conditions):
                     continue
 
-            if not matches_host_name(hostlist, hostname):
+            if not matches_host_name(host_conditions, hostname):
                 continue
 
             matching.add(hostname)

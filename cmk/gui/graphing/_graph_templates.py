@@ -32,6 +32,7 @@ from cmk.graphing.v1 import graphs as graphs_api
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
+    compute_warn_crit_rules_from_translated_metric,
     FixedVerticalRange,
     graph_specification_registry,
     GraphMetric,
@@ -467,7 +468,7 @@ def _create_graph_recipe_from_template(
             graph_template.range,
             translated_metrics,
         ),
-        horizontal_rules=graph_template.scalars,
+        horizontal_rules=graph_template.horizontal_rules,
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
         specification=specification,
@@ -575,11 +576,52 @@ def _evaluate_scalars(
 class EvaluatedGraphTemplate:
     id: str
     title: str
-    scalars: Sequence[HorizontalRule]
+    horizontal_rules: Sequence[HorizontalRule]
     consolidation_function: GraphConsolidationFunction
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[Evaluated]
+
+
+def _create_evaluated_graph_template_from_name(
+    name: str,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> EvaluatedGraphTemplate:
+    if name.startswith("METRIC_"):
+        name = name[7:]
+
+    if translated_metric := translated_metrics.get(name):
+        return EvaluatedGraphTemplate(
+            id=f"METRIC_{name}",
+            title="",
+            metrics=[
+                Evaluated(
+                    base=Metric(name),
+                    value=translated_metric.value,
+                    unit_spec=translated_metric.unit_spec,
+                    color=translated_metric.color,
+                    line_type="area",
+                    title=translated_metric.title,
+                )
+            ],
+            horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+                user_specific_unit(translated_metric.unit_spec, user, active_config),
+                translated_metric,
+            ),
+            consolidation_function="max",
+            range=None,
+            omit_zero_metrics=False,
+        )
+
+    return EvaluatedGraphTemplate(
+        id=f"METRIC_{name}",
+        title="",
+        metrics=[],
+        horizontal_rules=[],
+        consolidation_function="max",
+        range=None,
+        omit_zero_metrics=False,
+    )
 
 
 def _create_evaluated_graph_template(
@@ -590,7 +632,7 @@ def _create_evaluated_graph_template(
     return EvaluatedGraphTemplate(
         id=graph_template.id,
         title=_evaluate_title(graph_template.title, translated_metrics),
-        scalars=_evaluate_scalars(graph_template.scalars, translated_metrics),
+        horizontal_rules=_evaluate_scalars(graph_template.scalars, translated_metrics),
         consolidation_function=graph_template.consolidation_function or "max",
         range=graph_template.range,
         omit_zero_metrics=graph_template.omit_zero_metrics,
@@ -642,17 +684,7 @@ def _get_evaluated_graph_templates(
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            graph_template = _create_graph_template_from_name(metric_name)
-            yield _create_evaluated_graph_template(
-                graph_template,
-                evaluate_metrics(
-                    conflicting_metrics=graph_template.conflicting_metrics,
-                    optional_metrics=graph_template.optional_metrics,
-                    metric_expressions=graph_template.metrics,
-                    translated_metrics=translated_metrics,
-                ),
-                translated_metrics,
-            )
+            yield _create_evaluated_graph_template_from_name(metric_name, translated_metrics)
 
 
 def _matching_graph_templates(
@@ -675,20 +707,7 @@ def _matching_graph_templates(
         and graph_id[7:] in translated_metrics
     ):
         # Single metrics
-        graph_template = _create_graph_template_from_name(graph_id)
-        yield (
-            0,
-            _create_evaluated_graph_template(
-                graph_template,
-                evaluate_metrics(
-                    conflicting_metrics=graph_template.conflicting_metrics,
-                    optional_metrics=graph_template.optional_metrics,
-                    metric_expressions=graph_template.metrics,
-                    translated_metrics=translated_metrics,
-                ),
-                translated_metrics,
-            ),
-        )
+        yield (0, _create_evaluated_graph_template_from_name(graph_id, translated_metrics))
         return
 
     yield from (

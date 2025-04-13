@@ -627,7 +627,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
     EvaluatedGraphTemplate(
         id="graph1",
         title="Graph 1",
-        scalars=[],
+        horizontal_rules=[],
         consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
@@ -652,7 +652,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
     EvaluatedGraphTemplate(
         id="graph2",
         title="Graph 2",
-        scalars=[],
+        horizontal_rules=[],
         consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
@@ -2022,7 +2022,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
-                    scalars=[],
+                    horizontal_rules=[],
                     consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
@@ -2145,7 +2145,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
-                    scalars=[],
+                    horizontal_rules=[],
                     consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
@@ -2177,7 +2177,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="METRIC_foo",
                     title="",
-                    scalars=[],
+                    horizontal_rules=[],
                     consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
@@ -2198,7 +2198,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="METRIC_predict_foo",
                     title="",
-                    scalars=[
+                    horizontal_rules=[
                         HorizontalRule(
                             value=1.0,
                             rendered_value="1",
@@ -2232,7 +2232,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="METRIC_predict_lower_foo",
                     title="",
-                    scalars=[
+                    horizontal_rules=[
                         HorizontalRule(
                             value=3.0,
                             rendered_value="3",

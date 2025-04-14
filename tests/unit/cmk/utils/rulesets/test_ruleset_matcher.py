@@ -790,3 +790,83 @@ def test_matches_tag_condition(
         )
         is expected_result
     )
+
+
+def test_ruleset_matcher_get_host_values_compute_labels_lazily() -> None:
+    def _make_new_matcher(host_name: HostName) -> RulesetMatcher:
+        return RulesetMatcher(
+            host_tags={host_name: {}},
+            host_paths={},
+            all_configured_hosts=frozenset((host_name,)),
+            clusters_of={},
+            nodes_of={},
+        )
+
+    rules: Sequence[RuleSpec[str]] = [
+        {
+            "id": "id0",
+            "value": "os_linux",
+            "condition": {
+                "host_name": ["host2"],
+                "host_label_groups": [("and", [("and", "any:label")])],
+            },
+            "options": {},
+        },
+    ]
+
+    def labels_of_host(host_name: HostName) -> Mapping[str, str]:
+        raise RuntimeError()
+
+    # host labels don't matter for this host
+    assert not _make_new_matcher(HostName("host1")).get_host_values(
+        HostName("host1"), rules, labels_of_host
+    )
+    # but here they do
+    with pytest.raises(RuntimeError):
+        _make_new_matcher(HostName("host2")).get_host_values(
+            HostName("host2"), rules, labels_of_host
+        )
+
+
+def test_ruleset_matcher_get_host_values_changed_labels() -> None:
+    matcher = RulesetMatcher(
+        host_tags={HostName("host1"): {}},
+        host_paths={},
+        all_configured_hosts=frozenset((HostName("host1"),)),
+        clusters_of={},
+        nodes_of={},
+    )
+    rules: Sequence[RuleSpec[str]] = [
+        {
+            "id": "id0",
+            "value": "value_this",
+            "condition": {
+                "host_label_groups": [("and", [("and", "label:this")])],
+            },
+            "options": {},
+        },
+        {
+            "id": "id0",
+            "value": "value_that",
+            "condition": {
+                "host_label_groups": [("and", [("and", "label:that")])],
+            },
+            "options": {},
+        },
+    ]
+
+    def these_labels(host_name: HostName) -> Mapping[str, str]:
+        return {"label": "this"}
+
+    def those_labels(host_name: HostName) -> Mapping[str, str]:
+        return {"label": "that"}
+
+    # so far, so good:
+    assert matcher.get_host_values(HostName("host1"), rules, these_labels) == ["value_this"]
+
+    # but now changing labels are not respected :-(
+    assert matcher.get_host_values(HostName("host1"), rules, those_labels) == ["value_this"]
+
+    # until we clear the caches
+    matcher.clear_caches()
+    assert matcher.get_host_values(HostName("host1"), rules, those_labels) == ["value_that"]

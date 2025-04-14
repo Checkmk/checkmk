@@ -26,7 +26,7 @@ DEFAULT_STATUSES = {
     "Alert handler: Don't handle all check executions": "OK",
     "Apache number of processes": "WARN",
     "Apache process usage": "OK",
-    "Check helper usage": "OK",
+    # "Check helper usage": "OK",
     "Checkmk checker count": "OK",
     "Checkmk checker usage": "OK",
     "Checkmk fetcher usage": "OK",

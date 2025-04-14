@@ -3369,10 +3369,8 @@ class ModeUnknownRulesets(WatoMode):
         return [
             f
             for r in find_unknown_check_parameter_rule_sets().result
-            if (
-                (f := all_rulesets.get(f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"))
-                is not None
-            )
+            for t in RuleGroupType
+            if ((f := all_rulesets.get(f"{t.value}:{r}")) is not None)
         ]
 
     def _show_row(self, table: Table, unknown_ruleset_name: str, rule_nr: int, rule: Rule) -> None:

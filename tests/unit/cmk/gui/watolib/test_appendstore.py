@@ -7,7 +7,7 @@ from pathlib import Path
 from cmk.gui.watolib.appendstore import ABCAppendStore
 
 
-class TestAppendStore(ABCAppendStore[object]):
+class AppendStoreTest(ABCAppendStore[object]):
     @staticmethod
     def _serialize(entry: object) -> object:
         return entry
@@ -19,7 +19,7 @@ class TestAppendStore(ABCAppendStore[object]):
 
 def test_read(tmp_path: Path) -> None:
     file = tmp_path / "test"
-    store = TestAppendStore(file)
+    store = AppendStoreTest(file)
 
     file.write_bytes(b'{"foo": 1}\0{"bar": 2}\0')
 
@@ -28,7 +28,7 @@ def test_read(tmp_path: Path) -> None:
 
 def test_mutable_view(tmp_path: Path) -> None:
     file = tmp_path / "test"
-    store = TestAppendStore(file)
+    store = AppendStoreTest(file)
 
     with store.mutable_view() as view:
         view.append({"foo": 1})
@@ -39,7 +39,7 @@ def test_mutable_view(tmp_path: Path) -> None:
 
 def test_append(tmp_path: Path) -> None:
     file = tmp_path / "test"
-    store = TestAppendStore(file)
+    store = AppendStoreTest(file)
 
     store.append({"foo": 1})
     store.append({"bar": 2})

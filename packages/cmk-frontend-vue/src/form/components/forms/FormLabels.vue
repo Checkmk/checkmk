@@ -40,6 +40,7 @@ const [validation, value] = useValidation<StringMapping>(
 
 const keyValuePairs = ref<string[]>([])
 const error = ref<string | null>(null)
+const selectedValue = ref<string | null>(null)
 
 const syncDataAndKeyValuePairs = () => {
   const newValues = stringMappingToArray(data.value)
@@ -80,10 +81,14 @@ onBeforeUpdate(() => {
   }
 })
 
-const addItem = (item: string) => {
+const addItem = (item: string | null) => {
+  if (item === null) {
+    return
+  }
   if (validate(item)) {
     keyValuePairs.value = [...keyValuePairs.value, item]
   }
+  selectedValue.value = null
 }
 
 const editItem = (editedItem: string, index: number) => {
@@ -130,12 +135,12 @@ const deleteItem = (item: string) => {
   <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
     <!-- In formLabel, the size on input is a fixed size -->
     <FormAutocompleter
+      v-model="selectedValue"
       :size="inputSizes['MEDIUM'].width"
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
       :filter-on="keyValuePairs"
-      :reset-input-on-add="true"
       @keydown.enter="
         (e: KeyboardEvent) => {
           const v = (e.target as HTMLInputElement).value

@@ -2,15 +2,22 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.base.check_legacy_includes.elphase import check_elphase
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+from cmk.plugins.lib.elphase import check_elphase
 
-check_info = {}
+Section = dict[str, tuple[str, str]]
 
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.1 MAIN 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.2 MAIN 1.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.2
@@ -56,36 +63,43 @@ check_info = {}
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.14 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.14
 
 
-def inventory_acme_voltage(info):
-    return [(descr, {}) for descr, _value_str, state in info if state != "7"]
+def inventory_acme_voltage(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield from [Service(item=descr) for descr, _value_str, state in section if state != "7"]
 
 
-def check_acme_voltage(item, params, info):
-    for descr, value_str, rstate in info:
-        if item == descr:
-            state, readable = ACME_ENVIRONMENT_STATES[rstate]
-            return check_elphase(
-                descr,
-                params,
-                {descr: {"voltage": (float(value_str) / 1000.0, (int(state), readable))}},
-            )
-    return None
+def check_acme_voltage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    value_str, rstate = section[item]
+    state, readable = ACME_ENVIRONMENT_STATES[rstate]
+    yield from check_elphase(
+        item,
+        params,
+        {item: {"voltage": (float(value_str) / 1000.0, (int(state), readable))}},
+    )
 
 
-def parse_acme_voltage(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_acme_voltage(string_table: StringTable) -> Section | None:
+    section: Section = {}
+    for descr, value_str, rstate in string_table:
+        section[descr] = (value_str, rstate)
+    return section or None
 
 
-check_info["acme_voltage"] = LegacyCheckDefinition(
+snmp_section_acme_voltage = SimpleSNMPSection(
     name="acme_voltage",
-    parse_function=parse_acme_voltage,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.2.1.1",
         oids=["3", "4", "5"],
     ),
+    parse_function=parse_acme_voltage,
+)
+
+check_plugin_acme_voltage = CheckPlugin(
+    name="acme_voltage",
     service_name="Voltage %s",
     discovery_function=inventory_acme_voltage,
     check_function=check_acme_voltage,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

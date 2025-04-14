@@ -24,7 +24,6 @@ const props = defineProps<{
   filterOn: string[]
   size: number
   resetInputOnAdd: boolean
-  allowNewValueInput?: boolean
 }>()
 
 const model = defineModel<string>({ default: '' })
@@ -82,16 +81,6 @@ async function updateSuggestions(query: string) {
   }
   filteredSuggestions.value = []
 
-  // If new value input is allowed and the input is not the title to one of the given autocompleter
-  // choices, add the input as a new choice
-  if (props.allowNewValueInput && visibleInputValue.value.length > 0) {
-    if (newValue.choices.find((choice) => choice.title === visibleInputValue.value)) {
-      filteredSuggestions.value = [
-        { name: visibleInputValue.value, title: visibleInputValue.value }
-      ]
-    }
-  }
-
   filteredSuggestions.value.push(
     ...newValue.choices
       .filter((element: Suggestion) => element.name.length > 0 && element.title.length > 0)
@@ -101,9 +90,6 @@ async function updateSuggestions(query: string) {
 
 watch(visibleInputValue, async (value) => {
   await updateSuggestions(value)
-  if (props.allowNewValueInput) {
-    model.value = value
-  }
   showSuggestions.value = true
 })
 

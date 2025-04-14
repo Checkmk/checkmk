@@ -39,7 +39,7 @@ class SupportDiagnostics(CmkPage):
         self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         expect(
             self.collect_diagnostics_button,
             message="Expected 'Collect diagnostics' button to be enabled!",

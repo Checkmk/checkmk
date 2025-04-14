@@ -33,10 +33,10 @@ class SetupHost(CmkPage):
         self.main_menu.setup_menu("Hosts").click()
         _url_pattern: str = quote_plus("wato.py?mode=folder")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Setup hosts' page")
         expect(self.get_link("Add host")).to_be_visible()
         expect(self.get_link("Add folder")).to_be_visible()
@@ -155,7 +155,7 @@ class AddHost(CmkPage):
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=newhost")), wait_until="load"
         )
-        self._validate_page()
+        self.validate_page()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -174,7 +174,7 @@ class AddHost(CmkPage):
         return self.main_area.get_input("ipaddress")
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.main_area.get_suggestion(self.suggestions[0])).to_be_visible()
@@ -297,10 +297,10 @@ class HostProperties(CmkPage):
         setup_host_page.get_link(self.details.name).click()
         _url_pattern = quote_plus(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Host properties' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.main_area.get_text(text=HostProperties.dropdown_buttons[0])).to_be_visible()

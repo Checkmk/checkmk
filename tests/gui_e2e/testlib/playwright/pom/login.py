@@ -48,12 +48,12 @@ class LoginPage(CmkPage):
         if self.site_url:
             logger.info("Navigate to login page")
             self.page.goto(self.site_url, wait_until="load")
-            self._validate_page()
+            self.validate_page()
         else:
             raise ValueError("No site URL provided to navigate to login page.")
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         """Check if the current page is the login page."""
         logger.info("Validate that current page is login page")
         expect(self.page).to_have_url(re.compile(self.url_suffix))

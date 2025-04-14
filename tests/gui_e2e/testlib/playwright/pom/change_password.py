@@ -25,10 +25,10 @@ class ChangePassword(CmkPage):
         logger.info("Navigate to 'Change password' page")
         self.main_menu.user_change_password.click()
         self.page.wait_for_url(url=re.compile("user_change_pw.py$"), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Change password' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.current_password_input).to_be_visible()

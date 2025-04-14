@@ -36,10 +36,10 @@ class ServiceSearchPage(CmkPage):
         logger.info("Navigate to Monitor >> Overview >> %s", self.page_title)
         self.main_menu.monitor_menu("Service search").click()
         self.page.wait_for_url(url=re.compile(quote_plus("view_name=searchsvc")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.filter_sidebar.locator()).to_be_visible(timeout=5000)

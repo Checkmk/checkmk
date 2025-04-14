@@ -39,7 +39,7 @@ class CmkPage(LocatorHelper):
         if self._navigate_to_page:
             self.navigate()
         else:
-            self._validate_page()
+            self.validate_page()
         self._url = self.page.url
 
     @abstractmethod
@@ -47,11 +47,11 @@ class CmkPage(LocatorHelper):
         """Navigate to the page.
 
         Perform navigation steps, wait for the page to load and validate
-        the correct page is displayed by using the `_validate_page` method.
+        the correct page is displayed by using the `validate_page` method.
         """
 
     @abstractmethod
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         """Validate correct page is displayed.
 
         Ensure the expected page is displayed by checking the page title,

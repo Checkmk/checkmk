@@ -39,10 +39,10 @@ class Licensing(CmkPage):
         self.main_menu.setup_menu("Licensing").click()
         _url_pattern: str = quote_plus("wato.py?mode=licensing")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Licensing' page")
         expect(self.get_link("License usage")).to_be_visible()
 

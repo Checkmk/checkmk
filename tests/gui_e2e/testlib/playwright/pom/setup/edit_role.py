@@ -39,10 +39,10 @@ class EditRole(CmkPage):
         roles_and_permissions_page = RolesAndPermissions(self.page)
         roles_and_permissions_page.role_properties_button(self.role_name).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_role")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.internal_id_text_field).to_be_visible()

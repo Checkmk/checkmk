@@ -26,7 +26,7 @@ class BackgroundJobDetails(CmkPage):
         raise NotImplementedError
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         expect(
             self.background_jobs_overview_button,
             message="Expected 'Background jobs overview' button to be enabled!",

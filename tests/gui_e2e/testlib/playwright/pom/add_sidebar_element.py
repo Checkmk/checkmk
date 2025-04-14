@@ -28,7 +28,7 @@ class AddSidebarElement(CmkPage):
         self.sidebar.locator("div#add_snapin > a").click()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
 
     @override

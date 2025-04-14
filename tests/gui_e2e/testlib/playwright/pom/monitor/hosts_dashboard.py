@@ -34,10 +34,10 @@ class HostsDashboard(CmkPage):
             f"dashboard.py?name={self.page_title.split()[0].lower()}_hosts_overview"
         )
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet(self.chart_dashlets[0])).to_be_visible()

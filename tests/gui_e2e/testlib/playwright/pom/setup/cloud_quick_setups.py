@@ -54,10 +54,10 @@ class BaseQuickSetupConfigurationList(CmkPage):
             url=re.compile(f"{_url_pattern}.+{self.suffix}$"),
             wait_until="load",
         )
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
         expect(
             self.add_configuration_button,
@@ -147,10 +147,10 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
             url=re.compile(_url_pattern + f".+{self.suffix}$"),
             wait_until="load",
         )
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
 
     @override

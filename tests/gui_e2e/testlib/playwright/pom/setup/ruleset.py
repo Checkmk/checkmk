@@ -43,10 +43,10 @@ class Ruleset(CmkPage):
         else:
             self.main_menu.locator().get_by_role(role="link", name=self.rule_name).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.rule_name)
         self.main_area.check_page_title(self.rule_name)
         expect(self.main_area.get_suggestion("Add rule")).to_be_visible()

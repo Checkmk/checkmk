@@ -2,10 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import os
+import queue
 import re
 import time
+from collections.abc import Collection, Mapping
+from multiprocessing import JoinableQueue, Process
 from pathlib import Path
 from typing import Any, cast, NamedTuple
 
@@ -24,12 +28,13 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import paths
+from cmk.utils.licensing.handler import LicenseState
 
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
-from cmk.gui import hooks
+from cmk.gui import hooks, log
 from cmk.gui.config import (
     active_config,
     default_single_site_configuration,
@@ -37,8 +42,10 @@ from cmk.gui.config import (
     prepare_raw_site_config,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.site_config import (
     has_wato_slave_sites,
     is_replication_enabled,
@@ -63,6 +70,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.automation_commands import OMDStatus
+from cmk.gui.watolib.automations import do_remote_automation, parse_license_state
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
@@ -768,3 +777,113 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
         return effective_global_settings[varname]
 
     return default_values[varname]
+
+
+class PingResult(NamedTuple):
+    version: str
+    edition: str
+    omd_status: OMDStatus
+    license_state: LicenseState | None
+
+
+class ReplicationStatus(NamedTuple):
+    site_id: SiteId
+    success: bool
+    response: PingResult | Exception
+
+
+class ReplicationStatusFetcher:
+    """Helper class to retrieve the replication status of all relevant sites"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._logger = logger.getChild("replication-status")
+
+    def fetch(
+        self, sites: Collection[tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[SiteId, ReplicationStatus]:
+        self._logger.debug("Fetching replication status for %d sites" % len(sites))
+        results_by_site: dict[SiteId, ReplicationStatus] = {}
+
+        # Results are fetched simultaneously from the remote sites
+        result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
+
+        processes = []
+        for site_id, site in sites:
+            process = Process(target=self._fetch_for_site, args=(site_id, site, result_queue))
+            process.start()
+            processes.append((site_id, process))
+
+        # Now collect the results from the queue until all processes are finished
+        while any(p.is_alive() for site_id, p in processes):
+            try:
+                result = result_queue.get_nowait()
+                result_queue.task_done()
+                results_by_site[result.site_id] = result
+
+            except queue.Empty:
+                time.sleep(0.5)  # wait some time to prevent CPU hogs
+
+            except Exception as e:
+                logger.exception(
+                    "error collecting replication results from site %s", result.site_id
+                )
+                html.show_error(f"{result.site_id}: {e}")
+
+        self._logger.debug("Got results")
+        return results_by_site
+
+    def _fetch_for_site(
+        self,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        result_queue: JoinableQueue[ReplicationStatus],
+    ) -> None:
+        """Executes the tests on the site. This method is executed in a dedicated
+        subprocess (One per site)"""
+        self._logger.debug("[%s] Starting" % site_id)
+        result = None
+        try:
+            # TODO: Would be better to clean all open fds that are not needed, but we don't
+            # know the FDs of the result_queue pipe. Can we find it out somehow?
+            # Cleanup resources of the apache
+            # TODO: Needs to be solved for analzye_configuration too
+            # for x in range(3, 256):
+            #    try:
+            #        os.close(x)
+            #    except OSError, e:
+            #        if e.errno == errno.EBADF:
+            #            pass
+            #        else:
+            #            raise
+
+            # Reinitialize logging targets
+            log.init_logging()  # NOTE: We run in a subprocess!
+
+            raw_result = do_remote_automation(site, "ping", [], timeout=5)
+            assert isinstance(raw_result, dict)
+
+            result = ReplicationStatus(
+                site_id=site_id,
+                success=True,
+                response=PingResult(
+                    version=raw_result["version"],
+                    edition=raw_result["edition"],
+                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                    omd_status=raw_result["omd_status"],
+                ),
+            )
+            self._logger.debug("[%s] Finished" % site_id)
+        except Exception as e:
+            self._logger.debug("[%s] Failed" % site_id, exc_info=True)
+            result = ReplicationStatus(
+                site_id=site_id,
+                success=False,
+                response=e,
+            )
+        finally:
+            if result:
+                result_queue.put(result)
+            result_queue.close()
+            result_queue.join_thread()
+            result_queue.join()

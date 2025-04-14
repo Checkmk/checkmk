@@ -6,14 +6,11 @@
 
 from __future__ import annotations
 
-import queue
 import socket
-import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from copy import deepcopy
-from multiprocessing import JoinableQueue, Process
-from typing import Any, assert_never, cast, Literal, NamedTuple, overload
+from typing import Any, assert_never, cast, Literal, overload
 from urllib.parse import urlparse
 
 from livestatus import (
@@ -32,7 +29,6 @@ from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
-from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.paths import omd_root
 from cmk.utils.user import UserId
@@ -40,7 +36,7 @@ from cmk.utils.user import UserId
 import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import forms, log
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
@@ -106,10 +102,8 @@ from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
-    do_remote_automation,
     do_site_login,
     MKAutomationException,
-    parse_license_state,
 )
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
@@ -140,6 +134,9 @@ from cmk.gui.watolib.site_management import (
 )
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
+    PingResult,
+    ReplicationStatus,
+    ReplicationStatusFetcher,
     site_globals_editable,
     site_management_registry,
 )
@@ -1401,116 +1398,6 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 return "cross", _("Connection to port %s refused") % (remote_port,)
             case _:
                 assert_never(_)
-
-
-class PingResult(NamedTuple):
-    version: str
-    edition: str
-    omd_status: OMDStatus
-    license_state: LicenseState | None
-
-
-class ReplicationStatus(NamedTuple):
-    site_id: SiteId
-    success: bool
-    response: PingResult | Exception
-
-
-class ReplicationStatusFetcher:
-    """Helper class to retrieve the replication status of all relevant sites"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._logger = logger.getChild("replication-status")
-
-    def fetch(
-        self, sites: Collection[tuple[SiteId, SiteConfiguration]]
-    ) -> Mapping[SiteId, ReplicationStatus]:
-        self._logger.debug("Fetching replication status for %d sites" % len(sites))
-        results_by_site: dict[SiteId, ReplicationStatus] = {}
-
-        # Results are fetched simultaneously from the remote sites
-        result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
-
-        processes = []
-        for site_id, site in sites:
-            process = Process(target=self._fetch_for_site, args=(site_id, site, result_queue))
-            process.start()
-            processes.append((site_id, process))
-
-        # Now collect the results from the queue until all processes are finished
-        while any(p.is_alive() for site_id, p in processes):
-            try:
-                result = result_queue.get_nowait()
-                result_queue.task_done()
-                results_by_site[result.site_id] = result
-
-            except queue.Empty:
-                time.sleep(0.5)  # wait some time to prevent CPU hogs
-
-            except Exception as e:
-                logger.exception(
-                    "error collecting replication results from site %s", result.site_id
-                )
-                html.show_error(f"{result.site_id}: {e}")
-
-        self._logger.debug("Got results")
-        return results_by_site
-
-    def _fetch_for_site(
-        self,
-        site_id: SiteId,
-        site: SiteConfiguration,
-        result_queue: JoinableQueue[ReplicationStatus],
-    ) -> None:
-        """Executes the tests on the site. This method is executed in a dedicated
-        subprocess (One per site)"""
-        self._logger.debug("[%s] Starting" % site_id)
-        result = None
-        try:
-            # TODO: Would be better to clean all open fds that are not needed, but we don't
-            # know the FDs of the result_queue pipe. Can we find it out somehow?
-            # Cleanup resources of the apache
-            # TODO: Needs to be solved for analzye_configuration too
-            # for x in range(3, 256):
-            #    try:
-            #        os.close(x)
-            #    except OSError, e:
-            #        if e.errno == errno.EBADF:
-            #            pass
-            #        else:
-            #            raise
-
-            # Reinitialize logging targets
-            log.init_logging()  # NOTE: We run in a subprocess!
-
-            raw_result = do_remote_automation(site, "ping", [], timeout=5)
-            assert isinstance(raw_result, dict)
-
-            result = ReplicationStatus(
-                site_id=site_id,
-                success=True,
-                response=PingResult(
-                    version=raw_result["version"],
-                    edition=raw_result["edition"],
-                    license_state=parse_license_state(raw_result.get("license_state", "")),
-                    omd_status=raw_result["omd_status"],
-                ),
-            )
-            self._logger.debug("[%s] Finished" % site_id)
-        except Exception as e:
-            self._logger.debug("[%s] Failed" % site_id, exc_info=True)
-            result = ReplicationStatus(
-                site_id=site_id,
-                success=False,
-                response=e,
-            )
-        finally:
-            if result:
-                result_queue.put(result)
-            result_queue.close()
-            result_queue.join_thread()
-            result_queue.join()
 
 
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):

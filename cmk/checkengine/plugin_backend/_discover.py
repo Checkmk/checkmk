@@ -45,14 +45,15 @@ def load_all_plugins(
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_all_plugins(
             PluginGroup.AGENT_BASED, v2.entry_point_prefixes(), raise_errors=raise_errors
         )
-        if not_yet_moved_plugins := (
-            # HACK for migrating plugins: also search in certain modules that are not yet moved.
-            # This datastructure should only be filled for one commit in a chain, and be emptied
-            # right away. This is for convenience of the reviewer of a plugin migration only:
-            # This way we can separate migration and moving.
-            # For example:
-            # "cmk.base.legacy_checks.oracle_locks"
-            "cmk.base.legacy_checks.acme_powersupply",
+        if (
+            not_yet_moved_plugins := (
+                # HACK for migrating plugins: also search in certain modules that are not yet moved.
+                # This datastructure should only be filled for one commit in a chain, and be emptied
+                # right away. This is for convenience of the reviewer of a plugin migration only:
+                # This way we can separate migration and moving.
+                # For example:
+                # "cmk.base.legacy_checks.oracle_locks"
+            )
         ):
             more_discovered_plugins = discover_plugins_from_modules(
                 v2.entry_point_prefixes(),

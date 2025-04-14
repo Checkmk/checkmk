@@ -1224,7 +1224,9 @@ section_omd() {
         for sitedir in /omd/sites/*; do
             site_version="$(basename "$(realpath "${sitedir}/version")")"
             site=${sitedir#/omd/sites/}
-            find -L "/omd/versions/${site_version}/bin" -type f -user "root" -name "cmk-monitor-*" -exec sudo --non-interactive --user="${site}" {} \;
+            for topic in "broker" "mknotifyd" "apache" "diskusage"; do
+                sudo --non-interactive --user="${site}" "/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
+            done
         done
 
         echo '<<<omd_info:sep(59)>>>'

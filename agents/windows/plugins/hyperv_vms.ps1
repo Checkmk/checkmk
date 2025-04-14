@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0b5"
+$CMK_VERSION = "2.4.0b6"
 Write-Host "<<<hyperv_vms:sep(9)>>>"
 
 Hyper-V\Get-VM | select Name, State, Uptime, Status | ConvertTo-Csv -Delimiter "`t" -NoTypeInformation

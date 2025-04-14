@@ -7,7 +7,7 @@
 Monitor Mailman 2 mailing lists.
 """
 
-__version__ = "2.4.0b5"
+__version__ = "2.4.0b6"
 
 # This Checkmk-Agent plugin gathers information about mailinglists hosted
 # by the local mailman instance.

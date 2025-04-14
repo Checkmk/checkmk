@@ -3,11 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
 
-check_info = {}
+Section = dict[str, tuple[str, str]]
 
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.1 MAIN FAN1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.2 MAIN FAN2 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.2
@@ -23,32 +32,43 @@ check_info = {}
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.5.4 1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanState.4
 
 
-def inventory_acme_fan(info):
-    return [(descr, {}) for descr, _value_str, state in info if state != "7"]
+def parse_acme_fan(string_table: StringTable) -> Section | None:
+    section: Section = {}
+    for descr, value_str, state in string_table:
+        section[descr] = (value_str, state)
+    return section or None
 
 
-def check_acme_fan(item, params, info):
-    for descr, value_str, state in info:
-        if item == descr:
-            dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
-            return int(dev_state), f"Status: {dev_state_readable}, Speed: {value_str}%"
-    return None
-
-
-def parse_acme_fan(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["acme_fan"] = LegacyCheckDefinition(
+snmp_section_acme_fan = SimpleSNMPSection(
     name="acme_fan",
-    parse_function=parse_acme_fan,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.4.1.1",
         oids=["3", "4", "5"],
     ),
+    parse_function=parse_acme_fan,
+)
+
+
+def discover_acme_fan(section: Section) -> DiscoveryResult:
+    yield from [
+        Service(item=descr) for descr, (_value_str, state) in section.items() if state != "7"
+    ]
+
+
+def check_acme_fan(item: str, params: dict, section: Section) -> CheckResult:
+    if item in section:
+        value_str, state = section[item]
+
+        dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
+        yield Result(state=dev_state, summary=f"Status: {dev_state_readable}, Speed: {value_str}%")
+
+
+check_plugin_acme_fan = CheckPlugin(
+    name="acme_fan",
     service_name="Fan %s",
-    discovery_function=inventory_acme_fan,
+    discovery_function=discover_acme_fan,
     check_function=check_acme_fan,
     check_ruleset_name="hw_fans_perc",
+    check_default_parameters={},
 )

@@ -95,7 +95,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "3ware_disks",
         "3ware_info",
         "3ware_units",
-        "acme_fan",
         "ad_replication",
         "adva_fsp_temp",
         "aironet_errors",

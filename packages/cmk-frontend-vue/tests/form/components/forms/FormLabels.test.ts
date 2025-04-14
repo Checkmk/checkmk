@@ -209,7 +209,7 @@ describe('FormLabels', () => {
     expect(getCurrentData()).toBe('{"key1":"value1_edited","key2":"value2"}')
   })
 
-  test('should reset selection label', async () => {
+  test('should reset selection input element on add item', async () => {
     const { getCurrentData } = renderFormWithData({
       spec,
       data: {},
@@ -224,6 +224,6 @@ describe('FormLabels', () => {
     await userEvent.keyboard('[Enter]')
     expect(getCurrentData()).toBe('{"key3":"value3"}')
 
-    expect(dropdown.textContent).toBe('key3:value3') // FIX ME: should be empty!
+    expect(dropdown.textContent).toBe('Add some labels')
   })
 })

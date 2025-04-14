@@ -16,11 +16,10 @@ const props = defineProps<{
   filterOn: string[]
   startOfGroup?: boolean
   size: number
-  resetInputOnAdd: boolean
   label?: string
 }>()
 
-const model = defineModel<string>({ default: '' })
+const model = defineModel<string | null>({ default: null })
 
 async function suggestionCallback(query: string): Promise<ErrorResponse | Response> {
   if (props.autocompleter === undefined) {

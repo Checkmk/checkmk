@@ -31,7 +31,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Search...',
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -40,16 +39,15 @@ describe('FormAutocompleter', () => {
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    let selectedValue: string | undefined = ''
+    let selectedValue: string | null = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | undefined) => {
+        'onUpdate:modelValue': (option: string | null) => {
           selectedValue = option
         }
       }
@@ -77,7 +75,6 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -100,7 +97,6 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -123,7 +119,6 @@ describe('FormAutocompleter', () => {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test'
       }
@@ -141,16 +136,15 @@ describe('FormAutocompleter', () => {
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
-    let selectedValue: string | undefined = ''
+    let selectedValue: string | null = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | undefined) => {
+        'onUpdate:modelValue': (option: string | null) => {
           selectedValue = option
         }
       }
@@ -170,16 +164,15 @@ describe('FormAutocompleter', () => {
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    let selectedValue: string | undefined = ''
+    let selectedValue: string | null = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | undefined) => {
+        'onUpdate:modelValue': (option: string | null) => {
           selectedValue = option
         }
       }

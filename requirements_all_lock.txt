@@ -514,9 +514,9 @@ check-manifest==0.50 \
     --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
     --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
     # via devpi-client
-checkmk-dev-tools==0.6.0 \
-    --hash=sha256:5c392a2743cb7d3edfa0702a3d040e318abb64eb59a8a5be5b72c600d8d7f2dc \
-    --hash=sha256:69ba8545afb96a66b6d5f306688fb8a4c934414fe880d5ad2b50a50822de381b
+checkmk-dev-tools==0.7.0 \
+    --hash=sha256:cdac29c8b90b9d36828eb4c0209ff32f51c43c3342320336834c034c7fdd7b8c \
+    --hash=sha256:e722fbe5acaddcf03488002292d7f4aed6614ba4f516a206594a56765876a4dc
     # via -r requirements_dev.txt
 click==8.1.8 \
     --hash=sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2 \
@@ -664,6 +664,7 @@ decorator==5.2.1 \
     # via
     #   -r requirements_all.txt
     #   jsonpath-rw
+    #   retry
 defusedxml==0.7.1 \
     --hash=sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
@@ -2641,6 +2642,10 @@ ptyprocess==0.7.0 \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
     # via pexpect
+py==1.11.0 \
+    --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719 \
+    --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378
+    # via retry
 py-import-cycles==0.3.1 \
     --hash=sha256:420a0aa1ba52502bbfe551d3ca1748b5a35abce55a03f8688e8e21ba05afdc6d
     # via -r requirements_dev.txt
@@ -3385,6 +3390,10 @@ responses==0.25.3 \
     --hash=sha256:521efcbc82081ab8daa588e08f7e8a64ce79b91c39f6e62199b19159bea7dbcb \
     --hash=sha256:617b9247abd9ae28313d57a75880422d55ec63c29d33d629697590a034358dba
     # via -r requirements_dev.txt
+retry==0.9.2 \
+    --hash=sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606 \
+    --hash=sha256:f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4
+    # via checkmk-dev-tools
 rfc3339-validator==0.1.4 \
     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b \
     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa

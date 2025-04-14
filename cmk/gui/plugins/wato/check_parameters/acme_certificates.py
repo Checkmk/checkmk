@@ -2,47 +2,50 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    LevelDirection,
+    LevelsType,
+    migrate_to_float_simple_levels,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
 )
-from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_acme_certificates():
-    return TextInput(
-        title=_("Name of certificate"),
-        allow_empty=False,
-    )
-
-
-def _parameter_valuespec_acme_certificates():
+def _parameter_rulespec_acme_certificates() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "expire_lower",
-                Tuple(
-                    title=_("Lower age levels for expire date"),
-                    elements=[
-                        Age(title=_("Warning if below"), default_value=604800),
-                        Age(title=_("Critical if below"), default_value=2592000),
-                    ],
+        elements={
+            "expire_lower": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Time before the expiration date of the certificate"),
+                    level_direction=LevelDirection.LOWER,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ],
+                    ),
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=DefaultValue((604800.0, 2592000.0)),
+                    migrate=migrate_to_float_simple_levels,
                 ),
+                required=True,
             )
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="acme_certificates",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_acme_certificates,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_acme_certificates,
-        title=lambda: _("ACME certificates"),
-    )
+rule_spec_acme_sbc_snmp = CheckParameters(
+    parameter_form=_parameter_rulespec_acme_certificates,
+    name="acme_certificates",
+    title=Title("ACME Certificates"),
+    topic=Topic.APPLICATIONS,
+    condition=HostAndItemCondition(item_title=Title("Name of certificate")),
 )

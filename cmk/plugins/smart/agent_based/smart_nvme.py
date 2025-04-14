@@ -23,8 +23,16 @@ from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import NVMeAll, NVMeDevice, Section
 
 
-def discovery_smart_nvme_temp(params: DiscoveryParam, section: Section) -> DiscoveryResult:
-    for key, disk in section.devices.items():
+def discovery_smart_nvme_temp(
+    params: DiscoveryParam,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for key, disk in devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
@@ -36,13 +44,18 @@ def discovery_smart_nvme_temp(params: DiscoveryParam, section: Section) -> Disco
 
 
 def check_smart_nvme_temp(
-    item: str, params: TempAndDiscoveredParams, section: Section
+    item: str,
+    params: TempAndDiscoveredParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
 ) -> CheckResult:
-    if not isinstance(disk := section.devices.get(params["key"]), NVMeAll):
-        return
-
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
     if (
-        disk.nvme_smart_health_information_log is None
+        not isinstance(disk := devices.get(params["key"]), NVMeAll)
+        or disk.nvme_smart_health_information_log is None
         or disk.nvme_smart_health_information_log.temperature is None
     ):
         return
@@ -57,7 +70,7 @@ def check_smart_nvme_temp(
 
 check_plugin_smart_nvme_temp = CheckPlugin(
     name="smart_nvme_temp",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_nvme_temp,
     discovery_ruleset_name="smart_nvme",
@@ -74,8 +87,16 @@ class NVMeParams(TypedDict):
     media_errors: Required[int]
 
 
-def discover_smart_nvme(params: DiscoveryParam, section: Section) -> DiscoveryResult:
-    for key, disk in section.devices.items():
+def discover_smart_nvme(
+    params: DiscoveryParam,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for key, disk in devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
@@ -91,11 +112,20 @@ def discover_smart_nvme(params: DiscoveryParam, section: Section) -> DiscoveryRe
             )
 
 
-def check_smart_nvme(item: str, params: NVMeParams, section: Section) -> CheckResult:
-    if not isinstance(disk := section.devices.get(params["key"]), NVMeAll):
-        return
-
-    if disk.nvme_smart_health_information_log is None:
+def check_smart_nvme(
+    item: str,
+    params: NVMeParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> CheckResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if (
+        not isinstance(disk := devices.get(params["key"]), NVMeAll)
+        or disk.nvme_smart_health_information_log is None
+    ):
         return
 
     yield from check_levels(
@@ -187,7 +217,7 @@ def _check_against_discovery(
 
 check_plugin_smart_nvme_stats = CheckPlugin(
     name="smart_nvme_stats",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_nvme,
     discovery_ruleset_name="smart_nvme",

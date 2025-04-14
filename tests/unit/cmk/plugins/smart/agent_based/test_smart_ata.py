@@ -24,7 +24,9 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     ATARawValue,
     ATATable,
     ATATableEntry,
-    parse_smart_posix_all,
+    parse_smart_posix,
+    SCSIAll,
+    SCSIDevice,
     Section,
     Temperature,
 )
@@ -110,9 +112,21 @@ SECTION_ATA = Section(
     failures=[],
 )
 
+SECTION_SCAN_ARG = Section(
+    devices={
+        ("WDC WD3200BUCT-63TWBY0", "XXXATA"): SCSIAll(
+            device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
+            model_name="WDC WD3200BUCT-63TWBY0",
+            serial_number="XXXATA",
+            temperature=Temperature(current=0),
+        ),
+    },
+    failures=[],
+)
+
 
 def test_parse_smart_ata() -> None:
-    section = parse_smart_posix_all(STRING_TABLE_ATA)
+    section = parse_smart_posix(STRING_TABLE_ATA)
     assert section == SECTION_ATA
 
 
@@ -121,6 +135,7 @@ def test_discover_smart_ata_stat() -> None:
         discover_smart_ata(
             {"item_type": ("device_name", None)},
             SECTION_ATA,
+            SECTION_SCAN_ARG,
         )
     ) == [
         Service(
@@ -156,6 +171,7 @@ def test_check_smart_ata_stat() -> None:
                 "id_199": 0,
             },
             SECTION_ATA,
+            SECTION_SCAN_ARG,
             {},
             0,
         )

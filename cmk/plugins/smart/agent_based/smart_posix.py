@@ -127,7 +127,7 @@ class ParseSection(RootModel):
     root: NVMeAll | ATAAll | SCSIAll | FailureAll | CantOpenDevice
 
 
-def parse_smart_posix_all(string_table: StringTable) -> Section:
+def parse_smart_posix(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
     scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
     failures: list[FailureAll | CantOpenDevice] = []
@@ -142,5 +142,10 @@ def parse_smart_posix_all(string_table: StringTable) -> Section:
 
 agent_section_smart_posix_all = AgentSection(
     name="smart_posix_all",
-    parse_function=parse_smart_posix_all,
+    parse_function=parse_smart_posix,
+)
+
+agent_section_smart_posix_scan_arg = AgentSection(
+    name="smart_posix_scan_arg",
+    parse_function=parse_smart_posix,
 )

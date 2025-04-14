@@ -28,8 +28,16 @@ from .smart_posix import ATAAll, ATADevice, Section
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
 
-def discovery_smart_ata_temp(params: DiscoveryParam, section: Section) -> DiscoveryResult:
-    for key, disk in section.devices.items():
+def discovery_smart_ata_temp(
+    params: DiscoveryParam,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for key, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.temperature is not None:
             yield Service(item=get_item(disk, params["item_type"][0]), parameters={"key": key})
 
@@ -37,12 +45,14 @@ def discovery_smart_ata_temp(params: DiscoveryParam, section: Section) -> Discov
 def check_smart_ata_temp(
     item: str,
     params: TempAndDiscoveredParams,
-    section: Section,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
 ) -> CheckResult:
-    if not isinstance(disk := section.devices.get(params["key"]), ATAAll):
-        return
-
-    if disk.temperature is None:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(params["key"]), ATAAll) or disk.temperature is None:
         return
 
     yield from check_temperature(
@@ -55,7 +65,7 @@ def check_smart_ata_temp(
 
 check_plugin_smart_ata_temp = CheckPlugin(
     name="smart_ata_temp",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_ata_temp,
     discovery_ruleset_name="smart_ata",
@@ -78,8 +88,16 @@ class AtaParams(TypedDict):
     id_199: Required[int | None]
 
 
-def discover_smart_ata(params: DiscoveryParam, section: Section) -> DiscoveryResult:
-    for key, disk in section.devices.items():
+def discover_smart_ata(
+    params: DiscoveryParam,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for key, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.ata_smart_attributes is not None:
             parameters: AtaParams = {
                 "key": key,
@@ -98,18 +116,35 @@ def discover_smart_ata(params: DiscoveryParam, section: Section) -> DiscoveryRes
             )
 
 
-def check_smart_ata(item: str, params: AtaParams, section: Section) -> CheckResult:
-    yield from _check_smart_ata(item, params, section, get_value_store(), time.time())
+def check_smart_ata(
+    item: str,
+    params: AtaParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> CheckResult:
+    yield from _check_smart_ata(
+        item,
+        params,
+        section_smart_posix_all,
+        section_smart_posix_scan_arg,
+        get_value_store(),
+        time.time(),
+    )
 
 
 def _check_smart_ata(
     item: str,
     params: AtaParams,
-    section: Section,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
     value_store: MutableMapping[str, object],
     now: float,
 ) -> CheckResult:
-    if not isinstance(disk := section.devices.get(params["key"]), ATAAll):
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(params["key"]), ATAAll):
         return
 
     if (reallocated_sector_count := disk.by_id(5)) is not None:
@@ -237,7 +272,10 @@ def _check_command_timeout(
 
 check_plugin_smart_ata_stats = CheckPlugin(
     name="smart_ata_stats",
-    sections=["smart_posix_all"],
+    sections=[
+        "smart_posix_all",
+        "smart_posix_scan_arg",
+    ],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_ata,
     discovery_ruleset_name="smart_ata",

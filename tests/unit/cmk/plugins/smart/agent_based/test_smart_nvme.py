@@ -14,7 +14,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     NVMeAll,
     NVMeDevice,
     NVMeHealth,
-    parse_smart_posix_all,
+    parse_smart_posix,
     Section,
 )
 
@@ -50,12 +50,14 @@ SECTION_NVME = Section(
 
 
 def test_parse_smart_nvme() -> None:
-    section = parse_smart_posix_all(STRING_TABLE_NVME)
+    section = parse_smart_posix(STRING_TABLE_NVME)
     assert section == SECTION_NVME
 
 
 def test_discover_smart_nvme_stat() -> None:
-    assert list(discover_smart_nvme({"item_type": ("device_name", None)}, SECTION_NVME)) == [
+    assert list(
+        discover_smart_nvme({"item_type": ("device_name", None)}, SECTION_NVME, SECTION_NVME)
+    ) == [
         Service(
             item="/dev/nvme0",
             parameters={
@@ -76,6 +78,7 @@ def test_check_smart_nvme_stat() -> None:
                 "critical_warning": 0,
                 "media_errors": 0,
             },
+            SECTION_NVME,
             SECTION_NVME,
         )
     ) == [

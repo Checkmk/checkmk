@@ -19,8 +19,16 @@ from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import SCSIAll, SCSIDevice, Section
 
 
-def discovery_smart_scsi_temp(params: DiscoveryParam, section: Section) -> DiscoveryResult:
-    for key, disk in section.devices.items():
+def discovery_smart_scsi_temp(
+    params: DiscoveryParam,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for key, disk in devices.items():
         if isinstance(disk.device, SCSIDevice) and disk.temperature is not None:
             yield Service(
                 item=get_item(disk, params["item_type"][0]),
@@ -29,12 +37,16 @@ def discovery_smart_scsi_temp(params: DiscoveryParam, section: Section) -> Disco
 
 
 def check_smart_scsi_temp(
-    item: str, params: TempAndDiscoveredParams, section: Section
+    item: str,
+    params: TempAndDiscoveredParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
 ) -> CheckResult:
-    if not isinstance(disk := section.devices.get(params["key"]), SCSIAll):
-        return
-
-    if disk.temperature is None:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(params["key"]), SCSIAll) or disk.temperature is None:
         return
 
     yield from check_temperature(
@@ -47,7 +59,7 @@ def check_smart_scsi_temp(
 
 check_plugin_smart_scsi_temp = CheckPlugin(
     name="smart_scsi_temp",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_scsi_temp,
     discovery_ruleset_name="smart_scsi",

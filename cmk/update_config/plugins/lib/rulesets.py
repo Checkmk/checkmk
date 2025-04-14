@@ -5,7 +5,7 @@
 
 
 import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Final
 
@@ -200,7 +200,7 @@ def transform_wato_rulesets_params(
     logger: Logger,
     all_rulesets: RulesetCollection,
     raise_errors: bool = False,
-) -> Iterable[RulesetName]:
+) -> Collection[RulesetName]:
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
         try:

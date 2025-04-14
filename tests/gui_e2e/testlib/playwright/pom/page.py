@@ -408,9 +408,51 @@ class MainArea(LocatorHelper):
 class Sidebar(LocatorHelper):
     """functionality to find items from the sidebar"""
 
+    class Snapin:
+        """Functionality to find items from the sidebar snapin elements."""
+
+        def __init__(self, base_locator: Locator) -> None:
+            self._base_locator = base_locator
+
+        @property
+        def container(self) -> Locator:
+            """Returns the container of the snapin."""
+            return self._base_locator
+
+        @property
+        def loading_spinner(self) -> Locator:
+            """Returns the loading spinner displayed when the snapin is loading."""
+            return self._base_locator.locator("div.loading")
+
+        @property
+        def error_message(self) -> Locator:
+            """Returns the error message displayed when an error occurs."""
+            return self._base_locator.locator("div.message.error")
+
+        @property
+        def close_button(self) -> Locator:
+            """Returns the close button of the snapin."""
+            return self._base_locator.locator("div.snapin_buttons >> a")
+
+        def get_button(self, name: str) -> Locator:
+            """Returns the footnote link with the specified text.
+
+            Args:
+                name: The text of the button to find.
+            """
+            return self._base_locator.locator("div.footnotelink >> a").get_by_text(name)
+
+        def remove_from_sidebar(self) -> None:
+            """Removes the snapin and waits for it to be detached."""
+            self.close_button.click()
+            self.container.wait_for(state="detached")
+
     @override
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_sidebar").locator(selector)
+
+    def snapin(self, snapin_container_id: str) -> "Snapin":
+        return self.Snapin(self.locator(f"div#{snapin_container_id}"))
 
 
 class FilterSidebar(LocatorHelper):

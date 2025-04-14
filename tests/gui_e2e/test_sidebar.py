@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Final
+
 import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.helpers import Keys
+from tests.gui_e2e.testlib.playwright.pom.add_sidebar_element import AddSidebarElement
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 
 
@@ -14,16 +17,14 @@ from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
     """add and remove a snapin (aka a sidebar element)"""
 
-    dashboard_page.goto_add_sidebar_element()
-    dashboard_page.main_area.locator(f"div.snapinadder:has(div#{snapin_id})").click()
-    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
+    add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
+    add_sidebar_element_page.add_snapin_to_sidebar(snapin_id)
 
     snapin = dashboard_page.sidebar.snapin(snapin_id)
 
-    snapin.container.wait_for(state="attached")
     snapin.remove_from_sidebar()
 
-    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
+    add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
 
 
 def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
@@ -54,16 +55,14 @@ def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
     7. Verifies that the NagVis snapin is no longer visible in the sidebar.
     """
 
-    snapin_id = "snapin_container_nagvis_maps"
+    snapin_id: Final[str] = "snapin_container_nagvis_maps"
 
     # add nagvis snapin to the sidebar
-    dashboard_page.goto_add_sidebar_element()
-    dashboard_page.main_area.locator(f"div.snapinadder:has(div#{snapin_id})").click()
-    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
+    add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
+    add_sidebar_element_page.add_snapin_to_sidebar(snapin_id)
 
     # check that the nagvis snapin is visible in the sidebar
     snapin = dashboard_page.sidebar.snapin(snapin_id)
-    snapin.container.wait_for(state="visible")
 
     # Wait for the loading spinner to disappear
     snapin.loading_spinner.wait_for(state="detached")
@@ -83,6 +82,7 @@ def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
         "div#header >> img[alt='NagVis']"
     ).wait_for(state="visible")
 
-    dashboard_page.goto_add_sidebar_element()
+    # Clean up: remove the nagvis snapin from the sidebar
     snapin.remove_from_sidebar()
-    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
+    add_sidebar_element_page.navigate()
+    add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")

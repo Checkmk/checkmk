@@ -18,11 +18,10 @@ def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
     dashboard_page.main_area.locator(f"div.snapinadder:has(div#{snapin_id})").click()
     dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
 
-    dashboard_page.locator(f"div#check_mk_sidebar >> div#{snapin_id}").wait_for(state="attached")
-    dashboard_page.locator(
-        f"div#check_mk_sidebar >> div#{snapin_id} >> div.snapin_buttons >> a"
-    ).click()
-    dashboard_page.locator(f"div#check_mk_sidebar >> div#{snapin_id}").wait_for(state="detached")
+    snapin = dashboard_page.sidebar.snapin(snapin_id)
+
+    snapin.container.wait_for(state="attached")
+    snapin.remove_from_sidebar()
 
     dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
 
@@ -49,8 +48,10 @@ def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
     1. Adds the NagVis snapin to the sidebar.
     2. Verifies that the NagVis snapin is visible in the sidebar.
     3. Ensures that no error message is displayed in the NagVis snapin.
-    4. Confirms that the "edit" button in the NagVis snapin is visible and clickable.
-    5. Clicks the "edit" button and verifies that the NagVis frame is loaded.
+    4. Confirms that the "Edit" button in the NagVis snapin is visible and clickable.
+    5. Clicks the "Edit" button and verifies that the NagVis frame is loaded.
+    6. Cleans up by removing the NagVis snapin from the sidebar.
+    7. Verifies that the NagVis snapin is no longer visible in the sidebar.
     """
 
     snapin_id = "snapin_container_nagvis_maps"
@@ -61,30 +62,27 @@ def test_add_nagvis_snapin(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
 
     # check that the nagvis snapin is visible in the sidebar
-    navgis_maps_snapin_container = dashboard_page.locator(
-        f"div#check_mk_sidebar >> div#{snapin_id}"
-    )
-    navgis_maps_snapin_container.wait_for(state="visible")
+    snapin = dashboard_page.sidebar.snapin(snapin_id)
+    snapin.container.wait_for(state="visible")
 
     # Wait for the loading spinner to disappear
-    navgis_maps_snapin_container.locator("div#snapin_nagvis_maps >> div.loading").wait_for(
-        state="detached"
-    )
+    snapin.loading_spinner.wait_for(state="detached")
 
     # Check that the nagvis snapin has no error message
-    nagvis_maps_error_message = navgis_maps_snapin_container.locator("div.message.error")
-    assert not nagvis_maps_error_message.is_visible(), (
-        "Nagvis error message is visible, but should not be. "
-        f"Error message: '{nagvis_maps_error_message.inner_text()}'"
-    )
+    expect(
+        snapin.error_message, message="Nagvis error message is visible, but should not be"
+    ).not_to_be_visible()
 
     # Check that the nagvis snapin edit button is visible and clickable
-    nagvis_maps_edit_button = navgis_maps_snapin_container.locator("div.footnotelink >> a")
-    assert nagvis_maps_edit_button.is_visible(), "Nagvis 'edit' button is not visible"
-
+    nagvis_maps_edit_button = snapin.get_button("Edit")
+    expect(nagvis_maps_edit_button, message="Nagvis 'Edit' button is not visible").to_be_visible()
     nagvis_maps_edit_button.click()
 
     # Check that the nagvis edit frame is loaded
     dashboard_page.get_frame_locator("div#content_area >> iframe").locator(
         "div#header >> img[alt='NagVis']"
     ).wait_for(state="visible")
+
+    dashboard_page.goto_add_sidebar_element()
+    snapin.remove_from_sidebar()
+    dashboard_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")

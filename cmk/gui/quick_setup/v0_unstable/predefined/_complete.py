@@ -37,7 +37,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
 )
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -66,6 +66,7 @@ from cmk.gui.watolib.services import (
     get_check_table,
     perform_fix_all,
 )
+from cmk.gui.watolib.sites import ReplicationStatusFetcher, site_management_registry
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -303,35 +304,28 @@ def _create_and_save_special_agent_bundle(
         ),
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
-    progress_logger.log_new_progress_step("service_discovery", "Run service discovery")
-    try:
-        host: Host = Host.load_host(HostName(host_name))
-        if not site_is_local(active_config, site_id):
-            get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
-            snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
-            if not snapshot.exists:
-                raise Exception(
-                    _("Could not find a running service discovery for host %s on remote site %s")
-                    % (host_name, site_id)
-                )
-            while snapshot.is_active:
-                snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
-
-        check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
-        perform_fix_all(
-            discovery_result=check_table,
-            host=host,
-            raise_errors=False,
+    is_local = site_is_local(active_config, site_id)
+    if not _service_discovery_possible(site_id, is_local):
+        progress_logger.log_new_progress_step(
+            "service_discovery",
+            "Skipping service discovery as target site is unreachable",
+            status=StepStatus.COMPLETED,
         )
-    except Exception as e:
-        progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
+    else:
+        progress_logger.log_new_progress_step("service_discovery", "Run service discovery")
+        try:
+            _run_service_discovery(host_name, site_id, is_local)
+        except Exception as e:
+            progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
 
-        progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
-        delete_config_bundle(BundleId(bundle_id))
-        progress_logger.update_progress_step_status("delete_config_bundle", StepStatus.COMPLETED)
-        raise e
+            progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
+            delete_config_bundle(BundleId(bundle_id))
+            progress_logger.update_progress_step_status(
+                "delete_config_bundle", StepStatus.COMPLETED
+            )
+            raise e
 
-    progress_logger.update_progress_step_status("service_discovery", StepStatus.COMPLETED)
+        progress_logger.update_progress_step_status("service_discovery", StepStatus.COMPLETED)
 
     # revert changes does not work correctly when a config sync to another site occurred
     # for consistency reasons we always prevent the user from reverting the changes
@@ -349,4 +343,42 @@ def _create_and_save_special_agent_bundle(
             ("special_agent_name", special_agent_name),
         ],
         filename="wato.py",
+    )
+
+
+def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
+    if is_local:
+        return True
+
+    sites = site_management_registry["site_management"].load_sites()
+    site = sites.get(site_id)
+    if site is None or not is_replication_enabled(site):
+        return False
+
+    remote_status = ReplicationStatusFetcher().fetch([(site_id, site)])
+    if not remote_status[site_id].success:
+        return False
+
+    return True
+
+
+def _run_service_discovery(host_name: str, site_id: SiteId, is_local: bool) -> None:
+    host: Host = Host.load_host(HostName(host_name))
+    if not is_local:
+        # this also implicitly syncs the pending changes to the remote site to run the discovery
+        get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
+        snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+        if not snapshot.exists:
+            raise Exception(
+                _("Could not find a running service discovery for host %s on remote site %s")
+                % (host_name, site_id)
+            )
+        while snapshot.is_active:
+            snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+
+    check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
+    perform_fix_all(
+        discovery_result=check_table,
+        host=host,
+        raise_errors=False,
     )

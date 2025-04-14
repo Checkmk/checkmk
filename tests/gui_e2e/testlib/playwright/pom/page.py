@@ -99,11 +99,6 @@ class CmkPage(LocatorHelper):
         logger.info("Click on host link: %s", host_name)
         self.main_area.locator(f"td a:has-text('{host_name}')").click()
 
-    def goto_add_sidebar_element(self) -> None:
-        logger.info("Navigate to 'Add sidebar element' page")
-        self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
-        self.main_area.check_page_title("Add sidebar element")
-
     def press_keyboard(self, key: Keys) -> None:
         logger.info("Press keyboard key: %s", key.value)
         self.page.keyboard.press(str(key.value))
@@ -413,6 +408,7 @@ class Sidebar(LocatorHelper):
 
         def __init__(self, base_locator: Locator) -> None:
             self._base_locator = base_locator
+            self.container.wait_for(state="attached")
 
         @property
         def container(self) -> Locator:

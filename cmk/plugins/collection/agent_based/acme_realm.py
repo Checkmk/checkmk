@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -18,34 +17,44 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
-
-def inventory_acme_realm(section: StringTable) -> DiscoveryResult:
-    yield from [
-        Service(item=name)
-        for name, _inbound, _outbound, _total_inbound, _total_outbound, _state in section
-    ]
+Section = dict[str, tuple[str, str, str, str, str]]
 
 
-def check_acme_realm(item: str, section: StringTable) -> CheckResult:
+def discover_acme_realm(section: Section) -> DiscoveryResult:
+    if section:
+        yield from [
+            Service(item=name)
+            for name, (
+                _inbound,
+                _outbound,
+                _total_inbound,
+                _total_outbound,
+                _state,
+            ) in section.items()
+        ]
+
+
+def check_acme_realm(item: str, section: Section) -> CheckResult:
     map_states = {
         "3": (0, "in service"),
         "4": (1, "contraints violation"),
         "7": (2, "call load reduction"),
     }
-    for name, inbound, outbound, total_inbound, total_outbound, state in section:
-        if item == name:
-            dev_state, dev_state_readable = map_states[state]
-            yield Result(
-                state=State(dev_state),
-                summary=f"Status: {dev_state_readable}, Inbound: {inbound}/{total_inbound}, Outbound: {outbound}/{total_outbound}",
-            )
-            yield Metric("inbound", int(inbound), boundaries=(0, int(total_inbound)))
-            yield Metric("outbound", int(outbound), boundaries=(0, int(total_outbound)))
-            return
+    inbound, outbound, total_inbound, total_outbound, state = section[item]
+    dev_state, dev_state_readable = map_states[state]
+    yield Result(
+        state=State(dev_state),
+        summary=f"Status: {dev_state_readable}, Inbound: {inbound}/{total_inbound}, Outbound: {outbound}/{total_outbound}",
+    )
+    yield Metric("inbound", int(inbound), boundaries=(0, int(total_inbound)))
+    yield Metric("outbound", int(outbound), boundaries=(0, int(total_outbound)))
 
 
-def parse_acme_realm(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_acme_realm(string_table: StringTable) -> Section | None:
+    section: Section = {}
+    for name, inbound, outbound, total_inbound, total_outbound, state in string_table:
+        section[name] = (inbound, outbound, total_inbound, total_outbound, state)
+    return section or None
 
 
 snmp_section_acme_realm = SimpleSNMPSection(
@@ -60,6 +69,6 @@ snmp_section_acme_realm = SimpleSNMPSection(
 check_plugin_acme_realm = CheckPlugin(
     name="acme_realm",
     service_name="Realm %s",
-    discovery_function=inventory_acme_realm,
+    discovery_function=discover_acme_realm,
     check_function=check_acme_realm,
 )

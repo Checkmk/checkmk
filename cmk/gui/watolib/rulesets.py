@@ -849,10 +849,24 @@ class Ruleset:
         if not self.has_rule_search_options(search_options):
             return self.matches_fulltext_search(search_options)
 
+        rules = self.get_rules()
+
+        # Compute rule effectiveness for all rules in a rule set if needed
+        # Interesting: This has always tried host matching. Whether or not a service ruleset
+        # does not match any service has never been tested. Probably because this would be
+        # too expensive.
+        rule_effectiveness = (
+            analyze_host_rule_effectiveness(
+                [r.to_single_base_ruleset() for _f, _i, r in rules],
+            ).results
+            if rules and "rule_ineffective" in search_options
+            else {}
+        )
+
         # Store the matching rules for later result rendering
         self.search_matching_rules = []
-        for _folder, _rule_index, rule in self.get_rules():
-            if rule.matches_search(search_options):
+        for _folder, _rule_index, rule in rules:
+            if rule.matches_search(search_options, rule_effectiveness):
                 self.search_matching_rules.append(rule)
 
         # Show all rulesets where at least one rule matched
@@ -1298,19 +1312,10 @@ class Rule:
             },
         )
 
-    def is_ineffective(self) -> bool:
-        """Whether this rule does not match at all
-
-        Interesting: This has always tried host matching. Whether or not a service ruleset
-        does not match any service has never been tested. Probably because this would be
-        too expensive."""
-        # TODO: For better performance do not make an automation call per rule but some bulk call
-        # for the whole rule set.
-        return not analyze_host_rule_effectiveness([self.to_single_base_ruleset()]).results[self.id]
-
     def matches_search(
         self,
         search_options: SearchOptions,
+        rule_effectiveness: Mapping[str, bool],
     ) -> bool:
         if "rule_folder" in search_options and self.folder.path() not in self._get_search_folders(
             search_options
@@ -1331,7 +1336,7 @@ class Rule:
 
         if (
             "rule_ineffective" in search_options
-            and search_options["rule_ineffective"] != self.is_ineffective()
+            and search_options["rule_ineffective"] is rule_effectiveness[self.id]
         ):
             return False
 

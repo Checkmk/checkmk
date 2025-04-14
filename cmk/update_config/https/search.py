@@ -61,7 +61,7 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
         yield from ruleset.get_rules()
         return
     for folder, rule_index, rule in ruleset.get_rules():
-        if rule.matches_search(search):
+        if rule.matches_search(search, {}):
             yield folder, rule_index, rule
 
 

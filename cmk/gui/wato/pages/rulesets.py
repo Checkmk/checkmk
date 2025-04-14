@@ -115,6 +115,7 @@ from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
+    analyze_host_rule_effectiveness,
     analyze_host_rule_matches,
     analyze_service_rule_matches,
     find_unknown_check_parameter_rule_sets,
@@ -1218,6 +1219,14 @@ class ModeEditRuleset(WatoMode):
 
         search_options: SearchOptions = ModeRuleSearchForm().search_options
 
+        rule_effectiveness = (
+            analyze_host_rule_effectiveness(
+                [r.to_single_base_ruleset() for _f, _i, r in rules],
+            ).results
+            if "rule_ineffective" in search_options
+            else {}
+        )
+
         html.div("", id_="row_info")
         num_rows = 0
 
@@ -1261,6 +1270,7 @@ class ModeEditRuleset(WatoMode):
                         rulenr,
                         search_options,
                         rule_match_results,
+                        rule_effectiveness,
                     )
                     self._rule_cells(table, rule)
 
@@ -1288,6 +1298,7 @@ class ModeEditRuleset(WatoMode):
         rulenr: int,
         search_options: SearchOptions,
         rule_match_results: Mapping[str, RuleMatchResult],
+        rule_effectiveness: dict[str, bool],
     ) -> None:
         if rule_match_results:
             table.cell(_("Match host"), css=["narrow"])
@@ -1296,7 +1307,7 @@ class ModeEditRuleset(WatoMode):
 
         if rule.ruleset.has_rule_search_options(search_options):
             table.cell(_("Match search"), css=["narrow"])
-            if rule.matches_search(search_options) and (
+            if rule.matches_search(search_options, rule_effectiveness) and (
                 "fulltext" not in search_options
                 or not rule.ruleset.matches_fulltext_search(search_options)
             ):

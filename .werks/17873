@@ -1,0 +1,20 @@
+Title: informix_dbspaces: Fix logic to calculate total and free blobspace
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1744639335
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+Prior to this werk, both the free and total size of blobspace were
+calculated based on the same system default page size. This caused
+incorrect reporting of free/used space.
+
+Now, the free blobspace is correctly calculated with the chosen
+blobpage size.
+
+To benefit from this change, the mk_informix plugin should be
+installed with this new change.
+
+SUP-23233

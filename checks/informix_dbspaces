@@ -10,6 +10,7 @@ Relevant documentation:
 
 
 factory_settings["informix_dbspaces_default_levels"] = {"levels_perc": (80.0, 85.0)}
+FLAG_BLOBSPACE = 512
 
 
 def parse_informix_dbspaces(info):
@@ -48,8 +49,13 @@ def check_informix_dbspaces(item, params, parsed):
         free = 0
         for entry in datafiles:
             pagesize = int(entry["pagesize"])
-            free += int(entry["nfree"]) * pagesize
-            size += int(entry["chksize"]) * pagesize
+            system_pagesize = int(entry["system_pagesize"])
+            nfree_pagesize = (
+                pagesize if FLAG_BLOBSPACE & int(entry["chunk_flags"]) else system_pagesize
+            )
+            # FYI: The reference page size for nfree depends on the type of space
+            free += int(entry["nfree"]) * nfree_pagesize
+            size += int(entry["chksize"]) * system_pagesize
 
         used = size - free
         infotext = "Data files: %s, Size: %s, Used: %s" % (

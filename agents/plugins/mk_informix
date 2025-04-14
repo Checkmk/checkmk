@@ -177,13 +177,14 @@ informix_dbspaces() {
             trim(sd.name) || ' DBSPACE',
             sd.dbsnum,
             sd.is_temp,
-            sd.flags,
+            sd.flags sd_flags,
             'CHUNK',
             sc.fname,
-            (select sh_pagesize from sysmaster:sysshmvals) pagesize,
+            (select sh_pagesize from sysmaster:sysshmvals) system_pagesize,
+            sc.pagesize,
             sc.chksize,
             sc.nfree,
-            sc.flags,
+            sc.flags chunk_flags,
             trim(sc.mfname),
             sc.mflags
         from sysdbspaces sd, syschunks sc

@@ -208,4 +208,22 @@ describe('FormLabels', () => {
 
     expect(getCurrentData()).toBe('{"key1":"value1_edited","key2":"value2"}')
   })
+
+  test('should reset selection label', async () => {
+    const { getCurrentData } = renderFormWithData({
+      spec,
+      data: {},
+      backendValidation: []
+    })
+
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const labelInput = screen.getByRole('textbox', { name: 'filter' })
+    await userEvent.type(labelInput, 'key3:value3')
+    await screen.findByText('key3:value3')
+    await userEvent.keyboard('[Enter]')
+    expect(getCurrentData()).toBe('{"key3":"value3"}')
+
+    expect(dropdown.textContent).toBe('key3:value3') // FIX ME: should be empty!
+  })
 })

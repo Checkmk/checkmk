@@ -11,19 +11,27 @@ from cmk.agent_based.v2 import (
     get_value_store,
     Service,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import (
+    check_temperature,
+)
 
+from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import SCSIAll, SCSIDevice, Section
 
 
-def discovery_smart_scsi_temp(section: Section) -> DiscoveryResult:
-    for disk in section:
+def discovery_smart_scsi_temp(params: DiscoveryParam, section: Section) -> DiscoveryResult:
+    for key, disk in section.devices.items():
         if isinstance(disk.device, SCSIDevice) and disk.temperature is not None:
-            yield Service(item=disk.device.name)
+            yield Service(
+                item=get_item(disk, params["item_type"][0]),
+                parameters={"key": key},
+            )
 
 
-def check_smart_scsi_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
-    if (disk := _get_disk_scsi(section, item)) is None:
+def check_smart_scsi_temp(
+    item: str, params: TempAndDiscoveredParams, section: Section
+) -> CheckResult:
+    if not isinstance(disk := section.devices.get(params["key"]), SCSIAll):
         return
 
     if disk.temperature is None:
@@ -37,19 +45,13 @@ def check_smart_scsi_temp(item: str, params: TempParamType, section: Section) ->
     )
 
 
-def _get_disk_scsi(section: Section, item: str) -> SCSIAll | None:
-    for d in section:
-        if isinstance(d.device, SCSIDevice) and d.device.name == item:
-            return d
-
-    return None
-
-
 check_plugin_smart_scsi_temp = CheckPlugin(
     name="smart_scsi_temp",
     sections=["smart_posix_all"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_scsi_temp,
+    discovery_ruleset_name="smart_scsi",
+    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_scsi_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},

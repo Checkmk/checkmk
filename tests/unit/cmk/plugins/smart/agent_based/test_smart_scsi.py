@@ -7,6 +7,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     parse_smart_posix_all,
     SCSIAll,
     SCSIDevice,
+    Section,
     Temperature,
 )
 
@@ -19,8 +20,14 @@ STRING_TABLE_SCSI = [  # unmodified except for serial number
 
 def test_parse_smart_scsi() -> None:
     section = parse_smart_posix_all(STRING_TABLE_SCSI)
-    assert section == [
-        SCSIAll(
-            device=SCSIDevice(protocol="SCSI", name="/dev/da5"), temperature=Temperature(current=41)
-        )
-    ]
+    assert section == Section(
+        devices={
+            ("TOSHIBA AL13SXB60EN", "XXX"): SCSIAll(
+                model_name="TOSHIBA AL13SXB60EN",
+                serial_number="XXX",
+                device=SCSIDevice(protocol="SCSI", name="/dev/da5"),
+                temperature=Temperature(current=41),
+            )
+        },
+        failures=[],
+    )

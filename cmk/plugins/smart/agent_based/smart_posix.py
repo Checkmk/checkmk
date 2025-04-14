@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Literal
 
 import pydantic
@@ -52,6 +53,8 @@ class ATATable(pydantic.BaseModel, frozen=True):
 
 class ATAAll(pydantic.BaseModel, frozen=True):
     device: ATADevice
+    model_name: str
+    serial_number: str
     ata_smart_attributes: ATATable | None = None
     temperature: Temperature | None = None
 
@@ -80,11 +83,15 @@ class NVMeHealth(pydantic.BaseModel, frozen=True):
 
 class NVMeAll(pydantic.BaseModel, frozen=True):
     device: NVMeDevice
+    model_name: str
+    serial_number: str
     nvme_smart_health_information_log: NVMeHealth | None = None
 
 
 class SCSIAll(pydantic.BaseModel, frozen=True):
     device: SCSIDevice
+    model_name: str
+    serial_number: str
     temperature: Temperature | None = None
 
 
@@ -92,7 +99,10 @@ class FailureAll(pydantic.BaseModel, frozen=True):
     device: None = None  # happens on permission denied.
 
 
-Section = Sequence[NVMeAll | ATAAll | SCSIAll | FailureAll]
+@dataclass(frozen=True)
+class Section:
+    devices: Mapping[tuple[str, str], NVMeAll | ATAAll | SCSIAll]
+    failures: Sequence[FailureAll]
 
 
 class ParseSection(pydantic.RootModel):
@@ -101,7 +111,15 @@ class ParseSection(pydantic.RootModel):
 
 def parse_smart_posix_all(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
-    return [ParseSection.model_validate_json(line[0]).root for line in string_table]
+    scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
+    failures: list[FailureAll] = []
+    devices: dict[tuple[str, str], NVMeAll | ATAAll | SCSIAll] = {}
+    for scan in scans:
+        if isinstance(scan, FailureAll):
+            failures.append(scan)
+        else:
+            devices[(scan.model_name, scan.serial_number)] = scan
+    return Section(devices=devices, failures=failures)
 
 
 agent_section_smart_posix_all = AgentSection(

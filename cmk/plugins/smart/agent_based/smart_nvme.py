@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from typing import Required, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -17,22 +17,28 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import check_temperature
 
+from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import NVMeAll, NVMeDevice, Section
 
 
-def discovery_smart_nvme_temp(section: Section) -> DiscoveryResult:
-    for disk in section:
+def discovery_smart_nvme_temp(params: DiscoveryParam, section: Section) -> DiscoveryResult:
+    for key, disk in section.devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
-            yield Service(item=disk.device.name)
+            yield Service(
+                item=get_item(disk, params["item_type"][0]),
+                parameters={"key": key},
+            )
 
 
-def check_smart_nvme_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
-    if (disk := _get_disk_nvme(section, item)) is None:
+def check_smart_nvme_temp(
+    item: str, params: TempAndDiscoveredParams, section: Section
+) -> CheckResult:
+    if not isinstance(disk := section.devices.get(params["key"]), NVMeAll):
         return
 
     if (
@@ -54,29 +60,39 @@ check_plugin_smart_nvme_temp = CheckPlugin(
     sections=["smart_posix_all"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_nvme_temp,
+    discovery_ruleset_name="smart_nvme",
+    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_nvme_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
 )
 
 
-def discover_smart_nvme(section: Section) -> DiscoveryResult:
-    for disk in section:
+class NVMeParams(TypedDict):
+    key: Required[tuple[str, str]]
+    critical_warning: Required[int]
+    media_errors: Required[int]
+
+
+def discover_smart_nvme(params: DiscoveryParam, section: Section) -> DiscoveryResult:
+    for key, disk in section.devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
+            parameters: NVMeParams = {
+                "key": key,
+                "critical_warning": disk.nvme_smart_health_information_log.critical_warning,
+                "media_errors": disk.nvme_smart_health_information_log.media_errors,
+            }
             yield Service(
-                item=disk.device.name,
-                parameters={
-                    "critical_warning": disk.nvme_smart_health_information_log.critical_warning,
-                    "media_errors": disk.nvme_smart_health_information_log.media_errors,
-                },
+                item=get_item(disk, params["item_type"][0]),
+                parameters=parameters,
             )
 
 
-def check_smart_nvme(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
-    if (disk := _get_disk_nvme(section, item)) is None:
+def check_smart_nvme(item: str, params: NVMeParams, section: Section) -> CheckResult:
+    if not isinstance(disk := section.devices.get(params["key"]), NVMeAll):
         return
 
     if disk.nvme_smart_health_information_log is None:
@@ -153,13 +169,6 @@ def check_smart_nvme(item: str, params: Mapping[str, int], section: Section) -> 
     )
 
 
-def _get_disk_nvme(section: Section, item: str) -> NVMeAll | None:
-    for d in section:
-        if isinstance(d.device, NVMeDevice) and d.device.name == item:
-            return d
-    return None
-
-
 def _check_against_discovery(
     value: int, discovered_value: int | None, label: str, metric_name: str
 ) -> CheckResult:
@@ -181,6 +190,8 @@ check_plugin_smart_nvme_stats = CheckPlugin(
     sections=["smart_posix_all"],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_nvme,
+    discovery_ruleset_name="smart_nvme",
+    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_nvme,
     check_default_parameters={},  # needed to pass discovery parameters along!
 )

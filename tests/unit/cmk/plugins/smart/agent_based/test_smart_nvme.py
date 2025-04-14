@@ -15,6 +15,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     NVMeDevice,
     NVMeHealth,
     parse_smart_posix_all,
+    Section,
 )
 
 STRING_TABLE_NVME = [
@@ -23,24 +24,29 @@ STRING_TABLE_NVME = [
     ],
 ]
 
-SECTION_NVME = [
-    NVMeAll(
-        device=NVMeDevice(protocol="NVMe", name="/dev/nvme0"),
-        nvme_smart_health_information_log=NVMeHealth(
-            power_on_hours=9944,
-            power_cycles=2982,
-            critical_warning=0,
-            media_errors=0,
-            available_spare=100,
-            available_spare_threshold=50,
-            temperature=44,
-            percentage_used=2,
-            num_err_log_entries=0,
-            data_units_read=46988993,
-            data_units_written=41549752,
-        ),
-    )
-]
+SECTION_NVME = Section(
+    devices={
+        ("PC601 NVMe SK hynix 512GB", "XXXNVMe"): NVMeAll(
+            device=NVMeDevice(protocol="NVMe", name="/dev/nvme0"),
+            model_name="PC601 NVMe SK hynix 512GB",
+            serial_number="XXXNVMe",
+            nvme_smart_health_information_log=NVMeHealth(
+                power_on_hours=9944,
+                power_cycles=2982,
+                critical_warning=0,
+                media_errors=0,
+                available_spare=100,
+                available_spare_threshold=50,
+                temperature=44,
+                percentage_used=2,
+                num_err_log_entries=0,
+                data_units_read=46988993,
+                data_units_written=41549752,
+            ),
+        )
+    },
+    failures=[],
+)
 
 
 def test_parse_smart_nvme() -> None:
@@ -49,14 +55,29 @@ def test_parse_smart_nvme() -> None:
 
 
 def test_discover_smart_nvme_stat() -> None:
-    assert list(discover_smart_nvme(SECTION_NVME)) == [
-        Service(item="/dev/nvme0", parameters={"critical_warning": 0, "media_errors": 0}),
+    assert list(discover_smart_nvme({"item_type": ("device_name", None)}, SECTION_NVME)) == [
+        Service(
+            item="/dev/nvme0",
+            parameters={
+                "key": ("PC601 NVMe SK hynix 512GB", "XXXNVMe"),
+                "critical_warning": 0,
+                "media_errors": 0,
+            },
+        ),
     ]
 
 
 def test_check_smart_nvme_stat() -> None:
     assert list(
-        check_smart_nvme("/dev/nvme0", {"critical_warning": 0, "media_errors": 0}, SECTION_NVME)
+        check_smart_nvme(
+            "/dev/nvme0",
+            {
+                "key": ("PC601 NVMe SK hynix 512GB", "XXXNVMe"),
+                "critical_warning": 0,
+                "media_errors": 0,
+            },
+            SECTION_NVME,
+        )
     ) == [
         Result(state=State.OK, summary="Powered on: 1 year 49 days"),
         Metric("uptime", 35798400.0),

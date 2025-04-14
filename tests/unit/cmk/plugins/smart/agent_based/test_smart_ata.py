@@ -25,6 +25,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     ATATable,
     ATATableEntry,
     parse_smart_posix_all,
+    Section,
     Temperature,
 )
 
@@ -34,63 +35,80 @@ STRING_TABLE_ATA = [
     ],
 ]
 
-SECTION_ATA = [
-    ATAAll(
-        device=ATADevice(protocol="ATA", name="/dev/sda"),
-        ata_smart_attributes=ATATable(
-            table=[
-                ATATableEntry(
-                    id=1, name="Raw_Read_Error_Rate", value=200, thresh=51, raw=ATARawValue(value=0)
-                ),
-                ATATableEntry(
-                    id=5,
-                    name="Reallocated_Sector_Ct",
-                    value=200,
-                    thresh=0,
-                    raw=ATARawValue(value=0),
-                ),
-                ATATableEntry(
-                    id=9, name="Power_On_Hours", value=97, thresh=0, raw=ATARawValue(value=2901)
-                ),
-                ATATableEntry(
-                    id=10, name="Spin_Retry_Count", value=100, thresh=0, raw=ATARawValue(value=0)
-                ),
-                ATATableEntry(
-                    id=12, name="Power_Cycle_Count", value=100, thresh=0, raw=ATARawValue(value=669)
-                ),
-                ATATableEntry(
-                    id=194,
-                    name="Temperature_Celsius",
-                    value=105,
-                    thresh=0,
-                    raw=ATARawValue(value=38),
-                ),
-                ATATableEntry(
-                    id=196,
-                    name="Reallocated_Event_Count",
-                    value=200,
-                    thresh=0,
-                    raw=ATARawValue(value=0),
-                ),
-                ATATableEntry(
-                    id=197,
-                    name="Current_Pending_Sector",
-                    value=200,
-                    thresh=0,
-                    raw=ATARawValue(value=0),
-                ),
-                ATATableEntry(
-                    id=199,
-                    name="UDMA_CRC_Error_Count",
-                    value=200,
-                    thresh=0,
-                    raw=ATARawValue(value=0),
-                ),
-            ]
-        ),
-        temperature=Temperature(current=38),
-    )
-]
+SECTION_ATA = Section(
+    devices={
+        ("WDC WD3200BUCT-63TWBY0", "XXXATA"): ATAAll(
+            device=ATADevice(protocol="ATA", name="/dev/sda"),
+            model_name="WDC WD3200BUCT-63TWBY0",
+            serial_number="XXXATA",
+            ata_smart_attributes=ATATable(
+                table=[
+                    ATATableEntry(
+                        id=1,
+                        name="Raw_Read_Error_Rate",
+                        value=200,
+                        thresh=51,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=5,
+                        name="Reallocated_Sector_Ct",
+                        value=200,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=9, name="Power_On_Hours", value=97, thresh=0, raw=ATARawValue(value=2901)
+                    ),
+                    ATATableEntry(
+                        id=10,
+                        name="Spin_Retry_Count",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=12,
+                        name="Power_Cycle_Count",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=669),
+                    ),
+                    ATATableEntry(
+                        id=194,
+                        name="Temperature_Celsius",
+                        value=105,
+                        thresh=0,
+                        raw=ATARawValue(value=38),
+                    ),
+                    ATATableEntry(
+                        id=196,
+                        name="Reallocated_Event_Count",
+                        value=200,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=197,
+                        name="Current_Pending_Sector",
+                        value=200,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=199,
+                        name="UDMA_CRC_Error_Count",
+                        value=200,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                ]
+            ),
+            temperature=Temperature(current=38),
+        )
+    },
+    failures=[],
+)
 
 
 def test_parse_smart_ata() -> None:
@@ -99,14 +117,48 @@ def test_parse_smart_ata() -> None:
 
 
 def test_discover_smart_ata_stat() -> None:
-    assert list(discover_smart_ata(SECTION_ATA)) == [
-        Service(item="/dev/sda", parameters={"5": 0, "10": 0, "197": 0, "199": 0}),
+    assert list(
+        discover_smart_ata(
+            {"item_type": ("device_name", None)},
+            SECTION_ATA,
+        )
+    ) == [
+        Service(
+            item="/dev/sda",
+            parameters={
+                "key": ("WDC WD3200BUCT-63TWBY0", "XXXATA"),
+                "id_5": 0,
+                "id_10": 0,
+                "id_184": None,
+                "id_187": None,
+                "id_188": None,
+                "id_196": 0,
+                "id_197": 0,
+                "id_199": 0,
+            },
+        ),
     ]
 
 
 def test_check_smart_ata_stat() -> None:
     assert list(
-        _check_smart_ata("/dev/sda", {"5": 0, "10": 0, "197": 0, "199": 0}, SECTION_ATA, {}, 0)
+        _check_smart_ata(
+            "/dev/sda",
+            {
+                "key": ("WDC WD3200BUCT-63TWBY0", "XXXATA"),
+                "id_5": 0,
+                "id_10": 0,
+                "id_184": None,
+                "id_187": None,
+                "id_188": None,
+                "id_196": 0,
+                "id_197": 0,
+                "id_199": 0,
+            },
+            SECTION_ATA,
+            {},
+            0,
+        )
     ) == [
         Result(state=State.OK, summary="Reallocated sectors: 0"),
         Metric("harddrive_reallocated_sectors", 0.0),
@@ -131,6 +183,8 @@ def test_check_command_timeout() -> None:
     # {"id":188,"name":"Command_Timeout","value":100,"worst":100,"thresh":0,"when_failed":"","flags":{"value":50,"string":"-O--CK ","prefailure":false,"updated_online":true,"performance":false,"error_rate":false,"event_count":true,"auto_keep":true},"raw":{"value":92,"string":"92"}}
     disk = ATAAll(
         device=ATADevice(protocol="ATA", name="/dev/sda"),
+        model_name="WDC WD3200BUCT-63TWBY0",
+        serial_number="XXXATA",
         ata_smart_attributes=ATATable(
             table=[
                 ATATableEntry(
@@ -156,6 +210,8 @@ def test_check_command_timeout() -> None:
 def test_check_command_timeout_critical() -> None:
     disk = ATAAll(
         device=ATADevice(protocol="ATA", name="/dev/sda"),
+        model_name="WDC WD3200BUCT-63TWBY0",
+        serial_number="XXXATA",
         ata_smart_attributes=ATATable(
             table=[
                 ATATableEntry(
@@ -170,6 +226,8 @@ def test_check_command_timeout_critical() -> None:
         temperature=Temperature(current=38),
     )
     disk_second = ATAAll(
+        model_name="WDC WD3200BUCT-63TWBY0",
+        serial_number="XXXATA",
         device=ATADevice(protocol="ATA", name="/dev/sda"),
         ata_smart_attributes=ATATable(
             table=[

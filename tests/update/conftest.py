@@ -103,7 +103,7 @@ def _setup(
 
     if (
         request.config.getoption(name="--latest-base-version")
-        and base_package.version != BaseVersions.base_versions[-1]
+        and base_package != BaseVersions.base_versions[-1]
     ):
         pytest.skip("Only latest base-version selected")
 

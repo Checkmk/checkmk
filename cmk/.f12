@@ -5,7 +5,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -90,7 +90,7 @@ if [ "$CMK_EDITION" = "cme" ]; then
     sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/ccc/version.py"
 fi
 
-if [ -z "$ONLY_COPY" ]; then
+if [ -z "${ONLY_COPY}" ]; then
     (
         cd "$ROOT"/lib/python3/cmk
         "$ROOT"/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"

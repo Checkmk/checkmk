@@ -5,7 +5,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -21,15 +21,15 @@ gzip <omd.8 >"$ROOT/share/man/man8/omd.8.gz"
 (
     cd hooks
     for hook in *; do
-        cp -v $hook $ROOT/lib/omd/hooks/$hook
+        cp -v "${hook}" "${ROOT}/lib/omd/hooks/$hook"
     done
 )
 
-mkdir -p $ROOT/lib/omd/scripts/post-create
-mkdir -p $ROOT/lib/omd/scripts/post-update
+mkdir -p "${ROOT}/lib/omd/scripts/post-create"
+mkdir -p "${ROOT}/lib/omd/scripts/post-update"
 
-cp -v omd.service $ROOT/share/omd
-cp -v omd.bin $ROOT/bin/omd
+cp -v omd.service "${ROOT}/share/omd"
+cp -v omd.bin "${ROOT}/bin/omd"
 rsync \
     --exclude=__pycache__ \
     --recursive \
@@ -38,12 +38,11 @@ rsync \
     --specials \
     --relative \
     omdlib \
-    $ROOT/lib/python3
+    "${ROOT}/lib/python3"
 
-OLD_VERSION=$(readlink $ROOT/version)
+OLD_VERSION=$(readlink "${ROOT}/version")
 OLD_VERSION=${OLD_VERSION##*/}
-echo $OLD_VERSION
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python3/omdlib/__init__.py
-sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'$OLD_VERSION'/bin/python3|g' $ROOT/bin/omd
+sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" "${ROOT}/lib/python3/omdlib/__init__.py"
+sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'"${OLD_VERSION}"'/bin/python3|g' "${ROOT}/bin/omd"

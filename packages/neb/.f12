@@ -19,4 +19,4 @@ install --verbose ../../bazel-bin/packages/neb/libneb_shared.so "$ROOT/lib/mk-li
 patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/lib/mk-livestatus/livestatus.o"
 
 test -z "$ONLY_COPY" || exit 0
-sudo --login -u "$SITE" -- bash -c "omd restart nagios"
+sudo --login -u "${SITE}" -- bash -c "omd restart nagios"

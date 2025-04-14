@@ -20,4 +20,4 @@ install --verbose --mode 644 ../../bazel-bin/packages/livestatus/liblivestatus.s
 patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/lib/liblivestatus.so.0.1"
 
 test -z "$ONLY_COPY" || exit 0
-sudo --login -u "$SITE" -- bash -c "omd restart nagios; omd restart cmc"
+sudo --login -u "${SITE}" -- bash -c "omd restart nagios; omd restart cmc"

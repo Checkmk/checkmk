@@ -5,14 +5,14 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-EDITION=$(sudo --login -u "$SITE" -- bash -c "python3 -c 'from cmk.utils.version import edition; print(edition().long)'")
+EDITION=$(sudo --login -u "${SITE}" -- bash -c "python3 -c 'from cmk.utils.version import edition; print(edition().long)'")
 
 (
     cd skel || exit 1
@@ -28,5 +28,5 @@ EDITION=$(sudo --login -u "$SITE" -- bash -c "python3 -c 'from cmk.utils.version
 
 cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
 
-sudo --login -u "$SITE" -- bash -c "find \"$ROOT/etc\" -type f -exec \
+sudo --login -u "${SITE}" -- bash -c "find \"$ROOT/etc\" -type f -exec \
     perl -pi -e \"s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g; s|###EDITION###|$EDITION|g\" \"{}\" \;"

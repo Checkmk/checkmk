@@ -5,7 +5,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -17,8 +17,8 @@ rsync \
     --rsh="sudo --login -u \"$SITE\" -- exec" \
     ./skel/etc/apache/conf.d/*.conf \
     :etc/apache/conf.d/
-sudo --login -u "$SITE" -- sed -i "s|###ROOT###|${ROOT}|g" "${ROOT}"/etc/apache/conf.d/stats.conf
+sudo --login -u "${SITE}" -- sed -i "s|###ROOT###|${ROOT}|g" "${ROOT}"/etc/apache/conf.d/stats.conf
 
-if [ -z "$ONLY_COPY" ]; then
-    sudo --login -u "$SITE" -- bash -c "omd reload apache"
+if [ -z "${ONLY_COPY}" ]; then
+    sudo --login -u "${SITE}" -- bash -c "omd reload apache"
 fi

@@ -5,7 +5,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -22,6 +22,6 @@ for lang in ?? ??_??; do
     install -v -m 644 "$lang"/LC_MESSAGES/multisite.mo "$ROOT"/share/check_mk/locale/"$lang"/LC_MESSAGES
 done
 
-if [ -z "$ONLY_COPY" ]; then
-    sudo --login -u "$SITE" -- bash -c "omd restart apache"
+if [ -z "${ONLY_COPY}" ]; then
+    sudo --login -u "${SITE}" -- bash -c "omd restart apache"
 fi

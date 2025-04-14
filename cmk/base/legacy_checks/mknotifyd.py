@@ -78,6 +78,7 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
             site_entry: dict[str, dict] = {
                 "spools": {},
                 "connections": {},
+                "connections_v2": {},
                 "queues": {},
             }
             sub_entry = site_entry
@@ -98,7 +99,7 @@ def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
             elif varname == "Connection":
                 sub_entry = {}
                 # for "mknotifyd.connection_v2"
-                site_entry["connections"][connected_site] = sub_entry
+                site_entry["connections_v2"][connected_site] = sub_entry
                 # keep the "mknotifyd.connection" services working
                 site_entry["connections"][value] = sub_entry
 
@@ -293,12 +294,7 @@ def inventory_mknotifyd_connection(parsed):
 
 
 def check_mknotifyd_connection(item, _no_params, parsed):
-    # "mknotifyd.connection_v2"
-    if "Notification Spooler connection to" in item:
-        site_name, connection_name = item.split(" Notification Spooler connection to ", 1)
-    # "mknotifyd.connection"
-    else:
-        site_name, connection_name = item.split("-", 1)
+    site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
         raise IgnoreResultsError("No status information about spooler available")
@@ -345,15 +341,48 @@ check_info["mknotifyd.connection"] = LegacyCheckDefinition(
 )
 
 
+def check_mknotifyd_connection_v2(item, _no_params, parsed):
+    site_name, connection_name = item.split(" Notification Spooler connection to ", 1)
+
+    if site_name not in parsed["sites"]:
+        raise IgnoreResultsError("No status information about spooler available")
+
+    states = {
+        "established": (0, "Alive"),
+        "cooldown": (2, "Connection failed or terminated"),
+        "initial": (1, "Initialized"),
+        "connecting": (2, "Trying to connect"),
+    }
+
+    connections = parsed["sites"][site_name]["connections_v2"]
+    if connection_name in connections:
+        connection = connections[connection_name]
+
+        # First check state
+        state, state_name = states[connection["State"]]
+        yield state, state_name
+
+        if "Status Message" in connection:
+            yield 0, connection["Status Message"]
+
+        # Show uptime
+        if connection["State"] == "established":
+            age = parsed["timestamp"] - connection["Since"]
+            yield 0, "Uptime: %s" % render.timespan(age)
+
+            if "Connect Time" in connection:
+                yield 0, "Connect time: %.3f sec" % connection["Connect Time"]
+
+        # Stats
+        for what in ("Sent", "Received"):
+            num = connection["Notifications " + what]
+            if num:
+                yield 0, "%d Notifications %s" % (num, what.lower())
+
+
 def inventory_mknotifyd_connection_v2(parsed):
     for site_name, stats in parsed["sites"].items():
-        for connection_name in stats["connections"]:
-            try:
-                ip_address(connection_name)
-                # item of old discovered "mknotifyd.connection"
-                continue
-            except ValueError:
-                pass
+        for connection_name in stats["connections_v2"]:
             yield (
                 f"{site_name} Notification Spooler connection to {connection_name}",
                 {},
@@ -364,5 +393,5 @@ check_info["mknotifyd.connection_v2"] = LegacyCheckDefinition(
     service_name="OMD %s",
     sections=["mknotifyd"],
     discovery_function=inventory_mknotifyd_connection_v2,
-    check_function=check_mknotifyd_connection,
+    check_function=check_mknotifyd_connection_v2,
 )

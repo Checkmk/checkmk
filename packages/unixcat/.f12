@@ -5,15 +5,15 @@
 
 set -e
 
-./run --build
-
-SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-test -d "$ROOT" || exit 1
+test -d "${ROOT}" || exit 1
+
+./run --build
 
 install -v -m 755 ../../bazel-bin/packages/unixcat/unixcat "$ROOT/bin"
 patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/bin/unixcat"

@@ -11,6 +11,7 @@ SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
+test -d "${ROOT}" || exit 1
 
 npm run build
 rsync -rlD ./dist/ "$ROOT/share/check_mk/web/htdocs/cmk-frontend-vue/"

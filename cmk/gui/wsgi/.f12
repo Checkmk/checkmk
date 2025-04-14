@@ -5,11 +5,15 @@
 
 set -e
 
-SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-DEST="$ROOT/lib/python3/cmk/gui/wsgi/"
+test -d "${ROOT}" || exit 1
 
+DEST="$ROOT/lib/python3/cmk/gui/wsgi/"
 echo "Sync WSGI files to $DEST ..."
 rsync -v -rlD --relative ./* "$DEST"
 

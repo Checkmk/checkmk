@@ -5,11 +5,13 @@
 
 set -e
 
-SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+test -d "${ROOT}" || exit 1
 
 bazel build ":wheel"
 
@@ -18,7 +20,7 @@ bazel build ":wheel"
 # hint: use `omd-setup-version-for-dev` to fix permissions of the checkmk site.
 export PYTHONNOUSERSITE=1
 
-"/omd/sites/${SITE}/bin/python3" -m pip install \
+"${ROOT}/bin/python3" -m pip install \
     --no-deps \
     --upgrade \
     --force-reinstall \

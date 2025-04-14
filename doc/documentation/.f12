@@ -5,5 +5,13 @@
 
 set -e
 
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+test -d "${ROOT}" || exit 1
+
 make htmlhelp
 echo "Open in your browser: file://$(pwd)/_build/htmlhelp/index.html"

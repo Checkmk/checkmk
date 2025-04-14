@@ -5,15 +5,15 @@
 
 set -e
 
-./run --build
-
-SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-test -d "$ROOT" || exit 1
+test -d "${ROOT}" || exit 1
+
+./run --build
 
 # Simply copying the library can cause a running NEB/CMC to crash.
 install --verbose --mode 644 ../../bazel-bin/packages/livestatus/liblivestatus.so "$ROOT/lib/liblivestatus.so.0.1"

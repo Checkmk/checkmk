@@ -5,14 +5,15 @@
 
 set -e
 
-SITE=${SITE:-$(until [ "${PWD}" == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-GIT_ROOT=$(git rev-parse --show-toplevel)
+test -d "${ROOT}" || exit 1
 
+GIT_ROOT=$(git rev-parse --show-toplevel)
 echo "Copy CRE files..."
 rsync \
     --exclude="*.pyc" \

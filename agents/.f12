@@ -11,6 +11,7 @@ SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
+test -d "${ROOT}" || exit 1
 
 # don't delete *.deb and *.rpm files as those are part of the distribution and can not be found in the source directory
 rsync --verbose --recursive --links --devices --specials --one-file-system --delete \

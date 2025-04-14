@@ -605,6 +605,7 @@ def _page_menu_entries_predefined_searches(
         title=_("Unknown rule sets"),
         icon_name={"icon": "rulesets", "emblem": "warning"},
         item=make_simple_link(makeuri_contextless(request, [("mode", "unknown_rulesets")])),
+        is_shortcut=True,
     )
 
 

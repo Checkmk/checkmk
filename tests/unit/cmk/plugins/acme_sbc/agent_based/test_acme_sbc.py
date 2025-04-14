@@ -6,14 +6,6 @@
 
 import pytest
 
-from cmk.base.legacy_checks.acme_sbc_snmp import (
-    check_acme_sbc_snmp,
-    discover_acme_sbc_snmp,
-    ParamsT,
-    parse_acme_sbc_snmp,
-    Section,
-)
-
 from cmk.agent_based.v2 import (
     CheckResult,
     Metric,
@@ -21,6 +13,13 @@ from cmk.agent_based.v2 import (
     Service,
     State,
     StringTable,
+)
+from cmk.plugins.acme.agent_based.acme_sbc_snmp import (
+    check_acme_sbc_snmp,
+    discover_acme_sbc_snmp,
+    ParamsT,
+    parse_acme_sbc_snmp,
+    Section,
 )
 
 SECTION_1 = [[".1.3.6.1.4.1.9148.3.2.1.1.3.0", "100"], [".1.3.6.1.4.1.9148.3.2.1.1.4.0 2", "2"]]

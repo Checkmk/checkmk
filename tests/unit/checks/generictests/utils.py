@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-EXCLUDES = ("", "__init__", "conftest", "__pycache__", "acme_sbc_snmp")
+EXCLUDES = ("", "__init__", "conftest", "__pycache__")
 
 DATASET_DIR = Path(__file__).absolute().parent / "datasets"
 

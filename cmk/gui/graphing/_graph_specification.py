@@ -20,8 +20,11 @@ from pydantic import (
 
 from cmk.ccc.plugin_registry import Registry
 
+from cmk.gui.i18n import _
+
 from cmk.graphing.v1 import graphs as graphs_api
 
+from ._color import scalar_colors
 from ._from_api import RegisteredMetric
 from ._graph_render_config import GraphRenderOptions
 from ._metric_operation import (
@@ -30,7 +33,8 @@ from ._metric_operation import (
     MetricOperation,
     parse_metric_operation,
 )
-from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
+from ._translated_metrics import TranslatedMetric
+from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, UserSpecificUnit
 
 
 class HorizontalRule(BaseModel, frozen=True):
@@ -38,6 +42,32 @@ class HorizontalRule(BaseModel, frozen=True):
     rendered_value: str
     color: str
     title: str
+
+
+def compute_warn_crit_rules_from_translated_metric(
+    user_specific_unit: UserSpecificUnit,
+    translated_metric: TranslatedMetric,
+) -> Sequence[HorizontalRule]:
+    horizontal_rules = []
+    if (warn_value := translated_metric.scalar.get("warn")) is not None:
+        horizontal_rules.append(
+            HorizontalRule(
+                value=warn_value,
+                rendered_value=user_specific_unit.formatter.render(warn_value),
+                color=scalar_colors["warn"],
+                title=_("Warning"),
+            )
+        )
+    if (crit_value := translated_metric.scalar.get("crit")) is not None:
+        horizontal_rules.append(
+            HorizontalRule(
+                value=crit_value,
+                rendered_value=user_specific_unit.formatter.render(crit_value),
+                color=scalar_colors["crit"],
+                title=_("Critical"),
+            )
+        )
+    return horizontal_rules
 
 
 class GraphMetric(BaseModel, frozen=True):

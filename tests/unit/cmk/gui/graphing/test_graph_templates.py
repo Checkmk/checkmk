@@ -16,6 +16,7 @@ from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
+    _evaluate_scalars,
     _get_evaluated_graph_templates,
     _matching_graph_templates,
     _parse_bidirectional_from_api,
@@ -23,7 +24,6 @@ from cmk.gui.graphing._graph_templates import (
     _parse_graph_plugin,
     _sort_registered_graph_plugins,
     evaluate_metrics,
-    evaluate_scalars,
     EvaluatedGraphTemplate,
     GraphTemplate,
     MinimalGraphTemplateRange,
@@ -845,7 +845,7 @@ def test_horizontal_rules_from_thresholds(
         registered_metrics,
     )
     assert (
-        evaluate_scalars(
+        _evaluate_scalars(
             [
                 MetricExpression(
                     WarningOf(Metric("one")),

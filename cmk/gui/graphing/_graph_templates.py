@@ -544,7 +544,7 @@ def _graph_title_expression_to_metric_expression(
     return scalar
 
 
-def evaluate_scalars(
+def _evaluate_scalars(
     metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[HorizontalRule]:
@@ -590,7 +590,7 @@ def _create_evaluated_graph_template(
     return EvaluatedGraphTemplate(
         id=graph_template.id,
         title=_evaluate_title(graph_template.title, translated_metrics),
-        scalars=evaluate_scalars(graph_template.scalars, translated_metrics),
+        scalars=_evaluate_scalars(graph_template.scalars, translated_metrics),
         consolidation_function=graph_template.consolidation_function or "max",
         range=graph_template.range,
         omit_zero_metrics=graph_template.omit_zero_metrics,

@@ -729,4 +729,3 @@ filterwarnings = [
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.
 junit_logging = "all"
-asyncio_default_fixture_loop_scope = "function"

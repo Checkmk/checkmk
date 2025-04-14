@@ -9,11 +9,14 @@ Relevant documentation:
 """
 
 # mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
+
+FLAG_BLOBSPACE = 512
 
 
 def parse_informix_dbspaces(string_table):
@@ -45,15 +48,24 @@ def inventory_informix_dbspaces(parsed):
     return [(ts, {}) for ts in parsed]
 
 
+def _get_pagesize(entry: Mapping[str, str]) -> tuple[int, int]:
+    pagesize = int(entry["pagesize"])
+    system_pagesize = int(entry["system_pagesize"])
+    nfree_pagesize = pagesize if FLAG_BLOBSPACE & int(entry["chunk_flags"]) else system_pagesize
+
+    return system_pagesize, nfree_pagesize
+
+
 def check_informix_dbspaces(item, params, parsed):
     if item in parsed:
         datafiles = parsed[item]
         size = 0
         free = 0
         for entry in datafiles:
-            pagesize = int(entry["pagesize"])
-            free += int(entry["nfree"]) * pagesize
-            size += int(entry["chksize"]) * pagesize
+            system_pagesize, nfree_pagesize = _get_pagesize(entry)
+            # FYI: The reference page size for nfree depends on the type of space
+            free += int(entry["nfree"]) * nfree_pagesize
+            size += int(entry["chksize"]) * system_pagesize
 
         used = size - free
         infotext = "Data files: {}, Size: {}, Used: {}".format(

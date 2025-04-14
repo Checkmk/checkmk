@@ -386,7 +386,7 @@ std::string WmiBase::getData() {
         return WmiCachedDataHelper(cache_, data, separator());
     }
 
-    // all other errors means disaster and we sends NOTHING
+    // all other errors means disaster and we send NOTHING
     XLOG::l("Error reading WMI [{}] in '{}'", static_cast<int>(status),
             getUniqName());
 

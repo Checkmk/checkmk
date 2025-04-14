@@ -39,7 +39,6 @@
 #define NOPROFILER         // Profiler interface.
 #define NODEFERWINDOWPOS   // DeferWindowPos routines
 #define NOMCX              // Modem Configuration Extensions
-#define _CRT_USE_CONFORMING_ANNEX_K_TIME 1  // to have correct locatime_r
 
 #define _WIN32_WINNT 0x0600  // NOLINT
 

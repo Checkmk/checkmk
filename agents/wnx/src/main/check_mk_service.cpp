@@ -440,7 +440,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
 }
 }  // namespace
 
-// #TODO Function is over complicated
+// #TODO Function is overcomplicated
 // we want to test main function too.
 // so we have main, but callable
 int MainFunction(int argc, wchar_t const *argv[]) {

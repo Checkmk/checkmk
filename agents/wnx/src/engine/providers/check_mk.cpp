@@ -8,6 +8,7 @@
 #include "providers/check_mk.h"
 
 #include <string>
+#include <cerrno>
 
 //
 #include "wnx/asio.h"
@@ -126,8 +127,11 @@ std::string MakeDirs() {
 
 std::tm ToLocalTime(std::chrono::time_point<std::chrono::system_clock> now) {
     const std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm local_time;
-    auto _ = localtime_s(&now_c, &local_time);
+    std::tm local_time{};
+    errno = 0;
+    if (localtime_s(&local_time, &now_c) != 0) {
+        XLOG::d.e("ToLocalTime: localtime_s failed with errno {}", errno);
+    }
     return local_time;
 }
 

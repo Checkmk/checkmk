@@ -41,7 +41,7 @@ struct fmt::formatter<YAML::NodeType::value> {
     }
 
     template <typename FormatContext>
-    auto format(YAML::NodeType::value v, FormatContext &ctx) {
+    auto format(YAML::NodeType::value v, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}", mapper(v));
     }
 };
@@ -54,7 +54,7 @@ struct fmt::formatter<std::exception> {
     }
 
     template <typename FormatContext>
-    auto format(const std::exception &e, FormatContext &ctx) {
+    auto format(const std::exception &e, FormatContext &ctx) const {
         try {
             return fmt::format_to(ctx.out(), "{}", e.what());
         } catch (const std::exception & /* ups*/) {
@@ -74,7 +74,7 @@ struct fmt::formatter<std::filesystem::path> {
     }
 
     template <typename FormatContext>
-    auto format(const std::filesystem::path &p, FormatContext &ctx) {
+    auto format(const std::filesystem::path &p, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}", p.u8string());
     }
 };
@@ -87,7 +87,7 @@ struct fmt::formatter<std::chrono::milliseconds> {
     }
 
     template <typename FormatContext>
-    auto format(const std::chrono::milliseconds &p, FormatContext &ctx) {
+    auto format(const std::chrono::milliseconds &p, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}ms", p.count());
     }
 };
@@ -100,7 +100,7 @@ struct fmt::formatter<std::chrono::seconds> {
     }
 
     template <typename FormatContext>
-    auto format(const std::chrono::seconds &p, FormatContext &ctx) {
+    auto format(const std::chrono::seconds &p, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}s", p.count());
     }
 };
@@ -113,7 +113,7 @@ struct fmt::formatter<std::chrono::microseconds> {
     }
 
     template <typename FormatContext>
-    auto format(const std::chrono::microseconds &p, FormatContext &ctx) {
+    auto format(const std::chrono::microseconds &p, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}us", p.count());
     }
 };
@@ -126,7 +126,7 @@ struct fmt::formatter<std::chrono::nanoseconds> {
     }
 
     template <typename FormatContext>
-    auto format(const std::chrono::nanoseconds &p, FormatContext &ctx) {
+    auto format(const std::chrono::nanoseconds &p, FormatContext &ctx) const {
         return fmt::format_to(ctx.out(), "{}ns", p.count());
     }
 };
@@ -139,7 +139,7 @@ struct fmt::formatter<std::optional<T>> {
     }
 
     template <typename FormatContext>
-    auto format(const std::optional<T> &p, FormatContext &ctx) {
+    auto format(const std::optional<T> &p, FormatContext &ctx) const {
         if (p.has_value()) {
             return fmt::format_to(ctx.out(), "{}", *p);
         }

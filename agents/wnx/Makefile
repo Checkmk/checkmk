@@ -25,7 +25,7 @@ ASIO_VERSION 	:= asio-1.24.0-patched
 
 PACKAGE_FMT     := $(TOP_SRC_DIR)\third_party\fmt
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-FMT_VERSION    := fmt-10.2.1
+FMT_VERSION    := fmt-11.1.4
 
 PACKAGE_OHM     := $(TOP_SRC_DIR)\third_party\openhardwaremonitor
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
@@ -37,7 +37,7 @@ SIMPLEINI_VERSION     := simpleini-2af65fc
 
 PACKAGE_YAML   := $(TOP_SRC_DIR)\third_party\yaml-cpp
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-YAML_VERSION   := yaml-cpp.9a362420
+YAML_VERSION   := yaml-cpp-0.8.0
 
 PACKAGE_GTEST   := $(TOP_SRC_DIR)\third_party\googletest
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too

@@ -284,7 +284,7 @@ ModuleCommander::GetSystemExtensions() {
         return false;
     }
 
-    if (name().empty()) {
+    if (name().empty() || name() == "null") {
         XLOG::l("Name is absent or not valid");
         reset();
         return false;

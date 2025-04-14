@@ -1099,7 +1099,7 @@ class Site:
 
         # let's ensure, that no more processes for the site are running (CMK-21668)
         # all site processes will be for some file below /omd/sites/<site_id>
-        site_procs = get_processes_by_cmdline(f"omd/sites/{self.id}")
+        site_procs = get_processes_by_cmdline(f"omd/sites/{self.id}/")
         if site_procs:
             logger.warning(
                 "processes still running after stopping the site %s (only first 10):", self.id

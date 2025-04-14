@@ -12,12 +12,12 @@
 #include <functional>
 #include <vector>
 
-#include "wnx/cfg.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
-#include "iosfwd"                // for ofstream
-#include "wnx/on_start.h"            // for OnStart, AppType, AppType::test
-#include "system_error"          // for error_code
+#include "iosfwd"        // for ofstream
+#include "system_error"  // for error_code
+#include "wnx/cfg.h"
+#include "wnx/on_start.h"        // for OnStart, AppType, AppType::test
 #include "xstring"               // for string, basic_string, wstring
 #include "yaml-cpp/node/impl.h"  // for Node::Node, Node::~Node
 namespace YAML {
@@ -303,11 +303,12 @@ struct EventRecordData {
 const std::vector<EventRecordData> &SimpleLogData();
 
 constexpr std::array g_terminal_services_indexes = {
-    8154,  // windows 10, dev machine
-    2066,  // windows server, build machine
-    5090,  // windows 10, dev machine, late build
-    6324,  // windows 10, 20h2
-    8868,  // windows server build machine
+    8154,   // windows 10, dev machine
+    2066,   // windows server, build machine
+    5090,   // windows 10, dev machine, late build
+    6324,   // windows 10, 20h2
+    8868,   // windows server build machine
+    14404,  // windows 10, dev machine after rebuild
 };
 
 }  // namespace tst

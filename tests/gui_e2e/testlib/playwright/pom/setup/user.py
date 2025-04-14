@@ -34,7 +34,7 @@ class BaseUserPage(CmkPage):
     def navigate(self) -> None:
         pass
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.username_text_field).to_be_visible()
@@ -91,9 +91,9 @@ class AddUser(BaseUserPage):
         users_page = Users(self.page)
         users_page.add_user_button.click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.username_text_field).to_be_visible()
@@ -134,9 +134,9 @@ class EditUser(BaseUserPage):
         users_page = Users(self.page)
         users_page.user_properties_button(self.username).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.full_name_text_field).to_be_visible()

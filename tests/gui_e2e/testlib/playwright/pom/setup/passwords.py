@@ -27,10 +27,10 @@ class Passwords(CmkPage):
         logger.info("Navigate to 'Passwords' page")
         self.main_menu.setup_menu("Passwords").click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=passwords")), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Passwords' page")
         self.main_area.check_page_title("Passwords")
         expect(self.add_password_button).to_be_visible()

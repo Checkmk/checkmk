@@ -37,7 +37,7 @@ class BaseNotificationPage(QuickSetupPage):
     def navigate(self) -> None:
         pass
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.overview_mode_button).to_be_visible()
@@ -293,7 +293,7 @@ class EditNotificationRule(BaseNotificationPage):
         self.page.wait_for_url(
             url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
         )
-        self._validate_page()
+        self.validate_page()
 
 
 class AddNotificationRule(BaseNotificationPage):
@@ -310,7 +310,7 @@ class AddNotificationRule(BaseNotificationPage):
         self.page.wait_for_url(
             url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
         )
-        self._validate_page()
+        self.validate_page()
 
     @property
     def si_description(self) -> Locator:

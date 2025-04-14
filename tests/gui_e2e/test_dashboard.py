@@ -174,7 +174,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     edit_element_top_list_page = EditElementTopList(dashboard_page.page, navigate_to_page=False)
     edit_element_top_list_page.add_host_filter_site("Local site gui_e2e_central")
     edit_element_top_list_page.save_button.click()
-    linux_hosts_dashboard_page._validate_page()  # pylint: disable=protected-access
+    linux_hosts_dashboard_page.validate_page()
 
     logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
@@ -183,7 +183,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
     edit_element_top_list_page.add_host_filter_host_labels("cmk/os_family:linux")
     edit_element_top_list_page.save_button.click()
-    linux_hosts_dashboard_page._validate_page()  # pylint: disable=protected-access
+    linux_hosts_dashboard_page.validate_page()
 
     logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
@@ -192,7 +192,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     linux_hosts_dashboard_page.edit_properties_button(dashlet_title).click()
     edit_element_top_list_page.remove_host_filter_button("Site").click()
     edit_element_top_list_page.save_button.click()
-    linux_hosts_dashboard_page._validate_page()  # pylint: disable=protected-access
+    linux_hosts_dashboard_page.validate_page()
 
     logger.info("Check that filtered '%s' dashlet contains all expected hosts", dashlet_title)
     expect(linux_hosts_dashboard_page.dashlet_table_rows(dashlet_title)).to_have_count(hosts_count)
@@ -220,7 +220,7 @@ def test_add_top_list_dashlet(dashboard_page: Dashboard, linux_hosts: list[str])
     add_element_top_list_page.select_metric(metric)
     add_element_top_list_page.check_show_service_name_checkbox(True)
     add_element_top_list_page.save_button.click()
-    linux_hosts_dashboard_page._validate_page()  # pylint: disable=protected-access
+    linux_hosts_dashboard_page.validate_page()
 
     logger.info("Check that new dashlet is visible and not empty")
     expect(linux_hosts_dashboard_page.dashlet(f"Top 10: {metric}")).to_be_visible()

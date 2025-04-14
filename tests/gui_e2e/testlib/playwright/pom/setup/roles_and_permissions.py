@@ -28,9 +28,9 @@ class RolesAndPermissions(CmkPage):
         self.main_menu.setup_menu(self.page_title).click()
         _url_pattern: str = quote_plus("wato.py?mode=roles")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self._role_row("admin")).to_be_visible()

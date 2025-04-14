@@ -47,7 +47,7 @@ class PasswordPolicy(CmkPage):
         )
 
     @override
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         expect(
             self._num_groups_label,
             message="'Number of character groups to use' label is not visible",

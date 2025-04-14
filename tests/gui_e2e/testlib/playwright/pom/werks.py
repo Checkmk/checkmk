@@ -21,9 +21,9 @@ class Werks(CmkPage):
         logger.info("Navigate to 'Werks' page")
         self.main_menu.help_werks.click()
         self.page.wait_for_url(url=re.compile("change_log.py$"), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Werks' page")
         self.main_area.check_page_title(self.page_title)
 

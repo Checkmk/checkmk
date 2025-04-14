@@ -25,7 +25,7 @@ class GlobalSettings(CmkPage):
         self.main_menu.setup_menu(self.page_title).click()
         self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Global settings' page")
         self.main_area.check_page_title(self.page_title)
 

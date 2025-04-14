@@ -23,7 +23,7 @@ class ElementTopList(CmkPage):
             "this page can vary based on the dashboard and the specific element to be edited. ",
         )
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self._section("Context / Search Filters")).to_be_visible()

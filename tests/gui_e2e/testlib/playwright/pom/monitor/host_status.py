@@ -68,9 +68,9 @@ class HostStatus(CmkPage):
             quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=hoststatus")
         )
         self.page.wait_for_url(url=re.compile(status_of_host_url_pattern), wait_until="load")
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self._table_cell("Host name")).to_be_visible()

@@ -24,7 +24,7 @@ class CombinedGraphsServiceSearch(CmkPage):
             "this page can vary based on the filters applied on the 'Service Search' page.",
         )
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Combined graphs - Service search' page")
         self.main_area.check_page_title(re.compile(self.page_title))
 

@@ -31,9 +31,9 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
             url=re.compile(quote_plus("varname=periodic_discovery&mode=new_rule")),
             wait_until="load",
         )
-        self._validate_page()
+        self.validate_page()
 
-    def _validate_page(self) -> None:
+    def validate_page(self) -> None:
         logger.info("Validate that current page is 'Add rule: %s' page", self.rule_name)
         self.main_area.check_page_title(f"Add rule: {self.rule_name}")
         expect(self.description_text_field).to_be_visible()

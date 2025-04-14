@@ -3,15 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.base.check_legacy_includes.temperature import check_temperature
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v1 import get_value_store
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-check_info = {}
-
+Section = dict[str, tuple[str, str]]
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.1 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.1
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.2 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.2
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.3 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.3
@@ -38,38 +43,50 @@ check_info = {}
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.5.6 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureState.6
 
 
-def inventory_acme_temp(info):
-    return [(descr, {}) for descr, _value_str, state in info if state != "7"]
+def inventory_acme_temp(section: Section) -> DiscoveryResult:
+    if section:
+        yield from [
+            Service(item=descr) for descr, (_value_str, state) in section.items() if state != "7"
+        ]
 
 
-def check_acme_temp(item, params, info):
-    for descr, value_str, state in info:
+def check_acme_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+    for descr, value_str, state in section:
         if item == descr:
             dev_state, dev_state_readable = ACME_ENVIRONMENT_STATES[state]
-            return check_temperature(
+
+            yield from check_temperature(
                 float(value_str),
                 params,
-                "acme_temp.%s" % item,
+                unique_name="acme_temp.%s" % item,
+                value_store=get_value_store(),
                 dev_status=int(dev_state),
                 dev_status_name=dev_state_readable,
             )
-    return None
 
 
-def parse_acme_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_acme_temp(string_table: StringTable) -> Section | None:
+    section: Section = {}
+    for descr, value_str, state in string_table:
+        section[descr] = (value_str, state)
+    return section or None
 
 
-check_info["acme_temp"] = LegacyCheckDefinition(
+snmp_section_acme_temp = SimpleSNMPSection(
     name="acme_temp",
-    parse_function=parse_acme_temp,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.3.1.1",
         oids=["3", "4", "5"],
     ),
+    parse_function=parse_acme_temp,
+)
+
+check_plugin_acme_temp = CheckPlugin(
+    name="acme_temp",
     service_name="Temperature %s",
     discovery_function=inventory_acme_temp,
     check_function=check_acme_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

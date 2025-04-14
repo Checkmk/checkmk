@@ -25,7 +25,7 @@ pytestmark = pytest.mark.xfail(reason="CMK-22540; Flake while activating changes
 
 
 @pytest.fixture(name="host")
-def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
+def fixture_host(dashboard_page: Dashboard, test_site: Site) -> Iterator[HostProperties]:
     _host = HostProperties(
         dashboard_page.page,
         HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
@@ -33,7 +33,7 @@ def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
     yield _host
     if int(os.getenv("CLEANUP", "1")) == 1:
         _host.navigate()
-        _host.delete_host()
+        _host.delete_host(test_site)
 
 
 def test_navigate_to_host_properties(host: HostProperties) -> None:
@@ -47,7 +47,7 @@ def test_navigate_to_host_properties(host: HostProperties) -> None:
     expect(host.main_area.locator("div.warning")).to_have_count(0)
 
 
-def test_create_and_delete_a_host(dashboard_page: Dashboard) -> None:
+def test_create_and_delete_a_host(dashboard_page: Dashboard, test_site: Site) -> None:
     """Validate creation and deletes of a host."""
     # create Host
     host = HostProperties(
@@ -60,7 +60,7 @@ def test_create_and_delete_a_host(dashboard_page: Dashboard) -> None:
     host.select_host(host.details.name)
     # Cleanup: delete host
     host.navigate()
-    host.delete_host()
+    host.delete_host(test_site)
 
 
 def test_reschedule(host: HostProperties) -> None:

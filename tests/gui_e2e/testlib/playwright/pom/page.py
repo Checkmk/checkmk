@@ -13,6 +13,7 @@ from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
 from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -111,11 +112,19 @@ class CmkPage(LocatorHelper):
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
-    def activate_changes(self) -> None:
+    def activate_changes(self, site: Site | None = None) -> None:
         logger.info("Activate changes")
-        self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
-        self.activate_selected()
-        self.expect_success_state()
+        try:
+            self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
+            self.activate_selected()
+            self.expect_success_state()
+        except Exception as e:
+            if site:
+                e.add_note(
+                    "Flake during changes activation. The changes will be activated through the API."
+                )
+                site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+            raise e
 
     def goto(self, url: str, event: str = "load") -> None:
         """Override `Page.goto`. Additionally, wait for the page to `load`, by default.

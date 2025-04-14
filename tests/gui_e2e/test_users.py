@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="new_role")
 def create_new_role_by_cloning(
-    dashboard_page: Dashboard, request: pytest.FixtureRequest
+    dashboard_page: Dashboard,
+    request: pytest.FixtureRequest,
+    test_site: Site,
 ) -> Iterator[RoleData]:
     """Create a new role by cloning an existing role, delete it after the test.
 
@@ -53,12 +55,14 @@ def create_new_role_by_cloning(
     yield role_data
     roles_and_permissions_page.navigate()
     roles_and_permissions_page.delete_role(role_data.role_id)
-    roles_and_permissions_page.activate_changes()
+    roles_and_permissions_page.activate_changes(test_site)
 
 
 @pytest.fixture(name="new_user")
 def create_new_user(
-    dashboard_page: Dashboard, request: pytest.FixtureRequest
+    dashboard_page: Dashboard,
+    request: pytest.FixtureRequest,
+    test_site: Site,
 ) -> Iterator[UserData]:
     """Create a new user and delete it after the test.
 
@@ -75,7 +79,7 @@ def create_new_user(
     yield user_data
     users_page = Users(dashboard_page.page)
     users_page.delete_user(user_data.user_id)
-    users_page.activate_changes()
+    users_page.activate_changes(test_site)
 
 
 @pytest.mark.parametrize(

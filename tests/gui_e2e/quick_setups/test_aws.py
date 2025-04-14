@@ -47,7 +47,7 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="aws_qs_config_page")
 def fixture_aws_qs_config_page(
-    fake_aws_dump: None, dashboard_page: Dashboard
+    fake_aws_dump: None, dashboard_page: Dashboard, test_site: Site
 ) -> Iterator[AWSAddNewConfiguration]:
     """Navigate to the AWS Quick setup page and add new configuration page"""
     configuration_name = "my_aws_account"
@@ -76,7 +76,7 @@ def fixture_aws_qs_config_page(
         activate = True
 
     if activate:  # only activate if we deleted the quick setup or folder
-        list_hosts_page.activate_changes()
+        list_hosts_page.activate_changes(test_site)
 
 
 @pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")

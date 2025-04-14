@@ -12,7 +12,6 @@ from typing import Literal, override
 
 from livestatus import SiteId
 
-from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
@@ -26,6 +25,7 @@ from ._color import mix_colors, parse_color, parse_color_from_api, render_color,
 from ._formatter import AutoPrecision, StrictPrecision
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._metric_operation import (
+    create_metric_operation_from_translated_metric,
     GraphConsolidationFunction,
     line_type_mirror,
     LineType,
@@ -176,29 +176,6 @@ class Constant(BaseMetricExpression):
     @override
     def is_scalar(self) -> bool:
         return True
-
-
-def create_metric_operation_from_translated_metric(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metric: TranslatedMetric,
-    consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator:
-    metrics = [
-        MetricOpRRDSource(
-            site_id=site_id,
-            host_name=host_name,
-            service_name=service_name,
-            metric_name=pnp_cleanup(o.name),
-            consolidation_func_name=consolidation_function,
-            scale=o.scale,
-        )
-        for o in translated_metric.originals
-    ]
-    if len(metrics) > 1:
-        return MetricOpOperator(operator_name="MERGE", operands=metrics)
-    return metrics[0]
 
 
 @dataclass(frozen=True)

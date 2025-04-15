@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -12,28 +11,16 @@ from cmk.ccc.exceptions import MKGeneralException
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    HistoryEntry,
     HistoryPath,
     ImmutableDeltaTree,
-    ImmutableTree,
-    load_delta_cache,
-    load_tree,
-    save_delta_cache,
-    SDFilterChoice,
+    load_history,
     TreeOrArchiveStore,
 )
 
 from cmk.gui.i18n import _
 
 from ._tree import get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
-
-
-@dataclass(frozen=True)
-class HistoryEntry:
-    timestamp: int | None
-    new: int
-    changed: int
-    removed: int
-    delta_tree: ImmutableDeltaTree
 
 
 def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
@@ -45,7 +32,12 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, _corrupted = _get_history(
+    history, _corrupted = load_history(
+        TreeOrArchiveStore(
+            cmk.utils.paths.inventory_output_dir,
+            cmk.utils.paths.inventory_archive_dir,
+        ),
+        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
         filter_tree=filter_tree,
@@ -59,10 +51,7 @@ def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Se
     )
 
 
-def load_delta_tree(
-    hostname: HostName,
-    timestamp: int,
-) -> tuple[ImmutableDeltaTree, Sequence[str]]:
+def load_delta_tree(hostname: HostName, timestamp: int) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     if "/" in hostname:
         return ImmutableDeltaTree(), []  # just for security reasons
@@ -87,7 +76,12 @@ def load_delta_tree(
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, corrupted = _get_history(
+    history, corrupted = load_history(
+        TreeOrArchiveStore(
+            cmk.utils.paths.inventory_output_dir,
+            cmk.utils.paths.inventory_archive_dir,
+        ),
+        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
         filter_tree=filter_tree,
@@ -108,146 +102,14 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, corrupted = _get_history(
+    history, corrupted = load_history(
+        TreeOrArchiveStore(
+            cmk.utils.paths.inventory_output_dir,
+            cmk.utils.paths.inventory_archive_dir,
+        ),
+        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: pairs,
         filter_tree=filter_tree,
     )
     return history, _sort_corrupted_history_files(corrupted)
-
-
-def _get_pairs(
-    history_file_paths: Sequence[HistoryPath],
-) -> Sequence[tuple[HistoryPath, HistoryPath]]:
-    if not history_file_paths:
-        return []
-    paths = [HistoryPath(Path(), None)] + list(history_file_paths)
-    return list(zip(paths, paths[1:]))
-
-
-def _make_history_entry(
-    timestamp: int,
-    new: int,
-    changed: int,
-    removed: int,
-    delta_tree: ImmutableDeltaTree,
-    filter_tree: Sequence[SDFilterChoice] | None,
-) -> HistoryEntry | None:
-    if filter_tree is None:
-        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
-
-    if not (filtered_delta_tree := delta_tree.filter(filter_tree)):
-        return None
-
-    delta_stats = filtered_delta_tree.get_stats()
-    return HistoryEntry(
-        timestamp,
-        delta_stats["new"],
-        delta_stats["changed"],
-        delta_stats["removed"],
-        filtered_delta_tree,
-    )
-
-
-def _get_cached_entry(
-    delta_tree_path: Path, timestamp: int, filter_tree: Sequence[SDFilterChoice] | None
-) -> HistoryEntry | None:
-    try:
-        cached_data = load_delta_cache(delta_tree_path)
-    except MKGeneralException:
-        return None
-
-    if cached_data is None:
-        return None
-
-    new, changed, removed, delta_tree = cached_data
-    return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
-
-
-def _get_calculated_or_store_entry(
-    delta_tree_path: Path,
-    timestamp: int,
-    previous_tree: ImmutableTree,
-    current_tree: ImmutableTree,
-    filter_tree: Sequence[SDFilterChoice] | None,
-) -> HistoryEntry | None:
-    delta_tree = current_tree.difference(previous_tree)
-    delta_stats = delta_tree.get_stats()
-    new = delta_stats["new"]
-    changed = delta_stats["changed"]
-    removed = delta_stats["removed"]
-    if new or changed or removed:
-        save_delta_cache(delta_tree_path, (new, changed, removed, delta_tree))
-        return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
-    return None
-
-
-def _get_history(
-    hostname: HostName,
-    *,
-    filter_history_paths: Callable[
-        [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
-    ],
-    filter_tree: Sequence[SDFilterChoice] | None,
-) -> tuple[Sequence[HistoryEntry], Sequence[Path]]:
-    history_files = TreeOrArchiveStore(
-        cmk.utils.paths.inventory_output_dir,
-        cmk.utils.paths.inventory_archive_dir,
-    ).history(host_name=hostname)
-
-    cached_tree_loader = _CachedTreeLoader()
-    history: list[HistoryEntry] = []
-
-    corrupted_deltas = []
-    for previous, current in filter_history_paths(_get_pairs(history_files.paths)):
-        if current.timestamp is None:
-            continue
-
-        delta_tree_path = Path(
-            cmk.utils.paths.inventory_delta_cache_dir,
-            hostname,
-            f"{previous.timestamp}_{current.timestamp}",
-        )
-
-        if (
-            cached_history_entry := _get_cached_entry(
-                delta_tree_path, current.timestamp, filter_tree
-            )
-        ) is not None:
-            history.append(cached_history_entry)
-            continue
-
-        try:
-            previous_tree = cached_tree_loader.get_tree(previous.path)
-        except FileNotFoundError:
-            corrupted_deltas.append(previous.path)
-            continue
-
-        try:
-            current_tree = cached_tree_loader.get_tree(current.path)
-        except FileNotFoundError:
-            corrupted_deltas.append(current.path)
-            continue
-
-        if (
-            history_entry := _get_calculated_or_store_entry(
-                delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
-            )
-        ) is not None:
-            history.append(history_entry)
-
-    return history, list(history_files.corrupted) + corrupted_deltas
-
-
-@dataclass(frozen=True)
-class _CachedTreeLoader:
-    _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
-
-    def get_tree(self, filepath: Path) -> ImmutableTree:
-        if filepath == Path():
-            return ImmutableTree()
-
-        if filepath in self._lookup:
-            return self._lookup[filepath]
-
-        return self._lookup.setdefault(filepath, load_tree(filepath))

@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
 
 from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.hostaddress import HostName
 
@@ -1646,7 +1647,7 @@ class ImmutableDeltaTree:
 #   '----------------------------------------------------------------------'
 
 
-def load_tree(filepath: Path) -> ImmutableTree:
+def _load_tree(filepath: Path) -> ImmutableTree:
     if raw_tree := store.load_object_from_file(filepath, default=None):
         return deserialize_tree(raw_tree)
     return ImmutableTree()
@@ -1725,7 +1726,7 @@ class TreeStore:
         self._last_filepath = Path(tree_dir) / ".last"
 
     def load(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree(self._tree_file(host_name))
+        return _load_tree(self._tree_file(host_name))
 
     def save(
         self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
@@ -1775,7 +1776,7 @@ class TreeOrArchiveStore(TreeStore):
 
     def load_previous(self, *, host_name: HostName) -> ImmutableTree:
         if (tree_file := self._tree_file(host_name)).exists():
-            return load_tree(tree_file)
+            return _load_tree(tree_file)
 
         try:
             latest_archive_tree_file = max(
@@ -1784,7 +1785,7 @@ class TreeOrArchiveStore(TreeStore):
         except (FileNotFoundError, ValueError):
             return ImmutableTree()
 
-        return load_tree(latest_archive_tree_file)
+        return _load_tree(latest_archive_tree_file)
 
     def _archive_host_dir(self, host_name: HostName) -> Path:
         return self._archive_dir / str(host_name)
@@ -1822,14 +1823,14 @@ class TreeOrArchiveStore(TreeStore):
         return History(paths=paths, corrupted=corrupted)
 
 
-def load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
+def _load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
     if not (cached_data := store.load_object_from_file(cached_file, default=None)):
         return None
     new, changed, removed, raw_delta_tree = cached_data
     return new, changed, removed, deserialize_delta_tree(raw_delta_tree)
 
 
-def save_delta_cache(
+def _save_delta_cache(
     cached_file: Path, cached_data: tuple[int, int, int, ImmutableDeltaTree]
 ) -> None:
     new, changed, removed, delta_tree = cached_data
@@ -1837,3 +1838,148 @@ def save_delta_cache(
         cached_file,
         repr((new, changed, removed, serialize_delta_tree(delta_tree))),
     )
+
+
+@dataclass(frozen=True)
+class _CachedTreeLoader:
+    _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
+
+    def get_tree(self, filepath: Path) -> ImmutableTree:
+        if filepath == Path():
+            return ImmutableTree()
+
+        if filepath in self._lookup:
+            return self._lookup[filepath]
+
+        return self._lookup.setdefault(filepath, _load_tree(filepath))
+
+
+def _get_pairs(
+    history_file_paths: Sequence[HistoryPath],
+) -> Sequence[tuple[HistoryPath, HistoryPath]]:
+    if not history_file_paths:
+        return []
+    paths = [HistoryPath(Path(), None)] + list(history_file_paths)
+    return list(zip(paths, paths[1:]))
+
+
+@dataclass(frozen=True)
+class HistoryEntry:
+    timestamp: int | None
+    new: int
+    changed: int
+    removed: int
+    delta_tree: ImmutableDeltaTree
+
+
+def _make_history_entry(
+    timestamp: int,
+    new: int,
+    changed: int,
+    removed: int,
+    delta_tree: ImmutableDeltaTree,
+    filter_tree: Sequence[SDFilterChoice] | None,
+) -> HistoryEntry | None:
+    if filter_tree is None:
+        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
+
+    if not (filtered_delta_tree := delta_tree.filter(filter_tree)):
+        return None
+
+    delta_stats = filtered_delta_tree.get_stats()
+    return HistoryEntry(
+        timestamp,
+        delta_stats["new"],
+        delta_stats["changed"],
+        delta_stats["removed"],
+        filtered_delta_tree,
+    )
+
+
+def _get_cached_entry(
+    delta_tree_path: Path, timestamp: int, filter_tree: Sequence[SDFilterChoice] | None
+) -> HistoryEntry | None:
+    try:
+        cached_data = _load_delta_cache(delta_tree_path)
+    except MKGeneralException:
+        return None
+
+    if cached_data is None:
+        return None
+
+    new, changed, removed, delta_tree = cached_data
+    return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+
+
+def _get_calculated_or_store_entry(
+    delta_tree_path: Path,
+    timestamp: int,
+    previous_tree: ImmutableTree,
+    current_tree: ImmutableTree,
+    filter_tree: Sequence[SDFilterChoice] | None,
+) -> HistoryEntry | None:
+    delta_tree = current_tree.difference(previous_tree)
+    delta_stats = delta_tree.get_stats()
+    new = delta_stats["new"]
+    changed = delta_stats["changed"]
+    removed = delta_stats["removed"]
+    if new or changed or removed:
+        _save_delta_cache(delta_tree_path, (new, changed, removed, delta_tree))
+        return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+    return None
+
+
+def load_history(
+    tree_or_archive_store: TreeOrArchiveStore,
+    delta_cache_dir: Path,
+    hostname: HostName,
+    *,
+    filter_history_paths: Callable[
+        [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
+    ],
+    filter_tree: Sequence[SDFilterChoice] | None,
+) -> tuple[Sequence[HistoryEntry], Sequence[Path]]:
+    history_files = tree_or_archive_store.history(host_name=hostname)
+
+    cached_tree_loader = _CachedTreeLoader()
+    history: list[HistoryEntry] = []
+
+    corrupted_deltas = []
+    for previous, current in filter_history_paths(_get_pairs(history_files.paths)):
+        if current.timestamp is None:
+            continue
+
+        delta_tree_path = Path(
+            delta_cache_dir,
+            hostname,
+            f"{previous.timestamp}_{current.timestamp}",
+        )
+
+        if (
+            cached_history_entry := _get_cached_entry(
+                delta_tree_path, current.timestamp, filter_tree
+            )
+        ) is not None:
+            history.append(cached_history_entry)
+            continue
+
+        try:
+            previous_tree = cached_tree_loader.get_tree(previous.path)
+        except FileNotFoundError:
+            corrupted_deltas.append(previous.path)
+            continue
+
+        try:
+            current_tree = cached_tree_loader.get_tree(current.path)
+        except FileNotFoundError:
+            corrupted_deltas.append(current.path)
+            continue
+
+        if (
+            history_entry := _get_calculated_or_store_entry(
+                delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
+            )
+        ) is not None:
+            history.append(history_entry)
+
+    return history, list(history_files.corrupted) + corrupted_deltas

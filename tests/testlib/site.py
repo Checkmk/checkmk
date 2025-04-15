@@ -33,7 +33,6 @@ import urllib.parse
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
 from dataclasses import dataclass
-from getpass import getuser
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Final, Literal, overload
@@ -1459,9 +1458,10 @@ class Site:
             sudo=True,
         )
 
-        # Change ownership of all copied files to testuser
-        run(["chown", "-R", getuser(), self.result_dir().as_posix()], sudo=True)
-        run(["chgrp", "-R", getuser(), self.result_dir().as_posix()], sudo=True)
+        # Change ownership of all copied files to the user that executes the test
+        run(
+            ["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir().as_posix()], sudo=True
+        )
 
         # Rename files to get better handling by the browser when opening a crash file
         for crash_info in self.crash_archive_dir.glob("**/crash.info"):

@@ -166,7 +166,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture(name="created_host")
 def fixture_host(
-    dashboard_page: Dashboard, request: pytest.FixtureRequest
+    dashboard_page: Dashboard, request: pytest.FixtureRequest, test_site: Site
 ) -> Iterator[HostDetails]:
     """Create a host and delete it after the test.
 
@@ -174,12 +174,12 @@ def fixture_host(
     """
     host_details = request.param
     add_host_page = AddHost(dashboard_page.page)
-    add_host_page.create_host(host_details)
+    add_host_page.create_host(host_details, test_site)
     yield host_details
     setup_host_page = SetupHost(dashboard_page.page)
     setup_host_page.select_hosts([host_details.name])
     setup_host_page.delete_selected_hosts()
-    setup_host_page.activate_changes()
+    setup_host_page.activate_changes(test_site)
 
 
 @pytest.fixture(name="agent_dump_hosts", scope="session")

@@ -14,6 +14,7 @@ from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class AddHost(CmkPage):
     def snmp_dropdown_button(self) -> Locator:
         return self.main_area.locator("div#attr_entry_tag_snmp_ds >> b")
 
-    def create_host(self, host: HostDetails) -> None:
+    def create_host(self, host: HostDetails, test_site: Site | None = None) -> None:
         """On `Setup -> Hosts -> Add host` page, create a new host and activate changes.
 
         Note: only host name and ip address are filled in this method. If needed the method can
@@ -228,7 +229,7 @@ class AddHost(CmkPage):
                 )
                 e.add_note(error_msg)
             raise e
-        self.activate_changes()
+        self.activate_changes(test_site)
 
 
 class HostProperties(CmkPage):
@@ -302,7 +303,7 @@ class HostProperties(CmkPage):
         setattr(mapping, "Host", "menu_host")
         return mapping
 
-    def delete_host(self) -> None:
+    def delete_host(self, test_site: Site | None = None) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
         self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
@@ -313,5 +314,5 @@ class HostProperties(CmkPage):
         #     url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
         # )
         time.sleep(0.5)
-        self.activate_changes()
+        self.activate_changes(test_site)
         self._exists = False

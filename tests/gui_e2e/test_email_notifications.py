@@ -127,7 +127,7 @@ def test_filesystem_email_notifications(
     add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
     add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
     add_rule_filesystem_page.save_button.click()
-    add_rule_filesystem_page.activate_changes()
+    add_rule_filesystem_page.activate_changes(test_site)
 
     service_search_page = None
     try:
@@ -186,7 +186,7 @@ def test_filesystem_email_notifications(
             )
             logger.info("Delete the filesystems rule")
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
-            filesystems_rules_page.activate_changes()
+            filesystems_rules_page.activate_changes(test_site)
 
 
 def test_email_notifications_host_filters(

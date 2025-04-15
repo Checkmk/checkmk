@@ -47,7 +47,9 @@ def fixture_fake_azure_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="azure_qs_config_page")
 def fixture_azure_qs_config_page(
-    fake_azure_dump: None, dashboard_page: Dashboard
+    fake_azure_dump: None,
+    dashboard_page: Dashboard,
+    test_site: Site,
 ) -> Iterator[AzureAddNewConfiguration]:
     """Navigate to the Azure Quick setup page and add new configuration page"""
     configuration_name = "my_azure_account"
@@ -76,7 +78,7 @@ def fixture_azure_qs_config_page(
         activate = True
 
     if activate:  # only activate if we deleted the quick setup or folder
-        list_hosts_page.activate_changes()
+        list_hosts_page.activate_changes(test_site)
 
 
 def test_minimal_configuration(

@@ -208,7 +208,9 @@ def test_create_rules(
     indirect=["created_host"],
 )
 def test_periodic_service_discovery_rule(
-    dashboard_page: Dashboard, created_host: HostDetails
+    dashboard_page: Dashboard,
+    created_host: HostDetails,
+    test_site: Site,
 ) -> None:
     """Test the creation & prioritization of a new rule for periodic service discovery.
 
@@ -242,7 +244,7 @@ def test_periodic_service_discovery_rule(
         ruleset_page.rule_position(rule_description),
         message="Unexpected position of the new rule after moving it to the top",
     ).to_have_text("0")
-    ruleset_page.activate_changes()
+    ruleset_page.activate_changes(test_site)
 
     logger.info(
         "Check that the new rule is present in the 'Effective parameters of %s' page",

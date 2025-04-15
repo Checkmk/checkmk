@@ -49,7 +49,7 @@ def fixture_fake_gcp_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="gcp_qs_config_page")
 def fixture_gcp_qs_config_page(
-    fake_gcp_dump: None, dashboard_page: Dashboard
+    fake_gcp_dump: None, dashboard_page: Dashboard, test_site: Site
 ) -> Iterator[GCPAddNewConfiguration]:
     """Navigate to the GCP Quick setup page and add new configuration page"""
     configuration_name = "my_gcp_account"
@@ -78,7 +78,7 @@ def fixture_gcp_qs_config_page(
         activate = True
 
     if activate:  # only activate if we deleted the quick setup or folder
-        list_hosts_page.activate_changes()
+        list_hosts_page.activate_changes(test_site)
 
 
 @pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")

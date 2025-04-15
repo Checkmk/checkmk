@@ -12,6 +12,8 @@ from collections.abc import Collection, Container, Iterable, Iterator, Mapping, 
 from dataclasses import asdict
 from typing import Any, Literal, NamedTuple
 
+from pydantic import BaseModel, Field
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
@@ -65,7 +67,7 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
+from cmk.gui.watolib.automations import AnnotatedHostName, cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
@@ -97,7 +99,15 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
 from ._status_links import make_host_status_link
 
-AjaxDiscoveryRequest = dict[str, Any]
+
+class AjaxDiscoveryRequest(BaseModel):
+    host_name: AnnotatedHostName
+    folder_path: str
+    discovery_options: DiscoveryOptions
+    update_source: str | None = None
+    update_target: UpdateType | None = None
+    update_services: list[str] = Field(default_factory=list)
+    discovery_result: str | None = None
 
 
 class TableGroupEntry(NamedTuple):
@@ -279,49 +289,47 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         check_csrf_token()
         user.need_permission("wato.hosts")
 
-        api_request: AjaxDiscoveryRequest = self.webapi_request()
+        try:
+            api_request = AjaxDiscoveryRequest.model_validate(self.webapi_request())
+        except ValueError as e:
+            raise MKUserError("request", _("Invalid request")) from e
         request.del_var("request")  # Do not add this to URLs constructed later
-        update_target = (
-            None if (raw := api_request.get("update_target", None)) is None else UpdateType(raw)
-        )
-        update_source = api_request.get("update_source", None)
-        api_request.setdefault("update_services", [])
-        update_services = api_request.get("update_services", [])
 
         # Make Folder() be able to detect the current folder correctly
-        request.set_var("folder", api_request["folder_path"])
+        request.set_var("folder", api_request.folder_path)
 
-        folder = folder_tree().folder(api_request["folder_path"])
-        host = folder.host(api_request["host_name"])
+        folder = folder_tree().folder(api_request.folder_path)
+        host = folder.host(api_request.host_name)
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host.permissions.need_permission("read")
 
-        discovery_options = DiscoveryOptions(
-            **api_request["discovery_options"]
-        )  # FIXME: this violates typing.
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = (
-            DiscoveryResult.deserialize(raw)
-            if (raw := api_request.get("discovery_result"))
+            DiscoveryResult.deserialize(api_request.discovery_result)
+            if api_request.discovery_result
             else None
         )
 
         # If the user has the wrong permissions, then we still return a discovery result
         # which is different from the REST API behavior.
-        if not has_discovery_action_specific_permissions(discovery_options.action, update_target):
-            discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+        if not has_discovery_action_specific_permissions(
+            api_request.discovery_options.action, api_request.update_target
+        ):
+            discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
 
         discovery_result = self._perform_discovery_action(
-            action=discovery_options.action,
+            action=api_request.discovery_options.action,
             host=host,
             previous_discovery_result=previous_discovery_result,
-            update_source=update_source,
-            update_target=None if update_target is None else update_target.value,
+            update_source=api_request.update_source,
+            update_target=None
+            if api_request.update_target is None
+            else api_request.update_target.value,
             selected_services=self._resolve_selected_services(
-                update_services, discovery_options.show_checkboxes
+                api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
-            raise_errors=not discovery_options.ignore_errors,
+            raise_errors=not api_request.discovery_options.ignore_errors,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -339,29 +347,31 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         show_checkboxes = user.discovery_checkboxes
-        if show_checkboxes != discovery_options.show_checkboxes:
-            user.discovery_checkboxes = discovery_options.show_checkboxes
+        if show_checkboxes != api_request.discovery_options.show_checkboxes:
+            user.discovery_checkboxes = api_request.discovery_options.show_checkboxes
         show_parameters = user.parameter_column
-        if show_parameters != discovery_options.show_parameters:
-            user.parameter_column = discovery_options.show_parameters
+        if show_parameters != api_request.discovery_options.show_parameters:
+            user.parameter_column = api_request.discovery_options.show_parameters
         show_discovered_labels = user.discovery_show_discovered_labels
-        if show_discovered_labels != discovery_options.show_discovered_labels:
-            user.discovery_show_discovered_labels = discovery_options.show_discovered_labels
+        if show_discovered_labels != api_request.discovery_options.show_discovered_labels:
+            user.discovery_show_discovered_labels = (
+                api_request.discovery_options.show_discovered_labels
+            )
         show_plugin_names = user.discovery_show_plugin_names
-        if show_plugin_names != discovery_options.show_plugin_names:
-            user.discovery_show_plugin_names = discovery_options.show_plugin_names
+        if show_plugin_names != api_request.discovery_options.show_plugin_names:
+            user.discovery_show_plugin_names = api_request.discovery_options.show_plugin_names
 
         renderer = DiscoveryPageRenderer(
             host,
-            discovery_options,
+            api_request.discovery_options,
         )
-        page_code = renderer.render(discovery_result, api_request)
+        page_code = renderer.render(discovery_result, api_request.update_services)
         datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
 
         # Clean the requested action after performing it
-        performed_action = discovery_options.action
-        discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+        performed_action = api_request.discovery_options.action
+        discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
         message = (
             self._get_status_message(previous_discovery_result, discovery_result, performed_action)
             if discovery_result.sources
@@ -579,12 +589,12 @@ class DiscoveryPageRenderer:
         self._host = host
         self._options = options
 
-    def render(self, discovery_result: DiscoveryResult, api_request: dict) -> str:
+    def render(self, discovery_result: DiscoveryResult, update_services: list[str]) -> str:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry(html, "inline_help")
             self._show_discovered_host_labels(discovery_result)
-            self._show_discovery_details(discovery_result, api_request)
+            self._show_discovery_details(discovery_result, update_services)
             return output_funnel.drain()
 
     def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
@@ -748,7 +758,9 @@ class DiscoveryPageRenderer:
         table.cell(_("Check plug-in"), plugin_names, css=["plugins"])
         return
 
-    def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
+    def _show_discovery_details(
+        self, discovery_result: DiscoveryResult, update_services: list[str]
+    ) -> None:
         if not discovery_result.check_table:
             if not discovery_result.is_active() and self._host.is_cluster():
                 self._show_empty_cluster_hint()
@@ -787,7 +799,7 @@ class DiscoveryPageRenderer:
                 ) as table:
                     for check in sorted(checks, key=lambda e: e.description.lower()):
                         self._show_check_row(
-                            table, discovery_result, api_request, check, entry.show_bulk_actions
+                            table, discovery_result, update_services, check, entry.show_bulk_actions
                         )
 
                 if entry.show_bulk_actions:
@@ -1002,7 +1014,7 @@ class DiscoveryPageRenderer:
         self,
         table: Table,
         discovery_result: DiscoveryResult,
-        api_request: dict,
+        update_services: list[str],
         entry: CheckPreviewEntry,
         show_bulk_actions: bool,
     ) -> None:
@@ -1019,7 +1031,7 @@ class DiscoveryPageRenderer:
         self._show_bulk_checkbox(
             table,
             discovery_result,
-            api_request,
+            update_services,
             entry.check_plugin_name,
             entry.item,
             show_bulk_actions,
@@ -1259,7 +1271,7 @@ class DiscoveryPageRenderer:
         self,
         table: Table,
         discovery_result: DiscoveryResult,
-        api_request: dict,
+        update_services: list[str],
         check_type: str,
         item: Item,
         show_bulk_actions: bool,
@@ -1287,10 +1299,7 @@ class DiscoveryPageRenderer:
             css=["checkbox"],
         )
         name = checkbox_id(check_type, item)
-        checked = (
-            self._options.action == DiscoveryAction.BULK_UPDATE
-            and name in api_request["update_services"]
-        )
+        checked = self._options.action == DiscoveryAction.BULK_UPDATE and name in update_services
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
     def _show_actions(

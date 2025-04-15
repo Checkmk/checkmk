@@ -32,6 +32,8 @@ from cmk.utils.rulesets.conditions import (
 )
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import (
+    RulesetName,
+    RuleSpec,
     TagCondition,
     TagConditionNE,
     TagConditionNOR,
@@ -134,6 +136,7 @@ from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
+    FolderPath,
     FolderRulesets,
     Rule,
     RuleConditions,
@@ -3403,16 +3406,34 @@ class ModeUnknownRulesets(WatoMode):
             ]
         )
 
-    def _unknown_rulesets(self) -> Sequence[Ruleset]:
-        all_rulesets = AllRulesets.load_all_rulesets().get_rulesets()
-        return [
-            f
-            for r in find_unknown_check_parameter_rule_sets().result
-            for t in RuleGroupType
-            if ((f := all_rulesets.get(f"{t.value}:{r}")) is not None)
-        ]
+    def _unknown_rulesets(
+        self,
+    ) -> tuple[
+        Sequence[Ruleset],
+        Mapping[RulesetName, Sequence[tuple[FolderPath, RuleSpec[object]]]],
+    ]:
+        all_rulesets = AllRulesets.load_all_rulesets()
+        rulesets = all_rulesets.get_rulesets()
 
-    def _show_row(self, table: Table, unknown_ruleset_name: str, rule_nr: int, rule: Rule) -> None:
+        found_rule_sets: dict[RulesetName, Ruleset] = {}
+        unknown_rule_sets: dict[RulesetName, list[tuple[FolderPath, RuleSpec[object]]]] = {}
+        for rule_set_name in find_unknown_check_parameter_rule_sets().result:
+            for ty in RuleGroupType:
+                if (rule_set := rulesets.get(f"{ty.value}:{rule_set_name}")) is not None:
+                    found_rule_sets.setdefault(rule_set.name, rule_set)
+
+        for folder_path, rule_specs_by_name in all_rulesets.get_unknown_rulesets().items():
+            for rule_set_name, rule_specs in rule_specs_by_name.items():
+                if rule_set_name not in found_rule_sets:
+                    unknown_rule_sets.setdefault(rule_set_name, []).extend(
+                        [(folder_path, rs) for rs in rule_specs]
+                    )
+
+        return list(found_rule_sets.values()), unknown_rule_sets
+
+    def _show_row_unknown_check_parameter_ruleset(
+        self, table: Table, unknown_ruleset_name: str, rule_nr: int, rule: Rule
+    ) -> None:
         table.row()
 
         table.cell(
@@ -3426,7 +3447,7 @@ class ModeUnknownRulesets(WatoMode):
             sortable=False,
             css=["checkbox"],
         )
-        html.checkbox("_c_unknown_rule_%s" % rule.id)
+        html.checkbox("_c_unknown_cp_rule_%s" % rule.id)
 
         table.cell(_("Actions"), css=["buttons"])
         html.icon_button(
@@ -3434,8 +3455,8 @@ class ModeUnknownRulesets(WatoMode):
                 url=make_action_link(
                     [
                         ("mode", "unknown_rulesets"),
-                        ("_delete_ruleset_name", unknown_ruleset_name),
-                        ("_delete_rule_id", rule.id),
+                        ("_delete_cp_ruleset_name", unknown_ruleset_name),
+                        ("_delete_cp_rule_id", rule.id),
                     ]
                 ),
                 title=_("Delete unknown rule"),
@@ -3459,7 +3480,60 @@ class ModeUnknownRulesets(WatoMode):
             ),
         )
 
+    def _show_row_unknown_rulespec(
+        self,
+        table: Table,
+        unknown_ruleset_name: str,
+        rule_nr: int,
+        folder_path: str,
+        rulespec: RuleSpec[object],
+    ) -> None:
+        table.row()
+
+        table.cell(
+            html.render_input(
+                "_toggle_group",
+                type_="button",
+                class_="checkgroup",
+                onclick="cmk.selection.toggle_group_rows(this);",
+                value="X",
+            ),
+            sortable=False,
+            css=["checkbox"],
+        )
+        html.checkbox("_c_unknown_rule_%s" % rulespec["id"])
+
+        table.cell(_("Actions"), css=["buttons"])
+        html.icon_button(
+            make_confirm_delete_link(
+                url=make_action_link(
+                    [
+                        ("mode", "unknown_rulesets"),
+                        ("_delete_ruleset_name", unknown_ruleset_name),
+                        ("_delete_rule_id", rulespec["id"]),
+                    ]
+                ),
+                title=_("Delete unknown rule"),
+                message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
+            ),
+            _("Delete"),
+            "delete",
+        )
+
+        table.cell("#", css=["narrow nowrap"])
+        html.write_text_permissive(rule_nr)
+        table.cell(_("Folder"), folder_path)
+        table.cell(_("ID"), rulespec["id"])
+        table.cell(
+            _("Value"), HTMLWriter.render_tt(pformat(rulespec["value"]).replace("\n", "<br>"))
+        )
+        table.cell(
+            _("Conditions"),
+            HTMLWriter.render_tt(pformat(rulespec["condition"]).replace("\n", "<br>")),
+        )
+
     def page(self) -> None:
+        unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets()
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
             with table_element(
@@ -3470,31 +3544,57 @@ class ModeUnknownRulesets(WatoMode):
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 limit=None,
             ) as table:
-                for unknown_ruleset in self._unknown_rulesets():
-                    table.groupheader(_("Unknown ruleset: %s") % unknown_ruleset.name)
-                    for rules in unknown_ruleset.rules.values():
+                for unknown_check_parameter_ruleset in unknown_check_parameter_rulesets:
+                    table.groupheader(
+                        _("Unknown ruleset: %s") % unknown_check_parameter_ruleset.name
+                    )
+                    for rules in unknown_check_parameter_ruleset.rules.values():
                         for rule_nr, rule in enumerate(rules):
-                            self._show_row(table, unknown_ruleset.name, rule_nr, rule)
+                            self._show_row_unknown_check_parameter_ruleset(
+                                table, unknown_check_parameter_ruleset.name, rule_nr, rule
+                            )
+                for unknown_ruleset_name, rulespecs in unknown_rulesets.items():
+                    table.groupheader(_("Unknown ruleset: %s") % unknown_ruleset_name)
+                    for rule_nr, (folder_path, rulespec) in enumerate(rulespecs):
+                        self._show_row_unknown_rulespec(
+                            table, unknown_ruleset_name, rule_nr, folder_path, rulespec
+                        )
 
-    def _delete_rule(self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule) -> None:
+    def _delete_cp_rule(self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule) -> None:
         if is_locked_by_quick_setup(rule.locked_by):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
 
         ruleset.delete_rule(rule)
         rulesets.save_folder(rule.folder)
 
-    def _bulk_delete_selected_rules(self, selected_rule_ids: Sequence[str]) -> ActionResult:
+    def _bulk_delete_selected_rules(
+        self, selected_cp_rule_ids: Sequence[str], selected_rule_ids: Sequence[str]
+    ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
+        do_reset = False
         for ruleset in rulesets.get_rulesets().values():
             for rules in ruleset.rules.values():
                 for rule in rules:
-                    if rule.id in selected_rule_ids:
-                        self._delete_rule(rulesets, ruleset, rule)
+                    if rule.id in selected_cp_rule_ids:
+                        self._delete_cp_rule(rulesets, ruleset, rule)
+                        do_reset = True
 
-        deprecations.reset_scheduling()
+        do_save = False
+        for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
+            for ruleset_name, rulespecs in rulespecs_by_name.items():
+                for rulespec in rulespecs:
+                    if rulespec["id"] in selected_rule_ids:
+                        rulesets.delete_unknown_rule(folder_path, ruleset_name, rulespec["id"])
+                        do_save = True
+                        do_reset = True
+
+        if do_save:
+            rulesets.save()
+        if do_reset:
+            deprecations.reset_scheduling()
         return redirect(self.mode_url())
 
-    def _delete_selected_rule(
+    def _delete_selected_cp_rule(
         self, selected_ruleset_name: str, selected_rule_id: str
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
@@ -3504,22 +3604,45 @@ class ModeUnknownRulesets(WatoMode):
         for rules in ruleset.rules.values():
             for rule in rules:
                 if rule.id == selected_rule_id:
-                    self._delete_rule(rulesets, ruleset, rule)
+                    self._delete_cp_rule(rulesets, ruleset, rule)
                     deprecations.reset_scheduling()
                     return redirect(self.mode_url())
+
+        return None
+
+    def _delete_selected_rule(
+        self, selected_ruleset_name: str, selected_rule_id: str
+    ) -> ActionResult:
+        rulesets = AllRulesets.load_all_rulesets()
+        for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
+            for ruleset_name, rulespecs in rulespecs_by_name.items():
+                for rulespec in rulespecs:
+                    if rulespec["id"] == selected_rule_id:
+                        rulesets.delete_unknown_rule(folder_path, ruleset_name, rulespec["id"])
+                        rulesets.save()
+                        deprecations.reset_scheduling()
+                        return redirect(self.mode_url())
 
         return None
 
     def action(self) -> ActionResult:
         check_csrf_token()
 
-        if request.var("_bulk_delete_selected_unknown_rulesets") and (
-            d_rule_ids := [
-                vn.split("_c_unknown_rule_")[-1]
-                for vn, _vv in request.itervars(prefix="_c_unknown_rule")
-            ]
+        d_cp_rule_ids = [
+            vn.split("_c_unknown_cp_rule_")[-1]
+            for vn, _vv in request.itervars(prefix="_c_unknown_cp_rule")
+        ]
+        d_rule_ids = [
+            vn.split("_c_unknown_rule_")[-1]
+            for vn, _vv in request.itervars(prefix="_c_unknown_rule")
+        ]
+        if request.var("_bulk_delete_selected_unknown_rulesets") and (d_cp_rule_ids or d_rule_ids):
+            return self._bulk_delete_selected_rules(d_cp_rule_ids, d_rule_ids)
+
+        if (d_ruleset_name := request.var("_delete_cp_ruleset_name")) and (
+            d_rule_id := request.var("_delete_cp_rule_id")
         ):
-            return self._bulk_delete_selected_rules(d_rule_ids)
+            return self._delete_selected_cp_rule(d_ruleset_name, d_rule_id)
 
         if (d_ruleset_name := request.var("_delete_ruleset_name")) and (
             d_rule_id := request.var("_delete_rule_id")

@@ -467,6 +467,11 @@ class RulesetCollection:
     def delete(self, name: RulesetName) -> None:
         del self._rulesets[name]
 
+    def delete_unknown_rule(self, folder_path: FolderPath, name: RulesetName, rule_id: str) -> None:
+        self._unknown_rulesets[folder_path][name] = [
+            rs for rs in self._unknown_rulesets[folder_path][name] if rs["id"] != rule_id
+        ]
+
     def delete_unknown(self, folder_path: FolderPath, name: RulesetName) -> None:
         del self._unknown_rulesets[folder_path][name]
 

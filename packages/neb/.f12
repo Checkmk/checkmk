@@ -14,9 +14,10 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 ./run --build
+PACKAGE_DIR="$(bazel info bazel-bin)/packages/neb"
 
-install --verbose ../../bazel-bin/packages/neb/libneb_shared.so "$ROOT/lib/mk-livestatus/livestatus.o"
-patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/lib/mk-livestatus/livestatus.o"
+install "${PACKAGE_DIR}/libneb_shared.so" "${ROOT}/lib/mk-livestatus/livestatus.o"
+patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/mk-livestatus/livestatus.o"
 
-test -z "$ONLY_COPY" || exit 0
+test -z "${ONLY_COPY}" || exit 0
 sudo --login -u "${SITE}" -- bash -c "omd restart nagios"

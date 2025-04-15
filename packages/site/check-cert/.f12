@@ -14,7 +14,6 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 ./run --build
+PACKAGE_DIR="$(bazel info bazel-bin)/packages/site/check-cert"
 
-if [ -d "$ROOT" ]; then
-    install -v -m 755 ../../../bazel-bin/packages/site/check-cert/check-cert "$ROOT/lib/nagios/plugins/check_cert"
-fi
+install --mode 755 "${PACKAGE_DIR}/check-cert" "${ROOT}/lib/nagios/plugins/check_cert"

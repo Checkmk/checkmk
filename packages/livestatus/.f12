@@ -14,10 +14,11 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 ./run --build
+PACKAGE_DIR="$(bazel info bazel-bin)/packages/livestatus"
 
 # Simply copying the library can cause a running NEB/CMC to crash.
-install --verbose --mode 644 ../../bazel-bin/packages/livestatus/liblivestatus.so "$ROOT/lib/liblivestatus.so.0.1"
-patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/lib/liblivestatus.so.0.1"
+install --mode 644 "${PACKAGE_DIR}/liblivestatus.so" "${ROOT}/lib/liblivestatus.so.0.1"
+patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/lib/liblivestatus.so.0.1"
 
-test -z "$ONLY_COPY" || exit 0
+test -z "${ONLY_COPY}" || exit 0
 sudo --login -u "${SITE}" -- bash -c "omd restart nagios; omd restart cmc"

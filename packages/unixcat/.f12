@@ -14,6 +14,7 @@ ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
 ./run --build
+PACKAGE_DIR="$(bazel info bazel-bin)/packages/unixcat"
 
-install -v -m 755 ../../bazel-bin/packages/unixcat/unixcat "$ROOT/bin"
-patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/bin/unixcat"
+install --mode 755 "${PACKAGE_DIR}/unixcat" "${ROOT}/bin"
+patchelf --set-rpath "\$ORIGIN/../lib" "${ROOT}/bin/unixcat"

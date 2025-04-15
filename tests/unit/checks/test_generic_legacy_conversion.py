@@ -669,7 +669,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "infoblox_dns_stats",
         "infoblox_grid_status",
         "infoblox_replication_status",
-        "informix_dbspaces",
         "informix_locks",
         "informix_logusage",
         "informix_sessions",

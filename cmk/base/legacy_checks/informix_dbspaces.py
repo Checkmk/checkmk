@@ -8,20 +8,41 @@ Relevant documentation:
     * https://www.ibm.com/docs/en/informix-servers/14.10?topic=tables-syschunks
 """
 
-# mypy: disable-error-code="var-annotated"
 from collections.abc import Mapping
+from typing import Literal, NotRequired, TypedDict, TypeVar, Union
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+_NumberT = TypeVar("_NumberT", int, float)
+SimpleLevelsConfigModel = Union[
+    tuple[Literal["no_levels"], None], tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+]
+
 FLAG_BLOBSPACE = 512
+ParsedSubsection = dict[str, str]
+ParsedSection = dict[str, list[ParsedSubsection]]
 
 
-def parse_informix_dbspaces(string_table):
-    parsed = {}
+class CheckParams(TypedDict):
+    levels: NotRequired[tuple[int, int] | None]
+    levels_perc: tuple[float, float]
+
+
+def parse_informix_dbspaces(string_table: StringTable) -> ParsedSection:
+    parsed: ParsedSection = {}
     instance = None
-    entry = None
+    entry: ParsedSubsection | None = None
     for line in string_table:
         if (
             instance is not None
@@ -43,8 +64,8 @@ def parse_informix_dbspaces(string_table):
     return parsed
 
 
-def inventory_informix_dbspaces(parsed):
-    return [(ts, {}) for ts in parsed]
+def discovery_informix_dbspaces(section: ParsedSection) -> DiscoveryResult:
+    yield from [Service(item=ts) for ts in section]
 
 
 def _get_pagesize(entry: Mapping[str, str]) -> tuple[int, int]:
@@ -55,9 +76,15 @@ def _get_pagesize(entry: Mapping[str, str]) -> tuple[int, int]:
     return system_pagesize, nfree_pagesize
 
 
-def check_informix_dbspaces(item, params, parsed):
-    if item in parsed:
-        datafiles = parsed[item]
+def _transform_levels(
+    levels: tuple[_NumberT, _NumberT] | None,
+) -> SimpleLevelsConfigModel[_NumberT]:
+    return ("fixed", levels) if levels else ("no_levels", None)
+
+
+def check_informix_dbspaces(item: str, params: CheckParams, section: ParsedSection) -> CheckResult:
+    if item in section:
+        datafiles = section[item]
         size = 0
         free = 0
         for entry in datafiles:
@@ -67,40 +94,40 @@ def check_informix_dbspaces(item, params, parsed):
             size += int(entry["chksize"]) * system_pagesize
 
         used = size - free
-        infotext = f"Data files: {len(datafiles)}, Size: {render.disksize(size)}, Used: {render.disksize(used)}"
-        state = 0
-        if "levels" in params:
-            warn, crit = params["levels"]
-            if size >= crit:
-                state = 2
-            elif size >= warn:
-                state = 1
-            if state:
-                infotext += f" (warn/crit at {render.disksize(warn)}/{render.disksize(crit)})"
+        levels_size = _transform_levels(params.get("levels", None))
+        levels_used = _transform_levels(params.get("levels_perc", None))
+        if levels_used[0] == "fixed":
+            levels_used = (
+                "fixed",
+                (levels_used[1][0] * size / 100.0, levels_used[1][1] * size / 100.0),
+            )
 
-        yield state, infotext, [("tablespace_size", size), ("tablespace_used", used)]
-
-        if size:
-            used_perc = used * 100.0 / size
-            infotext = "%.2f%%" % used_perc
-            warn_perc, crit_perc = params["levels_perc"]
-            state = 0
-            if used_perc >= crit_perc:
-                state = 2
-            elif used_perc >= warn_perc:
-                state = 1
-            if state:
-                infotext += f" (warn/crit at {warn_perc:.2f}%/{crit_perc:.2f}%)"
-
-            yield state, infotext
+        yield Result(state=State.OK, summary=f"Data files: {len(datafiles)}")
+        yield from check_levels(
+            value=size,
+            metric_name="tablespace_size",
+            levels_upper=levels_size,
+            render_func=lambda x: f"Size: {render.disksize(x)}",
+        )
+        yield from check_levels(
+            value=used,
+            metric_name="tablespace_used",
+            levels_upper=levels_used,
+            render_func=lambda x: f"Used: {render.disksize(x)}",
+        )
 
 
-check_info["informix_dbspaces"] = LegacyCheckDefinition(
+agent_section_informix_dbspaces = AgentSection(
     name="informix_dbspaces",
     parse_function=parse_informix_dbspaces,
+)
+
+
+check_plugin_informix_dbspaces = CheckPlugin(
+    name="informix_dbspaces",
     service_name="Informix Tablespace %s",
-    discovery_function=inventory_informix_dbspaces,
+    discovery_function=discovery_informix_dbspaces,
     check_function=check_informix_dbspaces,
     check_ruleset_name="informix_dbspaces",
-    check_default_parameters={"levels_perc": (80.0, 85.0)},
+    check_default_parameters=CheckParams(levels_perc=(80.0, 85.0)),
 )

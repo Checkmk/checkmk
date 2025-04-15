@@ -99,12 +99,13 @@ function getItemVariant(index: number, length: number) {
   >
     <table
       ref="tableRef"
+      role="list"
       class="cmk-list__table"
       :class="{ 'cmk-list__table-empty': localOrder.length === 0 }"
     >
       <template v-if="orientation === 'vertical'">
         <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
-          <td>
+          <td role="listitem">
             <CmkListItem
               :remove-element="() => removeElement(dataIndex)"
               :variant="getItemVariant(listIndex, localOrder.length)"
@@ -117,7 +118,7 @@ function getItemVariant(index: number, length: number) {
       </template>
       <template v-else>
         <tr>
-          <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
+          <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex" role="listitem">
             <CmkListItem :button-padding="'8px'" :remove-element="() => removeElement(dataIndex)">
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
               <CmkSpace direction="horizontal" />

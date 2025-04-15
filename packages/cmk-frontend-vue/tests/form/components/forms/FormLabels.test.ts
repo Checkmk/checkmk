@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, within } from '@testing-library/vue'
+import { fireEvent, render, screen, within, findByRole, waitFor } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
@@ -20,7 +20,7 @@ vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) 
     ...mod,
     fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
       let firstElement: Array<{ name: string; title: string }> = []
-      if (value) {
+      if (value && /^.+:.+$/.test(value)) {
         firstElement = [{ name: value, title: value }]
       }
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -135,54 +135,28 @@ describe('FormLabels', () => {
   test('should not suggest used existing labels', async () => {
     renderFormWithData({
       spec,
-      data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
+      data: {},
       backendValidation: []
     })
+
+    async function assertNumberOfOptions(number: number) {
+      await waitFor(async () => expect(screen.queryAllByRole('option')).toHaveLength(number))
+    }
 
     const dropdown = screen.getByRole('combobox')
     await userEvent.click(dropdown)
+    // make sure the query we use at the end actually finds the element if it's available.
+    await assertNumberOfOptions(1)
+    await userEvent.click(await screen.findByRole('option', { name: EXISTING_LABEL_CONCAT }))
+
+    await userEvent.click(dropdown)
     const labelInput = screen.getByRole('textbox', { name: 'filter' })
-
     await fireEvent.update(labelInput, `${EXISTING_LABEL_KEY}:`)
-    await screen.findByText(`${EXISTING_LABEL_KEY}:`)
 
-    expect(screen.queryByText(EXISTING_LABEL_CONCAT)).toBeNull()
-    // not sure if this test is meaninfull, as everything takes some time to update?!
+    await assertNumberOfOptions(0)
   })
 
-  test('should warn about duplicates', async () => {
-    renderFormWithData({
-      spec,
-      data: { some: 'thing' },
-      backendValidation: []
-    })
-
-    // make sure that we see the label, if our current value is something different
-    let dropdown = screen.getByRole('combobox')
-    await userEvent.click(dropdown)
-    await screen.findByRole('option')
-    await screen.findByText(EXISTING_LABEL_CONCAT)
-
-    // but we should not see a suggestion if the data and the only existing
-    // label is the same
-    document.body.innerHTML = '' // TODO: CHECK IF NECESSARY!
-    renderFormWithData({
-      spec,
-      data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
-      backendValidation: []
-    })
-
-    dropdown = screen.getByRole('combobox')
-    await userEvent.click(dropdown)
-    // TODO: this is completly useless
-    // if you copy the next line after the first click(dropdown), the test will
-    // also pass! i fear we have to remove this test?!
-    expect(screen.queryByRole('option')).toBeNull()
-    expect(screen.queryByText(EXISTING_LABEL_CONCAT)).toBeNull()
-    // also: this is (now) a duplicate of the previous test?!
-  })
-
-  test('should allow edit label', async () => {
+  test('should allow remove label', async () => {
     const { getCurrentData } = renderFormWithData({
       spec,
       data: { key1: 'value1', key2: 'value2' },
@@ -193,20 +167,9 @@ describe('FormLabels', () => {
     const labelList = await within(ulElement).findAllByRole('listitem')
     expect(labelList).toHaveLength(2)
 
-    const label = labelList[0] ? await within(labelList[0]).findByRole('textbox') : null
-    if (!label) {
-      throw new Error('Label not found')
-    }
+    await userEvent.click(await findByRole(labelList[1]!, 'button', { name: 'Remove element' }))
 
-    const inputElement = label as HTMLInputElement
-
-    await fireEvent.click(inputElement)
-    await fireEvent.update(inputElement, 'key1:value1_edited')
-
-    expect(inputElement.value).toBe('key1:value1_edited')
-    await fireEvent.keyDown(inputElement, { key: 'Enter' })
-
-    expect(getCurrentData()).toBe('{"key1":"value1_edited","key2":"value2"}')
+    await waitFor(() => expect(getCurrentData()).toBe('{"key1":"value1"}'))
   })
 
   test('should reset selection input element on add item', async () => {

@@ -7,10 +7,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
-import { X } from 'lucide-vue-next'
+import CmkList from '@/components/CmkList'
 import { onBeforeUpdate, ref, watch } from 'vue'
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { inputSizes } from '../utils/sizes'
+import FormLabelsLabel from './FormLabelsLabel.vue'
+import FormLabel from '@/form/private/FormLabel.vue'
 
 type StringMapping = Record<string, string>
 
@@ -91,47 +93,25 @@ const addItem = (item: string | null) => {
   selectedValue.value = null
 }
 
-const editItem = (editedItem: string, index: number) => {
-  if (validate(editedItem)) {
-    keyValuePairs.value = [
-      ...keyValuePairs.value.slice(0, index),
-      editedItem,
-      ...keyValuePairs.value.slice(index + 1)
-    ]
-  }
-}
-
-const handleDeleteCrossItems = (e: KeyboardEvent, item: string) => {
-  if ((e.target as HTMLInputElement).value) {
-    return
-  }
-  keyValuePairs.value = keyValuePairs.value.filter((i) => i !== item)
-}
-
-const deleteItem = (item: string) => {
-  keyValuePairs.value = keyValuePairs.value.filter((i) => i !== item)
+const deleteItem = (index: number) => {
+  keyValuePairs.value.splice(index, 1)
+  value.value = arrayToStringMapping(keyValuePairs.value)
+  return true
 }
 </script>
 
 <template>
-  <ul class="label-list">
-    <li v-for="(item, index) in keyValuePairs" :key="item">
-      <span style="display: flex; align-items: center">
-        <input
-          class="item"
-          type="text"
-          :value="item"
-          @keydown.enter="
-            (e: KeyboardEvent) => editItem((e.target as HTMLInputElement).value, index)
-          "
-          @keydown.delete="(e: KeyboardEvent) => handleDeleteCrossItems(e, item)"
-        />
-        <button class="item-delete-btn" @click="() => deleteItem(item)">
-          <X :aria-label="spec.i18n.remove_label" class="close-btn" />
-        </button>
-      </span>
-    </li>
-  </ul>
+  <CmkList
+    :items-props="{ itemData: keyValuePairs }"
+    orientation="vertical"
+    :try-delete="deleteItem"
+  >
+    <template #item-props="{ itemData }">
+      <FormLabel>
+        <FormLabelsLabel :label-source="props.spec.label_source" :value="itemData" />
+      </FormLabel>
+    </template>
+  </CmkList>
   <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
     <!-- In formLabel, the size on input is a fixed size -->
     <FormAutocompleter
@@ -169,10 +149,6 @@ const deleteItem = (item: string) => {
     background-color: var(--default-form-element-bg-color);
     margin-bottom: 5px;
     padding: 2px;
-
-    &:focus-within {
-      background-color: var(--default-form-element-border-color);
-    }
   }
 }
 
@@ -181,49 +157,11 @@ table.nform input {
   padding: 2px;
 }
 
-.item {
-  height: 8px;
-  background-color: var(--default-form-element-bg-color);
-
-  &:focus {
-    background-color: var(--default-form-element-border-color);
-  }
-}
-
-.new-item {
-  padding: 4px;
-}
-
 .error {
   margin: 0;
   padding: 5px;
   background-color: rgb(247, 65, 65);
   color: var(--font-color);
   display: block;
-}
-
-.item-delete-btn {
-  cursor: pointer;
-  margin: 0 5px;
-  padding: 0;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  border: none;
-
-  &:hover {
-    background-color: #c77777;
-  }
-}
-
-.close-btn {
-  width: 10px;
-  height: 10px;
-  margin: 0;
-  padding: 1px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
 }
 </style>

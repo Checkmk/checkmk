@@ -81510,6 +81510,10 @@ msgstr "この %sを編集する権限がありません"
 msgid "You do not have the permissions to modify the forecast model."
 msgstr "予測モデルを変更する権限がありません。"
 
+#, fuzzy
+msgid "You do not have write permission for this folder."
+msgstr "この %sを編集する権限がありません"
+
 msgid "You don't have the right to rename hosts"
 msgstr "ホストの名前を変更する権利がありません"
 

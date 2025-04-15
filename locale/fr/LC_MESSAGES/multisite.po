@@ -86577,6 +86577,10 @@ msgstr ""
 "Vous n'avez pas les autorisations nécessaires pour modifier le modèle de "
 "prévision."
 
+#, fuzzy
+msgid "You do not have write permission for this folder."
+msgstr "Vous n'avez pas les autorisations nécessaires pour modifier ce %s"
+
 msgid "You don't have the right to rename hosts"
 msgstr "Vous n'avez pas le droit de renommer les hôtes"
 

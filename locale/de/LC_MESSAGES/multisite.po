@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-14 10:54+0000\n"
+"PO-Revision-Date: 2025-04-15 09:05+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -82624,6 +82624,9 @@ msgstr "Sie haben nicht die Berechtigung, diesen %s zu bearbeiten"
 
 msgid "You do not have the permissions to modify the forecast model."
 msgstr "Sie haben nicht die Berechtigung, das Prognosemodell zu ändern."
+
+msgid "You do not have write permission for this folder."
+msgstr "Sie haben keine Schreibberechtigung in diesem Ordner."
 
 msgid "You don't have the right to rename hosts"
 msgstr "Sie haben nicht die Berechtigung, den Host umzubenennen"

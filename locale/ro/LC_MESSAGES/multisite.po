@@ -85930,6 +85930,10 @@ msgstr "Nu aveți permisiunile necesare pentru a edita acest %s"
 msgid "You do not have the permissions to modify the forecast model."
 msgstr "Nu aveți permisiunea de a modifica modelul de prognoză."
 
+#, fuzzy
+msgid "You do not have write permission for this folder."
+msgstr "Nu aveți permisiunile necesare pentru a edita acest %s"
+
 msgid "You don't have the right to rename hosts"
 msgstr "Nu aveți dreptul de a redenumi gazdele"
 

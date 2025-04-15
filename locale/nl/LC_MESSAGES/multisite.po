@@ -85758,6 +85758,10 @@ msgstr "U heeft niet de rechten om deze %s te bewerken"
 msgid "You do not have the permissions to modify the forecast model."
 msgstr "U hebt niet de rechten om het voorspellingsmodel te wijzigen."
 
+#, fuzzy
+msgid "You do not have write permission for this folder."
+msgstr "U heeft niet de rechten om deze %s te bewerken"
+
 msgid "You don't have the right to rename hosts"
 msgstr "Je hebt niet het recht om hosts te hernoemen"
 

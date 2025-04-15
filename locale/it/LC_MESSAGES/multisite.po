@@ -85032,6 +85032,10 @@ msgstr "Non hai i permessi per modificare questo %s"
 msgid "You do not have the permissions to modify the forecast model."
 msgstr "Non hai i permessi per modificare il modello di previsione."
 
+#, fuzzy
+msgid "You do not have write permission for this folder."
+msgstr "Non hai i permessi per modificare questo %s"
+
 msgid "You don't have the right to rename hosts"
 msgstr "Non hai il diritto di rinominare gli host"
 

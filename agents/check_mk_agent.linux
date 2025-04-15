@@ -1306,22 +1306,12 @@ section_omd_core() {
 }
 
 section_mkbackup() {
-    if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
-        echo "<<<mkbackup>>>"
-        for F in /omd/sites/*/var/check_mk/backup/*.state; do
-            SITE=${F#/*/*/*}
-            SITE=${SITE%%/*}
-
-            JOB_IDENT=${F%.state}
-            JOB_IDENT=${JOB_IDENT##*/}
-
-            if [ "${JOB_IDENT}" != "restore" ]; then
-                echo "[[[site:${SITE}:${JOB_IDENT}]]]"
-                cat "${F}"
-                echo
-            fi
-        done
-    fi
+    for sitedir in /omd/sites/*; do
+        site_version="$(basename "$(realpath "${sitedir}/version")")"
+        site=${sitedir#/omd/sites/}
+        script="/omd/versions/${site_version}/bin/cmk-monitor-mkbackup"
+        [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
+    done
 
     # Collect states of configured CMA backup jobs
     if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then

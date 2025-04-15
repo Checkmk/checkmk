@@ -256,8 +256,9 @@ defineExpose({
   color: var(--font-color);
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-6);
+  box-sizing: border-box;
   border-radius: 0px;
-  max-width: fit-content;
+  min-width: 100%;
   margin: 0;
   padding: 0;
   list-style-type: none;

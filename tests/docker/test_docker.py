@@ -11,6 +11,7 @@ import subprocess
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
+from random import randint
 
 import docker  # type: ignore[import]
 import pytest
@@ -664,7 +665,7 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
-    container_name = f"{version.branch}-monitoring"
+    container_name = f"checkmk-{version.branch}_{randint(10000000, 99999999)}-monitoring"
 
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build

@@ -19,8 +19,12 @@ class CreatePrecompiledFiles(UpdateAction):
 
     @override
     def __call__(self, _logger: Logger) -> None:
+        #  Note: We do not use folder.save here, as this always invalidates all caches and reloads
+        #  the folder tree afterwards
+        folder_tree().invalidate_caches()
         for folder in folder_tree().root_folder().subfolders_recursively():
-            folder.save()
+            folder.save_folder_attributes()
+            folder.save_hosts()
 
 
 update_action_registry.register(

@@ -7,8 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
+from cmk.agent_based.v2 import check_levels, CheckResult, Metric, render, Result, State
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,12 +35,12 @@ def _check_total_capacity(disks: Sequence[FilerDisk]) -> CheckResult:
 
 
 def _check_spare_disks(spare_disks: int, spare_disk_levels: Any) -> CheckResult:
-    yield from check_levels_v1(
+    yield from check_levels(
         value=int(spare_disks),
         levels_lower=(
-            (float(spare_disk_levels[0]), float(spare_disk_levels[1]))
+            ("fixed", (float(spare_disk_levels[0]), float(spare_disk_levels[1])))
             if spare_disk_levels
-            else None
+            else ("no_levels", None)
         ),
         label="Spare disks",
         metric_name="spare_disks",

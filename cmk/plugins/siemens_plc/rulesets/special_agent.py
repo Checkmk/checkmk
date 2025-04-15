@@ -324,6 +324,14 @@ def _validate_id(value: str) -> None:
 def _migrate_value_entry(value: object) -> dict[str, object]:
     if isinstance(value, dict):
         return value
+
+    # TODO: valuespec-removal: This happens in the complain phase of a valuespec
+    # The ListOf valuespec creates a None out of nowhere
+    # This is a workaround keep the strict typing and make the migration work
+    # This returned value here, is not used anywhere
+    if value is None:
+        return {}
+
     assert isinstance(value, tuple)
     db_number, address, data_type, value_type, ident = value
     return {

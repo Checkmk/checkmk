@@ -37,6 +37,9 @@ class HistoryEntry:
 
 
 def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
+    if "/" in hostname:
+        return ImmutableDeltaTree()
+
     filter_tree = (
         make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
@@ -61,6 +64,9 @@ def load_delta_tree(
     timestamp: int,
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
+    if "/" in hostname:
+        return ImmutableDeltaTree(), []  # just for security reasons
+
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
@@ -94,6 +100,9 @@ def load_delta_tree(
 
 
 def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
+    if "/" in hostname:
+        return [], []  # just for security reasons
+
     filter_tree = (
         make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
@@ -124,9 +133,6 @@ def _get_history(
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> tuple[Sequence[HistoryEntry], Sequence[Path]]:
-    if "/" in hostname:
-        return [], []  # just for security reasons
-
     history_files = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,

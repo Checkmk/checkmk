@@ -692,7 +692,11 @@ section_aix_hacmp() {
             fi
 
             echo '<<<aix_hacmp_resources:sep(58)>>>'
-            waitmax 5 clRGinfo -s
+            if inpath clRGinfo; then
+                waitmax 5 clRGinfo -s
+            else # fallback, hardcoded base installation path
+                waitmax 5 /usr/es/sbin/cluster/utilities/clRGinfo -s
+            fi
         fi
     fi
 }

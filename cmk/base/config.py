@@ -36,6 +36,8 @@ from typing import (
     TypedDict,
 )
 
+from livestatus import SiteId
+
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
@@ -66,11 +68,8 @@ from cmk.utils.exceptions import (
     OnError,
 )
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.http_proxy_config import (
-    http_proxy_config_from_user_setting,
-    HTTPProxyConfig,
-)
-from cmk.utils.labels import Labels
+from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
+from cmk.utils.labels import get_builtin_host_labels, Labels
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -2005,6 +2004,11 @@ class ConfigCache:
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
+        builtin_host_labels = {
+            hostname: get_builtin_host_labels(_site_of_host(hostname))
+            for hostname in self.hosts_config
+        }
+
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=host_tags,
             host_paths=self._host_paths,
@@ -2013,6 +2017,7 @@ class ConfigCache:
                 host_label_rules,
                 service_label_rules,
                 self._discovered_labels_of_service,
+                builtin_host_labels,
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_of_cache,
@@ -2626,10 +2631,7 @@ class ConfigCache:
             return True
 
         # hosts without a site: tag belong to all sites
-        return (
-            ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site)
-            == distributed_wato_site
-        )
+        return _site_of_host(host_name) == distributed_wato_site
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)
@@ -4064,6 +4066,12 @@ def get_config_cache() -> ConfigCache:
     if not config_cache:
         config_cache["cache"] = _create_config_cache()
     return config_cache["cache"]
+
+
+def _site_of_host(host_name: HostName) -> SiteId:
+    return SiteId(
+        ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site or omd_site())
+    )
 
 
 def reset_config_cache() -> ConfigCache:

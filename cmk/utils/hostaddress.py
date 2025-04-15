@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Final, Self, TypeAlias
+from typing import Final, Iterator, Self, TypeAlias
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema, CoreSchema
@@ -35,6 +35,9 @@ class Hosts:
             ).items()
             if count > 1
         )
+
+    def __iter__(self) -> Iterator[HostName]:
+        return itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
 
 
 class HostAddress(str):

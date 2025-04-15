@@ -12,12 +12,13 @@ from typing import Any, Final, Literal, Self
 
 from typing_extensions import TypedDict
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.site import omd_site
 
 Labels = Mapping[str, str]
 
@@ -190,11 +191,8 @@ class DiscoveredHostLabelsStore:
         self._store.write_obj({l.name: l.to_dict() for l in labels})
 
 
-class BuiltinHostLabelsStore:
-    def load(self) -> Mapping[str, HostLabelValueDict]:
-        return {
-            "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
-        }
+def get_builtin_host_labels(site: SiteId) -> Labels:
+    return {"cmk/site": site}
 
 
 # Label group specific types

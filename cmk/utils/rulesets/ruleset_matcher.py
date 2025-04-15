@@ -15,7 +15,6 @@ from typing_extensions import TypedDict
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
-    BuiltinHostLabelsStore,
     DiscoveredHostLabelsStore,
     HostLabel,
     LabelGroups,
@@ -117,6 +116,7 @@ class LabelManager(NamedTuple):
     host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
+    builtin_host_labels: Mapping[HostName, Labels]
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -811,8 +811,8 @@ class RulesetOptimizer:
         labels: dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
-        labels.update(RulesetOptimizer._builtin_labels_of_host())
         labels.update(self._label_manager.explicit_host_labels.get(hostname, {}))
+        labels.update(self._label_manager.builtin_host_labels.get(hostname, {}))
         return self.__labels_of_host.setdefault(hostname, labels)
 
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
@@ -821,7 +821,12 @@ class RulesetOptimizer:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "discovered" for k in RulesetOptimizer._builtin_labels_of_host()})
+        labels.update(
+            {
+                k: "discovered"
+                for k in self._label_manager.builtin_host_labels.get(hostname, {}).keys()
+            }
+        )
         labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
         labels.update(
             {
@@ -843,12 +848,6 @@ class RulesetOptimizer:
             else merge_cluster_labels([DiscoveredHostLabelsStore(node).load() for node in nodes])
         )
         return {l.name: l.value for l in host_labels}
-
-    @staticmethod
-    def _builtin_labels_of_host() -> Labels:
-        return {
-            label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
-        }
 
     def labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
         """Returns the effective set of service labels from all available sources

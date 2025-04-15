@@ -278,7 +278,8 @@ explicit_host_conf: dict[str, dict[HostName, Any]] = {}
 extra_service_conf: dict[str, list[RuleSpec[int]]] = {}
 extra_nagios_conf = ""
 service_descriptions: dict[str, str] = {}
-# needed by WATO, ignored by Checkmk
+# host_attributes store explicitly configured attributes in WATO
+# and does not include inheritance from folders
 host_attributes: dict[HostName, dict[str, Any]] = {}
 # special parameters for host/PING check_command
 _PingLevels = dict[str, Union[int, tuple[float, float]]]

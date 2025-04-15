@@ -77,7 +77,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
 
     assert automation.execute(["test-host"]) == AnalyseHostResult(
         label_sources={"cmk/site": "discovered", "explicit": "explicit"},
-        labels={"cmk/site": "NO_SITE", "explicit": "ding"},
+        labels={"cmk/site": "unit", "explicit": "ding"},
     )
 
 

@@ -6001,12 +6001,17 @@ class Dictionary(ValueSpec[DictionaryModel]):
         if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
 
+        elements = list(self._get_elements())
+        if len(elements) == 0:
+            html.write_text_permissive(self._empty_text)
+            return
+
         if render == "form":
-            self._render_input_form(varprefix, value)
+            self._render_input_form(varprefix, elements, value)
         elif render == "form_part":
-            self._render_input_form(varprefix, value, as_part=True)
+            self._render_input_form(varprefix, elements, value, as_part=True)
         else:
-            self._render_input_normal(varprefix, value, two_columns=self._columns == 2)
+            self._render_input_normal(varprefix, elements, value, two_columns=self._columns == 2)
 
     def _render_input_normal_row(
         self,
@@ -6104,10 +6109,14 @@ class Dictionary(ValueSpec[DictionaryModel]):
         html.close_td()
 
     def _render_input_normal(
-        self, varprefix: str, value: DictionaryModel, two_columns: bool
+        self,
+        varprefix: str,
+        elements: DictionaryElements,
+        value: DictionaryModel,
+        two_columns: bool,
     ) -> None:
         html.open_table(class_=["dictionary"] + (["horizontal"] if self._horizontal else []))
-        for nr, (param, vs) in enumerate(self._get_elements()):
+        for nr, (param, vs) in enumerate(elements):
             if param in self._hidden_keys:
                 continue
             self._render_input_normal_row(varprefix, value, two_columns, nr, param, vs)
@@ -6116,7 +6125,11 @@ class Dictionary(ValueSpec[DictionaryModel]):
         html.close_table()
 
     def _render_input_form(
-        self, varprefix: str, value: DictionaryModel, as_part: bool = False
+        self,
+        varprefix: str,
+        elements: DictionaryElements,
+        value: DictionaryModel,
+        as_part: bool = False,
     ) -> None:
         headers = self._headers or [(self.title() or _("Properties"), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
@@ -6129,7 +6142,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
                     show_more_mode=user.show_mode != "default_show_less",
                     help_text=self.help(),
                 )
-            self.render_input_form_header(varprefix, value, header, section_elements, css=css)
+            self.render_input_form_header(
+                varprefix, elements, value, header, section_elements, css=css
+            )
         if not as_part:
             forms.end()
 
@@ -6161,12 +6176,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
     def render_input_form_header(
         self,
         varprefix: str,
+        elements: DictionaryElements,
         value: DictionaryModel,
         title: str,
         section_elements: Sequence[str],
         css: str | None,
     ) -> None:
-        for param, vs in self._get_elements():
+        for param, vs in elements:
             if param in self._hidden_keys:
                 continue
 

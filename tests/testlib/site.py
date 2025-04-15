@@ -1919,7 +1919,8 @@ class SiteFactory:
         site = self.get_existing_site(test_site.id)
 
         _assert_tmpfs(site, base_package.version)
-        _assert_nagvis_server(target_package)
+        if not site.edition.is_saas_edition():
+            _assert_nagvis_server(target_package)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1985,7 +1986,8 @@ class SiteFactory:
         site = self.get_existing_site(site.id)
 
         _assert_tmpfs(site, base_package.version)
-        _assert_nagvis_server(target_package)
+        if not site.edition.is_saas_edition():
+            _assert_nagvis_server(target_package)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)

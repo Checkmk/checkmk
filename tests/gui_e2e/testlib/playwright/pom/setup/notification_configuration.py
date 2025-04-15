@@ -124,3 +124,17 @@ class NotificationConfiguration(CmkPage):
     def check_failed_notifications_has_not_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Failed notifications")
         expect(locator).to_have_text(re.compile(rf"^\s{previous_count}$"))
+
+    def rule_conditions(self, rule_number: int = 0) -> Locator:
+        return self._notification_rule_row(rule_number).get_by_role(
+            "cell", name=re.compile("condition")
+        )
+
+    def expand_conditions(self, expand: bool = True, rule_number: int = 0) -> None:
+        conditions = self.rule_conditions(rule_number)
+        # "Match host event type" should be in the default conditions
+        expanded = conditions.get_by_role("cell", name="Match host event type").is_visible()
+        if not expanded and expand:
+            conditions.click()
+        else:
+            logger.debug("Conditions are already visible.")

@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import re
+import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
@@ -22,8 +26,47 @@ from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import (
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
+
+
+def _copy_file(
+    src: Path,
+    dst: Path,
+) -> None:
+    """Copy file from src to dst."""
+    try:
+        run(["cp", "-f", str(src), str(dst)], sudo=True)
+    except subprocess.CalledProcessError as exception:
+        exception.add_note(f"Failed to copy '{src}' to '{dst}'!")
+        raise exception
+
+
+@pytest.fixture(name="modify_notification_rule", scope="function")
+def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterator[str]:
+    """Modify existing email notification rule to match a specific host.
+
+    * Copy the existing notification rule file to a backup
+    * Modify the notification rule to match a specific host
+    * Restore the original notification rule file after the test execution
+    """
+    hostname = linux_hosts[0]
+
+    notification_rule_path = test_site.path("etc/check_mk/conf.d/wato/notifications.mk")
+    notification_rule_backup_path = notification_rule_path.parent / "notifications.mk.bak"
+    _copy_file(notification_rule_path, notification_rule_backup_path)
+
+    try:
+        content = test_site.read_file(notification_rule_path)
+        new_content = content[:-3] + f", 'match_hosts': ['{hostname}']" + content[-3:]
+        test_site.write_text_file(notification_rule_path, new_content)
+
+        yield hostname
+
+    finally:
+        _copy_file(notification_rule_backup_path, notification_rule_path)
+        test_site.delete_file(notification_rule_backup_path)
 
 
 @pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
@@ -144,3 +187,45 @@ def test_filesystem_email_notifications(
             logger.info("Delete the filesystems rule")
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
             filesystems_rules_page.activate_changes(test_site)
+
+
+def test_email_notifications_host_filters(
+    modify_notification_rule: str,
+    dashboard_page: Dashboard,
+) -> None:
+    """Test to verify that the host filter is working as expected.
+
+    * Modify existing notification rule located in ~/etc/check_mk/conf.d/wato/notifications.mk
+      so that to match the rule for a specific host
+    * Verify the match host is displayed under "Conditions" in
+      Setup > Events > Notifications > Events > Test notifications
+    * Verify the match host is displayed when modifying the existing rule under "Host filters"
+    * Restore the notification rule to its original state
+    """
+    host_name = modify_notification_rule
+    notification_configuration_page = NotificationConfiguration(dashboard_page.page)
+
+    # pre-condition for this test to be successful
+    expect(
+        notification_configuration_page.main_area.locator().get_by_role(
+            "cell", name=re.compile("conditions")
+        ),
+        message="Only one notification rule expected",
+    ).to_have_count(1)
+
+    notification_configuration_page.expand_conditions()
+
+    expect(
+        notification_configuration_page.main_area.locator().get_by_text(host_name),
+        message=f"Expected host '{host_name}' in rule conditions",
+    ).not_to_have_count(0)
+
+    edit_notification_rule_page = EditNotificationRule(
+        notification_configuration_page.page, rule_position=0
+    )
+    edit_notification_rule_page.expand_host_filters()
+    edit_notification_rule_page.hosts_textfield.first.click()
+    expect(
+        edit_notification_rule_page.main_area.locator().get_by_text(host_name),
+        message=f"Expected rule to be filtered by host: '{host_name}'",
+    ).to_have_count(1)

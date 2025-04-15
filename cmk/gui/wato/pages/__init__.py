@@ -106,7 +106,7 @@ def register(
     predefined_conditions.register(mode_registry)
     random_hosts.register(mode_registry)
     read_only.register(mode_registry)
-    rulesets.register(mode_registry)
+    rulesets.register(mode_registry, match_item_generator_registry)
     search.register(mode_registry)
     services.register(page_registry, mode_registry, automation_command_registry)
     sites.register(page_registry, mode_registry)

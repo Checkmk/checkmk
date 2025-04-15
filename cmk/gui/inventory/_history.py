@@ -154,9 +154,14 @@ def _get_history(
 
         try:
             previous_tree = cached_tree_loader.get_tree(previous.path)
+        except (FileNotFoundError, ValueError):
+            corrupted_deltas.append(previous.path)
+            continue
+
+        try:
             current_tree = cached_tree_loader.get_tree(current.path)
         except (FileNotFoundError, ValueError):
-            corrupted_deltas.append(cached_delta_tree_loader.path)
+            corrupted_deltas.append(current.path)
             continue
 
         if (

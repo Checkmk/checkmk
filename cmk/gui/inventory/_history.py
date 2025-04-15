@@ -154,13 +154,13 @@ def _get_history(
 
         try:
             previous_tree = cached_tree_loader.get_tree(previous.path)
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError:
             corrupted_deltas.append(previous.path)
             continue
 
         try:
             current_tree = cached_tree_loader.get_tree(current.path)
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError:
             corrupted_deltas.append(current.path)
             continue
 
@@ -185,10 +185,7 @@ class _CachedTreeLoader:
         if filepath in self._lookup:
             return self._lookup[filepath]
 
-        if not (tree := load_tree(filepath)):
-            raise ValueError(tree)
-
-        return self._lookup.setdefault(filepath, tree)
+        return self._lookup.setdefault(filepath, load_tree(filepath))
 
 
 @dataclass(frozen=True)

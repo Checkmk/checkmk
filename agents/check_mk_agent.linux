@@ -1299,7 +1299,7 @@ section_omd_core() {
     for sitedir in /omd/sites/*; do
         site_version="$(basename "$(realpath "${sitedir}/version")")"
         site=${sitedir#/omd/sites/}
-        sudo --non-interactive --user="${site}" "/omd/versions/${site-version}/bin/cmk-monitor-core"
+        sudo --non-interactive --user="${site}" "/omd/versions/${site_version}/bin/cmk-monitor-core"
     done
 }
 

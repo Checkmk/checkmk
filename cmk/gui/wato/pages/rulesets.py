@@ -158,6 +158,12 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroup,
     RulespecSubGroup,
 )
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk import trace
@@ -177,7 +183,10 @@ _DEPRECATION_PLANNED = ["agent_config:agent_paths", "agent_config:agent_user"]
 tracer = trace.get_tracer()
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     mode_registry.register(ModeRuleSearch)
     mode_registry.register(ModeRulesetGroup)
     mode_registry.register(ModeEditRuleset)
@@ -187,6 +196,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeNewRule)
     mode_registry.register(ModeExportRule)
     mode_registry.register(ModeUnknownRulesets)
+    match_item_generator_registry.register(MatchItemGeneratorUnknownRuleSets("unknown_rulesets"))
 
 
 def _group_rulesets(
@@ -3300,6 +3310,28 @@ class ModeExportRule(ABCEditRuleMode):
 @request_memoize()
 def _get_rule_render_mode() -> RenderMode:
     return RenderMode.BACKEND
+
+
+class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        yield MatchItem(
+            title=_("Unknown rulesets"),
+            topic=_("Service monitoring rules"),
+            url=makeuri_contextless(
+                request,
+                [("mode", "unknown_rulesets")],
+                filename="wato.py",
+            ),
+            match_texts=[_("Unknown rulesets")],
+        )
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
 
 
 class ModeUnknownRulesets(WatoMode):

@@ -8,6 +8,7 @@
 import logging
 import os
 from pathlib import Path
+from random import randint
 
 import docker  # type: ignore[import]
 import pytest
@@ -361,7 +362,7 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 
 
 def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
-    container_name = f"{version.branch}-monitoring"
+    container_name = f"checkmk-{version.branch}_{randint(10000000, 99999999)}-monitoring"
 
     assert isinstance(
         versions_compatible(

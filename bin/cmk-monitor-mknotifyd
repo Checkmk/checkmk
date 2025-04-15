@@ -10,10 +10,10 @@ HERE
     return 1
 }
 
-echo '<<<mknotifyd:sep(0)>>>'
 statefile=~/var/log/mknotifyd.state
 [ -e "${statefile}" ] && {
-    echo "[$(whoami)]"
+    echo '<<<mknotifyd:sep(0)>>>'
     date +%s
+    echo "[$(whoami)]"
     grep -v '^#' <"${statefile}"
 }

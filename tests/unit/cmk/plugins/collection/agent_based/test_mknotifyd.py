@@ -227,15 +227,15 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
 )
 
 INFO_TIMESTAMP_PER_SITE = [
-    ["[heute]"],
     ["1571212728"],
+    ["[heute]"],
     ["Version:         2019.10.14"],
     ["Updated:         1571212726 (2019-10-16 09:58:46)"],
     ["Started:         1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
     ["Configuration:   1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
     ["Listening FD:    5"],
-    ["[morgen]"],
     ["1571212730"],
+    ["[morgen]"],
     ["Version:         2019.10.14"],
     ["Updated:         1571212726 (2019-10-16 09:58:46)"],
     ["Started:         1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],

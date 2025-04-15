@@ -39,7 +39,7 @@ class HistoryEntry:
 def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
     delta_history, _corrupted_history_files = _get_history(
         hostname,
-        filter_pairs=lambda pairs: [pairs[-1]] if pairs else [],
+        filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
     )
     return delta_history[0].delta_tree if delta_history else ImmutableDeltaTree()
 
@@ -66,7 +66,7 @@ def load_delta_tree(
 
     delta_history, corrupted_history_files = _get_history(
         hostname,
-        filter_pairs=lambda pairs: _search_timestamps(pairs, timestamp),
+        filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
     )
     return (
         (delta_history[0].delta_tree, corrupted_history_files)
@@ -76,7 +76,7 @@ def load_delta_tree(
 
 
 def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
-    return _get_history(hostname, filter_pairs=lambda pairs: pairs)
+    return _get_history(hostname, filter_history_paths=lambda pairs: pairs)
 
 
 def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
@@ -97,7 +97,7 @@ def _get_pairs(
 def _get_history(
     hostname: HostName,
     *,
-    filter_pairs: Callable[
+    filter_history_paths: Callable[
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
@@ -118,7 +118,7 @@ def _get_history(
     )
 
     corrupted_deltas = []
-    for previous, current in filter_pairs(_get_pairs(history_files.paths)):
+    for previous, current in filter_history_paths(_get_pairs(history_files.paths)):
         if current.timestamp is None:
             continue
 

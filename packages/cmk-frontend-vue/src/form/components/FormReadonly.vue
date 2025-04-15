@@ -47,6 +47,7 @@ import {
 } from './forms/FormConditionChoices/utils'
 import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
 import type { CheckboxListChoiceElement } from '@/form/components/forms/FormCheckboxListChoice.vue'
+import FormLabelsLabel from '@/form/components/forms/FormLabelsLabel.vue'
 
 function renderForm(
   formSpec: FormSpec,
@@ -588,32 +589,14 @@ function renderConditionChoices(formSpec: ConditionChoices, value: ConditionChoi
 }
 
 function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
-  let bgColor = 'var(--tag-color)'
-  let color = 'var(--black)'
-
-  switch (formSpec.label_source) {
-    case 'discovered':
-      bgColor = 'var(--tag-discovered-color)'
-      color = 'var(--white)'
-      break
-    case 'explicit':
-      bgColor = 'var(--tag-explicit-color)'
-      color = 'var(--black)'
-      break
-    case 'ruleset':
-      bgColor = 'var(--tag-ruleset-color)'
-      color = 'var(--white)'
-      break
-  }
   return h(
     'div',
     { class: 'form-readonly__labels' },
     Object.entries(value).map(([key, value]) => {
-      return h(
-        'div',
-        { class: 'label', style: { backgroundColor: bgColor, color: color } },
-        `${key}: ${value}`
-      )
+      return h(FormLabelsLabel, {
+        labelSource: formSpec.label_source,
+        value: `${key}: ${value}`
+      })
     })
   )
 }
@@ -754,17 +737,6 @@ table.form-readonly__table {
   align-items: center;
   flex-wrap: wrap;
   gap: 5px 0;
-
-  > .label {
-    width: fit-content;
-    margin: 0 5px 0 0;
-    padding: 1px 4px;
-    border-radius: 5px;
-
-    &:first-child {
-      margin-left: 0;
-    }
-  }
 }
 
 .form-readonly__cascading-single-choice__layout-horizontal {

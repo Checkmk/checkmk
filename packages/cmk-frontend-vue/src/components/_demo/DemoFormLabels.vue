@@ -100,6 +100,7 @@ const mockLoaded = ref<boolean>(false)
   <label>
     Label Source:
     <select v-model="labelSource">
+      <option value="null">null</option>
       <option value="explicit">explicit</option>
       <option value="ruleset">ruleset</option>
       <option value="discovered">discovered</option>

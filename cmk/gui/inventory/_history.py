@@ -125,6 +125,63 @@ def _get_pairs(
     return list(zip(paths, paths[1:]))
 
 
+def _make_history_entry(
+    timestamp: int,
+    new: int,
+    changed: int,
+    removed: int,
+    delta_tree: ImmutableDeltaTree,
+    filter_tree: Sequence[SDFilterChoice] | None,
+) -> HistoryEntry | None:
+    if filter_tree is None:
+        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
+
+    if not (filtered_delta_tree := delta_tree.filter(filter_tree)):
+        return None
+
+    delta_stats = filtered_delta_tree.get_stats()
+    return HistoryEntry(
+        timestamp,
+        delta_stats["new"],
+        delta_stats["changed"],
+        delta_stats["removed"],
+        filtered_delta_tree,
+    )
+
+
+def _get_cached_entry(
+    delta_tree_path: Path, timestamp: int, filter_tree: Sequence[SDFilterChoice] | None
+) -> HistoryEntry | None:
+    try:
+        cached_data = load_delta_cache(delta_tree_path)
+    except MKGeneralException:
+        return None
+
+    if cached_data is None:
+        return None
+
+    new, changed, removed, delta_tree = cached_data
+    return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+
+
+def _get_calculated_or_store_entry(
+    delta_tree_path: Path,
+    timestamp: int,
+    previous_tree: ImmutableTree,
+    current_tree: ImmutableTree,
+    filter_tree: Sequence[SDFilterChoice] | None,
+) -> HistoryEntry | None:
+    delta_tree = current_tree.difference(previous_tree)
+    delta_stats = delta_tree.get_stats()
+    new = delta_stats["new"]
+    changed = delta_stats["changed"]
+    removed = delta_stats["removed"]
+    if new or changed or removed:
+        save_delta_cache(delta_tree_path, (new, changed, removed, delta_tree))
+        return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+    return None
+
+
 def _get_history(
     hostname: HostName,
     *,
@@ -146,14 +203,16 @@ def _get_history(
         if current.timestamp is None:
             continue
 
-        cached_delta_tree_loader = _CachedDeltaTreeLoader(
+        delta_tree_path = Path(
+            cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
-            previous.timestamp,
-            current.timestamp,
+            f"{previous.timestamp}_{current.timestamp}",
         )
 
         if (
-            cached_history_entry := cached_delta_tree_loader.get_cached_entry(filter_tree)
+            cached_history_entry := _get_cached_entry(
+                delta_tree_path, current.timestamp, filter_tree
+            )
         ) is not None:
             history.append(cached_history_entry)
             continue
@@ -171,8 +230,8 @@ def _get_history(
             continue
 
         if (
-            history_entry := cached_delta_tree_loader.get_calculated_or_store_entry(
-                previous_tree, current_tree, filter_tree
+            history_entry := _get_calculated_or_store_entry(
+                delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
             )
         ) is not None:
             history.append(history_entry)
@@ -192,69 +251,3 @@ class _CachedTreeLoader:
             return self._lookup[filepath]
 
         return self._lookup.setdefault(filepath, load_tree(filepath))
-
-
-@dataclass(frozen=True)
-class _CachedDeltaTreeLoader:
-    hostname: HostName
-    previous_timestamp: int | None
-    current_timestamp: int
-
-    @property
-    def path(self) -> Path:
-        return Path(
-            cmk.utils.paths.inventory_delta_cache_dir,
-            self.hostname,
-            f"{self.previous_timestamp}_{self.current_timestamp}",
-        )
-
-    def get_cached_entry(self, filter_tree: Sequence[SDFilterChoice] | None) -> HistoryEntry | None:
-        try:
-            cached_data = load_delta_cache(self.path)
-        except MKGeneralException:
-            return None
-
-        if cached_data is None:
-            return None
-
-        new, changed, removed, delta_tree = cached_data
-        return self._make_history_entry(new, changed, removed, delta_tree, filter_tree)
-
-    def get_calculated_or_store_entry(
-        self,
-        previous_tree: ImmutableTree,
-        current_tree: ImmutableTree,
-        filter_tree: Sequence[SDFilterChoice] | None,
-    ) -> HistoryEntry | None:
-        delta_tree = current_tree.difference(previous_tree)
-        delta_stats = delta_tree.get_stats()
-        new = delta_stats["new"]
-        changed = delta_stats["changed"]
-        removed = delta_stats["removed"]
-        if new or changed or removed:
-            save_delta_cache(self.path, (new, changed, removed, delta_tree))
-            return self._make_history_entry(new, changed, removed, delta_tree, filter_tree)
-        return None
-
-    def _make_history_entry(
-        self,
-        new: int,
-        changed: int,
-        removed: int,
-        delta_tree: ImmutableDeltaTree,
-        filter_tree: Sequence[SDFilterChoice] | None,
-    ) -> HistoryEntry | None:
-        if filter_tree is None:
-            return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
-
-        if not (filtered_delta_tree := delta_tree.filter(filter_tree)):
-            return None
-
-        delta_stats = filtered_delta_tree.get_stats()
-        return HistoryEntry(
-            self.current_timestamp,
-            delta_stats["new"],
-            delta_stats["changed"],
-            delta_stats["removed"],
-            filtered_delta_tree,
-        )

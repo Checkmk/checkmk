@@ -42,12 +42,18 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    delta_history, _corrupted_history_files = _get_history(
+    history, _corrupted = _get_history(
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
         filter_tree=filter_tree,
     )
-    return delta_history[0].delta_tree if delta_history else ImmutableDeltaTree()
+    return history[0].delta_tree if history else ImmutableDeltaTree()
+
+
+def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
+    return sorted(
+        [str(fp.relative_to(cmk.utils.paths.omd_root)) for fp in set(corrupted_history_files)]
+    )
 
 
 def load_delta_tree(
@@ -75,14 +81,14 @@ def load_delta_tree(
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    delta_history, corrupted_history_files = _get_history(
+    history, corrupted = _get_history(
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
         filter_tree=filter_tree,
     )
     return (
-        (delta_history[0].delta_tree, corrupted_history_files)
-        if delta_history
+        (history[0].delta_tree, _sort_corrupted_history_files(corrupted))
+        if history
         else (ImmutableDeltaTree(), [])
     )
 
@@ -93,17 +99,12 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    return _get_history(
+    history, corrupted = _get_history(
         hostname,
         filter_history_paths=lambda pairs: pairs,
         filter_tree=filter_tree,
     )
-
-
-def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
-    return sorted(
-        [str(fp.relative_to(cmk.utils.paths.omd_root)) for fp in set(corrupted_history_files)]
-    )
+    return history, _sort_corrupted_history_files(corrupted)
 
 
 def _get_pairs(
@@ -122,7 +123,7 @@ def _get_history(
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
-) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
+) -> tuple[Sequence[HistoryEntry], Sequence[Path]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
@@ -164,7 +165,7 @@ def _get_history(
         ) is not None:
             history.append(history_entry)
 
-    return history, _sort_corrupted_history_files(list(history_files.corrupted) + corrupted_deltas)
+    return history, list(history_files.corrupted) + corrupted_deltas
 
 
 @dataclass(frozen=True)

@@ -37,9 +37,15 @@ class HistoryEntry:
 
 
 def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
+    filter_tree = (
+        make_filter_choices_from_permitted_paths(permitted_paths)
+        if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
+        else None
+    )
     delta_history, _corrupted_history_files = _get_history(
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
+        filter_tree=filter_tree,
     )
     return delta_history[0].delta_tree if delta_history else ImmutableDeltaTree()
 
@@ -64,9 +70,15 @@ def load_delta_tree(
             % (timestamp, hostname)
         )
 
+    filter_tree = (
+        make_filter_choices_from_permitted_paths(permitted_paths)
+        if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
+        else None
+    )
     delta_history, corrupted_history_files = _get_history(
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
+        filter_tree=filter_tree,
     )
     return (
         (delta_history[0].delta_tree, corrupted_history_files)
@@ -76,7 +88,16 @@ def load_delta_tree(
 
 
 def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
-    return _get_history(hostname, filter_history_paths=lambda pairs: pairs)
+    filter_tree = (
+        make_filter_choices_from_permitted_paths(permitted_paths)
+        if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
+        else None
+    )
+    return _get_history(
+        hostname,
+        filter_history_paths=lambda pairs: pairs,
+        filter_tree=filter_tree,
+    )
 
 
 def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
@@ -100,6 +121,7 @@ def _get_history(
     filter_history_paths: Callable[
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
+    filter_tree: Sequence[SDFilterChoice] | None,
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
@@ -111,11 +133,6 @@ def _get_history(
 
     cached_tree_loader = _CachedTreeLoader()
     history: list[HistoryEntry] = []
-    filters = (
-        make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
-        else None
-    )
 
     corrupted_deltas = []
     for previous, current in filter_history_paths(_get_pairs(history_files.paths)):
@@ -126,7 +143,7 @@ def _get_history(
             hostname,
             previous.timestamp,
             current.timestamp,
-            filters,
+            filter_tree,
         )
 
         if (cached_history_entry := cached_delta_tree_loader.get_cached_entry()) is not None:
@@ -173,7 +190,7 @@ class _CachedDeltaTreeLoader:
     previous_timestamp: int | None
     current_timestamp: int
     # TODO Cleanup
-    filters: Sequence[SDFilterChoice] | None
+    filter_tree: Sequence[SDFilterChoice] | None
 
     @property
     def path(self) -> Path:
@@ -213,10 +230,10 @@ class _CachedDeltaTreeLoader:
     def _make_history_entry(
         self, new: int, changed: int, removed: int, delta_tree: ImmutableDeltaTree
     ) -> HistoryEntry | None:
-        if self.filters is None:
+        if self.filter_tree is None:
             return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
 
-        if not (filtered_delta_tree := delta_tree.filter(self.filters)):
+        if not (filtered_delta_tree := delta_tree.filter(self.filter_tree)):
             return None
 
         delta_stats = filtered_delta_tree.get_stats()

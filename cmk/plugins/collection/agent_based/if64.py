@@ -56,7 +56,7 @@ snmp_section_if64 = SNMPSection(
         ),
     ],
     detect=if64.HAS_ifHCInOctets,
-    supersedes=["if", "statgrab_net"],
+    supersedes=["if", "statgrab_net", "if32_with_alias"],
 )
 
 # Note: This section is by default deactivated (hard-coded in

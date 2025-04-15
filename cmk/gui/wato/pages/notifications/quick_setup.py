@@ -43,6 +43,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
+    ConditionalNotificationDialogWidget,
     ConditionalNotificationECAlertStageWidget,
     ConditionalNotificationServiceEventStageWidget,
 )
@@ -65,6 +66,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
+    Dialog,
     FormSpecId,
     FormSpecWrapper,
     Widget,
@@ -1443,6 +1445,18 @@ def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> N
 def recipient() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
+            ConditionalNotificationDialogWidget(
+                items=[
+                    Dialog(
+                        text=_(
+                            "Select one user from a contact group with access "
+                            "to all hosts and services. This will prevent "
+                            "duplicate notifications, as selecting multiple "
+                            "users will trigger separate notifications."
+                        ),
+                    )
+                ],
+            ),
             FormSpecWrapper(
                 id=FormSpecId("recipient"),
                 form_spec=DictionaryExtended(
@@ -1640,7 +1654,7 @@ def recipient() -> QuickSetupStage:
                         ),
                     }
                 ),
-            )
+            ),
         ]
 
     return QuickSetupStage(

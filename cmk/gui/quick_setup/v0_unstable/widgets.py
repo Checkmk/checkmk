@@ -27,6 +27,12 @@ class NoteText(Widget):
 
 
 @dataclass(frozen=True, kw_only=True)
+class Dialog(Widget):
+    widget_type: str = field(default="dialog", init=False)
+    text: str = ""
+
+
+@dataclass(frozen=True, kw_only=True)
 class ListOfWidgets(Widget):
     widget_type: str = field(default="list_of_widgets", init=False)
     items: list[Widget] = field(default_factory=list)

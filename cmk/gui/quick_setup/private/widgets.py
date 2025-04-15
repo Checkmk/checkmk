@@ -27,3 +27,8 @@ class ConditionalNotificationServiceEventStageWidget(ConditionalNotificationStag
 @dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationECAlertStageWidget(ConditionalNotificationStageWidget):
     widget_type: str = field(default="conditional_notification_ec_alert_stage_widget", init=False)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ConditionalNotificationDialogWidget(ConditionalNotificationStageWidget):
+    widget_type: str = field(default="conditional_notification_dialog_widget", init=False)

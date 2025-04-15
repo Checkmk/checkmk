@@ -686,16 +686,16 @@ section_aix_hacmp() {
 
             echo '<<<aix_hacmp_services>>>'
             if inpath clshowsrv; then
-                waitmax 5 clshowsrv -v
+                waitmax 5 sudo_as_root clshowsrv -v
             else # fallback, hardcoded base installation path
-                waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
+                waitmax 5 sudo_as_root /usr/es/sbin/cluster/utilities/clshowsrv -v
             fi
 
             echo '<<<aix_hacmp_resources:sep(58)>>>'
             if inpath clRGinfo; then
-                waitmax 5 clRGinfo -s
+                waitmax 5 sudo_as_root clRGinfo -s
             else # fallback, hardcoded base installation path
-                waitmax 5 /usr/es/sbin/cluster/utilities/clRGinfo -s
+                waitmax 5 sudo_as_root /usr/es/sbin/cluster/utilities/clRGinfo -s
             fi
         fi
     fi

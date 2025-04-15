@@ -9,7 +9,6 @@ import logging
 import os
 import subprocess
 from collections.abc import Mapping
-from contextlib import suppress
 from pathlib import Path
 from random import randint
 
@@ -216,19 +215,6 @@ def _pull(client: docker.DockerClient, version: CMKVersion) -> Image:
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
-def _remove_volumes(
-    client: docker.DockerClient, volumes: list[str] | None, is_update: bool
-) -> None:
-    """remove any pre-existing volumes"""
-    volume_ids = [_.split(":")[0] for _ in volumes or []]
-    exceptions = [docker.errors.NotFound]
-    if is_update:
-        exceptions.append(docker.errors.APIError)
-    with suppress(*exceptions):
-        for volume_id in volume_ids:
-            client.volumes.get(volume_id).remove(force=True)
-
-
 def _start(
     request: pytest.FixtureRequest,
     client: docker.DockerClient,
@@ -274,8 +260,7 @@ def _start(
     try:
         site_id = (environment or {}).get("CMK_SITE_ID", "cmk")
 
-        request.addfinalizer(lambda: c.remove(force=True))
-        request.addfinalizer(lambda: _remove_volumes(client, volumes, is_update))
+        request.addfinalizer(lambda: c.remove(v=True, force=True))
 
         testlib.wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
         output = c.logs().decode("utf-8")

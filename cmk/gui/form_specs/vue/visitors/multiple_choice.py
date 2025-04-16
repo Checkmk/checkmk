@@ -57,7 +57,7 @@ class MultipleChoiceVisitor(
     def _filter_out_invalid_choices(
         self, raw_value: Sequence[TransportFormat]
     ) -> _ParsedValueModel:
-        valid_raw_value_names = set([v["name"] for v in raw_value]) & self._get_valid_choices()
+        valid_raw_value_names = {v["name"] for v in raw_value} & self._get_valid_choices()
         return [v for v in raw_value if v["name"] in valid_raw_value_names]
 
     def _build_data_format_from_names(self, names: Sequence[str]) -> _ParsedValueModel:

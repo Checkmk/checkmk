@@ -161,7 +161,7 @@ class _ACTestResultProblem:
     def text(self) -> str:
         words = []
         for state, text in sorted(
-            set((r.state, r.text) for rs in self._ac_test_results.values() for r in rs)
+            {(r.state, r.text) for rs in self._ac_test_results.values() for r in rs}
         ):
             match state:
                 case ACResultState.CRIT:
@@ -240,7 +240,7 @@ class _ACTestResultProblem:
 
         table_content = HTML("", escape=False)
         for idx, (state, text) in enumerate(
-            sorted(set((r.state, r.text) for rs in self._ac_test_results.values() for r in rs))
+            sorted({(r.state, r.text) for rs in self._ac_test_results.values() for r in rs})
         ):
             match state:
                 case ACResultState.CRIT:

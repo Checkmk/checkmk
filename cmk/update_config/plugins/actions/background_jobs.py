@@ -41,7 +41,7 @@ def _rename_background_job_dirs(logger: Logger) -> None:
     )
 
     if os.path.exists(migrated_file_path):
-        with open(migrated_file_path, "r") as migrated_file:
+        with open(migrated_file_path) as migrated_file:
             migrated_dirs = json.load(migrated_file)
     else:
         migrated_dirs = []

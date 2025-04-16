@@ -336,9 +336,9 @@ def _cleanup_discovered_host_labels(
     discovered_host_labels_dir: Path,
     all_known_hosts: Iterable[str],
 ) -> None:
-    hosts_with_stored_discovered_host_labels = set(
+    hosts_with_stored_discovered_host_labels = {
         p.stem for p in discovered_host_labels_dir.iterdir()
-    )
+    }
     for removed_host_with_still_stored_discovered_host_labels in (
         hosts_with_stored_discovered_host_labels - set(all_known_hosts)
     ):

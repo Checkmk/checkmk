@@ -5,7 +5,10 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 cc_binary(
     name = "unixcat",
     srcs = ["src/unixcat.cc"],
-    copts = ["-O3"],
+    copts = [
+        "-std=c++20",
+        "-O3",
+    ],
     linkopts = [
         "-pthread",
     ],

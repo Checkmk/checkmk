@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.user import UserId

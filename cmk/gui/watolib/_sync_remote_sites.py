@@ -11,10 +11,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 
-from livestatus import SiteId
-
 from cmk.ccc import store
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry

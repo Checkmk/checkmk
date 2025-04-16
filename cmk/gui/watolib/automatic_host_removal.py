@@ -13,7 +13,9 @@ from typing import Literal, TypedDict
 
 from redis import ConnectionError as RedisConnectionError
 
-from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
+from livestatus import LocalConnection, MKLivestatusSocketError
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import log_dir

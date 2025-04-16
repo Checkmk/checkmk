@@ -33,7 +33,7 @@ import json
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any, Literal
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query, ResultRow

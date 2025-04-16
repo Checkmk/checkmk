@@ -27,7 +27,9 @@ from types import TracebackType
 from typing import Any, Literal, override
 from unittest import mock
 
-from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
+from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations
+
+from cmk.ccc.site import SiteId
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package

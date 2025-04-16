@@ -10,7 +10,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.structured_data import SDRawTree

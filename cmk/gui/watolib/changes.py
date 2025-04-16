@@ -8,7 +8,7 @@ import time
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils
 from cmk.utils.setup_search_index import request_index_update

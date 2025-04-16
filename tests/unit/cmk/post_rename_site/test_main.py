@@ -9,7 +9,7 @@ import sys
 import pytest
 from pytest_mock import MockerFixture
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import RenameAction, RenameActionRegistry

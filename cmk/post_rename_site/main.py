@@ -7,10 +7,8 @@ from argparse import ArgumentParser
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from livestatus import SiteId
-
 import cmk.ccc.debug
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths

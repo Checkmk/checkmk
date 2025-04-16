@@ -20,12 +20,10 @@ from typing import Any, NewType
 
 from pydantic import BaseModel
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore

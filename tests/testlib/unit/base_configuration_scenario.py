@@ -20,7 +20,7 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName

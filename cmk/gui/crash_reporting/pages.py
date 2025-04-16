@@ -15,11 +15,11 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, TypedDict
 
 import livestatus
-from livestatus import SiteId
 
 import cmk.ccc.crash_reporting
 import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import CrashInfo
+from cmk.ccc.site import SiteId
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (

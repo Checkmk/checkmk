@@ -10,6 +10,7 @@ from typing import Literal, Protocol
 import livestatus
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
@@ -1266,7 +1267,7 @@ PermissionRemoveAllDowntimes = Permission(
 )
 
 
-def hosts_user_can_see(users_sites: list[livestatus.SiteId] | None = None) -> Sequence[str]:
+def hosts_user_can_see(users_sites: list[SiteId] | None = None) -> Sequence[str]:
     """Returns a list of hostnames that the logged in user can see filtering
     on the action rows sites if they are provided."""
     hosts_query_result = Query([Hosts.name]).fetchall(
@@ -1828,7 +1829,7 @@ class CommandScheduleDowntimesForm:
 
             if not user.may("general.see_all"):
                 user_hosts = hosts_user_can_see(
-                    users_sites=list({livestatus.SiteId(row["site"]) for row in action_rows})
+                    users_sites=list({SiteId(row["site"]) for row in action_rows})
                 )
                 specs = [spec for spec in specs if spec in user_hosts]
                 action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
@@ -1915,15 +1916,15 @@ def _bi_commands(downtime: DowntimeSchedule, node: CompiledAggrTree) -> Sequence
 
 def _find_all_leaves(
     node: CompiledAggrRule | CompiledAggrLeaf,
-) -> list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]]:
+) -> list[tuple[SiteId | None, HostName, ServiceName | None]]:
     # From BICompiledLeaf (see also eval_result_node)
     if node["type"] == 1:
         site, host = node["host"]
-        return [(livestatus.SiteId(site), host, node.get("service"))]
+        return [(SiteId(site), host, node.get("service"))]
 
     # From BICompiledRule (see also eval_result_node)
     if node["type"] == 2:
-        entries: list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]] = []
+        entries: list[tuple[SiteId | None, HostName, ServiceName | None]] = []
         for n in node["nodes"]:
             entries += _find_all_leaves(n)
         return entries

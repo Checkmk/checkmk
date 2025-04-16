@@ -15,10 +15,9 @@ from typing import Annotated, assert_never, final, Literal, TypeVar
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 
-from livestatus import SiteId
-
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 
 from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName

@@ -24,12 +24,11 @@ from livestatus import (
     NetworkSocketDetails,
     SiteConfiguration,
     SiteConfigurations,
-    SiteId,
     TLSParams,
 )
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details

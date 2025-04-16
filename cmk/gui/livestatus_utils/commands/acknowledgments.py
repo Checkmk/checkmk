@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments."""
 
-from livestatus import MultiSiteConnection, SiteId
+from livestatus import MultiSiteConnection
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query

@@ -15,10 +15,11 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
 
-from livestatus import LivestatusResponse, SiteId
+from livestatus import LivestatusResponse
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths

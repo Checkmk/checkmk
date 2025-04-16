@@ -8,9 +8,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast, Literal, TypeAlias
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths

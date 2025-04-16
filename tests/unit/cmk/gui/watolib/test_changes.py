@@ -14,7 +14,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId

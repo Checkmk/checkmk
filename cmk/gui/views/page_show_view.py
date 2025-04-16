@@ -15,9 +15,8 @@ from typing import Any
 from urllib.parse import quote_plus
 
 import livestatus
-from livestatus import SiteId
 
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.livestatus_helpers.queries import Query

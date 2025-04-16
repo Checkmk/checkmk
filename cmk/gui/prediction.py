@@ -16,11 +16,11 @@ from livestatus import (
     MKLivestatusNotFoundError,
     MKLivestatusSocketError,
     SingleSiteConnection,
-    SiteId,
 )
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName

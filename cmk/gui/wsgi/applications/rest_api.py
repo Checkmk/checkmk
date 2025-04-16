@@ -22,12 +22,10 @@ from marshmallow import fields as ma_fields
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting, store
 from cmk.ccc.exceptions import MKException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import paths
 

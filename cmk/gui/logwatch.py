@@ -9,9 +9,9 @@ from collections.abc import Iterator
 from typing import Any
 
 import livestatus
-from livestatus import SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 

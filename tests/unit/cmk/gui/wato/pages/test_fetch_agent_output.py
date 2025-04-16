@@ -11,7 +11,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.common.repo import repo_path
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData

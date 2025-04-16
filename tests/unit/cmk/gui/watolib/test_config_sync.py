@@ -15,9 +15,10 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
+from livestatus import NetworkSocketDetails, SiteConfiguration, TLSParams
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.user import UserId

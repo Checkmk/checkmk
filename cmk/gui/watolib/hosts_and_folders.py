@@ -23,12 +23,10 @@ from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Typed
 
 from redis.client import Pipeline
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
 
 import cmk.utils.paths

@@ -9,7 +9,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-from livestatus import Command, MultiSiteConnection, SiteId
+from livestatus import Command, MultiSiteConnection
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.expressions import QueryExpression

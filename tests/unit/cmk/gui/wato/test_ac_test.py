@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

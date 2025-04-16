@@ -9,9 +9,8 @@ from typing import NamedTuple, NewType, override
 
 from pydantic import BaseModel
 
-from livestatus import SiteId
-
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName

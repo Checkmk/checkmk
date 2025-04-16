@@ -11,9 +11,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from livestatus import MKLivestatusNotFoundError, SiteId
+from livestatus import MKLivestatusNotFoundError
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName

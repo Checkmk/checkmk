@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from itertools import chain
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 

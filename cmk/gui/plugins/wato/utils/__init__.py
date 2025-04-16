@@ -14,11 +14,12 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast, Literal
 
-from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils.hostaddress import HostName

@@ -8,9 +8,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NewType
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 

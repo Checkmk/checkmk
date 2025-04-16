@@ -15,6 +15,7 @@ from typing import Any, Literal, TypedDict
 import livestatus
 
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -98,7 +99,7 @@ def register(
     icon_and_action_registry.register(InventoryIcon)
 
 
-def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:
+def verify_permission(host_name: HostName, site: SiteId | None) -> None:
     if user.may("general.see_all"):
         return
 
@@ -125,7 +126,7 @@ def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> No
         raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
 
 
-def get_status_data_via_livestatus(site: livestatus.SiteId | None, hostname: HostName) -> Row:
+def get_status_data_via_livestatus(site: SiteId | None, hostname: HostName) -> Row:
     query = (
         "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
         % livestatus.lqencode(hostname)
@@ -179,7 +180,7 @@ class _HostInvAPIResponse(TypedDict):
 
 def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
     raw_site = api_request.get("site")
-    site = livestatus.SiteId(raw_site) if raw_site is not None else None
+    site = SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
 
     tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))

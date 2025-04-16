@@ -13,9 +13,10 @@ from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeV
 
 from marshmallow import Schema as marshmallow_Schema
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusOutputFormat, LivestatusResponse
 
 from cmk.ccc import plugin_registry
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping, replace_macros_in_str

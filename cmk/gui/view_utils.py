@@ -7,7 +7,7 @@ import re
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources

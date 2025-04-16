@@ -9,9 +9,8 @@ import json
 import time
 from collections.abc import Iterator
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName

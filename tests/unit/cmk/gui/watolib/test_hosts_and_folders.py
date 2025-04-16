@@ -22,9 +22,8 @@ import pytest
 import time_machine
 from pytest import MonkeyPatch
 
-from livestatus import SiteId
-
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis

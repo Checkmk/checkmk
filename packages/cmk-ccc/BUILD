@@ -88,7 +88,6 @@ py_library(
     deps = [
         "_init",
         "i18n",
-        "//packages/cmk-livestatus-client:py_livestatus",
     ],
 )
 

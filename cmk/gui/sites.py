@@ -20,11 +20,10 @@ from livestatus import (
     sanitize_site_configuration,
     SiteConfiguration,
     SiteConfigurations,
-    SiteId,
     UnixSocketInfo,
 )
 
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 from cmk.utils import paths

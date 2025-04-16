@@ -7,7 +7,7 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef

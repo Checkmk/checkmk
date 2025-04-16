@@ -6,15 +6,10 @@
 
 from collections.abc import Iterator
 
-from livestatus import (
-    MKLivestatusBadGatewayError,
-    MKLivestatusTableNotFoundError,
-    OnlySites,
-    Query,
-    SiteId,
-)
+from livestatus import MKLivestatusBadGatewayError, MKLivestatusTableNotFoundError, OnlySites, Query
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
 from cmk.gui.htmllib.generator import HTMLWriter

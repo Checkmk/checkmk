@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
 from cmk.gui.i18n import _, _l, ungettext

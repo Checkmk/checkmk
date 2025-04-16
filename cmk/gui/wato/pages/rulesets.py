@@ -15,9 +15,8 @@ from enum import auto, Enum
 from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
-from livestatus import SiteId
-
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups

@@ -13,10 +13,10 @@ from pathlib import Path
 import requests
 import urllib3
 
-from livestatus import LocalConnection, SiteConfiguration, SiteId
+from livestatus import LocalConnection, SiteConfiguration
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
 
 from cmk.utils.paths import (

@@ -6,7 +6,7 @@ from collections.abc import Generator
 
 import pytest
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.user import UserId
 

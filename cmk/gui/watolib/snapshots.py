@@ -14,10 +14,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

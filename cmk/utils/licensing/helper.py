@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from uuid import UUID
 
-import livestatus
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 from cmk.utils.paths import log_dir
@@ -52,7 +52,7 @@ def load_instance_id(file_path: Path) -> UUID | None:
         return None
 
 
-def hash_site_id(site_id: livestatus.SiteId) -> str:
+def hash_site_id(site_id: SiteId) -> str:
     # We have to hash the site ID because some sites contain project names.
     # This hash also has to be constant because it will be used as an DB index.
     h = hashlib.new("sha256")

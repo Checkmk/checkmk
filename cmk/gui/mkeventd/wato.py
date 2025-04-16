@@ -29,11 +29,11 @@ from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
-from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
+from livestatus import LocalConnection, MKLivestatusSocketError
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.log

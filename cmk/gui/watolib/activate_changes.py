@@ -38,12 +38,12 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
-from livestatus import BrokerConnections, SiteConfiguration, SiteId
+from livestatus import BrokerConnections, SiteConfiguration
 
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.hostaddress import HostName

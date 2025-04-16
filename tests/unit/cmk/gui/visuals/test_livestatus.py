@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals import get_only_sites_from_context

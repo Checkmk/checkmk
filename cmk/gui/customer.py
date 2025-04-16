@@ -7,9 +7,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
 
 from cmk.utils import paths

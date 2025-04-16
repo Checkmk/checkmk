@@ -16,10 +16,9 @@ from typing import Any, Hashable, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 
-from livestatus import SiteId
-
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels

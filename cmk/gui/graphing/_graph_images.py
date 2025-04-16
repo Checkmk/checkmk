@@ -16,6 +16,8 @@ from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
+from cmk.ccc.site import SiteId
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import pdf
@@ -108,7 +110,7 @@ def _answer_graph_image_request(
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
         graph_recipes = get_template_graph_specification(
-            site_id=livestatus.SiteId(site) if site else None,
+            site_id=SiteId(site) if site else None,
             host_name=host_name,
             service_name=service_description,
             graph_index=None,  # all graphs

@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import os
 
-from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import SiteConfiguration, SiteConfigurations
 
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 

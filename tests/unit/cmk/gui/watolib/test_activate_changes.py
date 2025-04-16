@@ -19,9 +19,10 @@ from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
 from tests.testlib.unit.rabbitmq import get_expected_definition
 from tests.testlib.unit.utils import reset_registries
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

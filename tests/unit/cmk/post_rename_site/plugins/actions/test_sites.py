@@ -13,9 +13,10 @@ from livestatus import (
     ProxyConfig,
     SiteConfiguration,
     SiteConfigurations,
-    SiteId,
     TLSParams,
 )
+
+from cmk.ccc.site import SiteId
 
 from cmk.gui.watolib.sites import site_management_registry
 

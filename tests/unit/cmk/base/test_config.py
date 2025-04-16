@@ -19,10 +19,9 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
-from livestatus import SiteId
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths

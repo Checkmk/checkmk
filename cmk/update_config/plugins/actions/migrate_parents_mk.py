@@ -11,9 +11,7 @@ from logging import Logger
 from pathlib import Path
 from typing import NamedTuple, override
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName

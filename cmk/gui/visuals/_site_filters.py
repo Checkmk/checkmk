@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable
 from functools import partial
 
-import livestatus
+from cmk.ccc.site import SiteId
 
 from cmk.gui import query_filters
 from cmk.gui.config import active_config
@@ -110,11 +110,7 @@ class SiteFilter(Filter):
 
 def default_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
-    return (
-        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
-        if current_value
-        else None
-    )
+    return get_site_config(active_config, SiteId(current_value))["alias"] if current_value else None
 
 
 class MultipleSitesFilter(SiteFilter):

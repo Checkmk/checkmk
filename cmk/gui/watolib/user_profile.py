@@ -11,9 +11,10 @@ from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, cast, Literal, NamedTuple
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.user import UserId
 

@@ -36,13 +36,11 @@ from typing import (
     TypeVar,
 )
 
-from livestatus import SiteId
-
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils
 import cmk.utils.check_utils

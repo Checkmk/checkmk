@@ -13,9 +13,10 @@ import dataclasses
 import time
 from collections.abc import Collection
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
 
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

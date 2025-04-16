@@ -6,9 +6,8 @@
 from logging import Logger
 from typing import Sequence
 
-from livestatus import SiteId
-
 from cmk.ccc.i18n import _
+from cmk.ccc.site import SiteId
 
 from cmk.utils.global_ident_type import GlobalIdent
 

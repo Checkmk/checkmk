@@ -24,7 +24,7 @@ The event console endpoints allow for
 from collections.abc import Mapping
 from typing import Any
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 

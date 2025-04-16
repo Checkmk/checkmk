@@ -14,7 +14,7 @@ from typing import Literal, TypedDict
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 

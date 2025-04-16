@@ -20,11 +20,11 @@ from livestatus import (
     OnlySites,
     Query,
     QuerySpecification,
-    SiteId,
 )
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils import dateutils

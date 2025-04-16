@@ -9,7 +9,9 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import tmp_dir

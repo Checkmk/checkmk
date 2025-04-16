@@ -10,11 +10,9 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.hostaddress import HostName
 

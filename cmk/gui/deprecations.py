@@ -12,10 +12,10 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
 
 from cmk.ccc import store
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
 
 from cmk.utils import paths

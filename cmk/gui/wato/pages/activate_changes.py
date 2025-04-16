@@ -12,8 +12,9 @@ import os
 import tarfile
 from collections.abc import Collection, Iterator
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
 
 from cmk.utils import paths, render

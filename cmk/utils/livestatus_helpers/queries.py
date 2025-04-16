@@ -7,7 +7,9 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any, NoReturn, override
 
-from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites, SiteId
+from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (

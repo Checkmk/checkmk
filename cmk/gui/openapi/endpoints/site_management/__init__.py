@@ -22,7 +22,9 @@ The site management endpoints allow for:
 from collections.abc import Mapping
 from typing import Any
 
-from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import SiteConfiguration, SiteConfigurations
+
+from cmk.ccc.site import SiteId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response

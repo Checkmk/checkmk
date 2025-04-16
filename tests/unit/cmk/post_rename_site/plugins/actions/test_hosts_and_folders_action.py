@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName

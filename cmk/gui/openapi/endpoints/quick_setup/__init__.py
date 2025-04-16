@@ -19,9 +19,8 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
-from livestatus import SiteId
-
 from cmk.ccc.i18n import _
+from cmk.ccc.site import SiteId
 
 from cmk.utils.encoding import json_encode
 

@@ -5,7 +5,9 @@
 
 """Realizes the popup action menu for hosts/services in views"""
 
-from livestatus import livestatus_lql, SiteId
+from livestatus import livestatus_lql
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName

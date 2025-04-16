@@ -58,10 +58,9 @@ import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
-from livestatus import SiteId
-
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Version
 
 import cmk.utils.log

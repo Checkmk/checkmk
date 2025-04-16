@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from time import time
 from typing import get_args, Literal
 
-from livestatus import lqencode, MultiSiteConnection, OnlySites, SiteId
+from livestatus import lqencode, MultiSiteConnection, OnlySites
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query

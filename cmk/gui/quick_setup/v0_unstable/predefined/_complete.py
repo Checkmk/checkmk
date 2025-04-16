@@ -6,9 +6,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName

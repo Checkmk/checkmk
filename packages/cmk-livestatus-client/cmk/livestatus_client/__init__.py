@@ -25,10 +25,11 @@ from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
 
+from cmk.ccc.site import SiteId
+
 from cmk import trace
 
 UserId = NewType("UserId", str)
-SiteId = NewType("SiteId", str)
 
 
 class TLSParams(TypedDict, total=False):

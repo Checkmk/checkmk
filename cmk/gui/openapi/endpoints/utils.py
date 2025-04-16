@@ -8,9 +8,10 @@ import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
-from livestatus import MultiSiteConnection, SiteId
+from livestatus import MultiSiteConnection
 
 from cmk.ccc import version
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths

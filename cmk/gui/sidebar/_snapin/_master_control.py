@@ -7,7 +7,7 @@ import time
 from contextlib import nullcontext
 from typing import ContextManager
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.htmllib.foldable_container import foldable_container

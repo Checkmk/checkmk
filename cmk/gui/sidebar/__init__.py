@@ -14,9 +14,8 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
-from livestatus import SiteId
-
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

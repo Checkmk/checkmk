@@ -13,11 +13,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple, override, Self
 
-from livestatus import SiteConfiguration, SiteGlobals, SiteId
+from livestatus import SiteConfiguration, SiteGlobals
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

@@ -6,9 +6,8 @@
 from collections.abc import Callable
 from logging import Logger
 
-from livestatus import SiteId
-
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 
 from .logger import logger
 

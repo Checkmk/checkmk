@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from logging import Logger
 from typing import Literal, NamedTuple
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.regex
 from cmk.utils.timeperiod import TimeperiodName

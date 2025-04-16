@@ -14,9 +14,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.config import active_config

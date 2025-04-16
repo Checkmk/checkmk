@@ -9,7 +9,9 @@ import pytest
 
 from tests.unit.cmk.bi.bi_mocks import MockBIAggregationPack
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusOutputFormat, LivestatusResponse
+
+from cmk.ccc.site import SiteId
 
 from cmk.bi.data_fetcher import BIStatusFetcher, BIStructureFetcher
 from cmk.bi.lib import SitesCallback

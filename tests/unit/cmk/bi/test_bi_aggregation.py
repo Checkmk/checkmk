@@ -5,7 +5,9 @@
 
 import pytest
 
-from livestatus import LivestatusResponse, SiteId
+from livestatus import LivestatusResponse
+
+from cmk.ccc.site import SiteId
 
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation

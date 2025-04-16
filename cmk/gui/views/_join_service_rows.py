@@ -9,7 +9,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import NamedTuple
 
-from livestatus import lqencode, SiteId
+from livestatus import lqencode
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex

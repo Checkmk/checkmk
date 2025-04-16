@@ -11,10 +11,11 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from functools import lru_cache
 
 import livestatus
-from livestatus import livestatus_lql, SiteId
+from livestatus import livestatus_lql
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 
 from cmk.utils.hostaddress import HostName

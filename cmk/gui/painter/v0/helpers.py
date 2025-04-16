@@ -6,7 +6,7 @@
 import time
 from collections.abc import Mapping
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName

@@ -6,9 +6,8 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from livestatus import SiteId
-
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 
 

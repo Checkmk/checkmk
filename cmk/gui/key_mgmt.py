@@ -9,10 +9,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-from livestatus import SiteId
-
 from cmk.ccc import store
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.render
 from cmk.utils.certs import CertManagementEvent

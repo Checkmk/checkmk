@@ -26,7 +26,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.livestatus_helpers.expressions import And, Or, QueryExpression
 from cmk.utils.livestatus_helpers.tables.comments import Comments

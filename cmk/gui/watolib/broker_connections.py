@@ -9,15 +9,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TypedDict
 
-from livestatus import (
-    BrokerConnection,
-    BrokerConnections,
-    BrokerSite,
-    ConnectionId,
-    SiteId,
-)
+from livestatus import BrokerConnection, BrokerConnections, BrokerSite, ConnectionId
 
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 

@@ -12,7 +12,7 @@ import time_machine
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
 

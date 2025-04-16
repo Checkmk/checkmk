@@ -12,10 +12,8 @@ from collections.abc import Collection, Container, Iterable, Iterator, Mapping, 
 from dataclasses import asdict
 from typing import Any, Literal, NamedTuple
 
-from livestatus import SiteId
-
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
 
 import cmk.utils.render

@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import TypedDict
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (

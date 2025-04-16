@@ -5,9 +5,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.automations.results import SpecialAgentDiscoveryPreviewResult
 

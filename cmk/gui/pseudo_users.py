@@ -5,7 +5,7 @@
 
 from abc import ABC
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 
 class PseudoUserId(ABC):

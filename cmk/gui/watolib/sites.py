@@ -16,13 +16,12 @@ from livestatus import (
     NetworkSocketDetails,
     SiteConfiguration,
     SiteConfigurations,
-    SiteId,
 )
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import paths
 

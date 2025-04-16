@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusOutputFormat, LivestatusResponse
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.paths import default_config_dir
 

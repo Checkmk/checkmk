@@ -12,10 +12,9 @@ from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName

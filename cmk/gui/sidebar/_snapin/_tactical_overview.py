@@ -8,6 +8,8 @@ from typing import Literal, NamedTuple
 
 import livestatus
 
+from cmk.ccc.site import SiteId
+
 from cmk.gui import notifications, sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -464,7 +466,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         self,
         query: str | livestatus.Query,
         auth_domain: str = "read",
-        only_sites: list[livestatus.SiteId] | None = None,
+        only_sites: list[SiteId] | None = None,
         deflt: Sequence[int] | None = None,
     ) -> Sequence[int] | None:
         try:
@@ -521,7 +523,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _create_status_box(
         self,
-        site_ids: Collection[livestatus.SiteId],
+        site_ids: Collection[SiteId],
         css_class: str,
         site_status: str,
     ) -> None:

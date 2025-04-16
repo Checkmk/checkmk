@@ -8,7 +8,7 @@ import re
 
 import pytest
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.ec.export as ec
 from cmk.ec.config import MatchGroups, TextMatchResult

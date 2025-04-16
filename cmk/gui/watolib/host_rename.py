@@ -12,10 +12,9 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.agent_registration import get_uuid_link_manager

@@ -12,7 +12,9 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.users import create_and_destroy_user
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup

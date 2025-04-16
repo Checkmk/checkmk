@@ -399,11 +399,9 @@ import openapi_spec_validator
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 
-from livestatus import SiteId
-
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.paths import omd_root
 

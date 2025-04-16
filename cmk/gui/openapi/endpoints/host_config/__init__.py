@@ -44,7 +44,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 from urllib.parse import urlparse
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 

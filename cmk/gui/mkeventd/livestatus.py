@@ -5,7 +5,7 @@
 
 import time
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
 

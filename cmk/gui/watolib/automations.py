@@ -26,12 +26,12 @@ import requests
 import urllib3
 from pydantic import BaseModel, field_validator, PlainValidator
 
-from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import get_omd_config
+from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
 
 from cmk.utils import paths

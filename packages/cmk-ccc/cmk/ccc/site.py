@@ -8,10 +8,11 @@ import json
 import os
 from functools import cache
 from pathlib import Path
-
-from livestatus import SiteId
+from typing import NewType
 
 from cmk.ccc.i18n import _
+
+SiteId = NewType("SiteId", str)
 
 OMDConfig = dict[str, str]
 

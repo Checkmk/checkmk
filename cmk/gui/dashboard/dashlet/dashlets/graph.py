@@ -11,6 +11,7 @@ from typing import Any, Generic, Literal, TypeVar
 import livestatus
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
@@ -380,7 +381,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
         if isinstance(site, list):
-            site_id: livestatus.SiteId | None = livestatus.SiteId("".join(site))
+            site_id: SiteId | None = SiteId("".join(site))
         else:
             site_id = site
 

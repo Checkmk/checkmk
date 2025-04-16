@@ -11,11 +11,10 @@ from typing import TypedDict
 import pytest
 from pytest_mock import MockerFixture
 
-from livestatus import SiteId
-
 import omdlib.main
 from omdlib.contexts import SiteContext
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.store import load_text_from_file
 
 from cmk.gui.watolib import config_domains

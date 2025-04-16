@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName

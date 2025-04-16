@@ -12,7 +12,7 @@ from typing import Any, Callable
 from apispec import APISpec
 from werkzeug.utils import import_string
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects import Endpoint

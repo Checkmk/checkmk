@@ -6,7 +6,7 @@
 
 from pytest_mock.plugin import MockerFixture
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 

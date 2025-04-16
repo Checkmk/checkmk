@@ -10,9 +10,8 @@ import pytest
 
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection

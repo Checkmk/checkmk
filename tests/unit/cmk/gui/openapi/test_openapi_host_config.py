@@ -18,9 +18,8 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
-from livestatus import SiteId
-
 from cmk.ccc import version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP

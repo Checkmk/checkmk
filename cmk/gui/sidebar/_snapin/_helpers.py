@@ -8,9 +8,7 @@ import json
 import traceback
 from collections.abc import Sequence
 
-from livestatus import SiteId
-
-from cmk.ccc.site import url_prefix
+from cmk.ccc.site import SiteId, url_prefix
 
 from cmk.gui import pagetypes
 from cmk.gui.exceptions import MKUserError

@@ -19,6 +19,7 @@ import livestatus
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 from cmk.ccc.store import locked
 
 import cmk.utils.paths
@@ -1741,9 +1742,7 @@ def _get_dynamic_layer_ids(
 
 def _get_hostnames_from_core(topology_configuration: TopologyConfiguration) -> set[HostName]:
     site_id = (
-        livestatus.SiteId(request.get_str_input_mandatory("site"))
-        if request.get_str_input("site")
-        else None
+        SiteId(request.get_str_input_mandatory("site")) if request.get_str_input("site") else None
     )
     with sites.only_sites(site_id):
         return {x[0] for x in sites.live().query(topology_configuration.filter.query)}

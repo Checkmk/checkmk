@@ -7,7 +7,7 @@
 import re
 from collections.abc import Collection, Iterable, Sequence
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 

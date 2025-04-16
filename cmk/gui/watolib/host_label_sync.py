@@ -16,10 +16,11 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName

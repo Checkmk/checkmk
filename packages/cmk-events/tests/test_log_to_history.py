@@ -11,6 +11,8 @@ from pytest import MonkeyPatch
 
 import livestatus
 
+from cmk.ccc.site import SiteId
+
 from cmk.events.log_to_history import (
     log_to_history,
     notification_result_message,
@@ -30,7 +32,7 @@ class FakeLocalConnection:
     def command(
         self,
         command: str,
-        site: livestatus.SiteId | None = None,  # noqa: ARG002
+        site: SiteId | None = None,  # noqa: ARG002
     ) -> None:
         self.__class__.sent_command = command
 

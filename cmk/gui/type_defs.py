@@ -14,7 +14,7 @@ from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, Ty
 
 from pydantic import BaseModel, PlainValidator
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.labels import Labels

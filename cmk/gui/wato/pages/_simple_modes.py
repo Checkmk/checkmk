@@ -17,7 +17,7 @@ import json
 from collections.abc import Mapping
 from typing import Any, cast, Generic, TypeVar
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.urls import is_allowed_url
 

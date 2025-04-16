@@ -8,7 +8,9 @@ from typing import ContextManager
 
 import pytest
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostAddress
 

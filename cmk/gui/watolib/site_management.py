@@ -21,7 +21,6 @@ from livestatus import (
     ProxyConfigTcp,
     SiteConfiguration,
     SiteConfigurations,
-    SiteId,
     TLSInfo,
     TLSParams,
     UnixSocketDetails,
@@ -29,7 +28,7 @@ from livestatus import (
 )
 
 from cmk.ccc import version
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import paths
 from cmk.utils.user import UserId

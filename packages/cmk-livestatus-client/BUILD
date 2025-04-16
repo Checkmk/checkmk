@@ -16,6 +16,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-ccc:site",
         "//packages/cmk-trace",
         requirement("opentelemetry-api"),
     ],

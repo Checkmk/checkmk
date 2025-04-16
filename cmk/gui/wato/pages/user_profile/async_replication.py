@@ -7,9 +7,10 @@
 import time
 from typing import get_args
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.utils.user import UserId
 

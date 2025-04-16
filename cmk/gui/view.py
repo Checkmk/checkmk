@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName

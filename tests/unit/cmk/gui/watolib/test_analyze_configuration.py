@@ -9,9 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from livestatus import SiteId
-
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 

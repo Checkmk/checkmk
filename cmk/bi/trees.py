@@ -11,7 +11,7 @@ from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 from marshmallow import pre_dump
 from marshmallow_oneofschema import OneOfSchema
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.hostaddress import HostName

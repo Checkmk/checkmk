@@ -7,9 +7,7 @@ from collections.abc import Callable, Mapping
 from functools import partial
 from uuid import uuid4
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.hostaddress import HostName
 

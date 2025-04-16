@@ -15,10 +15,9 @@
 
 import json
 
-from livestatus import SiteId
-
 import cmk.ccc.debug
 import cmk.ccc.plugin_registry
+from cmk.ccc.site import SiteId
 
 import cmk.utils
 import cmk.utils.render

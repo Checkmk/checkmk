@@ -8,7 +8,9 @@ import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, TypeGuard, TypeVar
 
-from livestatus import OnlySites, SiteId
+from livestatus import OnlySites
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name

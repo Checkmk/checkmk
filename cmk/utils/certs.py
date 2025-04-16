@@ -15,9 +15,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from dateutil.relativedelta import relativedelta
 
-from livestatus import SiteId
-
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId

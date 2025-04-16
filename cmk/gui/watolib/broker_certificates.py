@@ -14,11 +14,11 @@ from cryptography.x509 import CertificateSigningRequest as x509CertificateSignin
 from cryptography.x509 import load_pem_x509_csr
 from dateutil.relativedelta import relativedelta
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils import paths
 from cmk.utils.certs import (

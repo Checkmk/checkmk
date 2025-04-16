@@ -12,9 +12,10 @@ import time
 from collections.abc import Container, Sequence
 from typing import Any, Final, Literal, NewType, TypedDict
 
-from livestatus import SiteConfigurations, SiteId
+from livestatus import SiteConfigurations
 
 from cmk.ccc import store
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import __version__, Edition, edition, Version
 
 import cmk.utils.paths

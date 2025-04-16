@@ -10,7 +10,9 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal, NamedTuple
 
-from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
+from livestatus import LivestatusResponse, lqencode, quote_dict
+
+from cmk.ccc.site import SiteId
 
 from cmk.utils.labels import AndOrNotLiteral, LabelGroups, single_label_group_from_labels
 

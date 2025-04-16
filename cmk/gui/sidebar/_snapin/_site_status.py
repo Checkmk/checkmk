@@ -5,7 +5,7 @@
 
 import json
 
-from livestatus import SiteId
+from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.htmllib.html import html

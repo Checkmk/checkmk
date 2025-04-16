@@ -9,9 +9,9 @@ import time
 from typing import Any
 
 import livestatus
-from livestatus import SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
 
 from cmk.gui import sites
 from cmk.gui.config import active_config

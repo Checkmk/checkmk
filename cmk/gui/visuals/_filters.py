@@ -12,6 +12,8 @@ from typing import Literal
 
 import livestatus
 
+from cmk.ccc.site import SiteId
+
 from cmk.gui import query_filters
 from cmk.gui import sites as sites
 from cmk.gui.config import active_config
@@ -1767,7 +1769,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         return cls.ID in ctx
 
     @staticmethod
-    def _connected_sites_to_pids() -> Mapping[livestatus.SiteId, int]:
+    def _connected_sites_to_pids() -> Mapping[SiteId, int]:
         return {
             site_id: site_status["core_pid"]
             for site_id, site_status in sites.states().items()

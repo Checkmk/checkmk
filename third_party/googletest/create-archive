@@ -2,7 +2,7 @@
 set -e
 
 # Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head philosophy" nowadays.
-SHA=71140c3ca7
+SHA=e90fe24856
 PACKAGE=googletest-${SHA}
 
 rm -rf googletest

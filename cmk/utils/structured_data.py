@@ -1835,13 +1835,6 @@ class HistoryStore:
         return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
 
 
-def _load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
-    if not (cached_data := store.load_object_from_file(cached_file, default=None)):
-        return None
-    new, changed, removed, raw_delta_tree = cached_data
-    return new, changed, removed, deserialize_delta_tree(raw_delta_tree)
-
-
 def _save_delta_cache(
     cached_file: Path, cached_data: tuple[int, int, int, ImmutableDeltaTree]
 ) -> None:
@@ -1914,19 +1907,26 @@ def _make_history_entry(
     )
 
 
-def _get_cached_entry(
+def _load_history_entry(
     delta_tree_path: Path, timestamp: int, filter_tree: Sequence[SDFilterChoice] | None
 ) -> HistoryEntry | None:
     try:
-        cached_data = _load_delta_cache(delta_tree_path)
+        cached_data = store.load_object_from_file(delta_tree_path, default=None)
     except MKGeneralException:
         return None
 
     if cached_data is None:
         return None
 
-    new, changed, removed, delta_tree = cached_data
-    return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+    new, changed, removed, raw_delta_tree = cached_data
+    return _make_history_entry(
+        timestamp,
+        new,
+        changed,
+        removed,
+        deserialize_delta_tree(raw_delta_tree),
+        filter_tree,
+    )
 
 
 def _get_calculated_or_store_entry(
@@ -1971,11 +1971,9 @@ def load_history(
         )
 
         if (
-            cached_history_entry := _get_cached_entry(
-                delta_tree_path, current.timestamp, filter_tree
-            )
+            entry := _load_history_entry(delta_tree_path, current.timestamp, filter_tree)
         ) is not None:
-            entries.append(cached_history_entry)
+            entries.append(entry)
             continue
 
         try:

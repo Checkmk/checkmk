@@ -87,14 +87,13 @@ TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]
 LabelGroupsCacheId = tuple[tuple[AndOrNotLiteral, tuple[tuple[AndOrNotLiteral, str], ...]], ...]
 
 PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
-PreprocessedServiceRuleset: TypeAlias = list[
-    tuple[
-        TRuleValue,
-        set[HostName],
-        LabelGroups,
-        LabelGroupsCacheId,
-        PreprocessedPattern,
-    ]
+
+type _PreprocessedServiceRule[TRuleValue] = tuple[
+    TRuleValue,
+    set[HostName],
+    LabelGroups,
+    LabelGroupsCacheId,
+    PreprocessedPattern,
 ]
 
 # FIXME: A lot of signatures regarding rules and rule sets are simply lying:
@@ -388,7 +387,9 @@ class RulesetOptimizer:
         # It is used to determine the best rule evualation method
         self._all_processed_hosts_similarity = 1.0
 
-        self.__service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
+        self.__service_ruleset_cache: dict[
+            tuple[int, bool], Sequence[_PreprocessedServiceRule[Any]]
+        ] = {}
         self.__host_ruleset_cache: dict[tuple[int, bool], Mapping[HostAddress, Sequence[Any]]] = {}
         self._all_matching_hosts_match_cache: dict[
             tuple[_ConditionCacheID, bool], set[HostName]
@@ -487,11 +488,11 @@ class RulesetOptimizer:
         host_name: HostName,
         ruleset: Sequence[RuleSpec[TRuleValue]],
         labels_of_host: Callable[[HostName], Labels],
-    ) -> PreprocessedServiceRuleset[TRuleValue]:
+    ) -> Sequence[_PreprocessedServiceRule[TRuleValue]]:
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-        ) -> PreprocessedServiceRuleset[TRuleValue]:
-            new_rules: PreprocessedServiceRuleset[TRuleValue] = []
+        ) -> Sequence[_PreprocessedServiceRule[TRuleValue]]:
+            new_rules: list[_PreprocessedServiceRule[TRuleValue]] = []
             for rule in ruleset:
                 if is_disabled(rule):
                     continue

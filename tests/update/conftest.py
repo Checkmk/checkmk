@@ -128,10 +128,12 @@ class TestParams:
 
 def get_omd_status(site: Site) -> dict[str, str]:
     """Get the omd status for all services of the given site."""
-    cmd = ["/usr/bin/omd", "status", "--bare"]
+    cmd = [site.path("bin/omd"), "status", "--bare"]
     status = {}
-    process = site.execute(cmd, stdout=subprocess.PIPE)
-    stdout, _ = process.communicate()
+    process = site.execute(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if stderr:
+        logger.error("omd status returned RC%s and STDERR=%s", process.returncode, stderr)
     for line in [_ for _ in stdout.splitlines() if " " in _]:
         key, val = (_.strip() for _ in line.split(" ", 1))
         status[key] = {"0": "running", "1": "stopped", "2": "partially running"}.get(val, val)

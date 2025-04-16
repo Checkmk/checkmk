@@ -33,6 +33,7 @@ class Params(BaseModel):
     cost: GCPCost | None = None
     piggyback: PiggyBackServices = Field(default_factory=PiggyBackServices)
     services: list[str] = Field(default_factory=list)
+    connection_test: bool = False  # only used by quick setup
 
 
 def agent_gcp_arguments(
@@ -64,6 +65,9 @@ def agent_gcp_arguments(
         args.append(prefix)
     else:
         args.append(params.project)
+
+    if params.connection_test:
+        args.append("--connection-test")
 
     yield SpecialAgentCommand(command_arguments=args)
 

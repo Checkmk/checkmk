@@ -1926,11 +1926,11 @@ def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
     except (ApiLoginFailed, ValueError) as exc:
-        error_msg = f"Management client login failed with: {exc}\n"
+        error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
         return 2, error_msg
     except requests.exceptions.ProxyError as exc:
-        error_msg = f"Management client login failed due to a proxy error: {exc}\n"
+        error_msg = f"Connection failed due to a proxy error: {exc}\n"
         sys.stdout.write(error_msg)
         return 2, error_msg
     return 0

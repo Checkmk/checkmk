@@ -10,7 +10,7 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -70,6 +70,12 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "credentials": DictElement(
             parameter_form=Password(
                 title=Title("JSON credentials for service account"),
+                custom_validate=(
+                    LengthInRange(
+                        min_value=1,
+                        error_msg=Message("JSON credentials are required but not specified."),
+                    ),
+                ),
                 migrate=migrate_to_password,
             ),
             required=True,

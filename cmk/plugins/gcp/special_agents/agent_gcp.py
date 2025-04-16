@@ -14,7 +14,8 @@ from types import TracebackType
 from typing import Any, assert_never, Protocol, Self
 
 import google.protobuf.duration_pb2 as duration
-from google.api_core.exceptions import PermissionDenied, Unauthenticated
+from google.api_core.exceptions import InvalidArgument, PermissionDenied, Unauthenticated
+from google.auth.exceptions import MalformedError
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -469,7 +470,10 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
                 gcp_serializer(
                     [
                         ExceptionSection(
-                            exc_type, exception, traceback, source=f"Metric: {metric.name}"
+                            exc_type,
+                            exception,
+                            traceback,
+                            source=f"Metric: {metric.name}",
                         )
                     ]
                 )
@@ -1209,7 +1213,16 @@ GCE = PiggyBackService(
 
 SERVICES = {
     s.name: s
-    for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS, GCE_STORAGE, HTTP_LOADBALANCER]
+    for s in [
+        GCS,
+        FUNCTIONS,
+        RUN,
+        CLOUDSQL,
+        FILESTORE,
+        REDIS,
+        GCE_STORAGE,
+        HTTP_LOADBALANCER,
+    ]
 }
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
@@ -1218,7 +1231,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
     parser.add_argument(
-        "--credentials", type=str, help="JSON credentials for service account", required=True
+        "--credentials",
+        type=str,
+        help="JSON credentials for service account",
+        required=True,
     )
     parser.add_argument(
         "--cost_table",
@@ -1247,10 +1263,47 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="Prefix for piggyback hosts",
         required=True,
     )
+    parser.add_argument(
+        "--connection-test",
+        action="store_true",
+        help="Run a connection test. No further agent code is executed.",
+    )
     return parser.parse_args(argv)
 
 
+def _test_connection(args: Args) -> int:
+    try:
+        client = Client(json.loads(args.credentials), args.project, args.date)
+        request = asset_v1.ListAssetsRequest(
+            parent=f"projects/{client.project}",
+            content_type=asset_v1.ContentType.RESOURCE,
+            asset_types=list(Extractors),
+        )
+        client.list_assets(request)
+        return 0
+    except json.decoder.JSONDecodeError as exc:
+        error_msg = f"Connection failed when trying to decode the provided JSON: {exc}\n"
+        sys.stderr.write(error_msg)
+        return 2
+    # TODO: This list of exception types is probably not exhaustive and should be extended after
+    #       thorough debugging of the GCP connection test
+    except (
+        Unauthenticated,
+        InvalidArgument,
+        MalformedError,
+        PermissionDenied,
+        ValueError,
+    ) as exc:
+        error_msg = f"Connection failed with: {exc}\n"
+        sys.stderr.write(error_msg)
+        return 2
+    return 0
+
+
 def agent_gcp_main(args: Args) -> int:
+    if args.connection_test:
+        return _test_connection(args)
+
     client = Client(json.loads(args.credentials), args.project, args.date)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]

@@ -92,19 +92,30 @@ def _validate_test_connection(
     output = diag_special_agent(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(
-            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
+            rulespec_name=rulespec_name,
+            host_name=host_name,
+            passwords=passwords,
+            params=params,
         ),
     )
     progress_logger.update_progress_step_status("test_connection", StepStatus.COMPLETED)
     progress_logger.log_new_progress_step(
         "evaluate_connection_result", "Evaluate test connection result"
     )
+
     for result in output.results:
         if result.return_code != 0:
+            # Pass on either the first line of output for known connection test errors or the last
+            # line in all other cases
+            output_lines: list[str] = result.response.split("\n")
+            relevant_output = (
+                output_lines[0]
+                if output_lines[0].startswith("Agent exited with code 2: Connection failed")
+                else output_lines[-1]
+            )
             if error_message:
                 general_errors.append(error_message)
-            # Do not show long output
-            general_errors.append(result.response.split("\n")[-1])
+            general_errors.append(relevant_output)
     progress_logger.update_progress_step_status("evaluate_connection_result", StepStatus.COMPLETED)
     return general_errors
 

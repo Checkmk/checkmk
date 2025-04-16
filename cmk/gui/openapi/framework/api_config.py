@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
+
+
+class DeprecationDetails(TypedDict):
+    warning_message: str
+    removal_date: str
 
 
 class APIVersion(enum.Enum):
@@ -32,3 +39,53 @@ class APIVersion(enum.Enum):
         if not isinstance(other, APIVersion):
             return NotImplemented
         return self.numeric_value <= other.numeric_value
+
+
+class APIConfig:
+    """Configuration for the versioned API system"""
+
+    RELEASED_VERSIONS_IN_ORDER = [
+        APIVersion.V1,  # Legacy version (includes all marshmallow endpoints)
+    ]
+
+    DEVELOPMENT_VERSIONS: Sequence[APIVersion] = []
+
+    DEPRECATED_VERSIONS: Mapping[APIVersion, DeprecationDetails] = {}
+
+    @classmethod
+    def is_version_available(cls, version: APIVersion, development_mode: bool = False) -> bool:
+        """Check if a version is available in the current environment"""
+        if version in cls.RELEASED_VERSIONS_IN_ORDER:
+            return True
+
+        if development_mode and version in cls.DEVELOPMENT_VERSIONS:
+            return True
+
+        return False
+
+    @classmethod
+    def is_version_deprecated(cls, version: APIVersion) -> bool:
+        """Check if a version is deprecated"""
+        return version in cls.DEPRECATED_VERSIONS
+
+    @classmethod
+    def get_released_versions(
+        cls, from_version: APIVersion | None = None, to_version: APIVersion | None = None
+    ) -> Sequence[APIVersion]:
+        """Get all released versions between two versions"""
+
+        if from_version is None and to_version is None:
+            return cls.RELEASED_VERSIONS_IN_ORDER
+
+        versions = []
+        if from_version is None:
+            from_version = cls.RELEASED_VERSIONS_IN_ORDER[0]
+
+        if to_version is None:
+            to_version = cls.RELEASED_VERSIONS_IN_ORDER[-1]
+
+        for version in cls.RELEASED_VERSIONS_IN_ORDER:
+            if from_version <= version <= to_version:
+                versions.append(version)
+
+        return versions

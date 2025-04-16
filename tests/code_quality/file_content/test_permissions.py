@@ -48,7 +48,7 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
     ("omd/packages/enterprise/bin/*", is_executable, [], []),
     ("omd/packages/enterprise/active_checks/*", is_executable, [], []),
     (
-        "non-free/cmk-update-agent/*",
+        "non-free/packages/cmk-update-agent/*",
         is_executable,
         [
             "chroot_version",
@@ -64,6 +64,7 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
             "cmk-update-agent.spec",
             "cmk-update-agent-32.spec",
             "build",
+            "BUILD",
         ],
         [],
     ),

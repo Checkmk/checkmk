@@ -35,7 +35,7 @@ def run_script(work_python: Path, *, script: Path) -> tuple[int, str, str]:
     "script,expected_code,expected_pipe,expected_err",
     [
         (
-            Path("..\\..\\..\\..\\..\\non-free\\cmk-update-agent\\cmk_update_agent.py"),
+            Path("..\\..\\..\\..\\..\\non-free\\packages\\cmk-update-agent\\cmk_update_agent.py"),
             1,
             "",
             "Missing config file at .\\cmk-update-agent.cfg. Configuration",

@@ -41,7 +41,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
                 "agents",
-                "non-free/cmk-update-agent"
+                "non-free/packages/cmk-update-agent"
             ],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
@@ -50,7 +50,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
                 install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
                 if [ "${edition}" != "raw" ]; then
                     echo "edition is ${edition} => copy Linux agent updaters"
-                    install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/cmk-update-agent/
+                    install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/packages/cmk-update-agent/
                 fi
                 """.stripIndent(),
         ],

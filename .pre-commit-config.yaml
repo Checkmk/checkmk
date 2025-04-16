@@ -35,7 +35,7 @@ repos:
             exclude: |
                 (?x)^(
                     ^agents/plugins/|
-                    ^non-free/cmk-update-agent/|
+                    ^non-free/packages/cmk-update-agent/|
                     ^tests/agent-plugin-unit/
                 )
     - repo: https://github.com/gitleaks/gitleaks

@@ -13,7 +13,7 @@ INTEGRATION_TIMESTAMP   := results\integration.timestamp
 PYTHON			:= ..\..\..\..\artefacts\python-3.cab
 
 # Scripts to be compatible with pythons
-SCRIPT_1		:= ..\..\..\..\non-free\cmk-update-agent\cmk_update_agent.py
+SCRIPT_1		:= ..\..\..\..\non-free\packages\cmk-update-agent\cmk_update_agent.py
 SCRIPT_2		:= ..\..\..\plugins\mk_logwatch.py
 SCRIPT_3		:= ..\..\..\plugins\mk_jolokia.py
 

@@ -35,7 +35,6 @@ get_candidates_from_filesystem() {
     SEARCH+=" doc"
     PRUNE+=" -path $(realpath doc/treasures) -prune -o" # our "treasures" need much more love before they can be linted
     if [ -d "omd/packages/enterprise" ]; then
-        SEARCH+=" non-free/cmk-update-agent"
         SEARCH+=" omd/packages/enterprise/alert_handlers"
         SEARCH+=" omd/packages/enterprise/bin"
         SEARCH+=" omd/packages/enterprise/saml2/attribute_mappings"

@@ -173,7 +173,10 @@ cmk_werks = ["cmk.werks"]
 # Add per-module options as [[tool.mypy.overrides]].
 explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
+# cmk-update-agent is needed for now because cmk_update_agent is still imported by some composition
+# tests. Can hopefully be cleaned up in a following step.
 mypy_path = """\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
     """
 plugins = ["pydantic.mypy"]

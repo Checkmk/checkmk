@@ -53,7 +53,7 @@ def test_python_module(
     assert output.ret_code == 1
     assert output.stdout.startswith("\r\n\tYou must install Agent Updater Python plugin")
     copy_cmk_updater(
-        git_dir / "non-free" / "cmk-update-agent",
+        git_dir / "non-free" / "packages" / "cmk-update-agent",
         data_dir / "plugins",
     )
     output = run_agent(

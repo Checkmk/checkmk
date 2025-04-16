@@ -12,34 +12,34 @@ from tests.gui_e2e.testlib.playwright.pom.setup.analyze_configuration import (
 )
 from tests.testlib.site import Site
 
-DEFAULT_STATUSES = {
-    "Broken GUI extensions": "OK",
-    "Deprecated GUI extensions": "OK",
-    "Deprecated HW/SW Inventory plug-ins": "OK",
-    "Deprecated PNP templates": "OK",
-    "Deprecated check man pages": "OK",
-    "Deprecated check plug-ins (legacy)": "OK",
-    "Deprecated check plug-ins (v1)": "OK",
-    "Deprecated legacy GUI extensions": "OK",
-    "Deprecated rule sets": "OK",
-    "Unknown check parameter rule sets": "OK",
-    "Alert handler: Don't handle all check executions": "OK",
-    "Apache number of processes": "WARN",
-    "Apache process usage": "OK",
-    # "Check helper usage": "OK",
-    "Checkmk checker count": "OK",
-    "Checkmk checker usage": "OK",
-    "Checkmk fetcher usage": "OK",
-    "Checkmk helper usage": "OK",
-    "Livestatus usage": "OK",
-    "Number of users": "OK",
-    "Temporary filesystem mounted": "OK",
-    "Backup configured": "WARN",
-    "Encrypt notification daemon communication": "OK",
-    "Escape HTML globally enabled": "OK",
-    "Livestatus encryption": "CRIT",
-    "Secure GUI (HTTP)": "WARN",
-}
+EXPECTED_CHECKS = [
+    "Broken GUI extensions",
+    "Deprecated GUI extensions",
+    "Deprecated HW/SW Inventory plug-ins",
+    "Deprecated PNP templates",
+    "Deprecated check man pages",
+    "Deprecated check plug-ins (legacy)",
+    "Deprecated check plug-ins (v1)",
+    "Deprecated legacy GUI extensions",
+    "Deprecated rule sets",
+    "Unknown check parameter rule sets",
+    "Alert handler: Don't handle all check executions",
+    "Apache number of processes",
+    "Apache process usage",
+    "Check helper usage",
+    "Checkmk checker count",
+    "Checkmk checker usage",
+    "Checkmk fetcher usage",
+    "Checkmk helper usage",
+    "Livestatus usage",
+    "Number of users",
+    "Temporary filesystem mounted",
+    "Backup configured",
+    "Encrypt notification daemon communication",
+    "Escape HTML globally enabled",
+    "Livestatus encryption",
+    "Secure GUI (HTTP)",
+]
 
 DEPRECATION_STATUSES = {
     "Deprecated GUI extensions": "WARN",
@@ -73,21 +73,13 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
         test_site.delete_file(f"{path}/fake.py")
 
 
-def test_analyze_configuration_statuses(dashboard_page: Dashboard) -> None:
-    """Navigate to the 'Analyze configuration' page and verify that configuration checks
-    have the expected statuses.
+def test_analyze_configuration_page(dashboard_page: Dashboard, simulate_deprecations: None) -> None:
+    """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
+
+    1. Trigger 'Deprecations' file-based checks by adding fake files in the specified locations.
+    2. Navigate to the 'Analyze configuration' page and verify that all expected checks are present.
+    3. Verify that 'Deprecations' file-based checks have the expected statuses.
     """
     analyze_configuration_page = AnalyzeConfiguration(dashboard_page.page)
-    analyze_configuration_page.verify_checks_statuses(DEFAULT_STATUSES)
-
-
-def test_deprecated_configuration_statuses(
-    dashboard_page: Dashboard, simulate_deprecations: None
-) -> None:
-    """Test that 'Deprecations' file-based checks are working as expected.
-
-    Simulate deprecated extensions, plug-ins, etc. and verify that the configuration checks
-    statuses are updated accordingly.
-    """
-    analyze_configuration_page = AnalyzeConfiguration(dashboard_page.page)
+    analyze_configuration_page.verify_all_expected_checks_are_present(EXPECTED_CHECKS)
     analyze_configuration_page.verify_checks_statuses(DEPRECATION_STATUSES)

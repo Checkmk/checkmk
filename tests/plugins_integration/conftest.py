@@ -5,6 +5,7 @@
 import logging
 import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +19,7 @@ from tests.plugins_integration import checks
 logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--update-checks",
         action="store_true",
@@ -54,50 +55,56 @@ def pytest_addoption(parser):
     parser.addoption(
         "--host-names",
         action="store",
+        nargs="+",
         help="Host name allow list",
         default=None,
     )
     parser.addoption(
         "--check-names",
         action="store",
+        nargs="+",
         help="Check name allow list",
         default=None,
     )
     parser.addoption(
         "--data-dir",
         action="store",
+        type=Path,
         help="Data dir path",
         default=None,
     )
     parser.addoption(
         "--dump-dir",
         action="store",
+        type=Path,
         help="Dump dir path",
         default=None,
     )
     parser.addoption(
         "--response-dir",
         action="store",
+        type=Path,
         help="Response dir path",
         default=None,
     )
     parser.addoption(
         "--diff-dir",
         action="store",
+        type=Path,
         help="Diff dir path",
         default=None,
     )
     parser.addoption(
         "--dump-types",
         action="store",
+        nargs="+",
         help='Selected dump types to process (default: "agent,snmp")',
         default=None,
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     # parse options that control the test execution
-
     checks.config = checks.CheckConfig(
         mode=(
             checks.CheckModes.UPDATE
@@ -108,14 +115,22 @@ def pytest_configure(config):
                 else checks.CheckModes.DEFAULT
             )
         ),
-        skip_cleanup=config.getoption("--skip-cleanup"),
-        data_dir_integration=config.getoption(name="--data-dir"),
-        dump_dir_integration=config.getoption(name="--dump-dir"),
-        response_dir_integration=config.getoption(name="--response-dir"),
-        diff_dir=config.getoption(name="--diff-dir"),
-        host_names=config.getoption(name="--host-names"),
-        check_names=config.getoption(name="--check-names"),
-        dump_types=config.getoption(name="--dump-types"),
+        skip_cleanup=_skip_cleanup_option
+        if isinstance(_skip_cleanup_option := config.getoption("--skip-cleanup"), bool)
+        else False,
+        data_dir_integration=_data_dir_option
+        if isinstance(_data_dir_option := config.getoption(name="--data-dir"), Path)
+        else None,
+        dump_dir_integration=_dump_dir_option
+        if isinstance(_dump_dir_option := config.getoption(name="--dump-dir"), Path)
+        else None,
+        response_dir_integration=_response_dir_option
+        if isinstance(_response_dir_option := config.getoption(name="--response-dir"), Path)
+        else None,
+        diff_dir=_ if isinstance(_ := config.getoption(name="--diff-dir"), Path) else None,
+        host_names=_ if isinstance(_ := config.getoption(name="--host-names"), list) else None,
+        check_names=_ if isinstance(_ := config.getoption(name="--check-names"), list) else None,
+        dump_types=_ if isinstance(_ := config.getoption(name="--dump-types"), list) else None,
     )
 
 

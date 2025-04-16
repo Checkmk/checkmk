@@ -294,7 +294,7 @@ def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any, None]:
     setattr(item, "rep_" + rep.when, rep)
 
 
-def pytest_addoption(parser: t.Any) -> None:
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom CLI arguments to GUI end to end testing framework."""
     group = parser.getgroup("playwright", "Playwright")
     group.addoption(

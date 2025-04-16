@@ -220,8 +220,8 @@ test_types = [
 ]
 
 
-def pytest_addoption(parser):
-    """Register the -T option to pytest"""
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register options to pytest"""
     parser.addoption(
         "-T",
         action="store",
@@ -258,7 +258,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Add important environment variables to the report and register custom pytest markers"""
     env_vars = {
         "BRANCH": current_base_branch_name(),
@@ -284,7 +284,7 @@ def pytest_configure(config):
         collect_ignore = ["schemathesis_openapi"]
 
 
-def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Config) -> None:
+def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
     items[:] = items[0 : config.getoption("--limit")]
     for item in items:

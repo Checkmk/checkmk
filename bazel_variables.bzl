@@ -8,24 +8,24 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
     ],
     "cce": [
-        "//non-free/packages/cmk-mknotifyd:cmk_mknotifyd_pkg",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
     ],
     "cee": [
-        "//non-free/packages/cmk-mknotifyd:cmk_mknotifyd_pkg",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
     ],
     "cme": [
-        "//non-free/packages/cmk-mknotifyd:cmk_mknotifyd_pkg",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
     ],
     "cse": [
-        "//non-free/packages/cmk-mknotifyd:cmk_mknotifyd_pkg",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
     ],

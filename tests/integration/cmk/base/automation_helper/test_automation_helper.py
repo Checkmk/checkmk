@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import subprocess
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -152,12 +153,12 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
         ),
     )
     site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
-    site.run(["omd", "restart", "automation-helper"])
+    _restart_automation_helper_and_wait_until_reachable(site)
     try:
         yield
     finally:
         site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
-        site.run(["omd", "restart", "automation-helper"])
+        _restart_automation_helper_and_wait_until_reachable(site)
 
 
 @contextmanager
@@ -179,12 +180,12 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
         reloader_config=default_configuration.reloader_config,
     )
     site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
-    site.run(["omd", "restart", "automation-helper"])
+    _restart_automation_helper_and_wait_until_reachable(site)
     try:
         yield
     finally:
         site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
-        site.run(["omd", "restart", "automation-helper"])
+        _restart_automation_helper_and_wait_until_reachable(site)
 
 
 @contextmanager
@@ -219,4 +220,22 @@ def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceRes
                 )
             ).serialized_result_or_error_code
         )
+    )
+
+
+def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
+    def health_endpoint_is_reachable() -> bool:
+        try:
+            HealthCheckResponse.model_validate_json(
+                _query_automation_helper(site, HealthMode().model_dump_json())
+            )
+        except subprocess.CalledProcessError:
+            return False
+        return True
+
+    site.run(["omd", "restart", "automation-helper"])
+    wait_until(
+        health_endpoint_is_reachable,
+        timeout=10,
+        interval=0.25,
     )

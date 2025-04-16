@@ -158,7 +158,9 @@ function selectOption(option: Suggestion): void {
         /></template>
         <template v-if="!dropdownButtonLabel">&nbsp;</template>
       </span>
-      <ArrowDown class="cmk-dropdown--arrow" :class="{ rotated: suggestionsShown }"
+      <ArrowDown
+        class="cmk-dropdown--arrow"
+        :class="{ rotated: suggestionsShown, disabled: disabled || !multipleChoicesAvailable }"
     /></CmkDropdownButton>
     <CmkSuggestions
       v-if="!!suggestionsShown"
@@ -189,6 +191,10 @@ function selectOption(option: Suggestion): void {
 
     &.rotated {
       transform: rotate(180deg);
+    }
+
+    &.disabled {
+      opacity: 0.4;
     }
   }
 }

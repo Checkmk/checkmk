@@ -1835,16 +1835,6 @@ class HistoryStore:
         return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
 
 
-def _save_delta_cache(
-    cached_file: Path, cached_data: tuple[int, int, int, ImmutableDeltaTree]
-) -> None:
-    new, changed, removed, delta_tree = cached_data
-    store.save_text_to_file(
-        cached_file,
-        repr((new, changed, removed, serialize_delta_tree(delta_tree))),
-    )
-
-
 @dataclass(frozen=True)
 class _CachedTreeLoader:
     _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
@@ -1929,7 +1919,7 @@ def _load_history_entry(
     )
 
 
-def _get_calculated_or_store_entry(
+def _compute_or_store_history_entry(
     delta_tree_path: Path,
     timestamp: int,
     previous_tree: ImmutableTree,
@@ -1942,7 +1932,10 @@ def _get_calculated_or_store_entry(
     changed = delta_stats["changed"]
     removed = delta_stats["removed"]
     if new or changed or removed:
-        _save_delta_cache(delta_tree_path, (new, changed, removed, delta_tree))
+        store.save_text_to_file(
+            delta_tree_path,
+            repr((new, changed, removed, serialize_delta_tree(delta_tree))),
+        )
         return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
     return None
 
@@ -1989,10 +1982,10 @@ def load_history(
             continue
 
         if (
-            history_entry := _get_calculated_or_store_entry(
+            entry := _compute_or_store_history_entry(
                 delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
             )
         ) is not None:
-            entries.append(history_entry)
+            entries.append(entry)
 
     return History(entries=entries, corrupted=list(files.corrupted) + corrupted_deltas)

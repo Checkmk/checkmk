@@ -14,7 +14,12 @@ from typing import TypedDict
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, path_parameters
-from cmk.gui.openapi.restful_objects.type_defs import LinkRelation, OpenAPIParameter, ParameterKey
+from cmk.gui.openapi.restful_objects.type_defs import (
+    EndpointKey,
+    LinkRelation,
+    OpenAPIParameter,
+    ParameterKey,
+)
 
 
 class EndpointEntry(TypedDict, total=True):
@@ -22,9 +27,6 @@ class EndpointEntry(TypedDict, total=True):
     href: str
     method: HTTPMethod
     rel: LinkRelation
-
-
-EndpointKey = tuple[str, LinkRelation]
 
 
 # This is the central store for all our endpoints. We use this to determine the correct URLs at

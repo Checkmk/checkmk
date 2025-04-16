@@ -2269,3 +2269,78 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
         ]
         if val
     }
+
+
+@contextmanager
+def connection(
+    *,
+    central_site: Site,
+    remote_site: Site,
+) -> Iterator[None]:
+    """Set up the site connection between central and remote site for a distributed setup"""
+    if central_site.version.is_managed_edition():
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+            "customer": "provider",
+        }
+    else:
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+        }
+
+    logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
+    central_site.openapi.sites.create(
+        {
+            "basic_settings": basic_settings,
+            "status_connection": {
+                "connection": {
+                    "socket_type": "tcp",
+                    "host": remote_site.http_address,
+                    "port": remote_site.livestatus_port,
+                    "encrypted": False,
+                    "verify": False,
+                },
+                "proxy": {
+                    "use_livestatus_daemon": "direct",
+                },
+                "connect_timeout": 2,
+                "persistent_connection": False,
+                "url_prefix": f"/{remote_site.id}/",
+                "status_host": {"status_host_set": "disabled"},
+                "disable_in_status_gui": False,
+            },
+            "configuration_connection": {
+                "enable_replication": True,
+                "url_of_remote_site": remote_site.internal_url,
+                "disable_remote_configuration": True,
+                "ignore_tls_errors": True,
+                "direct_login_to_web_gui_allowed": True,
+                "user_sync": {"sync_with_ldap_connections": "all"},
+                "replicate_event_console": True,
+                "replicate_extensions": True,
+                "message_broker_port": remote_site.message_broker_port,
+            },
+        }
+    )
+    logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
+    central_site.openapi.sites.login(remote_site.id)
+    logger.info("Activating site setup changes")
+    central_site.openapi.changes.activate_and_wait_for_completion(
+        # this seems to be necessary to avoid sporadic CI failures
+        force_foreign_changes=True,
+    )
+    try:
+        logger.info("Connection from '%s' to '%s' established", central_site.id, remote_site.id)
+        yield
+    finally:
+        logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
+        logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+        logger.info("Delete remote site connection '%s'", remote_site.id)
+        central_site.openapi.sites.delete(remote_site.id)
+        logger.info("Activating site removal changes")
+        central_site.openapi.changes.activate_and_wait_for_completion(
+            # this seems to be necessary to avoid sporadic CI failures
+            force_foreign_changes=True,
+        )

@@ -334,7 +334,7 @@ function Invoke-Attach($usbip, $addr, $port) {
         throw "Attach to the signing key is not possible. Signing can't be done"
     }
     Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 10 
     return
 }
 

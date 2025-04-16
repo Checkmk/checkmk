@@ -101,13 +101,12 @@ def execute_tests_in_container(
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
+            logger.info("| pytest tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| pytest -T integration "
-                "tests/integration/livestatus/test_livestatus.py "
+                "| pytest tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
             logger.info("| ")

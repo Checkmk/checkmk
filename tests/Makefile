@@ -216,14 +216,14 @@ test-docker-docker:
 test-docker:
 	docker run --rm -i $$(../buildscripts/docker_image_aliases/resolve.py IMAGE_HADOLINT) < ../docker_image/Dockerfile
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
-	$(PYTEST) -x -T docker $(realpath docker) $(PYTEST_SYSTEM_TEST_ARGS)
+	$(PYTEST) -x $(realpath docker) $(PYTEST_SYSTEM_TEST_ARGS)
 
 test-integration-agent-plugin-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
 
 test-integration-agent-plugin:
-	$(PYTEST) -x -T agent_plugin_integration $(realpath agent_plugin_integration) \
+	$(PYTEST) -x $(realpath agent_plugin_integration) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-format-python: test-format-python-sort test-format-python-format
@@ -255,17 +255,17 @@ test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
+	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
 test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
-	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	EDITION=cee $(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" \
 	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" \
 	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
 
 test-gui-e2e-cce:
@@ -278,72 +278,72 @@ test-gui-e2e-cse:
 	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
 test-integration:
-	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
 	--session-timeout 5400
 
 test-integration-redfish:
-	$(PYTEST) -T integration_redfish $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath integration_redfish) --session-timeout 1800
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
-	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
+	    $(PYTEST) --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
 	    $(realpath composition)
 
 test-extension-compatibility:
-	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
+	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cre:
-	EDITION=cre $(PYTEST) -T update $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
+	EDITION=cre $(PYTEST) $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
 	--session-timeout 5400
 
 test-update-cee:
-	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
 	--session-timeout 5400
 
 test-update-cce:
-	EDITION=cce $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
+	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
 	--session-timeout 5400
 
 test-update-cme:
-	EDITION=cme $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
+	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
 	--session-timeout 5400
 
 test-update-cse:
-	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
+	EDITION=cse $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
 	--session-timeout 5400
 
 test-update-cross-edition-cee-to-cce: # from CEE to CCE
-	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cee-to-cme: # from CEE to CME
-	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cee: # from CRE to CEE
-	EDITION=cre $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
 	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cce: # from CRE to CCE
-	EDITION=cre $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cre/test_update.py) -m cre \
+	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
-	SCHMATHESIS_PROFILE=ci $(PYTEST) -T schemathesis_openapi $(realpath schemathesis_openapi) \
+	SCHMATHESIS_PROFILE=ci $(PYTEST) $(realpath schemathesis_openapi) \
 	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \
 	--html="../results/schemathesis_openapi.html" --self-contained-html
 
 test-plugins:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
 	--ignore=plugins_integration/test_plugin_piggyback.py --session-timeout 7200
 
 test-plugins-piggyback:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
 	$(realpath plugins_integration/test_plugin_piggyback.py) --session-timeout 3600
 
 test-plugins-siteless:
-	$(PYTEST) -T plugins_siteless --log-cli-level=INFO $(realpath plugins_siteless) \
+	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \
 	plugins_siteless/test_plugins.py --session-timeout 1800
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
@@ -357,21 +357,21 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-requirements:
-	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
-	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	    $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-werks:
-	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_werks.py);
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
@@ -398,12 +398,11 @@ test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-packaging:
-	$(PYTEST) -T packaging packaging
+	$(PYTEST) packaging
 
 test-pylint:
 	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST) \
-	    -T unit \
 	    --config-file=pyproject.toml \
 	    --override-ini="pythonpath=." \
 	    --random-order-bucket=global \
@@ -430,7 +429,6 @@ test-cycles:
 
 test-unit-omdlib:
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
 		--config-file=pyproject.toml \
 		--doctest-modules \
 		--override-ini="pythonpath=. omd/packages/omd/" \
@@ -466,7 +464,6 @@ test-unit-all: test-doctest
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T testlib \
 		--config-file=pyproject.toml \
 		--doctest-modules \
 		--override-ini="pythonpath=." \

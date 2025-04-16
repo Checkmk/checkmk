@@ -13,8 +13,18 @@ defineProps<{ screenshotMode: boolean }>()
 <template>
   <CmkDialog
     :title="'Title'"
-    :message="'Some message, dismissal will be stored in currently logged in user based on key.'"
+    :message="'Some message, dismissal will be stored in localStorage for this session and sent to backend for retrieval.'"
     :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'info' }]"
     :dismissal_button="{ title: 'Dismiss', key: 'key' }"
   />
+  <CmkDialog
+    :title="'Title'"
+    :message="'Some message with buttons.'"
+    :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'info' }]"
+  />
+  <CmkDialog
+    :message="'Simple message with a button without title'"
+    :buttons="[{ title: 'Button 1', onclick: () => console.log('bar'), variant: 'info' }]"
+  />
+  <CmkDialog :message="'Very simple message'" />
 </template>

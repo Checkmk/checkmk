@@ -43,9 +43,10 @@ onMounted(() => {
       <CmkIcon name="info" />
     </div>
     <div class="cmk-dialog__content">
-      <p v-if="props.title" class="cmk-dialog__title">{{ props.title }}</p>
-      <p>{{ props.message }}</p>
+      <span v-if="props.title" class="cmk-dialog__title">{{ props.title }}<br /></span>
+      <span>{{ props.message }}</span>
       <div v-if="(props.buttons?.length ?? 0) > 0 || props.dismissal_button" class="buttons">
+        <CmkSpace :direction="'vertical'" />
         <!-- eslint-disable vue/valid-v-for since no unique identifier is present for key -->
         <template v-for="button in props.buttons">
           <CmkButton :variant="button.variant" @click="button.onclick">
@@ -73,22 +74,12 @@ div.cmk-dialog {
     border-radius: 0 4px 4px 0;
     flex-grow: 1;
     padding: var(--spacing);
-  }
 
-  p {
-    margin-left: var(--spacing);
-
-    &.cmk-dialog__title {
+    & > .cmk-dialog__title {
       font-weight: var(--font-weight-bold);
+      margin-bottom: var(--spacing);
+      display: block;
     }
-
-    &:last-child {
-      padding-bottom: var(--spacing);
-    }
-  }
-
-  a:first-child {
-    margin-right: var(--spacing);
   }
 }
 </style>

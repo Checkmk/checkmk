@@ -9,7 +9,7 @@ import pytest
 
 from tests.integration.linux_test_host import create_linux_test_host
 
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
@@ -19,6 +19,7 @@ _RELATIVE_PATH_CMC_RRDS = Path("var", "check_mk", "rrd")
 
 
 @skip_if_raw_edition
+@skip_if_saas_edition
 def test_convert_pnp_to_cmc(request: pytest.FixtureRequest, site: Site) -> None:
     hostname = HostAddress("test-pnp-to-cmc")
     rule_id_host_rrd_config = rule_id_service_rrd_config = None

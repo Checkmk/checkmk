@@ -32,7 +32,7 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, _corrupted = load_history(
+    history = load_history(
         TreeOrArchiveStore(
             cmk.utils.paths.inventory_output_dir,
             cmk.utils.paths.inventory_archive_dir,
@@ -42,7 +42,7 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
         filter_tree=filter_tree,
     )
-    return history[0].delta_tree if history else ImmutableDeltaTree()
+    return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
 
 def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
@@ -76,7 +76,7 @@ def load_delta_tree(hostname: HostName, timestamp: int) -> tuple[ImmutableDeltaT
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, corrupted = load_history(
+    history = load_history(
         TreeOrArchiveStore(
             cmk.utils.paths.inventory_output_dir,
             cmk.utils.paths.inventory_archive_dir,
@@ -87,9 +87,8 @@ def load_delta_tree(hostname: HostName, timestamp: int) -> tuple[ImmutableDeltaT
         filter_tree=filter_tree,
     )
     return (
-        (history[0].delta_tree, _sort_corrupted_history_files(corrupted))
-        if history
-        else (ImmutableDeltaTree(), [])
+        history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
+        _sort_corrupted_history_files(history.corrupted),
     )
 
 
@@ -102,7 +101,7 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
         if isinstance(permitted_paths := get_permitted_inventory_paths(), list)
         else None
     )
-    history, corrupted = load_history(
+    history = load_history(
         TreeOrArchiveStore(
             cmk.utils.paths.inventory_output_dir,
             cmk.utils.paths.inventory_archive_dir,
@@ -112,4 +111,4 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
         filter_history_paths=lambda pairs: pairs,
         filter_tree=filter_tree,
     )
-    return history, _sort_corrupted_history_files(corrupted)
+    return history.entries, _sort_corrupted_history_files(history.corrupted)

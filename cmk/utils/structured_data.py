@@ -1764,7 +1764,7 @@ class HistoryPath:
 
 
 @dataclass(frozen=True)
-class History:
+class HistoryPaths:
     paths: Sequence[HistoryPath]
     corrupted: Sequence[Path]
 
@@ -1798,11 +1798,11 @@ class TreeOrArchiveStore(TreeStore):
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
 
-    def history(self, *, host_name: HostName) -> History:
+    def history(self, *, host_name: HostName) -> HistoryPaths:
         try:
             archive_file_paths = sorted((self._archive_dir / str(host_name)).iterdir())
         except FileNotFoundError:
-            return History(paths=[], corrupted=[])
+            return HistoryPaths(paths=[], corrupted=[])
 
         paths = []
         corrupted = []
@@ -1820,7 +1820,7 @@ class TreeOrArchiveStore(TreeStore):
         except FileNotFoundError:
             pass
 
-        return History(paths=paths, corrupted=corrupted)
+        return HistoryPaths(paths=paths, corrupted=corrupted)
 
 
 def _load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
@@ -1870,6 +1870,12 @@ class HistoryEntry:
     changed: int
     removed: int
     delta_tree: ImmutableDeltaTree
+
+
+@dataclass(frozen=True)
+class History:
+    entries: Sequence[HistoryEntry]
+    corrupted: Sequence[Path]
 
 
 def _make_history_entry(
@@ -1938,14 +1944,12 @@ def load_history(
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
-) -> tuple[Sequence[HistoryEntry], Sequence[Path]]:
-    history_files = tree_or_archive_store.history(host_name=hostname)
-
+) -> History:
+    files = tree_or_archive_store.history(host_name=hostname)
     cached_tree_loader = _CachedTreeLoader()
-    history: list[HistoryEntry] = []
-
+    entries: list[HistoryEntry] = []
     corrupted_deltas = []
-    for previous, current in filter_history_paths(_get_pairs(history_files.paths)):
+    for previous, current in filter_history_paths(_get_pairs(files.paths)):
         if current.timestamp is None:
             continue
 
@@ -1960,7 +1964,7 @@ def load_history(
                 delta_tree_path, current.timestamp, filter_tree
             )
         ) is not None:
-            history.append(cached_history_entry)
+            entries.append(cached_history_entry)
             continue
 
         try:
@@ -1980,6 +1984,6 @@ def load_history(
                 delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
             )
         ) is not None:
-            history.append(history_entry)
+            entries.append(history_entry)
 
-    return history, list(history_files.corrupted) + corrupted_deltas
+    return History(entries=entries, corrupted=list(files.corrupted) + corrupted_deltas)

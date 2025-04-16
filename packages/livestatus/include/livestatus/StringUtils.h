@@ -6,8 +6,6 @@
 #ifndef StringUtils_h
 #define StringUtils_h
 
-#include <netinet/in.h>
-
 #include <bitset>
 #include <cstddef>
 #include <iterator>
@@ -18,6 +16,9 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+struct in6_addr;
+struct in_addr;
 
 namespace mk {
 std::string unsafe_tolower(const std::string &str);
@@ -68,7 +69,8 @@ std::string replace_first(const std::string &str, const std::string &from,
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to);
 
-std::string ipv4ToString(in_addr_t ipv4_address);
+std::string ipAddressToString(const in_addr &address);
+std::string ipAddressToString(const in6_addr &address);
 
 namespace ec {
 bool is_none(const std::string &str);

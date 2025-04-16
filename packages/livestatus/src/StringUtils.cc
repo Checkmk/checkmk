@@ -6,9 +6,11 @@
 #include "livestatus/StringUtils.h"
 
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
@@ -145,14 +147,16 @@ std::string replace_chars(const std::string &str,
     return result;
 }
 
-std::string ipv4ToString(in_addr_t ipv4_address) {
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-    char addr_buf[INET_ADDRSTRLEN];
-    struct in_addr ia = {ipv4_address};
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-    inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-    return addr_buf;
+std::string ipAddressToString(const in_addr &address) {
+    std::array<char, INET_ADDRSTRLEN> addr_buf{};
+    inet_ntop(AF_INET, &address, addr_buf.data(), addr_buf.size());
+    return addr_buf.data();
+}
+
+std::string ipAddressToString(const in6_addr &address) {
+    std::array<char, INET6_ADDRSTRLEN> addr_buf{};
+    inet_ntop(AF_INET6, &address, addr_buf.data(), addr_buf.size());
+    return addr_buf.data();
 }
 namespace ec {
 // The funny encoding of an Optional[Iterable[str]] is done in

@@ -69,19 +69,10 @@ def test_parse() -> None:
         ),
         pytest.param(
             "ol_informix15/0 foo",
-            {},
-            [
-                Result(state=State.OK, summary="Data files: 1"),
-                Result(state=State.OK, summary="Size: 3.15 GB"),
-                Metric("tablespace_size", 3145728000.0),
-                Result(state=State.OK, summary="Used: 4.16 MB"),
-                Metric("tablespace_used", 4159488.0),
-            ],
-            id="no params",
-        ),
-        pytest.param(
-            "ol_informix15/0 foo",
-            {"levels": (1, 4 * 1000**3)},
+            {
+                "levels": ("fixed", (1, 4 * 1000**3)),
+                "levels_perc": ("no_levels", None),
+            },
             [
                 Result(state=State.OK, summary="Data files: 1"),
                 Result(
@@ -95,7 +86,7 @@ def test_parse() -> None:
         ),
         pytest.param(
             "ol_informix15/0 foo",
-            {"levels_perc": (0, 0)},
+            {"levels": ("no_levels", None), "levels_perc": ("fixed", (0, 0))},
             [
                 Result(state=State.OK, summary="Data files: 1"),
                 Result(state=State.OK, summary="Size: 3.15 GB"),

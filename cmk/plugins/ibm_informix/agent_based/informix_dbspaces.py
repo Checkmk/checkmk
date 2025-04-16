@@ -9,7 +9,7 @@ Relevant documentation:
 """
 
 from collections.abc import Mapping
-from typing import Literal, NotRequired, TypedDict, TypeVar, Union
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -23,11 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-
-_NumberT = TypeVar("_NumberT", int, float)
-SimpleLevelsConfigModel = Union[
-    tuple[Literal["no_levels"], None], tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
-]
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 FLAG_BLOBSPACE = 512
 ParsedSubsection = dict[str, str]
@@ -35,8 +31,8 @@ ParsedSection = dict[str, list[ParsedSubsection]]
 
 
 class CheckParams(TypedDict):
-    levels: NotRequired[tuple[int, int] | None]
-    levels_perc: tuple[float, float]
+    levels: SimpleLevelsConfigModel[int]
+    levels_perc: SimpleLevelsConfigModel[float]
 
 
 def parse_informix_dbspaces(string_table: StringTable) -> ParsedSection:
@@ -76,12 +72,6 @@ def _get_pagesize(entry: Mapping[str, str]) -> tuple[int, int]:
     return system_pagesize, nfree_pagesize
 
 
-def _transform_levels(
-    levels: tuple[_NumberT, _NumberT] | None,
-) -> SimpleLevelsConfigModel[_NumberT]:
-    return ("fixed", levels) if levels else ("no_levels", None)
-
-
 def check_informix_dbspaces(item: str, params: CheckParams, section: ParsedSection) -> CheckResult:
     if item in section:
         datafiles = section[item]
@@ -94,8 +84,7 @@ def check_informix_dbspaces(item: str, params: CheckParams, section: ParsedSecti
             size += int(entry["chksize"]) * system_pagesize
 
         used = size - free
-        levels_size = _transform_levels(params.get("levels", None))
-        levels_used = _transform_levels(params.get("levels_perc", None))
+        levels_used = params["levels_perc"]
         if levels_used[0] == "fixed":
             levels_used = (
                 "fixed",
@@ -106,7 +95,7 @@ def check_informix_dbspaces(item: str, params: CheckParams, section: ParsedSecti
         yield from check_levels(
             value=size,
             metric_name="tablespace_size",
-            levels_upper=levels_size,
+            levels_upper=params["levels"],
             render_func=lambda x: f"Size: {render.disksize(x)}",
         )
         yield from check_levels(
@@ -129,5 +118,7 @@ check_plugin_informix_dbspaces = CheckPlugin(
     discovery_function=discovery_informix_dbspaces,
     check_function=check_informix_dbspaces,
     check_ruleset_name="informix_dbspaces",
-    check_default_parameters=CheckParams(levels_perc=(80.0, 85.0)),
+    check_default_parameters=CheckParams(
+        levels=("no_levels", None), levels_perc=("fixed", (80.0, 85.0))
+    ),
 )

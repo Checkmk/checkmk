@@ -12,45 +12,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 
-def _parameter_valuespec_informix_dbspaces():
-    return Dictionary(
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Upper levels for the DB space size"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
-                ),
-            ),
-            (
-                "levels_perc",
-                Tuple(
-                    title=_("Upper percentual levels for the DB space size"),
-                    elements=[
-                        Percentage(title=_("Warning at"), default_value=80.0),
-                        Percentage(title=_("Critical at"), default_value=85.0),
-                    ],
-                ),
-            ),
-        ]
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="informix_dbspaces",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_informix_dbspaces,
-        title=lambda: _("Informix DB spaces"),
-        item_spec=lambda: TextInput(title=_("The instance name")),
-    )
-)
-
-
 def _parameter_valuespec_informix_locks():
     return Dictionary(
         elements=[

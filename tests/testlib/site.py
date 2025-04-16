@@ -1221,7 +1221,7 @@ class Site:
         self._automation_secret = Password.random(24)
         if self.openapi.users.get(username):
             logger.info("Reusing existing test-user: '%s' (REUSE=1); resetting password.", username)
-            self.execute(
+            self.run(
                 ["bash", "-c", f'cmk-passwd "{username}" -i <<< "{self._automation_secret.raw}"']
             )
         else:
@@ -1347,19 +1347,15 @@ class Site:
             return
         logger.info("Saving to %s", self.result_dir())
         if self.path("junit.xml").exists():
-            execute(
-                ["cp", self.path("junit.xml").as_posix(), self.result_dir().as_posix()], sudo=True
-            )
+            run(["cp", self.path("junit.xml").as_posix(), self.result_dir().as_posix()], sudo=True)
 
-        execute(
-            ["cp", "-rL", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
-        )
+        run(["cp", "-rL", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True)
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
             orig_log_path = self.result_dir() / "log" / "apache" / log_name
             if self.file_exists(orig_log_path):
-                execute(
+                run(
                     [
                         "mv",
                         orig_log_path.as_posix(),
@@ -1369,12 +1365,12 @@ class Site:
                 )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
-            execute(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
+            run(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
 
         cmc_dir = self.result_dir() / "cmc"
         makedirs(cmc_dir, sudo=True)
 
-        execute(
+        run(
             [
                 "cp",
                 self.path("var/check_mk/core/history").as_posix(),
@@ -1384,7 +1380,7 @@ class Site:
         )
 
         if self.file_exists("var/check_mk/core/core"):
-            execute(
+            run(
                 [
                     "cp",
                     self.path("var/check_mk/core/core").as_posix(),
@@ -1393,12 +1389,12 @@ class Site:
                 sudo=True,
             )
 
-        execute(
+        run(
             ["cp", "-r", self.crash_report_dir.as_posix(), self.crash_archive_dir.as_posix()],
             sudo=True,
         )
 
-        execute(
+        run(
             [
                 "cp",
                 "-r",

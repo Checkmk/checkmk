@@ -651,6 +651,7 @@ try {
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
     if ($argSign -eq $true) {
         $argAttached = $true
+        $env:pin_cert_windows_usb | Out-File -Path .\check-signing-param.txt  -Append
     }
     Start-BinarySigning
     Start-BazelSigning

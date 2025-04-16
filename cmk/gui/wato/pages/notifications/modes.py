@@ -641,13 +641,19 @@ class ABCNotificationsMode(ABCEventsMode):
             ]
             + back_mode
         )
-        clone_url = folder_preserving_link(
-            [
-                ("mode", mode),
-                ("clone", nr),
-                ("user", userid),
-            ]
-            + back_mode
+        clone_url = make_confirm_delete_link(
+            url=folder_preserving_link(
+                [
+                    ("mode", mode),
+                    ("clone", nr),
+                    ("user", userid),
+                ]
+                + back_mode
+            ),
+            title=_("Clone & edit notification rule #%d") % nr,
+            suffix=rule.get("description", ""),
+            confirm_button=_("Yes, clone & edit"),
+            cancel_button=_("No, don't clone"),
         )
 
         return NotificationRuleLinks(
@@ -3855,7 +3861,6 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._clone_nr = request.get_integer_input_mandatory("clone", -1)
-        self._new = self._edit_nr < 0
         notifications_rules = list(NotificationRuleConfigFile().load_for_reading())
         if self._clone_nr >= 0 and not request.var("_clear"):
             try:
@@ -3867,6 +3872,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("Notification rule does not exist."))
 
+        self._new = self._edit_nr < 0
         if self._edit_nr >= len(notifications_rules):
             raise MKUserError(None, _("Notification rule does not exist."))
         self._object_id: str | None = (

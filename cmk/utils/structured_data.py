@@ -1938,14 +1938,14 @@ def _get_calculated_or_store_entry(
 def load_history(
     tree_or_archive_store: TreeOrArchiveStore,
     delta_cache_dir: Path,
-    hostname: HostName,
+    host_name: HostName,
     *,
     filter_history_paths: Callable[
         [Sequence[tuple[HistoryPath, HistoryPath]]], Sequence[tuple[HistoryPath, HistoryPath]]
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
-    files = tree_or_archive_store.history(host_name=hostname)
+    files = tree_or_archive_store.history(host_name=host_name)
     cached_tree_loader = _CachedTreeLoader()
     entries: list[HistoryEntry] = []
     corrupted_deltas = []
@@ -1955,7 +1955,7 @@ def load_history(
 
         delta_tree_path = Path(
             delta_cache_dir,
-            hostname,
+            host_name,
             f"{previous.timestamp}_{current.timestamp}",
         )
 

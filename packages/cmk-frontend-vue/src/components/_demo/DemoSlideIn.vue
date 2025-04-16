@@ -19,6 +19,8 @@ import type {
   Topic,
   TopicElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -26,8 +28,11 @@ const data = ref<Record<string, Record<string, unknown>>>({
   some_topic_id: { some_topic_element: { element_name: 'string content' } }
 })
 
-const scrollOpen = ref<boolean>(false)
-const open = ref<boolean>(false)
+const slideOut1 = ref<boolean>(false)
+const slideOut2 = ref<boolean>(false)
+const slideOut3 = ref<boolean>(false)
+
+const collapsible = ref<boolean>(false)
 
 const catalog = ref<Catalog>({
   type: 'catalog',
@@ -85,11 +90,15 @@ const catalog = ref<Catalog>({
 
 <template>
   <h2>With embedded Form</h2>
-  <CmkButton @click="open = !open">trigger button text</CmkButton>
-  <SlideIn :open="open" :header="{ title: 'some title', closeButton: true }" @close="open = false">
+  <CmkButton @click="slideOut1 = !slideOut1">open</CmkButton>
+  <SlideIn
+    :open="slideOut1"
+    :header="{ title: 'some title', closeButton: true }"
+    @close="slideOut1 = false"
+  >
     <div style="margin-bottom: 1em">
       <CmkButtonSubmit>save</CmkButtonSubmit>
-      <CmkButtonCancel @click="open = false">cancel</CmkButtonCancel>
+      <CmkButtonCancel @click="slideOut1 = false">cancel</CmkButtonCancel>
     </div>
     <div class="content">
       <FormEdit v-model:data="data" :spec="catalog" :backend-validation="[]" />
@@ -97,13 +106,29 @@ const catalog = ref<Catalog>({
   </SlideIn>
   <pre>{{ data }}</pre>
   <h2>With very long content</h2>
-  <CmkButton @click="scrollOpen = !scrollOpen">open another slidein</CmkButton>
+  <CmkButton @click="slideOut2 = !slideOut2">open</CmkButton>
   <SlideIn
-    :open="scrollOpen"
+    :open="slideOut2"
     :header="{ title: 'some title', closeButton: true }"
-    @close="scrollOpen = false"
+    @close="slideOut2 = false"
   >
     <div v-for="i in 100" :key="i">{{ i }} <br /></div>
+  </SlideIn>
+  <h2>With very wide content</h2>
+  <CmkButton @click="slideOut3 = !slideOut3">open</CmkButton>
+  <SlideIn
+    :open="slideOut3"
+    :header="{ title: 'some title', closeButton: true }"
+    @close="slideOut3 = false"
+  >
+    <CmkCollapsibleTitle
+      :title="'Show wide content'"
+      :open="collapsible"
+      @toggle-open="collapsible = !collapsible"
+    />
+    <CmkCollapsible :open="collapsible">
+      <span v-for="i in 100" :key="i">{{ i }}</span></CmkCollapsible
+    >
   </SlideIn>
 </template>
 

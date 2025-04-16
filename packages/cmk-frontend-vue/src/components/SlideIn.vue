@@ -69,7 +69,8 @@ const focusOnSlideInContent = async () => {
 
 <style scoped>
 .slide-in__container {
-  max-width: 80%;
+  width: 80%;
+  max-width: 1024px;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -86,6 +87,14 @@ const focusOnSlideInContent = async () => {
 
   &[data-state='closed'] {
     animation: slide-in__container-hide 0.2s ease-in-out;
+  }
+}
+
+/* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
+@media screen and (max-width: 1024px) {
+  .slide-in__container {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

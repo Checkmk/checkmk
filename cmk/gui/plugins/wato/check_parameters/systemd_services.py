@@ -15,7 +15,9 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import (
     Dictionary,
+    FixedValue,    
     Filesize,
+    Labels,
     ListChoice,
     ListOf,
     MonitoringState,
@@ -84,42 +86,71 @@ rulespec_registry.register(
     )
 )
 
+def _valuespec_discovery_systemd_units_label_addon_elements() -> list:
+    return [
+        (
+            "host_labels_auto",
+            FixedValue(
+                True,
+                title=_("Automatic generation of Host Labels"),
+                totext=_("active"),
+                help=_(
+                    "Create Host Labels for each discovered systemd service in the following format cmk/systemd/<service-name>"
+                ),
+            ),
+        ),
+        (
+            "host_labels_explicit",
+            Labels(
+                Labels.World.CONFIG,  # type: ignore
+                title=_("Explicit Host Label(s)"),
+                help=_(
+                    "Here you can specify host labels that are automatically created when one of the systemd services is discovered."
+                ),
+            ),
+        ),
+    ]
 
-def _valuespec_discovery_systemd_units() -> Dictionary:
+
+def _valuespec_discovery_systemd_units_elements() -> list:
+    return [
+        (
+            "descriptions",
+            ListOf(
+                valuespec=TextOrRegExp(),
+                title=_("Restrict by description"),
+                help=_("Restrict the systemd units by description."),
+                allow_empty=False,
+            ),
+        ),
+        (
+            "names",
+            ListOf(
+                valuespec=TextOrRegExp(),
+                title=_("Restrict by name"),
+                help=_("Restrict the systemd units by their name."),
+                allow_empty=False,
+            ),
+        ),
+        (
+            "states",
+            ListChoice(
+                choices=[
+                    ("active", "active"),
+                    ("inactive", "inactive"),
+                    ("failed", "failed"),
+                ],
+                title=_("Restrict by state"),
+                allow_empty=False,
+            ),
+        ),
+    ]
+
+
+def _valuespec_discovery_systemd_units_base(elements) -> Dictionary:
     return Dictionary(
         title=_("Systemd single unit discovery"),
-        elements=[
-            (
-                "descriptions",
-                ListOf(
-                    valuespec=TextOrRegExp(),
-                    title=_("Restrict by description"),
-                    help=_("Restrict the systemd units by description."),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "names",
-                ListOf(
-                    valuespec=TextOrRegExp(),
-                    title=_("Restrict by name"),
-                    help=_("Restrict the systemd units by their name."),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "states",
-                ListChoice(
-                    choices=[
-                        ("active", "active"),
-                        ("inactive", "inactive"),
-                        ("failed", "failed"),
-                    ],
-                    title=_("Restrict by state"),
-                    allow_empty=False,
-                ),
-            ),
-        ],
+        elements=elements,
         help=_(
             "Configure the discovery of single systemd units (sockets or services)."
             " To be discovered, a unit must match at least one condition each:"
@@ -132,6 +163,17 @@ def _valuespec_discovery_systemd_units() -> Dictionary:
         empty_text=_("No restrictions (discover all units)"),
     )
 
+def _valuespec_discovery_systemd_units_addon() -> Dictionary:
+    return _valuespec_discovery_systemd_units_base(
+        _valuespec_discovery_systemd_units_elements()
+        + _valuespec_discovery_systemd_units_label_addon_elements()
+    )
+
+
+def _valuespec_discovery_systemd_units() -> Dictionary:
+    return _valuespec_discovery_systemd_units_base(
+        _valuespec_discovery_systemd_units_elements()
+    )
 
 rulespec_registry.register(
     HostRulespec(
@@ -139,7 +181,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
         name="discovery_systemd_units_services",
-        valuespec=_valuespec_discovery_systemd_units,
+        valuespec=_valuespec_discovery_systemd_units_addon,
     )
 )
 

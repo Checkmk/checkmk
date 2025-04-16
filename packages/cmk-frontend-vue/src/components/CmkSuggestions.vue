@@ -64,16 +64,18 @@ function scrollCurrentlySelectedIntoView(): void {
   if (suggestionRefs.value === null) {
     return
   }
-  suggestionRefs.value[getCurrentlySelectedAsIndex()]?.scrollIntoView({ block: 'nearest' })
+  const index = getCurrentlySelectedAsIndex()
+  if (index === null) {
+    return
+  }
+  suggestionRefs.value[index]?.scrollIntoView({ block: 'nearest' })
 }
 
-function getCurrentlySelectedAsIndex(): number {
+function getCurrentlySelectedAsIndex(): number | null {
   let currentlySelected = currentlySelectedElement.value
   if (currentlySelected === null) {
     if (!filteredSuggestions.value[0]) {
-      throw new Error(
-        'Internal error: CmkSuggestions: should select first element, but element not available'
-      )
+      return null
     }
     currentlySelected = filteredSuggestions.value[0]
   }
@@ -84,7 +86,7 @@ function getCurrentlySelectedAsIndex(): number {
     }))
     .find(({ name }) => currentlySelected.name === name)
   if (currentElement === undefined) {
-    throw new Error('Internal error: CmkSuggestions: Could not find current element')
+    return null
   }
   return currentElement.index
 }
@@ -120,10 +122,13 @@ function selectSibilingElement(direction: number) {
   }
 
   const currentIndex = getCurrentlySelectedAsIndex()
-
-  currentlySelectedElement.value =
-    filteredSuggestions.value[wrap(currentIndex + direction, filteredSuggestions.value.length)] ||
-    null
+  if (currentIndex === null) {
+    currentlySelectedElement.value = null
+  } else {
+    currentlySelectedElement.value =
+      filteredSuggestions.value[wrap(currentIndex + direction, filteredSuggestions.value.length)] ||
+      null
+  }
 }
 
 function wrap(index: number, length: number): number {

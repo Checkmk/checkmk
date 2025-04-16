@@ -175,6 +175,49 @@ test('dropdown option keyboard selection with filtering wraps', async () => {
   expect(selectedOption).toBe('option2')
 })
 
+test('dropdown keyboard can handle empty dropdown', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+
+  await userEvent.keyboard('dadada[ArrowUp]')
+})
+
+test('dropdown keyboard can handle selection filtered away dropdown', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'filtered',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'aaaaa', name: 'aaaaa' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+
+  await userEvent.keyboard('[ArrowDown]')
+  await userEvent.keyboard('option')
+  await userEvent.keyboard('[ArrowUp]')
+})
+
 test('dropdown option immediate focus and filtering', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {

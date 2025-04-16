@@ -3581,12 +3581,16 @@ class ConfigCache:
         host_name: HostName,
         nodes: Iterable[HostName],
     ) -> None:
-        cluster_host_family = (
-            "IPv6" if self.default_address_family(host_name) is socket.AF_INET6 else "IPv4"
-        )
-        address_families = [
-            f"{host_name}: {cluster_host_family}",
-        ]
+        if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
+            cluster_host_family = None
+            address_families = []
+        else:
+            cluster_host_family = (
+                "IPv6" if self.default_address_family(host_name) is socket.AF_INET6 else "IPv4"
+            )
+            address_families = [
+                f"{host_name}: {cluster_host_family}",
+            ]
 
         address_family = cluster_host_family
         mixed = False

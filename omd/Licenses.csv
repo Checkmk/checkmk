@@ -183,7 +183,7 @@ https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 Perl module: YAML-Tiny,1.67,Artistic-1.0-Perl OR GPL-1.0-or-later,"http://dev.perl.org/licenses/artistic.html
 https://www.gnu.org/licenses/old-licenses/gpl-1.0-standalone.html",,
 pnp4nagios,0.6.26,GPL-2.0-only,https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html,,
-python,3.12.3,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
+python,3.12.9,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
 Python,3.12.6,PSF-2.0,https://opensource.org/licenses/Python-2.0,omd/packages/Python/Python-3.12.6.tar.xz,
 Python module: aiohappyeyeballs,2.4.4,PSF-2.0,https://opensource.org/licenses/Python-2.0,,
 Python module: aiohttp,3.10.5,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,

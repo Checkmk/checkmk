@@ -1798,9 +1798,16 @@ class TreeOrArchiveStore(TreeStore):
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
 
-    def history(self, *, host_name: HostName) -> HistoryPaths:
+
+class HistoryStore:
+    def __init__(self, *, inventory_dir: Path, archive_dir: Path, delta_cache_dir: Path) -> None:
+        self.inventory_dir = inventory_dir
+        self.archive_dir = archive_dir
+        self.delta_cache_dir = delta_cache_dir
+
+    def files(self, *, host_name: HostName) -> HistoryPaths:
         try:
-            archive_file_paths = sorted((self._archive_dir / str(host_name)).iterdir())
+            archive_file_paths = sorted((self.archive_dir / str(host_name)).iterdir())
         except FileNotFoundError:
             return HistoryPaths(paths=[], corrupted=[])
 
@@ -1814,13 +1821,18 @@ class TreeOrArchiveStore(TreeStore):
             except ValueError:
                 corrupted.append(file_path)
 
-        tree_file = self._tree_file(host_name)
+        tree_file = self.inventory_dir / str(host_name)
         try:
             paths.append(HistoryPath(path=tree_file, timestamp=int(tree_file.stat().st_mtime)))
         except FileNotFoundError:
             pass
 
         return HistoryPaths(paths=paths, corrupted=corrupted)
+
+    def delta_cache_host_tree_file(
+        self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
+    ) -> Path:
+        return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
 
 
 def _load_delta_cache(cached_file: Path) -> tuple[int, int, int, ImmutableDeltaTree] | None:
@@ -1936,8 +1948,7 @@ def _get_calculated_or_store_entry(
 
 
 def load_history(
-    tree_or_archive_store: TreeOrArchiveStore,
-    delta_cache_dir: Path,
+    history_store: HistoryStore,
     host_name: HostName,
     *,
     filter_history_paths: Callable[
@@ -1945,7 +1956,7 @@ def load_history(
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
-    files = tree_or_archive_store.history(host_name=host_name)
+    files = history_store.files(host_name=host_name)
     cached_tree_loader = _CachedTreeLoader()
     entries: list[HistoryEntry] = []
     corrupted_deltas = []
@@ -1953,10 +1964,10 @@ def load_history(
         if current.timestamp is None:
             continue
 
-        delta_tree_path = Path(
-            delta_cache_dir,
-            host_name,
-            f"{previous.timestamp}_{current.timestamp}",
+        delta_tree_path = history_store.delta_cache_host_tree_file(
+            host_name=host_name,
+            previous_timestamp=previous.timestamp,
+            current_timestamp=current.timestamp,
         )
 
         if (

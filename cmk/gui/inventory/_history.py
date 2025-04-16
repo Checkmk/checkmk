@@ -13,9 +13,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     HistoryEntry,
     HistoryPath,
+    HistoryStore,
     ImmutableDeltaTree,
     load_history,
-    TreeOrArchiveStore,
 )
 
 from cmk.gui.i18n import _
@@ -33,11 +33,11 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
         else None
     )
     history = load_history(
-        TreeOrArchiveStore(
-            cmk.utils.paths.inventory_output_dir,
-            cmk.utils.paths.inventory_archive_dir,
+        HistoryStore(
+            inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
+            archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
+            delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
         ),
-        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
         filter_tree=filter_tree,
@@ -77,11 +77,11 @@ def load_delta_tree(hostname: HostName, timestamp: int) -> tuple[ImmutableDeltaT
         else None
     )
     history = load_history(
-        TreeOrArchiveStore(
-            cmk.utils.paths.inventory_output_dir,
-            cmk.utils.paths.inventory_archive_dir,
+        HistoryStore(
+            inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
+            archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
+            delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
         ),
-        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
         filter_tree=filter_tree,
@@ -102,11 +102,11 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
         else None
     )
     history = load_history(
-        TreeOrArchiveStore(
-            cmk.utils.paths.inventory_output_dir,
-            cmk.utils.paths.inventory_archive_dir,
+        HistoryStore(
+            inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
+            archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
+            delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
         ),
-        Path(cmk.utils.paths.inventory_delta_cache_dir),
         hostname,
         filter_history_paths=lambda pairs: pairs,
         filter_tree=filter_tree,

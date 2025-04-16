@@ -17971,7 +17971,7 @@ msgstr ""
 "veuillez contacter votre support Checkmk.<br><br>Cordialement, votre serveur "
 "Checkmk"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Dear Checkmk user,<br><br>You have %s left in your Checkmk trial period of "
 "site '%s'.<br><br>%s now to continue using Checkmk as you do today. If you "
@@ -17979,8 +17979,10 @@ msgid ""
 "licensing page.<br><br>Otherwise, you will be automatically converted to the "
 "license state 'Free' after the trial period ends. In this license state, you "
 "have to reduce your number of services from %s to %s to meet the maximum "
-"service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
-"Checkmk Server"
+"service limit of Checkmk in license state 'Free'.<br><br>In a distributed "
+"monitoring setup, only services on the local site are counted, as remote "
+"sites are not included. Please note that distributed monitoring is not "
+"available in the license state 'Free'.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Cher utilisateur de Checkmk,<br><br>Il vous reste %s dans votre période "
 "d'essai Checkmk du site '%s'.<br><br>%s maintenant pour continuer à utiliser "
@@ -19116,7 +19118,11 @@ msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Déployer le plugin de l'agent nvidia_smi"
 
 #, fuzzy
-msgid "Deploy SMART plug-in"
+msgid "Deploy SMART Posix plug-in"
+msgstr "Déployer le plugin SMART"
+
+#, fuzzy
+msgid "Deploy SMART legacy plug-in"
 msgstr "Déployer le plugin SMART"
 
 #, fuzzy
@@ -22853,6 +22859,10 @@ msgstr "Activer les données de performance"
 msgid "Enable periodic notifications"
 msgstr "Activer les notifications périodiques"
 
+#, fuzzy
+msgid "Enable piggyback-hub"
+msgstr "Utiliser le ferroutage"
+
 msgid "Enable processing of passive check results"
 msgstr "Permettre le traitement des résultats des contrôles passifs"
 
@@ -22890,6 +22900,13 @@ msgstr "Activer la livraison synchrone via SMTP"
 #, fuzzy
 msgid "Enable the ntopng host filter"
 msgstr "Activez cette instance de ntopng"
+
+#, fuzzy
+msgid ""
+"Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+msgstr ""
+"Garder les hôtes pendant que la source de ferroutage envoie des données de "
+"ferroutage seulement pour les autres hôtes pour"
 
 msgid "Enable this ntopng instance"
 msgstr "Activez cette instance de ntopng"
@@ -31036,9 +31053,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
-"Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
-"will be monitored for temperature and errors."
+"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
+"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
+"harddisks will be monitored for temperature and errors. The legacy plug-in "
+"<tt>smart</tt> is deprecated and should not be used anymore. "
 msgstr ""
 "Les hôtes configurés via cette règle obtiennent le déploiement du plugin "
 "<tt>smart</tt>. En supposant que vous avez installé <tt>smartmontools</tt>, "
@@ -33797,6 +33815,12 @@ msgstr ""
 
 msgid "In Progress"
 msgstr "En cours"
+
+msgid ""
+"In a distributed monitoring setup, only services on the local site are "
+"counted, as remote sites are not included. Please note that distributed "
+"monitoring is not available in the license state 'Free'."
+msgstr ""
 
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
@@ -39852,8 +39876,9 @@ msgstr "Gérer tous les rapports programmés"
 msgid "Manage InfluxDB connections"
 msgstr "Gérer les connexions InfluxDB"
 
-msgid "Manage OpenTelemetry configurations (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "Manage OpenTelemetry configurations (experimental)"
+msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gérer ses propres rapports programmés"
@@ -46468,14 +46493,6 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "Uniquement les notifications groupées pendant la période suivante"
 
-#, fuzzy
-msgid ""
-"Only care about hosts that receive data from resources which name matches "
-"one of these regular expressions."
-msgstr ""
-"Ne se préoccupe que des hôtes qui reçoivent des données piggyback d'hôtes "
-"dont le nom correspond à l'une de ces expressions régulières."
-
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -46487,14 +46504,6 @@ msgid ""
 "Only core functionality of Robotmk is shown, because the Core MKP has been "
 "installed."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"Only create hosts that receive open telemetry data from resources which name "
-"matches one of these regular expressions."
-msgstr ""
-"Ne se préoccupe que des hôtes qui reçoivent des données piggyback d'hôtes "
-"dont le nom correspond à l'une de ces expressions régulières."
 
 msgid "Only discover monitors in the following states"
 msgstr "Découvrez uniquement les moniteurs dans les états suivants"
@@ -46780,11 +46789,13 @@ msgstr "S.M.A.R.T. OpenHardwareMonitor."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-msgid "OpenTelemetry (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry (experimental)"
+msgstr "Ajouter une configuration d'état"
 
-msgid "OpenTelemetry collector (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector (experimental)"
+msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
@@ -48065,13 +48076,22 @@ msgstr ""
 "Sinon, le comptage recommencera à zéro avec un nouvel événement pour le "
 "prochain match de règles."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
-"Checkmk in license state 'Free'"
+"Checkmk in license state 'Free'."
 msgstr ""
+"Cher utilisateur de Checkmk,<br><br>Il vous reste %s dans votre période "
+"d'essai Checkmk du site '%s'.<br><br>%s maintenant pour continuer à utiliser "
+"Checkmk comme vous le faites aujourd'hui. Si vous avez déjà une licence, "
+"veuillez entrer les détails de votre licence sur la page de licence du "
+"produit.<br><br>Dans le cas contraire, vous serez automatiquement converti à "
+"l'état de licence 'Free' après la fin de la période d'essai. Dans cet état "
+"de licence, vous devez réduire votre nombre de services de %s à %s pour "
+"respecter la limite maximale de services de Checkmk dans l'état de licence "
+"'Free'.<br><br>Sincèrement, votre serveur Checkmk"
 
 #, fuzzy
 msgid ""
@@ -50101,10 +50121,6 @@ msgstr "Noms de cochons"
 
 msgid "Piggyback services to monitor"
 msgstr "Les services de piggyback pour surveiller"
-
-#, fuzzy
-msgid "Piggyback-hub turned on on remote site"
-msgstr "Transfert d'informations d'un autre hôte"
 
 msgid "Piggybacked docker containers"
 msgstr "Conteneurs docker piggybacked"
@@ -64876,6 +64892,11 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "Le numéro de la phase de puissance."
 
+msgid ""
+"The OpenTelemetry collector is an experimental beta feature, and not "
+"supported yet. "
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
@@ -67894,6 +67915,14 @@ msgstr ""
 "Le graphique de performance affiche toujours la mémoire occupée. Ceci est "
 "indépendant des niveaux de contrôle réels qui peuvent être définis pour les "
 "niveaux de mémoire libre et occupée."
+
+#, fuzzy
+msgid ""
+"The piggyback-hub cannot be enabled for a remote site if it is disabled for "
+"the central site"
+msgstr ""
+"Le proxy Livestatus n'est pas seulement bon pour les sites esclaves, activez-"
+"le pour votre site principal"
 
 #, fuzzy
 msgid ""
@@ -72587,6 +72616,10 @@ msgstr ""
 "Cette règle configure les niveaux d'utilisation du CPU (pas la charge) pour "
 "les systèmes hôtes VMware ESX. Le pourcentage d'utilisation est calculé par "
 "rapport au nombre total de CPU. "
+
+#, fuzzy
+msgid "This rule configures the OpenTelemetry special agent."
+msgstr "Cette règle configure les notifications en masse."
 
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
@@ -80126,6 +80159,11 @@ msgstr "Utiliser toutes les rotations de la carte"
 
 msgid "Use alternative display name for services"
 msgstr "Utiliser un nom d'affichage alternatif pour les services"
+
+msgid ""
+"Use and test at your heart's desire, just don’t rely on it in production - "
+"scope & features may change."
+msgstr ""
 
 #, fuzzy
 msgid "Use any network address"
@@ -89740,6 +89778,26 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Only care about hosts that receive data from resources which name matches "
+#~ "one of these regular expressions."
+#~ msgstr ""
+#~ "Ne se préoccupe que des hôtes qui reçoivent des données piggyback d'hôtes "
+#~ "dont le nom correspond à l'une de ces expressions régulières."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only create hosts that receive open telemetry data from resources which "
+#~ "name matches one of these regular expressions."
+#~ msgstr ""
+#~ "Ne se préoccupe que des hôtes qui reçoivent des données piggyback d'hôtes "
+#~ "dont le nom correspond à l'une de ces expressions régulières."
+
+#, fuzzy
+#~ msgid "Piggyback-hub turned on on remote site"
+#~ msgstr "Transfert d'informations d'un autre hôte"
 
 #~ msgid "Persistent Connection"
 #~ msgstr "Connexion persistante"

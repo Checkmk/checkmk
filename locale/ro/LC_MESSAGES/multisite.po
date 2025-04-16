@@ -17863,8 +17863,10 @@ msgid ""
 "licensing page.<br><br>Otherwise, you will be automatically converted to the "
 "license state 'Free' after the trial period ends. In this license state, you "
 "have to reduce your number of services from %s to %s to meet the maximum "
-"service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
-"Checkmk Server"
+"service limit of Checkmk in license state 'Free'.<br><br>In a distributed "
+"monitoring setup, only services on the local site are counted, as remote "
+"sites are not included. Please note that distributed monitoring is not "
+"available in the license state 'Free'.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Stimate utilizator Checkmk,<br><br>Mai aveți %d zile rămase din perioada de "
 "testare Checkmk a site-ului '%s'.<br><br>%s acum pentru a continua să "
@@ -19007,7 +19009,11 @@ msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Implementați Robotmk Scheduler și Agent Plugin"
 
 #, fuzzy
-msgid "Deploy SMART plug-in"
+msgid "Deploy SMART Posix plug-in"
+msgstr "Implementați pluginul SMART"
+
+#, fuzzy
+msgid "Deploy SMART legacy plug-in"
 msgstr "Implementați pluginul SMART"
 
 #, fuzzy
@@ -22718,6 +22724,10 @@ msgstr "Activați datele de performanță"
 msgid "Enable periodic notifications"
 msgstr "Activați notificările periodice"
 
+#, fuzzy
+msgid "Enable piggyback-hub"
+msgstr "Utilizați Piggyback"
+
 msgid "Enable processing of passive check results"
 msgstr "Activarea procesării rezultatelor verificărilor pasive"
 
@@ -22756,6 +22766,13 @@ msgstr "Activați livrarea sincronă prin SMTP"
 #, fuzzy
 msgid "Enable the ntopng host filter"
 msgstr "Activați această instanță ntopng"
+
+#, fuzzy
+msgid ""
+"Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+msgstr ""
+"Păstrați gazdele în timp ce sursa de piggyback trimite date de piggyback "
+"numai pentru alte gazde pentru"
 
 msgid "Enable this ntopng instance"
 msgstr "Activați această instanță ntopng"
@@ -30823,9 +30840,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
-"Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
-"will be monitored for temperature and errors."
+"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
+"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
+"harddisks will be monitored for temperature and errors. The legacy plug-in "
+"<tt>smart</tt> is deprecated and should not be used anymore. "
 msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>smart</tt> "
 "implementat. Presupunând că ați instalat <tt>smartmontools</tt>, harddisk-"
@@ -33581,6 +33599,12 @@ msgstr ""
 
 msgid "In Progress"
 msgstr "În curs de desfășurare"
+
+msgid ""
+"In a distributed monitoring setup, only services on the local site are "
+"counted, as remote sites are not included. Please note that distributed "
+"monitoring is not available in the license state 'Free'."
+msgstr ""
 
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
@@ -39601,8 +39625,9 @@ msgstr "Gestionați toate rapoartele programate"
 msgid "Manage InfluxDB connections"
 msgstr "Gestionați conexiunile InfluxDB"
 
-msgid "Manage OpenTelemetry configurations (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "Manage OpenTelemetry configurations (experimental)"
+msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gestionați propriile rapoarte programate"
@@ -46165,14 +46190,6 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "Numai notificări în masă în următoarea perioadă de timp"
 
-#, fuzzy
-msgid ""
-"Only care about hosts that receive data from resources which name matches "
-"one of these regular expressions."
-msgstr ""
-"Aveți grijă doar de gazdele care primesc date piggyback de la gazde al căror "
-"nume se potrivește cu una dintre aceste expresii regulate."
-
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -46184,14 +46201,6 @@ msgid ""
 "Only core functionality of Robotmk is shown, because the Core MKP has been "
 "installed."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"Only create hosts that receive open telemetry data from resources which name "
-"matches one of these regular expressions."
-msgstr ""
-"Aveți grijă doar de gazdele care primesc date piggyback de la gazde al căror "
-"nume se potrivește cu una dintre aceste expresii regulate."
 
 msgid "Only discover monitors in the following states"
 msgstr "Descoperiți numai monitoarele din următoarele state"
@@ -46482,11 +46491,13 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-msgid "OpenTelemetry (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry (experimental)"
+msgstr "Configurația stilului selectat"
 
-msgid "OpenTelemetry collector (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector (experimental)"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
@@ -47759,12 +47770,12 @@ msgstr ""
 "În caz contrar, numărarea va începe de la unu, cu un nou eveniment pentru "
 "următorul meci de reguli."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
-"Checkmk in license state 'Free'"
+"Checkmk in license state 'Free'."
 msgstr ""
 "În caz contrar, veți fi convertit automat la starea de licență 'Free' după "
 "ce se încheie perioada de probă. În această stare de licență, trebuie să "
@@ -49766,10 +49777,6 @@ msgstr "Nume Piggyback"
 
 msgid "Piggyback services to monitor"
 msgstr "Servicii Piggyback pentru a monitoriza"
-
-#, fuzzy
-msgid "Piggyback-hub turned on on remote site"
-msgstr "Informații Piggyback de la altă gazdă"
 
 msgid "Piggybacked docker containers"
 msgstr "Containere docker cu porțelanuri"
@@ -64460,6 +64467,11 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "Numărul fazei de putere."
 
+msgid ""
+"The OpenTelemetry collector is an experimental beta feature, and not "
+"supported yet. "
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
@@ -67470,6 +67482,14 @@ msgstr ""
 "Graficul de performanță va afișa întotdeauna memoria ocupată. Acest lucru "
 "este independent de nivelurile reale de verificare, care pot fi setate atât "
 "pentru nivelurile de memorie liberă, cât și pentru cele de memorie ocupată."
+
+#, fuzzy
+msgid ""
+"The piggyback-hub cannot be enabled for a remote site if it is disabled for "
+"the central site"
+msgstr ""
+"Proxy-ul Livestatus nu este bun doar pentru site-urile slave, activați-l "
+"pentru site-ul principal."
 
 #, fuzzy
 msgid ""
@@ -72163,6 +72183,10 @@ msgstr ""
 "Această regulă configurează nivelurile de utilizare a procesorului (nu de "
 "încărcare) pentru sistemele gazdă VMware ESX. Procentul de utilizare este "
 "calculat în raport cu numărul total de unități centrale de procesare. "
+
+#, fuzzy
+msgid "This rule configures the OpenTelemetry special agent."
+msgstr "Această regulă configurează notificările în masă."
 
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
@@ -79583,6 +79607,11 @@ msgstr "Utilizați toate rotațiile hărții"
 
 msgid "Use alternative display name for services"
 msgstr "Utilizați un nume de afișare alternativ pentru servicii"
+
+msgid ""
+"Use and test at your heart's desire, just don’t rely on it in production - "
+"scope & features may change."
+msgstr ""
 
 msgid "Use any network address"
 msgstr "Utilizați orice adresă de rețea"
@@ -89103,6 +89132,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only care about hosts that receive data from resources which name matches "
+#~ "one of these regular expressions."
+#~ msgstr ""
+#~ "Aveți grijă doar de gazdele care primesc date piggyback de la gazde al "
+#~ "căror nume se potrivește cu una dintre aceste expresii regulate."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only create hosts that receive open telemetry data from resources which "
+#~ "name matches one of these regular expressions."
+#~ msgstr ""
+#~ "Aveți grijă doar de gazdele care primesc date piggyback de la gazde al "
+#~ "căror nume se potrivește cu una dintre aceste expresii regulate."
+
+#, fuzzy
+#~ msgid "Piggyback-hub turned on on remote site"
+#~ msgstr "Informații Piggyback de la altă gazdă"
 
 #, fuzzy, python-format
 #~ msgid ""

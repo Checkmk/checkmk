@@ -16985,7 +16985,7 @@ msgstr ""
 "<br><br>制限なしでCheckmkを継続したい場合は、Checkmkサポートにご連絡くださ"
 "い。<br><br>敬具、あなたのCheckmkサーバー"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Dear Checkmk user,<br><br>You have %s left in your Checkmk trial period of "
 "site '%s'.<br><br>%s now to continue using Checkmk as you do today. If you "
@@ -16993,8 +16993,10 @@ msgid ""
 "licensing page.<br><br>Otherwise, you will be automatically converted to the "
 "license state 'Free' after the trial period ends. In this license state, you "
 "have to reduce your number of services from %s to %s to meet the maximum "
-"service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
-"Checkmk Server"
+"service limit of Checkmk in license state 'Free'.<br><br>In a distributed "
+"monitoring setup, only services on the local site are counted, as remote "
+"sites are not included. Please note that distributed monitoring is not "
+"available in the license state 'Free'.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Checkmkユーザー様, <br><br>残り%s日であなたのサイト '%s' の Checkmk 試用期間"
 "は終了します。<br><br>現在と同じようにCheckmkを使用するには、今すぐ %s を入力"
@@ -18083,7 +18085,12 @@ msgstr "ORACLEデータベースプラグインをデプロイします"
 msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Robotmkスケジューラとエージェントプラグインをデプロイする"
 
-msgid "Deploy SMART plug-in"
+#, fuzzy
+msgid "Deploy SMART Posix plug-in"
+msgstr "SMARTプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy SMART legacy plug-in"
 msgstr "SMARTプラグインをデプロイする"
 
 msgid "Deploy SUSEConnect plug-in"
@@ -21574,6 +21581,10 @@ msgstr "パフォーマンスデータを有効にする"
 msgid "Enable periodic notifications"
 msgstr "定期的な通知を有効にする"
 
+#, fuzzy
+msgid "Enable piggyback-hub"
+msgstr "分散ピギーバックを有効にする"
+
 msgid "Enable processing of passive check results"
 msgstr "パッシブチェック結果の処理を有効にする"
 
@@ -21610,6 +21621,13 @@ msgstr "SMTP経由の同期配信を有効にする"
 
 msgid "Enable the ntopng host filter"
 msgstr "ntopngホストフィルターを有効にする"
+
+#, fuzzy
+msgid ""
+"Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+msgstr ""
+"ピギーバック元が他のホストのピギーバックデータのみを送信している間、ホストを"
+"保持"
 
 msgid "Enable this ntopng instance"
 msgstr "このntopngインスタンスを有効にします"
@@ -29386,10 +29404,12 @@ msgstr ""
 "このルールを介して構成されたホストは、 <tt>mk_logins</tt> プラグインがデプロ"
 "イされます。"
 
+#, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
-"Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
-"will be monitored for temperature and errors."
+"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
+"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
+"harddisks will be monitored for temperature and errors. The legacy plug-in "
+"<tt>smart</tt> is deprecated and should not be used anymore. "
 msgstr ""
 "このルールで設定されたホストには、<tt>smart</tt>プラグインがデプロイされま"
 "す。<tt>smartmontools</tt>をインストールした場合、ローカルのハードディスクの"
@@ -31976,6 +31996,12 @@ msgstr ""
 
 msgid "In Progress"
 msgstr "進行中"
+
+msgid ""
+"In a distributed monitoring setup, only services on the local site are "
+"counted, as remote sites are not included. Please note that distributed "
+"monitoring is not available in the license state 'Free'."
+msgstr ""
 
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
@@ -37761,7 +37787,8 @@ msgstr "すべてのスケジュールされたレポートを管理する"
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDBコネクションの管理"
 
-msgid "Manage OpenTelemetry configurations (Experimental)"
+#, fuzzy
+msgid "Manage OpenTelemetry configurations (experimental)"
 msgstr "OpenTelemetry構成の管理（実験的）"
 
 msgid "Manage Own Scheduled Reports"
@@ -44071,14 +44098,6 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "次の期間中の一括通知のみ"
 
-#, fuzzy
-msgid ""
-"Only care about hosts that receive data from resources which name matches "
-"one of these regular expressions."
-msgstr ""
-"名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
-"ストのみを対象とします。"
-
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -44091,13 +44110,6 @@ msgid ""
 "installed."
 msgstr ""
 "コアMKPがインストールされているため、Robotmkのコア機能のみが表示されます。"
-
-msgid ""
-"Only create hosts that receive open telemetry data from resources which name "
-"matches one of these regular expressions."
-msgstr ""
-"名前がこれらの正規表現の1つと一致するホストからOpen telemetryを受信するホスト"
-"のみを対象とします。"
 
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
@@ -44377,10 +44389,12 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-msgid "OpenTelemetry (Experimental)"
+#, fuzzy
+msgid "OpenTelemetry (experimental)"
 msgstr "Open telemetry（実験的）"
 
-msgid "OpenTelemetry collector (Experimental)"
+#, fuzzy
+msgid "OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "OpenTelemetry collector configurations"
@@ -45617,12 +45631,12 @@ msgstr ""
 "そうでない場合は、次のルールマッチのために新しいイベントを1つからカウントしま"
 "す。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
-"Checkmk in license state 'Free'"
+"Checkmk in license state 'Free'."
 msgstr ""
 "そうしないと、試用期間終了後自動的にライセンス状態「無料」に変換されます。"
 "「無料」のライセンス状態Checkmkの最大サービス数を超えるため、サービス数を%sか"
@@ -47542,10 +47556,6 @@ msgstr "ピギーバック名"
 
 msgid "Piggyback services to monitor"
 msgstr "監視するピギーバックサービス"
-
-#, fuzzy
-msgid "Piggyback-hub turned on on remote site"
-msgstr "他のホストからのピギーバック情報"
 
 msgid "Piggybacked docker containers"
 msgstr "ピギーバックdockerコンテナ"
@@ -61502,6 +61512,11 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
 
+msgid ""
+"The OpenTelemetry collector is an experimental beta feature, and not "
+"supported yet. "
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
@@ -64332,6 +64347,14 @@ msgid ""
 msgstr ""
 "パフォーマンスグラフには、常に占有メモリが表示されます。これは、空きメモリレ"
 "ベルと占有メモリレベルの両方に設定できる実際のチェックレベルとは無関係です。"
+
+#, fuzzy
+msgid ""
+"The piggyback-hub cannot be enabled for a remote site if it is disabled for "
+"the central site"
+msgstr ""
+"Livestatus プロキシは、リモートサイトに適しているだけでなく、セントラルサイト"
+"にも有効です"
 
 msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original message text. "
@@ -68739,6 +68762,10 @@ msgid ""
 msgstr ""
 "このルールは、VMware ESXホストシステムのCPU使用率（負荷ではない）のレベルを設"
 "定します。使用率の割合は、CPUの総数を基準にして計算されます "
+
+#, fuzzy
+msgid "This rule configures the OpenTelemetry special agent."
+msgstr "統合されたOpenTelemetry コレクタのすべての関連構成。"
 
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
@@ -75474,6 +75501,11 @@ msgstr "すべての地図回転を使用"
 
 msgid "Use alternative display name for services"
 msgstr "サービスに代替表示名を使用する"
+
+msgid ""
+"Use and test at your heart's desire, just don’t rely on it in production - "
+"scope & features may change."
+msgstr ""
 
 msgid "Use any network address"
 msgstr "ネットワークアドレスを使用"
@@ -84628,6 +84660,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
 
+#, fuzzy
+#~ msgid ""
+#~ "Only care about hosts that receive data from resources which name matches "
+#~ "one of these regular expressions."
+#~ msgstr ""
+#~ "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信す"
+#~ "るホストのみを対象とします。"
+
+#~ msgid ""
+#~ "Only create hosts that receive open telemetry data from resources which "
+#~ "name matches one of these regular expressions."
+#~ msgstr ""
+#~ "名前がこれらの正規表現の1つと一致するホストからOpen telemetryを受信するホ"
+#~ "ストのみを対象とします。"
+
+#, fuzzy
+#~ msgid "Piggyback-hub turned on on remote site"
+#~ msgstr "他のホストからのピギーバック情報"
+
 #, python-format
 #~ msgid ""
 #~ "Your license has been suspended. Please contact the Checkmk sales team at "
@@ -84880,9 +84931,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 #, fuzzy
 #~ msgid "Distributed piggyback"
 #~ msgstr "分散監視"
-
-#~ msgid "Enable distributed piggyback"
-#~ msgstr "分散ピギーバックを有効にする"
 
 #, fuzzy
 #~ msgid "Number of graphs per event (default: 5)"

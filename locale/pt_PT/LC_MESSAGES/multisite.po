@@ -17851,8 +17851,10 @@ msgid ""
 "licensing page.<br><br>Otherwise, you will be automatically converted to the "
 "license state 'Free' after the trial period ends. In this license state, you "
 "have to reduce your number of services from %s to %s to meet the maximum "
-"service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
-"Checkmk Server"
+"service limit of Checkmk in license state 'Free'.<br><br>In a distributed "
+"monitoring setup, only services on the local site are counted, as remote "
+"sites are not included. Please note that distributed monitoring is not "
+"available in the license state 'Free'.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Caro utilizador do Checkmk,<br><br>Tem %d dias restantes no seu período de "
 "teste do Checkmk do site '%s'.<br><br>%s agora para continuar a usar o "
@@ -18980,7 +18982,11 @@ msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Implantar o plug-in do agente nvidia_smi"
 
 #, fuzzy
-msgid "Deploy SMART plug-in"
+msgid "Deploy SMART Posix plug-in"
+msgstr "Implementar o plugin SMART"
+
+#, fuzzy
+msgid "Deploy SMART legacy plug-in"
 msgstr "Implementar o plugin SMART"
 
 #, fuzzy
@@ -22672,6 +22678,10 @@ msgstr "Habilitar dados de desempenho"
 msgid "Enable periodic notifications"
 msgstr "Habilitar notificações periódicas"
 
+#, fuzzy
+msgid "Enable piggyback-hub"
+msgstr "Use o Piggyback"
+
 msgid "Enable processing of passive check results"
 msgstr "Permitir o processamento de resultados de verificação passiva"
 
@@ -22709,6 +22719,13 @@ msgstr "Habilitar a entrega síncrona via SMTP"
 #, fuzzy
 msgid "Enable the ntopng host filter"
 msgstr "Habilite esta instância superior"
+
+#, fuzzy
+msgid ""
+"Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+msgstr ""
+"Manter hosts enquanto a fonte piggyback envia dados piggyback apenas para "
+"outros hosts para"
 
 msgid "Enable this ntopng instance"
 msgstr "Habilite esta instância superior"
@@ -30793,9 +30810,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
-"Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
-"will be monitored for temperature and errors."
+"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
+"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
+"harddisks will be monitored for temperature and errors. The legacy plug-in "
+"<tt>smart</tt> is deprecated and should not be used anymore. "
 msgstr ""
 "Os anfitriões configurados através desta regra obtêm o plugin <tt>smart</tt> "
 "implantado. Assumindo que você tenha instalado <tt>smartmontools</tt>, seus "
@@ -33513,6 +33531,12 @@ msgstr ""
 
 msgid "In Progress"
 msgstr "Em andamento"
+
+msgid ""
+"In a distributed monitoring setup, only services on the local site are "
+"counted, as remote sites are not included. Please note that distributed "
+"monitoring is not available in the license state 'Free'."
+msgstr ""
 
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
@@ -39528,8 +39552,9 @@ msgstr "Gerir todos os relatórios agendados"
 msgid "Manage InfluxDB connections"
 msgstr "Gerir ligações InfluxDB"
 
-msgid "Manage OpenTelemetry configurations (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "Manage OpenTelemetry configurations (experimental)"
+msgstr "Adicionar, editar e eliminar ligações InfluxDB."
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gerir os próprios relatórios programados"
@@ -46078,14 +46103,6 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "Apenas notificações em massa durante o seguinte período de tempo"
 
-#, fuzzy
-msgid ""
-"Only care about hosts that receive data from resources which name matches "
-"one of these regular expressions."
-msgstr ""
-"Só se preocupam com os anfitriões que recebem dados piggyback de anfitriões "
-"cujo nome corresponde a uma destas expressões regulares."
-
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -46097,14 +46114,6 @@ msgid ""
 "Only core functionality of Robotmk is shown, because the Core MKP has been "
 "installed."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"Only create hosts that receive open telemetry data from resources which name "
-"matches one of these regular expressions."
-msgstr ""
-"Só se preocupam com os anfitriões que recebem dados piggyback de anfitriões "
-"cujo nome corresponde a uma destas expressões regulares."
 
 msgid "Only discover monitors in the following states"
 msgstr "Só descobrir monitores nos seguintes estados"
@@ -46383,11 +46392,13 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-msgid "OpenTelemetry (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry (experimental)"
+msgstr "Adicionar configuração do estado"
 
-msgid "OpenTelemetry collector (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector (experimental)"
+msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
@@ -47664,12 +47675,12 @@ msgstr ""
 "Caso contrário, a contagem começará de um com um novo evento para o próximo "
 "jogo de regras."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
-"Checkmk in license state 'Free'"
+"Checkmk in license state 'Free'."
 msgstr ""
 "Caso contrário, será automaticamente convertido para o estado de licença "
 "\"Gratuito\" após o fim do período experimental. Neste estado de licença, "
@@ -49675,10 +49686,6 @@ msgstr "Nomes de porquinhos"
 
 msgid "Piggyback services to monitor"
 msgstr "Serviços de acompanhamento para monitorizar"
-
-#, fuzzy
-msgid "Piggyback-hub turned on on remote site"
-msgstr "Informações de outros anfitriões"
 
 msgid "Piggybacked docker containers"
 msgstr "Contentores portuários com fundo de porco"
@@ -64302,6 +64309,11 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "O Número da fase de energia."
 
+msgid ""
+"The OpenTelemetry collector is an experimental beta feature, and not "
+"supported yet. "
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
@@ -67276,6 +67288,14 @@ msgstr ""
 "O gráfico de desempenho irá sempre mostrar a memória ocupada. Isto é "
 "independente dos níveis de verificação reais que podem ser definidos tanto "
 "para os níveis de memória livre como para a memória ocupada."
+
+#, fuzzy
+msgid ""
+"The piggyback-hub cannot be enabled for a remote site if it is disabled for "
+"the central site"
+msgstr ""
+"O Livestatus Proxy não é bom apenas para locais de escravos, habilite-o para "
+"o seu site mestre"
 
 #, fuzzy
 msgid ""
@@ -71888,6 +71908,10 @@ msgstr ""
 "Esta regra configura os níveis de utilização da CPU (não a carga) para "
 "sistemas host VMware ESX. A porcentagem de utilização é calculada em relação "
 "ao número total de CPUs. "
+
+#, fuzzy
+msgid "This rule configures the OpenTelemetry special agent."
+msgstr "Esta regra configura as notificações em massa."
 
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
@@ -79364,6 +79388,11 @@ msgstr "Utilizar todas as rotações do mapa"
 
 msgid "Use alternative display name for services"
 msgstr "Usar nome de exibição alternativo para serviços"
+
+msgid ""
+"Use and test at your heart's desire, just don’t rely on it in production - "
+"scope & features may change."
+msgstr ""
 
 msgid "Use any network address"
 msgstr "Utilizar qualquer endereço de rede"
@@ -88816,6 +88845,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only care about hosts that receive data from resources which name matches "
+#~ "one of these regular expressions."
+#~ msgstr ""
+#~ "Só se preocupam com os anfitriões que recebem dados piggyback de "
+#~ "anfitriões cujo nome corresponde a uma destas expressões regulares."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only create hosts that receive open telemetry data from resources which "
+#~ "name matches one of these regular expressions."
+#~ msgstr ""
+#~ "Só se preocupam com os anfitriões que recebem dados piggyback de "
+#~ "anfitriões cujo nome corresponde a uma destas expressões regulares."
+
+#, fuzzy
+#~ msgid "Piggyback-hub turned on on remote site"
+#~ msgstr "Informações de outros anfitriões"
 
 #, fuzzy, python-format
 #~ msgid ""

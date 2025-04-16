@@ -17856,8 +17856,10 @@ msgid ""
 "licensing page.<br><br>Otherwise, you will be automatically converted to the "
 "license state 'Free' after the trial period ends. In this license state, you "
 "have to reduce your number of services from %s to %s to meet the maximum "
-"service limit of Checkmk in license state 'Free'.<br><br>Sincerely, your "
-"Checkmk Server"
+"service limit of Checkmk in license state 'Free'.<br><br>In a distributed "
+"monitoring setup, only services on the local site are counted, as remote "
+"sites are not included. Please note that distributed monitoring is not "
+"available in the license state 'Free'.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Beste Checkmk gebruiker,<br><br>U hebt %d dagen over in uw Checkmk "
 "proefperiode van site '%s'.<br><br>%s nu om Checkmk te blijven gebruiken "
@@ -18985,7 +18987,11 @@ msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "De nvidia_smi agent-plugin implementeren"
 
 #, fuzzy
-msgid "Deploy SMART plug-in"
+msgid "Deploy SMART Posix plug-in"
+msgstr "SMART plugin implementeren"
+
+#, fuzzy
+msgid "Deploy SMART legacy plug-in"
 msgstr "SMART plugin implementeren"
 
 #, fuzzy
@@ -22679,6 +22685,10 @@ msgstr "Inschakelen prestatiegegevens"
 msgid "Enable periodic notifications"
 msgstr "Periodieke meldingen inschakelen"
 
+#, fuzzy
+msgid "Enable piggyback-hub"
+msgstr "Gebruik Piggyback"
+
 msgid "Enable processing of passive check results"
 msgstr "Verwerking van passieve controleresultaten mogelijk maken"
 
@@ -22716,6 +22726,13 @@ msgstr "Synchrone levering via SMTP inschakelen"
 #, fuzzy
 msgid "Enable the ntopng host filter"
 msgstr "Activeer deze ntopng instantie"
+
+#, fuzzy
+msgid ""
+"Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+msgstr ""
+"Houdt hosts terwijl piggyback bron stuurt piggyback gegevens alleen voor "
+"andere hosts voor"
 
 msgid "Enable this ntopng instance"
 msgstr "Activeer deze ntopng instantie"
@@ -30789,9 +30806,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
-"Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
-"will be monitored for temperature and errors."
+"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
+"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
+"harddisks will be monitored for temperature and errors. The legacy plug-in "
+"<tt>smart</tt> is deprecated and should not be used anymore. "
 msgstr ""
 "Hosts die via deze regel zijn geconfigureerd krijgen de <tt>smart</tt> "
 "plugin uitgerold. Ervan uitgaande dat u <tt>smartmontools</tt> heeft "
@@ -33523,6 +33541,12 @@ msgstr ""
 
 msgid "In Progress"
 msgstr "In uitvoering"
+
+msgid ""
+"In a distributed monitoring setup, only services on the local site are "
+"counted, as remote sites are not included. Please note that distributed "
+"monitoring is not available in the license state 'Free'."
+msgstr ""
 
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
@@ -39540,8 +39564,9 @@ msgstr "Alle geplande rapporten beheren"
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB verbindingen beheren"
 
-msgid "Manage OpenTelemetry configurations (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "Manage OpenTelemetry configurations (experimental)"
+msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Eigen geplande rapporten beheren"
@@ -46105,14 +46130,6 @@ msgstr ""
 msgid "Only bulk notifications during the following time period"
 msgstr "Alleen bulkmeldingen gedurende de volgende periode"
 
-#, fuzzy
-msgid ""
-"Only care about hosts that receive data from resources which name matches "
-"one of these regular expressions."
-msgstr ""
-"Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
-"overeenkomt met een van deze reguliere expressies."
-
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
@@ -46124,14 +46141,6 @@ msgid ""
 "Only core functionality of Robotmk is shown, because the Core MKP has been "
 "installed."
 msgstr ""
-
-#, fuzzy
-msgid ""
-"Only create hosts that receive open telemetry data from resources which name "
-"matches one of these regular expressions."
-msgstr ""
-"Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
-"overeenkomt met een van deze reguliere expressies."
 
 msgid "Only discover monitors in the following states"
 msgstr "Ontdek alleen monitors in de volgende staten"
@@ -46413,11 +46422,13 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-msgid "OpenTelemetry (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry (experimental)"
+msgstr "Configuratie toestand toevoegen"
 
-msgid "OpenTelemetry collector (Experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector (experimental)"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
@@ -47695,13 +47706,21 @@ msgstr ""
 "Anders begint het tellen vanaf één met een nieuwe gebeurtenis voor de "
 "volgende regelwedstrijd."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Otherwise, you will be automatically converted to the license state 'Free' "
 "after the trial period ends. In this license state, you have to reduce your "
 "number of services from %s to %s to meet the maximum service limit of "
-"Checkmk in license state 'Free'"
+"Checkmk in license state 'Free'."
 msgstr ""
+"Beste Checkmk gebruiker,<br><br>U hebt %d dagen over in uw Checkmk "
+"proefperiode van site '%s'.<br><br>%s nu om Checkmk te blijven gebruiken "
+"zoals u dat nu doet. Als u al een licentie hebt, voer dan uw "
+"licentiegegevens in op de licentiepagina van het product.<br><br>Of u wordt "
+"automatisch omgezet naar de licentiestatus 'Gratis' na afloop van de "
+"proefperiode. In deze licentiestatus moet u het aantal services verminderen "
+"van %s naar %s om te voldoen aan de maximale servicelimiet van Checkmk in "
+"licentiestatus 'Free'.<br><br>Met vriendelijke groet, uw Checkmk Server"
 
 #, fuzzy
 msgid ""
@@ -49712,10 +49731,6 @@ msgstr "Piggyback namen"
 
 msgid "Piggyback services to monitor"
 msgstr "Piggyback-diensten om toezicht te houden op"
-
-#, fuzzy
-msgid "Piggyback-hub turned on on remote site"
-msgstr "Piggyback informatie van andere gastheer"
 
 msgid "Piggybacked docker containers"
 msgstr "Piggybacked docker containers"
@@ -64310,6 +64325,11 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "Het nummer van de machtsfase."
 
+msgid ""
+"The OpenTelemetry collector is an experimental beta feature, and not "
+"supported yet. "
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
@@ -67296,6 +67316,14 @@ msgstr ""
 "De prestatiegrafiek toont altijd het bezette geheugen. Dit is onafhankelijk "
 "van de werkelijke controleniveaus die kunnen worden ingesteld voor zowel "
 "vrije als bezette geheugenniveaus."
+
+#, fuzzy
+msgid ""
+"The piggyback-hub cannot be enabled for a remote site if it is disabled for "
+"the central site"
+msgstr ""
+"De Livestatus Proxy is niet alleen goed voor slave sites, schakel het in "
+"voor uw master site"
 
 #, fuzzy
 msgid ""
@@ -71934,6 +71962,10 @@ msgstr ""
 "Deze regel configureert niveaus voor het CPU-gebruik (niet de belasting) "
 "voor VMware ESX-hostsystemen. Het gebruikspercentage wordt berekend ten "
 "opzichte van het totale aantal CPU's. "
+
+#, fuzzy
+msgid "This rule configures the OpenTelemetry special agent."
+msgstr "Deze regel configureert bulkmeldingen."
 
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
@@ -79408,6 +79440,11 @@ msgstr "Alle kaartrotaties gebruiken"
 
 msgid "Use alternative display name for services"
 msgstr "Gebruik alternatieve weergavenaam voor diensten"
+
+msgid ""
+"Use and test at your heart's desire, just don’t rely on it in production - "
+"scope & features may change."
+msgstr ""
 
 #, fuzzy
 msgid "Use any network address"
@@ -88915,6 +88952,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only care about hosts that receive data from resources which name matches "
+#~ "one of these regular expressions."
+#~ msgstr ""
+#~ "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de "
+#~ "naam overeenkomt met een van deze reguliere expressies."
+
+#, fuzzy
+#~ msgid ""
+#~ "Only create hosts that receive open telemetry data from resources which "
+#~ "name matches one of these regular expressions."
+#~ msgstr ""
+#~ "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de "
+#~ "naam overeenkomt met een van deze reguliere expressies."
+
+#, fuzzy
+#~ msgid "Piggyback-hub turned on on remote site"
+#~ msgstr "Piggyback informatie van andere gastheer"
 
 #, fuzzy, python-format
 #~ msgid ""

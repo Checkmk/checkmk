@@ -19,8 +19,8 @@
   --form-readonly-error-bg-color: rgb(252, 85, 85);
   --tag-added-color-light: rgb(6, 103, 193);
   --tag-color: rgb(0, 168, 181);
-  --tag-discovered-color: rgb(119, 72, 152);
-  --tag-explicit-color: rgba(243, 174, 75);
+  --tag-explicit-color: rgb(119, 72, 152);
+  --tag-discovered-color: rgba(243, 174, 75);
   --tag-ruleset-color: rgba(222, 67, 131);
   --default-help-icon-bg-color: rgb(6, 103, 193);
   --default-help-icon-bg-color-hover: rgb(56, 133, 205);

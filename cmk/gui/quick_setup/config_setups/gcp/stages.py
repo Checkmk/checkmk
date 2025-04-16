@@ -47,9 +47,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 
-from cmk.plugins.gcp.rulesets import (  # pylint: disable=cmk-module-layer-violation
-    gcp,
-)
+from cmk.plugins.gcp.rulesets import gcp  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.shared_typing.vue_formspec_components import DictionaryLayout
@@ -57,6 +55,17 @@ from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
 PREV_BUTTON_LABEL = _("Back")
+
+
+def _collect_params_for_connection_test(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Mapping[str, object]:
+    """For the quick setup validation of the AWS authentication we run a connection test only using
+    the agent option "--connection-test"."""
+    return {
+        **collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form),
+        "connection_test": True,
+    }
 
 
 def configure_authentication() -> QuickSetupStage:
@@ -113,7 +122,7 @@ def configure_authentication() -> QuickSetupStage:
                     qs_validators.validate_test_connection_custom_collect_params(
                         rulespec_name=RuleGroup.SpecialAgents("gcp"),
                         parameter_form=gcp.form_spec(),
-                        custom_collect_params=collect_params_with_defaults_from_form_data,
+                        custom_collect_params=_collect_params_for_connection_test,
                         error_message=_(
                             "Could not access your GCP account. Please check your credentials."
                         ),

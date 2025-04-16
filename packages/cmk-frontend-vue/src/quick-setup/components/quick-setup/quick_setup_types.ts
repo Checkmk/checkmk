@@ -51,7 +51,7 @@ export interface QuickSetupSaveStageSpec {
   /** @property {VNode | null} content - Component to be displayed as last stage content */
   content?: VnodeOrNull
 
-  /** @property {string[]} errors - List of errors (General + stage validation) */
+  /** @property {(string | DetailedError)[]} errors - List of errors (General + stage validation) */
   errors: Readonly<Array<string | DetailedError>>
 
   /** @property {QuickSetupStageAction[]} actions - List of actions from wich will render buttons */

@@ -29,7 +29,7 @@ description:
   For Oracle support the Oracle instantclient needs to be installed as well, and the LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of that package.
 
   The oracle check supports procedure calls.
-  It must return excactly one output variable.
+  It must return exactly one output variable.
   The value of the variable must be in the same format as the return value of the sql statement described above.
 
   This check is configured by the WATO ruleset "Check SQL Database".

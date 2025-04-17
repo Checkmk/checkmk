@@ -137,7 +137,7 @@ def is_python_file(file_path: Path) -> bool:
     shebang_pattern = re.compile(r"^#!.*python3$")
     if file_path.suffix == ".py":
         return True
-    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+    with open(file_path, encoding="utf-8", errors="replace") as f:
         first_line = f.readline().rstrip("\n")
     return bool(shebang_pattern.match(first_line))
 

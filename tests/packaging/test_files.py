@@ -385,9 +385,9 @@ def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) 
     python_binary = _get_shipped_python_binary_name(paths)
     shortened_python_version = python_binary.replace("python", "").replace(".", "")
 
-    python_paths = set(
+    python_paths = {
         path for path in paths if path.startswith(f"/opt/omd/versions/{omd_version}/lib/python3")
-    )
+    }
     python_files = [path for path in python_paths if path.endswith(".py")]
     assert python_files, f"Didn't find Python files in package {package_path}"
 

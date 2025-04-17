@@ -111,7 +111,7 @@ def check_apc_test(params: Mapping[str, Any], section: StringTable) -> CheckResu
 
     yield Result(
         state=state,
-        summary="Date of last test: {}".format(last_date),
+        summary=f"Date of last test: {last_date}",
     )
 
 

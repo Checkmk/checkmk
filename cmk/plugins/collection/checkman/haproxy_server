@@ -1,5 +1,5 @@
 title: HAProxy: Server Status
-agents: freebsd linux
+agents: freebsd, linux
 catalog: app/haproxy
 license: GPLv2
 distribution: check_mk

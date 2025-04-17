@@ -33,13 +33,15 @@ from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
-from cmk.gui.openapi import endpoint_registry
-from cmk.gui.openapi.framework.registry import EndpointDefinition
+from cmk.gui.openapi import endpoint_registry as legacy_endpoint_registry
+from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
+from cmk.gui.openapi.framework.registry import EndpointDefinition, versioned_endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
+from cmk.gui.openapi.restful_objects.utils import format_to_routing_path
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
@@ -72,6 +74,8 @@ EXCEPTION_STATUS: dict[type[Exception], int] = {
 }
 
 PathArgs = Mapping[str, Any]
+
+type EndpointIdent = str
 
 
 def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
@@ -414,67 +418,167 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         super().__init__(debug)
         # This intermediate data structure is necessary because `Rule`s can't contain anything
         # other than str anymore. Technically they could, but the typing is now fixed to str.
-        self._endpoints: dict[str, AbstractWSGIApp] = {}
         self._url_map: Map | None = None
-        self._rules: list[Rule] = []
+        self._versioned_endpoints: dict[APIVersion, dict[EndpointIdent, AbstractWSGIApp]] = {}
+        self._versioned_rules: list[Rule] = []
         self.testing = testing
 
-    def _build_url_map(self) -> Map:
-        self._endpoints.clear()
-        self._rules[:] = []
+    @staticmethod
+    def _discover_endpoints(
+        available_versions: Sequence[APIVersion],
+    ) -> dict[APIVersion, Sequence[LegacyEndpointAdapter | VersionedEndpointAdapter]]:
+        discovered_endpoints: dict[
+            APIVersion, dict[str, LegacyEndpointAdapter | VersionedEndpointAdapter]
+        ] = {}
+        excluded_endpoints: dict[APIVersion, set[str]] = {
+            version: set() for version in available_versions
+        }
 
-        self.add_rule(
-            ["/ui/", "/ui/<path:path>"],
-            ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
-            "swagger-ui",
-        )
-        self.add_rule(
-            ["/openapi-swagger-ui.yaml"],
-            ServeSpec("swagger-ui", "yaml"),
-            "swagger-ui-yaml",
-        )
-        self.add_rule(
-            ["/openapi-swagger-ui.json"],
-            ServeSpec("swagger-ui", "json"),
-            "swagger-ui-json",
-        )
-        self.add_rule(
-            ["/openapi-doc.yaml"],
-            ServeSpec("doc", "yaml"),
-            "doc-yaml",
-        )
-        self.add_rule(
-            ["/openapi-doc.json"],
-            ServeSpec("doc", "json"),
-            "doc-json",
-        )
+        # Discover endpoints
+        prev_version = available_versions[0]
+        for version in available_versions:
+            # Copy the endpoints from the previous version
+            discovered_endpoints[version] = (
+                discovered_endpoints[prev_version].copy()
+                if prev_version in discovered_endpoints
+                else {}
+            )
+            # Remove excluded endpoints
+            for endpoint_key in excluded_endpoints[version]:
+                if endpoint_key in discovered_endpoints[version]:
+                    del discovered_endpoints[version][endpoint_key]
 
-        endpoint: Endpoint
-        for endpoint in endpoint_registry:
-            self.add_rule(
-                [endpoint.default_path],
-                LegacyEndpointAdapter(endpoint),
-                endpoint.ident,
-                methods=[endpoint.method],
+            del excluded_endpoints[version]
+
+            if version == APIVersion.V1:
+                # Legacy repository
+                legacy_endpoint: Endpoint
+                for legacy_endpoint in legacy_endpoint_registry:
+                    discovered_endpoints[version][legacy_endpoint.ident] = LegacyEndpointAdapter(
+                        legacy_endpoint
+                    )
+
+                    if legacy_endpoint.removed_in_version:
+                        excluded_endpoints[legacy_endpoint.removed_in_version].add(
+                            legacy_endpoint.ident
+                        )
+
+            # Versioned repository
+            versioned_endpoint: EndpointDefinition
+            for versioned_endpoint in versioned_endpoint_registry.specified_endpoints(version):
+                discovered_endpoints[version][versioned_endpoint.ident] = VersionedEndpointAdapter(
+                    versioned_endpoint
+                )
+
+                if versioned_endpoint.removed_in_version:
+                    excluded_endpoints[versioned_endpoint.removed_in_version].add(
+                        versioned_endpoint.ident
+                    )
+
+            prev_version = version
+
+        return {
+            version: list(endpoints.values()) for version, endpoints in discovered_endpoints.items()
+        }
+
+    def _build_versioned_url_map(self) -> Map:
+        available_versions = APIConfig.get_released_versions()
+
+        self._versioned_endpoints = {version: {} for version in available_versions}
+        self._versioned_rules.clear()
+
+        discovered_endpoints = self._discover_endpoints(available_versions)
+
+        # Build routes
+        for version in available_versions:
+            for adapted_endpoint in discovered_endpoints[version]:
+                if isinstance(adapted_endpoint, LegacyEndpointAdapter):
+                    # Add router from legacy
+                    self._add_versioned_rule(
+                        path_entries=[adapted_endpoint.endpoint.default_path],
+                        endpoint=adapted_endpoint,
+                        method=adapted_endpoint.endpoint.method,
+                        content_type=adapted_endpoint.endpoint.content_type,
+                        version=version,
+                    )
+
+                else:
+                    # Add route from versioned
+                    self._add_versioned_rule(
+                        path_entries=[
+                            format_to_routing_path(adapted_endpoint.endpoint.metadata.path)
+                        ],
+                        endpoint=adapted_endpoint,
+                        method=adapted_endpoint.endpoint.metadata.method,
+                        content_type=adapted_endpoint.endpoint.metadata.content_type,
+                        version=version,
+                    )
+
+            # TODO: These rules are from legacy. Need update to versioned
+            self._add_versioned_rule(
+                path_entries=["/openapi-swagger-ui.yaml"],
+                endpoint=ServeSpec("swagger-ui", "yaml"),
+                content_type="application/yaml",
+                version=version,
+            )
+            self._add_versioned_rule(
+                path_entries=["/openapi-swagger-ui.json"],
+                endpoint=ServeSpec("swagger-ui", "json"),
+                content_type="application/json",
+                version=version,
+            )
+            self._add_versioned_rule(
+                path_entries=["/openapi-doc.yaml"],
+                endpoint=ServeSpec("doc", "yaml"),
+                content_type="application/yaml",
+                version=version,
+            )
+            self._add_versioned_rule(
+                path_entries=["/openapi-doc.json"],
+                endpoint=ServeSpec("doc", "json"),
+                content_type="application/json",
+                version=version,
             )
 
-        return Map([Submount("/<_site>/check_mk/api/<_version>/", [*self._rules])])
+            self._add_versioned_rule(
+                path_entries=["/ui/", "/ui/<path:path>"],
+                endpoint=ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
+                content_type="text/html",
+                version=version,
+            )
 
-    def add_rule(
+        return Map([Submount("/<_site>/check_mk/api/", self._versioned_rules)])
+
+    def _add_versioned_rule(
         self,
         path_entries: list[str],
         endpoint: AbstractWSGIApp,
-        key: str,
-        methods: Sequence[HTTPMethod] | None = None,
+        version: APIVersion,
+        content_type: str,
+        method: HTTPMethod | None = None,
     ) -> None:
-        if methods is None:
-            methods = ["get"]
-        self._endpoints[key] = endpoint
+        if method is None:
+            method = "get"
+
         for path in path_entries:
-            self._rules.append(Rule(path, methods=methods, endpoint=key))
+            path = path.lstrip("/")
+            key = f"{version.value}:{method}:{path}:{content_type}"
+
+            self._versioned_rules.append(
+                Rule(f"/{version.value}/{path}", methods=[method], endpoint=key)
+            )
+            self._versioned_endpoints[version][key] = endpoint
+
+            if version == APIVersion.V1:
+                # alias 1.0 to v1
+                key = f"1.0:{method}:{path}:{content_type}"
+                self._versioned_rules.append(Rule(f"/1.0/{path}", methods=[method], endpoint=key))
+                self._versioned_endpoints[version][key] = endpoint
 
     @tracer.instrument("CheckmkRESTAPI._lookup_destination")
-    def _lookup_destination(self, environ: WSGIEnvironment) -> tuple[AbstractWSGIApp, PathArgs]:
+    def _lookup_destination(
+        self, environ: WSGIEnvironment
+    ) -> tuple[AbstractWSGIApp, PathArgs, APIVersion]:
         """Match the URL which is requested with the corresponding endpoint.
 
         The returning of the path variables should be considered a hack and should be removed
@@ -483,26 +587,36 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         if self._url_map is None:
             # NOTE: This needs to be executed in a Request context because it depends on
             # the configuration
-            self._url_map = self._build_url_map()
+            self._url_map = self._build_versioned_url_map()
 
         urls = self._url_map.bind_to_environ(environ)
+
         result: tuple[str, PathArgs] = urls.match(return_rule=False)
         endpoint_ident, matched_path_args = result
 
-        # Remove _site & _version (see Submount above), so the validators don't go crazy.
-        path_args = {
-            key: value
-            for key, value in matched_path_args.items()
-            if key not in ("_site", "_version")
-        }
+        # Remove _site (see Submount above), so the validators don't go crazy.
+        path_args = {key: value for key, value in matched_path_args.items() if key != "_site"}
 
-        return self._endpoints[endpoint_ident], path_args
+        # example: /heute/check_mk/api/1.0/openapi-doc.yaml
+        requested_version_str = urls.path_info.split("/")[4]
+
+        # 1.0 and v1 should map to the same endpoint
+        requested_version = (
+            APIVersion.V1
+            if requested_version_str == "1.0"
+            else APIVersion.from_string(requested_version_str)
+        )
+        return (
+            self._versioned_endpoints[requested_version][endpoint_ident],
+            path_args,
+            requested_version,
+        )
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         response: WSGIApplication
 
         try:
-            wsgi_endpoint, path_args = self._lookup_destination(environ)
+            wsgi_endpoint, path_args, _requested_version = self._lookup_destination(environ)
 
             if isinstance(wsgi_endpoint, LegacyEndpointAdapter):
                 g.endpoint = wsgi_endpoint.endpoint

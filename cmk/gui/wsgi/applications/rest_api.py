@@ -34,6 +34,7 @@ from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi import endpoint_registry
+from cmk.gui.openapi.framework.registry import EndpointDefinition
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
@@ -159,6 +160,21 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
             }
         ),
     )
+
+
+class VersionedEndpointAdapter(AbstractWSGIApp):
+    """Wrap an EndpointDefinition
+
+    Makes a "real" WSGI application out of a versioned definition.
+    """
+
+    def __init__(self, endpoint: EndpointDefinition, debug: bool = False) -> None:
+        super().__init__(debug)
+        self.endpoint = endpoint
+
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        # TODO: implement endpoint handling logic
+        raise NotImplementedError
 
 
 class LegacyEndpointAdapter(AbstractWSGIApp):

@@ -8,10 +8,9 @@
 """
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Callable
 
 import pytest
 

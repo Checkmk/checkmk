@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Callable
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion

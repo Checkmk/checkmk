@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Optional
 
 from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag
 
@@ -47,7 +46,7 @@ class EndpointFamilyRegistry:
             raise ValueError(f"Endpoint family {family.name} already registered")
         self._families[family.name] = family
 
-    def get(self, name: str) -> Optional[EndpointFamily]:
+    def get(self, name: str) -> EndpointFamily | None:
         return self._families.get(name)
 
     def get_all(self) -> list[EndpointFamily]:

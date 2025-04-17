@@ -6,8 +6,8 @@
 
 import enum
 import http.client
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Any
 
 from apispec import APISpec
 from werkzeug.utils import import_string

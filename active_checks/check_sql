@@ -355,10 +355,13 @@ def db2_execute(
 
 
 def sqlanywhere_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
+    site = os.getenv("OMD_SITE")
+
     try:
         import sqlanydb  # type: ignore[import-not-found]
     except ImportError as exc:
-        bail_out(3, "%s. Please install it via 'pip install sqlanydb'." % exc)
+        bail_out(3, f"{exc}. Please install via `omd[{site}]$ pip3 install sqlanydb`.")
+
     return sqlanydb.connect(uid=user, pwd=pwd, dbn=db_name, host=f"{host}:{port}")
 
 

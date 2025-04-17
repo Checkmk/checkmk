@@ -1873,33 +1873,7 @@ class History:
     corrupted: Sequence[Path]
 
 
-def _make_history_entry(
-    timestamp: int,
-    new: int,
-    changed: int,
-    removed: int,
-    delta_tree: ImmutableDeltaTree,
-    filter_tree: Sequence[SDFilterChoice] | None,
-) -> HistoryEntry | None:
-    if filter_tree is None:
-        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
-
-    if not (filtered_delta_tree := delta_tree.filter(filter_tree)):
-        return None
-
-    delta_stats = filtered_delta_tree.get_stats()
-    return HistoryEntry(
-        timestamp,
-        delta_stats["new"],
-        delta_stats["changed"],
-        delta_stats["removed"],
-        filtered_delta_tree,
-    )
-
-
-def _load_history_entry(
-    delta_tree_path: Path, timestamp: int, filter_tree: Sequence[SDFilterChoice] | None
-) -> HistoryEntry | None:
+def _load_history_entry(delta_tree_path: Path, timestamp: int) -> HistoryEntry | None:
     try:
         cached_data = store.load_object_from_file(delta_tree_path, default=None)
     except MKGeneralException:
@@ -1909,14 +1883,7 @@ def _load_history_entry(
         return None
 
     new, changed, removed, raw_delta_tree = cached_data
-    return _make_history_entry(
-        timestamp,
-        new,
-        changed,
-        removed,
-        deserialize_delta_tree(raw_delta_tree),
-        filter_tree,
-    )
+    return HistoryEntry(timestamp, new, changed, removed, deserialize_delta_tree(raw_delta_tree))
 
 
 def _compute_or_store_history_entry(
@@ -1924,7 +1891,6 @@ def _compute_or_store_history_entry(
     timestamp: int,
     previous_tree: ImmutableTree,
     current_tree: ImmutableTree,
-    filter_tree: Sequence[SDFilterChoice] | None,
 ) -> HistoryEntry | None:
     delta_tree = current_tree.difference(previous_tree)
     delta_stats = delta_tree.get_stats()
@@ -1936,8 +1902,23 @@ def _compute_or_store_history_entry(
             delta_tree_path,
             repr((new, changed, removed, serialize_delta_tree(delta_tree))),
         )
-        return _make_history_entry(timestamp, new, changed, removed, delta_tree, filter_tree)
+        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
     return None
+
+
+def _filter_history_entry(
+    entry: HistoryEntry, filter_tree: Sequence[SDFilterChoice]
+) -> HistoryEntry | None:
+    if not (filtered_delta_tree := entry.delta_tree.filter(filter_tree)):
+        return None
+    delta_stats = filtered_delta_tree.get_stats()
+    return HistoryEntry(
+        entry.timestamp,
+        delta_stats["new"],
+        delta_stats["changed"],
+        delta_stats["removed"],
+        filtered_delta_tree,
+    )
 
 
 def load_history(
@@ -1963,9 +1944,7 @@ def load_history(
             current_timestamp=current.timestamp,
         )
 
-        if (
-            entry := _load_history_entry(delta_tree_path, current.timestamp, filter_tree)
-        ) is not None:
+        if (entry := _load_history_entry(delta_tree_path, current.timestamp)) is not None:
             entries.append(entry)
             continue
 
@@ -1983,9 +1962,15 @@ def load_history(
 
         if (
             entry := _compute_or_store_history_entry(
-                delta_tree_path, current.timestamp, previous_tree, current_tree, filter_tree
+                delta_tree_path, current.timestamp, previous_tree, current_tree
             )
         ) is not None:
             entries.append(entry)
 
-    return History(entries=entries, corrupted=list(files.corrupted) + corrupted_deltas)
+    if filter_tree is None:
+        return History(entries=entries, corrupted=list(files.corrupted) + corrupted_deltas)
+
+    return History(
+        entries=[f for e in entries if (f := _filter_history_entry(e, filter_tree))],
+        corrupted=list(files.corrupted) + corrupted_deltas,
+    )

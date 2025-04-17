@@ -31,6 +31,7 @@ from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request
+from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.permission_tracking import (
     enable_permission_tracking,
     is_permission_tracking_enabled,
@@ -225,6 +226,11 @@ class Endpoint:
             OpenAPI spec. If not set, the endpoint will infer the spec information based on the
             endpoint's module (legacy).
 
+        removed_in_version:
+            The starting (inclusive) version from which the endpoint will be no longer available
+            in the REST-API. All subsequent REST API versions will also not include this
+            endpoint.
+
     """
 
     def __init__(
@@ -257,6 +263,7 @@ class Endpoint:
         accept: AcceptFieldType = "application/json",
         internal_user_only: bool = False,
         family_name: str | None = None,
+        removed_in_version: APIVersion | None = None,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -282,6 +289,7 @@ class Endpoint:
         self.accept = accept if isinstance(accept, list) else [accept]
         self.internal_user_only = internal_user_only
         self.family_name = family_name
+        self.removed_in_version = removed_in_version
 
         if deprecated_urls is not None:
             for url in deprecated_urls:

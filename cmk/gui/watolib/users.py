@@ -102,6 +102,7 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
                 action="edit-user",
                 message="Deleted user: %s" % user_id,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
                 object_ref=make_user_object_ref(user_id),
             )
         add_change(
@@ -140,6 +141,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
                 "Created new user: %s" % user_id if is_new_user else "Modified user: %s" % user_id
             ),
             user_id=user.id,
+            use_git=active_config.wato_use_git,
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
         )

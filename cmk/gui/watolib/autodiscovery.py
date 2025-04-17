@@ -17,6 +17,7 @@ from cmk.gui.background_job import (
     NoArgs,
     simple_job_target,
 )
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -82,6 +83,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                     object_ref=host.object_ref(),
                     user_id=user.id,
                     diff_text=discovery_result.diff_text,
+                    use_git=active_config.wato_use_git,
                 )
             else:
                 add_service_change(
@@ -99,6 +101,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 action="activate-changes",
                 message="Started activation of site %s" % self.site_id,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
 
         job_interface.send_result_message(_("Successfully discovered hosts"))

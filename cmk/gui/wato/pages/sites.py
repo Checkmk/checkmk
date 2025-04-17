@@ -991,6 +991,7 @@ class ModeDistributedMonitoring(WatoMode):
                     action="edit-site",
                     message=message,
                     user_id=user.id,
+                    use_git=active_config.wato_use_git,
                 )
                 flash(message)
                 return redirect(mode_url("sites"))

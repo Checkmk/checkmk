@@ -205,6 +205,7 @@ def test_log_audit_with_object_diff() -> None:
             message="Message",
             object_ref=None,
             user_id=UserId("calvin"),
+            use_git=False,
             diff_text=make_diff_text(old, new),
         )
 
@@ -229,6 +230,7 @@ def test_log_audit_with_html_message() -> None:
             message=HTML.without_escaping("Message <b>bla</b>"),
             object_ref=None,
             user_id=UserId("calvin"),
+            use_git=False,
         )
 
     store = AuditLogStore()

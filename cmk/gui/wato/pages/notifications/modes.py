@@ -2556,6 +2556,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 action=log_what,
                 message=log_text,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
         else:
             super()._add_change(log_what, log_text)
@@ -3251,6 +3252,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
                 action=log_what,
                 message=log_text,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
         else:
             super()._add_change(log_what, log_text)

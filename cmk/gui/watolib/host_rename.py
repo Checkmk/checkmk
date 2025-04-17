@@ -208,6 +208,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                         action="edit-rule",
                         message=f'Renamed host condition from "{oldname}" to "{newname}"',
                         user_id=user.id,
+                        use_git=active_config.wato_use_git,
                         diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )

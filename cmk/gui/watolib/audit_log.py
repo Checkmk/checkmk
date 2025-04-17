@@ -16,7 +16,6 @@ from typing import Any, NamedTuple, TypedDict
 from cmk.utils.user import UserId
 
 import cmk.gui.watolib.git
-from cmk.gui.config import active_config
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
@@ -167,12 +166,10 @@ def log_audit(
     action: str,
     message: LogMessage,
     user_id: UserId | None,
+    use_git: bool,
     object_ref: ObjectRef | None = None,
     diff_text: str | None = None,
-    use_git: bool | None = None,
 ) -> None:
-    if use_git is None:
-        use_git = active_config.wato_use_git
     if isinstance(message, LazyString):
         message = message.unlocalized_str()
 

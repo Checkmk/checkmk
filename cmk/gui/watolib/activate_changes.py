@@ -1782,6 +1782,7 @@ class ActivateChangesManager(ActivateChanges):
             action="activate-changes",
             message=log_msg,
             user_id=user.id,
+            use_git=active_config.wato_use_git,
         )
 
         if self._comment:
@@ -1789,6 +1790,7 @@ class ActivateChangesManager(ActivateChanges):
                 action="activate-changes",
                 message="Comment: %s" % self._comment,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
 
     def get_state(self) -> ActivationState:
@@ -2065,6 +2067,7 @@ def _prepare_for_activation_tasks(
                 action="activate-changes",
                 message="Started activation of site %s" % site_id,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             site_activation_states_per_site[site_id] = site_activation_state
 
@@ -2711,6 +2714,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         action="replication",
         message="Synchronized configuration from central site (local site ID is %s.)" % site_id,
         user_id=user.id,
+        use_git=active_config.wato_use_git,
     )
 
 

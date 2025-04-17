@@ -55,6 +55,7 @@ def add_change(
         message=text,
         object_ref=object_ref,
         user_id=user.id if add_user else UserId(""),
+        use_git=active_config.wato_use_git,
         diff_text=diff_text,
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()

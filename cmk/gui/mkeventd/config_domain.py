@@ -49,6 +49,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
                 action="mkeventd-activate",
                 message="Activated changes of event console configuration",
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             self._save_active_config()
             execute_command("RELOAD", site=omd_site())

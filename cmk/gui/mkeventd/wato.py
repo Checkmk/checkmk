@@ -3025,6 +3025,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             action="mkeventd-switchmode",
             message="Switched replication slave mode to %s" % new_mode,
             user_id=user.id,
+            use_git=active_config.wato_use_git,
         )
         flash(_("Switched to %s mode") % new_mode)
         return None

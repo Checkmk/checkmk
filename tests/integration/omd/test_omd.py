@@ -2,12 +2,17 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import logging
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import run
 from tests.testlib.version import version_from_env
+
+_logger = logging.getLogger(__name__)
 
 
 def test_run_omd(site: Site) -> None:
@@ -102,28 +107,117 @@ def test_run_omd_status_bare(site: Site) -> None:
         raise excp
 
 
-def test_run_omd_backup_and_omd_restore(site: Site) -> None:
+@pytest.mark.parametrize(
+    "cmd_option, bake_agents, patterns_not_allowed",
+    [
+        (
+            None,
+            False,
+            [],
+        ),
+        (
+            "--no-past",
+            False,
+            [
+                "var/check_mk/core/history",
+            ],
+        ),
+        (
+            "--no-agents",
+            True,
+            [
+                "var/check_mk/agents*/*",
+            ],
+        ),
+    ],
+)
+def test_run_omd_backup_and_omd_restore(
+    site: Site, cmd_option: str, bake_agents: bool, patterns_not_allowed: list
+) -> None:
     """
     Test the 'omd backup' and 'omd restore' commands.
+        * without special options
+        * with options --no-past and --no-agents
 
     This test creates a backup of the current site and then restores it with a new name.
+
+    Args:
+        cmd_option: command line option for "omd backup"
+        bake_agents: Should we bake agents on the site to be backed up?
+        patterns_not_allowed: list of globular patterns to check for disallowed files
     """
     site_factory = SiteFactory(
         version=version_from_env(),
         enforce_english_gui=False,
         prefix="",
     )
+
+    # TODO: run from a new site for "--no-past" and "--no-agents"
+
+    if bake_agents:
+        logging.info("Baking agents for site '%s'", site.id)
+        site.run(["cmk", "--bake-agents"])
+
+    # test sanity check: check that the files exist only after startup and site preparation
+    # (they are allowed and should exist NOW, but NOT in the backup)
+    # -> this way we will notice, if the application implementation using these files changed
+    #    (test might need to be adapted then)
+    for pattern in patterns_not_allowed:
+        files_existing_in_site = site.run(
+            ["find", str(site.root), "-path", f"{site.root}/{pattern}"]
+        ).stdout.splitlines()
+        assert files_existing_in_site, f"Files '{pattern}' should exist in started/running site."
+        logging.info(
+            "OK: Found %d files matching '%s' in running/prepared backup site '%s'",
+            len(files_existing_in_site),
+            pattern,
+            site.id,
+        )
+
     restored_site_name = "restored_site"
     restored_site = None
     backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
     try:
-        run(["omd", "backup", site.id, str(backup_path)], sudo=True, check=True)
+        # run the backup
+        if cmd_option is None:
+            backup_cmd = ["omd", "backup", site.id, str(backup_path)]
+        else:
+            backup_cmd = ["omd", "backup", cmd_option, site.id, str(backup_path)]
+        logging.info("Running backup with '%s'", " ".join(backup_cmd))
+        run(backup_cmd, sudo=True, check=True)
         assert backup_path.stat().st_size > 0, "Backup file was not created."
 
+        # run restore
+        # (don't start yet, as we want to check the files first)
         run(["omd", "restore", restored_site_name, str(backup_path)], sudo=True, check=True)
-        restored_site = site_factory.get_existing_site(restored_site_name)
+        restored_site = site_factory.get_existing_site(restored_site_name, start=False)
         assert restored_site.exists(), "Restored site does not exist."
+        assert not restored_site.is_running(), "Restored site should not be auto-started."
+
+        # check that forbidden files are not in the restored site
+        # (depending on the backup option)
+        forbidden_files = []
+        for pattern in patterns_not_allowed:
+            files_existing_in_site = restored_site.run(
+                ["find", str(restored_site.root), "-path", f"{restored_site.root}/{pattern}"]
+            ).stdout.splitlines()
+            if files_existing_in_site:
+                logging.info(
+                    "Detected %d forbidden files in the backup for '%s': %s",
+                    len(files_existing_in_site),
+                    pattern,
+                    files_existing_in_site,
+                )
+                forbidden_files.extend(files_existing_in_site)
+        if forbidden_files:
+            raise AssertionError(
+                f"Detected {len(forbidden_files)} forbidden files in the backup: {forbidden_files}."
+            )
+
+        # now start the restored site
+        restored_site.start()
         assert restored_site.is_running(), "Restored site is not running."
+
     finally:
         if backup_path.exists():
             run(["rm", "-rf", str(backup_path)], sudo=True)

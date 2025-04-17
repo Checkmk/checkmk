@@ -41,3 +41,21 @@ description:
   Note, the Oracle check supports procedure calls. However, it must return exactly one output
   variable. The value of this variable must be in the same format as the return value of the SQL
   statement described above.
+
+  -- SQL Anywhere Support --
+
+  SQL Anywhere should be installed under your site's {~/local/lib} folder.
+
+  Ensure that the site has permission to use the SQL Anywhere files:
+
+  {omd[site]$ chown -R site:site /omd/sites/site/local/lib/sqlanywhere*}
+
+  SQL Anywhere requires certain environment variables to be set at runtime. So, add the following
+  line to the site's {~/.bashrc} file:
+
+  {source ./local/lib/sqlanywhere17/bin64/sa_config.sh}
+
+  This example is unique to an installation of SQL Anywhere 17 on a 64 bit machine, but you may
+  need to adapt this to fit your installation.
+
+  Finally, run {omd restart}, so that the environment variables are loaded into the site.

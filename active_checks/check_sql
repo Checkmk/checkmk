@@ -8,10 +8,9 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.org/pypi/ibm_db
 
-# SQLAnywhere support requires installation of the SAP SQL Anywhere binaries:
-# https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0
-# as well as the sqlanydb Python DB driver for SqlAnywhere:
-# https://pypi.org/project/sqlanydb/
+# SQLAnywhere support requires installation of the SAP SQL Anywhere binaries, the `sqlanydb` python
+# package, and certain environment variables set in the site's runtime environment. See the checkman
+# documentation for more information.
 """Checkmk SQL Database Request Check"""
 
 import argparse
@@ -356,6 +355,19 @@ def db2_execute(
 
 def sqlanywhere_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     site = os.getenv("OMD_SITE")
+
+    if not any("sqlanywhere" in path for path in sys.path):
+        message = (
+            "ERROR: SQL Anywhere binaries weren't found on your $PATH\nMake sure that they are "
+            f"installed under /omd/sites/{site}/local/lib with the correct file permissions:\n\n"
+            f"$ chown -R {site}:{site} /omd/sites/{site}/local/lib/sqlanywhere*\n\n"
+            f"Now, source the environment variables inside: /omd/sites/{site}/.bashrc\n\n"
+            "Here is how it'd look if SQL Anywhere 17 on a 64 bit machine is installed:\n\n"
+            "source ./local/lib/sqlanywhere17/bin64/sa_config.sh\n\n"
+            "Finally, run 'omd restart' so that the site loads the necessary environment "
+            "variables."
+        )
+        bail_out(3, message)
 
     try:
         import sqlanydb  # type: ignore[import-not-found]

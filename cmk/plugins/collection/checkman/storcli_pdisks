@@ -1,5 +1,5 @@
 title: LSI MegaRAID: State of Physical Disks (via StorCLI)
-agents: windows/linux
+agents: windows, linux
 catalog: os/storage
 license: GPLv2
 distribution: check_mk

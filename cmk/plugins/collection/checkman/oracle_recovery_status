@@ -1,5 +1,5 @@
 title: Oracle: Checkpoint and User Managed Backup State of Datafiles
-agents: linux, aix, hp/ux, Solaris
+agents: linux, aix, hpux, solaris
 catalog: app/oracle
 license: GPLv2
 distribution: check_mk

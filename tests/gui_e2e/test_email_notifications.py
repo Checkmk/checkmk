@@ -19,10 +19,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.add_rule_filesystems import AddR
 from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration import (
     NotificationConfiguration,
 )
-from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import (
-    AddNotificationRule,
-    EditNotificationRule,
-)
+from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import EditNotificationRule
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
@@ -101,21 +98,24 @@ def test_filesystem_email_notifications(
     # The scrollbar interrupts the interaction with rule edit button -> collapse overview
     notification_configuration_page.collapse_notification_overview(True)
     notification_configuration_page.notification_rule_copy_button(0).click()
+    notification_configuration_page.clone_and_edit_button.click()
 
     logger.info("Modify the cloned rule")
-    add_notification_rule_page = AddNotificationRule(
-        notification_configuration_page.page, navigate_to_page=False
+    cloned_notification_rule_page = EditNotificationRule(
+        notification_configuration_page.page,
+        rule_position=1,
+        navigate_to_page=False,
     )
-    add_notification_rule_page.modify_notification_rule(
+    cloned_notification_rule_page.modify_notification_rule(
         username, f"{service_name}$", notification_description
     )
 
     logger.info("Disable the default notification rule")
-    edit_notification_rule_page = EditNotificationRule(
+    default_notification_rule_page = EditNotificationRule(
         notification_configuration_page.page, rule_position=0
     )
-    edit_notification_rule_page.check_disable_rule(True)
-    edit_notification_rule_page.apply_and_create_another_rule_button.click()
+    default_notification_rule_page.check_disable_rule(True)
+    default_notification_rule_page.apply_and_create_another_rule_button.click()
 
     logger.info(
         "Add rule for filesystems to change status '%s' when used space is more then %s percent",
@@ -169,14 +169,15 @@ def test_filesystem_email_notifications(
         notification_configuration_page.navigate()
         # The scrollbar interrupts the interaction with rule delete button -> collapse overview
         notification_configuration_page.collapse_notification_overview(True)
+        # delete the cloned rule.
         notification_configuration_page.delete_notification_rule(notification_description)
 
         logger.info("Enable the default notification rule")
-        edit_notification_rule_page = EditNotificationRule(
+        default_notification_rule_page = EditNotificationRule(
             notification_configuration_page.page, rule_position=0
         )
-        edit_notification_rule_page.check_disable_rule(False)
-        edit_notification_rule_page.apply_and_create_another_rule_button.click()
+        default_notification_rule_page.check_disable_rule(False)
+        default_notification_rule_page.apply_and_create_another_rule_button.click()
 
         if service_search_page is not None:
             filesystems_rules_page = Ruleset(

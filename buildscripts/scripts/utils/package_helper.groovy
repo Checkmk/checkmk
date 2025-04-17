@@ -65,8 +65,15 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             dependency_paths: [
                 "agents/wnx",
                 "agents/windows",
+                "agents/modules",
                 "packages/host/cmk-agent-ctl",
                 "packages/host/mk-sql",
+                "third_party/asio",
+                "third_party/googletest",
+                "third_party/fmt",
+                "third_party/yaml-cpp",
+                "third_party/simpleini",
+                "third_party/openhardwaremonitor",
             ],
             install_cmd: """\
                 cp \

@@ -13,9 +13,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import FormHelp from '@/form/private/FormHelp.vue'
 import { useId } from '@/form/utils'
-import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
-import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
@@ -237,10 +235,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                       : 'both'
                   "
                   :label="dict_element.dict_config.parameter_form.title"
+                  :help="dict_element.dict_config.parameter_form.help"
                   @update:model-value="toggleElement(dict_element.dict_config.name)"
                 />
-                <CmkSpace size="small" />
-                <HelpText :help="dict_element.dict_config.parameter_form.help" />
               </span>
               <FormIndent
                 v-if="dict_element.is_active"

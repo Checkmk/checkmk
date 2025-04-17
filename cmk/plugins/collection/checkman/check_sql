@@ -27,12 +27,17 @@ description:
   Currently the check works with MySQL, Postgresql, MSSQL, DB2, SQL Anywhere and Oracle databases.
   For this to work, additional python libraries must be installed (depending on the type of database one of {psycopg2}, {pymysql}, {pymssql}, {oracledb}, {ibm_db}, {ibm_db_dbi} and {sqlanydb}).
   Remember to use {pip3} when installing python libraries from the omd shell.
-  For Oracle support the Oracle instantclient needs to be installed as well, and the LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of that package.
-
-  The oracle check supports procedure calls.
-  It must return exactly one output variable.
-  The value of the variable must be in the same format as the return value of the sql statement described above.
 
   This check is configured by the WATO ruleset "Check SQL Database".
 
   See the {usage} page of the check for details about the invocation on the command line ({check_sql --help}).
+
+  -- Oracle Support --
+
+  In order to use Oracle in this check, {instantclient} must be installed. You also need to modify
+  the {LD_LIBRARY_PATH} environment variable to point to the location where the {libclntsh.so}
+  library is located.
+
+  Note, the Oracle check supports procedure calls. However, it must return exactly one output
+  variable. The value of this variable must be in the same format as the return value of the SQL
+  statement described above.

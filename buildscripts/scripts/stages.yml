@@ -409,6 +409,11 @@ STAGES:
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
+    - NAME: "Detect Merge Conflicts"
+      DIR: ""
+      COMMAND: "./scripts/check-merge-conflicts ${PATCHSET_REVISION} &> ${RESULTS}/merge-conflicts.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/merge-conflicts.txt"
+
     ########## packages ########################################################
 
     - NAME: 'Package check-cert'

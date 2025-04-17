@@ -2145,8 +2145,8 @@ class ABCEditRuleMode(WatoMode):
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
-                "edit-rule",
-                _('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
+                action_name="edit-rule",
+                text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
                 % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
                 diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),

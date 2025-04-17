@@ -246,8 +246,8 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
 
         # All sites and domains can be affected by a restore: Better restart everything.
         _changes.add_change(
-            "changes-discarded",
-            msg,
+            action_name="changes-discarded",
+            text=msg,
             domains=ABCConfigDomain.enabled_domains(),
             need_restart=True,
         )

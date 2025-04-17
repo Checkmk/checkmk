@@ -272,8 +272,8 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
         if not has_errors and not is_wato_slave_site():
             # Force synchronization of the config after a successful configuration update
             add_change(
-                "cmk-update-config",
-                "Successfully updated Checkmk configuration",
+                action_name="cmk-update-config",
+                text="Successfully updated Checkmk configuration",
                 need_sync=True,
             )
 

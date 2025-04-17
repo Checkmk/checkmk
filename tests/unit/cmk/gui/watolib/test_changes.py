@@ -249,14 +249,26 @@ def test_log_audit_with_html_message() -> None:
 def test_disable_activate_changes_writer(mocker: MockerFixture, request_context: None) -> None:
     add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
 
-    add_change("ding", "dong", sites=[SiteId("a")])
+    add_change(
+        action_name="ding",
+        text="dong",
+        sites=[SiteId("a")],
+    )
     add_to_site_mock.assert_called_once()
     add_to_site_mock.reset_mock()
 
     with ActivateChangesWriter.disable():
-        add_change("ding", "dong", sites=[SiteId("a")])
+        add_change(
+            action_name="ding",
+            text="dong",
+            sites=[SiteId("a")],
+        )
     add_to_site_mock.assert_not_called()
     add_to_site_mock.reset_mock()
 
-    add_change("ding", "dong", sites=[SiteId("a")])
+    add_change(
+        action_name="ding",
+        text="dong",
+        sites=[SiteId("a")],
+    )
     add_to_site_mock.assert_called_once()

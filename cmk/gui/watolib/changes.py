@@ -33,6 +33,7 @@ from cmk.gui.watolib.site_changes import SiteChanges
 
 
 def add_change(
+    *,
     action_name: str,
     text: LogMessage,
     object_ref: ObjectRef | None = None,
@@ -193,6 +194,7 @@ class ActivateChangesWriter:
 
 
 def add_service_change(
+    *,
     action_name: str,
     text: str,
     object_ref: ObjectRef,
@@ -203,8 +205,8 @@ def add_service_change(
     need_sync: bool = False,
 ) -> None:
     add_change(
-        action_name,
-        text,
+        action_name=action_name,
+        text=text,
         object_ref=object_ref,
         sites=[site_id],
         diff_text=diff_text,

@@ -168,8 +168,8 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
         _changes.add_change(
-            f"{action}-{self._mode_type.type_name()}",
-            text,
+            action_name=f"{action}-{self._mode_type.type_name()}",
+            text=text,
             domains=self._mode_type.affected_config_domains(),
             sites=affected_sites,
         )

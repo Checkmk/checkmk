@@ -87,12 +87,12 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 )
             else:
                 add_service_change(
-                    "autodiscovery",
-                    message,
-                    host.object_ref(),
-                    [config_domain_registry[CORE_DOMAIN]],
-                    {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-                    self.site_id,
+                    action_name="autodiscovery",
+                    text=message,
+                    object_ref=host.object_ref(),
+                    domains=[config_domain_registry[CORE_DOMAIN]],
+                    domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+                    site_id=self.site_id,
                     diff_text=discovery_result.diff_text,
                 )
 

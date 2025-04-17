@@ -946,8 +946,8 @@ class ModeDistributedMonitoring(WatoMode):
             del site["secret"]
         self._site_mgmt.save_sites(configured_sites)
         _changes.add_change(
-            "edit-site",
-            _("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
+            action_name="edit-site",
+            text=_("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
             domains=[ConfigDomainGUI()],
             sites=[omd_site()],
         )
@@ -1520,8 +1520,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             save_site_global_settings(self._current_settings)
 
         _changes.add_change(
-            "edit-configvar",
-            msg,
+            action_name="edit-configvar",
+            text=msg,
             sites=[self._site_id],
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
@@ -1698,8 +1698,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
         trusted_cas.append(cert_str)
 
         _changes.add_change(
-            "edit-configvar",
-            _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
+            action_name="edit-configvar",
+            text=_("Added CA with fingerprint %s to trusted certificate authorities")
+            % digest_sha256,
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )

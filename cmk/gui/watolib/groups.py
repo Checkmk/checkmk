@@ -168,7 +168,11 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
 
 
 def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
-    add_change(action_name, text, sites=customer_api().customer_group_sites(group))
+    add_change(
+        action_name=action_name,
+        text=text,
+        sites=customer_api().customer_group_sites(group),
+    )
 
 
 def check_modify_group_permissions(group_type: GroupType) -> None:

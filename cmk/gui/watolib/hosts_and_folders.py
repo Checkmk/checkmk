@@ -2192,8 +2192,8 @@ class Folder(FolderProtocol):
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
         add_change(
-            "new-folder",
-            _l("Created new folder %s") % new_subfolder.alias_path(),
+            action_name="new-folder",
+            text=_l("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
@@ -2218,8 +2218,8 @@ class Folder(FolderProtocol):
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
         add_change(
-            "delete-folder",
-            _l("Deleted folder %s") % subfolder.alias_path(),
+            action_name="delete-folder",
+            text=_l("Deleted folder %s") % subfolder.alias_path(),
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
         )
@@ -2290,8 +2290,8 @@ class Folder(FolderProtocol):
 
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
-            "move-folder",
-            _l("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+            action_name="move-folder",
+            text=_l("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
@@ -2345,8 +2345,8 @@ class Folder(FolderProtocol):
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change(
-            "edit-folder",
-            _l("Edited properties of folder %s") % self.title(),
+            action_name="edit-folder",
+            text=_l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
@@ -2426,8 +2426,8 @@ class Folder(FolderProtocol):
         self._num_hosts = len(self._hosts)
 
         add_change(
-            "create-host",
-            _l("Created new host %s.") % host_name,
+            action_name="create-host",
+            text=_l("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
@@ -2460,8 +2460,8 @@ class Folder(FolderProtocol):
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
             add_change(
-                "delete-host",
-                _l("Deleted host %s") % host_name,
+                action_name="delete-host",
+                text=_l("Deleted host %s") % host_name,
                 object_ref=host.object_ref(),
                 sites=[host.site_id()],
                 domains=[config_domain_registry[CORE_DOMAIN]],
@@ -2569,8 +2569,8 @@ class Folder(FolderProtocol):
             old_folder_text = self.path() or self.tree.root_folder().title()
             new_folder_text = target_folder.path() or self.tree.root_folder().title()
             add_change(
-                "move-host",
-                _l('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
+                action_name="move-host",
+                text=_l('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
                 % (
                     old_folder_text,
                     self._id,
@@ -2625,8 +2625,8 @@ class Folder(FolderProtocol):
 
         self.attributes["parents"] = [HostName(h) for h in new_parents]
         add_change(
-            "rename-parent",
-            _l('Renamed parent from %s to %s in folder "%s"')
+            action_name="rename-parent",
+            text=_l('Renamed parent from %s to %s in folder "%s"')
             % (oldname, newname, self.alias_path()),
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
@@ -3385,8 +3385,8 @@ class Host:
 
     def add_edit_host_change(self, diff: str, affected_sites: list[SiteId]) -> None:
         add_change(
-            "edit-host",
-            _l("Modified host %s.") % self.name(),
+            action_name="edit-host",
+            text=_l("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
@@ -3423,8 +3423,8 @@ class Host:
         self.folder().save_hosts()
 
         add_change(
-            "edit-host",
-            _l("Removed explicit attributes of host %s.") % self.name(),
+            action_name="edit-host",
+            text=_l("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
@@ -3477,8 +3477,8 @@ class Host:
 
         self._cluster_nodes = [HostName(h) for h in new_cluster_nodes]
         add_change(
-            "rename-node",
-            _l("Renamed cluster node from %s into %s.") % (oldname, newname),
+            action_name="rename-node",
+            text=_l("Renamed cluster node from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3494,8 +3494,8 @@ class Host:
 
         self.attributes["parents"] = [HostName(h) for h in new_parents]
         add_change(
-            "rename-parent",
-            _l("Renamed parent from %s into %s.") % (oldname, newname),
+            action_name="rename-parent",
+            text=_l("Renamed parent from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3504,8 +3504,8 @@ class Host:
 
     def rename(self, new_name: HostName) -> None:
         add_change(
-            "rename-host",
-            _l("Renamed host from %s into %s.") % (self.name(), new_name),
+            action_name="rename-host",
+            text=_l("Renamed host from %s into %s.") % (self.name(), new_name),
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,

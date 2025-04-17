@@ -36,8 +36,8 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
 
     logger.debug("Add changes for the connected sites")
     add_change(
-        "edit-sites",
-        _("Renamed site %s") % old_site_id,
+        action_name="edit-sites",
+        text=_("Renamed site %s") % old_site_id,
         domains=[ConfigDomainGUI()],
         sites=list(get_all_replicated_sites()),
         need_restart=True,

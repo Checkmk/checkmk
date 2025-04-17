@@ -645,8 +645,8 @@ def add_changes_after_editing_broker_connection(
     )
 
     add_change(
-        "edit-sites",
-        change_message,
+        action_name="edit-sites",
+        text=change_message,
         need_sync=True,
         need_restart=True,
         sites=[omd_site()] + sites,
@@ -671,8 +671,8 @@ def add_changes_after_editing_site_connection(
 
     sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
-        "edit-sites",
-        change_message,
+        action_name="edit-sites",
+        text=change_message,
         sites=sites_to_update,
         # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
         # significant more time to restart than the other domains, we now try to be more specific
@@ -712,6 +712,11 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
+        add_change(
+            action_name="edit-sites",
+            text=change_message,
+            sites=[omd_site()],
+            domains=[ConfigDomainGUI()],
+        )
 
     return change_message

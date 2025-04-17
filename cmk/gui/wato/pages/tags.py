@@ -209,7 +209,10 @@ class ModeTags(ABCTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             update_tag_config(self._tag_config)
-            _changes.add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
+            _changes.add_change(
+                action_name="edit-tags",
+                text=_("Removed tag group %s (%s)") % (message, del_id),
+            )
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_delete"]))
@@ -270,7 +273,10 @@ class ModeTags(ABCTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             update_tag_config(self._tag_config)
-            _changes.add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
+            _changes.add_change(
+                action_name="edit-tags",
+                text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
+            )
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_del_aux"]))
@@ -289,7 +295,10 @@ class ModeTags(ABCTagMode):
             raise MKUserError(None, "%s" % e)
         update_tag_config(self._tag_config)
         self._load_effective_config()
-        _changes.add_change("edit-tags", _("Changed order of tag groups"))
+        _changes.add_change(
+            action_name="edit-tags",
+            text=_("Changed order of tag groups"),
+        )
         return None
 
     def page(self) -> None:
@@ -780,7 +789,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                 raise MKUserError(None, "%s" % e)
             update_tag_config(changed_hosttags_config)
             _changes.add_change(
-                "edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id
+                action_name="edit-hosttags",
+                text=_("Created new host tag group '%s'") % changed_tag_group.id,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -807,7 +817,8 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         update_tag_config(changed_hosttags_config)
         _changes.add_change(
-            "edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id)
+            action_name="edit-hosttags",
+            text=_("Edited host tag group %s (%s)") % (message, self._id),
         )
         if isinstance(message, str):
             flash(message)

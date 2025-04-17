@@ -321,8 +321,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         ]
 
     @abc.abstractmethod
-    def _add_change(self, log_what: str, log_text: str) -> None:
-        raise NotImplementedError()
+    def _add_change(self, *, action_name: str, text: str) -> None: ...
 
     def _generic_rule_list_actions(
         self,
@@ -334,7 +333,10 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         edit_rules = list(rules)
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
-            self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
+            self._add_change(
+                action_name=what + "-delete-rule",
+                text=_("Deleted %s %d") % (what_title, nr),
+            )
             del edit_rules[nr]
             save_rules(edit_rules)
 
@@ -347,7 +349,8 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                 edit_rules[to_pos:to_pos] = [rule]
                 save_rules(edit_rules)
                 self._add_change(
-                    what + "-move-rule", _("Changed position of %s %d") % (what_title, from_pos)
+                    action_name=what + "-move-rule",
+                    text=_("Changed position of %s %d") % (what_title, from_pos),
                 )
 
 

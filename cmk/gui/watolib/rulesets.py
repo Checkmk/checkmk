@@ -715,8 +715,8 @@ class Ruleset:
             self.append_rule(rule.folder, rule)
 
         add_change(
-            "new-rule",
-            _l('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
+            action_name="new-rule",
+            text=_l('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
@@ -757,8 +757,8 @@ class Ruleset:
 
     def add_new_rule_change(self, index: int, folder: Folder, rule: Rule) -> None:
         add_change(
-            "new-rule",
-            _('Created new rule #%d in ruleset "%s" in folder "%s"')
+            action_name="new-rule",
+            text=_('Created new rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), folder.alias_path()),
             sites=folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
@@ -926,8 +926,8 @@ class Ruleset:
         folder_rules[index] = rule
 
         add_change(
-            "edit-rule",
-            _l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
+            action_name="edit-rule",
+            text=_l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
@@ -944,8 +944,8 @@ class Ruleset:
 
         if create_change:
             add_change(
-                "edit-rule",
-                _l('Deleted rule #%d in ruleset "%s" in folder "%s"')
+                action_name="edit-rule",
+                text=_l('Deleted rule #%d in ruleset "%s" in folder "%s"')
                 % (index, self.title(), rule.folder.alias_path()),
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
@@ -962,8 +962,8 @@ class Ruleset:
         rules.remove(rule)
         rules.insert(index, rule)
         add_change(
-            "edit-ruleset",
-            _l('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
+            action_name="edit-ruleset",
+            text=_l('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
             % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),

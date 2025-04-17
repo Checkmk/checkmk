@@ -215,8 +215,8 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
 
         if changed_folder_rulesets:
             add_change(
-                "edit-ruleset",
-                _l("Renamed host in %d rulesets of folder %s")
+                action_name="edit-ruleset",
+                text=_l("Renamed host in %d rulesets of folder %s")
                 % (len(changed_folder_rulesets), folder.title()),
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
@@ -250,8 +250,8 @@ def _rename_hosts_in_check_mk(
         # Restart is done by remote automation (below), so don't do it during rename/sync
         # The sync is automatically done by the remote automation call
         add_change(
-            "renamed-hosts",
-            message,
+            action_name="renamed-hosts",
+            text=message,
             sites=[site_id],
             need_restart=False,
             prevent_discard_changes=True,

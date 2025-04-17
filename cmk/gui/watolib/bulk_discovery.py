@@ -459,8 +459,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_hosts_succeeded += 1
 
         add_service_change(
-            "bulk-discovery",
-            _(
+            action_name="bulk-discovery",
+            text=_(
                 "Did service discovery on host %s: %d added, %d removed, %d kept, "
                 "%d total services and %d host labels added, %d host labels total"
             )
@@ -473,10 +473,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 result.self_new_host_labels,
                 result.self_total_host_labels,
             ),
-            host.object_ref(),
-            [config_domain_registry[CORE_DOMAIN]],
-            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            host.site_id(),
+            object_ref=host.object_ref(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+            site_id=host.site_id(),
             diff_text=result.diff_text,
         )
 

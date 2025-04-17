@@ -106,8 +106,8 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
                 object_ref=make_user_object_ref(user_id),
             )
         add_change(
-            "edit-users",
-            _l("Deleted user: %s") % ", ".join(deleted_users),
+            action_name="edit-users",
+            text=_l("Deleted user: %s") % ", ".join(deleted_users),
             sites=None if affected_sites == "all" else list(affected_sites),
         )
         userdb.save_users(all_users, datetime.now())
@@ -162,14 +162,14 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
 
     if new_users_info:
         add_change(
-            "edit-users",
-            _l("Created new users: %s") % ", ".join(new_users_info),
+            action_name="edit-users",
+            text=_l("Created new users: %s") % ", ".join(new_users_info),
             sites=None if affected_sites == "all" else list(affected_sites),
         )
     if modified_users_info:
         add_change(
-            "edit-users",
-            _l("Modified users: %s") % ", ".join(modified_users_info),
+            action_name="edit-users",
+            text=_l("Modified users: %s") % ", ".join(modified_users_info),
             sites=None if affected_sites == "all" else list(affected_sites),
         )
         hooks.call("users-changed", modified_users_info)

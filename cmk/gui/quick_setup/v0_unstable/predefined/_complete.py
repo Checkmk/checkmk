@@ -354,8 +354,8 @@ def _create_and_save_special_agent_bundle(
     # revert changes does not work correctly when a config sync to another site occurred
     # for consistency reasons we always prevent the user from reverting the changes
     add_change(
-        "create-quick-setup",
-        _("Created Quick setup {bundle_id}").format(bundle_id=bundle_id),
+        action_name="create-quick-setup",
+        text=_("Created Quick setup {bundle_id}").format(bundle_id=bundle_id),
         prevent_discard_changes=True,
     )
 

@@ -116,7 +116,10 @@ def delete_timeperiod(name: TimeperiodName) -> None:
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods)
-    _changes.add_change("edit-timeperiods", _("Deleted time period %s") % name)
+    _changes.add_change(
+        action_name="edit-timeperiods",
+        text=_("Deleted time period %s") % name,
+    )
 
 
 def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
@@ -129,7 +132,10 @@ def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
 
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
-    _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
+    _changes.add_change(
+        action_name="edit-timeperiods",
+        text=_("Modified time period %s") % name,
+    )
 
 
 def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
@@ -142,7 +148,10 @@ def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
 
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
-    _changes.add_change("edit-timeperiods", _("Created new time period %s") % name)
+    _changes.add_change(
+        action_name="edit-timeperiods",
+        text=_("Created new time period %s") % name,
+    )
 
 
 def verify_timeperiod_name_exists(name: str) -> bool:

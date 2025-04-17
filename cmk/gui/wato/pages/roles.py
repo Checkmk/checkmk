@@ -121,14 +121,18 @@ class ModeRoles(WatoMode):
             role_id = RoleID(request.get_ascii_input_mandatory("_delete"))
             userroles.delete_role(role_id)
             _changes.add_change(
-                "edit-roles", _("Deleted role '%s'") % role_id, sites=get_login_sites()
+                action_name="edit-roles",
+                text=_("Deleted role '%s'") % role_id,
+                sites=get_login_sites(),
             )
 
         elif request.var("_clone"):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
             userroles.clone_role(role_id)
             _changes.add_change(
-                "edit-roles", _("Created new role '%s'") % role_id, sites=get_login_sites()
+                action_name="edit-roles",
+                text=_("Created new role '%s'") % role_id,
+                sites=get_login_sites(),
             )
 
         return redirect(self.mode_url())
@@ -263,7 +267,9 @@ class ModeRoleTwoFactor(WatoMode):
         userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=self._role_id)
         userroles.logout_users_with_role(self._role_id)
         _changes.add_change(
-            "edit-roles", _("Modified user role '%s'") % self._role_id, sites=get_login_sites()
+            action_name="edit-roles",
+            text=_("Modified user role '%s'") % self._role_id,
+            sites=get_login_sites(),
         )
         return redirect(mode_url(ModeRoles.name()))
 
@@ -345,7 +351,9 @@ class ModeEditRole(WatoMode):
         self._role_id = RoleID(new_id)
 
         _changes.add_change(
-            "edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites()
+            action_name="edit-roles",
+            text=_("Modified user role '%s'") % new_id,
+            sites=get_login_sites(),
         )
         return url
 

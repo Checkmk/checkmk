@@ -717,12 +717,12 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
             len(host_labels),
         )
         _changes.add_service_change(
-            "update-host-labels",
-            message,
-            host.object_ref(),
-            [config_domain_registry[CORE_DOMAIN]],
-            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            host.site_id(),
+            action_name="update-host-labels",
+            text=message,
+            object_ref=host.object_ref(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+            site_id=host.site_id(),
         )
         update_host_labels(
             host.site_id(),
@@ -1011,12 +1011,12 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
     """
     if action == DiscoveryAction.TABULA_RASA:
         _changes.add_service_change(
-            "refresh-autochecks",
-            _("Refreshed check configuration of host '%s'") % host.name(),
-            host.object_ref(),
-            [config_domain_registry[CORE_DOMAIN]],
-            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            host.site_id(),
+            action_name="refresh-autochecks",
+            text=_("Refreshed check configuration of host '%s'") % host.name(),
+            object_ref=host.object_ref(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+            site_id=host.site_id(),
         )
 
     if site_is_local(active_config, host.site_id()):

@@ -51,22 +51,22 @@ def remove_password(ident: str) -> None:
 def _add_change(ident: str, change_type: str) -> None:
     if change_type == "new":  # create password
         add_change(
-            "add-password",
-            f"Added the password {ident}",
+            action_name="add-password",
+            text=f"Added the password {ident}",
             domains=[ConfigDomainCore()],
             sites=None,
         )
     elif change_type == "edit":
         add_change(
-            "edit-password",
-            f"Edited the password '{ident}'",
+            action_name="edit-password",
+            text=f"Edited the password '{ident}'",
             domains=[ConfigDomainCore()],
             sites=None,
         )
     else:  # delete
         add_change(
-            "delete-password",
-            f"Removed the password '{ident}'",
+            action_name="delete-password",
+            text=f"Removed the password '{ident}'",
             domains=[ConfigDomainCore()],
             sites=None,
         )

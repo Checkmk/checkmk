@@ -193,12 +193,13 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             self._attrs.append(self._attr)
 
             _changes.add_change(
-                "edit-%sattr" % self._type,
-                _("Create new %s attribute %s") % (self._type, self._name),
+                action_name="edit-%sattr" % self._type,
+                text=_("Create new %s attribute %s") % (self._type, self._name),
             )
         else:
             _changes.add_change(
-                "edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name)
+                action_name="edit-%sattr" % self._type,
+                text=_("Modified %s attribute %s") % (self._type, self._name),
             )
             self._attr["title"] = title
             self._attr["topic"] = topic
@@ -512,7 +513,10 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         save_custom_attrs_to_mk_file(self._all_attrs)
         remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
         self._update_config()
-        _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
+        _changes.add_change(
+            action_name="edit-%sattrs" % self._type,
+            text=_("Deleted attribute %s") % (delname),
+        )
         return redirect(self.mode_url())
 
     def page(self) -> None:

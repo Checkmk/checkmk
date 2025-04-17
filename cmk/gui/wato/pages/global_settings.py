@@ -400,8 +400,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         if self._varname == "trusted_certificate_authorities":
             ConfigDomainCACertificates.log_changes(current, new_value)
         _changes.add_change(
-            "edit-configvar",
-            msg,
+            action_name="edit-configvar",
+            text=msg,
             sites=self._affected_sites(),
             domains=[(domain := self._config_variable.domain())],
             need_restart=self._config_variable.need_restart(),
@@ -597,8 +597,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         save_global_settings(self._current_settings)
 
         _changes.add_change(
-            "edit-configvar",
-            msg,
+            action_name="edit-configvar",
+            text=msg,
             domains=[(domain := config_variable.domain())],
             need_restart=config_variable.need_restart(),
             need_apache_reload=config_variable.need_apache_reload(),

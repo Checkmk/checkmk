@@ -579,8 +579,8 @@ class SiteManagement:
         cls.save_sites(all_sites)
 
         cmk.gui.watolib.changes.add_change(
-            "edit-sites",
-            _("Deleted site %s") % site_id,
+            action_name="edit-sites",
+            text=_("Deleted site %s") % site_id,
             domains=domains,
             # Exclude site which is about to be removed. The activation won't be executed for that
             # site anymore, so there is no point in adding a change for this site

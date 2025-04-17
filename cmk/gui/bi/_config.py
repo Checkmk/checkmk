@@ -256,7 +256,12 @@ class ABCBIMode(WatoMode):
 
     def _add_change(self, action_name: str, text: LogMessage) -> None:
         site_ids = list(wato_slave_sites().keys()) + [omd_site()]
-        _changes.add_change(action_name, text, domains=[ConfigDomainGUI()], sites=site_ids)
+        _changes.add_change(
+            action_name=action_name,
+            text=text,
+            domains=[ConfigDomainGUI()],
+            sites=site_ids,
+        )
 
     def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])

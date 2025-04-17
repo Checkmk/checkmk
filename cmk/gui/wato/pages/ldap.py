@@ -827,17 +827,17 @@ class ModeEditLDAPConnection(WatoMode):
                 )
             _all_connections[connection_cfg["id"]] = connection_cfg
             add_change(
-                "new-ldap-connection",
-                _("Created new LDAP connection"),
-                get_affected_sites(connection_cfg),
+                action_name="new-ldap-connection",
+                text=_("Created new LDAP connection"),
+                sites=get_affected_sites(connection_cfg),
             )
 
         else:
             _all_connections[connection_cfg["id"]] = connection_cfg
             add_change(
-                "edit-ldap-connection",
-                _("Changed LDAP connection %s") % connection_cfg["id"],
-                get_affected_sites(connection_cfg),
+                action_name="edit-ldap-connection",
+                text=_("Changed LDAP connection %s") % connection_cfg["id"],
+                sites=get_affected_sites(connection_cfg),
             )
 
         self._connection_cfg = connection_cfg

@@ -534,8 +534,12 @@ class ABCNotificationsMode(ABCEventsMode):
         except IndexError:
             return _("Plain email")
 
-    def _add_change(self, log_what, log_text):
-        _changes.add_change(log_what, log_text, need_restart=False)
+    def _add_change(self, *, action_name: str, text: str) -> None:
+        _changes.add_change(
+            action_name=action_name,
+            text=text,
+            need_restart=False,
+        )
 
     def _vs_notification_bulkby(self):
         return ListChoice(
@@ -2372,8 +2376,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             del self._rules[nr]
             userdb.save_users(self._users, now)
             self._add_change(
-                "notification-delete-user-rule",
-                _("Deleted notification rule %d of user %s") % (nr, self._user_id()),
+                action_name="notification-delete-user-rule",
+                text=_("Deleted notification rule %d of user %s") % (nr, self._user_id()),
             )
 
         elif request.has_var("_move"):
@@ -2385,8 +2389,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             userdb.save_users(self._users, now)
 
             self._add_change(
-                "notification-move-user-rule",
-                _("Changed position of notification rule %d of user %s")
+                action_name="notification-move-user-rule",
+                text=_("Changed position of notification rule %d of user %s")
                 % (from_pos, self._user_id()),
             )
 
@@ -2549,17 +2553,20 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def _user_id(self):
         return user.id
 
-    def _add_change(self, log_what: str, log_text: str) -> None:
+    def _add_change(self, *, action_name: str, text: str) -> None:
         if has_wato_slave_sites():
             self._start_async_repl = True
             _audit_log.log_audit(
-                action=log_what,
-                message=log_text,
+                action=action_name,
+                message=text,
                 user_id=user.id,
                 use_git=active_config.wato_use_git,
             )
         else:
-            super()._add_change(log_what, log_text)
+            super()._add_change(
+                action_name=action_name,
+                text=text,
+            )
 
     def title(self) -> str:
         return _("Your personal notification rules")
@@ -3103,7 +3110,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self._save_rules(self._rules)
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
-        self._add_change(log_what, self._log_text(self._edit_nr))
+        self._add_change(
+            action_name=log_what,
+            text=self._log_text(self._edit_nr),
+        )
         flash(
             _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
             if self._new
@@ -3245,17 +3255,20 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def _user_id(self):
         return user.id
 
-    def _add_change(self, log_what, log_text):
+    def _add_change(self, action_name: str, text: str) -> None:
         if has_wato_slave_sites():
             self._start_async_repl = True
             _audit_log.log_audit(
-                action=log_what,
-                message=log_text,
+                action=action_name,
+                message=text,
                 user_id=user.id,
                 use_git=active_config.wato_use_git,
             )
         else:
-            super()._add_change(log_what, log_text)
+            super()._add_change(
+                action_name=action_name,
+                text=text,
+            )
 
     def _back_mode(self) -> ActionResult:
         if has_wato_slave_sites():
@@ -3411,8 +3424,12 @@ class ABCNotificationParameterMode(WatoMode):
     ) -> None:
         NotificationParameterConfigFile().save(parameters)
 
-    def _add_change(self, log_what, log_text):
-        _changes.add_change(log_what, log_text, need_restart=False)
+    def _add_change(self, *, action_name: str, text: str) -> None:
+        _changes.add_change(
+            action_name=action_name,
+            text=text,
+            need_restart=False,
+        )
 
     def _log_text(self, edit_nr: int) -> str:
         raise NotImplementedError()
@@ -3508,8 +3525,8 @@ class ABCNotificationParameterMode(WatoMode):
                 i for i, v in enumerate(method_parameter_list) if v[0] == parameter_id
             )
             self._add_change(
-                "notification-delete-notification-parameter",
-                _("Deleted notification parameter %d") % parameter_number,
+                action_name="notification-delete-notification-parameter",
+                text=_("Deleted notification parameter %d") % parameter_number,
             )
 
         elif request.has_var("_move"):
@@ -3524,8 +3541,8 @@ class ABCNotificationParameterMode(WatoMode):
             self._save_parameters(self._parameters)
 
             self._add_change(
-                "notification-move-notification-parameter",
-                _("Changed position of notification parameter %d") % from_pos,
+                action_name="notification-move-notification-parameter",
+                text=_("Changed position of notification parameter %d") % from_pos,
             )
 
         if back_mode := request.var("back_mode"):
@@ -3719,8 +3736,12 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                         spec.value_to_html(parameter["parameter_properties"])
                     )
 
-    def _add_change(self, log_what, log_text):
-        _changes.add_change(log_what, log_text, need_restart=False)
+    def _add_change(self, *, action_name: str, text: str) -> None:
+        _changes.add_change(
+            action_name=action_name,
+            text=text,
+            need_restart=False,
+        )
 
     def _parameter_links(
         self,
@@ -3839,7 +3860,10 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         self._save_parameters(self._parameters)
 
         log_what = "new-notification-parameter" if self._new else "edit-notification-parameter"
-        self._add_change(log_what, self._log_text(self._edit_nr))
+        self._add_change(
+            action_name=log_what,
+            text=self._log_text(self._edit_nr),
+        )
 
         if back_mode := request.var("back_mode"):
             return redirect(mode_url(back_mode, method=self._method()))

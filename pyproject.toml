@@ -37,7 +37,6 @@ ignore = [
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
   "UP017", # Use `datetime.UTC` alias
-  "UP025", # Remove unicode literals from strings
   "UP028", # Replace `yield` over `for` loop with `yield from`
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
@@ -68,6 +67,7 @@ ignore = [
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP015", # Unnecessary open mode parameters
   "UP024", # Replace aliased errors with `OSError`
+  "UP025", # Remove unicode literals from strings
   "UP036", # Version block is outdated for minimum Python version
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
@@ -79,6 +79,7 @@ ignore = [
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP012", # Unnecessary call to `encode` as UTF-8
+  "UP025", # Remove unicode literals from strings
   "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP036", # Version block is outdated for minimum Python version
 ]

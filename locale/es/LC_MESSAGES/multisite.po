@@ -335,10 +335,6 @@ msgstr "%%d elementos bloqueados"
 msgid "%.1f mm"
 msgstr "%.1f mm"
 
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
-
 msgid "%/m"
 msgstr "%/m"
 
@@ -710,6 +706,10 @@ msgstr "%s se detuvo después de %s en %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s escribe %s"
+
+#, fuzzy, python-format
+msgid "%s%% OK"
+msgstr "%.2f%% OK"
 
 #, python-format
 msgid ""

@@ -336,10 +336,6 @@ msgstr "%%d vergrendelde elementen"
 msgid "%.1f mm"
 msgstr "%.1f mm"
 
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
-
 msgid "%/m"
 msgstr "%/m"
 
@@ -711,6 +707,10 @@ msgstr "%s is gestopt na %s om %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s schrijf %s"
+
+#, fuzzy, python-format
+msgid "%s%% OK"
+msgstr "%.2f%% OK"
 
 #, python-format
 msgid ""

@@ -43,7 +43,6 @@ ignore = [
   "UP017", # Use `datetime.UTC` alias
   "UP024", # Replace aliased errors with `OSError`
   "UP025", # Remove unicode literals from strings
-  "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP028", # Replace `yield` over `for` loop with `yield from`
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
@@ -73,6 +72,7 @@ ignore = [
 "agents/plugins/*" = ["UP036"]
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP036", # Version block is outdated for minimum Python version
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]

@@ -161,7 +161,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     )
 
 
-class EndpointAdapter(AbstractWSGIApp):
+class LegacyEndpointAdapter(AbstractWSGIApp):
     """Wrap an Endpoint
 
     Makes a "real" WSGI application out of an endpoint. Should be refactored away.
@@ -172,7 +172,7 @@ class EndpointAdapter(AbstractWSGIApp):
         self.endpoint = endpoint
 
     def __repr__(self) -> str:
-        return f"<EndpointAdapter {self.endpoint!r}>"
+        return f"<LegacyEndpointAdapter {self.endpoint!r}>"
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
@@ -437,7 +437,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         for endpoint in endpoint_registry:
             self.add_rule(
                 [endpoint.default_path],
-                EndpointAdapter(endpoint),
+                LegacyEndpointAdapter(endpoint),
                 endpoint.ident,
                 methods=[endpoint.method],
             )
@@ -488,7 +488,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         try:
             wsgi_endpoint, path_args = self._lookup_destination(environ)
 
-            if isinstance(wsgi_endpoint, EndpointAdapter):
+            if isinstance(wsgi_endpoint, LegacyEndpointAdapter):
                 g.endpoint = wsgi_endpoint.endpoint
 
             # This is an implicit dependency, as we only know the args at runtime, but the
@@ -503,7 +503,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
 
             # A Checmk Reserved endpoint can only be accessed with the site secret
             if (
-                isinstance(wsgi_endpoint, EndpointAdapter)
+                isinstance(wsgi_endpoint, LegacyEndpointAdapter)
                 and wsgi_endpoint.endpoint.internal_user_only
                 and not isinstance(session.session.user, LoggedInSuperUser)
             ):

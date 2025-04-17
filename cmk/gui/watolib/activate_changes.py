@@ -1662,7 +1662,7 @@ class ActivateChangesManager(ActivateChanges):
 
             with backup_snapshots.create_snapshot_in_concurrent_thread(
                 comment=self._comment,
-                created_by=user.id or "",
+                created_by=user.id,
                 secret=backup_snapshots.snapshot_secret(),
                 max_snapshots=active_config.wato_max_snapshots,
                 use_git=active_config.wato_use_git,
@@ -1778,10 +1778,18 @@ class ActivateChangesManager(ActivateChanges):
 
     def _log_activation(self):
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
-        log_audit(action="activate-changes", message=log_msg)
+        log_audit(
+            action="activate-changes",
+            message=log_msg,
+            user_id=user.id,
+        )
 
         if self._comment:
-            log_audit(action="activate-changes", message="Comment: %s" % self._comment)
+            log_audit(
+                action="activate-changes",
+                message="Comment: %s" % self._comment,
+                user_id=user.id,
+            )
 
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
@@ -2053,7 +2061,11 @@ def _prepare_for_activation_tasks(
                 continue
             _mark_running(site_activation_state)
 
-            log_audit(action="activate-changes", message="Started activation of site %s" % site_id)
+            log_audit(
+                action="activate-changes",
+                message="Started activation of site %s" % site_id,
+                user_id=user.id,
+            )
             site_activation_states_per_site[site_id] = site_activation_state
 
             if activate_changes.is_sync_needed(site_id):
@@ -2698,6 +2710,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
     log_audit(
         action="replication",
         message="Synchronized configuration from central site (local site ID is %s.)" % site_id,
+        user_id=user.id,
     )
 
 

@@ -11,13 +11,12 @@ import re
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.utils.user import UserId
 
 import cmk.gui.watolib.git
 from cmk.gui.config import active_config
-from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
@@ -167,8 +166,8 @@ def log_audit(
     *,
     action: str,
     message: LogMessage,
+    user_id: UserId | None,
     object_ref: ObjectRef | None = None,
-    user_id: UserId | Literal[""] | None = None,
     diff_text: str | None = None,
     use_git: bool | None = None,
 ) -> None:
@@ -189,12 +188,9 @@ def _log_entry(
     action: str,
     message: HTML | str,
     object_ref: ObjectRef | None,
-    user_id: UserId | Literal[""] | None,
+    user_id: UserId | None,
     diff_text: str | None,
 ) -> None:
-    if user_id is None:
-        user_id = user.id
-
     entry = AuditLogStore.Entry(
         time=int(time.time()),
         object_ref=object_ref,

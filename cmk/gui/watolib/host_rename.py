@@ -27,6 +27,7 @@ from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
@@ -206,6 +207,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                     log_audit(
                         action="edit-rule",
                         message=f'Renamed host condition from "{oldname}" to "{newname}"',
+                        user_id=user.id,
                         diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )

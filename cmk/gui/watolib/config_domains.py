@@ -248,6 +248,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         log_audit(
             action="liveproxyd-activate",
             message="Activating changes of Livestatus Proxy configuration",
+            user_id=user.id,
         )
 
         try:

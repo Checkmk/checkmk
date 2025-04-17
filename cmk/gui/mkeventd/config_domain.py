@@ -13,6 +13,7 @@ from cmk.utils.config_warnings import ConfigurationWarnings
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
@@ -47,6 +48,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
             log_audit(
                 action="mkeventd-activate",
                 message="Activated changes of event console configuration",
+                user_id=user.id,
             )
             self._save_active_config()
             execute_command("RELOAD", site=omd_site())

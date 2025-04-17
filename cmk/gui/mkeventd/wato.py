@@ -3022,7 +3022,9 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             new_mode = "takeover"
         execute_command("SWITCHMODE", [new_mode], omd_site())
         log_audit(
-            action="mkeventd-switchmode", message="Switched replication slave mode to %s" % new_mode
+            action="mkeventd-switchmode",
+            message="Switched replication slave mode to %s" % new_mode,
+            user_id=user.id,
         )
         flash(_("Switched to %s mode") % new_mode)
         return None

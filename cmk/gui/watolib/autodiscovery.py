@@ -96,7 +96,9 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
 
         if result.changes_activated:
             log_audit(
-                action="activate-changes", message="Started activation of site %s" % self.site_id
+                action="activate-changes",
+                message="Started activation of site %s" % self.site_id,
+                user_id=user.id,
             )
 
         job_interface.send_result_message(_("Successfully discovered hosts"))

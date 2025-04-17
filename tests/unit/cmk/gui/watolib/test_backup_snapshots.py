@@ -22,7 +22,7 @@ def _snapshot_files() -> Generator[pathlib.Path, None, None]:
 def test_create_snapshot() -> None:
     backup_snapshots.create_snapshot(
         comment="",
-        created_by="",
+        created_by=None,
         secret=b"abc",
         max_snapshots=10,
         use_git=False,
@@ -35,7 +35,7 @@ def test_create_snapshot() -> None:
 def test_snapshot_status() -> None:
     backup_snapshots.create_snapshot(
         comment="test snapshot",
-        created_by="",
+        created_by=UserId(""),
         secret=b"abc",
         max_snapshots=10,
         use_git=False,

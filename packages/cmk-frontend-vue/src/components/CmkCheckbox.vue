@@ -5,43 +5,59 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
-import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
+import HelpText from '@/components/HelpText.vue'
+
 const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
   label?: string
   padding?: 'top' | 'bottom' | 'both'
+  help?: string
 }
 
 const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
 </script>
 
 <template>
-  <label
-    class="cmk-checkbox"
-    :class="{
-      'cmk-checkbox__pad_top': padding !== 'bottom',
-      'cmk-checkbox__pad_bottom': padding !== 'top'
-    }"
-  >
-    <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button">
-      <CheckboxIndicator class="cmk-checkbox__indicator">
-        <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-          <g transform="rotate(45,9,9)">
-            <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
-          </g>
-        </svg>
-      </CheckboxIndicator>
-    </CheckboxRoot>
-    <span v-if="label"><CmkSpace size="small" /><CmkHtml :html="label" /></span>
-  </label>
+  <span class="cmk-checkbox__container">
+    <label
+      class="cmk-checkbox"
+      :class="{
+        'cmk-checkbox__pad_top': padding !== 'bottom',
+        'cmk-checkbox__pad_bottom': padding !== 'top'
+      }"
+    >
+      <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button">
+        <CheckboxIndicator class="cmk-checkbox__indicator">
+          <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <g transform="rotate(45,9,9)">
+              <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
+            </g>
+          </svg>
+        </CheckboxIndicator>
+      </CheckboxRoot>
+      <span v-if="label"
+        ><CmkHtml :html="label" /><span class="nowrap"
+          >&nbsp;<HelpText v-if="help" :help="help" /></span
+      ></span>
+    </label>
+  </span>
 </template>
 
 <style scoped>
+span {
+  vertical-align: middle;
+
+  &.cmk-checkbox__container {
+    display: inline-block;
+  }
+}
+
 .cmk-checkbox {
   cursor: pointer;
-  display: inline-block;
+  display: flex;
+
   &.cmk-checkbox__pad_top {
     padding-top: 2px;
   }
@@ -76,8 +92,12 @@ const { padding = 'both', label } = defineProps<CmkCheckboxProps>()
     }
   }
 
-  span {
-    vertical-align: middle;
+  & > span {
+    margin-left: var(--spacing-half);
+  }
+
+  .nowrap {
+    white-space: nowrap;
   }
 }
 </style>

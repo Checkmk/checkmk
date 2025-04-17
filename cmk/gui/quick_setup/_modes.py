@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Protocol
 
@@ -403,14 +403,37 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
 
     @property
     def permission(self) -> None | str:
-        return "wato.rulesets"
+        # this should've only been used within `may_see`, which we've overridden...
+        raise NotImplementedError()
+
+    def may_see(self) -> bool:
+        domains = bundle_domains()
+        if self.rule_group_type not in domains:
+            return False
+
+        for domain_definition in domains[self.rule_group_type]:
+            permission: str = domain_definition.permission
+            permission = permission if "." in permission else ("wato." + permission)
+            if not user.may(permission):
+                return False
+
+        return True
 
     @property
     def is_show_more(self) -> bool:
         return False
 
+    @property
+    @abstractmethod
+    def rule_group_type(self) -> RuleGroupType:
+        pass
+
 
 class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
+    @property
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
     @property
     def mode_or_url(self) -> str:
         return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
@@ -437,6 +460,10 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
 
 
 class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
+    @property
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
     @property
     def mode_or_url(self) -> str:
         return mode_url(
@@ -466,6 +493,10 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
 
 
 class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
+    @property
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
     @property
     def mode_or_url(self) -> str:
         return mode_url(

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import collections
 import time
 from collections.abc import Iterable
+from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
@@ -18,9 +18,12 @@ check_info = {}
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
 # .1.3.6.1.4.1.25597.11.5.1.7.0 2016/02/26 15:42:06 --> FE-FIREEYE-MIB::feLastContentUpdateTime.0
 
-SecurityContent = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "SecurityContent", "version update_status update_time_str update_time_seconds"
-)
+
+class SecurityContent(NamedTuple):
+    version: str
+    update_status: str | None
+    update_time_str: str
+    update_time_seconds: float | None
 
 
 def parse_fireeye_content(string_table):

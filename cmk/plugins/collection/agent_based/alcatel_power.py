@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 from collections.abc import Mapping
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -39,13 +39,11 @@ alcatel_power_type_map = {
     "2": "DC",
 }
 
-AlcatelPowerEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "AlcatelPowerEntry",
-    [
-        "oper_state_readable",
-        "power_type",
-    ],
-)
+
+class AlcatelPowerEntry(NamedTuple):
+    oper_state_readable: str
+    power_type: str
+
 
 Section = Mapping[str, AlcatelPowerEntry]
 

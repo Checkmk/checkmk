@@ -675,7 +675,7 @@ class ModeEditUser(WatoMode):
         self._can_edit_users = edition(paths.omd_root) != Edition.CSE
 
     def _from_vars(self):
-        # TODO: Should we turn the both fields below into Optional[UserId]?
+        # TODO: Should we turn the both fields below into UserId | None?
         try:
             self._user_id = request.get_validated_type_input(UserId, "edit", empty_is_none=True)
         except ValueError as e:

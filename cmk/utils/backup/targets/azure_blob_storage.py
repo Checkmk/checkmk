@@ -91,6 +91,7 @@ class BlobStorage:
     def objects(self) -> Iterator[Path]:
         yield from (Path(blob_name) for blob_name in self.container_client.list_blob_names())
 
+    # NOTE: We can't use the '|' operator below because of the forward reference.
     @staticmethod
     def _credentials(
         configured_credentials: BlobStorageCredentials,

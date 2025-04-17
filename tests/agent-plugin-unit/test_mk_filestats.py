@@ -6,10 +6,10 @@
 
 
 import ast
-import collections
 import configparser
 import os
 import sys
+from collections import OrderedDict
 from typing import Mapping, Optional, Sequence, Tuple
 
 import pytest
@@ -180,9 +180,7 @@ class TestConfigParsing:
     def mocked_configparser(self, config_options):
         # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
         # package, but we simply can't assume that this is installed on the client!
-        parser = MockConfigParser(
-            mk_filestats.DEFAULT_CFG_SECTION, dict_type=collections.OrderedDict
-        )
+        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
         for section, option, value in config_options:
             parser.add_section(section)
             parser.set(section, option, value)
@@ -334,10 +332,12 @@ def test_grouping_multiple_groups(
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-        "FilestatFake", ["size", "age", "stat_status"]
+    filestat = mk_filestats.FileStat(
+        file_path="hurz",
+        stat_status="file vanished",
+        size=val,
+        age=val,
     )
-    filestat = FilestatFake(val, val, "file vanished")
 
     assert not mk_filestats.SizeFilter(">=1024").matches(filestat)
     assert not mk_filestats.AgeFilter(">=1024").matches(filestat)

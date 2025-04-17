@@ -1609,9 +1609,6 @@ class EnabledDisabledServicesEditor:
 
         elif service_patterns:
             rule = Rule.from_ruleset_defaults(folder, ruleset)
-
-            # mypy is wrong here vor some reason:
-            # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
             conditions = RuleConditions(
                 folder.path(),
                 host_name=[self._host.name()],

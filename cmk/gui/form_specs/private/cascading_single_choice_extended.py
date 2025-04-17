@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Generic
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, CascadingSingleChoiceElement
-from cmk.rulesets.v1.form_specs._base import ModelT
 from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 @dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoiceElementExtended(CascadingSingleChoiceElement[ModelT], Generic[ModelT]):
+class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[ModelT]):
     """Specifies an element of a single choice cascading form.
 
     It can and should only be used internally when using it to generate CascadingSingleChoiceExtended

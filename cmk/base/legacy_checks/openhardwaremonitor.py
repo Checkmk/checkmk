@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import collections
 import re
 from collections.abc import Mapping
-from typing import NotRequired, TypedDict
+from typing import NamedTuple, NotRequired, TypedDict
 
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -65,9 +64,13 @@ OpenhardwaremonitorTraits: Mapping[str, _Trait] = {
     "Factor": {"unit": "1", "factor": 1.0},
     "Data": {"unit": " B", "factor": 1073741824.0},
 }
-OpenhardwaremonitorSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "OpenhardwaremonitorSensor", ("reading", "unit", "perf_var", "WMIstatus")
-)
+
+
+class OpenhardwaremonitorSensor(NamedTuple):
+    reading: float
+    unit: str
+    perf_var: str | None
+    WMIstatus: str
 
 
 def parse_openhardwaremonitor(string_table):

@@ -12,10 +12,10 @@
 # cmk_140 gui_crawl blue 100 1562574249416 1127 SUCCESS 881681 1562574249416
 
 import json
-from collections import namedtuple
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from time import time
-from typing import Any, NamedTuple
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -32,20 +32,19 @@ from cmk.agent_based.v2 import (
 
 from .lib import render_integer
 
-JenkinsJobInfo: NamedTuple = namedtuple(  # nosemgrep: typing-namedtuple-call
-    "JenkinsJobInfo",
-    [
-        "display_name",
-        "name",
-        "state",
-        "score",
-        "last_suc_build",
-        "build_id",
-        "build_result",
-        "build_duration",
-        "build_timestamp",
-    ],
-)
+
+@dataclass
+class JenkinsJobInfo:
+    display_name: object
+    name: object
+    state: str | None
+    score: float | None
+    last_suc_build: float | None
+    build_id: int | None
+    build_result: str | None
+    build_duration: float | None
+    build_timestamp: int | None
+
 
 MAP_JOB_STATES = {
     "aborted": {"state": State.OK, "info": "Aborted"},
@@ -68,11 +67,11 @@ MAP_BUILD_STATES = {
     "none": State.OK,  # running
 }
 
-Section = Mapping[str, JenkinsJobInfo]
+Section = Mapping[str, Sequence[JenkinsJobInfo]]
 
 
 def parse_jenkins_jobs(string_table: StringTable) -> Section:
-    parsed: dict[str, JenkinsJobInfo] = {}
+    parsed: dict[str, list[JenkinsJobInfo]] = {}
 
     for line in string_table:
         jenkins_data = json.loads(line[0])
@@ -190,7 +189,7 @@ def _process_job(job: JenkinsJobInfo, params: Mapping[str, Any], now: int | floa
         )
 
 
-def _handle_single_job(job):
+def _handle_single_job(job: dict[str, Any]) -> JenkinsJobInfo:
     # key healthReport can have an empty list value
     try:
         health_rp = job["healthReport"][0]["score"]
@@ -210,7 +209,7 @@ def _handle_single_job(job):
     # key lastBuild can have None value: {'lastBuild':None}
     try:
         last_br: str | None = job["lastBuild"]["result"]
-        last_bn: str | None = job["lastBuild"]["number"]
+        last_bn: int | None = int(job["lastBuild"]["number"])
         last_bd: float | None = float(job["lastBuild"]["duration"]) / 1000.0
         last_bt: int | None = int(int(job["lastBuild"]["timestamp"]) / 1000)
     except (KeyError, TypeError, ValueError):
@@ -232,7 +231,7 @@ def _handle_single_job(job):
     )
 
 
-def _handle_job_type(data, new_dict, folder=""):
+def _handle_job_type(data: Iterable, new_dict: dict[str, list], folder: str) -> dict[str, list]:
     for job_type in data:
         item_name = folder
         if job_type.get("_class") and job_type["_class"] in [

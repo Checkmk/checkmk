@@ -19,7 +19,7 @@
 # virtualmachine  OpenSUSE_I
 
 
-import collections
+from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
@@ -31,11 +31,14 @@ vsphere_object_names = {
 }
 
 
+class Obj(NamedTuple):
+    name: str
+    hostsystem: str
+    state: str
+
+
 def parse_esx_vsphere_objects(string_table):
     parsed = {}
-    Obj = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-        "Obj", ["name", "hostsystem", "state"]
-    )
     for line in string_table:
         if len(line) < 2:
             continue

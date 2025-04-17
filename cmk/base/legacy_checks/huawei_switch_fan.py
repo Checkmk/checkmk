@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-import collections
+from typing import NamedTuple
 
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
 
@@ -16,9 +15,10 @@ from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 
-HuaweiFanData = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "HuaweiFanData", "fan_present fan_speed"
-)
+
+class HuaweiFanData(NamedTuple):
+    fan_present: bool
+    fan_speed: float
 
 
 def parse_huawei_switch_fan(string_table):

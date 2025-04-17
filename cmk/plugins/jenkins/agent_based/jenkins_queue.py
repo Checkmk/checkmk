@@ -126,7 +126,7 @@ def _check_jenkins_queue(
 
         jenkins_value = f"jenkins_{metric_name}"
 
-        # A better type would be Optional[FixedLevelsT] but mypy does not seem to be able to
+        # A better type would be FixedLevelsT | None but mypy does not seem to be able to
         # handle the indirect creation of the key and isn't able to properly detect the
         # used types.
         task_levels: Any = params.get(jenkins_value)

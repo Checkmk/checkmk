@@ -124,14 +124,13 @@ def duplicate_service_warning(
 
 # TODO: Just for documentation purposes for now.
 #
-# HostCheckCommand = NewType('HostCheckCommand',
-#                            Union[Literal["smart"],
-#                                  Literal["ping"],
-#                                  Literal["ok"],
-#                                  Literal["agent"],
-#                                  Tuple[Literal["service"], TextInput],
-#                                  Tuple[Literal["tcp"], Integer],
-#                                  Tuple[Literal["custom"], TextInput]])
+# HostCheckCommand = NewType(
+#     "HostCheckCommand",
+#     Literal["smart", "ping", "ok", "agent"]
+#     | tuple[Literal["service"], TextInput]
+#     | tuple[Literal["tcp"], Integer]
+#     | tuple[Literal["custom"], TextInput],
+# )
 
 
 def _cluster_ping_command(

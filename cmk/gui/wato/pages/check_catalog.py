@@ -55,6 +55,7 @@ class CatalogEntry(TypedDict):
     title: str
 
 
+# NOTE: We can't use the '|' operator because of the recursion.
 CatalogTree = dict[str, Union["CatalogTree", Sequence[CatalogEntry]]]
 
 

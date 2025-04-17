@@ -5,9 +5,9 @@
 
 import abc
 import logging
-import typing as t
-from collections.abc import Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pprint import pformat
+from typing import Generic, NamedTuple, Protocol, TypeVar
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
@@ -28,12 +28,12 @@ from cmk.gui.watolib.rulespecs import (
 
 logger = logging.getLogger(__name__)
 
-T = t.TypeVar("T")
-TF = t.TypeVar("TF", bound=Rulespec)
-TC = t.TypeVar("TC", bound=CheckPlugin | InventoryPlugin)
+T = TypeVar("T")
+TF = TypeVar("TF", bound=Rulespec)
+TC = TypeVar("TC", bound=CheckPlugin | InventoryPlugin)
 
 
-class MergeKey(t.NamedTuple):
+class MergeKey(NamedTuple):
     type_name: str
     name: str
 
@@ -42,7 +42,7 @@ class DefaultLoadingFailed(Exception):
     pass
 
 
-class Base(t.Generic[T], abc.ABC):
+class Base(Generic[T], abc.ABC):
     type: str
 
     def __init__(self, element: T) -> None:
@@ -83,7 +83,7 @@ class Base(t.Generic[T], abc.ABC):
         return f"<{self.__class__.__name__} {self._element}>"
 
 
-class BaseProtocol(t.Protocol):
+class BaseProtocol(Protocol):
     type: str
 
     def get_name(self) -> str: ...
@@ -97,11 +97,11 @@ class BaseProtocol(t.Protocol):
     def __gt__(self, other: object) -> bool: ...
 
 
-class WatoProtocol(BaseProtocol, t.Protocol):
+class WatoProtocol(BaseProtocol, Protocol):
     def validate_parameter(self, parameters: ParametersTypeAlias | None) -> Exception | None: ...
 
 
-class PluginProtocol(BaseProtocol, t.Protocol):
+class PluginProtocol(BaseProtocol, Protocol):
     def get_default_parameters(self) -> ParametersTypeAlias | None: ...
 
 
@@ -192,7 +192,7 @@ class WatoCheck(Wato[CheckParameterRulespecWithoutItem | CheckParameterRulespecW
         return isinstance(self._element, CheckParameterRulespecWithItem)
 
 
-def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProtocol]:
+def load_plugin(agent_based_plugins: AgentBasedPlugins) -> Iterator[PluginProtocol]:
     for check_element in agent_based_plugins.check_plugins.values():
         if check_element.check_ruleset_name is not None:
             yield PluginCheck(check_element)
@@ -204,7 +204,7 @@ def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProt
             yield PluginInventory(inventory_element)
 
 
-def load_wato() -> t.Iterator[WatoProtocol]:
+def load_wato() -> Iterator[WatoProtocol]:
     for element in rulespec_registry.values():
         if isinstance(group := element.group(), RulespecGroupCheckParametersDiscovery) or (
             isinstance(group, RulespecSubGroup)
@@ -395,18 +395,18 @@ class ErrorReporter:
 ################################################################################
 
 
-T_contra = t.TypeVar("T_contra", contravariant=True)
+T_contra = TypeVar("T_contra", contravariant=True)
 
 
-class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
+class SupportsGreaterThan(Protocol, Generic[T_contra]):
     def __gt__(self, other: T_contra) -> bool: ...
 
 
-A = t.TypeVar("A", bound=SupportsGreaterThan)
-B = t.TypeVar("B")
+A = TypeVar("A", bound=SupportsGreaterThan)
+B = TypeVar("B")
 
 
-def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[tuple[A | None, B | None]]:
+def merge(a: Iterable[A], b: Iterable[B]) -> Iterator[tuple[A | None, B | None]]:
     """
     merge a and b in a way that elements that are equal in a and b are in the
     same tuple.

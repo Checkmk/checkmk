@@ -258,7 +258,7 @@ class UISidebarPosition(UserAttribute):
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Sidebar position"),
-            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
+            # FIXME: Why isn't this simply a bool instead of an Literal["left"] | None?
             choices=[(None, _("Right")), ("left", _("Left"))],
         )
 
@@ -282,7 +282,7 @@ class UIIconTitle(UserAttribute):
                 "bar should show a title or not. This gives you the possibility "
                 "to save some space in the UI."
             ),
-            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["hide"]]?
+            # FIXME: Why isn't this simply a bool instead of an Literal["hide"] | None?
             choices=[(None, _("Show title")), ("hide", _("Hide title"))],
         )
 
@@ -304,7 +304,7 @@ class UIIconPlacement(UserAttribute):
                 "for lean design. Or have a colored icon for every entry so that "
                 "over time you can zoom in more quickly to a specific entry."
             ),
-            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["entry"]]?
+            # FIXME: Why isn't this simply a bool instead of an Literal["entry"] | None?
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
         )
 

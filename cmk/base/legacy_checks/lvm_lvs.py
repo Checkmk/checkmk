@@ -6,16 +6,17 @@
 # example output
 
 
-import collections
+from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 check_info = {}
 
-LvmLvsEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "LvmLvsEntry", ["data", "meta"]
-)
+
+class LvmLvsEntry(NamedTuple):
+    data: float
+    meta: float
 
 
 def parse_lvm_lvs(string_table):

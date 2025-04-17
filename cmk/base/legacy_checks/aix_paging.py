@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-import collections
+from typing import NamedTuple
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
@@ -20,9 +20,13 @@ check_info = {}
 # hd6                   hdisk11                rootvg       10240MB    23        yes        yes       lv       0
 
 
-AIXPaging = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "AIXPaging", ["group", "size_mb", "usage_perc", "active", "auto", "type"]
-)
+class AIXPaging(NamedTuple):
+    group: str
+    size_mb: int
+    usage_perc: int
+    active: str
+    auto: str
+    type_: str
 
 
 def parse_aix_paging(string_table):
@@ -59,7 +63,7 @@ def check_aix_paging(item, params, parsed):
         return
     avail_mb = data.size_mb * (1 - data.usage_perc / 100.0)
     yield df_check_filesystem_single(item, data.size_mb, avail_mb, 0, None, None, params)
-    yield 0, f"Active: {data.active}, Auto: {data.auto}, Type: {data.type}"
+    yield 0, f"Active: {data.active}, Auto: {data.auto}, Type: {data.type_}"
 
 
 def discover_aix_paging(section):

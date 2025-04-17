@@ -159,7 +159,7 @@ std::string ipAddressToString(const in6_addr &address) {
     return addr_buf.data();
 }
 namespace ec {
-// The funny encoding of an Optional[Iterable[str]] is done in
+// The funny encoding of an Iterable[str] | None is done in
 // cmk.ec.history.quote_tab().
 
 bool is_none(const std::string &str) { return str == "\002"; }

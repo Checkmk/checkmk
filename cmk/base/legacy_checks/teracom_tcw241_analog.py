@@ -4,16 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import collections
+from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
 
 check_info = {}
 
-AnalogSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-    "AnalogSensor", "description maximum minimum voltage"
-)
+
+class AnalogSensor(NamedTuple):
+    description: str
+    maximum: float
+    minimum: float
+    voltage: float
 
 
 _TABLES = ["1", "2", "3", "4"]

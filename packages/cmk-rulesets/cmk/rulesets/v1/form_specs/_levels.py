@@ -6,16 +6,14 @@
 import enum
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Literal, TypedDict, TypeVar, Union
+from typing import Literal, TypedDict
 
 from .._localize import Help, Title
 from ._base import DefaultValue, FormSpec, Prefill
 
-_NumberT = TypeVar("_NumberT", int, float)
-
 
 @dataclass(frozen=True, kw_only=True)
-class PredictiveLevels(Generic[_NumberT]):
+class PredictiveLevels[_NumberT: (int, float)]:
     """Definition for levels based on a prediction of the monitored value.
 
     Usable only in conjunction with :class:`Levels`.
@@ -66,7 +64,7 @@ class LevelDirection(enum.Enum):
     LOWER = "lower"
 
 
-class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
+class _PredictiveLevelsT[_NumberT: (int, float)](TypedDict):
     period: Literal["wday", "day", "hour", "minute"]
     horizon: int
     levels: (
@@ -77,15 +75,17 @@ class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
     bound: tuple[_NumberT, _NumberT] | None
 
 
-SimpleLevelsConfigModel = Union[
-    tuple[Literal["no_levels"], None], tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
-]
+type SimpleLevelsConfigModel[_NumberT: (int, float)] = (
+    tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+)
 
 
-LevelsConfigModel = Union[
-    SimpleLevelsConfigModel[_NumberT],
-    tuple[Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]],
-]
+type LevelsConfigModel[_NumberT: (int, float)] = (
+    SimpleLevelsConfigModel[_NumberT]
+    | tuple[
+        Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]
+    ]
+)
 
 
 class LevelsType(enum.Enum):
@@ -97,7 +97,7 @@ class LevelsType(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
+class SimpleLevels[_NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels without predictive levels.
 
     This creates a FormSpec that allows to configure simple levels, i.e.
@@ -151,7 +151,7 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
+class Levels[_NumberT: (int, float)](FormSpec[LevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels including predictive levels
 
     This creates a FormSpec that extends the SimpleLevels with the possibility to configure

@@ -8,10 +8,10 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from keyword import iskeyword
-from typing import Any, Generic
+from typing import Any
 
 from .._localize import Help, Label, Message, Title
-from ._base import DefaultValue, FormSpec, InputHint, ModelT
+from ._base import DefaultValue, FormSpec, InputHint
 
 
 def _validate_name(name: str) -> None:
@@ -23,7 +23,7 @@ def _validate_name(name: str) -> None:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoiceElement(Generic[ModelT]):
+class CascadingSingleChoiceElement[ModelT]:
     """Specifies an element of a single choice cascading form.
 
     Arguments:
@@ -95,7 +95,7 @@ class NoGroup:
 
 
 @dataclass(frozen=True, kw_only=True)
-class DictElement(Generic[ModelT]):
+class DictElement[ModelT]:
     """Specifies an element of a dictionary form.
 
     Arguments:
@@ -157,7 +157,7 @@ class Dictionary(FormSpec[Mapping[str, object]]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class List(FormSpec[Sequence[ModelT]]):
+class List[ModelT](FormSpec[Sequence[ModelT]]):
     """
     Specifies a list of configuration elements of the same type.
 

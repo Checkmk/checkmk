@@ -4,15 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Union
 
 from .._localize import Help, Title
 
-ModelT = TypeVar("ModelT")
-
 
 @dataclass(frozen=True, kw_only=True)
-class FormSpec(Generic[ModelT]):
+class FormSpec[ModelT]:
     """Common base class for FormSpecs.
 
     This encapsulates some properties that all form specs have in common.
@@ -71,7 +68,7 @@ class FormSpec(Generic[ModelT]):
 
 
 @dataclass(frozen=True)
-class DefaultValue(Generic[ModelT]):
+class DefaultValue[ModelT]:
     """Defines a default value for the form spec.
 
     Note that the default value *will* be part of the created configuration,
@@ -83,7 +80,7 @@ class DefaultValue(Generic[ModelT]):
 
 
 @dataclass(frozen=True)
-class InputHint(Generic[ModelT]):
+class InputHint[ModelT]:
     """Defines an input hint for the form spec.
 
     Note that an input hint *will not* be part of the created configuration,
@@ -94,4 +91,4 @@ class InputHint(Generic[ModelT]):
     value: ModelT
 
 
-Prefill = Union[DefaultValue[ModelT], InputHint[ModelT]]
+type Prefill[ModelT] = DefaultValue[ModelT] | InputHint[ModelT]

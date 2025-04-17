@@ -6,21 +6,21 @@
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
-from typing import Literal, TypeVar, Union
+from typing import Literal
 
 from cmk.agent_based.v1 import Metric, Result, State
 
-_NumberT = TypeVar("_NumberT", int, float)
-
 NoLevelsT = tuple[Literal["no_levels"], None]
 
-FixedLevelsT = tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+type FixedLevelsT[_NumberT: (int, float)] = tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
 
-PredictiveLevelsT = tuple[
+type PredictiveLevelsT[_NumberT: (int, float)] = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
 
-LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]
+type LevelsT[_NumberT: (int, float)] = (
+    NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]
+)
 
 
 class Direction(StrEnum):
@@ -112,7 +112,7 @@ def _make_prediction_metric(name: str, value: float | None, direction: Direction
     return Metric(f"predict_lower_{name}", value)
 
 
-def _check_levels(
+def _check_levels[_NumberT: (int, float)](
     value: float,
     levels: LevelsT[_NumberT] | None,
     levels_direction: Direction,
@@ -167,7 +167,7 @@ def _summarize_predictions(
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
-def check_levels(
+def check_levels[_NumberT: (int, float)](
     value: float,
     *,
     levels_upper: LevelsT[_NumberT] | None = None,

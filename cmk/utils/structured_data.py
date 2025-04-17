@@ -1807,6 +1807,30 @@ class HistoryEntry:
     removed: int
     delta_tree: ImmutableDeltaTree
 
+    @classmethod
+    def from_raw(
+        cls, timestamp: int | None, raw: tuple[int, int, int, SDRawDeltaTree]
+    ) -> HistoryEntry:
+        new, changed, removed, raw_delta_tree = raw
+        return cls(
+            timestamp,
+            new,
+            changed,
+            removed,
+            deserialize_delta_tree(raw_delta_tree),
+        )
+
+    @classmethod
+    def from_delta_tree(cls, timestamp: int | None, delta_tree: ImmutableDeltaTree) -> HistoryEntry:
+        delta_stats = delta_tree.get_stats()
+        return cls(
+            timestamp,
+            delta_stats["new"],
+            delta_stats["changed"],
+            delta_stats["removed"],
+            delta_tree,
+        )
+
 
 class HistoryStore:
     def __init__(self, *, inventory_dir: Path, archive_dir: Path, delta_cache_dir: Path) -> None:
@@ -1848,7 +1872,7 @@ class HistoryStore:
         self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
     ) -> HistoryEntry | None:
         try:
-            cached_data = store.load_object_from_file(
+            raw = store.load_object_from_file(
                 self._delta_cache_host_tree_file(
                     host_name,
                     previous_timestamp,
@@ -1859,17 +1883,7 @@ class HistoryStore:
         except MKGeneralException:
             return None
 
-        if cached_data is None:
-            return None
-
-        new, changed, removed, raw_delta_tree = cached_data
-        return HistoryEntry(
-            current_timestamp,
-            new,
-            changed,
-            removed,
-            deserialize_delta_tree(raw_delta_tree),
-        )
+        return None if raw is None else HistoryEntry.from_raw(current_timestamp, raw)
 
     def lookup_tree(self, file_path: Path) -> ImmutableTree:
         if file_path == Path():
@@ -1905,21 +1919,6 @@ def _get_pairs(
         return []
     paths = [HistoryPath(Path(), None)] + list(history_file_paths)
     return list(zip(paths, paths[1:]))
-
-
-def _filter_history_entry(
-    entry: HistoryEntry, filter_tree: Sequence[SDFilterChoice]
-) -> HistoryEntry | None:
-    if not (filtered_delta_tree := entry.delta_tree.filter(filter_tree)):
-        return None
-    delta_stats = filtered_delta_tree.get_stats()
-    return HistoryEntry(
-        entry.timestamp,
-        delta_stats["new"],
-        delta_stats["changed"],
-        delta_stats["removed"],
-        filtered_delta_tree,
-    )
 
 
 @dataclass(frozen=True)
@@ -1963,14 +1962,8 @@ def load_history(
         except FileNotFoundError:
             continue
 
-        delta_tree = current_tree.difference(previous_tree)
-        delta_stats = delta_tree.get_stats()
-        entry = HistoryEntry(
-            current.timestamp,
-            delta_stats["new"],
-            delta_stats["changed"],
-            delta_stats["removed"],
-            delta_tree,
+        entry = HistoryEntry.from_delta_tree(
+            current.timestamp, current_tree.difference(previous_tree)
         )
         if entry.new or entry.changed or entry.removed:
             history_store.save_history_entry(
@@ -1985,6 +1978,10 @@ def load_history(
         return History(entries=entries, corrupted=files.corrupted)
 
     return History(
-        entries=[f for e in entries if (f := _filter_history_entry(e, filter_tree))],
+        entries=[
+            HistoryEntry.from_delta_tree(e.timestamp, d)
+            for e in entries
+            if (d := e.delta_tree.filter(filter_tree))
+        ],
         corrupted=files.corrupted,
     )

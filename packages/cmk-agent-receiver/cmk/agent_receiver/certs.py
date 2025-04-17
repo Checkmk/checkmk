@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from functools import cache
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -36,7 +36,7 @@ def current_time_naive() -> datetime:
     datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
     certificates use. See also https://github.com/pyca/cryptography/issues/9186.
     """
-    return datetime.now(tz=timezone.utc).replace(tzinfo=None)
+    return datetime.now(tz=UTC).replace(tzinfo=None)
 
 
 def sign_agent_csr(

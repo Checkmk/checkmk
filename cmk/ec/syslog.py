@@ -7,7 +7,7 @@
 import socket
 from codecs import BOM_UTF8
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Literal
 
@@ -319,7 +319,7 @@ class SyslogMessage:
         >>> SyslogMessage._unix_timestamp_to_rfc_5424(1618243591.1234)
         '2021-04-12T16:06:31.123400+00:00'
         """
-        return datetime.fromtimestamp(unix_timestamp, tz=timezone.utc).isoformat()
+        return datetime.fromtimestamp(unix_timestamp, tz=UTC).isoformat()
 
     @classmethod
     def _add_ip_and_sl_to_structured_data(

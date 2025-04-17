@@ -779,7 +779,7 @@ def _notification_options_to_internal_format(
 
 def _time_stamp_range(datetime_range: TimeRange) -> TIMESTAMP_RANGE:
     def timestamp(date_time):
-        return dt.datetime.timestamp(date_time.replace(tzinfo=dt.timezone.utc))
+        return dt.datetime.timestamp(date_time.replace(tzinfo=dt.UTC))
 
     return timestamp(datetime_range["start_time"]), timestamp(datetime_range["end_time"])
 

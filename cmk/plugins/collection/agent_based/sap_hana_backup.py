@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from datetime import datetime, timezone, tzinfo
+from datetime import datetime, tzinfo, UTC
 from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -24,7 +24,7 @@ from cmk.plugins.lib import sap_hana
 
 # Black magic alert: could return None in some cases, but the offset seems to be
 # magically calculated based on local systemtime...
-LOCAL_TIMEZONE = datetime.now(tz=timezone.utc).astimezone().tzinfo
+LOCAL_TIMEZONE = datetime.now(tz=UTC).astimezone().tzinfo
 
 
 class Backup(NamedTuple):
@@ -92,7 +92,7 @@ def parse_sap_hana_backup(string_table: StringTable) -> Section:
 
 
 def parse_sap_hana_backup_v2(string_table: StringTable) -> Section:
-    return _parse_sap_hana_backup(string_table, timezone.utc)
+    return _parse_sap_hana_backup(string_table, UTC)
 
 
 agent_section_sap_hana_backup = AgentSection(
@@ -136,7 +136,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
             state=State.OK, summary="Last: %s" % render.datetime(data.end_time.timestamp())
         )
         yield from check_levels_v1(
-            (datetime.now(tz=timezone.utc) - data.end_time).total_seconds(),
+            (datetime.now(tz=UTC) - data.end_time).total_seconds(),
             metric_name="backup_age",
             levels_upper=params["backup_age"],
             render_func=render.timespan,

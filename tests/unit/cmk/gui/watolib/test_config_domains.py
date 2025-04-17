@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import TypedDict
 
@@ -229,7 +229,7 @@ class TestConfigDomainCACertificates:
         assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
 
     def test_remote_sites_cas(self) -> None:
-        longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=timezone.utc)
+        longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)
 
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas(
             [remote1_newer, remote1_older, remote2]

@@ -7,7 +7,7 @@ import collections
 import re
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
@@ -324,7 +324,7 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 
         # comparing naive to aware datetimes raises anyway, but the assertion is less obscure
         assert cert_info.not_after.tzinfo is not None, "cert_info.not_after must be tz aware"
-        duration_valid = cert_info.not_after - datetime.now(timezone.utc)
+        duration_valid = cert_info.not_after - datetime.now(UTC)
 
         if duration_valid.total_seconds() < 0:
             yield Result(

@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Generator, Mapping
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any, Final, Literal, NamedTuple
 
@@ -263,7 +263,7 @@ def check_wlan_controller_last_backup(
         return
 
     yield from check_levels(
-        (datetime.now(timezone.utc) - data.last_backup).total_seconds(),
+        (datetime.now(UTC) - data.last_backup).total_seconds(),
         levels_upper=params["last_backup"],
         metric_name="backup_age",
         render_func=render.timespan,

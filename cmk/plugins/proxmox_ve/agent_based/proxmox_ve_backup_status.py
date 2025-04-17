@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
@@ -152,7 +152,7 @@ def check_proxmox_ve_vm_backup_status(
     started_time = last_backup.get("started_time")
     if started_time:
         yield from check_levels_v1(
-            value=(now - started_time.astimezone(timezone.utc)).total_seconds(),
+            value=(now - started_time.astimezone(UTC)).total_seconds(),
             levels_upper=age_levels_upper,
             metric_name="age",
             render_func=render.timespan,
@@ -223,7 +223,7 @@ def check_proxmox_ve_vm_backup_status_unpure(
     """Because of datetime.now() this function is not testable.
     Test check_proxmox_ve_vm_backup_status() instead."""
     # the datetime object is always utc
-    yield from check_proxmox_ve_vm_backup_status(datetime.now(tz=timezone.utc), params, section)
+    yield from check_proxmox_ve_vm_backup_status(datetime.now(tz=UTC), params, section)
 
 
 check_plugin_proxmox_ve_vm_backup_status = CheckPlugin(

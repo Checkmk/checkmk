@@ -22,7 +22,7 @@ MSSQL_VEEAMSQL2012:Databases|log_file(s)_size_(kb)|tempdb|13624
 
 from collections.abc import Sequence
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib.mssql_counters import Section
@@ -91,7 +91,7 @@ def to_timestamp(values: Sequence[str]) -> float:
             return datetime.strptime(" ".join(values), "%Y-%m-%d %H:%M:%S")
         return get_datetime_from_obsolete_format(values)
 
-    return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()
+    return to_datetime(values).replace(tzinfo=UTC).timestamp()
 
 
 def parse_mssql_counters(string_table: StringTable) -> Section:

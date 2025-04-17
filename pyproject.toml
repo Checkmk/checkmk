@@ -36,7 +36,6 @@ ignore = [
   # Basically a TODO list...
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
-  "UP017", # Use `datetime.UTC` alias
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
   "UP035", # Import from `FOO` instead: `BAR`
@@ -73,6 +72,7 @@ ignore = [
 ]
 "non-free/cmk-update-agent/cmk_update_agent.py" = [
   "UP009", # UTF-8 encoding declaration is unnecessary
+  "UP017", # Use `datetime.UTC` alias
 ]
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`

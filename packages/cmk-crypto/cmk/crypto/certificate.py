@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import assert_never, NamedTuple, TypeAlias
 
@@ -105,7 +105,7 @@ class CertificateWithPrivateKey(NamedTuple):
             subject_name=name,
             subject_alt_dns_names=alt_names,
             expiry=expiry,
-            start_date=datetime.now(tz=timezone.utc),
+            start_date=datetime.now(tz=UTC),
             is_ca=is_ca,
             issuer_signing_key=private_key,
             issuer_name=name,
@@ -190,7 +190,7 @@ class CertificateWithPrivateKey(NamedTuple):
             subject_name=issued_name,
             subject_alt_dns_names=issued_alt_names,
             expiry=expiry,
-            start_date=datetime.now(tz=timezone.utc),
+            start_date=datetime.now(tz=UTC),
             is_ca=is_ca,
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
@@ -221,7 +221,7 @@ class CertificateWithPrivateKey(NamedTuple):
             subject_name=csr.subject,
             subject_alt_dns_names=[x509.DNSName(cn)],
             expiry=expiry,
-            start_date=datetime.now(tz=timezone.utc),
+            start_date=datetime.now(tz=UTC),
             is_ca=False,
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
@@ -532,11 +532,11 @@ class Certificate:
         if allowed_drift is None:
             allowed_drift = relativedelta(hours=+2)
 
-        if self._is_not_valid_before(datetime.now(tz=timezone.utc) + allowed_drift):
+        if self._is_not_valid_before(datetime.now(tz=UTC) + allowed_drift):
             raise InvalidExpiryError(
                 f"Certificate is not yet valid (not_valid_before: {self.not_valid_before})"
             )
-        if self._is_expired_after(datetime.now(tz=timezone.utc) - allowed_drift):
+        if self._is_expired_after(datetime.now(tz=UTC) - allowed_drift):
             raise InvalidExpiryError(
                 f"Certificate is expired (not_valid_after: {self.not_valid_after})"
             )
@@ -559,7 +559,7 @@ class Certificate:
         If the certificate's "not_valid_after" time lies in the past, a negative value will be
         returned.
         """
-        return (self.not_valid_after - datetime.now(tz=timezone.utc)).days
+        return (self.not_valid_after - datetime.now(tz=UTC)).days
 
     def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
         """return the fingerprint

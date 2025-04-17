@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import time_machine
 from pytest import MonkeyPatch
@@ -70,7 +70,7 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
     ]
 
 
-@time_machine.travel(datetime.fromtimestamp(1622638021, tz=timezone.utc))
+@time_machine.travel(datetime.fromtimestamp(1622638021, tz=UTC))
 def test_send_event(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         mkeventd_wato,

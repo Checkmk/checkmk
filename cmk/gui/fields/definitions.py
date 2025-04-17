@@ -12,7 +12,7 @@ import re
 import typing
 import uuid
 from collections.abc import Callable, Collection, Mapping, MutableMapping
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any, Literal
 
 import marshmallow
@@ -1262,7 +1262,7 @@ class PasswordShare(base.String):
 
 
 def from_timestamp(value: float) -> datetime:
-    return datetime.fromtimestamp(value, tz=timezone.utc)
+    return datetime.fromtimestamp(value, tz=UTC)
 
 
 def to_timestamp(value: datetime) -> float:

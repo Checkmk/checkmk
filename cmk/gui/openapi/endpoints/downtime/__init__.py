@@ -215,7 +215,7 @@ def create_host_related_downtime(params: Mapping[str, Any]) -> Response:
 
 def _with_defaulted_timezone(
     date: dt.datetime,
-    _get_local_timezone: Callable[[], dt.tzinfo | None] = lambda: dt.datetime.now(dt.timezone.utc)
+    _get_local_timezone: Callable[[], dt.tzinfo | None] = lambda: dt.datetime.now(dt.UTC)
     .astimezone()
     .tzinfo,
 ) -> dt.datetime:

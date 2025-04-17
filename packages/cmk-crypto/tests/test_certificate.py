@@ -6,7 +6,7 @@
 
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import NoReturn
 
@@ -391,7 +391,7 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=[x509.DNSName(n) for n in sans],
             expiry=relativedelta(days=1),
-            start_date=datetime.now(timezone.utc),
+            start_date=datetime.now(UTC),
             is_ca=False,
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),

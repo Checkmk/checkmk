@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -16,7 +16,7 @@ NOW_SIMULATED = datetime(2019, 1, 1, 22, tzinfo=ZoneInfo("UTC"))
 ITEM = "inst"
 SECTION = {
     ITEM: sap_hana_backup.Backup(
-        end_time=datetime(2019, 1, 1, 0, 0, tzinfo=timezone.utc),
+        end_time=datetime(2019, 1, 1, 0, 0, tzinfo=UTC),
         state_name="successful",
         comment="",
         message="<ok>",

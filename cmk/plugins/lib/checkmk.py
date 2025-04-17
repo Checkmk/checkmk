@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import StrEnum
 from typing import NamedTuple
 
@@ -149,7 +149,7 @@ class CertInfo(BaseModel):
 
         # We _should_ only get timezone aware datetimes here. If it's naive anyway, assume UTC.
         if dt.tzinfo is None:
-            dt.replace(tzinfo=timezone.utc)
+            dt.replace(tzinfo=UTC)
 
         return dt
 

@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any, Literal
 
 import pytest
@@ -103,7 +103,7 @@ WLAN_CONTROLLERS_SECTION = {
         access_points_count=483,
         client_count=167,
         reachability_status=True,
-        last_backup=datetime(2020, 7, 27, 17, 28, 2, tzinfo=timezone.utc),
+        last_backup=datetime(2020, 7, 27, 17, 28, 2, tzinfo=UTC),
     ),
     "wism22": WlanController(
         name="wism22",
@@ -180,7 +180,7 @@ def test_get_controllers(
     "last_backup, expected_result",
     [
         (None, None),
-        ("2020-07-27T17:27:39.000Z", datetime(2020, 7, 27, 17, 27, 39, tzinfo=timezone.utc)),
+        ("2020-07-27T17:27:39.000Z", datetime(2020, 7, 27, 17, 27, 39, tzinfo=UTC)),
     ],
 )
 def test_get_last_backup(last_backup: str | None, expected_result: datetime | None) -> None:

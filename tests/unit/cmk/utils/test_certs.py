@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -229,7 +229,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
         subject_name=X509Name.create(common_name="peter"),
         subject_alt_dns_names=None,
         expiry=relativedelta(days=1),
-        start_date=datetime.now(timezone.utc),
+        start_date=datetime.now(UTC),
         is_ca=True,
         issuer_signing_key=peters_mom.private_key,
         issuer_name=peters_mom.certificate.subject,

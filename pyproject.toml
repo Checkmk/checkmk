@@ -34,7 +34,6 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
-  "UP004", # Class `_MockHttpResponse` inherits from `object`
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
   "UP009", # UTF-8 encoding declaration is unnecessary
@@ -72,7 +71,10 @@ ignore = [
 "agents/*" = ["ARG001", "ARG002", "SLF001"]
 # Agent plugins still need to support Python 2.7
 "agents/plugins/*" = ["UP036"]
-"tests/agent-plugin-unit/*" = ["UP036"]
+"tests/agent-plugin-unit/*" = [
+  "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP036", # Version block is outdated for minimum Python version
+]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 
 [tool.ruff.lint.mccabe]

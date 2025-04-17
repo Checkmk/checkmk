@@ -100,20 +100,20 @@ function addSelected() {
 }
 
 function removeSelected() {
-  const removedEntries: DualListChoiceElement[] = []
+  const removedEntries: string[] = []
   activeSelected.value.forEach((entry) => {
     const index = value.value.map((element) => element.name).indexOf(entry)
     if (index !== -1) {
       const element = localElements.value.find((element) => element.name === entry)
       if (element) {
-        removedEntries.push(element)
+        removedEntries.push(entry)
       }
     }
   })
   if (removedEntries.length === 0) {
     return
   }
-  value.value = value.value.filter((entry) => !removedEntries.includes(entry))
+  value.value = value.value.filter((entry) => !removedEntries.includes(entry.name))
   cleanSelection()
 }
 

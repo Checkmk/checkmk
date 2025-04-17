@@ -21,6 +21,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.dcd import DCD
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.passwords import Passwords
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -94,7 +95,8 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
         json_credentials='{"no": "idea"}',
     )
     gcp_qs_config_page.button_proceed_from_stage_one.click()
-    gcp_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    gcp_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         gcp_qs_config_page.button_proceed_from_stage_two,
         message="Expected stage 2 button to be enabled after proceeding to stage 2!",
@@ -109,7 +111,8 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
         site_name=test_site.id,
     )
     gcp_qs_config_page.button_proceed_from_stage_two.click()
-    gcp_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    gcp_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         gcp_qs_config_page.button_proceed_from_stage_three,
         message="Expected stage 3 button to be enabled after proceeding to stage 3!",
@@ -123,7 +126,8 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
         services=QuickSetupMultiChoice([], ["HTTP(S) load balancer"]),
     )
     gcp_qs_config_page.button_proceed_from_stage_three.click()
-    gcp_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    gcp_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         gcp_qs_config_page.button_proceed_from_stage_four,
         message="Expected stage 4 button to be enabled after proceeding to stage 4!",
@@ -139,7 +143,8 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
         gcp_qs_config_page.main_area.locator().get_by_text("GCP services found!"),
         message="Expected GCP services to be found after the connection test!",
     ).to_be_visible()
-    gcp_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    gcp_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     gcp_qs_config_page.save_quick_setup()
 
     logger.info("Validate GCP configuration is listed.")

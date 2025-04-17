@@ -71,7 +71,7 @@ def test_add_new_notification_rule(
     add_rule_page.goto_next_qs_stage()
 
     logger.info("Create new html email parameter")
-    add_rule_page.create_parameter_button().click()
+    add_rule_page.create_html_parameter_using_slide_in()
 
     logger.info("Set description of parameter")
     add_rule_page.si_description.fill("gui_e2e_test_parameter")

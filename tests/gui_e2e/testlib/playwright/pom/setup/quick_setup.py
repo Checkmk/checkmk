@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-import time
 from abc import abstractmethod
 
 from playwright.sync_api import expect, Locator
 
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +61,13 @@ class QuickSetupPage(CmkPage):
 
     def goto_next_qs_stage(self) -> None:
         self.main_area.locator(".qs-stage--active").get_by_label(GOTO_NEXT_STAGE).click()
-        logger.info("Wait for 750ms for proper animation")
-        time.sleep(750 / 1000)
+        logger.debug("Wait for animation to complete")
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)
 
     def goto_prev_qs_stage(self) -> None:
         self.main_area.locator(".qs-stage--active").get_by_label(GOTO_PREV_STAGE).click()
-        logger.info("Wait for 750ms for proper animation")
-        time.sleep(750 / 1000)
+        logger.debug("Wait for animation to complete")
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)
 
     def save_and_test(self) -> None:
         self.main_area.locator(".qs-save-stage__content").get_by_label("Save").first.click()
@@ -82,3 +82,4 @@ class QuickSetupPage(CmkPage):
     def save_editor_slide_in(self) -> None:
         save = self.editor_slide_in.get_by_role("button", name="Save")
         save.click()
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)

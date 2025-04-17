@@ -54,6 +54,14 @@ class NotificationConfiguration(CmkPage):
     def notification_rule_rows(self) -> Locator:
         return self.main_area.locator("table.data >> tr.data")
 
+    @property
+    def clone_and_edit_button(self) -> Locator:
+        """Return locator of button to confirm the action "clone & edit" a rule.
+
+        Apears only when a notification rule is being cloned!
+        """
+        return self.main_area.get_confirmation_popup_button("clone & edit")
+
     @overload
     def _notification_rule_row(self, rule_id: str) -> Locator: ...
 

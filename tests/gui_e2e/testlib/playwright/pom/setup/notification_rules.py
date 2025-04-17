@@ -103,7 +103,7 @@ class BaseNotificationPage(QuickSetupPage):
 
     @property
     def hosts_checkbox(self) -> Locator:
-        return self._hosts_row.get_by_role("checkbox")
+        return self._checkbox("Hosts", exact=True)
 
     def hosts_dropdown_list(self, index: int = 0) -> Locator:
         """Return locator corresponding to dropdown list consisting of host names.
@@ -127,11 +127,11 @@ class BaseNotificationPage(QuickSetupPage):
 
     @property
     def _exclude_services_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_role("checkbox", name="Exclude services")
+        return self._checkbox("Exclude services", exact=True)
 
     @property
     def services_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_role("checkbox", name="Services", exact=True)
+        return self._checkbox("Services", exact=True)
 
     def _match_services_text_field(self, index: int = 0) -> Locator:
         return self._get_row("Services").locator("input").nth(index)
@@ -201,6 +201,10 @@ class BaseNotificationPage(QuickSetupPage):
     @property
     def _disable_rule_button(self) -> Locator:
         return self.main_area.locator().get_by_role("checkbox", name="Disable rule")
+
+    def _checkbox(self, name: str, exact: bool = False) -> Locator:
+        ma = self.main_area.locator()
+        return ma.get_by_role("checkbox").and_(ma.get_by_label(name, exact=exact))
 
     def add_service_event(
         self,

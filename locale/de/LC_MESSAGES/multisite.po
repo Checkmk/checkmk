@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-16 14:54+0000\n"
+"PO-Revision-Date: 2025-04-17 14:29+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -375,10 +375,6 @@ msgstr "%%d gesperrte Elemente"
 #, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
-
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
 
 msgid "%/m"
 msgstr "%/m"
@@ -799,6 +795,10 @@ msgstr "%s wurde nach %s um %s gestoppt."
 #, python-format
 msgid "%s | %s"
 msgstr "%s | %s"
+
+#, python-format
+msgid "%s%% OK"
+msgstr "%s%% OK"
 
 #, python-format
 msgid ""
@@ -13086,6 +13086,10 @@ msgstr "%s für Paketierung klonen"
 msgid "Clone %s notification parameter"
 msgstr "%s Benachrichtigungsparameter klonen"
 
+#, python-format
+msgid "Clone & edit notification rule #%d"
+msgstr "Benachrichtigungsregel #%d klonen & bearbeiten"
+
 msgid "Clone SLA"
 msgstr "Klone SLA"
 
@@ -17316,8 +17320,8 @@ msgstr ""
 "Lieber Checkmk-Benutzer,<br><br>Sie haben noch %s in Ihrem Checkmk-"
 "Testzeitraum für die Instanz '%s' übrig.<br><br>%s jetzt, um Checkmk weiter "
 "so wie heute nutzen zu können. Falls Sie bereits eine Lizenz besitzen, geben "
-"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite "
-"ein.<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
+"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite ein."
+"<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
 "automatisch in den Lizenzstatus 'Free' umgewandelt. In diesem Lizenzstatus "
 "müssen Sie die Anzahl der Services von %s auf %s reduzieren, um die maximale "
 "Servicegrenze von Checkmk im Lizenzstatus 'Free' zu erfüllen.<br><br>In "
@@ -42356,6 +42360,9 @@ msgstr "Nein, Einstellungen anpassen"
 msgid "No, discard"
 msgstr "Nein, verwerfen"
 
+msgid "No, don't clone"
+msgstr "Nein, nicht klonen"
+
 msgid "No, keep current name"
 msgstr "Nein, aktuellen Namen beibehalten"
 
@@ -57380,8 +57387,8 @@ msgstr ""
 "ul> Die Protokollierung ist standardmäßig deaktiviert. Der "
 "Standardschwellenwert ist auf 60 Sekunden eingestellt. Wenn die "
 "Protokollierung aktiviert ist, wird ein Logeintrag pro Darstellung einer "
-"Tabellenansicht, die den konfigurierten Schwellenwert überschreitet, in <b>"
-"var/log/web.log</b> protokolliert."
+"Tabellenansicht, die den konfigurierten Schwellenwert überschreitet, in "
+"<b>var/log/web.log</b> protokolliert."
 
 #, python-format
 msgid "Some but not all package types are signed with key '%s'"
@@ -81301,6 +81308,9 @@ msgstr "Ja"
 
 msgid "Yes, acknowledge"
 msgstr "Ja, quittieren"
+
+msgid "Yes, clone & edit"
+msgstr "Ja, klonen & bearbeiten"
 
 msgid "Yes, rename"
 msgstr "Ja, umbenennen"

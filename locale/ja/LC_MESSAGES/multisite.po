@@ -367,10 +367,6 @@ msgstr "%%d ロックされた要素"
 msgid "%.1f mm"
 msgstr "%.1f mm"
 
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
-
 msgid "%/m"
 msgstr "%/m"
 
@@ -775,6 +771,10 @@ msgstr "%s は %s後に%sで停止しました。"
 #, python-format
 msgid "%s | %s"
 msgstr "%s |%s"
+
+#, fuzzy, python-format
+msgid "%s%% OK"
+msgstr "%.2f%% OK"
 
 #, python-format
 msgid ""
@@ -12813,6 +12813,10 @@ msgstr "パッケージ用のクローン %s"
 #, fuzzy, python-format
 msgid "Clone %s notification parameter"
 msgstr "%s 通知パラメータを追加"
+
+#, fuzzy, python-format
+msgid "Clone & edit notification rule #%d"
+msgstr "通知ルール %d を編集する"
 
 msgid "Clone SLA"
 msgstr "クローンSLA"
@@ -42059,6 +42063,9 @@ msgstr "いいえ、設定を調整してください"
 
 msgid "No, discard"
 msgstr "いいえ廃棄します"
+
+msgid "No, don't clone"
+msgstr ""
 
 msgid "No, keep current name"
 msgstr "いいえ、現在の名前を維持します"
@@ -80292,6 +80299,9 @@ msgstr "はい"
 
 msgid "Yes, acknowledge"
 msgstr "承認します"
+
+msgid "Yes, clone & edit"
+msgstr ""
 
 msgid "Yes, rename"
 msgstr "はい、名前を変更します"

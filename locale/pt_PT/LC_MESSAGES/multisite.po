@@ -379,10 +379,6 @@ msgstr "%%d elementos bloqueados"
 msgid "%.1f mm"
 msgstr "%.1f mm"
 
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
-
 msgid "%/m"
 msgstr "%/m"
 
@@ -794,6 +790,10 @@ msgstr "%s parou depois de %s ás %s."
 #, python-format
 msgid "%s | %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%s%% OK"
+msgstr "%.2f%% OK"
 
 #, python-format
 msgid ""
@@ -13516,6 +13516,10 @@ msgstr "Clonar %s para empacotamento"
 #, fuzzy, python-format
 msgid "Clone %s notification parameter"
 msgstr "Adicionar regra de notificação"
+
+#, fuzzy, python-format
+msgid "Clone & edit notification rule #%d"
+msgstr "Editar regra de notificação %d"
 
 msgid "Clone SLA"
 msgstr "Clone SLA"
@@ -43978,6 +43982,9 @@ msgstr "Configurações do anfitrião"
 #, fuzzy
 msgid "No, discard"
 msgstr "descartes"
+
+msgid "No, don't clone"
+msgstr ""
 
 msgid "No, keep current name"
 msgstr "Não, manter o nome atual"
@@ -84363,6 +84370,9 @@ msgstr "Sim"
 #, fuzzy
 msgid "Yes, acknowledge"
 msgstr "reconhecido"
+
+msgid "Yes, clone & edit"
+msgstr ""
 
 msgid "Yes, rename"
 msgstr "Sim, mudar o nome"

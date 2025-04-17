@@ -378,10 +378,6 @@ msgstr "%%d vergrendelde elementen"
 msgid "%.1f mm"
 msgstr "%.1f mm"
 
-#, python-format
-msgid "%.2f%% OK"
-msgstr "%.2f%% OK"
-
 msgid "%/m"
 msgstr "%/m"
 
@@ -793,6 +789,10 @@ msgstr "%s is gestopt na %s om %s."
 #, python-format
 msgid "%s | %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%s%% OK"
+msgstr "%.2f%% OK"
 
 #, python-format
 msgid ""
@@ -13514,6 +13514,10 @@ msgstr "Kloon %s voor verpakking"
 #, fuzzy, python-format
 msgid "Clone %s notification parameter"
 msgstr "Meldingsregel toevoegen"
+
+#, fuzzy, python-format
+msgid "Clone & edit notification rule #%d"
+msgstr "Wijzig notificatie regel %d"
 
 msgid "Clone SLA"
 msgstr "Kloon SLA"
@@ -43988,6 +43992,9 @@ msgstr "Host instellingen"
 #, fuzzy
 msgid "No, discard"
 msgstr "werpt"
+
+msgid "No, don't clone"
+msgstr ""
 
 #, fuzzy
 msgid "No, keep current name"
@@ -84451,6 +84458,9 @@ msgstr "Ja"
 #, fuzzy
 msgid "Yes, acknowledge"
 msgstr "erkend"
+
+msgid "Yes, clone & edit"
+msgstr ""
 
 #, fuzzy
 msgid "Yes, rename"

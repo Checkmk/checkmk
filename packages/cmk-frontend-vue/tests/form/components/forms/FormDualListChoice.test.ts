@@ -165,6 +165,27 @@ describe('FormDualListChoice', () => {
     ).equal(4)
   })
 
+  // Marked as fails because the input v-model is not updating the selection in vitest
+  test.fails('add by clicking add button having selected item', async () => {
+    render(FormDualListChoiceComponent, {
+      props: {
+        spec,
+        data: [],
+        backendValidation: []
+      }
+    })
+
+    const choice2 = screen.getByRole<HTMLSelectElement>('option', { name: 'Choice 2' })
+    await fireEvent.click(choice2)
+
+    const add = screen.getByRole<HTMLButtonElement>('button', { name: 'Add' })
+    await fireEvent.click(add)
+
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
+    ).equal(1)
+  })
+
   test('remove by double click on selected item', async () => {
     render(FormDualListChoiceComponent, {
       props: {
@@ -183,6 +204,27 @@ describe('FormDualListChoice', () => {
     expect(
       screen.getByRole<HTMLSelectElement>('listbox', { name: 'Selected options' }).options.length
     ).equal(2)
+  })
+
+  // Marked as fails because the input v-model is not updating the selection in vitest
+  test.fails('remove by clicking remove button having selected item', async () => {
+    render(FormDualListChoiceComponent, {
+      props: {
+        spec,
+        data: [{ name: 'choice1', title: 'Choice 1' }],
+        backendValidation: []
+      }
+    })
+
+    const choice = screen.getByRole('option', { name: 'Choice 1' })
+    await fireEvent.click(choice)
+
+    const remove = screen.getByRole<HTMLButtonElement>('button', { name: 'Remove' })
+    await fireEvent.click(remove)
+
+    expect(
+      screen.getByRole<HTMLSelectElement>('listbox', { name: 'Available options' }).options.length
+    ).equal(0)
   })
 
   describe('style', () => {

@@ -9,16 +9,13 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
 inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
-
-BY_ID_PATH="/dev/disk/by-id"
-BLOCK_PATH="/sys/block"
 
 # This will be called on LSI based raidcontrollers and accesses
 # the SMART data of SATA disks attached to a SAS Raid HBA via
@@ -64,131 +61,127 @@ megaraid_info() {
         done
 }
 
-main() {
-    # Only handle always updated values, add device path and vendor/model
-    if inpath smartctl >/dev/null 2>&1; then
-        #
-        # if the 3ware-utility is found
-        # get the serials for all disks on the controller
-        #
-        if inpath tw_cli >/dev/null 2>&1; then
-            # support for only one controller at the moment
-            TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
+# Only handle always updated values, add device path and vendor/model
+if inpath smartctl >/dev/null 2>&1; then
+    #
+    # if the 3ware-utility is found
+    # get the serials for all disks on the controller
+    #
+    if inpath tw_cli >/dev/null 2>&1; then
+        # support for only one controller at the moment
+        TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
 
-            # - add a trailing zero to handle case of unused slot
-            #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
-            # - only the last 9 chars seem to be relevant
-            # (hopefully all this doesn't change with new kernels...)
-            eval "$(tw_cli /"$TWAC" show drivestatus | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
-                twaminor=${twaminor#p}
-                serial=${serial:(-9)}
-                serial=AMCC_${serial}00000000000
-                echo "$serial=$twaminor"
-            done)"
-        else
-            echo "tw_cli not found" >&2
-        fi
-
-        INPATH_UDEVADM=$(inpath udevadm && echo "udevadm_present")
-
-        echo '<<<smart>>>'
-        SEEN=
-        # don't use brace expansion here to stay POSIX conform
-        for D in "$BY_ID_PATH"/scsi-* "$BY_ID_PATH"/ata-* "$BY_ID_PATH"/nvme-*; do
-            [ "$D" != "${D%scsi-\*}" ] && continue
-            [ "$D" != "${D%ata-\*}" ] && continue
-            [ "$D" != "${D%nvme-\*}" ] && continue
-            [ "$D" != "${D%-part*}" ] && continue
-            N=$(readlink "$D")
-            N=${N##*/}
-            if [ -r "$BLOCK_PATH"/"$N"/device/vendor ]; then
-                VEND=$(tr -d ' ' <"$BLOCK_PATH"/"$N"/device/vendor)
-            elif [ -r "$BLOCK_PATH"/"$N"/device/device/vendor ]; then
-                VEND=NVME
-            else
-                # 2012-01-25 Stefan Kaerst CDJ - in case $N does not exist
-                VEND=ATA
-            fi
-            if [ -r "$BLOCK_PATH"/"$N"/device/model ]; then
-                MODEL=$(sed -e 's/ /_/g' -e 's/_*$//g' <"$BLOCK_PATH"/"$N"/device/model)
-            else
-                MODEL=$(smartctl -a "$D" | grep -i "device model" | sed -e "s/.*:[ ]*//g" -e "s/\ /_/g")
-            fi
-            # Excluded disk models for SAN arrays or certain RAID luns that are also not usable..
-            if [ "$MODEL" = "iSCSI_Disk" ] || [ "$MODEL" = "LOGICAL_VOLUME" ]; then
-                continue
-            fi
-
-            # Exclude everything which can read a CD
-            if [ "$INPATH_UDEVADM" == "udevadm_present" ] && (udevadm info /dev/"$N" | grep -Fxq 'E: ID_CDROM_CD=1'); then
-                continue
-            fi
-
-            # Avoid duplicate entries for same device
-            if [ "${SEEN//.$N./}" != "$SEEN" ]; then
-                continue
-            fi
-            SEEN="$SEEN.$N."
-
-            # strip device name for final output
-            DNAME=${D#"$BY_ID_PATH"/scsi-}
-            DNAME=${DNAME#"$BY_ID_PATH"/ata-}
-            # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
-            CMD=
-            if [ "$VEND" == "AMCC" ] && [ -n "$TWAC" ]; then
-                DNAME=${DNAME#1}
-                [ -z "${!DNAME}" ] && continue
-                CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
-                # create nice device name including model
-                MODEL=$(tw_cli /"$TWAC"/p"${!DNAME}" show model | head -n 1 | awk -F= '{ print $2 }')
-                MODEL=${MODEL## }
-                MODEL=${MODEL// /-}
-                DNAME=${DNAME#AMCC_}
-                DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
-            elif [ "$VEND" != "ATA" ]; then
-                if [ "$VEND" == "NVME" ]; then
-                    DNAME="/dev/$N"
-                    CMD="smartctl -d nvme -A $DNAME"
-                else
-                    TEMP=
-                    # create temperature output as expected by checks/smart
-                    # this is a hack, TODO: change checks/smart to support SCSI-disks
-                    eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _; do
-                        [ "$a" == Serial ] && echo SN="$c"
-                        [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
-                    done)"
-                    [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
-                    DNAME="${VEND}_${MODEL}_${SN}"
-                fi
-            else
-                CMD="smartctl -d ata -v 9,raw48 -A $D; smartctl -d sat -v 9,raw48 -A $D"
-            fi
-
-            if [ "$VEND" == "NVME" ]; then
-                echo "$DNAME $VEND $MODEL"
-                [ -n "$CMD" ] && eval "$CMD" | sed -e '1,5d; /^$/d'
-            else
-                [ -n "$CMD" ] && eval "$CMD" | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
-            fi
-        done 2>/dev/null
-
-        # Call MegaRaid submodule if conditions are met
-        if type MegaCli >/dev/null 2>&1; then
-            MegaCli_bin="MegaCli"
-        elif type MegaCli64 >/dev/null 2>&1; then
-            MegaCli_bin="MegaCli64"
-        elif type megacli >/dev/null 2>&1; then
-            MegaCli_bin="megacli"
-        else
-            MegaCli_bin="unknown"
-        fi
-
-        if [ "$MegaCli_bin" != "unknown" ]; then
-            megaraid_info "$MegaCli_bin"
-        fi
+        # - add a trailing zero to handle case of unused slot
+        #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
+        # - only the last 9 chars seem to be relevant
+        # (hopefully all this doesn't change with new kernels...)
+        eval "$(tw_cli /"$TWAC" show drivestatus | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
+            twaminor=${twaminor#p}
+            serial=${serial:(-9)}
+            serial=AMCC_${serial}00000000000
+            echo "$serial=$twaminor"
+        done)"
     else
-        echo "ERROR: smartctl not found" >&2
+        echo "tw_cli not found" >&2
     fi
-}
 
-[ -z "${MK_SOURCE_ONLY}" ] && main
+    INPATH_UDEVADM=$(inpath udevadm && echo "udevadm_present")
+
+    echo '<<<smart>>>'
+    SEEN=
+    # don't use brace expansion here to stay POSIX conform
+    for D in /dev/disk/by-id/scsi-* /dev/disk/by-id/ata-* /dev/disk/by-id/nvme-*; do
+        [ "$D" != "${D%scsi-\*}" ] && continue
+        [ "$D" != "${D%ata-\*}" ] && continue
+        [ "$D" != "${D%nvme-\*}" ] && continue
+        [ "$D" != "${D%-part*}" ] && continue
+        N=$(readlink "$D")
+        N=${N##*/}
+        if [ -r /sys/block/"$N"/device/vendor ]; then
+            VEND=$(tr -d ' ' </sys/block/"$N"/device/vendor)
+        elif [ -r /sys/block/"$N"/device/device/vendor ]; then
+            VEND=NVME
+        else
+            # 2012-01-25 Stefan Kaerst CDJ - in case $N does not exist
+            VEND=ATA
+        fi
+        if [ -r /sys/block/"$N"/device/model ]; then
+            MODEL=$(sed -e 's/ /_/g' -e 's/_*$//g' </sys/block/"$N"/device/model)
+        else
+            MODEL=$(smartctl -a "$D" | grep -i "device model" | sed -e "s/.*:[ ]*//g" -e "s/\ /_/g")
+        fi
+        # Excluded disk models for SAN arrays or certain RAID luns that are also not usable..
+        if [ "$MODEL" = "iSCSI_Disk" ] || [ "$MODEL" = "LOGICAL_VOLUME" ]; then
+            continue
+        fi
+
+        # Exclude everything which can read a CD
+        if [ "$INPATH_UDEVADM" == "udevadm_present" ] && (udevadm info /dev/"$N" | grep -Fxq 'E: ID_CDROM_CD=1'); then
+            continue
+        fi
+
+        # Avoid duplicate entries for same device
+        if [ "${SEEN//.$N./}" != "$SEEN" ]; then
+            continue
+        fi
+        SEEN="$SEEN.$N."
+
+        # strip device name for final output
+        DNAME=${D#/dev/disk/by-id/scsi-}
+        DNAME=${DNAME#/dev/disk/by-id/ata-}
+        # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
+        CMD=
+        if [ "$VEND" == "AMCC" ] && [ -n "$TWAC" ]; then
+            DNAME=${DNAME#1}
+            [ -z "${!DNAME}" ] && continue
+            CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
+            # create nice device name including model
+            MODEL=$(tw_cli /"$TWAC"/p"${!DNAME}" show model | head -n 1 | awk -F= '{ print $2 }')
+            MODEL=${MODEL## }
+            MODEL=${MODEL// /-}
+            DNAME=${DNAME#AMCC_}
+            DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
+        elif [ "$VEND" != "ATA" ]; then
+            if [ "$VEND" == "NVME" ]; then
+                DNAME="/dev/$N"
+                CMD="smartctl -d nvme -A $DNAME"
+            else
+                TEMP=
+                # create temperature output as expected by checks/smart
+                # this is a hack, TODO: change checks/smart to support SCSI-disks
+                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _; do
+                    [ "$a" == Serial ] && echo SN="$c"
+                    [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
+                done)"
+                [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP \(0 0 0 0\)"
+                DNAME="${VEND}_${MODEL}_${SN}"
+            fi
+        else
+            CMD="smartctl -d ata -v 9,raw48 -A $D; smartctl -d sat -v 9,raw48 -A $D"
+        fi
+
+        if [ "$VEND" == "NVME" ]; then
+            echo "$DNAME $VEND $MODEL"
+            [ -n "$CMD" ] && eval "$CMD" | sed -e '1,5d; /^$/d'
+        else
+            [ -n "$CMD" ] && eval "$CMD" | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+        fi
+    done 2>/dev/null
+
+    # Call MegaRaid submodule if conditions are met
+    if type MegaCli >/dev/null 2>&1; then
+        MegaCli_bin="MegaCli"
+    elif type MegaCli64 >/dev/null 2>&1; then
+        MegaCli_bin="MegaCli64"
+    elif type megacli >/dev/null 2>&1; then
+        MegaCli_bin="megacli"
+    else
+        MegaCli_bin="unknown"
+    fi
+
+    if [ "$MegaCli_bin" != "unknown" ]; then
+        megaraid_info "$MegaCli_bin"
+    fi
+else
+    echo "ERROR: smartctl not found" >&2
+fi

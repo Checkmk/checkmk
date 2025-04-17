@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 from collections.abc import Sequence
 
 from cmk.gui.http import HTTPMethod
@@ -54,3 +55,19 @@ def identify_expected_status_codes(
         expected_status_codes.add(428)  # precondition required
 
     return expected_status_codes
+
+
+def format_to_routing_path(endpoint_path: str) -> str:
+    """
+    Examples:
+        >>> format_to_routing_path('/objects/folder_config/{folder_id}')
+        '/objects/folder_config/<string:folder_id>'
+
+        >>> format_to_routing_path('/objects/{object_type}/{object_id}/config')
+        '/objects/<string:object_type>/<string:object_id>/config'
+
+        >>> format_to_routing_path('A string with no replacements')
+        'A string with no replacements'
+    """
+    pattern = r"\{([^{}]+)\}"
+    return re.sub(pattern, lambda m: f"<string:{m.group(1)}>", endpoint_path)

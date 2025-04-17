@@ -16,7 +16,6 @@ import functools
 import http.client
 import json
 import logging
-import re
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Final, TypeVar
@@ -49,7 +48,11 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
     TagGroup,
 )
-from cmk.gui.openapi.restful_objects.utils import endpoint_ident, identify_expected_status_codes
+from cmk.gui.openapi.restful_objects.utils import (
+    endpoint_ident,
+    format_to_routing_path,
+    identify_expected_status_codes,
+)
 from cmk.gui.openapi.restful_objects.validators import (
     ContentTypeValidator,
     HeaderValidator,
@@ -707,19 +710,3 @@ class Endpoint:
 
     def make_url(self, parameter_values: dict[str, Any]) -> str:
         return self.path.format(**parameter_values)
-
-
-def format_to_routing_path(endpoint_path: str) -> str:
-    """
-    Examples:
-        >>> format_to_routing_path('/objects/folder_config/{folder_id}')
-        '/objects/folder_config/<string:folder_id>'
-
-        >>> format_to_routing_path('/objects/{object_type}/{object_id}/config')
-        '/objects/<string:object_type>/<string:object_id>/config'
-
-        >>> format_to_routing_path('A string with no replacements')
-        'A string with no replacements'
-    """
-    pattern = r"\{([^{}]+)\}"
-    return re.sub(pattern, lambda m: f"<string:{m.group(1)}>", endpoint_path)

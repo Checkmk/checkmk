@@ -1,0 +1,32 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+COMMIT_TO_CHECK=${1:-HEAD}
+IGNORE_SCRIPT_PATH=":!${BASH_SOURCE[0]#./}"
+MERGE_CONFLICT_PATTERN="^<<<<<<<\|>>>>>>>"
+EXIT_STATUS=0
+
+get_changed_files() {
+    git diff-tree --no-commit-id --name-only "${COMMIT_TO_CHECK}" -r -- . "${IGNORE_SCRIPT_PATH}"
+}
+
+merge_conflicts_detected() {
+    git show --no-notes "${COMMIT_TO_CHECK}:${1}" | grep -wq "${MERGE_CONFLICT_PATTERN}"
+}
+
+for file in $(get_changed_files); do
+    if merge_conflicts_detected "$file"; then
+        echo "FAILED: ${file}"
+        EXIT_STATUS=1
+    fi
+done
+
+if [ $EXIT_STATUS == 0 ]; then
+    echo "Merge conflict check success."
+else
+    echo "Merge conflict check failed!"
+fi
+
+exit $EXIT_STATUS

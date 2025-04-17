@@ -63,17 +63,17 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build",
             dependency_paths: [
-                "agents/wnx",
-                "agents/windows",
                 "agents/modules",
+                "agents/windows",
+                "agents/wnx",
                 "packages/host/cmk-agent-ctl",
                 "packages/host/mk-sql",
                 "third_party/asio",
-                "third_party/googletest",
                 "third_party/fmt",
-                "third_party/yaml-cpp",
-                "third_party/simpleini",
+                "third_party/googletest",
                 "third_party/openhardwaremonitor",
+                "third_party/simpleini",
+                "third_party/yaml-cpp",
             ],
             install_cmd: """\
                 cp \

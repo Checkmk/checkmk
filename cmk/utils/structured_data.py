@@ -1757,18 +1757,6 @@ class TreeStore:
         return self._tree_dir / f"{host_name}.gz"
 
 
-@dataclass(frozen=True)
-class HistoryPath:
-    path: Path
-    timestamp: int | None
-
-
-@dataclass(frozen=True)
-class HistoryPaths:
-    paths: Sequence[HistoryPath]
-    corrupted: Sequence[Path]
-
-
 class TreeOrArchiveStore(TreeStore):
     def __init__(self, tree_dir: Path | str, archive: Path | str) -> None:
         super().__init__(tree_dir)
@@ -1797,6 +1785,27 @@ class TreeOrArchiveStore(TreeStore):
         target_dir.mkdir(parents=True, exist_ok=True)
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
+
+
+@dataclass(frozen=True)
+class HistoryPath:
+    path: Path
+    timestamp: int | None
+
+
+@dataclass(frozen=True)
+class HistoryPaths:
+    paths: Sequence[HistoryPath]
+    corrupted: Sequence[Path]
+
+
+@dataclass(frozen=True)
+class HistoryEntry:
+    timestamp: int | None
+    new: int
+    changed: int
+    removed: int
+    delta_tree: ImmutableDeltaTree
 
 
 class HistoryStore:
@@ -1898,21 +1907,6 @@ def _get_pairs(
     return list(zip(paths, paths[1:]))
 
 
-@dataclass(frozen=True)
-class HistoryEntry:
-    timestamp: int | None
-    new: int
-    changed: int
-    removed: int
-    delta_tree: ImmutableDeltaTree
-
-
-@dataclass(frozen=True)
-class History:
-    entries: Sequence[HistoryEntry]
-    corrupted: Sequence[Path]
-
-
 def _filter_history_entry(
     entry: HistoryEntry, filter_tree: Sequence[SDFilterChoice]
 ) -> HistoryEntry | None:
@@ -1926,6 +1920,12 @@ def _filter_history_entry(
         delta_stats["removed"],
         filtered_delta_tree,
     )
+
+
+@dataclass(frozen=True)
+class History:
+    entries: Sequence[HistoryEntry]
+    corrupted: Sequence[Path]
 
 
 def load_history(

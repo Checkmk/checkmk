@@ -16,27 +16,16 @@ index 0000000..ae2269b
 +
 +unix_cc_toolchain_config = _unix_cc_toolchain_config
 diff --git a/cc/private/toolchain/unix_cc_toolchain_config.bzl b/cc/private/toolchain/unix_cc_toolchain_config.bzl
-index ee26a55..d9f812a 100644
+index ee26a55..907637c 100644
 --- a/cc/private/toolchain/unix_cc_toolchain_config.bzl
 +++ b/cc/private/toolchain/unix_cc_toolchain_config.bzl
-@@ -36,6 +36,13 @@ def _target_os_version(ctx):
-     xcode_config = ctx.attr._xcode_config[apple_common.XcodeVersionConfig]
-     return xcode_config.minimum_os_for_platform_type(platform_type)
- 
-+def _dynamic_to_static_cpp_runtime_lib(lib):
-+    if lib == "-lstdc++":
-+        return "-l:libstdc++.a"
-+    if lib == "-lc++":
-+        return "-l:c++.a"
-+    return lib
-+
- def layering_check_features(compiler, extra_flags_per_feature, is_macos):
-     if compiler != "clang":
-         return []
-@@ -360,6 +367,17 @@ def _impl(ctx):
-     static_link_cpp_runtimes_feature = feature(
-         name = "static_link_cpp_runtimes",
+@@ -362,6 +362,23 @@ def _impl(ctx):
          enabled = False,
+     )
+ 
++    static_libstdcpp_feature = feature(
++        name = "static_libstdcpp",
++        enabled = False,
 +        flag_sets = [
 +            flag_set(
 +                actions = [
@@ -48,18 +37,13 @@ index ee26a55..d9f812a 100644
 +                flag_groups = [flag_group(flags = ["-static-libstdc++"])],
 +            ),
 +        ],
-     )
- 
++        implies = ["static_link_cpp_runtimes"],
++    )
++
      default_compile_flags_feature = feature(
-@@ -1266,6 +1284,7 @@ def _impl(ctx):
-         ],
-     )
- 
-+    cpp_runtimes = ["-lstdc++", "-lc++"]
-     default_link_libs_feature = feature(
-         name = "default_link_libs",
+         name = "default_compile_flags",
          enabled = True,
-@@ -1273,6 +1292,21 @@ def _impl(ctx):
+@@ -1273,6 +1290,21 @@ def _impl(ctx):
              flag_set(
                  actions = all_link_actions + lto_index_actions,
                  flag_groups = [flag_group(flags = ctx.attr.link_libs)] if ctx.attr.link_libs else [],
@@ -71,7 +55,7 @@ index ee26a55..d9f812a 100644
 +                actions = all_link_actions + lto_index_actions,
 +                flag_groups = [flag_group(
 +                    flags = [
-+                        _dynamic_to_static_cpp_runtime_lib(link_lib)
++                        "-l:libstdc++.a" if "stdc++" in link_lib else link_lib
 +                        for link_lib in ctx.attr.link_libs
 +                    ],
 +                )] if ctx.attr.link_libs else [],
@@ -81,3 +65,19 @@ index ee26a55..d9f812a 100644
              ),
          ],
      )
+@@ -1803,6 +1835,7 @@ def _impl(ctx):
+             ubsan_feature,
+             gcc_quoting_for_param_files_feature,
+             static_link_cpp_runtimes_feature,
++            static_libstdcpp_feature,
+         ] + (
+             [
+                 supports_start_end_lib_feature,
+@@ -1853,6 +1886,7 @@ def _impl(ctx):
+             ubsan_feature,
+             gcc_quoting_for_param_files_feature,
+             static_link_cpp_runtimes_feature,
++            static_libstdcpp_feature,
+         ] + (
+             [
+                 supports_start_end_lib_feature,

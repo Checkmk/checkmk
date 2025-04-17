@@ -15,7 +15,9 @@ def main() {
         "test-python3-ruff",
         "test-python3-bandit",
         "test-agent-plugin-unit",
-        "test-python3-code-quality",
+        // TODO: Re-enable this as soon as fetching the git tags is not expansive as hell anymore
+        // Currently the idea is to only run those tests cron triggered in order to avoid git fetch --tags on every commit
+        // "test-python3-code-quality",
         "test-python3-format",
         "test-python3-typing",
         "test-bazel-lint",

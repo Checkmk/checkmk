@@ -107,8 +107,7 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
 
 
 def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
-    # TODO: Renable having git tags available
-    # _assert_git_tags_available()
+    _assert_git_tags_available()
 
     list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():

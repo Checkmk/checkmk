@@ -145,7 +145,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "aws_costs_and_usage",
         "aws_costs_and_usage_per_service",
         "aws_dynamodb_limits",
-        "aws_dynamodb_summary",
         "aws_dynamodb_table",
         "aws_dynamodb_table_read_capacity",
         "aws_dynamodb_table_write_capacity",

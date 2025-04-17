@@ -1417,14 +1417,14 @@ class Site:
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
             run(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
 
-        cmc_dir = self.result_dir() / "cmc"
-        makedirs(cmc_dir, sudo=True)
+        core_dir = self.result_dir() / self.core_name()
+        makedirs(core_dir, sudo=True)
 
         run(
             [
                 "cp",
-                self.path("var/check_mk/core/history").as_posix(),
-                (cmc_dir / "history").as_posix(),
+                self.core_history_log().as_posix(),
+                (core_dir / "history").as_posix(),
             ],
             sudo=True,
         )
@@ -1434,7 +1434,7 @@ class Site:
                 [
                     "cp",
                     self.path("var/check_mk/core/core").as_posix(),
-                    (cmc_dir / "core_dump").as_posix(),
+                    (core_dir / "core_dump").as_posix(),
                 ],
                 sudo=True,
             )

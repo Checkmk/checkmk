@@ -234,3 +234,80 @@ def test_missing_catalog_entries_of_man_pages(all_pages: Mapping[str, man_pages.
     found_catalog_entries_from_man_pages = {e for page in all_pages.values() for e in page.catalog}
     missing_catalog_entries = found_catalog_entries_from_man_pages - set(man_pages.CATALOG_TITLES)
     assert not missing_catalog_entries
+
+
+_ALLOWED_AGENTS = [
+    # TODO remove prefixes? eg. 'agent_'
+    "3par",
+    "agent_cisco_prime",
+    "agent_redfish",
+    "agent_redfish_power",
+    "agent_ucs_bladecenter",
+    "aix",
+    "alertmanager",
+    "allnet_ip_sensoric",
+    "appdynamics",
+    "aws",
+    "aws_status",
+    "azure",
+    "azure_status",
+    "cisco_meraki",
+    "datadog",
+    "ddn_s2a",
+    "elasticsearch",
+    "emc",
+    "emcvnx",
+    "freebsd",
+    "fritzbox",
+    "gcp",
+    "gcp_status",
+    "gerrit",
+    "graylog",
+    "hp_msa",
+    "hpux",
+    "ibm_svc",
+    "jenkins",
+    "jira",
+    "kubernetes",
+    "linux",
+    "macosx",
+    "mobileiron",
+    "mqtt",
+    "netapp",
+    "netbsd",
+    "nutanix",
+    "openbsd",
+    "openvms",
+    "openwrt",
+    "otel",
+    "prometheus",
+    "proxmox_ve",
+    "pure_storage_fa",
+    "rabbitmq",
+    "ruckus",
+    "salesforce",
+    "siemens_plc",
+    "snmp",
+    "solaris",
+    "splunk",
+    "storeonce",
+    "storeonce4x",
+    "vnx_quotas",
+    "vsphere",
+    "windows",
+    "z_os",
+    "zerto",
+    # TODO lower case and/or cmk_bi?
+    "BI",
+    # TODO do we want to specify these?
+    "active",
+    "special",
+]
+
+
+def test_man_page_agents(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+    man_page_uses_forbidden_agents: dict[str, set[str]] = {}
+    for name, page in all_pages.items():
+        if forbidden := set(page.agents) - set(_ALLOWED_AGENTS):
+            man_page_uses_forbidden_agents.setdefault(name, forbidden)
+    assert not man_page_uses_forbidden_agents

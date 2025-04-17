@@ -1,5 +1,5 @@
 title: HPE Switches: Fan Status
-agents: SNMP
+agents: snmp
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk

@@ -36,7 +36,6 @@ ignore = [
   # Basically a TODO list...
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
-  "UP012", # Unnecessary call to `encode` as UTF-8
   "UP015", # Unnecessary open mode parameters
   "UP017", # Use `datetime.UTC` alias
   "UP024", # Replace aliased errors with `OSError`
@@ -79,6 +78,7 @@ ignore = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
+  "UP012", # Unnecessary call to `encode` as UTF-8
   "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP036", # Version block is outdated for minimum Python version
 ]

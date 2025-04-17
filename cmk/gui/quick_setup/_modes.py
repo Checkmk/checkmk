@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -91,16 +91,20 @@ class ModeQuickSetupSpecialAgent(WatoMode):
     VAR_NAME = "varname"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "new_special_agent_configuration"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditConfigurationBundles
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(varname=self._name)
 
+    @override
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
         if not self._name.startswith(RuleGroupType.SPECIAL_AGENTS.value):
@@ -115,24 +119,29 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         self._quick_setup_id = quick_setup.id
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
         for domain_definition in bundle_domains()[RuleGroupType.SPECIAL_AGENTS]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
+    @override
     def title(self) -> str:
         title = rulespec_registry[self._name].title
         assert title is not None
         return _("Add %s configuration") % title
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         with request.stashed_vars():
             return super().breadcrumb()
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             title=_("Configuration"),
@@ -141,6 +150,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
             cancel_url=mode_url(mode_name=ModeEditConfigurationBundles.name(), varname=self._name),
         )
 
+    @override
     def page(self) -> None:
         enable_page_menu_entry(html, "inline_help")
         html.vue_app(
@@ -159,13 +169,16 @@ class ModeEditConfigurationBundles(WatoMode):
     VAR_BUNDLE_ID = "_bundle_id"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_configuration_bundles"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
         yield BreadcrumbItem(
@@ -173,12 +186,14 @@ class ModeEditConfigurationBundles(WatoMode):
             url=None,
         )
 
+    @override
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
         for domain_definition in bundle_domains()[self._bundle_group_type]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
+    @override
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
         try:
@@ -192,9 +207,11 @@ class ModeEditConfigurationBundles(WatoMode):
                 % self._name,
             )
 
+    @override
     def _breadcrumb_url(self) -> str:
         return self.mode_url(varname=self._name)
 
+    @override
     def title(self) -> str:
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             title = rulespec_registry[self._name].title
@@ -202,6 +219,7 @@ class ModeEditConfigurationBundles(WatoMode):
             return title
         raise MKGeneralException("Not implemented bundle group type")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
@@ -233,6 +251,7 @@ class ModeEditConfigurationBundles(WatoMode):
         )
         return menu
 
+    @override
     def page(self) -> None:
         if not active_config.wato_hide_varnames:
             display_varname = (
@@ -308,6 +327,7 @@ class ModeEditConfigurationBundles(WatoMode):
         ]
         return make_action_link(vars_)
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
@@ -398,14 +418,17 @@ class ModeEditConfigurationBundles(WatoMode):
 
 class ABCMainModuleQuickSetup(ABCMainModule, ABC):
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicQuickSetup
 
     @property
+    @override
     def permission(self) -> None | str:
         # this should've only been used within `may_see`, which we've overridden...
         raise NotImplementedError()
 
+    @override
     def may_see(self) -> bool:
         domains = bundle_domains()
         if self.rule_group_type not in domains:
@@ -420,6 +443,7 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
         return True
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return False
 
@@ -431,40 +455,49 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
 
 class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
     @property
+    @override
     def rule_group_type(self) -> RuleGroupType:
         return RuleGroupType.SPECIAL_AGENTS
 
     @property
+    @override
     def mode_or_url(self) -> str:
         return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
 
     @property
+    @override
     def title(self) -> str:
         return _("Amazon Web Service (AWS)")
 
     @property
+    @override
     def icon(self) -> Icon:
         return "quick_setup_aws"
 
     @property
+    @override
     def description(self) -> str:
         return _("Configure Amazon Web Service (AWS) monitoring in Checkmk")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 10
 
     @classmethod
+    @override
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["aws"]
 
 
 class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
+    @override
     def rule_group_type(self) -> RuleGroupType:
         return RuleGroupType.SPECIAL_AGENTS
 
     @property
+    @override
     def mode_or_url(self) -> str:
         return mode_url(
             ModeEditConfigurationBundles.name(),
@@ -472,32 +505,39 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
         )
 
     @property
+    @override
     def title(self) -> str:
         return _("Microsoft Azure")
 
     @property
+    @override
     def icon(self) -> Icon:
         return "azure_vms"
 
     @property
+    @override
     def description(self) -> str:
         return _("Configure Microsoft Azure monitoring in Checkmk")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 11
 
     @classmethod
+    @override
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["azure"]
 
 
 class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
     @property
+    @override
     def rule_group_type(self) -> RuleGroupType:
         return RuleGroupType.SPECIAL_AGENTS
 
     @property
+    @override
     def mode_or_url(self) -> str:
         return mode_url(
             ModeEditConfigurationBundles.name(),
@@ -505,22 +545,27 @@ class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
         )
 
     @property
+    @override
     def title(self) -> str:
         return _("Google Cloud Platform (GCP)")
 
     @property
+    @override
     def icon(self) -> Icon:
         return "gcp"
 
     @property
+    @override
     def description(self) -> str:
         return _("Configure Google Cloud Platform (GCP) monitoring in Checkmk")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 12
 
     @classmethod
+    @override
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["gcp"]
 
@@ -540,17 +585,21 @@ class ModeConfigurationBundle(WatoMode):
     VAR_ACTION = "action"
 
     @classmethod
+    @override
     def name(cls) -> str:
         return "edit_configuration_bundle"
 
     @classmethod
+    @override
     def parent_mode(cls) -> type["WatoMode"]:
         return ModeEditConfigurationBundles
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    @override
     def ensure_permissions(self) -> None:
         if not self._existing_bundle:
             return
@@ -560,11 +609,13 @@ class ModeConfigurationBundle(WatoMode):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
+    @override
     def title(self) -> str:
         if not self._existing_bundle:
             return _("Configuration: %s") % self._bundle_id
         return _("Edit configuration: %s") % self._bundle["title"]
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         if not self._existing_bundle:
             return Breadcrumb()
@@ -572,6 +623,7 @@ class ModeConfigurationBundle(WatoMode):
         request.set_var(ModeEditConfigurationBundles.VAR_NAME, self._bundle_group)
         return super().breadcrumb()
 
+    @override
     def _from_vars(self) -> None:
         self._bundle_id = request.get_validated_type_input_mandatory(BundleId, "bundle_id")
 
@@ -608,11 +660,13 @@ class ModeConfigurationBundle(WatoMode):
                 % self._bundle_id,
             )
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Actions"), breadcrumb, form_name="edit_bundle", button_name="_save"
         )
 
+    @override
     def page(self) -> None:
         if not self._existing_bundle:
             html.open_div(class_="really")
@@ -732,6 +786,7 @@ class ModeConfigurationBundle(WatoMode):
             elements=elements,
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 

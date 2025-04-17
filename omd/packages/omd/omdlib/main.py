@@ -104,10 +104,8 @@ from omdlib.utils import (
     create_skeleton_files,
     delete_user_file,
     get_editor,
-    get_site_distributed_setup,
     replace_tags,
     site_exists,
-    SiteDistributedSetup,
 )
 from omdlib.version import (
     default_version,
@@ -134,7 +132,6 @@ from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.resulttype import Error, OK, Result
-from cmk.utils.werks import unacknowledged_incompatible_werks
 
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password
@@ -2789,34 +2786,6 @@ def main_update(
             "'omd -f update' or 'omd --force update'"
             "But you will be on your own from there."
         )
-
-    # warn about unacknowledged werks
-    is_major_update = cmk_from_version.base != cmk_to_version.base
-    # but we can only do this if we have access to the version we upgrade from:
-    # (docker installations have only a single version, the one they run and update to.)
-    access_to_from_version = os.path.exists(os.path.join(site.real_dir, "version"))
-    if (
-        is_major_update
-        and access_to_from_version
-        and get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
-    ):
-        unack_werks = unacknowledged_incompatible_werks()
-        if len(unack_werks):
-            note_list_is_clipped = ""
-            werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks[:50])
-            if len(unack_werks) > 50:
-                note_list_is_clipped = "(Only showing the first 50 unacknowledged werks here, check the changelog in Checkmk for the whole list.)\n\n"
-            if not dialog_yesno(
-                f"The current site contains {len(unack_werks)} unacknowledged werks.\n\n"
-                "It is recommended to review these werks for changes you need to make to your sites configuration. "
-                "If you continue, those werks will be automatically acknowledged and "
-                f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n{note_list_is_clipped}"
-                f"{werks_list}",
-                "Acknowledge werks and continue",
-                "Abort",
-                scrollbar=True,
-            ):
-                bail_out("Aborted.")
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.

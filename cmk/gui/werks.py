@@ -15,14 +15,8 @@ from typing import Any, cast, Literal, override, TypedDict
 from cmk.ccc.version import Edition
 
 from cmk.utils.man_pages import make_man_page_path_map
-from cmk.utils.werks import (
-    load_werk_entries,
-    sort_by_date,
-    unacknowledged_incompatible_werks,
-)
-from cmk.utils.werks.acknowledgement import (
-    is_acknowledged,
-)
+from cmk.utils.werks import load_werk_entries
+from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
 
@@ -89,6 +83,20 @@ def get_werk_by_id(werk_id: int) -> Werk:
         if werk.id == werk_id:
             return werk
     raise MKUserError("werk", _("This werk does not exist."))
+
+
+def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
+    return sorted(werks, key=lambda werk: werk.date, reverse=True)
+
+
+def unacknowledged_incompatible_werks() -> list[Werk]:
+    acknowledged_werk_ids = load_acknowledgements()
+    return sort_by_date(
+        werk
+        for werk in load_werk_entries()
+        if werk.compatible == Compatibility.NOT_COMPATIBLE
+        and not is_acknowledged(werk, acknowledged_werk_ids)
+    )
 
 
 class WerkTableOptions(TypedDict):

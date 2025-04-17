@@ -20,18 +20,18 @@ only handle the WerkV2 model. Old style werks are converted to markdown Werks,
 so both can be handled with a common interface.
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 
 import cmk.utils.paths
 
-from cmk.werks.models import Compatibility, Werk
+from cmk.werks.models import Werk
 from cmk.werks.utils import (
     load_precompiled_werks_file,
 )
 
-from .acknowledgement import is_acknowledged, load_acknowledgements, UNACKNOWLEDGED_WERKS_JSON
+from .acknowledgement import load_acknowledgements, UNACKNOWLEDGED_WERKS_JSON
 
 COMPILED_WERKS_DIR = Path(cmk.utils.paths.share_dir, "werks")
 
@@ -82,17 +82,3 @@ def load_werk_entries() -> Sequence[Werk]:
     # expected, so this caching issue might actually be a feature.
     werks_raw = load()
     return list(werks_raw.values())
-
-
-def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
-    return sorted(werks, key=lambda werk: werk.date, reverse=True)
-
-
-def unacknowledged_incompatible_werks() -> list[Werk]:
-    acknowledged_werk_ids = load_acknowledgements()
-    return sort_by_date(
-        werk
-        for werk in load_werk_entries()
-        if werk.compatible == Compatibility.NOT_COMPATIBLE
-        and not is_acknowledged(werk, acknowledged_werk_ids)
-    )

@@ -1,5 +1,5 @@
 title: Oracle Instance: Undo Retention
-agents: linux, aix, hp/ux, Solaris
+agents: linux, aix, hpux, solaris
 catalog: app/oracle
 license: GPLv2
 distribution: check_mk

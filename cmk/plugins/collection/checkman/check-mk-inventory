@@ -1,5 +1,5 @@
 title: Checkmk: Discovery Procedure
-agents: aix, freebsd, hpux, linux, macosx, netbsd, openwbsd, openwrt, solaris
+agents: aix, freebsd, hpux, linux, macosx, netbsd, openbsd, openwrt, solaris
 catalog: app/cmk
 license: GPLv2
 distribution: check_mk

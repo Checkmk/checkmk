@@ -1,5 +1,5 @@
 title: Cisco Meraki devices: Power Supply
-agents: special agent
+agents: special
 catalog: hw/network/cisco
 license: GPLv2
 distribution: check_mk

@@ -933,7 +933,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> SDRawTree:
         checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         try:
-            tree = TreeStore(cmk.utils.paths.inventory_output_dir).load(
+            tree = TreeStore(Path(cmk.utils.paths.inventory_output_dir)).load(
                 host_name=checkmk_server_host
             )
         except FileNotFoundError:

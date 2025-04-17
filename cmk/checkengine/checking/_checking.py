@@ -7,6 +7,7 @@
 import itertools
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import cmk.utils.paths
@@ -147,7 +148,7 @@ def _do_inventory_actions_during_checking_for(
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
 ) -> None:
-    tree_store = TreeStore(cmk.utils.paths.status_data_dir)
+    tree_store = TreeStore(Path(cmk.utils.paths.status_data_dir))
 
     if not params.status_data_inventory:
         # includes cluster case

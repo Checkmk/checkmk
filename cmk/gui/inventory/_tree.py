@@ -147,9 +147,9 @@ def _load_tree_from_file(
 
     match tree_type:
         case "inventory":
-            return TreeStore(cmk.utils.paths.inventory_output_dir).load(host_name=host_name)
+            return TreeStore(Path(cmk.utils.paths.inventory_output_dir)).load(host_name=host_name)
         case "status_data":
-            return TreeStore(cmk.utils.paths.status_data_dir).load(host_name=host_name)
+            return TreeStore(Path(cmk.utils.paths.status_data_dir)).load(host_name=host_name)
 
 
 @request_memoize()

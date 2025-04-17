@@ -1721,9 +1721,9 @@ def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTr
 
 
 class TreeStore:
-    def __init__(self, tree_dir: Path | str) -> None:
-        self._tree_dir = Path(tree_dir)
-        self._last_filepath = Path(tree_dir) / ".last"
+    def __init__(self, inventory_dir: Path) -> None:
+        self.inventory_dir = inventory_dir
+        self._last_filepath = inventory_dir / ".last"
 
     def load(self, *, host_name: HostName) -> ImmutableTree:
         return _load_tree(self._tree_file(host_name))
@@ -1731,7 +1731,7 @@ class TreeStore:
     def save(
         self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
     ) -> None:
-        self._tree_dir.mkdir(parents=True, exist_ok=True)
+        self.inventory_dir.mkdir(parents=True, exist_ok=True)
 
         tree_file = self._tree_file(host_name)
 
@@ -1751,16 +1751,16 @@ class TreeStore:
         self._gz_file(host_name).unlink(missing_ok=True)
 
     def _tree_file(self, host_name: HostName) -> Path:
-        return self._tree_dir / str(host_name)
+        return self.inventory_dir / str(host_name)
 
     def _gz_file(self, host_name: HostName) -> Path:
-        return self._tree_dir / f"{host_name}.gz"
+        return self.inventory_dir / f"{host_name}.gz"
 
 
 class TreeOrArchiveStore(TreeStore):
-    def __init__(self, tree_dir: Path | str, archive: Path | str) -> None:
-        super().__init__(tree_dir)
-        self._archive_dir = Path(archive)
+    def __init__(self, inventory_dir: Path, archive_dir: Path) -> None:
+        super().__init__(inventory_dir)
+        self.archive_dir = Path(archive_dir)
 
     def load_previous(self, *, host_name: HostName) -> ImmutableTree:
         if (tree_file := self._tree_file(host_name)).exists():
@@ -1776,7 +1776,7 @@ class TreeOrArchiveStore(TreeStore):
         return _load_tree(latest_archive_tree_file)
 
     def _archive_host_dir(self, host_name: HostName) -> Path:
-        return self._archive_dir / str(host_name)
+        return self.archive_dir / str(host_name)
 
     def archive(self, *, host_name: HostName) -> None:
         if not (tree_file := self._tree_file(host_name)).exists():

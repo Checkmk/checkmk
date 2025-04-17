@@ -2626,7 +2626,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = plugins.inventory_plugins
 
-    tree_store = TreeStore(cmk.utils.paths.inventory_output_dir)
+    tree_store = TreeStore(Path(cmk.utils.paths.inventory_output_dir))
 
     for hostname in hostnames:
 
@@ -2736,8 +2736,8 @@ def execute_active_check_inventory(
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
 ) -> Sequence[ActiveCheckResult]:
     tree_or_archive_store = TreeOrArchiveStore(
-        cmk.utils.paths.inventory_output_dir,
-        cmk.utils.paths.inventory_archive_dir,
+        Path(cmk.utils.paths.inventory_output_dir),
+        Path(cmk.utils.paths.inventory_archive_dir),
     )
     previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
 

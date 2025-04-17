@@ -1804,6 +1804,7 @@ class HistoryStore:
         self.inventory_dir = inventory_dir
         self.archive_dir = archive_dir
         self.delta_cache_dir = delta_cache_dir
+        self._lookup: dict[Path, ImmutableTree] = {}
 
     def files(self, *, host_name: HostName) -> HistoryPaths:
         try:
@@ -1834,19 +1835,14 @@ class HistoryStore:
     ) -> Path:
         return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
 
-
-@dataclass(frozen=True)
-class _CachedTreeLoader:
-    _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
-
-    def get_tree(self, filepath: Path) -> ImmutableTree:
-        if filepath == Path():
+    def lookup_tree(self, file_path: Path) -> ImmutableTree:
+        if file_path == Path():
             return ImmutableTree()
 
-        if filepath in self._lookup:
-            return self._lookup[filepath]
+        if file_path in self._lookup:
+            return self._lookup[file_path]
 
-        return self._lookup.setdefault(filepath, _load_tree(filepath))
+        return self._lookup.setdefault(file_path, _load_tree(file_path))
 
 
 def _get_pairs(
@@ -1931,7 +1927,6 @@ def load_history(
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
     files = history_store.files(host_name=host_name)
-    cached_tree_loader = _CachedTreeLoader()
     entries: list[HistoryEntry] = []
     for previous, current in filter_history_paths(_get_pairs(files.paths)):
         if current.timestamp is None:
@@ -1948,12 +1943,12 @@ def load_history(
             continue
 
         try:
-            previous_tree = cached_tree_loader.get_tree(previous.path)
+            previous_tree = history_store.lookup_tree(previous.path)
         except FileNotFoundError:
             continue
 
         try:
-            current_tree = cached_tree_loader.get_tree(current.path)
+            current_tree = history_store.lookup_tree(current.path)
         except FileNotFoundError:
             continue
 

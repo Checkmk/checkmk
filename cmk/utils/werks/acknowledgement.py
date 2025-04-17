@@ -17,7 +17,7 @@ UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
-    return werk.id in acknowledged_werk_ids or version_is_pre_127(werk.version)
+    return werk.id in acknowledged_werk_ids
 
 
 def load_acknowledgements(
@@ -35,10 +35,6 @@ def save_acknowledgements(
     acknowledged_werks_mk: Path = ACKNOWLEDGEMENT_PATH,
 ) -> None:
     store.save_object_to_file(acknowledged_werks_mk, acknowledged_werks)
-
-
-def version_is_pre_127(version: str) -> bool:
-    return version.startswith("1.2.5") or version.startswith("1.2.6")
 
 
 def write_unacknowledged_werks(

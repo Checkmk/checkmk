@@ -1830,10 +1830,37 @@ class HistoryStore:
 
         return HistoryPaths(paths=paths, corrupted=corrupted)
 
-    def delta_cache_host_tree_file(
-        self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
+    def _delta_cache_host_tree_file(
+        self, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
     ) -> Path:
         return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
+
+    def load_history_entry(
+        self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
+    ) -> HistoryEntry | None:
+        try:
+            cached_data = store.load_object_from_file(
+                self._delta_cache_host_tree_file(
+                    host_name,
+                    previous_timestamp,
+                    current_timestamp,
+                ),
+                default=None,
+            )
+        except MKGeneralException:
+            return None
+
+        if cached_data is None:
+            return None
+
+        new, changed, removed, raw_delta_tree = cached_data
+        return HistoryEntry(
+            current_timestamp,
+            new,
+            changed,
+            removed,
+            deserialize_delta_tree(raw_delta_tree),
+        )
 
     def lookup_tree(self, file_path: Path) -> ImmutableTree:
         if file_path == Path():
@@ -1843,6 +1870,23 @@ class HistoryStore:
             return self._lookup[file_path]
 
         return self._lookup.setdefault(file_path, _load_tree(file_path))
+
+    def save_history_entry(
+        self,
+        *,
+        host_name: HostName,
+        previous_timestamp: int | None,
+        current_timestamp: int,
+        entry: HistoryEntry,
+    ) -> None:
+        store.save_text_to_file(
+            self._delta_cache_host_tree_file(
+                host_name,
+                previous_timestamp,
+                current_timestamp,
+            ),
+            repr((entry.new, entry.changed, entry.removed, serialize_delta_tree(entry.delta_tree))),
+        )
 
 
 def _get_pairs(
@@ -1867,39 +1911,6 @@ class HistoryEntry:
 class History:
     entries: Sequence[HistoryEntry]
     corrupted: Sequence[Path]
-
-
-def _load_history_entry(delta_tree_path: Path, timestamp: int) -> HistoryEntry | None:
-    try:
-        cached_data = store.load_object_from_file(delta_tree_path, default=None)
-    except MKGeneralException:
-        return None
-
-    if cached_data is None:
-        return None
-
-    new, changed, removed, raw_delta_tree = cached_data
-    return HistoryEntry(timestamp, new, changed, removed, deserialize_delta_tree(raw_delta_tree))
-
-
-def _compute_or_store_history_entry(
-    delta_tree_path: Path,
-    timestamp: int,
-    previous_tree: ImmutableTree,
-    current_tree: ImmutableTree,
-) -> HistoryEntry | None:
-    delta_tree = current_tree.difference(previous_tree)
-    delta_stats = delta_tree.get_stats()
-    new = delta_stats["new"]
-    changed = delta_stats["changed"]
-    removed = delta_stats["removed"]
-    if new or changed or removed:
-        store.save_text_to_file(
-            delta_tree_path,
-            repr((new, changed, removed, serialize_delta_tree(delta_tree))),
-        )
-        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
-    return None
 
 
 def _filter_history_entry(
@@ -1932,13 +1943,13 @@ def load_history(
         if current.timestamp is None:
             continue
 
-        delta_tree_path = history_store.delta_cache_host_tree_file(
-            host_name=host_name,
-            previous_timestamp=previous.timestamp,
-            current_timestamp=current.timestamp,
-        )
-
-        if (entry := _load_history_entry(delta_tree_path, current.timestamp)) is not None:
+        if (
+            entry := history_store.load_history_entry(
+                host_name=host_name,
+                previous_timestamp=previous.timestamp,
+                current_timestamp=current.timestamp,
+            )
+        ) is not None:
             entries.append(entry)
             continue
 
@@ -1952,11 +1963,22 @@ def load_history(
         except FileNotFoundError:
             continue
 
-        if (
-            entry := _compute_or_store_history_entry(
-                delta_tree_path, current.timestamp, previous_tree, current_tree
+        delta_tree = current_tree.difference(previous_tree)
+        delta_stats = delta_tree.get_stats()
+        entry = HistoryEntry(
+            current.timestamp,
+            delta_stats["new"],
+            delta_stats["changed"],
+            delta_stats["removed"],
+            delta_tree,
+        )
+        if entry.new or entry.changed or entry.removed:
+            history_store.save_history_entry(
+                host_name=host_name,
+                previous_timestamp=previous.timestamp,
+                current_timestamp=current.timestamp,
+                entry=entry,
             )
-        ) is not None:
             entries.append(entry)
 
     if filter_tree is None:

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 const listItemVariants = cva('', {
   variants: {
@@ -40,18 +41,22 @@ const { buttonPadding = '16px' } = defineProps<{
     <div class="cmk-list-item__button-container">
       <div class="cmk-list-item__buttons">
         <template v-if="draggable!!">
-          <CmkIconButton
-            name="drag"
-            size="small"
-            style="pointer-events: none"
+          <!--
+            There are NO automatic tests for the dragging behavior, see comment
+            in tests. If you change anything here, test manually!
+          -->
+          <div
+            class="cmk-list-item__drag-button"
             aria-label="Drag to reorder"
+            role="button"
             :draggable="true"
             @dragstart="draggable?.dragStart"
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
-            @click.prevent="() => {}"
-          />
-          <CmkSpace direction="horizontal" />
+          >
+            <CmkIcon name="drag" size="small" style="pointer-events: none" />
+          </div>
+          <CmkSpace direction="horizontal" size="small" />
         </template>
         <CmkIconButton
           name="close"
@@ -114,6 +119,12 @@ const { buttonPadding = '16px' } = defineProps<{
       padding-top: 0;
       padding-bottom: 0;
     }
+  }
+
+  .cmk-list-item__drag-button {
+    display: inline-block;
+    cursor: grab;
+    padding-right: var(--spacing-half);
   }
 }
 </style>

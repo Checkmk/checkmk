@@ -86,7 +86,7 @@ class RfSSDPServer:
                 data, addr = self.sock.recvfrom(1024)
                 pcount += 1
                 self.check(data, addr)
-            except socket.timeout:
+            except TimeoutError:
                 countTimeout += 1
                 continue
             except Exception as e:

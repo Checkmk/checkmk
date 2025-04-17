@@ -1933,7 +1933,6 @@ def load_history(
     files = history_store.files(host_name=host_name)
     cached_tree_loader = _CachedTreeLoader()
     entries: list[HistoryEntry] = []
-    corrupted_deltas = []
     for previous, current in filter_history_paths(_get_pairs(files.paths)):
         if current.timestamp is None:
             continue
@@ -1951,13 +1950,11 @@ def load_history(
         try:
             previous_tree = cached_tree_loader.get_tree(previous.path)
         except FileNotFoundError:
-            corrupted_deltas.append(previous.path)
             continue
 
         try:
             current_tree = cached_tree_loader.get_tree(current.path)
         except FileNotFoundError:
-            corrupted_deltas.append(current.path)
             continue
 
         if (
@@ -1968,9 +1965,9 @@ def load_history(
             entries.append(entry)
 
     if filter_tree is None:
-        return History(entries=entries, corrupted=list(files.corrupted) + corrupted_deltas)
+        return History(entries=entries, corrupted=files.corrupted)
 
     return History(
         entries=[f for e in entries if (f := _filter_history_entry(e, filter_tree))],
-        corrupted=list(files.corrupted) + corrupted_deltas,
+        corrupted=files.corrupted,
     )

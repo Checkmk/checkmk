@@ -2552,7 +2552,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def _add_change(self, log_what: str, log_text: str) -> None:
         if has_wato_slave_sites():
             self._start_async_repl = True
-            _audit_log.log_audit(log_what, log_text)
+            _audit_log.log_audit(action=log_what, message=log_text)
         else:
             super()._add_change(log_what, log_text)
 
@@ -3243,7 +3243,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def _add_change(self, log_what, log_text):
         if has_wato_slave_sites():
             self._start_async_repl = True
-            _audit_log.log_audit(log_what, log_text)
+            _audit_log.log_audit(action=log_what, message=log_text)
         else:
             super()._add_change(log_what, log_text)
 

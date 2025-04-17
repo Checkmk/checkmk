@@ -1778,10 +1778,10 @@ class ActivateChangesManager(ActivateChanges):
 
     def _log_activation(self):
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
-        log_audit("activate-changes", log_msg)
+        log_audit(action="activate-changes", message=log_msg)
 
         if self._comment:
-            log_audit("activate-changes", "Comment: %s" % self._comment)
+            log_audit(action="activate-changes", message="Comment: %s" % self._comment)
 
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
@@ -2053,7 +2053,7 @@ def _prepare_for_activation_tasks(
                 continue
             _mark_running(site_activation_state)
 
-            log_audit("activate-changes", "Started activation of site %s" % site_id)
+            log_audit(action="activate-changes", message="Started activation of site %s" % site_id)
             site_activation_states_per_site[site_id] = site_activation_state
 
             if activate_changes.is_sync_needed(site_id):
@@ -2696,8 +2696,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         )
 
     log_audit(
-        "replication",
-        "Synchronized configuration from central site (local site ID is %s.)" % site_id,
+        action="replication",
+        message="Synchronized configuration from central site (local site ID is %s.)" % site_id,
     )
 
 

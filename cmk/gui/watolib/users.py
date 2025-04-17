@@ -99,8 +99,8 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
     if deleted_users:
         for user_id in deleted_users:
             log_audit(
-                "edit-user",
-                "Deleted user: %s" % user_id,
+                action="edit-user",
+                message="Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
             )
         add_change(

@@ -44,7 +44,10 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
-            log_audit("mkeventd-activate", "Activated changes of event console configuration")
+            log_audit(
+                action="mkeventd-activate",
+                message="Activated changes of event console configuration",
+            )
             self._save_active_config()
             execute_command("RELOAD", site=omd_site())
         return []

@@ -144,8 +144,8 @@ def create_snapshot(
     _do_snapshot_maintenance(max_snapshots, debug)
 
     log_audit(
-        "snapshot-created",
-        "Created snapshot %s" % snapshot_name,
+        action="snapshot-created",
+        message="Created snapshot %s" % snapshot_name,
         use_git=use_git,
         user_id=created_by,
     )

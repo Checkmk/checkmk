@@ -987,7 +987,7 @@ class ModeDistributedMonitoring(WatoMode):
                 )
                 trigger_remote_certs_creation(login_id, site)
 
-                _audit_log.log_audit("edit-site", message)
+                _audit_log.log_audit(action="edit-site", message=message)
                 flash(message)
                 return redirect(mode_url("sites"))
 

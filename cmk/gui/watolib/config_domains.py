@@ -245,7 +245,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         self.activate()
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        log_audit("liveproxyd-activate", "Activating changes of Livestatus Proxy configuration")
+        log_audit(
+            action="liveproxyd-activate",
+            message="Activating changes of Livestatus Proxy configuration",
+        )
 
         try:
             pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")

@@ -204,8 +204,8 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                     changed_folder_rulesets.append(varname)
 
                     log_audit(
-                        "edit-rule",
-                        f'Renamed host condition from "{oldname}" to "{newname}"',
+                        action="edit-rule",
+                        message=f'Renamed host condition from "{oldname}" to "{newname}"',
                         diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )

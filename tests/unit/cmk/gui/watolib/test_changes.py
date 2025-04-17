@@ -201,9 +201,9 @@ def test_log_audit_with_object_diff() -> None:
 
     with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         log_audit(
-            object_ref=None,
             action="bla",
             message="Message",
+            object_ref=None,
             user_id=UserId("calvin"),
             diff_text=make_diff_text(old, new),
         )
@@ -225,10 +225,10 @@ def test_log_audit_with_object_diff() -> None:
 def test_log_audit_with_html_message() -> None:
     with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         log_audit(
-            object_ref=None,
-            user_id=UserId("calvin"),
             action="bla",
             message=HTML.without_escaping("Message <b>bla</b>"),
+            object_ref=None,
+            user_id=UserId("calvin"),
         )
 
     store = AuditLogStore()

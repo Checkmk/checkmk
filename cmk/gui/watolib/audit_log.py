@@ -164,6 +164,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 
 
 def log_audit(
+    *,
     action: str,
     message: LogMessage,
     object_ref: ObjectRef | None = None,

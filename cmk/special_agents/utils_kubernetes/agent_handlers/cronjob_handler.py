@@ -52,7 +52,7 @@ def create_api_sections(
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cron_job_pods_v1"),
+            section_name=SectionName("kube_memory_resources_v1"),
             section=collect_memory_resources_from_api_pods(cronjob_pods),
         ),
         WriteableSection(

@@ -11,9 +11,15 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
+    InputHint,
+    Integer,
+    LevelDirection,
+    SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import (
+    CheckParameters,
     DiscoveryParameters,
+    HostAndItemCondition,
     Topic,
 )
 
@@ -64,4 +70,192 @@ rule_spec_smart_scsi_discovery = DiscoveryParameters(
     topic=Topic.STORAGE,
     parameter_form=_formspec_discovery_smart,
     name="smart_scsi",
+)
+
+
+def _parameter_valuespec_smart_ata() -> Dictionary:
+    return Dictionary(
+        elements={
+            "levels_5": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Reallocated sectors (id 5)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_10": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Spin retries (id 10)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_184": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("End-to-End Errors (id 184)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_187": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Uncorrectable Errors (id 187)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_196": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Reallocated events (id 196)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_197": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Pending sectors (id 197)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+            "levels_199": DictElement(
+                required=False,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("CRC errors (id 199)"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="levels_upper",
+                            title=Title("Configure levels"),
+                            parameter_form=SimpleLevels(
+                                form_spec_template=Integer(unit_symbol=""),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_fixed_levels=InputHint((1, 1)),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="discovered_value",
+                            title=Title("Alert if value has increased since discovery"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ],
+                    prefill=DefaultValue(value="levels_upper"),
+                ),
+            ),
+        },
+        ignored_elements=(  # to render `AtaDiscoveredParams` correctly
+            "key",
+            "id_5",
+            "id_10",
+            "id_184",
+            "id_187",
+            "id_188",
+            "id_196",
+            "id_197",
+            "id_199",
+        ),
+    )
+
+
+rule_spec_smart_ata = CheckParameters(
+    name="smart_ata",
+    title=Title("SMART ATA"),
+    topic=Topic.STORAGE,
+    parameter_form=_parameter_valuespec_smart_ata,
+    condition=HostAndItemCondition(item_title=Title("Disk")),
 )

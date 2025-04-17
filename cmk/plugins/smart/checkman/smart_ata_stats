@@ -26,6 +26,7 @@ description:
 
  If any of these counters increase, the check goes {CRIT}.
  It will become {OK} again if the service is rediscovered.
+ This behaviour is configurable via the rule SMART ATA.
  Additionally, the check compares the reallocated events to the corresponding
  thresholds reported via smartctl.
 

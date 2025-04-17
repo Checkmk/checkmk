@@ -36,7 +36,6 @@ ignore = [
   # Basically a TODO list...
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
-  "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP012", # Unnecessary call to `encode` as UTF-8
   "UP015", # Unnecessary open mode parameters
@@ -69,11 +68,16 @@ ignore = [
 "agents/*" = ["ARG001", "ARG002", "SLF001"]
 # Agent plugins still need to support Python 2.7
 "agents/plugins/*" = [
+  "UP009", # UTF-8 encoding declaration is unnecessary
   "UP036", # Version block is outdated for minimum Python version
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
+"non-free/cmk-update-agent/cmk_update_agent.py" = [
+  "UP009", # UTF-8 encoding declaration is unnecessary
+]
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP009", # UTF-8 encoding declaration is unnecessary
   "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP036", # Version block is outdated for minimum Python version
 ]

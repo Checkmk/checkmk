@@ -9,8 +9,9 @@ Flask uses a generic session cookie store which we don't want to implement here 
 simplicity. In case we have such a generic thing, it will be easy to switch to it.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, Sequence
+from typing import Literal
 
 import flask
 

@@ -5,9 +5,9 @@
 
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Iterator, NamedTuple
+from typing import NamedTuple
 
 from cmk.utils.redis import disable_redis
 

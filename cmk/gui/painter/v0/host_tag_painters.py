@@ -5,7 +5,7 @@
 
 """Dynamic host tag painters and sorters based on the site configuration"""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.utils.tags import TagGroup, TagGroupID
 

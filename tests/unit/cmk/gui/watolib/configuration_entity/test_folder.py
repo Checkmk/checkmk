@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import shutil
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 

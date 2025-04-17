@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping
+from collections.abc import Mapping
+from typing import Final
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (

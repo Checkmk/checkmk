@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Optional
 
 from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag
 
@@ -40,7 +40,7 @@ class EndpointFamilyRegistry:
     """Registry for all endpoint families in the REST API."""
 
     def __init__(self):
-        self._families: Dict[str, EndpointFamily] = {}
+        self._families: dict[str, EndpointFamily] = {}
 
     def register(self, family: EndpointFamily) -> None:
         if family.name in self._families:
@@ -50,7 +50,7 @@ class EndpointFamilyRegistry:
     def get(self, name: str) -> Optional[EndpointFamily]:
         return self._families.get(name)
 
-    def get_all(self) -> List[EndpointFamily]:
+    def get_all(self) -> list[EndpointFamily]:
         return list(self._families.values())
 
 

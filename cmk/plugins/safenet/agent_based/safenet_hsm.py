@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, TypedDict, Union
+from typing import TypedDict, Union
 
 from cmk.agent_based.v1 import GetRateError
 from cmk.agent_based.v2 import (
@@ -105,7 +105,7 @@ def inventory_safenet_hsm_events(section: Section) -> DiscoveryResult:
 
 def check_safenet_hsm_events(params: EventStatCheckParamT, section: Section) -> CheckResult:
     now = time.time()
-    errors: List[str] = []
+    errors: list[str] = []
 
     for event in ("critical", "noncritical"):
         yield from _check_values(f"{event}_events", f"{event.title()} Events", section, params)

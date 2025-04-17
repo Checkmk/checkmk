@@ -5,7 +5,8 @@
 
 import enum
 from argparse import ArgumentParser
-from typing import Iterable, Protocol
+from collections.abc import Iterable
+from typing import Protocol
 
 from pydantic import BaseModel
 

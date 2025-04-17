@@ -74,8 +74,8 @@
 
 import re
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, Iterable, TypeVar
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, TypeVar
 
 from cmk.agent_based.v2 import (
     AgentSection,

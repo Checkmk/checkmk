@@ -11,8 +11,8 @@ from __future__ import annotations
 import abc
 import functools
 import re
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Hashable, Literal, NotRequired, TypedDict
+from collections.abc import Callable, Hashable, Mapping, Sequence
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 

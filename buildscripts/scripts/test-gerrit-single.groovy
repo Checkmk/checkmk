@@ -106,27 +106,6 @@ def main() {
                                 }
                             }
 
-                            def jvm_out_path = sh(
-                                script: "echo ~/.cache/bazel/_bazel_jenkins/\$(echo -n ${checkout_dir} | md5sum | awk '{print \$1}')/server/jvm.out",
-                                returnStdout: true
-                            ).trim();
-                            if (sh(script: "ls ${jvm_out_path}", returnStatus: true) == 0 && cmd_status != 0) {
-                                print("DEBUG: Trying to copy bazel jvm log");
-                                sh(script: "cp ${jvm_out_path} ${checkout_dir}/${result_dir}/", returnStatus: true);
-                                mail(
-                                    to: "timotheus.bachinger@checkmk.com",  // TODO: Add the commmiter
-                                    cc: "",
-                                    bcc: "",
-                                    from: "\"CI\" <${JENKINS_MAIL}>",
-                                    replyTo: "${TEAM_CI_MAIL}",
-                                    subject: "[jvm out found!]",
-                                    body: ("""
-                                                |Job link:
-                                                |    ${build_url}
-                                                |""".stripMargin()),
-                                );
-                            }
-
                             archiveArtifacts(
                                 artifacts: "${result_dir}/**",
                                 fingerprint: true,

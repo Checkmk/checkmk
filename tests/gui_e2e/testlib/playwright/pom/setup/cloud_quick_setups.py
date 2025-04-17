@@ -12,6 +12,7 @@ from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -190,11 +191,13 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
     def _create_folder(self, parent: str, name: str) -> None:
         main_area = self.main_area.locator()
         main_area.get_by_role("button", name="Create new").click()
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)
         dialog = main_area.get_by_role("dialog", name="New folder")
         dialog.get_by_role("textbox", name="Title").fill(name)
         dialog.get_by_role("combobox", name="Parent folder").click()
         dialog.get_by_role("option", name=parent, exact=True).click()
         dialog.get_by_role("button", name="Save").click()
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)
 
     def _handle_folder_selection(
         self,

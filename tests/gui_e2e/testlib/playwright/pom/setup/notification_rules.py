@@ -15,6 +15,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.notification_configuration impor
     NotificationConfiguration,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.quick_setup import QuickSetupPage
+from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -147,8 +148,10 @@ class BaseNotificationPage(QuickSetupPage):
     def notification_method_option(self, option: str) -> Locator:
         return self._stage_three.get_by_role("option", name=option)
 
-    def create_parameter_button(self) -> Locator:
-        return self._stage_three.get_by_role("button", name="Create")
+    def create_html_parameter_using_slide_in(self) -> None:
+        """Open the slide-in window to initialize a new notifications parameter."""
+        self._stage_three.get_by_role("button", name="Create").click()
+        self.page.wait_for_timeout(ANIMATION_TIMEOUT)
 
     # stage 4
     @property

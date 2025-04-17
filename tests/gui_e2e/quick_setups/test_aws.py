@@ -21,6 +21,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.dcd import DCD
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import SetupHost
 from tests.gui_e2e.testlib.playwright.pom.setup.passwords import Passwords
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
+from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -92,7 +93,8 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
         access_password="my_aws_access_password",
     )
     aws_qs_config_page.button_proceed_from_stage_one.click()
-    aws_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    aws_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         aws_qs_config_page.button_proceed_from_stage_two,
         message="Expected stage 2 button to be enabled after proceeding to stage 2!",
@@ -108,7 +110,8 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
         site_name=test_site.id,
     )
     aws_qs_config_page.button_proceed_from_stage_two.click()
-    aws_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    aws_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         aws_qs_config_page.button_proceed_from_stage_three,
         message="Expected stage 3 button to be enabled after proceeding to stage 3!",
@@ -123,7 +126,8 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
         global_services=QuickSetupMultiChoice(["Costs and usage"], []),
     )
     aws_qs_config_page.button_proceed_from_stage_three.click()
-    aws_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    aws_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     expect(
         aws_qs_config_page.button_proceed_from_stage_four,
         message="Expected stage 4 button to be enabled after proceeding to stage 4!",
@@ -139,7 +143,8 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
         aws_qs_config_page.main_area.locator().get_by_text("AWS services found!"),
         message="Expected AWS services to be found after the connection test!",
     ).to_be_visible()
-    aws_qs_config_page.page.wait_for_timeout(750)  # wait for stage transition animation
+    # wait for stage transition animation
+    aws_qs_config_page.page.wait_for_timeout(ANIMATION_TIMEOUT)
     aws_qs_config_page.save_quick_setup()
 
     logger.info("Validate AWS configuration is listed.")

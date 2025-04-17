@@ -31,6 +31,7 @@ _grep_with_excludes() {
         --exclude="*.Po" \
         --exclude="*.a" \
         --exclude="*.bat" \
+        --exclude="*.bazel" \
         --exclude="*.c" \
         --exclude="*.cc" \
         --exclude="*.cmake" \

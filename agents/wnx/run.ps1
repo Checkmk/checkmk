@@ -315,13 +315,51 @@ function Start-UnitTests {
     Write-Host "Success unit tests" -foreground Green
 }
 
+function Test-SigningQuickly {
+    if ($argSign -ne $true) {
+        return
+    }
+
+    try {
+        Write-Host "Validate signing..." -ForegroundColor White
+        $TempFile = New-TemporaryFile
+        $ps_name = $TempFile.BaseName + ".ps1"
+        Rename-Item -NewName $ps_name -Path $TempFile
+        $newfile = $TempFile.DirectoryName + $TempFile.BaseName + ".ps1"
+        "Get-Date" | Out-File $newfile
+        for ($i = 1; $i -le 15; $i++) {
+            & ./scripts/sign_code_fast.cmd $newfile
+            if ($LASTEXITCODE -eq 0) {
+                break
+            }
+            Write-Host "Waiting 1 seconds before retry" -ForegroundColor White
+            Start-Sleep -Seconds 1
+        }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to sign test file" $LASTEXITCODE -foreground Red
+        }
+        else {
+            Write-Host "Success signing test file" -ForegroundColor Green
+        }
+        Remove-Item -Path $newfile -Force -ErrorAction SilentlyContinue
+
+    }
+    catch {
+        Write-Host "Failed to create temporary file" -ForegroundColor Red
+    }
+
+
+}
+
+
+
 function Invoke-Attach($usbip, $addr, $port) {
     if ($argSign -ne $true) {
         Write-Host "Skipping attach" -ForegroundColor Yellow
         return
     }
     &$usbip attach -r $addr -b $port
-    for ($i = 1; $i -le 15; $i++) {
+    for ($i = 1; $i -le 20; $i++) {
         if ($LASTEXITCODE -eq 0) {
             break
         }
@@ -334,7 +372,8 @@ function Invoke-Attach($usbip, $addr, $port) {
         throw "Attach to the signing key is not possible. Signing can't be done"
     }
     Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 10 
+    Start-Sleep -Seconds 5 
+    Test-SigningQuickly
     return
 }
 
@@ -548,49 +587,11 @@ function Invoke-Detach($argFlag) {
 }
 
 
-function Test-SigningQuickly {
-    if ($argSign -ne $true) {
-        return
-    }
-
-    try {
-        Write-Host "Validate signing..." -ForegroundColor White
-        $TempFile = New-TemporaryFile
-        $ps_name = $TempFile.BaseName + ".ps1"
-        Rename-Item -NewName $ps_name -Path $TempFile
-        $newfile = $TempFile.DirectoryName + $TempFile.BaseName + ".ps1"
-        "Get-Date" | Out-File $newfile
-        for ($i = 1; $i -le 15; $i++) {
-            & ./scripts/sign_code_fast.cmd $newfile
-            if ($LASTEXITCODE -eq 0) {
-                break
-            }
-            Write-Host "Waiting 2 seconds for USB to attach" -ForegroundColor White
-            Start-Sleep -Seconds 2
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to sign test file" $LASTEXITCODE -foreground Red
-        }
-        else {
-            Write-Host "Success signing test file" -ForegroundColor Green
-        }
-        Remove-Item -Path $newfile -Force -ErrorAction SilentlyContinue
-
-    }
-    catch {
-        Write-Host "Failed to create temporary file" -ForegroundColor Red
-    }
-
-
-}
-
 function Start-MsiSigning {
     if ($argSign -ne $true) {
         Write-Host "Skipping MSI signing..." -ForegroundColor Yellow
         return
     }
-
-    Test-SigningQuickly
 
     Write-Host "MSI signing..." -ForegroundColor White
     & ./scripts/sign_code.cmd $arte\check_mk_agent.msi

@@ -41,7 +41,7 @@ YAML_VERSION   := yaml-cpp.9a362420
 
 PACKAGE_GTEST   := $(TOP_SRC_DIR)\third_party\googletest
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-GTEST_VERSION   := googletest-71140c3ca7-patched
+GTEST_VERSION   := googletest-e90fe24856-patched
 
 
 

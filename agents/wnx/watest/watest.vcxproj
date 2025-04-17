@@ -26,7 +26,7 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AsioVersion>asio-1.24.0-patched</AsioVersion>
     <FmtVersion>fmt-10.2.1</FmtVersion>
-    <GoogleTest>googletest-71140c3ca7-patched</GoogleTest>
+    <GoogleTest>googletest-e90fe24856-patched</GoogleTest>
     <YamlCpp>yaml-cpp.9a362420</YamlCpp>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

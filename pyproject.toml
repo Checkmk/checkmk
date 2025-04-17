@@ -36,7 +36,6 @@ ignore = [
   # Basically a TODO list...
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
-  "UP015", # Unnecessary open mode parameters
   "UP017", # Use `datetime.UTC` alias
   "UP024", # Replace aliased errors with `OSError`
   "UP025", # Remove unicode literals from strings
@@ -68,6 +67,7 @@ ignore = [
 "agents/plugins/*" = [
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
+  "UP015", # Unnecessary open mode parameters
   "UP036", # Version block is outdated for minimum Python version
   "UP041", # Replace aliased errors with `TimeoutError`
 ]

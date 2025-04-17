@@ -570,7 +570,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         # if XML...
         elif os.path.isfile(fpath_xml):
-            f = open(fpath_xml, "r")
+            f = open(fpath_xml)
             self.send_response(200)
             self.send_header("Content-Type", "application/xml;charset=utf-8")
             self.send_header("OData-Version", "4.0")

@@ -466,6 +466,11 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/toml-format.txt"
 
+    - NAME: "Detect Merge Conflicts"
+      DIR: ""
+      COMMAND: "./scripts/check-merge-conflicts ${PATCHSET_REVISION} &> ${RESULTS}/merge-conflicts.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/merge-conflicts.txt"
+
     ########## packages ########################################################
 
     - NAME: "Package check-cert"

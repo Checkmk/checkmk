@@ -12,6 +12,7 @@ from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.decorators import AcceptFieldType
 from cmk.gui.openapi.restful_objects.type_defs import (
+    EndpointFamilyName,
     EndpointTarget,
     ErrorStatusCodeInt,
     ETagBehaviour,
@@ -80,7 +81,7 @@ class EndpointMetadata:
 
     path: str
     link_relation: LinkRelation
-    family: str
+    family: EndpointFamilyName
     method: HTTPMethod
     content_type: str = "application/json"
     accept: AcceptFieldType = "application/json"

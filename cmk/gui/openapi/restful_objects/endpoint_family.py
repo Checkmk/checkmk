@@ -5,14 +5,14 @@
 
 from dataclasses import dataclass
 
-from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag
+from cmk.gui.openapi.restful_objects.type_defs import EndpointFamilyName, OpenAPITag
 
 
 @dataclass
 class EndpointFamily:
     """Represents a logical grouping of related REST API endpoints."""
 
-    name: str
+    name: EndpointFamilyName
     """The name of the endpoint family, used as the tag name in OpenAPI spec."""
 
     description: str

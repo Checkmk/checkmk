@@ -50,7 +50,11 @@ def test_download_diagnostics(dashboard_page: Dashboard, request: pytest.Fixture
 
     # remove ignored errors
     for ignored in ignore_errors:
-        errors.remove(ignored)
+        try:
+            errors.remove(ignored)
+        except KeyError:
+            # ignored error not found - do nothing.
+            continue
 
     if errors:
         download_log = artifacts_dir / f"{file_prefix}_diagnostic_dump.log"

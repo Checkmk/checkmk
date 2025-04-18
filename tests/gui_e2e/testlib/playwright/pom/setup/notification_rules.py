@@ -97,12 +97,23 @@ class BaseNotificationPage(QuickSetupPage):
     def hosts_checkbox(self) -> Locator:
         return self._checkbox("Hosts", exact=True)
 
-    @property
-    def hosts_textfield(self) -> Locator:
-        return self._host_filters_dropdown.locator("tr").nth(4).locator("input")
+    def hosts_dropdown_list(self, index: int = 0) -> Locator:
+        """Return locator corresponding to dropdown list consisting of host names.
 
-    def select_host_from_textfield(self, name: str) -> Locator:
-        return self._host_filters_dropdown.locator("li", has_text=name)
+        There can be multiple dropdown lists present.
+        By default, the first one or left most one is addressed.
+        """
+        return (
+            self._host_filters_dropdown.locator("tr").nth(4).locator("div.cmk-dropdown").nth(index)
+        )
+
+    def select_host_from_dropdown_list(self, name: str, index: int = 0) -> Locator:
+        """Return locator corresponding to a name present within the dropdown list of host names.
+
+        There can be multiple dropdown lists present.
+        By default, the first one or the left-most dropdown list is searched.
+        """
+        return self.hosts_dropdown_list(index).get_by_role("option", name=name)
 
     @property
     def _service_filters_button(self) -> Locator:

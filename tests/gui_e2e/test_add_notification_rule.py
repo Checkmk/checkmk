@@ -64,8 +64,8 @@ def test_add_new_notification_rule(
     logger.info("Set Hosts on Host filters to '%s'", test_site.id)
     add_rule_page.expand_host_filters()
     add_rule_page.hosts_checkbox.set_checked(True)
-    add_rule_page.hosts_textfield.click()
-    add_rule_page.select_host_from_textfield(host_name).click()
+    add_rule_page.hosts_dropdown_list().click()
+    add_rule_page.select_host_from_dropdown_list(host_name).click()
 
     logger.info("Go to stage '%s'", STAGE_NOTIFICATION_METHOD)
     add_rule_page.goto_next_qs_stage()

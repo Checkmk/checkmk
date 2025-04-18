@@ -120,8 +120,30 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
+@pytest.fixture(name="restore_site_state")
+def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
+    """In context of a site, backup '~/var' and restore it's state after a test-run.
+
+    TODO: The fixture needs to be made more specific, in terms of what is being restored!
+    """
+    var = (test_site.root / "var").resolve().as_posix()
+    backup_var = f"{var}.bak"
+    logger.debug("Backup site directory '%s'.", var)
+    cmd = ["cp", "-a", "-R", var, backup_var]
+    test_site.run(cmd)
+    yield
+    logger.debug("Restore site directory '%s'", var)
+    test_site.run(["cd", test_site.root.resolve().as_posix()])
+    test_site.run(["rm", "-rf", var])
+    test_site.run(["mv", backup_var, var])
+    test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+
+
 def test_create_rules(
-    test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
+    test_site: Site,
+    dashboard_page: Dashboard,
+    pytestconfig: pytest.Config,
+    restore_site_state: None,
 ) -> None:
     with (
         _write_rules_to_disk(test_site)
@@ -190,10 +212,7 @@ def test_create_rules(
                 f'Rule creation for ruleset "{ruleset_name}" has failed!'
             )
 
-        # TODO: missing teardown.
 
-
-@pytest.mark.xfail(reason="Flaky test, see CMK-20900")
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -262,7 +281,6 @@ def test_periodic_service_discovery_rule(
     ruleset_page.delete_button.click()
 
 
-@pytest.mark.xfail(reason="Flaky test, see CMK-20900")
 @pytest.mark.parametrize(
     "created_host",
     [

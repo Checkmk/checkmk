@@ -225,7 +225,7 @@ def test_email_notifications_host_filters(
         notification_configuration_page.page, rule_position=0
     )
     edit_notification_rule_page.expand_host_filters()
-    edit_notification_rule_page.hosts_textfield.first.click()
+    edit_notification_rule_page.hosts_dropdown_list().click()
     expect(
         edit_notification_rule_page.main_area.locator().get_by_text(host_name),
         message=f"Expected rule to be filtered by host: '{host_name}'",

@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from flask import has_request_context
+
 from cmk.gui.ctx_stack import g
 
 
 def need_sidebar_reload():
+    if not has_request_context():
+        return  # Silently accept inactive request context (e.g. non-gui call and tests)
     g.need_sidebar_reload = True
 
 

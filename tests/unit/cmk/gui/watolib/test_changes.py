@@ -92,7 +92,6 @@ class TestAuditLogStore:
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
-    @pytest.mark.usefixtures("request_context")
     def test_transport_html(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(
             int(time.time()),
@@ -189,7 +188,6 @@ class TestSiteChanges:
         assert not list(store.read())
 
 
-@pytest.mark.usefixtures("request_context")
 def test_log_audit_with_object_diff() -> None:
     old = {
         "a": "b",
@@ -222,7 +220,6 @@ def test_log_audit_with_object_diff() -> None:
     ]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_log_audit_with_html_message() -> None:
     with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
         log_audit(
@@ -246,7 +243,7 @@ def test_log_audit_with_html_message() -> None:
     ]
 
 
-def test_disable_activate_changes_writer(mocker: MockerFixture, request_context: None) -> None:
+def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
     add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
 
     add_change(

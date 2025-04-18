@@ -37,6 +37,7 @@ pylsp-mypy  # mypy plugin for python-lsp-server
 pymongo  # used by mk_mongodb agent plugin
 pytest
 pytest-asyncio  # faciliate testing of async code
+pytest-benchmark  # used for performance tests
 pytest-html  # used to generate HTML reports for test suites
 pytest-mock  # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order  # used to test resiliency

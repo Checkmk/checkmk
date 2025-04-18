@@ -2273,7 +2273,7 @@
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements.txt": "47292854608a0f30615e31f5915b1429e1cab5af20c63ca8e19cae82eceb13b0",
+          "@@//requirements.txt": "72991d9c131b739faceaf1d5e0055f86f7c1b30de15601049732696459c227d6",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_mypy~//mypy/private/requirements.txt": "5fef4723b02210e3f231d2b55e4894e43d669077b30e91e4303f5c14115af981",
@@ -5940,6 +5940,23 @@
               "requirement": "py==1.11.0 --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719 --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"
             }
           },
+          "cmk_requirements_312_py_cpuinfo": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "py-cpuinfo==9.0.0 --hash=sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690 --hash=sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5"
+            }
+          },
           "cmk_requirements_312_py_import_cycles": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
@@ -6499,6 +6516,23 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "pytest-asyncio==0.23.8 --hash=sha256:50265d892689a5faefb84df80819d1ecef566eb3549cf915dfb33569359d1ce2 --hash=sha256:759b10b33a6dc61cce40a8bd5205e302978bbbcc00e279a8b61d9a6a3c82e4d3"
+            }
+          },
+          "cmk_requirements_312_pytest_benchmark": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "pytest-benchmark==5.0.1 --hash=sha256:8138178618c85586ce056c70cc5e92f4283c2e6198e8422c2c825aeb3ace6afd --hash=sha256:d75fec4cbf0d4fd91e020f425ce2d845e9c127c21bae35e77c84db8ed84bfaa6"
             }
           },
           "cmk_requirements_312_pytest_check": {
@@ -12996,6 +13030,7 @@
                 "psycopg2_binary": "{\"cmk_requirements_312_psycopg2_binary\":[{\"version\":\"3.12\"}]}",
                 "ptyprocess": "{\"cmk_requirements_312_ptyprocess\":[{\"version\":\"3.12\"}]}",
                 "py": "{\"cmk_requirements_312_py\":[{\"version\":\"3.12\"}]}",
+                "py_cpuinfo": "{\"cmk_requirements_312_py_cpuinfo\":[{\"version\":\"3.12\"}]}",
                 "py_import_cycles": "{\"cmk_requirements_312_py_import_cycles\":[{\"version\":\"3.12\"}]}",
                 "pyasn1": "{\"cmk_requirements_312_pyasn1\":[{\"version\":\"3.12\"}]}",
                 "pyasn1_modules": "{\"cmk_requirements_312_pyasn1_modules\":[{\"version\":\"3.12\"}]}",
@@ -13029,6 +13064,7 @@
                 "pyspnego": "{\"cmk_requirements_312_pyspnego\":[{\"version\":\"3.12\"}]}",
                 "pytest": "{\"cmk_requirements_312_pytest\":[{\"version\":\"3.12\"}]}",
                 "pytest_asyncio": "{\"cmk_requirements_312_pytest_asyncio\":[{\"version\":\"3.12\"}]}",
+                "pytest_benchmark": "{\"cmk_requirements_312_pytest_benchmark\":[{\"version\":\"3.12\"}]}",
                 "pytest_check": "{\"cmk_requirements_312_pytest_check\":[{\"version\":\"3.12\"}]}",
                 "pytest_html": "{\"cmk_requirements_312_pytest_html\":[{\"version\":\"3.12\"}]}",
                 "pytest_metadata": "{\"cmk_requirements_312_pytest_metadata\":[{\"version\":\"3.12\"}]}",
@@ -13387,6 +13423,7 @@
                 "psycopg2_binary",
                 "ptyprocess",
                 "py",
+                "py_cpuinfo",
                 "py_import_cycles",
                 "pyasn1",
                 "pyasn1_modules",
@@ -13420,6 +13457,7 @@
                 "pyspnego",
                 "pytest",
                 "pytest_asyncio",
+                "pytest_benchmark",
                 "pytest_check",
                 "pytest_html",
                 "pytest_metadata",

@@ -2570,6 +2570,10 @@ py==1.11.0 \
     --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719 \
     --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378
     # via retry
+py-cpuinfo==9.0.0 \
+    --hash=sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690 \
+    --hash=sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5
+    # via pytest-benchmark
 py-import-cycles==0.3.1 \
     --hash=sha256:420a0aa1ba52502bbfe551d3ca1748b5a35abce55a03f8688e8e21ba05afdc6d
     # via -r dev-requirements.in
@@ -2961,6 +2965,7 @@ pytest==7.4.4 \
     #   -r packages/cmk-werks/requirements.in
     #   meraki
     #   pytest-asyncio
+    #   pytest-benchmark
     #   pytest-check
     #   pytest-html
     #   pytest-metadata
@@ -2974,6 +2979,10 @@ pytest==7.4.4 \
 pytest-asyncio==0.23.8 \
     --hash=sha256:50265d892689a5faefb84df80819d1ecef566eb3549cf915dfb33569359d1ce2 \
     --hash=sha256:759b10b33a6dc61cce40a8bd5205e302978bbbcc00e279a8b61d9a6a3c82e4d3
+    # via -r dev-requirements.in
+pytest-benchmark==5.0.1 \
+    --hash=sha256:8138178618c85586ce056c70cc5e92f4283c2e6198e8422c2c825aeb3ace6afd \
+    --hash=sha256:d75fec4cbf0d4fd91e020f425ce2d845e9c127c21bae35e77c84db8ed84bfaa6
     # via -r dev-requirements.in
 pytest-check==2.5.3 \
     --hash=sha256:2357d7df77c395d30c0c4957724fdfce1a75ea8bc9eb2308c0ffe56f62ac70ca \

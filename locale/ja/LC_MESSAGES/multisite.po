@@ -48758,6 +48758,9 @@ msgstr "事前定義された条件"
 msgid "Predefined searches"
 msgstr "事前定義された検索"
 
+msgid "Predicted Media Life Left"
+msgstr ""
+
 msgid "Predicted average for 15 minute CPU load"
 msgstr "CPU負荷の15分間の予測平均"
 
@@ -53251,6 +53254,10 @@ msgstr "接続するSQL-Server"
 
 msgid "SQLAnywhere"
 msgstr "SQLAnywhere"
+
+#, fuzzy
+msgid "SSD Endurance Utilization"
+msgstr "エンコーダーの使用率"
 
 msgid "SSH Port"
 msgstr "SSHポート"

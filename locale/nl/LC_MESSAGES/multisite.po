@@ -51017,6 +51017,9 @@ msgstr "Voorgedefinieerde voorwaarden"
 msgid "Predefined searches"
 msgstr "Voorgedefinieerde zoekopdrachten"
 
+msgid "Predicted Media Life Left"
+msgstr ""
+
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Voorspeld gemiddelde voor 15 minuten CPU belasting"
 
@@ -55656,6 +55659,10 @@ msgstr "SQL-Server om verbinding mee te maken"
 
 msgid "SQLAnywhere"
 msgstr "SQLAnywhere"
+
+#, fuzzy
+msgid "SSD Endurance Utilization"
+msgstr "Encodergebruik"
 
 msgid "SSH Port"
 msgstr "SSH-poort"

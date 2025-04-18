@@ -50986,6 +50986,9 @@ msgstr "Condições pré-definidas"
 msgid "Predefined searches"
 msgstr "Pesquisas pré-definidas"
 
+msgid "Predicted Media Life Left"
+msgstr ""
+
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Média prevista para 15 minutos de carga de CPU"
 
@@ -55647,6 +55650,10 @@ msgstr "SQL-Server para se conectar a"
 
 msgid "SQLAnywhere"
 msgstr "SQLA em qualquer lugar"
+
+#, fuzzy
+msgid "SSD Endurance Utilization"
+msgstr "Utilização do codificador"
 
 msgid "SSH Port"
 msgstr "Porto SSH"

@@ -51081,6 +51081,9 @@ msgstr "Condiții predefinite"
 msgid "Predefined searches"
 msgstr "Căutări predefinite"
 
+msgid "Predicted Media Life Left"
+msgstr ""
+
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Media prognozată pentru 15 minute de încărcare a CPU"
 
@@ -55723,6 +55726,10 @@ msgstr "SQL-Server la care să se conecteze"
 
 msgid "SQLAnywhere"
 msgstr "SQLAnywhere"
+
+#, fuzzy
+msgid "SSD Endurance Utilization"
+msgstr "Utilizarea codificatorului"
 
 msgid "SSH Port"
 msgstr "Port SSH"

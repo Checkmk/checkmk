@@ -242,7 +242,7 @@ def parse_ps_lnx(string_table: StringTable) -> ps.Section | None:
 
 
 def _separate_sub_string_table(now: int, string_table: StringTable) -> tuple[int, StringTable]:
-    if string_table[0][0].startswith("[time]") and string_table[2][0].startswith("[processes]"):
+    if string_table and string_table[0][0].startswith("[time]") and string_table[2][0].startswith("[processes]"):
         return int(string_table[1][0]), string_table[3:]
     return now, string_table
 

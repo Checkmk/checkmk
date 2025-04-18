@@ -187,9 +187,11 @@ class EWS(_Connection):
         self, subject: str, mail_from: str, mail_to: str, now: int, key: int
     ) -> tuple[str, MailID]:
         """Send an email with provided content using EWS and provided oauth"""
+        subject = f"{subject} {now} {key}"
         m = EWSMessage(
             account=self._account,
-            subject=f"{subject} {now} {key}",
+            subject=subject,
+            body=subject,
             author=mail_from,
             to_recipients=[mail_to],
         )
@@ -304,10 +306,11 @@ class SMTP(_Connection):
     def _send_mail(
         self, subject: str, mail_from: str, mail_to: str, now: int, key: int
     ) -> tuple[str, MailID]:
-        mail = email.mime.text.MIMEText("")
+        subject = f"{subject} {now} {key}"
+        mail = email.mime.text.MIMEText(subject)
         mail["From"] = mail_from
         mail["To"] = mail_to
-        mail["Subject"] = f"{subject} {now} {key}"
+        mail["Subject"] = subject
         mail["Date"] = email.utils.formatdate(localtime=True)
 
         logging.debug(

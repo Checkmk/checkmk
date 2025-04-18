@@ -86,7 +86,10 @@ class SetupHost(CmkPage):
         self.main_area.click_item_in_dropdown_list(dropdown_button="Hosts", item="Delete hosts")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         try:
-            expect(self.successfully_deleted_msg).to_be_visible()
+            expect(
+                self.successfully_deleted_msg,
+                message="Expected message 'Successfully deleted X hosts' to be visible!",
+            ).to_be_visible()
         except PWTimeoutError as e:
             if self.main_area.locator("div.error").count() != 0:
                 error_msg = (

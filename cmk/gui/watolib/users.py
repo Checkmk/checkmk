@@ -110,6 +110,7 @@ def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesF
             text=_l("Deleted user: %s") % ", ".join(deleted_users),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
+            use_git=active_config.wato_use_git,
         )
         userdb.save_users(all_users, datetime.now())
 
@@ -167,6 +168,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
             text=_l("Created new users: %s") % ", ".join(new_users_info),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
+            use_git=active_config.wato_use_git,
         )
     if modified_users_info:
         add_change(
@@ -174,6 +176,7 @@ def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None
             text=_l("Modified users: %s") % ", ".join(modified_users_info),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
+            use_git=active_config.wato_use_git,
         )
         hooks.call("users-changed", modified_users_info)
 

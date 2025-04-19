@@ -410,6 +410,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             domain_settings={
                 domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
             },
+            use_git=active_config.wato_use_git,
         )
 
         return redirect(self._back_url())
@@ -607,6 +608,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             domain_settings={
                 domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
             },
+            use_git=active_config.wato_use_git,
         )
 
         if action == "_reset":

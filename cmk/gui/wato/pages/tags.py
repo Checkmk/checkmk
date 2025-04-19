@@ -16,6 +16,7 @@ from cmk.utils.tags import TagGroupID, TagID
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -214,6 +215,7 @@ class ModeTags(ABCTagMode):
                 action_name="edit-tags",
                 text=_("Removed tag group %s (%s)") % (message, del_id),
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             if isinstance(message, str):
                 flash(message)
@@ -279,6 +281,7 @@ class ModeTags(ABCTagMode):
                 action_name="edit-tags",
                 text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             if isinstance(message, str):
                 flash(message)
@@ -302,6 +305,7 @@ class ModeTags(ABCTagMode):
             action_name="edit-tags",
             text=_("Changed order of tag groups"),
             user_id=user.id,
+            use_git=active_config.wato_use_git,
         )
         return None
 
@@ -796,6 +800,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                 action_name="edit-hosttags",
                 text=_("Created new host tag group '%s'") % changed_tag_group.id,
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -825,6 +830,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             action_name="edit-hosttags",
             text=_("Edited host tag group %s (%s)") % (message, self._id),
             user_id=user.id,
+            use_git=active_config.wato_use_git,
         )
         if isinstance(message, str):
             flash(message)

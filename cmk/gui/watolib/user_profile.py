@@ -124,6 +124,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
                     user_id=None,
                     sites=[result.site_id],
                     need_restart=False,
+                    use_git=active_config.wato_use_git,
                 )
 
     pool.terminate()
@@ -177,6 +178,7 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
             action_name="edit-users",
             text="<br>".join(changes),
             user_id=None,
+            use_git=active_config.wato_use_git,
         )
 
 

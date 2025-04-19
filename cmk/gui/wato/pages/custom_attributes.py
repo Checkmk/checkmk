@@ -13,6 +13,7 @@ from typing import Generic, TypeVar
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -197,12 +198,14 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
                 action_name="edit-%sattr" % self._type,
                 text=_("Create new %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
         else:
             _changes.add_change(
                 action_name="edit-%sattr" % self._type,
                 text=_("Modified %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
+                use_git=active_config.wato_use_git,
             )
             self._attr["title"] = title
             self._attr["topic"] = topic
@@ -520,6 +523,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             action_name="edit-%sattrs" % self._type,
             text=_("Deleted attribute %s") % (delname),
             user_id=user.id,
+            use_git=active_config.wato_use_git,
         )
         return redirect(self.mode_url())
 

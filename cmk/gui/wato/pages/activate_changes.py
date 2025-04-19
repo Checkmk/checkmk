@@ -251,6 +251,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             user_id=user.id,
             domains=ABCConfigDomain.enabled_domains(),
             need_restart=True,
+            use_git=active_config.wato_use_git,
         )
 
         _extract_snapshot(file_to_restore)

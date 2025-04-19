@@ -723,6 +723,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
+            use_git=active_config.wato_use_git,
         )
 
     def move_to_folder(
@@ -766,6 +767,7 @@ class Ruleset:
             sites=folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
+            use_git=active_config.wato_use_git,
         )
 
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
@@ -936,6 +938,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
             object_ref=rule.object_ref(),
+            use_git=active_config.wato_use_git,
         )
         self._on_change()
 
@@ -954,6 +957,7 @@ class Ruleset:
                 user_id=user.id,
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
+                use_git=active_config.wato_use_git,
             )
         self._on_change()
 
@@ -973,6 +977,7 @@ class Ruleset:
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
+            use_git=active_config.wato_use_git,
         )
         return index
 

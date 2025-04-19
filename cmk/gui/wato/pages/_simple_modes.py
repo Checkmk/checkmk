@@ -25,6 +25,7 @@ from cmk.utils.user import UserId
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
@@ -176,6 +177,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
             user_id=user_id,
             domains=self._mode_type.affected_config_domains(),
             sites=affected_sites,
+            use_git=active_config.wato_use_git,
         )
 
 

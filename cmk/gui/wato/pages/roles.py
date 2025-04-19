@@ -126,6 +126,7 @@ class ModeRoles(WatoMode):
                 text=_("Deleted role '%s'") % role_id,
                 user_id=user.id,
                 sites=get_login_sites(),
+                use_git=active_config.wato_use_git,
             )
 
         elif request.var("_clone"):
@@ -136,6 +137,7 @@ class ModeRoles(WatoMode):
                 text=_("Created new role '%s'") % role_id,
                 user_id=user.id,
                 sites=get_login_sites(),
+                use_git=active_config.wato_use_git,
             )
 
         return redirect(self.mode_url())
@@ -274,6 +276,7 @@ class ModeRoleTwoFactor(WatoMode):
             text=_("Modified user role '%s'") % self._role_id,
             user_id=user.id,
             sites=get_login_sites(),
+            use_git=active_config.wato_use_git,
         )
         return redirect(mode_url(ModeRoles.name()))
 
@@ -359,6 +362,7 @@ class ModeEditRole(WatoMode):
             text=_("Modified user role '%s'") % new_id,
             user_id=user.id,
             sites=get_login_sites(),
+            use_git=active_config.wato_use_git,
         )
         return url
 

@@ -276,6 +276,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
                 text="Successfully updated Checkmk configuration",
                 user_id=None,
                 need_sync=True,
+                use_git=False,
             )
 
     if has_errors:

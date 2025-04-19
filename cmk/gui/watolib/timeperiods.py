@@ -19,6 +19,7 @@ from cmk.utils.timeperiod import (
     TimeperiodSpecs,
 )
 
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -121,6 +122,7 @@ def delete_timeperiod(name: TimeperiodName) -> None:
         action_name="edit-timeperiods",
         text=_("Deleted time period %s") % name,
         user_id=user.id,
+        use_git=active_config.wato_use_git,
     )
 
 
@@ -138,6 +140,7 @@ def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         action_name="edit-timeperiods",
         text=_("Modified time period %s") % name,
         user_id=user.id,
+        use_git=active_config.wato_use_git,
     )
 
 
@@ -155,6 +158,7 @@ def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         action_name="edit-timeperiods",
         text=_("Created new time period %s") % name,
         user_id=user.id,
+        use_git=active_config.wato_use_git,
     )
 
 

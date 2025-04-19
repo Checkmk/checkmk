@@ -262,6 +262,7 @@ class ABCBIMode(WatoMode):
             user_id=user.id,
             domains=[ConfigDomainGUI()],
             sites=site_ids,
+            use_git=active_config.wato_use_git,
         )
 
     def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:

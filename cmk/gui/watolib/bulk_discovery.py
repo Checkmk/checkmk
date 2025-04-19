@@ -32,6 +32,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -479,6 +480,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             site_id=host.site_id(),
             diff_text=result.diff_text,
+            use_git=active_config.wato_use_git,
         )
 
         if not host.locked():

@@ -221,6 +221,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                 user_id=user.id,
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
+                use_git=active_config.wato_use_git,
             )
             rulesets.save_folder()
 
@@ -257,6 +258,7 @@ def _rename_hosts_in_check_mk(
             sites=[site_id],
             need_restart=False,
             prevent_discard_changes=True,
+            use_git=active_config.wato_use_git,
         )
 
         new_counts = rename_hosts(

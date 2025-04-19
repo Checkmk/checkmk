@@ -2152,6 +2152,7 @@ class ABCEditRuleMode(WatoMode):
                 sites=affected_sites,
                 diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
                 object_ref=self._rule.object_ref(),
+                use_git=active_config.wato_use_git,
             )
 
         flash(self._success_message())

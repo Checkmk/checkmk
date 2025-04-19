@@ -89,4 +89,5 @@ def add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
         user_id=user.id,
         sites=[site_id],
         need_restart=False,
+        use_git=active_config.wato_use_git,
     )

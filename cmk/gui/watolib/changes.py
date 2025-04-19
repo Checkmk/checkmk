@@ -36,6 +36,7 @@ def add_change(
     action_name: str,
     text: LogMessage,
     user_id: UserId | None,
+    use_git: bool,
     object_ref: ObjectRef | None = None,
     diff_text: str | None = None,
     need_sync: bool | None = None,
@@ -55,7 +56,7 @@ def add_change(
         message=text,
         object_ref=object_ref,
         user_id=user_id,
-        use_git=active_config.wato_use_git,
+        use_git=use_git,
         diff_text=diff_text,
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
@@ -201,6 +202,7 @@ def add_service_change(
     domains: Sequence[ABCConfigDomain],
     domain_settings: DomainSettings,
     site_id: SiteId,
+    use_git: bool,
     diff_text: str | None = None,
     need_sync: bool = False,
 ) -> None:
@@ -214,4 +216,5 @@ def add_service_change(
         need_sync=need_sync,
         domains=domains,
         domain_settings=domain_settings,
+        use_git=use_git,
     )

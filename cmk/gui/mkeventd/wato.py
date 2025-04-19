@@ -1621,6 +1621,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             user_id=user.id,
             domains=[self._config_domain],
             sites=_get_event_console_sync_sites(),
+            use_git=active_config.wato_use_git,
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
@@ -2662,6 +2663,7 @@ def _add_change_for_sites(
         user_id=user.id,
         domains=[config_domain],
         sites=sites_,
+        use_git=active_config.wato_use_git,
     )
 
 

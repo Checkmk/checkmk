@@ -43,6 +43,7 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
         domains=[ConfigDomainGUI()],
         sites=list(get_all_replicated_sites()),
         need_restart=True,
+        use_git=False,
     )
 
 

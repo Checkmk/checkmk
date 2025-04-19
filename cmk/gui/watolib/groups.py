@@ -17,6 +17,7 @@ from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
 from cmk.gui import hooks
+from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
@@ -173,6 +174,7 @@ def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> N
         text=text,
         user_id=user.id,
         sites=customer_api().customer_group_sites(group),
+        use_git=active_config.wato_use_git,
     )
 
 

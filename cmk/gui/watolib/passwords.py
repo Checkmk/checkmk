@@ -6,6 +6,7 @@
 from cmk.utils.password_store import Password
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
@@ -56,6 +57,7 @@ def _add_change(ident: str, change_type: str) -> None:
             user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
+            use_git=active_config.wato_use_git,
         )
     elif change_type == "edit":
         add_change(
@@ -64,6 +66,7 @@ def _add_change(ident: str, change_type: str) -> None:
             user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
+            use_git=active_config.wato_use_git,
         )
     else:  # delete
         add_change(
@@ -72,6 +75,7 @@ def _add_change(ident: str, change_type: str) -> None:
             user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
+            use_git=active_config.wato_use_git,
         )
 
 

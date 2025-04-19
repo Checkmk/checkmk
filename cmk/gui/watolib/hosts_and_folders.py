@@ -2198,6 +2198,7 @@ class Folder(FolderProtocol):
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
+            use_git=active_config.wato_use_git,
         )
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
@@ -2224,6 +2225,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
+            use_git=active_config.wato_use_git,
         )
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
@@ -2297,6 +2299,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
+            use_git=active_config.wato_use_git,
         )
         need_sidebar_reload()
         folder_lookup_cache().delete()
@@ -2354,6 +2357,7 @@ class Folder(FolderProtocol):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
+            use_git=active_config.wato_use_git,
         )
 
     def prepare_create_hosts(self) -> None:
@@ -2438,6 +2442,7 @@ class Folder(FolderProtocol):
             diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([host_name]),
+            use_git=active_config.wato_use_git,
         )
 
     def delete_hosts(
@@ -2472,6 +2477,7 @@ class Folder(FolderProtocol):
                 sites=[host.site_id()],
                 domains=[config_domain_registry[CORE_DOMAIN]],
                 domain_settings=_core_settings_hosts_to_update([host.name()]),
+                use_git=active_config.wato_use_git,
             )
 
         self.save_folder_attributes()  # num_hosts has changed
@@ -2586,6 +2592,7 @@ class Folder(FolderProtocol):
                 user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=affected_sites,
+                use_git=active_config.wato_use_git,
             )
 
         self.save_folder_attributes()  # num_hosts has changed
@@ -2638,6 +2645,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
+            use_git=active_config.wato_use_git,
         )
         self.save()
         return True
@@ -3401,6 +3409,7 @@ class Host:
             diff_text=diff,
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([self.name()]),
+            use_git=active_config.wato_use_git,
         )
 
     def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
@@ -3440,6 +3449,7 @@ class Host:
             diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings=_core_settings_hosts_to_update([self.name()]),
+            use_git=active_config.wato_use_git,
         )
 
     def _need_folder_write_permissions(self) -> None:
@@ -3492,6 +3502,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            use_git=active_config.wato_use_git,
         )
         self.folder().save_hosts()
         return True
@@ -3510,6 +3521,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            use_git=active_config.wato_use_git,
         )
         self.folder().save_hosts()
         return True
@@ -3522,6 +3534,7 @@ class Host:
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,
+            use_git=active_config.wato_use_git,
         )
         self._name = new_name
 

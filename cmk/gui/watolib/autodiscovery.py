@@ -95,6 +95,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                     domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
                     site_id=self.site_id,
                     diff_text=discovery_result.diff_text,
+                    use_git=active_config.wato_use_git,
                 )
 
         if result.changes_activated:

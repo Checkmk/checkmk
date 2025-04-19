@@ -470,6 +470,7 @@ class Discovery:
                 _make_host_audit_log_object(old_autochecks),
                 _make_host_audit_log_object(autochecks_table),
             ),
+            use_git=active_config.wato_use_git,
         )
 
     def _get_table_target(self, entry: CheckPreviewEntry) -> str:
@@ -725,6 +726,7 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             site_id=host.site_id(),
+            use_git=active_config.wato_use_git,
         )
         update_host_labels(
             host.site_id(),
@@ -1020,6 +1022,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             site_id=host.site_id(),
+            use_git=active_config.wato_use_git,
         )
 
     if site_is_local(active_config, host.site_id()):

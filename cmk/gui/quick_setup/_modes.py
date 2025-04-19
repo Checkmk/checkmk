@@ -282,6 +282,7 @@ class ModeEditConfigurationBundles(WatoMode):
             text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
             user_id=user.id,
             prevent_discard_changes=prevent_discard_changes,
+            use_git=active_config.wato_use_git,
         )
 
     def _bundles_listing(self, group_name: str) -> None:

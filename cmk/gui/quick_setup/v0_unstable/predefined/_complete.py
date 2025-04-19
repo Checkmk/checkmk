@@ -358,6 +358,7 @@ def _create_and_save_special_agent_bundle(
         text=_("Created Quick setup {bundle_id}").format(bundle_id=bundle_id),
         user_id=user.id,
         prevent_discard_changes=True,
+        use_git=active_config.wato_use_git,
     )
 
     return makeuri_contextless(

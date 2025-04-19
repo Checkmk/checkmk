@@ -212,6 +212,7 @@ def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId]) -> No
         user_id=user.id,
         domains=[ConfigDomainGUI()],
         sites=sites,
+        use_git=active_config.wato_use_git,
     )
 
 

@@ -588,6 +588,7 @@ class SiteManagement:
             # site anymore, so there is no point in adding a change for this site
             sites=list(connected_sites - {site_id}),
             need_restart=True,
+            use_git=active_config.wato_use_git,
         )
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 

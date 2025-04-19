@@ -254,6 +254,7 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
         text="dong",
         user_id=UserId("calvin"),
         sites=[SiteId("a")],
+        use_git=False,
     )
     add_to_site_mock.assert_called_once()
     add_to_site_mock.reset_mock()
@@ -264,6 +265,7 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
             text="dong",
             user_id=UserId("calvin"),
             sites=[SiteId("a")],
+            use_git=False,
         )
     add_to_site_mock.assert_not_called()
     add_to_site_mock.reset_mock()
@@ -273,5 +275,6 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
         text="dong",
         user_id=UserId("calvin"),
         sites=[SiteId("a")],
+        use_git=False,
     )
     add_to_site_mock.assert_called_once()

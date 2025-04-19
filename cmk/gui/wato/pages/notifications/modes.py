@@ -540,6 +540,7 @@ class ABCNotificationsMode(ABCEventsMode):
             text=text,
             user_id=user.id,
             need_restart=False,
+            use_git=active_config.wato_use_git,
         )
 
     def _vs_notification_bulkby(self):
@@ -3431,6 +3432,7 @@ class ABCNotificationParameterMode(WatoMode):
             text=text,
             user_id=user.id,
             need_restart=False,
+            use_git=active_config.wato_use_git,
         )
 
     def _log_text(self, edit_nr: int) -> str:
@@ -3744,6 +3746,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             user_id=user.id,
             text=text,
             need_restart=False,
+            use_git=active_config.wato_use_git,
         )
 
     def _parameter_links(

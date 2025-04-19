@@ -19,6 +19,7 @@ from cmk.utils.rulesets.conditions import (
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
@@ -185,6 +186,7 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
         user_id=user.id,
         sites=list(set(affected_sites)),
         object_ref=source_entry.rule.object_ref(),
+        use_git=active_config.wato_use_git,
     )
 
     return serve_json(_serialize_rule(source_entry))

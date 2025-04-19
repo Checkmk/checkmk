@@ -951,6 +951,7 @@ class ModeDistributedMonitoring(WatoMode):
             user_id=user.id,
             domains=[ConfigDomainGUI()],
             sites=[omd_site()],
+            use_git=active_config.wato_use_git,
         )
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
@@ -1527,6 +1528,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             sites=[self._site_id],
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
+            use_git=active_config.wato_use_git,
         )
 
         if action == "_reset":
@@ -1706,6 +1708,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             user_id=user.id,
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
+            use_git=active_config.wato_use_git,
         )
         save_global_settings(
             {

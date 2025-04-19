@@ -653,6 +653,7 @@ def add_changes_after_editing_broker_connection(
         need_restart=True,
         sites=[omd_site()] + sites,
         domains=[ConfigDomainGUI()],
+        use_git=active_config.wato_use_git,
     )
 
     return change_message
@@ -707,6 +708,7 @@ def add_changes_after_editing_site_connection(
                 # "mknotifyd",
             }
         ],
+        use_git=active_config.wato_use_git,
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -721,6 +723,7 @@ def add_changes_after_editing_site_connection(
             user_id=user.id,
             sites=[omd_site()],
             domains=[ConfigDomainGUI()],
+            use_git=active_config.wato_use_git,
         )
 
     return change_message

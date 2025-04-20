@@ -19,6 +19,7 @@ description:
  It will become {OK} again if the service is rediscovered.
  Additionally, the check compares the available spare to the corresponding
  thresholds reported via smartctl.
+ This behavior is configurable via the rule `SMART NMVe`.
 
  The check requires enabling agent plugin {smart_posix}.
  Moreover, the monitored device needs support the NMVe protocol.

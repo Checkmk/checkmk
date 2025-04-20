@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Required, TypedDict
+from typing import Literal, Required, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     get_value_store,
     Metric,
+    NoLevelsT,
     render,
     Result,
     Service,
@@ -81,10 +83,46 @@ check_plugin_smart_nvme_temp = CheckPlugin(
 )
 
 
-class NVMeParams(TypedDict):
+type DiscoveredOrLevels = (
+    tuple[Literal["levels_upper"], FixedLevelsT[int] | NoLevelsT]
+    | tuple[Literal["discovered_value"], None]
+)
+
+type AvailableSpareLevels = (
+    tuple[Literal["levels_lower"], FixedLevelsT[int] | NoLevelsT]
+    | tuple[Literal["threshold"], None]
+)
+
+
+class NVMeRuleSetParams(TypedDict):
+    levels_critical_warning: DiscoveredOrLevels
+    levels_media_errors: DiscoveredOrLevels
+    levels_available_spare: AvailableSpareLevels
+    levels_spare_percentage_used: FixedLevelsT[int] | NoLevelsT
+    levels_error_information_log_entries: FixedLevelsT[int] | NoLevelsT
+    levels_data_units_read: FixedLevelsT[int] | NoLevelsT
+    levels_data_units_written: FixedLevelsT[int] | NoLevelsT
+
+
+class NVMeDiscoveredParams(TypedDict):
     key: Required[tuple[str, str]]
     critical_warning: Required[int]
     media_errors: Required[int]
+
+
+class NVMeParams(NVMeRuleSetParams, NVMeDiscoveredParams):
+    pass
+
+
+DEFAULT_PARAMS: NVMeRuleSetParams = {
+    "levels_critical_warning": ("discovered_value", None),
+    "levels_media_errors": ("discovered_value", None),
+    "levels_available_spare": ("threshold", None),
+    "levels_spare_percentage_used": ("no_levels", None),
+    "levels_error_information_log_entries": ("no_levels", None),
+    "levels_data_units_read": ("no_levels", None),
+    "levels_data_units_written": ("no_levels", None),
+}
 
 
 def discover_smart_nvme(
@@ -101,7 +139,7 @@ def discover_smart_nvme(
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
-            parameters: NVMeParams = {
+            parameters: NVMeDiscoveredParams = {
                 "key": key,
                 "critical_warning": disk.nvme_smart_health_information_log.critical_warning,
                 "media_errors": disk.nvme_smart_health_information_log.media_errors,
@@ -142,36 +180,31 @@ def check_smart_nvme(
         render_func=str,
     )
 
-    yield from _check_against_discovery(
+    yield from _check_against_discovered_or_levels(
+        param=params["levels_critical_warning"],
         value=disk.nvme_smart_health_information_log.critical_warning,
         discovered_value=params["critical_warning"],
         label="Critical warning",
         metric_name="nvme_critical_warning",
     )
 
-    yield from _check_against_discovery(
+    yield from _check_against_discovered_or_levels(
+        param=params["levels_media_errors"],
         value=disk.nvme_smart_health_information_log.media_errors,
         discovered_value=params["media_errors"],
         label="Media and data integrity errors",
         metric_name="nvme_media_and_data_integrity_errors",
     )
 
-    yield from check_levels(
+    yield from _check_available_spare(
+        param=params["levels_available_spare"],
         value=disk.nvme_smart_health_information_log.available_spare,
-        levels_lower=(
-            "fixed",
-            (
-                disk.nvme_smart_health_information_log.available_spare_threshold,
-                disk.nvme_smart_health_information_log.available_spare_threshold,
-            ),
-        ),
-        label="Available spare",
-        metric_name="nvme_available_spare",
-        render_func=render.percent,
+        threshold=disk.nvme_smart_health_information_log.available_spare_threshold,
     )
 
     yield from check_levels(
         value=disk.nvme_smart_health_information_log.percentage_used,
+        levels_upper=params["levels_spare_percentage_used"],
         label="Percentage used",
         metric_name="nvme_spare_percentage_used",
         render_func=render.percent,
@@ -179,6 +212,7 @@ def check_smart_nvme(
 
     yield from check_levels(
         value=disk.nvme_smart_health_information_log.num_err_log_entries,
+        levels_upper=params["levels_error_information_log_entries"],
         label="Error information log entries",
         metric_name="nvme_error_information_log_entries",
         render_func=str,
@@ -186,6 +220,7 @@ def check_smart_nvme(
 
     yield from check_levels(
         value=disk.nvme_smart_health_information_log.data_units_read * 512000,
+        levels_upper=params["levels_data_units_read"],
         label="Data units read",
         metric_name="nvme_data_units_read",
         render_func=render.bytes,
@@ -193,10 +228,31 @@ def check_smart_nvme(
 
     yield from check_levels(
         value=disk.nvme_smart_health_information_log.data_units_written * 512000,
+        levels_upper=params["levels_data_units_written"],
         label="Data units written",
         metric_name="nvme_data_units_written",
         render_func=render.bytes,
     )
+
+
+def _check_against_discovered_or_levels(
+    param: DiscoveredOrLevels,
+    value: int,
+    discovered_value: int | None,
+    label: str,
+    metric_name: str,
+) -> CheckResult:
+    match param[1]:
+        case None:
+            yield from _check_against_discovery(value, discovered_value, label, metric_name)
+        case levels_upper:
+            yield from check_levels(
+                value=value,
+                levels_upper=levels_upper,
+                label=label,
+                render_func=str,
+                metric_name=metric_name,
+            )
 
 
 def _check_against_discovery(
@@ -215,6 +271,19 @@ def _check_against_discovery(
     yield Metric(metric_name, value)
 
 
+def _check_available_spare(param: AvailableSpareLevels, value: int, threshold: int) -> CheckResult:
+    levels_or_thresh = param[1]
+    yield from check_levels(
+        value=value,
+        levels_lower=(
+            ("fixed", (threshold, threshold)) if levels_or_thresh is None else levels_or_thresh
+        ),
+        label="Available spare",
+        metric_name="nvme_available_spare",
+        render_func=render.percent,
+    )
+
+
 check_plugin_smart_nvme_stats = CheckPlugin(
     name="smart_nvme_stats",
     sections=["smart_posix_all", "smart_posix_scan_arg"],
@@ -223,5 +292,6 @@ check_plugin_smart_nvme_stats = CheckPlugin(
     discovery_ruleset_name="smart_nvme",
     discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_nvme,
+    check_ruleset_name="smart_nvme",
     check_default_parameters={},  # needed to pass discovery parameters along!
 )

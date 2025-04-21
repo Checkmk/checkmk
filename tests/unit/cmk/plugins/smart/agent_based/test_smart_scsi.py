@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.plugins.smart.agent_based.smart_posix import (
     parse_smart_posix_all,
     SCSIAll,
@@ -31,3 +33,23 @@ def test_parse_smart_scsi() -> None:
         },
         failures=[],
     )
+
+
+@pytest.mark.xfail(strict=True)
+def test_parse_smart_scsi_7_3_regression() -> None:
+    """model_name accidently replaced with scsi_model_name
+
+    From the `smartmontools` change log:
+        > scsiprint.cpp: Re-add JSON value 'model_name'.
+
+        > This fixes a regression from r5286 (smartmontools 7.3).
+        > Keep 'scsi_model_name' to provide backward compatibility with
+        > release 7.3 and 7.4.
+    """
+
+    string_table_scsi = [  # unmodified except for serial number
+        [
+            """{"json_format_version":[1,0],"smartctl":{"version":[7,3],"svn_revision":"5338","platform_info":"x86_64-linux-6.8.8-4-pve","build_info":"(local build)","argv":["smartctl","--all","--json=c","/dev/sda","-d","scsi"],"exit_status":4},"local_time":{"time_t":1740485276,"asctime":"Tue Feb 25 12:07:56 2025 GMT"},"device":{"name":"/dev/sda","info_name":"/dev/sda","type":"scsi","protocol":"SCSI"},"scsi_vendor":"DELL","scsi_product":"PERC H740P Mini","scsi_model_name":"DELL PERC H740P Mini","scsi_revision":"5.13","scsi_version":"SPC-3","user_capacity":{"blocks":22496673792,"bytes":11518296981504},"logical_block_size":512,"rotation_rate":0,"logical_unit_id":"0x62cea7f069f4f4002cdd61b0b23cf598","serial_number":"serialxxx","device_type":{"scsi_terminology":"Peripheral Device Type [PDT]","scsi_value":0,"name":"disk"},"smart_support":{"available":false},"temperature":{"current":0},"scsi_temperature":{"drive_trip":0}}"""
+        ]
+    ]
+    _section = parse_smart_posix_all(string_table_scsi)

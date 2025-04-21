@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 
 from cmk.plugins.smart.agent_based.smart_posix import parse_smart_posix_all
 
 
-@pytest.mark.xfail(strict=True)
 def test_parse_sd_card_reader() -> None:
     """SD card reader from a Macbook Pro 13 (no card inserted in reader)"""
     string_table = [
@@ -19,7 +17,6 @@ def test_parse_sd_card_reader() -> None:
     parse_smart_posix_all(string_table)
 
 
-@pytest.mark.xfail(strict=True)
 def test_parse_freebsd_ata_cam_layer() -> None:
     """Unknown device from support ticket
 
@@ -34,7 +31,6 @@ def test_parse_freebsd_ata_cam_layer() -> None:
     parse_smart_posix_all(string_table)
 
 
-@pytest.mark.xfail(strict=True)
 def test_parse_ata_identify_device_structure_missing_information() -> None:
     """Exit code 4, no model_name
 

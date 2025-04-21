@@ -81,6 +81,14 @@ def _reload_automation_config() -> None:
 
 
 def _clear_caches_before_each_call() -> None:
-    ruleset_matcher = config.get_config_cache().ruleset_matcher
+    config_cache = config.get_config_cache()
+    ruleset_matcher = config_cache.ruleset_matcher
+    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+        {
+            hn
+            for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
+    )
     ruleset_matcher.ruleset_optimizer.clear_caches()
     ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()

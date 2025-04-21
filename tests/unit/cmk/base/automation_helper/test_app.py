@@ -21,8 +21,6 @@ from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 from cmk.ccc.version import Version
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 
@@ -100,7 +98,7 @@ def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[AgentBasedPlugins], LoadingResult],
-    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
+    clear_caches_before_each_call: Callable[[ConfigCache], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
         poll_interval=1.0,

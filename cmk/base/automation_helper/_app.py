@@ -20,7 +20,6 @@ from cmk.ccc import version as cmk_version
 
 from cmk.utils import paths, tty
 from cmk.utils.log import logger as cmk_logger
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
@@ -29,6 +28,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import config
 from cmk.base.automations import AutomationError
+from cmk.base.config import ConfigCache
 
 from ._cache import Cache, CacheError
 from ._config import ReloaderConfig
@@ -60,7 +60,7 @@ class _ApplicationDependencies:
     changes_cache: Cache
     reloader_config: ReloaderConfig
     reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
-    clear_caches_before_each_call: Callable[[RulesetMatcher], None]
+    clear_caches_before_each_call: Callable[[ConfigCache], None]
     state: _State
 
 
@@ -74,7 +74,7 @@ def make_application(
     cache: Cache,
     reloader_config: ReloaderConfig,
     reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
-    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
+    clear_caches_before_each_call: Callable[[ConfigCache], None],
 ) -> FastAPI:
     app = FastAPI(
         lifespan=_lifespan,
@@ -205,7 +205,7 @@ def _execute_automation_endpoint(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
-    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
+    clear_caches_before_each_call: Callable[[ConfigCache], None],
     state: _State,
 ) -> AutomationResponse:
     LOGGER.info(
@@ -242,7 +242,7 @@ def _execute_automation_endpoint(
         temporary_log_level(cmk_logger, payload.log_level),
     ):
         if state.loading_result:
-            clear_caches_before_each_call(state.loading_result.config_cache.ruleset_matcher)
+            clear_caches_before_each_call(state.loading_result.config_cache)
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(

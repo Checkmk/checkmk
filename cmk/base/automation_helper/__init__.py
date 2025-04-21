@@ -18,7 +18,6 @@ from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.utils.caching import cache_manager
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
@@ -27,6 +26,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import config
 from cmk.base.automations import automations
+from cmk.base.config import ConfigCache
 
 from ._app import make_application
 from ._cache import Cache
@@ -137,6 +137,13 @@ def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadingResul
     return config.load(discovery_rulesets, validate_hosts=False)
 
 
-def _clear_caches_before_each_call(ruleset_matcher: RulesetMatcher) -> None:
-    ruleset_matcher.ruleset_optimizer.clear_caches()
-    ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()
+def _clear_caches_before_each_call(config_cache: ConfigCache) -> None:
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+        {
+            hn
+            for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
+    )
+    config_cache.ruleset_matcher.ruleset_optimizer.clear_caches()
+    config_cache.ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()

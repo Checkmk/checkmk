@@ -506,7 +506,6 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 [
                     ("mode", "test_notifications"),
                     ("host_name", host.name()),
-                    ("_test_host_notifications", 1),
                 ],
                 filename="wato.py",
             )

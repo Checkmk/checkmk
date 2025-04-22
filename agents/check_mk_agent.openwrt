@@ -915,55 +915,55 @@ section_nullmailer() {
     fi
 }
 
-section_omd() {
+section_omd_status() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; MK_SOURCE_AGENT=yes . '${0}'; sudo_as_root omd status --bare || true"
-
-        ${MK_RUN_SYNC_PARTS} || return
-
-        for sitedir in /omd/sites/*; do
-            site_version="$(basename "$(realpath "${sitedir}/version")")"
-            site=${sitedir#/omd/sites/}
-            for topic in "broker" "mknotifyd" "apache" "diskusage"; do
-                sudo --non-interactive --user="${site}" "/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
-            done
-        done
-
-        echo '<<<omd_info:sep(59)>>>'
-        echo '[versions]'
-        echo 'version;number;edition;demo'
-        for versiondir in /omd/versions/*; do
-            version=${versiondir#/omd/versions/}
-
-            # filter out special directory 'default'
-            if [ "${version}" = "default" ]; then
-                continue
-            fi
-
-            number=${version}
-            demo="0"
-            if [ "${version##*.}" = "demo" ]; then
-                number=${version%.demo}
-                demo="1"
-            fi
-            edition=${number##*.}
-            number=${number%.*}
-            echo "${version};${number};${edition};${demo}"
-        done
-        echo '[sites]'
-        echo 'site;used_version;autostart'
-        for sitedir in /omd/sites/*; do
-            site=${sitedir#/omd/sites/}
-            used_version=$(readlink "${sitedir}"/version)
-            used_version=${used_version##*/}
-            autostart="0"
-            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
-                autostart="1"
-            fi
-            echo "${site};${used_version};${autostart}"
-        done
     fi
+}
+
+section_omd() {
+    for sitedir in /omd/sites/*; do
+        site_version="$(basename "$(realpath "${sitedir}/version")")"
+        site=${sitedir#/omd/sites/}
+        for topic in "broker" "mknotifyd" "apache" "diskusage"; do
+            sudo --non-interactive --user="${site}" "/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
+        done
+    done
+
+    echo '<<<omd_info:sep(59)>>>'
+    echo '[versions]'
+    echo 'version;number;edition;demo'
+    for versiondir in /omd/versions/*; do
+        version=${versiondir#/omd/versions/}
+
+        # filter out special directory 'default'
+        if [ "${version}" = "default" ]; then
+            continue
+        fi
+
+        number=${version}
+        demo="0"
+        if [ "${version##*.}" = "demo" ]; then
+            number=${version%.demo}
+            demo="1"
+        fi
+        edition=${number##*.}
+        number=${number%.*}
+        echo "${version};${number};${edition};${demo}"
+    done
+    echo '[sites]'
+    echo 'site;used_version;autostart'
+    for sitedir in /omd/sites/*; do
+        site=${sitedir#/omd/sites/}
+        used_version=$(readlink "${sitedir}"/version)
+        used_version=${used_version##*/}
+        autostart="0"
+        if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
+            autostart="1"
+        fi
+        echo "${site};${used_version};${autostart}"
+    done
 }
 
 section_zpool() {
@@ -1567,6 +1567,8 @@ run_partially_asnchronous_sections() {
     section_ntp
 
     section_chrony
+
+    section_omd_status
 
     run_remote_plugins "${MK_CONFDIR}/mrpe.cfg"
 }

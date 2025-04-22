@@ -1222,57 +1222,57 @@ section_mailqueue() {
     fi
 }
 
-section_omd() {
+section_omd_status() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
         export -f sudo_as_root
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; sudo_as_root omd status --bare || true"
-
-        ${MK_RUN_SYNC_PARTS} || return
-
-        for sitedir in /omd/sites/*; do
-            site_version="$(basename "$(realpath "${sitedir}/version")")"
-            site=${sitedir#/omd/sites/}
-            for topic in "broker" "mknotifyd" "apache" "diskusage"; do
-                script="/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
-                [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
-            done
-        done
-
-        echo '<<<omd_info:sep(59)>>>'
-        echo '[versions]'
-        echo 'version;number;edition;demo'
-        for versiondir in /omd/versions/*; do
-            version=${versiondir#/omd/versions/}
-
-            # filter out special directory 'default'
-            if [ "${version}" = "default" ]; then
-                continue
-            fi
-
-            number=${version}
-            demo="0"
-            if [ "${version##*.}" = "demo" ]; then
-                number=${version%.demo}
-                demo="1"
-            fi
-            edition=${number##*.}
-            number=${number%.*}
-            echo "${version};${number};${edition};${demo}"
-        done
-        echo '[sites]'
-        echo 'site;used_version;autostart'
-        for sitedir in /omd/sites/*; do
-            site=${sitedir#/omd/sites/}
-            used_version=$(readlink "${sitedir}"/version)
-            used_version=${used_version##*/}
-            autostart="0"
-            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
-                autostart="1"
-            fi
-            echo "${site};${used_version};${autostart}"
-        done
     fi
+}
+
+section_omd() {
+    for sitedir in /omd/sites/*; do
+        site_version="$(basename "$(realpath "${sitedir}/version")")"
+        site=${sitedir#/omd/sites/}
+        for topic in "broker" "mknotifyd" "apache" "diskusage"; do
+            script="/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
+            [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
+        done
+    done
+
+    echo '<<<omd_info:sep(59)>>>'
+    echo '[versions]'
+    echo 'version;number;edition;demo'
+    for versiondir in /omd/versions/*; do
+        version=${versiondir#/omd/versions/}
+
+        # filter out special directory 'default'
+        if [ "${version}" = "default" ]; then
+            continue
+        fi
+
+        number=${version}
+        demo="0"
+        if [ "${version##*.}" = "demo" ]; then
+            number=${version%.demo}
+            demo="1"
+        fi
+        edition=${number##*.}
+        number=${number%.*}
+        echo "${version};${number};${edition};${demo}"
+    done
+    echo '[sites]'
+    echo 'site;used_version;autostart'
+    for sitedir in /omd/sites/*; do
+        site=${sitedir#/omd/sites/}
+        used_version=$(readlink "${sitedir}"/version)
+        used_version=${used_version##*/}
+        autostart="0"
+        if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
+            autostart="1"
+        fi
+        echo "${site};${used_version};${autostart}"
+    done
 }
 
 section_zpool() {
@@ -2060,6 +2060,9 @@ run_purely_synchronous_sections() {
     ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
     [ -z "${MK_SKIP_FILEINFO}" ] && _log_section_time section_fileinfo
 
+    ## Check status of OMD sites and Checkmk Notification spooler
+    [ -z "${MK_SKIP_OMD}" ] && _log_section_time section_omd
+
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
@@ -2105,8 +2108,8 @@ run_partially_asynchronous_sections() {
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
     [ -z "${MK_SKIP_ARECA}" ] && _log_section_time section_areca_raid
 
-    ## Check status of OMD sites and Checkmk Notification spooler
-    [ -z "${MK_SKIP_OMD}" ] && _log_section_time section_omd
+    ## Check global status of OMD sites
+    [ -z "${MK_SKIP_OMD}" ] && _log_section_time section_omd_status
 
     if [ -z "${MK_SKIP_TIMESYNCHRONISATION}" ]; then
         _log_section_time section_timesyncd || _log_section_time section_ntp

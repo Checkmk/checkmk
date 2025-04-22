@@ -19,6 +19,9 @@ The Bakery API has a different logic for now, but will be adapted in the future 
 The shipped plugins are located under the ``cmk/plugins`` folder, while local third party plugins are placed under the ``local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
+If you want to override the behavior of existing plugins, you can put code under ``local/lib/python3/cmk/plugins``.
+Please be aware that you are doing such changes at your own risk and that Checkmk does not offer support for such modifications.
+
 Below the top-level folder, plugins are organized in families, e.g. all plugins concerning cisco devices will be found under the folder named ``cisco``.
 Plugins belonging to the same family can share code, regardless of the plugin group.
 For example a `server-side call` plugin can share code with the `agent based` plugins if they belong to the same family.

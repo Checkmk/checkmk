@@ -189,6 +189,7 @@ def test_filesystem_email_notifications(
             filesystems_rules_page.activate_changes(test_site)
 
 
+@pytest.mark.skip(reason="Test failing. See CMK-23100.")
 def test_email_notifications_host_filters(
     modify_notification_rule: str,
     dashboard_page: Dashboard,

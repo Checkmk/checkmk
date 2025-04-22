@@ -122,6 +122,6 @@ def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
             Path("family/agent_based/check.py"),
         },
         PackagePart.LIB: {
-            Path("python3/cmk/base/cee/plugins/bakery/bakelet.py"),  # FIXME
+            Path("check_mk/base/cee/plugins/bakery/bakelet.py"),
         },
     }

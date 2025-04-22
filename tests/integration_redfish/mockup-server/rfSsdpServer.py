@@ -44,7 +44,7 @@ class RfSSDPServer:
         self.cachecontrol = 1800
         myVersion = root.get("RedfishVersion", "1.0.0")
         self.major, self.minor, self.errata = tuple(myVersion.split("."))
-        self.addSearchTarget("urn:dmtf-org:service:redfish-rest:1:{}".format(self.minor))
+        self.addSearchTarget(f"urn:dmtf-org:service:redfish-rest:1:{self.minor}")
 
         # initiate multicast socket
         # rf-spec:
@@ -80,7 +80,7 @@ class RfSSDPServer:
         while True:
             try:
                 if countTimeout % 5 == 0:
-                    logger.info("Ssdp Poll... {} pings".format(pcount))
+                    logger.info(f"Ssdp Poll... {pcount} pings")
                     pcount = 0
                     countTimeout = 1
                 data, addr = self.sock.recvfrom(1024)
@@ -95,7 +95,7 @@ class RfSSDPServer:
         pass
 
     def check(self, data, addr):
-        logger.info("SSDP Packet received from {}".format(addr))
+        logger.info(f"SSDP Packet received from {addr}")
         decoded = data.decode().replace("\r", "").split("\n")
         msgtype, decoded = decoded[0], decoded[1:]
         decodeddict = {
@@ -107,12 +107,10 @@ class RfSSDPServer:
             if st in self.searchtargets:
                 response = [
                     "HTTP/1.1 200 OK",
-                    "CACHE-CONTROL: max-age={}".format(self.cachecontrol),
-                    "ST:urn:dmtf-org:service:redfish-rest:1:{}".format(self.minor),
-                    "USN:uuid:{}::urn:dmtf-org:service:redfish-rest:1:{}".format(
-                        self.UUID, self.minor
-                    ),
-                    "AL:{}".format(self.location),
+                    f"CACHE-CONTROL: max-age={self.cachecontrol}",
+                    f"ST:urn:dmtf-org:service:redfish-rest:1:{self.minor}",
+                    f"USN:uuid:{self.UUID}::urn:dmtf-org:service:redfish-rest:1:{self.minor}",
+                    f"AL:{self.location}",
                     "EXT:",
                 ]
 
@@ -120,7 +118,7 @@ class RfSSDPServer:
                 response = "\r\n".join(response)
 
                 self.sock.sendto(response.encode(), addr)
-                logger.info("SSDP Packet sent to {}".format(addr))
+                logger.info(f"SSDP Packet sent to {addr}")
 
 
 """

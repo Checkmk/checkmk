@@ -21,13 +21,10 @@ from cryptography.x509.oid import NameOID
 
 class RedirectHandler(SimpleHTTPRequestHandler):
     def do_POST(self) -> None:
-        site_apache_address = "{}{}".format(
-            # Note: It would be nice to set this needed URL on __init__ of RedirectHandler,
-            # but that's not possible because HTTPServer insists in taking a
-            # SimpleHTTPSRequestHandler class instead of an instance. Hence we set it on the HTTPServer instead.
-            self.server.site_apache_url,  # type: ignore[attr-defined]
-            self.path,
-        )
+        # Note: It would be nice to set this needed URL on __init__ of RedirectHandler,
+        # but that's not possible because HTTPServer insists in taking a
+        # SimpleHTTPSRequestHandler class instead of an instance. Hence we set it on the HTTPServer instead.
+        site_apache_address = f"{self.server.site_apache_url}{self.path}"  # type: ignore[attr-defined]
         self.send_response(308)
         self.send_header("Location", site_apache_address)
         self.end_headers()

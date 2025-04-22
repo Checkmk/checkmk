@@ -35,7 +35,6 @@ ignore = [
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
   "UP031", # Use format specifiers instead of percent format
-  "UP032", # Use f-string instead of `format` call
   "UP035", # Import from `FOO` instead: `BAR`
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
@@ -66,6 +65,7 @@ ignore = [
   "UP024", # Replace aliased errors with `OSError`
   "UP025", # Remove unicode literals from strings
   "UP028", # Replace `yield` over `for` loop with `yield from`
+  "UP032", # Use f-string instead of `format` call
   "UP036", # Version block is outdated for minimum Python version
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
@@ -73,6 +73,7 @@ ignore = [
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP017", # Use `datetime.UTC` alias
+  "UP032", # Use f-string instead of `format` call
 ]
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`

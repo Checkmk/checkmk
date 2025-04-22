@@ -1128,10 +1128,7 @@ class MultiSiteConnection(Helpers):
                     elif shs == 3:
                         ex = "The remote monitoring host's state it not yet determined"
                     elif shs == 4:
-                        ex = "Invalid status host: site {} has no host {!r}".format(
-                            status_host[0],
-                            status_host[1],
-                        )
+                        ex = f"Invalid status host: site {status_host[0]} has no host {status_host[1]!r}"
                     else:
                         ex = "Error determining state of remote monitoring host: %s" % shs
                     self.deadsites[sitename] = {

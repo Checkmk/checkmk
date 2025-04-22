@@ -1471,12 +1471,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                     ldap_user_id
                 )
             except CantSyncLDAPUserException:
-                cant_sync_msg = (
-                    '  SKIP SYNC "{}" name conflict with user from "{}" connector.'.format(
-                        ldap_user_id,
-                        self.id,
-                    )
-                )
+                cant_sync_msg = f'  SKIP SYNC "{ldap_user_id}" name conflict with user from "{self.id}" connector.'
                 if not self._has_suffix():
                     cant_sync_msg += " A suffix should be added to this connector."
                 self._logger.info(cant_sync_msg)

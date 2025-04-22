@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-17 14:29+0000\n"
+"PO-Revision-Date: 2025-04-22 09:52+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -48972,7 +48972,7 @@ msgid "Predefined searches"
 msgstr "Vordefinierte Suchen"
 
 msgid "Predicted Media Life Left"
-msgstr ""
+msgstr "Prognostizierte verbleibende Lebensdauer der Medien"
 
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Vorhersage der 15-minütigen CPU-Last"
@@ -53411,9 +53411,8 @@ msgstr "zu folgendem SQL-Server verbinden"
 msgid "SQLAnywhere"
 msgstr "SQLAnywhere"
 
-#, fuzzy
 msgid "SSD Endurance Utilization"
-msgstr "Encoder-Auslastung"
+msgstr "SSD Endurance Auslastung"
 
 msgid "SSH Port"
 msgstr "SSH-Port"

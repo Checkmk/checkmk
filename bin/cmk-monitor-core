@@ -5,7 +5,7 @@
 
 OMD_SITE=$(whoami)
 SITE_VERSION="$(realpath ~/version | sed 's|.*/||')"
-LD_LIBRARY_PATH="/omd/versions/${SITE_VERSION}/lib":"${LD_LIBRARY_PATH}"
+LD_LIBRARY_PATH="/omd/versions/${SITE_VERSION}/lib:${LD_LIBRARY_PATH}"
 export LD_LIBRARY_PATH
 
 waitmax_for_unixcat() {

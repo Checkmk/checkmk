@@ -11,7 +11,6 @@ They almost all require a Git repository to be present.
 
 import logging
 import os
-import re
 import subprocess
 import sys
 from collections.abc import Callable
@@ -95,54 +94,27 @@ def current_branch_version() -> str:
 
 
 @cache
-def current_base_branch_name() -> str:
-    branch_name = current_branch_name()
-
-    # Detect which other branch this one was created from. We do this by going back the
-    # current branches git log one step by another and check which branches contain these
-    # commits. Only search for our main (master + major-version) branches
-    try:
-        commits = subprocess.check_output(
-            ["git", "rev-list", "--max-count=30", branch_name],
+def branch_name_is_branch_version() -> bool:
+    return (
+        subprocess.check_output(
+            [
+                "make",
+                "--no-print-directory",
+                "-f",
+                str(repo_path() / "defines.make"),
+                "print-BRANCH_NAME_IS_BRANCH_VERSION",
+            ],
             encoding="utf-8",
-            stderr=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError:
-        return branch_name
-    for commit in commits.strip().split("\n"):
-        # Asking for remote heads here, since the git repos checked out in CI
-        # do not create all branches locally
+        ).strip()
+        == "yes"
+    )
 
-        # --format=%(refname): Is not supported by all distros :(
-        #
-        # heads = subprocess.check_output(
-        #    ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
-        # if not isinstance(heads, str):
-        #    heads = heads.decode("utf-8")
 
-        # for head in heads.strip().split("\n"):
-        #    if head == "refs/remotes/origin/master":
-        #        return "master"
-
-        #    if re.match(r"^refs/remotes/origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
-        #        return head
-
-        lines = subprocess.check_output(
-            ["git", "branch", "-r", "--contains", commit], encoding="utf-8"
-        )
-        for line in lines.strip().split("\n"):
-            if not line:
-                continue
-            head = line.split()[0]
-
-            if head == "origin/master":
-                return "master"
-
-            if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
-                return head[7:]
-
-    LOGGER.warning("Could not determine base branch, using %s", branch_name)
-    return branch_name
+@cache
+def current_base_branch_name() -> str:
+    if branch_name_is_branch_version():
+        return current_branch_version()
+    return "master"
 
 
 @cache

@@ -58,15 +58,6 @@ BRANCH_VERSION     := 2.5.0
 # set this to any value after creating a new (beta) branch
 BRANCH_NAME_IS_BRANCH_VERSION :=
 
-# This automatism did not work well in all cases. There were daily build jobs that used
-# e.g. 2020.02.08 as BRANCH_VERSION, even if they should use 1.7.0
-#BRANCH_VERSION := $(shell echo "$(VERSION)" | sed -E 's/^([0-9]+.[0-9]+.[0-9]+).*$$/\1/')
-# In case of "master daily builds" we get the DATE as BRANCH_VERSION, which is
-# not what we want. TODO: Find a solution for this
-#ifeq ($(BRANCH_VERSION),$(shell date +%Y.%m.%d))
-#    BRANCH_VERSION := 1.7.0
-#endif
-
 SHELL              := /bin/bash
 CLANG_VERSION      := 19
 

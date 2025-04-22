@@ -116,7 +116,8 @@ class CmkPage(LocatorHelper):
         except Exception as e:
             if site:
                 e.add_note(
-                    "Flake during changes activation. The changes will be activated through the API."
+                    "Flake during changes activation."
+                    " The changes will be activated through the API."
                 )
                 site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
             raise e
@@ -376,6 +377,15 @@ class MainArea(LocatorHelper):
     @property
     def page_menu_bar(self) -> Locator:
         return self.locator("table#page_menu_bar")
+
+    @property
+    def _page_menu_popups(self) -> Locator:
+        return self.locator("div#page_menu_popups")
+
+    def get_confirmation_popup_button(self, button_name: str) -> Locator:
+        return self._page_menu_popups.locator("div.confirm_container").get_by_role(
+            "button", name=button_name
+        )
 
     def dropdown_button(self, name: str, exact: bool = True) -> Locator:
         return self.page_menu_bar.get_by_role(role="heading", name=name, exact=exact)

@@ -151,6 +151,10 @@ class Site:
         self.result_dir().mkdir(parents=True, exist_ok=True)
 
     @property
+    def alias(self) -> str:
+        return self.id.replace("_", " ").capitalize()
+
+    @property
     def version(self) -> CMKVersion:
         return self._package.version
 
@@ -169,9 +173,14 @@ class Site:
         return self._apache_port
 
     @property
+    def url_prefix(self) -> str:
+        """This gives the prefix for the URL of the site."""
+        return f"{self.http_proto}://{self.http_address}:{self.apache_port}/{self.id}/"
+
+    @property
     def internal_url(self) -> str:
         """This gives the address-port combination where the site-Apache process listens."""
-        return f"{self.http_proto}://{self.http_address}:{self.apache_port}/{self.id}/check_mk/"
+        return self.url_prefix + "check_mk/"
 
     @property
     def internal_url_mobile(self) -> str:
@@ -1809,8 +1818,8 @@ class SiteFactory:
 
         return site
 
-    def copy_site(self, site: Site, copy_name: str) -> Site:
-        self._base_ident = ""
+    @contextmanager
+    def copy_site(self, site: Site, copy_name: str) -> Iterator[Site]:
         site_copy = self._site_obj(copy_name)
 
         assert not site_copy.exists(), (
@@ -1819,11 +1828,17 @@ class SiteFactory:
 
         site.stop()
         logger.info("Copying site '%s' to site '%s'...", site.id, site_copy.id)
-        run(["omd", "cp", site.id, copy_name], sudo=True)
+        run(["omd", "cp", site.id, site_copy.id], sudo=True)
         site_copy = self.get_existing_site(copy_name)
         site_copy.start()
 
-        return site_copy
+        try:
+            yield site_copy
+
+        finally:
+            if os.getenv("CLEANUP", "1") == "1":
+                logger.info("Removing site '%s'...", site_copy.id)
+                site_copy.rm()
 
     def interactive_update(
         self,

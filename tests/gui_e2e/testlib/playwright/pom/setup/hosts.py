@@ -166,6 +166,14 @@ class AddHost(CmkPage):
         return self.main_area.get_input("host")
 
     @property
+    def monitored_on_site_checkbox(self) -> Locator:
+        return self.main_area.get_attribute_label("site")
+
+    @property
+    def monitored_on_site_dropdown_button(self) -> Locator:
+        return self.main_area.locator("div#attr_entry_site >> b")
+
+    @property
     def ipv4_address_checkbox(self) -> Locator:
         return self.main_area.get_attribute_label("ipaddress")
 
@@ -208,6 +216,12 @@ class AddHost(CmkPage):
         """
         logger.info("Fill in host details")
         self.host_name_text_field.fill(host.name)
+
+        if host.site:
+            self.monitored_on_site_checkbox.click()
+            self.monitored_on_site_dropdown_button.click()
+            self.main_area.locator().get_by_role("option").filter(has_text=host.site).click()
+
         self.ipv4_address_checkbox.click()
         self.ipv4_address_text_field.fill(host.ip if host.ip else LOCALHOST_IPV4)
 

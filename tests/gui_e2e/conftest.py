@@ -31,7 +31,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.testlib.common.repo import repo_path
 from tests.testlib.emails import EmailManager
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import ADMIN_USER, get_site_factory, Site
+from tests.testlib.site import ADMIN_USER, get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
@@ -40,13 +40,30 @@ logger = logging.getLogger(__name__)
 setup_fixtures = [notification_user]
 
 
+@pytest.fixture(name="site_factory", scope="session")
+def _site_factory() -> SiteFactory:
+    """Return the site factory object."""
+    return get_site_factory(prefix="gui_e2e_")
+
+
 @pytest.fixture(name="test_site", scope="session")
-def fixture_test_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    """Return the Checkmk site object."""
+def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory) -> Iterator[Site]:
+    """Return the central Checkmk site object."""
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from get_site_factory(prefix="gui_e2e_").get_test_site()
+        yield from site_factory.get_test_site(name="central")
+
+
+@pytest.fixture(name="remote_site", scope="module")
+def fixture_remote_site(
+    request: pytest.FixtureRequest, site_factory: SiteFactory
+) -> Iterator[Site]:
+    """Return the remote Checkmk site object."""
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from site_factory.get_test_site(name="remote")
 
 
 @pytest.fixture(name="credentials", scope="session")

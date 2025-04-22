@@ -24,7 +24,7 @@ Change the log level to verbose or less.
 
 <em>Indicators of Compromise</em>:
 
-Check <code>var/log/web.log for messages beginning with</code>Site states: `
+Check <code>var/log/web.log</code> for messages beginning with <code>Site states: </code>
 
 <em>Vulnerability Management</em>:
 

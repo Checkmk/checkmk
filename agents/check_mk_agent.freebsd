@@ -326,7 +326,7 @@ detect_python() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b6"
+    echo "Version: 2.4.0b7"
     echo "AgentOS: freebsd"
     echo "Hostname: $(hostname)"
 

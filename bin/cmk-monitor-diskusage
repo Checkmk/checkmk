@@ -1,0 +1,32 @@
+#!/bin/sh
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+usage() {
+    cat <<HERE >&2
+Used for internal monitoring of omd diskusage.
+HERE
+    return 1
+}
+
+_du_no_errors() {
+    if [ -e "${1}" ]; then
+        output=$(du -bs "$1") && printf "%s\n" "${output}"
+    else
+        printf "0 %s\n" "${1}"
+    fi
+}
+
+echo '<<<omd_diskusage:sep(0)>>>'
+echo "[site $(whoami)]"
+_du_no_errors ~
+_du_no_errors ~/var/log
+_du_no_errors ~/var/check_mk/rrd
+_du_no_errors ~/var/pnp4nagios/
+_du_no_errors ~/tmp/
+_du_no_errors ~/local/
+_du_no_errors ~/var/check_mk/agents/
+_du_no_errors ~/var/mkeventd/history/
+_du_no_errors ~/var/check_mk/core/
+_du_no_errors ~/var/check_mk/inventory_archive/

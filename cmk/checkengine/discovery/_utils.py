@@ -10,21 +10,20 @@ import enum
 import json
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Final, Generic, Literal, Protocol, Self, TypeVar
+from typing import Final, Generic, Literal, Protocol, Self, TypedDict, TypeVar
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
-DiscoveryVsSetting = dict[
-    Literal[
-        "add_new_services",
-        "remove_vanished_services",
-        "update_host_labels",
-        "update_changed_service_labels",
-        "update_changed_service_parameters",
-    ],
-    bool,
-]
-DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting | None]
+
+class DiscoverySettingFlags(TypedDict):
+    add_new_services: bool
+    remove_vanished_services: bool
+    update_host_labels: bool
+    update_changed_service_labels: bool
+    update_changed_service_parameters: bool
+
+
+DiscoveryValueSpecModel = tuple[Literal["update_everything", "custom"], DiscoverySettingFlags]
 
 
 @dataclass(frozen=True)
@@ -47,7 +46,7 @@ class DiscoverySettings:
         )
 
     @classmethod
-    def from_vs(cls, mode: DiscoveryVsSettings | None) -> Self:
+    def from_vs(cls, mode: DiscoveryValueSpecModel | None) -> Self:
         if mode is None:
             return cls(
                 update_host_labels=False,
@@ -57,25 +56,13 @@ class DiscoverySettings:
                 update_changed_service_parameters=False,
             )
 
-        if "update_everything" in mode:
-            return cls(
-                update_host_labels=True,
-                add_new_services=True,
-                remove_vanished_services=True,
-                update_changed_service_labels=True,
-                update_changed_service_parameters=True,
-            )
-
-        # "custom" mode
-        assert mode[1] is not None
+        _ident, flags = mode
         return cls(
-            update_host_labels=mode[1].get("update_host_labels", False),
-            add_new_services=mode[1].get("add_new_services", False),
-            remove_vanished_services=mode[1].get("remove_vanished_services", False),
-            update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
-            update_changed_service_parameters=mode[1].get(
-                "update_changed_service_parameters", False
-            ),
+            update_host_labels=flags["update_host_labels"],
+            add_new_services=flags["add_new_services"],
+            remove_vanished_services=flags["remove_vanished_services"],
+            update_changed_service_labels=flags["update_changed_service_labels"],
+            update_changed_service_parameters=flags["update_changed_service_parameters"],
         )
 
     def to_json(self) -> str:

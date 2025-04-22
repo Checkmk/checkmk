@@ -5,8 +5,10 @@
 
 from pathlib import Path
 
+from pytest import MonkeyPatch
+
 from cmk.mkp_tool import PackagePart, PathConfig
-from cmk.mkp_tool._reporter import _all_local_files, all_packable_files
+from cmk.mkp_tool._reporter import _all_local_files, all_packable_files, categorize_files
 
 
 def _setup_local_files_structure(path_config: PathConfig) -> None:
@@ -64,3 +66,68 @@ def test_get_packable_files_by_part(path_config: PathConfig) -> None:
         },
     }
     assert all_packable_files(path_config) == expected
+
+
+_PATH_CONFIG = PathConfig(
+    cmk_plugins_dir=Path("/omd/sites/mySite/local/lib/python3/cmk/plugins/"),
+    cmk_addons_plugins_dir=Path("/omd/sites/mySite/local/lib/python3/cmk_addons/plugins/"),
+    agent_based_plugins_dir=Path("/omd/sites/mySite/local/lib/check_mk/base/plugins/agent_based/"),
+    agents_dir=Path("/omd/sites/mySite/share/check_mk/agents/"),
+    alert_handlers_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    bin_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    check_manpages_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    checks_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    doc_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    gui_plugins_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    inventory_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    lib_dir=Path("/omd/sites/mySite/local/lib"),
+    locale_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    mib_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    mkp_rule_pack_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    notifications_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    pnp_templates_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    web_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    installed_packages_dir=Path("/omd/sites/mySite/NEVERMIND"),
+    local_root=Path("/omd/sites/mySite/NEVERMIND"),
+    manifests_dir=Path("/omd/sites/mySite/NEVERMIND"),
+)
+
+
+def test_categorize_files_empty() -> None:
+    assert not categorize_files({}, _PATH_CONFIG)
+
+
+def _fake_resolve(self: Path) -> Path:
+    str_self = str(self)
+    if str_self.startswith("/omd/"):
+        str_self = "/opt" + str_self
+    return Path(str_self.replace("lib/check_mk", "lib/python3/cmk"))
+
+
+def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(Path, "resolve", _fake_resolve)
+
+    resolved_to_abstracted = {
+        Path(
+            "/opt/omd/sites/mySite/local/lib/python3/cmk/plugins/family/agent_based/check.py"
+        ): Path("/omd/sites/mySite/local/lib/check_mk/plugins/family/agent_based/check.py"),
+        Path(
+            "/opt/omd/sites/mySite/local/lib/python3/cmk_addons/plugins/family/agent_based/check.py"
+        ): Path(
+            "/omd/sites/mySite/local/lib/python3/cmk_addons/plugins/family/agent_based/check.py"
+        ),
+        Path(
+            "/opt/omd/sites/mySite/local/lib/python3/cmk/base/cee/plugins/bakery/bakelet.py"
+        ): Path("/omd/sites/mySite/local/lib/check_mk/base/cee/plugins/bakery/bakelet.py"),
+    }
+    assert categorize_files(resolved_to_abstracted, _PATH_CONFIG) == {
+        PackagePart.CMK_PLUGINS: {
+            Path("family/agent_based/check.py"),
+        },
+        PackagePart.CMK_ADDONS_PLUGINS: {
+            Path("family/agent_based/check.py"),
+        },
+        PackagePart.LIB: {
+            Path("check_mk/base/cee/plugins/bakery/bakelet.py"),
+        },
+    }

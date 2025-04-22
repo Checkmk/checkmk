@@ -36,7 +36,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -59,7 +59,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -82,7 +82,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -105,7 +105,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -128,7 +128,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -151,7 +151,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -174,7 +174,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -223,7 +223,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -246,7 +246,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_upper",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol=""),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=InputHint((1, 1)),
@@ -269,7 +269,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="levels_lower",
                             title=Title("Configure levels"),
-                            parameter_form=SimpleLevels(
+                            parameter_form=SimpleLevels[int](
                                 form_spec_template=Integer(unit_symbol="%"),
                                 level_direction=LevelDirection.LOWER,
                                 prefill_fixed_levels=InputHint((20, 10)),
@@ -286,7 +286,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
             ),
             "levels_spare_percentage_used": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=SimpleLevels[int](
                     title=Title("Percentage used"),
                     form_spec_template=Integer(unit_symbol="%"),
                     level_direction=LevelDirection.UPPER,
@@ -295,7 +295,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
             ),
             "levels_error_information_log_entries": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=SimpleLevels[int](
                     title=Title("Error information log entries"),
                     form_spec_template=Integer(unit_symbol=""),
                     level_direction=LevelDirection.UPPER,
@@ -304,7 +304,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
             ),
             "levels_data_units_read": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=SimpleLevels[int](
                     title=Title("Data units read"),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[
@@ -319,7 +319,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
             ),
             "levels_data_units_written": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=SimpleLevels[int](
                     title=Title("Data units written"),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[

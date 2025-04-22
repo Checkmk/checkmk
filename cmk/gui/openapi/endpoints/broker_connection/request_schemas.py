@@ -27,21 +27,25 @@ class BrokerConnectionConfig(BaseSchema):
     connecter = fields.Nested(
         SiteId,
         required=True,
-        description="The site ID of the connecter.",
+        description="The ID of the site initiating the connection.",
         example={"site_id": "remote_1"},
     )
     connectee = fields.Nested(
         SiteId,
         required=True,
-        description="The site ID of the connectee.",
+        description="The ID of the site accepting the connection.",
         example={"site_id": "remote_2"},
     )
 
     @validates_schema
     def validate_connection(self, data: dict[str, Any], **kwargs: Any) -> None:
         """The two connected sites should not be the same."""
-        if data["connecter"]["site_id"] == data["connectee"]["site_id"]:
-            raise ValidationError("The connecter and connectee should not have the same site_id.")
+        if data["connecter"]["site_id"] != data["connectee"]["site_id"]:
+            return
+        raise ValidationError(
+            "The site initiating the connection and the site accepting the connection"
+            " should not have the same ID."
+        )
 
 
 class BrokerConnectionRequestCreate(BaseSchema):

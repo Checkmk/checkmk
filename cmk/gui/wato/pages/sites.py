@@ -694,7 +694,9 @@ class ModeEditBrokerConnection(WatoMode):
                 SiteId(raw_site_spec["connectee"]),
             )
         except KeyError:
-            raise MKUserError(None, _("Connecter and connectee sites must be specified."))
+            raise MKUserError(
+                None, _("The sites initiating and accepting the connection must be specified.")
+            )
 
         connection = BrokerConnection(
             connecter=BrokerSite(site_id=source_site),
@@ -747,7 +749,8 @@ class ModeEditBrokerConnection(WatoMode):
                 "connecter to the connectee and vice versa. "
                 "Note that the order in which you choose the sites here still might matter, "
                 "depending on your network restrictions: "
-                "The connecter must be able to establish a TCP connection to the connectee."
+                "The initiating peer must be able to establish a TCP connection to the accepting "
+                "peer."
             ),
         )
 
@@ -779,7 +782,7 @@ class ModeEditBrokerConnection(WatoMode):
             (
                 "connecter",
                 DropdownChoice(
-                    title=_("Connecter"),
+                    title=_("Initiating peer"),
                     choices=replicated_sites_choices,
                     sorted=True,
                     help=_("Select the site that is establishing the TCP connection."),
@@ -788,7 +791,7 @@ class ModeEditBrokerConnection(WatoMode):
             (
                 "connectee",
                 DropdownChoice(
-                    title=_("Connectee"),
+                    title=_("Accepting peer"),
                     choices=replicated_sites_choices,
                     sorted=True,
                     help=_("Select the site that is accepting the TCP connection."),
@@ -1145,8 +1148,8 @@ class ModeDistributedMonitoring(WatoMode):
         self, table: Table, connection_id: str, connection: BrokerConnection
     ) -> None:
         table.cell(_("ID"), connection_id)
-        table.cell(_("connecter"), connection.connecter.site_id)
-        table.cell(_("connectee"), connection.connectee.site_id)
+        table.cell(_("Initiating peer"), connection.connecter.site_id)
+        table.cell(_("Accepting peer"), connection.connectee.site_id)
 
     def _show_basic_settings(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
         table.cell(_("ID"), site_id)

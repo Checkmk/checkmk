@@ -71,7 +71,7 @@ CONNECTION_ID_SHOULD_EXIST = {
 def _validation_error(exc: MKUserError) -> Response:
     return problem(
         status=400,
-        title="Connecter and connectee are already connected",
+        title="Initiating and accepting peer are already connected",
         detail=str(exc),
     )
 

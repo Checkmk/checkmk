@@ -13,6 +13,7 @@ from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.roles import AutomationUserFile
 
+from cmk.update_config.plugins.actions.tag_conditions import get_tag_config, transform_host_tags
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -48,11 +49,33 @@ def _migrate_automation_user(user_id: UserId) -> None:
     AutomationUserFile(user_id).save(secret.exists())
 
 
+def _migrate_notification_rules(user_spec: UserSpec) -> None:
+    """
+    Until 2.4 the "tag" condition was in format list, from 2.4 on it's dict
+    """
+    if "notification_rules" not in user_spec:
+        return
+
+    tag_groups, aux_tag_list = get_tag_config()
+    for rule in (notification_rules := user_spec.get("notification_rules", [])):
+        if "match_hosttags" not in rule:
+            continue
+
+        if isinstance(host_tags := rule["match_hosttags"], dict):
+            continue
+
+        assert isinstance(host_tags, list)
+        rule["match_hosttags"] = transform_host_tags(host_tags, tag_groups, aux_tag_list)
+
+    user_spec["notification_rules"] = notification_rules
+
+
 def _update_user_attributes(logger: Logger, users: Users) -> Users:
     for user_id, user_spec in users.items():
         _add_alias(user_id, user_spec)
         _migrate_automation_user(user_id)
         _add_roles(user_spec)
+        _migrate_notification_rules(user_spec)
     return users
 
 

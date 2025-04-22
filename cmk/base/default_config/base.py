@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container, Iterable, Mapping, Sequence
-from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict, Union
+from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict
 
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -286,10 +286,10 @@ service_descriptions: dict[str, str] = {}
 # and does not include inheritance from folders
 host_attributes: dict[HostName, dict[str, Any]] = {}
 # special parameters for host/PING check_command
-_PingLevels = dict[str, Union[int, tuple[float, float]]]
+_PingLevels = dict[str, int | tuple[float, float]]
 ping_levels: list[RuleSpec[_PingLevels]] = []
 # alternative host check instead of check_icmp
-_HostCheckCommand = Union[None, str, tuple[str, int | str]]
+_HostCheckCommand = str | tuple[str, int | str] | None
 host_check_commands: list[RuleSpec[_HostCheckCommand]] = []
 # time settings for piggybacked hosts
 piggybacked_host_files: list[RuleSpec[Mapping[str, object]]] = []

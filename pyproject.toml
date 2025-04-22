@@ -34,7 +34,6 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
-  "UP007", # Use `X | Y` for type annotations
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
   "UP035", # Import from `FOO` instead: `BAR`
@@ -60,6 +59,7 @@ ignore = [
 "agents/*" = ["ARG001", "ARG002", "SLF001"]
 # Agent plugins still need to support Python 2.7
 "agents/plugins/*" = [
+  "UP007", # Use `X | Y` for type annotations
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP015", # Unnecessary open mode parameters
@@ -77,6 +77,7 @@ ignore = [
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
+  "UP007", # Use `X | Y` for type annotations
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP012", # Unnecessary call to `encode` as UTF-8
@@ -87,6 +88,18 @@ ignore = [
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 "packages/cmk-agent-based/cmk/agent_based/v1/type_defs.py" = [
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
+]
+"cmk/shared_typing/*" = [
+  "UP007", # Use `X | Y` for type annotations
+]
+"cmk/checkengine/plugin_backend/utils.py" = [
+  "UP007", # Use `X | Y` for type annotations
+]
+"packages/cmk-rulesets/*" = [
+  "UP007", # Use `X | Y` for type annotations
+]
+"packages/cmk-agent-based/*" = [
+  "UP007", # Use `X | Y` for type annotations
 ]
 
 [tool.ruff.lint.mccabe]

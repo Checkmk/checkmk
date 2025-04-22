@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
-TC = t.TypeVar("TC", bound=t.Union[CheckPlugin, InventoryPlugin])
+TC = t.TypeVar("TC", bound=CheckPlugin | InventoryPlugin)
 
 
 class MergeKey(t.NamedTuple):
@@ -98,13 +98,11 @@ class BaseProtocol(t.Protocol):
 
 
 class WatoProtocol(BaseProtocol, t.Protocol):
-    def validate_parameter(
-        self, parameters: t.Optional[ParametersTypeAlias]
-    ) -> t.Optional[Exception]: ...
+    def validate_parameter(self, parameters: ParametersTypeAlias | None) -> Exception | None: ...
 
 
 class PluginProtocol(BaseProtocol, t.Protocol):
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
+    def get_default_parameters(self) -> ParametersTypeAlias | None: ...
 
 
 class Plugin(Base[TC], abc.ABC):
@@ -115,7 +113,7 @@ class Plugin(Base[TC], abc.ABC):
         return str(self._element.name)
 
     @abc.abstractmethod
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
+    def get_default_parameters(self) -> ParametersTypeAlias | None: ...
 
 
 class PluginDiscovery(Plugin[CheckPlugin]):
@@ -125,7 +123,7 @@ class PluginDiscovery(Plugin[CheckPlugin]):
         assert self._element.discovery_ruleset_name
         return str(self._element.discovery_ruleset_name)
 
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
+    def get_default_parameters(self) -> ParametersTypeAlias | None:
         return self._element.discovery_default_parameters
 
 
@@ -136,7 +134,7 @@ class PluginInventory(Plugin[InventoryPlugin]):
         assert self._element.ruleset_name
         return str(self._element.ruleset_name)
 
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
+    def get_default_parameters(self) -> ParametersTypeAlias | None:
         return self._element.defaults
 
 
@@ -147,7 +145,7 @@ class PluginCheck(Plugin[CheckPlugin]):
         assert self._element.check_ruleset_name
         return str(self._element.check_ruleset_name)
 
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
+    def get_default_parameters(self) -> ParametersTypeAlias | None:
         return self._element.check_default_parameters
 
     def has_item(self) -> bool:
@@ -158,9 +156,7 @@ class Wato(Base[TF]):
     def get_description(self) -> str:
         return f"wato {self.type}-rule '{self.get_name()}'"
 
-    def validate_parameter(
-        self, parameters: t.Optional[ParametersTypeAlias]
-    ) -> t.Optional[Exception]:
+    def validate_parameter(self, parameters: ParametersTypeAlias | None) -> Exception | None:
         try:
             self._element.valuespec.validate_datatype(parameters, "")
             self._element.valuespec.validate_value(parameters, "")
@@ -183,7 +179,7 @@ class WatoInventory(Wato[Rulespec]):
         return self._element.name
 
 
-class WatoCheck(Wato[t.Union[CheckParameterRulespecWithoutItem, CheckParameterRulespecWithItem]]):
+class WatoCheck(Wato[CheckParameterRulespecWithoutItem | CheckParameterRulespecWithItem]):
     type = "check"
 
     def get_merge_name(self) -> str:
@@ -300,7 +296,7 @@ class ErrorReporter:
     }
 
     def __init__(self) -> None:
-        self._last_exception: t.Optional[DefaultLoadingFailed] = None
+        self._last_exception: DefaultLoadingFailed | None = None
         self._failures: list[str] = []
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING | self.ENFORCING_ONLY_RULESETS
@@ -410,7 +406,7 @@ A = t.TypeVar("A", bound=SupportsGreaterThan)
 B = t.TypeVar("B")
 
 
-def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[tuple[t.Optional[A], t.Optional[B]]]:
+def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[tuple[A | None, B | None]]:
     """
     merge a and b in a way that elements that are equal in a and b are in the
     same tuple.
@@ -419,13 +415,13 @@ def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[tuple[t.Optional[A],
     iter_a = iter(a)
     iter_b = iter(b)
 
-    def next_a() -> t.Optional[A]:
+    def next_a() -> A | None:
         try:
             return next(iter_a)
         except StopIteration:
             return None
 
-    def next_b() -> t.Optional[B]:
+    def next_b() -> B | None:
         try:
             return next(iter_b)
         except StopIteration:

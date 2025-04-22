@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any
 
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -51,9 +51,9 @@ def _parse_ts(raw_ts: str) -> datetime | None:
         return None
 
 
-Percentage = Annotated[Union[int, None], BeforeValidator(_parse_percentage)]
-TemperatureAlias = Annotated[Union[float, None], BeforeValidator(_parse_temperature)]
-TS = Annotated[Union[datetime, None], BeforeValidator(_parse_ts)]
+Percentage = Annotated[int | None, BeforeValidator(_parse_percentage)]
+TemperatureAlias = Annotated[float | None, BeforeValidator(_parse_temperature)]
+TS = Annotated[datetime | None, BeforeValidator(_parse_ts)]
 
 
 class Battery(BaseModel):

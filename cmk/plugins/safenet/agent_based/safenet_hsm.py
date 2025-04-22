@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import TypedDict, Union
+from typing import TypedDict
 
 from cmk.agent_based.v1 import GetRateError
 from cmk.agent_based.v2 import (
@@ -37,7 +37,7 @@ class EventStatCheckParamT(TypedDict):
     noncritical_event_rate: LevelsT
 
 
-CheckParamT = Union[OperationStatCheckParamT, EventStatCheckParamT]
+CheckParamT = OperationStatCheckParamT | EventStatCheckParamT
 
 
 class Section(TypedDict):

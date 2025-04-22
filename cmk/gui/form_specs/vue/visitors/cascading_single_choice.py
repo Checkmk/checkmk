@@ -42,7 +42,7 @@ class CascadingSingleChoiceVisitor(
             # The default value for a cascading_single_choice element only
             # contains the name of the selected element, not the value.
             return (prefill_default, DEFAULT_VALUE)
-        if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
+        if not isinstance(raw_value, list | tuple) or len(raw_value) != 2:
             return InvalidValue(reason=_("Invalid datatype"), fallback_value=("", None))
 
         name = raw_value[0]

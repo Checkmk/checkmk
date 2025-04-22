@@ -503,7 +503,7 @@ class BIHostRenamer:
         # TODO: renaming can be moved into the action class itself. allows easier plug-ins
         if isinstance(
             bi_node.action,
-            (BIStateOfHostAction, BIStateOfServiceAction, BIStateOfRemainingServicesAction),
+            BIStateOfHostAction | BIStateOfServiceAction | BIStateOfRemainingServicesAction,
         ):
             if bi_node.action.host_regex == oldname:
                 bi_node.action.host_regex = newname
@@ -521,7 +521,7 @@ class BIHostRenamer:
     def rename_node_search(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
         # TODO: renaming can be moved into the search class itself. allows easier plug-ins
         if (
-            isinstance(bi_node.search, (BIHostSearch, BIServiceSearch))
+            isinstance(bi_node.search, BIHostSearch | BIServiceSearch)
             and bi_node.search.conditions["host_choice"]["type"] == "host_name_regex"
             and bi_node.search.conditions["host_choice"]["pattern"] == oldname
         ):

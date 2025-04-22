@@ -93,7 +93,7 @@ def _filter_check(
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
-            if not isinstance(element, (Result, Metric, IgnoreResults)):
+            if not isinstance(element, Result | Metric | IgnoreResults):
                 raise TypeError("unexpected type in check function: %r" % type(element))
             yield element
 

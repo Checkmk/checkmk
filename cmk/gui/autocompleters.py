@@ -249,7 +249,7 @@ class PageVsAutocomplete(AjaxPage):
         # Check for correct result_data format
         assert isinstance(result_data, list)
         if result_data:
-            assert isinstance(result_data[0], (list, tuple))
+            assert isinstance(result_data[0], list | tuple)
             assert len(result_data[0]) == 2
 
         return {"choices": result_data}

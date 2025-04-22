@@ -275,7 +275,7 @@ class Metric(_MetricTuple):
     ) -> Metric:
         cls._validate_name(name)
 
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             raise TypeError(f"value for metric must be float or int, got {value!r}")
 
         return super().__new__(
@@ -299,7 +299,7 @@ class Metric(_MetricTuple):
     def _sanitize_single_value(field: str, value: float | None) -> _EvalableFloat | None:
         if value is None:
             return None
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return _EvalableFloat(value)
         raise TypeError(f"{field} values for metric must be float, int or None")
 

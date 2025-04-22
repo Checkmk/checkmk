@@ -37,7 +37,7 @@ def _render_atomic_value(tag: str, value: Any, attrs: str) -> str:
             return f"<{tag}{attrs}>{_escape_xml(val)}</{tag}>"
         case bool(val):
             return f"<{tag}{attrs}>{str(val).lower()}</{tag}>"
-        case val if isinstance(val, (datetime.datetime, datetime.date)):
+        case val if isinstance(val, datetime.datetime | datetime.date):
             return f"<{tag}{attrs}>{val.isoformat()}</{tag}>"
         case None:
             return f"<{tag}{attrs}></{tag}>"
@@ -70,7 +70,7 @@ def _get_xml_type(value: Any) -> str:
         return "null"
     if isinstance(value, bool):
         return "bool"
-    if isinstance(value, (str, datetime.datetime, datetime.date)):
+    if isinstance(value, str | datetime.datetime | datetime.date):
         return "str"
     if isinstance(value, int):
         return "int"

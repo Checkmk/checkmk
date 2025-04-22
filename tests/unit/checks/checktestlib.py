@@ -132,14 +132,14 @@ class PerfValue(Tuploid):
         #       context for performance values using Checkmk metrics. It is therefore
         #       preferred to return a "naked" scalar.
         msg = "PerfValue: %s parameter %r must be of type int, float or None - not %r"
-        assert isinstance(value, (int, float)), msg.replace(" or None", "") % (
+        assert isinstance(value, int | float), msg.replace(" or None", "") % (
             "value",
             value,
             type(value),
         )
         for n in ("warn", "crit", "minimum", "maximum"):
             v = getattr(self, n)
-            assert v is None or isinstance(v, (int, float)), msg % (n, v, type(v))
+            assert v is None or isinstance(v, int | float), msg % (n, v, type(v))
 
     @property
     def tuple(self):
@@ -503,7 +503,7 @@ def assertEqual(first, second, descr=""):
             assertEqual(first[k], second[k], descr + " [%s]" % repr(k))
         assert not remainder, f"{descr}missing keys {list(remainder)!r} in {first!r}"
 
-    if isinstance(first, (list, tuple)):
+    if isinstance(first, list | tuple):
         assert len(first) == len(second), f"{descr}varying length: {first!r} != {second!r}"
         for (c, fst), snd in zip(enumerate(first), second):
             assertEqual(fst, snd, descr + "[%d] " % c)

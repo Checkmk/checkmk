@@ -1018,7 +1018,7 @@ def render_mobile_list(
         rendered_cells = [cell.render(row, link_renderer) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
-            assert isinstance(rendered_content, (str, HTML))
+            assert isinstance(rendered_content, str | HTML)
             html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
@@ -1026,7 +1026,7 @@ def render_mobile_list(
                     [
                         rendered_cell[1]
                         for rendered_cell in rendered_cells[1 : num_columns + 1]
-                        if isinstance(rendered_cell[1], (str, HTML))
+                        if isinstance(rendered_cell[1], str | HTML)
                     ]
                 )
                 html.h3(content)
@@ -1035,7 +1035,7 @@ def render_mobile_list(
                     rendered_cells[num_columns + 1 :], cells[num_columns + 1 :]
                 ):
                     rendered_class, rendered_content = rendered_cell
-                    assert isinstance(rendered_content, (str, HTML))
+                    assert isinstance(rendered_content, str | HTML)
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
                     html.write_text_permissive(": ")

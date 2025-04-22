@@ -63,7 +63,7 @@ def discover_oracle_instance(section: Section) -> DiscoveryResult:
 
 
 def check_oracle_instance(item: str, params: _Params, section: Section) -> CheckResult:
-    if isinstance((instance := section.get(item)), (GeneralError, InvalidData)):
+    if isinstance((instance := section.get(item)), GeneralError | InvalidData):
         yield Result(state=State.CRIT, summary=instance.error)
         return
     if instance is None:

@@ -65,7 +65,7 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendMode
                 return prefill_default
             raw_value = prefill_default
 
-        if not isinstance(raw_value, (float, int)):
+        if not isinstance(raw_value, float | int):
             return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value=None)
 
         try:

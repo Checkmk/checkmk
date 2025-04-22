@@ -1004,7 +1004,7 @@ class Section:
     def add(self, info):
         if not info:
             return
-        if isinstance(info[0], (list, tuple)):  # we got a list of lines
+        if isinstance(info[0], list | tuple):  # we got a list of lines
             for row in info:
                 self._cont.append(self.formatline(row))
         else:  # assume one single line

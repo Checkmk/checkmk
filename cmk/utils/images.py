@@ -87,7 +87,7 @@ class CMKImage:
             if self._metadata:
                 meta = PngImagePlugin.PngInfo()
                 for key, value in self.pil().info.items():
-                    if isinstance(value, (bytes, str)):
+                    if isinstance(value, bytes | str):
                         meta.add_text(key, value, False)
 
                 for key, value in self._metadata.items():

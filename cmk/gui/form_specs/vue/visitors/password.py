@@ -42,7 +42,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
         if isinstance(raw_value, DefaultValue):
             return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
-        if not isinstance(raw_value, (tuple, list)):
+        if not isinstance(raw_value, tuple | list):
             return InvalidValue(reason=_("No password provided"), fallback_value=fallback_value)
 
         match self.options.data_origin:

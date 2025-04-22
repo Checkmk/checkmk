@@ -1168,7 +1168,7 @@ def _pack_dict_groups(
         nested_packed_dict = {}
         if isinstance(
             (nested_form := dict_elements[key_to_pack].parameter_form),
-            (ruleset_api_v1.form_specs.Dictionary, DictionaryExtended),
+            ruleset_api_v1.form_specs.Dictionary | DictionaryExtended,
         ):
             # handle innermost migrations
             if nested_form.migrate is not None:

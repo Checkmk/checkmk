@@ -147,7 +147,7 @@ class HTMLWriter:
         if not text:
             return
 
-        if isinstance(text, (int, HTML)):
+        if isinstance(text, int | HTML):
             text = str(text)
 
         if not isinstance(text, str):

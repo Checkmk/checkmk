@@ -13,7 +13,7 @@ from cmk import fields
 
 class BoolOrStringField(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
-        if isinstance(value, (bool, str)):
+        if isinstance(value, bool | str):
             return value
 
         raise ValidationError("Invalid type. Expected bool or str.")

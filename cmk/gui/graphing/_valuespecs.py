@@ -103,7 +103,7 @@ def migrate_graph_render_options(value):
     if value.pop("show_service", False):
         value["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
-    if isinstance(value.get("title_format"), (str, tuple)):
+    if isinstance(value.get("title_format"), str | tuple):
         value["title_format"] = migrate_graph_render_options_title_format(value["title_format"])
     return value
 

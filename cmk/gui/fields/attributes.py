@@ -153,7 +153,7 @@ class IPNetworkCIDR(String):
             raise ValidationError("Expected an IP network in CIDR notation like '192.168.0.0/24'")
 
     def _serialize(self, value, attr, obj, **kwargs):
-        if isinstance(value, (list, tuple)) and len(value) == 2:
+        if isinstance(value, list | tuple) and len(value) == 2:
             return f"{value[0]}/{value[1]}"
         raise ValidationError(
             f"Error handling {value!r}, expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)"

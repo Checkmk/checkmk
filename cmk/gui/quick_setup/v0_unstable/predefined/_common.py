@@ -174,7 +174,7 @@ def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
     for component in components:
-        if isinstance(component, (ListOfWidgets, Collapsible, ConditionalNotificationStageWidget)):
+        if isinstance(component, ListOfWidgets | Collapsible | ConditionalNotificationStageWidget):
             yield from iter(_flatten_formspec_wrappers(component.items))
 
         if isinstance(component, FormSpecWrapper):

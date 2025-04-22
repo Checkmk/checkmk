@@ -32,7 +32,7 @@ class Serializer(Protocol):
         # `memoryview` doesn't have a `__bytes__()` method and therefore
         # tests false to `isinstance(..., SupportsBytes)` eventhough
         # `bytes(memoryview(b"hello"))` works as expected.
-        if isinstance(other, (Buffer, SupportsBytes)):
+        if isinstance(other, Buffer | SupportsBytes):
             return bytes(self) == bytes(other)
         return NotImplemented
 

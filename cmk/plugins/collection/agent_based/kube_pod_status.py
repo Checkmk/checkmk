@@ -84,7 +84,7 @@ def _container_status_details(containers: Sequence[ContainerStatus]) -> CheckRes
             notice=f"{container.name}: {container.state.detail}",
         )
         for container in erroneous_or_incomplete_containers(containers)
-        if isinstance(container.state, (ContainerTerminatedState, ContainerWaitingState))
+        if isinstance(container.state, ContainerTerminatedState | ContainerWaitingState)
         and container.state.detail is not None
     )
 

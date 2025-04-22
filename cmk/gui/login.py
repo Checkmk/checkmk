@@ -81,7 +81,7 @@ def authenticate() -> Iterator[bool]:
     automation secret authentication."""
     if isinstance(session.user, LoggedInNobody):
         yield False
-    elif isinstance(session.user, (LoggedInSuperUser, LoggedInRemoteSite)):
+    elif isinstance(session.user, LoggedInSuperUser | LoggedInRemoteSite):
         # This is used with the internaltoken auth
         # Let's hope we do not need the transactions for this user...
         yield True

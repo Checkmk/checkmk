@@ -33,7 +33,7 @@ def _filter_inventory(
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
-            if not isinstance(element, (Attributes, TableRow)):
+            if not isinstance(element, Attributes | TableRow):
                 raise TypeError("unexpected type in inventory function: %r" % type(element))
             yield element
 

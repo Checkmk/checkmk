@@ -373,7 +373,7 @@ def _render_dashlet_content(
 
 
 def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | str:
-    if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
+    if isinstance(e, MKMissingDataError | MKCombinedGraphLimitExceededError):
         return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):

@@ -20,7 +20,7 @@ _KNOWN_OFFENDERS = {
 
 
 def _get_first_actual_valuespec(vspec: ValueSpec) -> ValueSpec:
-    if isinstance(vspec, (Transform, Migrate)):
+    if isinstance(vspec, Transform | Migrate):
         return _get_first_actual_valuespec(vspec._valuespec)
     return vspec
 
@@ -31,7 +31,7 @@ def test_plugin_parameters_are_dict() -> None:
         if not (
             element.group in {RulespecGroupCheckParametersDiscovery, RulespecGroupInventory}
             or isinstance(
-                element, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
+                element, CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem
             )
         ):
             continue

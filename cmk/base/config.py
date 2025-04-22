@@ -556,7 +556,7 @@ def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
 def get_default_config() -> dict[str, Any]:
     """Provides a dictionary containing the Check_MK default configuration"""
     return {
-        key: copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+        key: copy.deepcopy(value) if isinstance(value, dict | list) else value
         for key, value in default_config.__dict__.items()
         if key[0] != "_"
     }
@@ -3644,7 +3644,7 @@ class ConfigCache:
     @staticmethod
     def replace_macros(s: str, macros: ObjectMacros) -> str:
         for key, value in macros.items():
-            if isinstance(value, (numbers.Integral, float)):
+            if isinstance(value, numbers.Integral | float):
                 value = str(value)  # e.g. in _EC_SL (service level)
 
             # TODO: Clean this up

@@ -79,7 +79,7 @@ def repr2(obj: object) -> str:
     """
     if isinstance(obj, dict):
         return "{" + ", ".join(f"{repr2(k)}: {repr2(v)}" for k, v in obj.items()) + "}"
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list | tuple):
         return "[" + ", ".join(repr2(x) for x in obj) + "]"
     if isinstance(obj, str):
         return f"u'{obj}'"

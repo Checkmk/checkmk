@@ -1511,7 +1511,7 @@ def rbn_match_contact_groups(
 
         for required_group in rule["contact_match_groups"]:
             contactgroups = contact["contactgroups"]
-            assert isinstance(contactgroups, (tuple, list))
+            assert isinstance(contactgroups, tuple | list)
 
             if required_group not in contactgroups:
                 return "he/she is not member of the contact group {} (his groups are {})".format(

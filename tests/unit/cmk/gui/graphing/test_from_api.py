@@ -92,9 +92,9 @@ def _collect_metric_names_from_quantity(
 def _collect_metric_names_from_perfometer(
     perfometer: perfometers_api.Perfometer,
 ) -> Iterator[str]:
-    if not isinstance(perfometer.focus_range.lower.value, (int, float)):
+    if not isinstance(perfometer.focus_range.lower.value, int | float):
         yield from _collect_metric_names_from_quantity(perfometer.focus_range.lower.value)
-    if not isinstance(perfometer.focus_range.upper.value, (int, float)):
+    if not isinstance(perfometer.focus_range.upper.value, int | float):
         yield from _collect_metric_names_from_quantity(perfometer.focus_range.upper.value)
     for segment in perfometer.segments:
         yield from _collect_metric_names_from_quantity(segment)
@@ -102,9 +102,9 @@ def _collect_metric_names_from_perfometer(
 
 def _collect_metric_names_from_graph(graph: graphs_api.Graph) -> Iterator[str]:
     if graph.minimal_range:
-        if not isinstance(graph.minimal_range.lower, (int, float)):
+        if not isinstance(graph.minimal_range.lower, int | float):
             yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
-        if not isinstance(graph.minimal_range.lower, (int, float)):
+        if not isinstance(graph.minimal_range.lower, int | float):
             yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
     for compound_line in graph.compound_lines:
         yield from _collect_metric_names_from_quantity(compound_line)

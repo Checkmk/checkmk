@@ -101,7 +101,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
                 raise MKUserError(None, read_only.message())
 
             result = mode.action()
-            if isinstance(result, (tuple, str, bool)):
+            if isinstance(result, tuple | str | bool):
                 raise MKGeneralException(
                     f'WatoMode "{current_mode}" returns unsupported return value: {result!r}'
                 )

@@ -70,7 +70,7 @@ def inv_paint_hz(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_number_with_precision(value, drop_zeroes=False, unit="Hz")
 
@@ -80,7 +80,7 @@ def inv_paint_bytes(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     if value == 0:
         return "number", "0"
@@ -92,7 +92,7 @@ def inv_paint_size(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_bytes(value)
 
@@ -102,7 +102,7 @@ def inv_paint_bytes_rounded(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     if value == 0:
         return "number", "0"
@@ -112,7 +112,7 @@ def inv_paint_bytes_rounded(value: SDValue) -> PaintResult:
 def inv_paint_number(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
-    if not isinstance(value, (str, int, float)):
+    if not isinstance(value, str | int | float):
         raise ValueError(value)
     return "number", str(value)
 
@@ -123,7 +123,7 @@ def inv_paint_count(value: SDValue) -> PaintResult:
     # (though it doesn't do so yet)
     if value == "" or value is None:
         return "", ""
-    if not isinstance(value, (str, int, float)):
+    if not isinstance(value, str | int | float):
         raise ValueError(value)
     return "number", str(value)
 
@@ -131,7 +131,7 @@ def inv_paint_count(value: SDValue) -> PaintResult:
 def inv_paint_nic_speed(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
-    if not isinstance(value, (str, int)):
+    if not isinstance(value, str | int):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_nic_speed(value)
 
@@ -237,7 +237,7 @@ def inv_paint_volt(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     return "number", "%.1f V" % value
 
@@ -247,7 +247,7 @@ def inv_paint_date(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     date_painted = time.strftime("%Y-%m-%d", time.localtime(value))
     return "number", "%s" % date_painted
@@ -258,7 +258,7 @@ def inv_paint_date_and_time(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
     return "number", "%s" % date_painted
@@ -269,7 +269,7 @@ def inv_paint_age(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     return "number", cmk.utils.render.approx_age(value)
 
@@ -287,7 +287,7 @@ def inv_paint_timestamp_as_age(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
     return inv_paint_age(time.time() - value)
 
@@ -297,7 +297,7 @@ def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
         return "", ""
     if isinstance(value, str):
         return "number", value
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         raise ValueError(value)
 
     def round_to_day(ts):

@@ -276,7 +276,7 @@ def check_mail(args: Args) -> CheckResult:
             # (Copy and) Delete the forwarded mails if configured
             if args.cleanup:
                 if args.cleanup != "delete":
-                    if not isinstance(connection, (IMAP, EWS)):
+                    if not isinstance(connection, IMAP | EWS):
                         raise CleanupMailboxError(
                             f"Copying mails is not implemented for {type(connection)!r}"
                         )

@@ -358,7 +358,7 @@ def _predictive_levels(
 
 
 def recompose(form_spec: FormSpec[Any]) -> TransformDataForLegacyFormatOrRecomposeFunction:
-    if not isinstance(form_spec, (Levels, SimpleLevels)):
+    if not isinstance(form_spec, Levels | SimpleLevels):
         raise MKGeneralException(
             f"Cannot recompose form spec. Expected a Levels/SimpleLevels form spec, got {type(form_spec)}"
         )
@@ -390,7 +390,7 @@ def recompose(form_spec: FormSpec[Any]) -> TransformDataForLegacyFormatOrRecompo
         )
 
     # Make typing happy
-    assert isinstance(form_spec, (Levels, SimpleLevels))
+    assert isinstance(form_spec, Levels | SimpleLevels)
 
     prefill_ident = {
         LevelsType.NONE: _LevelDynamicChoice.NO_LEVELS.value,

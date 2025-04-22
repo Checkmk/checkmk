@@ -93,7 +93,7 @@ def _check_jenkins_queue(
 
     if now is None:
         now = time.time()
-    assert isinstance(now, (float, int))
+    assert isinstance(now, float | int)
 
     def task_order_helper(task: JenkinsTask) -> tuple[bool, bool, int]:
         is_stuck = task["stuck"]

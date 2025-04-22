@@ -81,7 +81,7 @@ def escape_attribute(value: EscapableEntity) -> str:
         return str(value)  # HTML code which must not be escaped
     if value is None:
         return ""
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return str(value)
     if isinstance(value, LazyString):
         return escape(str(value))
@@ -133,7 +133,7 @@ def escape_text(value: EscapableEntity, escape_links: bool = False) -> str:
 
     if value is None:
         text = ""
-    elif isinstance(value, (int, float)):
+    elif isinstance(value, int | float):
         text = str(value)
     elif isinstance(value, LazyString):
         text = str(value)
@@ -225,7 +225,7 @@ def strip_tags(ht: EscapableEntity) -> str:
         A string without working HTML tags.
 
     """
-    if not isinstance(ht, (str, HTML, LazyString)):
+    if not isinstance(ht, str | HTML | LazyString):
         return str(ht)
 
     string = str(ht)

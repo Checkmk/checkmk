@@ -84,12 +84,7 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
     def extract_status(exc: Exception) -> int:
         if isinstance(
             exc,
-            (
-                MKAgentError,
-                MKFetcherError,
-                MKIPAddressLookupError,
-                MKSNMPError,
-            ),
+            MKAgentError | MKFetcherError | MKIPAddressLookupError | MKSNMPError,
         ):
             return exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):

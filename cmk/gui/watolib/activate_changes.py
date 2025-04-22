@@ -565,7 +565,7 @@ def _calc_status_details(
     if phase == PHASE_DONE:
         value += _(" Finished at: %s.") % render.time_of_day(time_ended)
     elif phase != PHASE_QUEUED:
-        assert isinstance(time_started, (int, float))
+        assert isinstance(time_started, int | float)
         estimated_time_left = expected_duration - (time.time() - time_started)
         if estimated_time_left < 0:
             value += " " + _("Takes %.1f seconds longer than expected") % abs(estimated_time_left)
@@ -617,7 +617,7 @@ def _set_result(
 def _handle_activation_changes_exception(
     exc_logger: logging.Logger, exception: Exception, site_activation_status: SiteActivationState
 ) -> None:
-    if isinstance(exception, (MKGeneralException, MKUserError)):
+    if isinstance(exception, MKGeneralException | MKUserError):
         exc_logger.exception("error activating changes")
         message = str(exception)
     else:

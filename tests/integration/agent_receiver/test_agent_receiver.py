@@ -109,13 +109,11 @@ def paired_keypair_fixture(
     assert isinstance(
         root_key,
         # this is CertificateIssuerPrivateKeyTypes
-        (
-            asymmetric.ed25519.Ed25519PrivateKey,
-            asymmetric.ed448.Ed448PrivateKey,
-            asymmetric.rsa.RSAPrivateKey,
-            asymmetric.dsa.DSAPrivateKey,
-            asymmetric.ec.EllipticCurvePrivateKey,
-        ),
+        asymmetric.ed25519.Ed25519PrivateKey
+        | asymmetric.ed448.Ed448PrivateKey
+        | asymmetric.rsa.RSAPrivateKey
+        | asymmetric.dsa.DSAPrivateKey
+        | asymmetric.ec.EllipticCurvePrivateKey,
     )
 
     private_key_path = tmp_path_factory.mktemp("certs") / "private_key.key"

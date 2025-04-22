@@ -155,7 +155,7 @@ def _filter_in_host_inventory_range(
     def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
         if not isinstance(
             invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
-            (int, float),
+            int | float,
         ):
             return False
         return query_filters.value_in_range(invdata, bounds)

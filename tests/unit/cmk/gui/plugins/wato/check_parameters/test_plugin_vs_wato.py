@@ -216,10 +216,7 @@ def load_wato() -> Iterator[WatoProtocol]:
             yield WatoInventory(element)
         elif isinstance(
             element,
-            (
-                CheckParameterRulespecWithItem,
-                CheckParameterRulespecWithoutItem,
-            ),
+            CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem,
         ):
             yield WatoCheck(element)
 

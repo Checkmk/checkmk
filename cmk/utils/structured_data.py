@@ -464,12 +464,12 @@ def _deserialize_legacy_tree(
             if not value:
                 continue
 
-            if all(isinstance(v, (int, float, str, bool)) or v is None for v in value):
+            if all(isinstance(v, int | float | str | bool) or v is None for v in value):
                 if w := ", ".join(str(v) for v in value if v):
                     raw_pairs.setdefault(SDKey(key), w)
                 continue
 
-            if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
+            if all(not isinstance(v, list | dict) for row in value for v in row.values()):
                 # Either we get:
                 #   [
                 #       {"column1": "value 11", "column2": "value 12",...},
@@ -487,7 +487,7 @@ def _deserialize_legacy_tree(
             for idx, entry in enumerate(value):
                 raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
 
-        elif isinstance(value, (int, float, str, bool)) or value is None:
+        elif isinstance(value, int | float | str | bool) or value is None:
             raw_pairs.setdefault(SDKey(key), value)
 
         else:
@@ -698,7 +698,7 @@ class _MutableAttributes:
         return len(self.pairs)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (_MutableAttributes, ImmutableAttributes)):
+        if not isinstance(other, _MutableAttributes | ImmutableAttributes):
             return NotImplemented
         return self.pairs == other.pairs
 
@@ -770,7 +770,7 @@ class _MutableTable:
         return sum(map(len, self.rows_by_ident.values()))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (_MutableTable, ImmutableTable)):
+        if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
 
         compared_row_idents = _DictKeys.compare(
@@ -918,7 +918,7 @@ class MutableTree:
         )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (MutableTree, ImmutableTree)):
+        if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
 
         if self.attributes != other.attributes or self.table != other.table:
@@ -1307,7 +1307,7 @@ class ImmutableAttributes:
         return len(self.pairs)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (_MutableAttributes, ImmutableAttributes)):
+        if not isinstance(other, _MutableAttributes | ImmutableAttributes):
             return NotImplemented
         return self.pairs == other.pairs
 
@@ -1332,7 +1332,7 @@ class ImmutableTable:
         return sum(map(len, self.rows_by_ident.values()))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (_MutableTable, ImmutableTable)):
+        if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
 
         compared_row_idents = _DictKeys.compare(
@@ -1390,7 +1390,7 @@ class ImmutableTree:
         )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (MutableTree, ImmutableTree)):
+        if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
 
         if self.attributes != other.attributes or self.table != other.table:

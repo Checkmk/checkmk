@@ -20,7 +20,7 @@ def check_humidity(humidity, params):
         levels = (params.get("levels") or (None, None)) + (
             params.get("levels_lower") or (None, None)
         )
-    elif isinstance(params, (list, tuple)):
+    elif isinstance(params, list | tuple):
         # old params = (crit_low , warn_low, warn, crit)
         levels = (params[2], params[3], params[1], params[0])
     else:

@@ -92,7 +92,7 @@ class UnaryExpression(abc.ABC):
 
     def op(self, operator: str, other: UnaryExpression | Primitives) -> BinaryExpression:
         other_expr: UnaryExpression
-        if isinstance(other, (list, tuple)):
+        if isinstance(other, list | tuple):
             other_expr = LiteralExpression(" ".join(other))
         elif isinstance(other, UnaryExpression):
             other_expr = other

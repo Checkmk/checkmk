@@ -67,7 +67,7 @@ def from_mm(dim: Sequence[float]) -> Sequence[float]: ...
 
 
 def from_mm(dim: float | Sequence[float]) -> float | Sequence[float]:
-    if isinstance(dim, (int, float)):
+    if isinstance(dim, int | float):
         return dim * mm
     return [x * mm for x in dim]
 
@@ -636,7 +636,7 @@ class Document:
         # all this here to a pair ( "bc", 17.2 ) of the alignment
         # characters and the tabstop in *internal* dimensions.
         def convert_tabstop(t: SizeMM | str) -> tuple[str, SizeInternal]:
-            if isinstance(t, (int, float)):
+            if isinstance(t, int | float):
                 return "", float(t) * mm
             if isinstance(t, str):
                 formatchars = ""

@@ -56,7 +56,7 @@ def send_command(
     current_time = int(time.time())
     cmd: str = command
     for pos, param in enumerate(params):
-        if not isinstance(param, (int, str)):
+        if not isinstance(param, int | str):
             raise ValueError(f"Unknown type of parameter {pos}: {type(param)}")
         cmd += f";{param}"
 

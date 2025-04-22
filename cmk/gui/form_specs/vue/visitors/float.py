@@ -43,7 +43,7 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FrontendModel]):
 
         #  23 / -23 / "23" / "-23" / 23.0 / "-23.0" -> OK
         #  other                                    -> INVALID
-        if not isinstance(raw_value, (float, int)):
+        if not isinstance(raw_value, float | int):
             return InvalidValue[_FrontendModel](reason=_("Not a number"), fallback_value="")
 
         return float(raw_value)

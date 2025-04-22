@@ -134,7 +134,7 @@ def _permission_descriptions(
 
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
-        if isinstance(permission, (permissions.Perm, permissions.OkayToIgnorePerm)):
+        if isinstance(permission, permissions.Perm | permissions.OkayToIgnorePerm):
             perm_name = permission.name
             try:
                 desc = description_map.get(perm_name) or permission_registry[perm_name].description

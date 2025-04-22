@@ -149,7 +149,7 @@ class EditDashletPage(Page):
                 elements=params,
             )
 
-        elif isinstance(params, (Dictionary, Transform)):
+        elif isinstance(params, Dictionary | Transform):
             vs_type = params
 
         elif isinstance(params, tuple):

@@ -64,7 +64,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @user.setter
     def user(self, user: LoggedInUser) -> None:
-        if not isinstance(user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
+        if not isinstance(user, LoggedInNobody | LoggedInSuperUser | LoggedInRemoteSite):
             assert user.id is not None
         self["_user"] = user
 
@@ -74,7 +74,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @property
     def persist_session(self) -> bool:
-        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
+        if isinstance(self.user, LoggedInNobody | LoggedInSuperUser | LoggedInRemoteSite):
             return False
 
         if not self.is_gui_session:
@@ -266,7 +266,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             self.session_info.flashes.append(tuple_to_add)
 
     def two_factor_pending(self) -> bool:
-        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
+        if isinstance(self.user, LoggedInNobody | LoggedInSuperUser):
             return False
 
         return (

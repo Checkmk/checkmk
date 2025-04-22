@@ -27,7 +27,7 @@ class DiffPath:
 
 
 def make_diff(old: object, new: object) -> str:
-    root = [] if isinstance(old, (list, dict)) else ["object"]
+    root = [] if isinstance(old, list | dict) else ["object"]
     diffs = sorted(_diff_values(root, old, new))  # sort by path, then message
     return "\n".join(msg for _path, msg in diffs)
 
@@ -50,7 +50,7 @@ def _iter_path_components(
     components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...],
 ) -> Iterable[PATH_COMPONENT]:
     for component in components:
-        if isinstance(component, (str, int)):
+        if isinstance(component, str | int):
             yield component
         else:
             yield from component

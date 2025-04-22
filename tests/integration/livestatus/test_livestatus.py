@@ -141,7 +141,7 @@ def test_usage_counters(site: Site) -> None:
     assert isinstance(rows, list)
     assert len(rows) == 1
     assert isinstance(rows[0], list)
-    assert all(isinstance(v, (int, float)) for v in rows[0])
+    assert all(isinstance(v, int | float) for v in rows[0])
 
 
 @pytest.fixture(name="configure_service_tags")

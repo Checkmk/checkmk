@@ -307,7 +307,7 @@ class SNMPTrapTranslator:
     ) -> tuple[str, str]:
         key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)  # type: ignore[no-untyped-call]
         # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
-        if isinstance(value, (pysnmp.proto.rfc1155.TimeTicks, pysnmp.proto.rfc1902.TimeTicks)):
+        if isinstance(value, pysnmp.proto.rfc1155.TimeTicks | pysnmp.proto.rfc1902.TimeTicks):
             val = str(Age(float(value) / 100))
         else:
             val = value.prettyPrint()

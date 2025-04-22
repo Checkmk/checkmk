@@ -157,7 +157,7 @@ def run_piggyback_hub(
     for proc in cycle(processes):
         proc.join(timeout=5)
         if not proc.is_alive():
-            assert isinstance(proc, (ReceivingProcess, SendingPayloadProcess))  # mypy :-/
+            assert isinstance(proc, ReceivingProcess | SendingPayloadProcess)  # mypy :-/
             return terminate_all_processes(f"{proc.task_name} died")
 
     raise RuntimeError("Unreachable code reached")

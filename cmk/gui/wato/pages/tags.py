@@ -1082,7 +1082,7 @@ def _show_affected_rulesets(affected_rulesets: list[Ruleset]) -> None:
 
 
 def _is_removing_tags(operation: ABCOperation) -> bool:
-    if isinstance(operation, (OperationRemoveAuxTag, OperationRemoveTagGroup)):
+    if isinstance(operation, OperationRemoveAuxTag | OperationRemoveTagGroup):
         return True
 
     if isinstance(operation, OperationReplaceGroupedTags) and operation.remove_tag_ids:

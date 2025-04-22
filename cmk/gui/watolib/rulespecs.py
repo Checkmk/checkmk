@@ -492,7 +492,7 @@ class Rulespec(abc.ABC):
         if item_spec is None:
             return None
 
-        if isinstance(item_spec, (DropdownChoice, OptionalDropdownChoice)):
+        if isinstance(item_spec, DropdownChoice | OptionalDropdownChoice):
             return item_spec.choices()
 
         return None
@@ -1161,13 +1161,11 @@ def _registration_should_be_skipped(instance: object) -> bool:
     # objects that can be specified using the new API.
     return isinstance(
         instance,
-        (
-            CheckParameterRulespecWithItem,
-            CheckParameterRulespecWithoutItem,
-            ManualCheckParameterRulespec,
-            HostRulespec,
-            ServiceRulespec,
-        ),
+        CheckParameterRulespecWithItem
+        | CheckParameterRulespecWithoutItem
+        | ManualCheckParameterRulespec
+        | HostRulespec
+        | ServiceRulespec,
     )
 
 
@@ -1210,9 +1208,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
         if not isinstance(instance, Rulespec):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
 
-        if isinstance(
-            instance, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
-        ):
+        if isinstance(instance, CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem):
             manual_instance: Any = instance.manual_check_parameter_rulespec_instance
             if manual_instance:
                 subgroup_key = "static/" + manual_instance.group().sub_group_name

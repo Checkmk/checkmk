@@ -792,7 +792,7 @@ def _make_hashable_object(obj: object) -> Hashable:
         for key, value in obj.items():
             new_obj[key] = _make_hashable_object(value)
         return frozenset(new_obj)
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list | tuple):
         return tuple(_make_hashable_object(item) for item in obj)
 
     raise TypeError("Unsupported type for hashable object")

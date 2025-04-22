@@ -296,7 +296,7 @@ TEMPLATES = {
 
 
 def _to_env(value: list | dict | str) -> str:
-    if isinstance(value, (list, dict)):
+    if isinstance(value, list | dict):
         return json.dumps(value)
 
     return value

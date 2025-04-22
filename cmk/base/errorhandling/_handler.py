@@ -92,7 +92,7 @@ def _handle_failure(
             raise exc
         return exit_spec.get("timeout", 2), "Timed out"
 
-    if isinstance(exc, (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError)):
+    if isinstance(exc, MKAgentError | MKFetcherError | MKSNMPError | MKIPAddressLookupError):
         return exit_spec.get("connection", 2), str(exc)
 
     if isinstance(exc, MKGeneralException):

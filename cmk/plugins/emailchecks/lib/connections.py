@@ -572,7 +572,7 @@ def verified_result(data: object) -> Sequence[bytes | tuple[bytes, bytes]] | Seq
         assert isinstance(result, list)
         if not result:
             return result  # empty list
-        if not isinstance(result[0], (str, bytes, tuple)):
+        if not isinstance(result[0], str | bytes | tuple):
             raise TypeError(f"Can not handle this datatype {result}")
         type_first_element: tuple[type, type] | type = type(result[0])
         if type_first_element in {tuple, bytes}:

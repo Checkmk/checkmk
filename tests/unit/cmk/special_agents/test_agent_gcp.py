@@ -317,7 +317,7 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
         piggy_back_prefix="custom-prefix",
     )
     return list(
-        s for s in sections if isinstance(s, (agent_gcp.PiggyBackSection, agent_gcp.AssetSection))
+        s for s in sections if isinstance(s, agent_gcp.PiggyBackSection | agent_gcp.AssetSection)
     )
 
 

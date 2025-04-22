@@ -229,7 +229,7 @@ def _parse_subscription_details_limit_type_and_value(
 ) -> SubscriptionDetailsLimit:
     if not isinstance(raw_type, str):
         raise TypeError(raw_type)
-    if not isinstance(raw_value, (str, int, float)):
+    if not isinstance(raw_value, str | int | float):
         raise TypeError(raw_value)
     if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
         return SubscriptionDetailsLimit(
@@ -250,9 +250,9 @@ def _parse_subscription_details_limit_type_and_value(
 
 
 def _parse_subscription_details_limit(raw: object) -> SubscriptionDetailsLimit:
-    if isinstance(raw, (list, tuple)) and len(raw) == 2:
+    if isinstance(raw, list | tuple) and len(raw) == 2:
         return _parse_subscription_details_limit_type_and_value(raw[0], raw[1])
-    if isinstance(raw, (str, int, float)):
+    if isinstance(raw, str | int | float):
         return _parse_subscription_details_limit_type_and_value(str(raw), raw)
     raise TypeError(raw)
 
@@ -261,7 +261,7 @@ def _parse_subscription_details(raw: object) -> SubscriptionDetails:
     # Old:      'subscription_details': ['manual', {...}]
     # Current:  'subscription_details': {"source": "manual", ...}
     # Future:   'subscription_details': {"source": 'from_tribe'}/{"source": "manual", ...}
-    if isinstance(raw, (list, tuple)) and len(raw) == 2:
+    if isinstance(raw, list | tuple) and len(raw) == 2:
         _source, details = raw
         if not isinstance(details, dict):
             raise TypeError(details)

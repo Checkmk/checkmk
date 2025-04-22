@@ -178,7 +178,7 @@ def section(
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
-            if isinstance(checkbox, (str, HTML)):
+            if isinstance(checkbox, str | HTML):
                 html.write_text_permissive(checkbox)
             else:
                 name, active, attrname = checkbox

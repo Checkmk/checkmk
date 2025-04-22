@@ -162,11 +162,11 @@ def _add_graphing_plugins(
 
         elif isinstance(
             plugin,
-            (perfometers_api.Perfometer, perfometers_api.Bidirectional, perfometers_api.Stacked),
+            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
         ):
             perfometers_from_api.register(plugin)
 
-        elif isinstance(plugin, (graphs_api.Graph, graphs_api.Bidirectional)):
+        elif isinstance(plugin, graphs_api.Graph | graphs_api.Bidirectional):
             graphs_from_api.register(plugin)
 
 

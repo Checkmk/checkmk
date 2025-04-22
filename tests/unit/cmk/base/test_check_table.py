@@ -180,7 +180,7 @@ def test_check_table_enforced_vs_discovered_precedence(
         timespecific_params = table[ServiceID(smart, item)].parameters
         p = timespecific_params.evaluate(lambda _: True)
         assert p is not None
-        assert not isinstance(p, (tuple, list, str, int))
+        assert not isinstance(p, tuple | list | str | int)
         return str(p["source"])
 
     assert _source_of_item(node_services, "node-item") == "enforced-on-node"

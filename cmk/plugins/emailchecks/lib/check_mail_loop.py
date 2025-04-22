@@ -269,7 +269,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
 
         # send a 'sensor-email' with a timestamp we expect to receive next time
-        if fetch == send and isinstance(connection, (SMTP, EWS)):
+        if fetch == send and isinstance(connection, SMTP | EWS):
             new_mail = connection.send_mail(
                 args.subject,
                 mail_from=args.mail_from,

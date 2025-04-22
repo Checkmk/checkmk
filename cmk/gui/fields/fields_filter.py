@@ -105,7 +105,7 @@ class _IncludeFields(_SpecificFieldsFilter):
     def __init__(self, fields: dict[str, FieldsFilter]) -> None:
         if len(fields) == 0:
             raise ValueError("Must specify at least one field to include.")
-        if any(isinstance(value, (_Excluded, _ExcludeFields)) for value in fields.values()):
+        if any(isinstance(value, _Excluded | _ExcludeFields) for value in fields.values()):
             raise ValueError("Cannot mix include and exclude filters.")
 
         super().__init__(fields)
@@ -127,7 +127,7 @@ class _ExcludeFields(_SpecificFieldsFilter):
     def __init__(self, fields: dict[str, FieldsFilter]) -> None:
         if len(fields) == 0:
             raise ValueError("Must specify at least one field to exclude.")
-        if any(isinstance(value, (_Included, _IncludeFields)) for value in fields.values()):
+        if any(isinstance(value, _Included | _IncludeFields) for value in fields.values()):
             raise ValueError("Cannot mix include and exclude filters.")
 
         super().__init__(fields)

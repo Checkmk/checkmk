@@ -125,13 +125,13 @@ def _check_levels[_NumberT: (int, float)](
             return CheckLevelsResult(Type.NO_LEVELS, State.OK)
 
         case "fixed", (warn, crit):
-            assert isinstance(warn, (float, int)) and isinstance(crit, (float, int))
+            assert isinstance(warn, float | int) and isinstance(crit, float | int)
             return _check_fixed_levels(value, (warn, crit), levels_direction, render_func)
 
         case "predictive", (metric, prediction, p_levels):
             assert isinstance(metric, str)
             # we expect `float`, but since typing does not prevent us from passing `int`, be nice
-            assert prediction is None or isinstance(prediction, (float, int))
+            assert prediction is None or isinstance(prediction, float | int)
             assert p_levels is None or isinstance(p_levels, tuple)
             return _check_predictive_levels(
                 value, metric, prediction, p_levels, levels_direction, render_func

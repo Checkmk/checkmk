@@ -100,9 +100,9 @@ def _log_event(
 def quote_tab(col: Any) -> bytes:
     if isinstance(col, bool):
         return b"1" if col else b"0"
-    if isinstance(col, (float, int)):
+    if isinstance(col, float | int):
         return str(col).encode("utf-8")
-    if isinstance(col, (tuple, list)):
+    if isinstance(col, tuple | list):
         return b"\1" + b"\1".join(quote_tab(e) for e in col)
     if col is None:
         return b"\2"

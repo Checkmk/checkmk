@@ -82,9 +82,9 @@ class _MetricNamesOrScalars:
     def from_perfometers(cls, *perfometers_: perfometers_api.Perfometer) -> Self:
         instance = cls([], [])
         for perfometer in perfometers_:
-            if not isinstance(perfometer.focus_range.lower.value, (int, float)):
+            if not isinstance(perfometer.focus_range.lower.value, int | float):
                 instance.collect_quantity_names(perfometer.focus_range.lower.value)
-            if not isinstance(perfometer.focus_range.upper.value, (int, float)):
+            if not isinstance(perfometer.focus_range.upper.value, int | float):
                 instance.collect_quantity_names(perfometer.focus_range.upper.value)
             for s in perfometer.segments:
                 instance.collect_quantity_names(s)
@@ -346,12 +346,12 @@ def _make_projection(
         else lambda v: v
     )
 
-    if isinstance(focus_range.lower.value, (int, float)):
+    if isinstance(focus_range.lower.value, int | float):
         lower_x = conversion(float(focus_range.lower.value))
     else:
         lower_x = _evaluate_quantity(focus_range.lower.value, translated_metrics).value
 
-    if isinstance(focus_range.upper.value, (int, float)):
+    if isinstance(focus_range.upper.value, int | float):
         upper_x = conversion(float(focus_range.upper.value))
     else:
         upper_x = _evaluate_quantity(focus_range.upper.value, translated_metrics).value

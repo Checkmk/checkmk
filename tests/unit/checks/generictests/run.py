@@ -51,7 +51,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
 def get_merged_parameters(check, provided_p):
     default_p = check.default_parameters()
 
-    if isinstance(provided_p, (int, tuple)):
+    if isinstance(provided_p, int | tuple):
         return provided_p
     if not provided_p:
         return default_p

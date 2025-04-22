@@ -117,12 +117,12 @@ def _parse_minimal_range(
     return MinimalGraphTemplateRange(
         min=(
             Constant(minimal_range.lower)
-            if isinstance(minimal_range.lower, (int, float))
+            if isinstance(minimal_range.lower, int | float)
             else parse_base_expression_from_api(minimal_range.lower)
         ),
         max=(
             Constant(minimal_range.upper)
-            if isinstance(minimal_range.upper, (int, float))
+            if isinstance(minimal_range.upper, int | float)
             else parse_base_expression_from_api(minimal_range.upper)
         ),
     )

@@ -103,7 +103,7 @@ def _fake_version_and_paths() -> None:
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
-        if name.startswith("_") or not isinstance(value, (str, Path)) or name in unpatched_paths:
+        if name.startswith("_") or not isinstance(value, str | Path) or name in unpatched_paths:
             continue
 
         try:

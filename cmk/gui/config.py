@@ -277,7 +277,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
         if k[0] == "_" or k in ("CREConfig", "CEEConfig", "CMEConfig"):
             continue
 
-        if isinstance(v, (dict, list)):
+        if isinstance(v, dict | list):
             v = copy.deepcopy(v)
 
         default_config[k] = v

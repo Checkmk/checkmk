@@ -24,7 +24,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, _ParsedValueModel, _FrontendModel]):
         if isinstance(raw_value, DefaultValue):
             return (DEFAULT_VALUE,) * len(self.form_spec.elements)
 
-        if not isinstance(raw_value, (list, tuple)):
+        if not isinstance(raw_value, list | tuple):
             return InvalidValue(
                 reason=_("Invalid tuple"),
                 fallback_value=[

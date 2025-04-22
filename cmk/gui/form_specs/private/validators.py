@@ -58,7 +58,7 @@ class IsFloat:
         self.error_msg = error_msg
 
     def __call__(self, value: typing.Any) -> None:
-        if not isinstance(value, (float, int)):
+        if not isinstance(value, float | int):
             raise ValidationError(self.error_msg)
 
 

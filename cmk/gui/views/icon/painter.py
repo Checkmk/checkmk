@@ -250,7 +250,7 @@ def _process_icon(
     title: str | None = None
     url: None | tuple[str, str] | str = None
     icon_name: IconSpec = ""
-    if isinstance(result, (str, HTML)):
+    if isinstance(result, str | HTML):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.
         # LM: There are icons that still use this API

@@ -263,7 +263,7 @@ def update_property(
         del schema_data
         return
     for key in property_data:
-        if key not in schema_data or not isinstance(schema_data[key], (dict, list)):
+        if key not in schema_data or not isinstance(schema_data[key], dict | list):
             schema_data[key] = property_data[key]
             logger.warning(
                 'SCHEMA %s: Property "%s" must be defined as "%s".%s',

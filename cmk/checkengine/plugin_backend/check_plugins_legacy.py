@@ -125,7 +125,7 @@ def _create_check_function(
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
         for idx, subresult in enumerate(subresults):
-            if isinstance(subresult, (Result, Metric, IgnoreResults)):
+            if isinstance(subresult, Result | Metric | IgnoreResults):
                 yield subresult
                 continue
 
@@ -143,7 +143,7 @@ def _create_new_results_with_details(
 ) -> CheckResult:
     state_sorted = defaultdict(list)
     for result in results:
-        if isinstance(result, (Result, Metric)):
+        if isinstance(result, Result | Metric):
             yield result
             continue
         state = State(result[0])

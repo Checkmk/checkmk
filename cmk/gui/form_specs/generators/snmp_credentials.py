@@ -84,7 +84,7 @@ def _snmp_community_element() -> SimplePassword:
 
 def _snmpv3_no_auth_no_priv_element() -> Tuple:
     def migrate(x: object) -> tuple[object, ...]:
-        if isinstance(x, (list, tuple)) and len(x) == 2:
+        if isinstance(x, list | tuple) and len(x) == 2:
             return tuple(x)
         return ("noAuthNoPriv", "")
 

@@ -327,7 +327,7 @@ def _get_averaged_disk(
             backlog_minutes=averaging / 60.0,
         )
         for key, value in list(disk.items())
-        if isinstance(value, (int, float))
+        if isinstance(value, int | float)
     }
 
 
@@ -512,6 +512,6 @@ def _check_diskstat_dict(
     # Send everything as performance data now. Sort keys alphabetically
     for key in sorted(set(disk) - {m for m, _ in metrics}):
         value = disk[key]
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             # Currently the levels are not shown in the perfdata
             yield Metric("disk_" + key, value)

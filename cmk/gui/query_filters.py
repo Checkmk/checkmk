@@ -337,14 +337,14 @@ def value_in_range(value: int | float, bounds: MaybeBounds) -> bool:
 
 def column_value_in_range(row: Row, column: str, bounds: MaybeBounds) -> bool:
     value = row.get(column)
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         return False
     return value_in_range(value, bounds)
 
 
 def column_age_in_range(row: Row, column: str, bounds: MaybeBounds) -> bool:
     value = row.get(column)
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, int | float):
         return False
     return value_in_range(time.time() - value, bounds)
 

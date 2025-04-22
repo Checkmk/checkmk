@@ -35,7 +35,6 @@ ignore = [
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
   "UP031", # Use format specifiers instead of percent format
-  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
 ]
 
@@ -66,6 +65,7 @@ ignore = [
   "UP028", # Replace `yield` over `for` loop with `yield from`
   "UP032", # Use f-string instead of `format` call
   "UP036", # Version block is outdated for minimum Python version
+  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
 "non-free/cmk-update-agent/cmk_update_agent.py" = [
@@ -85,6 +85,7 @@ ignore = [
   "UP026", # `mock` is deprecated, use `unittest.mock`
   "UP035", # Import from `FOO` instead: `BAR`
   "UP036", # Version block is outdated for minimum Python version
+  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 "packages/cmk-agent-based/cmk/agent_based/v1/type_defs.py" = [

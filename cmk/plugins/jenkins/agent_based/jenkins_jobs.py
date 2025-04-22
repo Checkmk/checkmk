@@ -104,7 +104,7 @@ def _check_jenkins_jobs(
 
     if now is None:
         now = time()
-    assert isinstance(now, (float, int))
+    assert isinstance(now, float | int)
 
     for job in item_data:
         yield from _process_job(job, params, now)

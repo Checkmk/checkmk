@@ -1099,7 +1099,7 @@ def add_to_event_context(
     param: object,
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> None:
-    if isinstance(param, (list, tuple)):
+    if isinstance(param, list | tuple):
         if all(isinstance(p, str) for p in param):
             # TODO: Why on earth do we have these arbitrary differences? Can we unify this?
             suffix, separator = ("S", " ") if isinstance(param, list) else ("", "\t")
@@ -1115,7 +1115,7 @@ def add_to_event_context(
                     value = ("url", value)
                 value = get_http_proxy(value).serialize()
             add_to_event_context(context, varname, value, get_http_proxy)
-    elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
+    elif isinstance(param, str | int | float):  # NOTE: bool is a subclass of int!
         # Dynamically added keys...
         context[prefix] = str(param)  # type: ignore[literal-required]
     elif param is None:

@@ -14,10 +14,10 @@ CheckParams = None | Mapping[str, Any] | list[float] | None | tuple[float, float
 
 def check_humidity(humidity: float, params: CheckParams) -> CheckResult:
     levels_upper, levels_lower = None, None
-    if isinstance(params, (dict, Mapping)):
+    if isinstance(params, dict | Mapping):
         levels_upper = params.get("levels") or None
         levels_lower = params.get("levels_lower") or None
-    elif isinstance(params, (list, tuple)):
+    elif isinstance(params, list | tuple):
         # old params = (crit_low , warn_low, warn, crit)
         levels_upper = params[2], params[3]
         levels_lower = params[1], params[0]

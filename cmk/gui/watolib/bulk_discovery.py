@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import multiprocessing as mp
 import threading
-from collections.abc import Sequence
-from typing import NamedTuple, NewType
+from collections.abc import Mapping, Sequence
+from typing import Literal, NamedTuple, NewType
 
 from pydantic import BaseModel
 
@@ -19,7 +19,12 @@ from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
-from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
+from cmk.checkengine.discovery import (
+    DiscoveryResult,
+    DiscoverySettingFlags,
+    DiscoverySettings,
+    DiscoveryValueSpecModel,
+)
 
 from cmk.gui.background_job import (
     AlreadyRunningError,
@@ -104,7 +109,13 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                 "update_everything",
                                 _("Refresh all services and host labels (tabula rasa)"),
                                 FixedValue(
-                                    value=None,
+                                    value=DiscoverySettingFlags(
+                                        add_new_services=True,
+                                        remove_vanished_services=True,
+                                        update_host_labels=True,
+                                        update_changed_service_labels=True,
+                                        update_changed_service_parameters=True,
+                                    ),
                                     title=_("Refresh all services and host labels (tabula rasa)"),
                                     totext="",
                                 ),
@@ -136,9 +147,9 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                             ),
                                         ),
                                         (
-                                            "update_changed_service_params",
+                                            "update_changed_service_parameters",
                                             Checkbox(
-                                                label=_("Update service params"),
+                                                label=_("Update service parameters"),
                                                 default_value=False,
                                             ),
                                         ),
@@ -183,53 +194,35 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: str | tuple[str, dict[str, bool]],
-) -> tuple[str, dict[str, bool]]:
-    # already migrated
-    if isinstance(param, tuple):
-        return param
-
-    if param == "new":
-        return (
-            "custom",
-            {
-                "add_new_services": True,
-                "remove_vanished_services": False,
-                "update_host_labels": True,
-            },
-        )
-
-    if param == "remove":
-        return (
-            "custom",
-            {
-                "add_new_services": False,
-                "remove_vanished_services": True,
-                "update_host_labels": False,
-            },
-        )
-
-    if param == "fixall":
-        return (
-            "custom",
-            {
-                "add_new_services": True,
-                "remove_vanished_services": True,
-                "update_host_labels": True,
-            },
-        )
-
-    if param == "refresh":
+    param: tuple[Literal["update_everything", "custom"], Mapping[str, bool] | None],
+) -> DiscoveryValueSpecModel:
+    ident, flags = param
+    if ident == "update_everything" or flags is None:
+        # handle temporary 2.4 beta state and inconsistent 2.3 state
         return (
             "update_everything",
-            {
-                "add_new_services": True,
-                "remove_vanished_services": True,
-                "update_host_labels": True,
-            },
+            DiscoverySettingFlags(
+                add_new_services=True,
+                remove_vanished_services=True,
+                update_host_labels=True,
+                update_changed_service_labels=True,
+                update_changed_service_parameters=True,
+            ),
         )
 
-    raise MKUserError(None, _("Automatic rediscovery parameter {param} not implemented"))
+    return (
+        "custom",
+        DiscoverySettingFlags(
+            add_new_services=flags["add_new_services"],
+            remove_vanished_services=flags["remove_vanished_services"],
+            update_host_labels=flags["update_host_labels"],
+            update_changed_service_labels=flags.get("update_changed_service_labels", False),
+            update_changed_service_parameters=flags.get(
+                "update_changed_service_parameters",
+                bool(flags.get("update_changed_service_params", False)),
+            ),
+        ),
+    )
 
 
 class _DiscoveryTaskResult(NamedTuple):

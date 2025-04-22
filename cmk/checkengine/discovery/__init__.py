@@ -29,7 +29,13 @@ from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabe
 from ._params import DiscoveryCheckParameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
-from ._utils import DiscoveryMode, DiscoverySettings, DiscoveryVsSettings, QualifiedDiscovery
+from ._utils import (
+    DiscoveryMode,
+    DiscoverySettingFlags,
+    DiscoverySettings,
+    DiscoveryValueSpecModel,
+    QualifiedDiscovery,
+)
 
 __all__ = [
     "analyse_cluster_labels",
@@ -48,7 +54,8 @@ __all__ = [
     "DiscoveryCheckParameters",
     "DiscoveryMode",  # in the process of being replaced by DiscoverySettings
     "DiscoverySettings",
-    "DiscoveryVsSettings",
+    "DiscoverySettingFlags",
+    "DiscoveryValueSpecModel",
     "DiscoveryResult",
     "DiscoveryPlugin",
     "DiscoveredLabelsCache",

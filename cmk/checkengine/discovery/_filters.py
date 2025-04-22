@@ -9,7 +9,7 @@ from typing import Literal, NamedTuple, TypedDict
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
 
-from ._utils import DiscoveryVsSettings
+from ._utils import DiscoveryValueSpecModel
 
 ServiceFilter = Callable[[ServiceName], bool]
 
@@ -34,7 +34,7 @@ class RediscoveryParameters(TypedDict, total=False):
     excluded_time: Sequence[tuple[tuple[int, int], tuple[int, int]]]
     keep_clustered_vanished_services: bool
     group_time: int
-    mode: DiscoveryVsSettings
+    mode: DiscoveryValueSpecModel  # we actually only need DiscoverySettingFlags
     service_whitelist: Sequence[str]
     service_blacklist: Sequence[str]
     service_filters: tuple[Literal["combined", "dedicated"], ServiceFiltersDedicated]

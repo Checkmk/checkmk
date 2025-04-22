@@ -60,7 +60,10 @@ def categorize_files(
 def _relative_path(
     package_part: PackagePart, resolved_full_path: Path, path_config: PathConfig
 ) -> Path:
-    return resolved_full_path.relative_to(path_config.resolved_paths[package_part])
+    rpath = resolved_full_path.relative_to(path_config.resolved_paths[package_part])
+    if package_part is PackagePart.LIB and (rpath_str := str(rpath)).startswith("python3/cmk/"):
+        return Path(f"check_mk/{rpath_str[11:]}")
+    return rpath
 
 
 def all_rule_pack_files(ec_path: Path) -> set[Path]:

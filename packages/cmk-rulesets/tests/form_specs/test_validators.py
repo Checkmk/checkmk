@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Mapping, Sequence
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext as does_not_raise
-from typing import ContextManager
 
 import pytest
 

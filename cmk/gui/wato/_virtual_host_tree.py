@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Collection, Sequence
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
-from typing import ContextManager, TypedDict
+from typing import TypedDict
 
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 

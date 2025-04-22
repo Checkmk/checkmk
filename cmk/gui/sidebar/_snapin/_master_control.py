@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
-from typing import ContextManager
 
 from cmk.ccc.site import SiteId
 

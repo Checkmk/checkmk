@@ -9,9 +9,10 @@ import importlib
 import threading
 import time
 from collections.abc import Callable, Sequence
+from contextlib import AbstractContextManager as ContextManager
 from logging import Logger
 from pathlib import Path
-from typing import ContextManager, IO, NamedTuple
+from typing import IO, NamedTuple
 
 from pydantic import BaseModel, field_serializer, field_validator
 

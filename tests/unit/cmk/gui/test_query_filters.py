@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
-from typing import ContextManager, Literal
+from typing import Literal
 
 import pytest
 

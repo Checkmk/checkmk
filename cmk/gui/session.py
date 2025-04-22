@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Container, Iterator
+from contextlib import AbstractContextManager as ContextManager
 from datetime import datetime
-from typing import cast, ContextManager
+from typing import cast
 
 import flask
 from flask import Flask

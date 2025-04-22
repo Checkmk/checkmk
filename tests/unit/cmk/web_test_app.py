@@ -10,8 +10,9 @@ import typing
 import urllib.parse
 from base64 import b64encode
 from collections.abc import Callable, Generator, Mapping
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
-from typing import Any, cast, ContextManager, Literal
+from typing import Any, cast, Literal
 
 from flask.testing import FlaskClient
 from mypy_extensions import KwArg

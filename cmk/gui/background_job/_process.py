@@ -14,10 +14,11 @@ import os
 import threading
 import time
 from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
 from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
-from typing import ContextManager, IO, override
+from typing import IO, override
 
 from setproctitle import setthreadtitle
 

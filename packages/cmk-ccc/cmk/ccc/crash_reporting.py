@@ -17,11 +17,11 @@ import sys
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Final, Generic, NotRequired, Sequence, TypedDict, TypeVar
+from typing import Any, Final, Generic, NotRequired, TypedDict, TypeVar
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store

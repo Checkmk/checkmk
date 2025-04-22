@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from contextlib import AbstractContextManager as ContextManager
 from pathlib import Path
-from typing import ContextManager, Final
+from typing import Final
 
 import pytest
 from watchdog.events import (

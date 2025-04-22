@@ -168,7 +168,7 @@ def _parameter_valuespec_temperature() -> Dictionary:
             ),
         ],
         ignored_keys=[
-            "_item_key",  # ?
+            "_item_key",  # discovered params: `cmciii_temp`
             "levels_battery",  # funny default construct, see apc_symmetra_temp
             "levels_sensors",  # funny default construct, see apc_symmetra_temp
             "cpu",  # funny default construct, see openhardwaremonitor

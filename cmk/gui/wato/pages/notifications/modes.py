@@ -1871,17 +1871,21 @@ class ModeTestNotifications(ModeNotifications):
         table.row(css=["notification_context hidden"])
 
     def _render_test_notifications(self) -> None:
-        if self._test_notification_ongoing() or request.var("test_notification"):
+        general_test_options = self._get_default_options(
+            request.var("host_name"),
+            request.var("service_name"),
+        )
+        advanced_test_options = ""
+        notify_plugin = {}
+        if (
+            form_submitted := request.var("test_notification")
+        ) or self._test_notification_ongoing():
             general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
-            advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
-            notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
-        else:
-            general_test_options = self._get_default_options(
-                request.var("host_name"),
-                request.var("service_name"),
-            )
-            advanced_test_options = ""
-            notify_plugin = {}
+            if form_submitted:
+                advanced_test_options = self._vs_advanced_test_options().from_html_vars(
+                    "advanced_opts"
+                )
+                notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
 
         self._ensure_correct_default_test_options()
 

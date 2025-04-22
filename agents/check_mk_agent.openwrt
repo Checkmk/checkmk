@@ -1538,8 +1538,6 @@ run_purely_synchronous_sections() {
 
     section_omd
 
-    section_omd_apache
-
     section_zpool
 
     section_veritas_vcs

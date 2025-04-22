@@ -11,7 +11,7 @@ builtin host labels.
 
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
-from typing import DefaultDict, Final
+from typing import Final
 
 import cmk.ccc.version as cmk_version
 
@@ -92,7 +92,7 @@ def test_all_sections_have_host_labels_documented(
         *(s for s in agent_based_plugins.snmp_sections.values()),
     ]
 
-    encountered_labels: DefaultDict[str, dict[SectionName, Sequence[str]]] = defaultdict(dict)
+    encountered_labels: defaultdict[str, dict[SectionName, Sequence[str]]] = defaultdict(dict)
 
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing as t
 
 import pytest
 
@@ -47,7 +46,7 @@ RESULT_0 = {
     ],
 )
 def test_cisco_vpn_sessions_parse(
-    string_table: StringTable, output: t.Dict[str, t.Dict[str, int]]
+    string_table: StringTable, output: dict[str, dict[str, int]]
 ) -> None:
     result = cisco_vpn_sessions.parse_cisco_vpn_sessions(string_table)
     assert result == output

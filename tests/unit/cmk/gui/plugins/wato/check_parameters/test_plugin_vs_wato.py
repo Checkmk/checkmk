@@ -410,7 +410,7 @@ A = t.TypeVar("A", bound=SupportsGreaterThan)
 B = t.TypeVar("B")
 
 
-def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[t.Tuple[t.Optional[A], t.Optional[B]]]:
+def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[tuple[t.Optional[A], t.Optional[B]]]:
     """
     merge a and b in a way that elements that are equal in a and b are in the
     same tuple.

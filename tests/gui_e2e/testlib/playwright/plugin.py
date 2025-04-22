@@ -190,7 +190,7 @@ def manage_new_page_from_browser_context(
 
         NOTE: requires access to pytest fixture: `request`.
     """
-    pages: t.List[Page] = []
+    pages: list[Page] = []
     context.on("page", lambda page: pages.append(page))
     page = context.new_page()
     try:
@@ -203,7 +203,7 @@ def manage_new_page_from_browser_context(
 
 def _may_create_screenshot(
     request: pytest.FixtureRequest | None,
-    pages: t.List[Page],
+    pages: list[Page],
 ) -> None:
     if isinstance(request, pytest.FixtureRequest):
         failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False

@@ -20,7 +20,7 @@ import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import ClassVar, Literal, NamedTuple, NoReturn, override, Type, TypeVar
+from typing import ClassVar, Literal, NamedTuple, NoReturn, override, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -87,7 +87,7 @@ class Stash(BaseModel):
         self.ids_by_project[project].append(werk_id.id)
 
     @classmethod
-    def load_from_file(cls: Type[T]) -> T:
+    def load_from_file(cls: type[T]) -> T:
         if not cls.PATH.exists():
             return cls.model_validate({"ids_by_project": {}})
         content = cls.PATH.read_text(encoding="utf-8")

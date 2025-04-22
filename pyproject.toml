@@ -34,7 +34,6 @@ ignore = [
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
   # Basically a TODO list...
-  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP007", # Use `X | Y` for type annotations
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
@@ -71,11 +70,13 @@ ignore = [
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
 "non-free/cmk-update-agent/cmk_update_agent.py" = [
+  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP017", # Use `datetime.UTC` alias
 ]
 "tests/agent-plugin-unit/*" = [
   "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
   "UP012", # Unnecessary call to `encode` as UTF-8
@@ -84,6 +85,9 @@ ignore = [
   "UP036", # Version block is outdated for minimum Python version
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
+"packages/cmk-agent-based/cmk/agent_based/v1/type_defs.py" = [
+  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

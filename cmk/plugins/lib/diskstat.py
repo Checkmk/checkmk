@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
-from typing import Any, DefaultDict, TypedDict
+from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -148,7 +148,7 @@ def combine_disks(disks: Iterable[Disk]) -> Disk:
     # the physical multipath devices and would add up the traffic
     # of the paths with the traffice of the device itself....
 
-    combined_disk: DefaultDict[str, float] = defaultdict(float)
+    combined_disk: defaultdict[str, float] = defaultdict(float)
     # We do not set these settings explictly because some
     # devices may not provide all of them.
     # "read_ios"                   : 0.0,
@@ -166,7 +166,7 @@ def combine_disks(disks: Iterable[Disk]) -> Disk:
     # "queue_length"               : 0.0,
     # "read_ql"                    : 0.0,
     # "write_ql"                   : 0.0,
-    n_contributions: DefaultDict[str, int] = defaultdict(int)
+    n_contributions: defaultdict[str, int] = defaultdict(int)
 
     for disk in disks:
         for key, value in disk.items():

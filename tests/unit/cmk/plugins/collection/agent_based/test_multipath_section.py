@@ -13,7 +13,7 @@ from cmk.plugins.lib import multipath as multipath_utils
 
 
 class TupleTestData(t.NamedTuple):
-    input: t.List[str]
+    input: list[str]
     output: multipath_utils.Section
 
 
@@ -446,5 +446,5 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
         ),
     ],
 )
-def test_multipath_parse_groups(group: t.List[str], result: str) -> None:
+def test_multipath_parse_groups(group: list[str], result: str) -> None:
     assert result in multipath.parse_multipath([group])

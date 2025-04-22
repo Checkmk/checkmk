@@ -21,12 +21,12 @@ class BrokerConnectionExtension(BaseSchema):
     id = fields.String(description="The unique identifier of the connection.")
     connecter = fields.Nested(
         ConnectedSiteAttributes,
-        description="The attributes of the connecter site.",
+        description="The attributes of the site initiating the connection.",
         example={"site_id": "heute_remote_1"},
     )
     connectee = fields.Nested(
         ConnectedSiteAttributes,
-        description="The attributes of the connectee site.",
+        description="The attributes of the site accepting the connection.",
         example={"site_id": "heute_remote_2"},
     )
 

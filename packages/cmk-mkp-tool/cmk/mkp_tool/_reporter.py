@@ -37,6 +37,12 @@ def _all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set
         if resolved not in resolved_to_abstracted or resolved_to_abstracted[resolved] == resolved:
             resolved_to_abstracted[resolved] = path
 
+    return categorize_files(resolved_to_abstracted, path_config)
+
+
+def categorize_files(
+    resolved_to_abstracted: Mapping[Path, Path], path_config: PathConfig
+) -> Mapping[PackagePart | None, set[Path]]:
     categorized_files: dict[PackagePart | None, set[Path]] = {}
     for resolved_full_path, user_full_path in resolved_to_abstracted.items():
         if (package_part := path_config.get_part(resolved_full_path)) is not None:

@@ -4,11 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.acme.agent_based.lib import DETECT_ACME
+from dataclasses import dataclass
+from typing import TypedDict
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
 # comNET GmbH, Fabian Binder
 
@@ -16,11 +28,41 @@ check_info = {}
 # .1.3.6.1.4.1.9148.3.2.1.1.4 Health Status Description (apSysRedundancy)
 
 
-def inventory_acme_sbc_snmp(info):
-    yield None, {}
+class ParamsT(TypedDict):
+    lower_levels: LevelsT
 
 
-def check_acme_sbc_snmp(_no_item, params, info):
+@dataclass(frozen=True)
+class Section:
+    score: str
+    status: str
+
+
+def parse_acme_sbc_snmp(string_table: StringTable) -> Section | None:
+    if string_table:
+        return Section(
+            score=string_table[0][1],
+            status=string_table[1][1],
+        )
+    return None
+
+
+snmp_section_acme_sbc_snmp = SimpleSNMPSection(
+    name="acme_sbc_snmp",
+    detect=DETECT_ACME,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.9148.3.2.1.1",
+        oids=["3", "4"],
+    ),
+    parse_function=parse_acme_sbc_snmp,
+)
+
+
+def discover_acme_sbc_snmp(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_acme_sbc_snmp(params: ParamsT, section: Section) -> CheckResult:
     map_states = {
         "0": (3, "unknown"),
         "1": (1, "initial"),
@@ -34,46 +76,23 @@ def check_acme_sbc_snmp(_no_item, params, info):
         "9": (1, "recovery"),
     }
 
-    try:
-        score, state = info[0]
-    except (IndexError, ValueError):
-        return
-    health_state, health_state_readable = map_states.get(state, (3, "unknown"))
-    yield health_state, "Health state: %s" % (health_state_readable)
+    health_state, health_state_readable = map_states.get(section.status, (3, "unknown"))
+    yield Result(state=State(health_state), summary="Health state: %s" % (health_state_readable))
 
-    try:
-        score = int(score)
-    except ValueError:
-        yield 3, "Unknown score: %s" % score
-        return
-    warn, crit = params.get("levels_lower", (None, None))
-    levels_msg = f" (warn/crit at or below {warn}%/{crit}%)"
-    score_msg = "Score: %s%%" % score
-    if crit is not None and score <= crit:
-        yield 2, score_msg + levels_msg
-    elif warn is not None and score <= warn:
-        yield 1, score_msg + levels_msg
-    else:
-        yield 0, score_msg
+    yield from check_levels(
+        int(section.score),
+        levels_lower=params["lower_levels"],
+        metric_name="health_state",
+        label="Score",
+        render_func=lambda v: f"{v}%",
+    )
 
 
-def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable | None:
-    return string_table or None
-
-
-check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
+check_plugin_acme_sbc_snmp = CheckPlugin(
     name="acme_sbc_snmp",
-    parse_function=parse_acme_sbc_snmp,
-    detect=DETECT_ACME,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.9148.3.2.1.1",
-        oids=["3", "4"],
-    ),
     service_name="ACME SBC health",
-    discovery_function=inventory_acme_sbc_snmp,
+    discovery_function=discover_acme_sbc_snmp,
     check_function=check_acme_sbc_snmp,
     check_ruleset_name="acme_sbc_snmp",
-    check_default_parameters={
-        "levels_lower": (99, 75),
-    },
+    check_default_parameters=ParamsT(lower_levels=("fixed", (75, 50))),
 )

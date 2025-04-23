@@ -194,20 +194,25 @@ def _check_livestatus_cert(
         return
 
     valid_until = int(valid_until_str)
+    secs_left = valid_until - this_time
     yield Result(
         state=State.OK,
-        notice="Site certificate valid until %s" % render.date(valid_until),
-    )
-    secs_left = valid_until - this_time
-    yield from check_levels_v1(
-        value=secs_left,
-        label="Expiring in",
-        levels_lower=_make_levels(params["site_cert_days"]),
-        render_func=render.timespan,
-        notice_only=True,
-        boundaries=(0, None),
+        notice=f"Site certificate valid until {render.date(valid_until)}",
     )
     yield Metric("site_cert_days", secs_left / 86400.0)
+    if secs_left < 0:
+        yield Result(
+            state=State.CRIT,  # at the time of writing this, levels are always configured >=0
+            summary=f"Expired {render.timespan(-secs_left)} ago",
+        )
+    else:
+        yield from check_levels_v1(
+            value=secs_left,
+            label="Expiring in",
+            levels_lower=_make_levels(params["site_cert_days"]),
+            render_func=render.timespan,
+            notice_only=True,
+        )
 
 
 def _generate_livestatus_results(

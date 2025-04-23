@@ -353,6 +353,7 @@ CEE_UNUSED_PACKAGES = [
     "snmpsim-lextudio",
     "websocket-client",
     "wrapt",
+    "setuptools",  # workaround for mypy/pylint issues introduced by https://github.com/pypa/setuptools/pull/4953
 ]
 
 

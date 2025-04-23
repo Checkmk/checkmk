@@ -418,7 +418,7 @@ Pipfile.lock: Pipfile
 	@( \
 		echo "Locking Python requirements..." ; \
 		flock $(LOCK_FD); \
-		( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
+		( SKIP_MAKEFILE_CALL=1 PIP_CONSTRAINT=temporary_pipenv_constraints.txt $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH); \
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
@@ -438,5 +438,5 @@ Pipfile.lock: Pipfile
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIP_CONSTRAINT=temporary_pipenv_constraints.txt SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)

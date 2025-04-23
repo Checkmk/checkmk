@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-21 18:02+0000\n"
+"PO-Revision-Date: 2025-04-23 10:46+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/stable/"
 "fr/>\n"
 "Language: fr\n"
@@ -707,9 +707,9 @@ msgstr "%s a été arrêté après %s à %s."
 msgid "%s write %s"
 msgstr "%s écrire %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s%% OK"
-msgstr "%.2f%% OK"
+msgstr "%s%% OK"
 
 #, python-format
 msgid ""
@@ -855,9 +855,9 @@ msgstr "(Aucune adresse électronique de secours n'est configurée !)"
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveaux d'alerte SLA à %d/%d incidents restants)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "(SLA alert levels at %r%%/%r%% left)"
-msgstr "(niveaux d'alerte SLA à %d%%/%d%% restants)"
+msgstr "(niveaux d'alerte SLA à %r%%/%r%% restants)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP et noms DNS)"
@@ -1825,7 +1825,6 @@ msgstr ""
 "conteneur docker en spécifiant l'expression \"%s\" (sans les guillemets), et "
 "en sélectionnant \"%s\".</p>"
 
-#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1855,10 +1854,10 @@ msgstr ""
 "premières sous-expressions correspondantes sont utilisées pour les "
 "descriptions du service. Les sous-chaînes correspondantes correspondant aux "
 "groupes restants sont néanmoins copiées dans l'expression régulière.</"
-"p><p>Comme alternative à <tt>%s</tt> ; vous pouvez également utiliser <tt>"
-"%1</tt> ;, <tt>%2</tt> ;, etc.  Ils seront remplacés par le premier, le "
+"p><p>Comme alternative à <tt>%s</tt> ; vous pouvez également utiliser "
+"<tt>%1</tt> ;, <tt>%2</tt> ;, etc. Ils seront remplacés par le premier, le "
 "deuxième, ... groupe correspondant. Cela vous permet de réorganiser les "
-"choses"
+"choses."
 
 msgid ""
 "<p>The service description may contain one or more occurances of <tt>%s</"
@@ -4563,9 +4562,9 @@ msgstr "Les hôtes affectés contiennent"
 msgid "Affected sites"
 msgstr "Sites affectés"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Affected sites: %s"
-msgstr "Sites affectés"
+msgstr "Sites affectés : %s"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -11937,9 +11936,9 @@ msgstr ""
 "Choisissez, si vous voulez utiliser l'information de l'hôte parent pour le "
 "nom de serveur NetBIOS ou si vous voulez en spécifier un."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Chosen file: %s"
-msgstr "Dossiers de base"
+msgstr "Dossier choisi : %s"
 
 msgid "Chrony timesynchronisation"
 msgstr "Synchronisation de la chronologie"
@@ -12891,7 +12890,6 @@ msgstr "Spécification SLA"
 msgid "Compute average over last "
 msgstr "Calculer la moyenne sur le dernier "
 
-#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
@@ -12903,7 +12901,11 @@ msgstr ""
 "Calcule la moyenne de l'utilisation des processeurs à un seul cœur. Notez "
 "que cette option n'a d'effet que si au moins une des sous-options 'Appliquer "
 "les niveaux de single-core' ou 'Graphiques pour l'utilisation moyenne de "
-"single-core' est activée."
+"single-core' est activée.\n"
+"Note : La moyenne est calculée en utilisant la méthode de la moyenne mobile "
+"exponentielle (EMA), qui prend en compte à la fois la nouvelle valeur et la "
+"moyenne précédente tout en appliquant un facteur pondéré à chacune d'entre "
+"elles."
 
 msgid "Compute range accoring to displayed data"
 msgstr "Calculer la portée en fonction des données affichées"
@@ -17542,9 +17544,9 @@ msgstr "Création d'un nouveau paquet d'extension %s"
 msgid "Deprecated legacy GUI extensions"
 msgstr "Reproduire les extensions"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deprecated plug-in: %s"
-msgstr "Plugins de contrôle obsolètes"
+msgstr "Plugin obsolète : %s"
 
 msgid "Deprecated rulesets"
 msgstr "Jeux de règles obsolètes"
@@ -17647,9 +17649,8 @@ msgstr "Détails des notifications d'accueil"
 msgid "Details for service notifications"
 msgstr "Détails des notifications de service"
 
-#, fuzzy
 msgid "Details:"
-msgstr "Détails"
+msgstr "Détails :"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Détecter et utiliser les proxies configurés sur le système cible"
@@ -29792,13 +29793,13 @@ msgstr ""
 "vous avez acheté votre licence par l'intermédiaire d'un %s, veuillez le "
 "contacter."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "If you want to continue to use Checkmk, please contact the Checkmk sales "
 "team at %s."
 msgstr ""
-"Si vous souhaitez continuer à utiliser Checkmk, veuillez acheter une licence "
-"supportant %s ou contacter l'équipe de vente de Checkmk à %s."
+"Si vous souhaitez continuer à utiliser Checkmk, veuillez contacter l'équipe "
+"de vente de Checkmk à %s."
 
 #, python-format
 msgid ""
@@ -30967,10 +30968,8 @@ msgstr ""
 msgid "Information about size, age and count of files"
 msgstr "Informations sur la taille, l'âge et le nombre de fichiers"
 
-#, fuzzy
 msgid "Information about the Appliance hardware and firmware version."
 msgstr ""
-"Configuration du système d'inventaire de matériel et de logiciels Checkmk"
 
 msgid "Information similar to 'docker system df' output"
 msgstr "Informations similaires à la sortie 'docker system df'"
@@ -31507,9 +31506,8 @@ msgstr "Paramètre de contrôle non valide"
 msgid "Invalid check type"
 msgstr "Type de chèque non valide"
 
-#, fuzzy
 msgid "Invalid code provided"
-msgstr "L'URL de retour fournie est invalide."
+msgstr ""
 
 #, python-format
 msgid "Invalid color specification '%s'"
@@ -32997,9 +32995,9 @@ msgstr ""
 "pouvez soit désactiver le groupage des notifications, soit choisir un autre "
 "plugin de notification qui permet le groupage."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Legacy GUI extension in %r"
-msgstr "Extensions de l'interface graphique héritée"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -33815,9 +33813,8 @@ msgstr ""
 msgid "Licensed"
 msgstr "Licencié"
 
-#, fuzzy
 msgid "Licensed phase: too many services."
-msgstr "Voir tous les hôtes et services"
+msgstr ""
 
 #, fuzzy
 msgid "Licensed services"
@@ -34736,9 +34733,8 @@ msgstr ""
 "Enregistrez le processus d'enregistrement de l'agent des demandes entrantes "
 "par la commande d'enregistrement du contrôleur d'agent Checkmk."
 
-#, fuzzy
 msgid "Log the automatic host removal process."
-msgstr "Activer la suppression automatique des hôtes"
+msgstr "Enregistrez la suppression automatique des hôtes."
 
 msgid "Log: Details"
 msgstr "Journal : Détails"
@@ -36690,9 +36686,9 @@ msgstr "Nombre maximal de fils"
 msgid "Maximum of "
 msgstr "Maximum à "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Maximum of %s"
-msgstr "Maximum à "
+msgstr "Maximum à %s"
 
 msgid "Maximum parallel connections"
 msgstr "Nombre maximal de connexions parallèles"
@@ -37451,9 +37447,9 @@ msgstr "Nombre minimal de nœuds de travail prêts"
 msgid "Minimum of "
 msgstr "Minimum à "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Minimum of %s"
-msgstr "Minimum à "
+msgstr "Minimum à %s"
 
 msgid "Minimum password length"
 msgstr "Longueur minimale du mot de passe"
@@ -39466,9 +39462,8 @@ msgstr "Aucune entrée."
 msgid "No exclude range configured"
 msgstr "Aucune plage d'exclusion configurée"
 
-#, fuzzy
 msgid "No expiration date"
-msgstr "État d'enregistrement"
+msgstr "Aucune date d'expiration"
 
 msgid "No explicit credentials"
 msgstr "Pas d'accréditation explicite"
@@ -41516,9 +41511,8 @@ msgstr "L'hôte en bas"
 msgid "On host name exclusion list."
 msgstr "%s sur la liste d'exclusion."
 
-#, fuzzy
 msgid "On host: Schedule downtime"
-msgstr "Planifier un temps d'arrêt ?"
+msgstr "À l'hôte : Planifier un temps d'arrêt"
 
 msgid "On recovery (OK/UP)"
 msgstr ""
@@ -42256,9 +42250,8 @@ msgstr "Oracle Logswitches"
 msgid "Oracle Memory"
 msgstr "Mémoire cache"
 
-#, fuzzy
 msgid "Oracle PDB Total Size"
-msgstr "ORACLE Total attendu"
+msgstr ""
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
@@ -53990,10 +53983,9 @@ msgid "Specify database names that the rule should apply to"
 msgstr ""
 "Indiquez les noms des bases de données auxquelles la règle doit s'appliquer"
 
-#, fuzzy
 msgid "Specify database names that the rule should apply to."
 msgstr ""
-"Indiquez les noms des bases de données auxquelles la règle doit s'appliquer"
+"Indiquez les noms des bases de données auxquelles la règle doit s'appliquer."
 
 msgid "Specify discovery mode"
 msgstr "Spécifier le mode de découverte"
@@ -54253,12 +54245,11 @@ msgstr ""
 msgid "Specify the monitoring state when the bonding mode is not as expected."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Specify the name of a store (This is either a mailbox or public folder)."
 msgstr ""
 "Spécifiez le nom d'un magasin (il s'agit d'une boîte aux lettres ou d'un "
-"dossier public)"
+"dossier public)."
 
 msgid "Specify the name of the ASM Disk Group "
 msgstr "Spécifiez le nom du groupe de disques ASM. "
@@ -55705,9 +55696,8 @@ msgstr "Stop"
 msgid "Stop SNMP processing on timeout"
 msgstr "Temps de traitement des événements"
 
-#, fuzzy
 msgid "Stop and do not create hosts"
-msgstr "Arrêtez et ne créez pas d'hôtes."
+msgstr "Arrêtez et ne créez pas d'hôtes"
 
 msgid "Stop background jobs"
 msgstr "Arrêter les travaux en arrière-plan"
@@ -58608,9 +58598,9 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "L'élément de contenu \"%s, %s\" ne peut pas être rendu : %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The content of this file %s could not be processed successfully: %s"
-msgstr "Le contenu de ce fichier n'a pas pu être traité avec succès : %s"
+msgstr "Le contenu de ce fichier %s n'a pas pu être traité avec succès : %s"
 
 msgid ""
 "The corresponding username in ntopng of the current checkmk user. It is "
@@ -61666,9 +61656,9 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "L'utilisateur %s utilisé par l'analyse réseau du dossier %s n'existe pas."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The user id '%s' already exists"
-msgstr "Cet identifiant existe déjà."
+msgstr ""
 
 msgid "The user interface"
 msgstr "L'interface utilisateur"
@@ -63003,9 +62993,9 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Cela n'affecte pas les hôtes dans les sous-dossiers."
 
-#, fuzzy, python-format
+#, python-format
 msgid "This does not work in Checkmk %s."
-msgstr "Cet hôte n'a pas d'agents Checkmk."
+msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "Cet élément est actuellement en arrêt programmé."
@@ -66761,9 +66751,8 @@ msgstr "Calendrier"
 msgid "Time horizon"
 msgstr "Horizon temporel"
 
-#, fuzzy
 msgid "Time horizon for repeated events"
-msgstr "Temps de couverture des événements"
+msgstr ""
 
 msgid "Time horizon to keep in cache"
 msgstr "Horizon temporel à conserver dans le cache"
@@ -70205,9 +70194,8 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr ""
 
-#, fuzzy
 msgid "Trial phase: too many services."
-msgstr "Voir tous les hôtes et services"
+msgstr ""
 
 msgid "Trial time left is visible in the user admin panel"
 msgstr ""
@@ -72664,9 +72652,8 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Utiliser le SID distant"
 
-#, fuzzy
 msgid "Use the status of the Check_MK Service"
-msgstr "Utiliser le statut du service..."
+msgstr ""
 
 msgid "Use the status of the service..."
 msgstr "Utiliser le statut du service..."
@@ -75499,7 +75486,6 @@ msgstr ""
 "Les éléments de page et les éléments de page fixes des rapports hérités "
 "apparaissent avant les éléments définis dans ce rapport."
 
-#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
 "<b>before</b> the levels on total CPU utilization are being applied.\n"
@@ -75508,7 +75494,11 @@ msgid ""
 "applying a weighted factor to each."
 msgstr ""
 "Lorsque cette option est activée, l'utilisation du CPU est moyennée "
-"<b>avant</b> l'application des niveaux sur l'utilisation totale du CPU."
+"<b>avant</b> l'application des niveaux sur l'utilisation totale du CPU.\n"
+"Note : La moyenne est calculée en utilisant la méthode de la moyenne mobile "
+"exponentielle (EMA), qui prend en compte à la fois la nouvelle valeur et la "
+"moyenne précédente tout en appliquant un facteur pondéré à chacune d'entre "
+"elles."
 
 msgid ""
 "When this option is activated then the block rate is being averaged "
@@ -81003,9 +80993,8 @@ msgstr "y"
 msgid "year"
 msgstr "année"
 
-#, fuzzy
 msgid "years"
-msgstr "année"
+msgstr "années"
 
 msgid "yes"
 msgstr "oui"

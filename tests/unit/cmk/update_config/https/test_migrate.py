@@ -41,11 +41,12 @@ from cmk.update_config.https.conflict_options import (
     OnlyStatusCodesAllowed,
     SSLIncompatible,
     V1ChecksRedirectResponse,
+    V2ChecksCertificates,
 )
 from cmk.update_config.https.conflicts import _migrate_expect_response, Conflict, detect_conflicts
 from cmk.update_config.https.migrate import migrate
 
-DEFAULT = Config()
+KEEP_CONFIGURATION = Config(v2_checks_certificates=V2ChecksCertificates.keep)
 
 HOST_1 = {"address": ("direct", "[::1]"), "virthost": "[::1]"}
 
@@ -1021,7 +1022,7 @@ EXAMPLE_99: Mapping[str, object] = {
     ],
 )
 def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:
-    assert detect_conflicts(DEFAULT, rule_value) == conflict
+    assert detect_conflicts(KEEP_CONFIGURATION, rule_value) == conflict
 
 
 @pytest.mark.parametrize(
@@ -1029,11 +1030,11 @@ def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) 
     [
         (
             EXAMPLE_12,
-            DEFAULT,
+            KEEP_CONFIGURATION,
         ),
         (
             EXAMPLE_68,
-            DEFAULT,
+            KEEP_CONFIGURATION,
         ),
         (
             EXAMPLE_75,
@@ -1041,7 +1042,10 @@ def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) 
         ),
         (
             EXAMPLE_89,
-            Config(cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore),
+            Config(
+                cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore,
+                v2_checks_certificates=V2ChecksCertificates.keep,
+            ),
         ),
     ],
 )
@@ -1057,21 +1061,21 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
 @pytest.mark.parametrize(
     "rule_value, config, url, server",
     [
-        (EXAMPLE_3, DEFAULT, "http://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_4, DEFAULT, "https://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_5, DEFAULT, "http://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_6, DEFAULT, "http://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_7, DEFAULT, "http://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_8, DEFAULT, "http://$HOSTNAME$", "$HOSTADDRESS$"),
-        (EXAMPLE_9, DEFAULT, "http://$HOSTNAME$:443", "$HOSTADDRESS$"),
-        (EXAMPLE_10, DEFAULT, "http://facebook.de", "google.com"),
-        (EXAMPLE_15, DEFAULT, "http://google.com", "google.com"),
-        (EXAMPLE_16, DEFAULT, "http://127.0.0.1", "127.0.0.1"),
-        (EXAMPLE_17, DEFAULT, "http://localhost", "localhost"),
-        (EXAMPLE_18, DEFAULT, "http://[::1]", "[::1]"),
+        (EXAMPLE_3, KEEP_CONFIGURATION, "http://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_4, KEEP_CONFIGURATION, "https://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_5, KEEP_CONFIGURATION, "http://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_6, KEEP_CONFIGURATION, "http://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_7, KEEP_CONFIGURATION, "http://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_8, KEEP_CONFIGURATION, "http://$HOSTNAME$", "$HOSTADDRESS$"),
+        (EXAMPLE_9, KEEP_CONFIGURATION, "http://$HOSTNAME$:443", "$HOSTADDRESS$"),
+        (EXAMPLE_10, KEEP_CONFIGURATION, "http://facebook.de", "google.com"),
+        (EXAMPLE_15, KEEP_CONFIGURATION, "http://google.com", "google.com"),
+        (EXAMPLE_16, KEEP_CONFIGURATION, "http://127.0.0.1", "127.0.0.1"),
+        (EXAMPLE_17, KEEP_CONFIGURATION, "http://localhost", "localhost"),
+        (EXAMPLE_18, KEEP_CONFIGURATION, "http://[::1]", "[::1]"),
         (
             EXAMPLE_20,  # TODO: check whether this would work in V1, or whether users typically use `[::1]` in their rule
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "http://[::1]",
             "::1",
         ),
@@ -1081,10 +1085,10 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
             "http://[::1]:80:80",
             "[::1]:80",
         ),
-        (EXAMPLE_21, DEFAULT, "http://[::1]/werks", "[::1]"),
-        (EXAMPLE_25, DEFAULT, "https://[::1]", "[::1]"),
-        (EXAMPLE_26, DEFAULT, "https://google.com", "google.com"),
-        (EXAMPLE_11, DEFAULT, "http://facebook.de", "$HOSTADDRESS$"),
+        (EXAMPLE_21, KEEP_CONFIGURATION, "http://[::1]/werks", "[::1]"),
+        (EXAMPLE_25, KEEP_CONFIGURATION, "https://[::1]", "[::1]"),
+        (EXAMPLE_26, KEEP_CONFIGURATION, "https://google.com", "google.com"),
+        (EXAMPLE_11, KEEP_CONFIGURATION, "http://facebook.de", "$HOSTADDRESS$"),
     ],
 )
 def test_migrate_url(
@@ -1107,7 +1111,7 @@ def test_migrate_url(
     [
         (
             EXAMPLE_27,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=None,
@@ -1116,7 +1120,7 @@ def test_migrate_url(
         ),
         (
             EXAMPLE_64,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             Document(
                 document_body=DocumentBodyOption.IGNORE,
                 max_age=None,
@@ -1125,7 +1129,7 @@ def test_migrate_url(
         ),
         (
             EXAMPLE_65,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=None,
@@ -1134,7 +1138,7 @@ def test_migrate_url(
         ),
         (
             EXAMPLE_66,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=111.0,
@@ -1143,7 +1147,7 @@ def test_migrate_url(
         ),
         (
             EXAMPLE_67,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             Document(
                 document_body=DocumentBodyOption.IGNORE,
                 max_age=111.0,
@@ -1171,12 +1175,12 @@ def test_migrate_document(
     [
         (
             EXAMPLE_27,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.GET, None),
         ),
         (
             EXAMPLE_50,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (
                 HttpMethod.POST,
                 SendData(
@@ -1189,7 +1193,7 @@ def test_migrate_document(
         ),
         (
             EXAMPLE_52,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (
                 HttpMethod.POST,
                 SendData(
@@ -1202,7 +1206,7 @@ def test_migrate_document(
         ),
         (
             EXAMPLE_53,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (
                 HttpMethod.PUT,
                 SendData(
@@ -1215,27 +1219,27 @@ def test_migrate_document(
         ),
         (
             EXAMPLE_54,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.GET, None),
         ),
         (
             EXAMPLE_55,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.DELETE, None),
         ),
         (
             EXAMPLE_56,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.HEAD, None),
         ),
         (
             EXAMPLE_57,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.PUT, SendData(send_data=None)),
         ),
         (
             EXAMPLE_58,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (HttpMethod.POST, SendData(send_data=None)),
         ),
         (
@@ -1351,7 +1355,7 @@ def test_migrate_method(rule_value: Mapping[str, object], config: Config, expect
     [
         (
             EXAMPLE_47,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (
                 MatchType.REGEX,
                 BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
@@ -1359,7 +1363,7 @@ def test_migrate_method(rule_value: Mapping[str, object], config: Config, expect
         ),
         (
             EXAMPLE_48,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             (
                 MatchType.REGEX,
                 BodyRegex(regex="", case_insensitive=False, multiline=False, invert=False),
@@ -1395,7 +1399,7 @@ def test_migrate_expect_regex(
     [
         (
             EXAMPLE_27,
-            DEFAULT,
+            KEEP_CONFIGURATION,
         ),
         (
             EXAMPLE_74,
@@ -1422,27 +1426,43 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_17, DEFAULT, None),
-        (EXAMPLE_25, DEFAULT, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
-        (EXAMPLE_27, DEFAULT, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+        (EXAMPLE_17, KEEP_CONFIGURATION, None),
+        (
+            EXAMPLE_25,
+            KEEP_CONFIGURATION,
+            {"min_version": TlsVersion.TLS_1_2, "allow_higher": False},
+        ),
+        (EXAMPLE_27, KEEP_CONFIGURATION, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
         (
             EXAMPLE_22,
-            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            Config(
+                ssl_incompatible=SSLIncompatible.negotiate,
+                v2_checks_certificates=V2ChecksCertificates.keep,
+            ),
             {"min_version": TlsVersion.AUTO, "allow_higher": True},
         ),
         (
             EXAMPLE_23,
-            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            Config(
+                ssl_incompatible=SSLIncompatible.negotiate,
+                v2_checks_certificates=V2ChecksCertificates.keep,
+            ),
             {"min_version": TlsVersion.AUTO, "allow_higher": True},
         ),
         (
             EXAMPLE_24,
-            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            Config(
+                ssl_incompatible=SSLIncompatible.negotiate,
+                v2_checks_certificates=V2ChecksCertificates.keep,
+            ),
             {"min_version": TlsVersion.AUTO, "allow_higher": True},
         ),
         (
             EXAMPLE_93,
-            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            Config(
+                ssl_incompatible=SSLIncompatible.negotiate,
+                v2_checks_certificates=V2ChecksCertificates.keep,
+            ),
             {"min_version": TlsVersion.AUTO, "allow_higher": True},
         ),
     ],
@@ -1463,11 +1483,11 @@ def test_migrate_ssl(rule_value: Mapping[str, object], config: Config, expected:
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_1, DEFAULT, (LevelsType.FIXED, (0.1, 0.2))),
-        (EXAMPLE_2, DEFAULT, (LevelsType.FIXED, (0.1, 0.2))),
-        (EXAMPLE_27, DEFAULT, None),
-        (EXAMPLE_28, DEFAULT, (LevelsType.FIXED, (0.0, 0.0))),
-        (EXAMPLE_84, DEFAULT, (LevelsType.NO_LEVELS, None)),
+        (EXAMPLE_1, KEEP_CONFIGURATION, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_2, KEEP_CONFIGURATION, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_27, KEEP_CONFIGURATION, None),
+        (EXAMPLE_28, KEEP_CONFIGURATION, (LevelsType.FIXED, (0.0, 0.0))),
+        (EXAMPLE_84, KEEP_CONFIGURATION, (LevelsType.NO_LEVELS, None)),
     ],
 )
 def test_migrate_response_time(
@@ -1487,7 +1507,7 @@ def test_migrate_response_time(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_46, DEFAULT, (MatchType.STRING, "example")),
+        (EXAMPLE_46, KEEP_CONFIGURATION, (MatchType.STRING, "example")),
         (
             EXAMPLE_49,
             Config(cant_have_regex_and_string=CantHaveRegexAndString.string),
@@ -1513,9 +1533,9 @@ def test_migrate_expect_string(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
-        (EXAMPLE_29, DEFAULT, 10.0),
-        (EXAMPLE_30, DEFAULT, 0.0),
+        (EXAMPLE_27, KEEP_CONFIGURATION, None),
+        (EXAMPLE_29, KEEP_CONFIGURATION, 10.0),
+        (EXAMPLE_30, KEEP_CONFIGURATION, 0.0),
     ],
 )
 def test_migrate_timeout(
@@ -1536,8 +1556,8 @@ def test_migrate_timeout(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
-        (EXAMPLE_31, DEFAULT, "agent"),
+        (EXAMPLE_27, KEEP_CONFIGURATION, None),
+        (EXAMPLE_31, KEEP_CONFIGURATION, "agent"),
     ],
 )
 def test_migrate_user_agent(
@@ -1560,12 +1580,12 @@ def test_migrate_user_agent(
     [
         (
             EXAMPLE_27,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             None,
         ),
         (
             EXAMPLE_32,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             [
                 {"header_name": "head", "header_value": "tail"},
                 {"header_name": "mop", "header_value": ""},
@@ -1574,22 +1594,22 @@ def test_migrate_user_agent(
         ),
         (
             EXAMPLE_34,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             [{"header_name": "head", "header_value": "tail"}],
         ),
         (
             EXAMPLE_35,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             [{"header_name": "head", "header_value": ""}],
         ),
         (
             EXAMPLE_71,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             [{"header_name": "", "header_value": "tail"}],
         ),
         (
             EXAMPLE_72,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             [{"header_name": "head", "header_value": "tail"}],
         ),
         (
@@ -1616,7 +1636,7 @@ def test_migrate_add_headers(
 
 def test_migrate_auth_user() -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, EXAMPLE_36)
+    for_migration = detect_conflicts(KEEP_CONFIGURATION, EXAMPLE_36)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(for_migration)
@@ -1630,7 +1650,7 @@ def test_migrate_auth_user() -> None:
 
 def test_migrate_auth_no_auth() -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
+    for_migration = detect_conflicts(KEEP_CONFIGURATION, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(for_migration)
@@ -1646,43 +1666,43 @@ def test_migrate_auth_no_auth() -> None:
     [
         (
             EXAMPLE_27,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "ok",
             None,
         ),  # TODO: discuss with PM
         (
             EXAMPLE_37,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "ok",
             None,
         ),
         (
             EXAMPLE_38,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "warning",
             None,
         ),
         (
             EXAMPLE_39,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "critical",
             None,
         ),
         (
             EXAMPLE_40,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "follow",
             None,
         ),
         (
             EXAMPLE_41,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "sticky",
             None,
         ),
         (
             EXAMPLE_42,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "stickyport",
             None,
         ),
@@ -1722,8 +1742,8 @@ def test_helper_migrate_expect_response() -> None:
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
-        (EXAMPLE_45, DEFAULT, ServerResponse(expected=[])),
+        (EXAMPLE_27, KEEP_CONFIGURATION, None),
+        (EXAMPLE_45, KEEP_CONFIGURATION, ServerResponse(expected=[])),
         (
             EXAMPLE_44,
             Config(only_status_codes_allowed=OnlyStatusCodesAllowed.ignore),
@@ -1748,8 +1768,21 @@ def test_migrate_expect_response(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_69, DEFAULT, (CertificateValidity.VALIDATE, (LevelsType.FIXED, (0.0, 0.0)))),
-        (EXAMPLE_70, DEFAULT, (CertificateValidity.VALIDATE, (LevelsType.NO_LEVELS, None))),
+        (
+            EXAMPLE_69,
+            KEEP_CONFIGURATION,
+            (CertificateValidity.VALIDATE, (LevelsType.FIXED, (0.0, 0.0))),
+        ),
+        (
+            EXAMPLE_70,
+            KEEP_CONFIGURATION,
+            (CertificateValidity.VALIDATE, (LevelsType.NO_LEVELS, None)),
+        ),
+        (
+            EXAMPLE_79,
+            Config(v2_checks_certificates=V2ChecksCertificates.disable),
+            (CertificateValidity.NO_VALIDATION, None),
+        ),
     ],
 )
 def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected: object) -> None:
@@ -1767,8 +1800,16 @@ def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_43, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
-        (EXAMPLE_73, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+        (
+            EXAMPLE_43,
+            KEEP_CONFIGURATION,
+            (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no")),
+        ),
+        (
+            EXAMPLE_73,
+            KEEP_CONFIGURATION,
+            (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no")),
+        ),
     ],
 )
 def test_migrate_expect_response_header(
@@ -1791,22 +1832,22 @@ def test_migrate_expect_response_header(
     [
         (
             EXAMPLE_76,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
         ),
         (
             EXAMPLE_77,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             ServiceDescription(prefix=ServicePrefix.NONE, name="name (migrated)"),
         ),
         (
             EXAMPLE_78,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
         ),
         (
             EXAMPLE_79,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
         ),
     ],
@@ -1826,11 +1867,11 @@ def test_migrate_name(rule_value: Mapping[str, object], config: Config, expected
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, AddressFamily.ANY),
-        (EXAMPLE_80, DEFAULT, AddressFamily.ANY),
-        (EXAMPLE_81, DEFAULT, AddressFamily.IPV4),
-        (EXAMPLE_82, DEFAULT, AddressFamily.PRIMARY),
-        (EXAMPLE_83, DEFAULT, AddressFamily.IPV6),
+        (EXAMPLE_27, KEEP_CONFIGURATION, AddressFamily.ANY),
+        (EXAMPLE_80, KEEP_CONFIGURATION, AddressFamily.ANY),
+        (EXAMPLE_81, KEEP_CONFIGURATION, AddressFamily.IPV4),
+        (EXAMPLE_82, KEEP_CONFIGURATION, AddressFamily.PRIMARY),
+        (EXAMPLE_83, KEEP_CONFIGURATION, AddressFamily.IPV6),
     ],
 )
 def test_migrate_address_family(
@@ -1850,7 +1891,7 @@ def test_migrate_address_family(
 
 def test_preserve_http_version() -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
+    for_migration = detect_conflicts(KEEP_CONFIGURATION, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(for_migration)
@@ -1866,7 +1907,7 @@ def test_preserve_http_version() -> None:
     [
         (
             EXAMPLE_94,
-            DEFAULT,
+            KEEP_CONFIGURATION,
             "http://[::1]",
         ),
     ],
@@ -1883,3 +1924,10 @@ def test_migrate_http_1_0(
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].url == expected
+
+
+def test_detect_ssl_default_conflict() -> None:
+    assert detect_conflicts(Config(), EXAMPLE_79) == Conflict(
+        type_=ConflictType.v2_checks_certificates,
+        mode_fields=["ssl"],
+    )

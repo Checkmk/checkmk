@@ -25,6 +25,7 @@ from cmk.update_config.https.conflict_options import (
     OnlyStatusCodesAllowed,
     SSLIncompatible,
     V1ChecksRedirectResponse,
+    V2ChecksCertificates,
 )
 from cmk.update_config.https.v1_scheme import V1Cert, V1Host, V1Url, V1Value
 
@@ -237,16 +238,21 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_=ConflictType.only_status_codes_allowed,
                 mode_fields=["expect_response"],
             )
-        if (
-            config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip
-            and value.uses_https()
-            and value.disable_sni
-        ):
-            return Conflict(
-                type_=ConflictType.cant_disable_sni_with_https,
-                mode_fields=["ssl"],
-                disable_sni=True,
-            )
+        if value.uses_https():
+            if config.v2_checks_certificates is V2ChecksCertificates.skip:
+                return Conflict(
+                    type_=ConflictType.v2_checks_certificates,
+                    mode_fields=["ssl"],
+                )
+            if (
+                config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip
+                and value.disable_sni
+            ):
+                return Conflict(
+                    type_=ConflictType.cant_disable_sni_with_https,
+                    mode_fields=["ssl"],
+                    disable_sni=True,
+                )
         if (
             config.v1_checks_redirect_response is V1ChecksRedirectResponse.skip
             and migrated_expect_response

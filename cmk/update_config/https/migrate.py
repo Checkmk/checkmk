@@ -28,7 +28,11 @@ V1 supports HTTP/1.0 and HTTP/1.1. V2 only supports HTTP/1.1 and HTTP/2.0. HTTP/
 from collections.abc import Mapping
 from typing import assert_never, Literal
 
-from cmk.update_config.https.conflict_options import CantHaveRegexAndString, CantPostData
+from cmk.update_config.https.conflict_options import (
+    CantHaveRegexAndString,
+    CantPostData,
+    V2ChecksCertificates,
+)
 from cmk.update_config.https.conflicts import ForMigration, MigratableCert, MigratableUrl
 from cmk.update_config.https.render import MIGRATE_POSTFIX
 
@@ -48,6 +52,7 @@ def _migrate_method(method: Literal["GET", "HEAD", "DELETE", "POST", "PUT"]) -> 
 
 
 def _migrate_url_params(
+    v2_checks_certificates: V2ChecksCertificates,
     cant_have_regex_and_string: CantHaveRegexAndString,
     cant_post_data: CantPostData,
     url_params: MigratableUrl,
@@ -165,6 +170,11 @@ def _migrate_url_params(
             max_age_new: Mapping[str, object] = {}
         case max_age:
             max_age_new = {"max_age": float(max_age)}
+    match v2_checks_certificates:
+        case V2ChecksCertificates.keep | V2ChecksCertificates.skip:
+            cert: Mapping[str, object] = {}
+        case V2ChecksCertificates.disable:
+            cert = {"cert": ("no_validation", None)}
     content = {**content_header, **body}
     return (
         {
@@ -186,6 +196,7 @@ def _migrate_url_params(
                 **page_size_new,
                 **max_age_new,
             },
+            **cert,
         },
     )
 
@@ -228,6 +239,7 @@ def migrate(for_migration: ForMigration) -> Mapping[str, object]:
         connection, remaining_settings = _migrate_cert_params(value.mode[1], address_family)
     else:
         connection, remaining_settings = _migrate_url_params(
+            for_migration.config.v2_checks_certificates,
             for_migration.config.cant_have_regex_and_string,
             for_migration.config.cant_post_data,
             value.mode[1],

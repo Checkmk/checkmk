@@ -413,7 +413,7 @@ from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
-from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import _operation_dicts
+from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc_endpoints
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
@@ -446,7 +446,7 @@ def _generate_spec(
     if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
         undocumented_tag_groups.add("Checkmk Internal")
 
-    populate_spec(spec, target, undocumented_tag_groups, str(site))
+    populate_spec(spec, target, undocumented_tag_groups)
     generated_spec = spec.to_dict()
     _add_cookie_auth(generated_spec, site)
     if not validate:
@@ -461,7 +461,6 @@ def populate_spec(
     spec: APISpec,
     target: EndpointTarget,
     undocumented_tag_groups: set[str],
-    site_name: str,
 ) -> APISpec:
     endpoint: Endpoint
 
@@ -479,16 +478,19 @@ def populate_spec(
         if target in endpoint.blacklist_in or endpoint.tag_group in undocumented_tag_groups:
             continue
 
-        for path, operation_dict in _operation_dicts(spec, endpoint):
-            ident = endpoint.method, path
+        for doc_endpoint in marshmallow_doc_endpoints(spec, endpoint):
+            ident = doc_endpoint.method, doc_endpoint.path
             if ident in seen_paths:
                 raise ValueError(
                     f"{ident} has already been defined.\n\n"
-                    f"This one: {operation_dict}\n\n"
+                    f"This one: {doc_endpoint.operation_object}\n\n"
                     f"The previous one: {seen_paths[ident]}\n\n"
                 )
-            seen_paths[ident] = operation_dict
-            spec.path(path=path, operations={str(k): v for k, v in operation_dict.items()})
+            seen_paths[ident] = doc_endpoint.operation_object
+            spec.path(
+                path=doc_endpoint.path,
+                operations={str(k): v for k, v in doc_endpoint.operation_object.items()},
+            )
 
     del seen_paths
     return spec

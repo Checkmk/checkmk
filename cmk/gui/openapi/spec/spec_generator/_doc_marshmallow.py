@@ -54,12 +54,16 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
     endpoint_title_and_description_from_docstring,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import (
+    DocEndpoint,
     MarshmallowSchemaDefinitions,
     SpecEndpoint,
 )
 
 
-def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, OperationObject]]:
+def marshmallow_doc_endpoints(
+    spec: APISpec,
+    endpoint: Endpoint,
+) -> Iterator[DocEndpoint]:
     """Generate the openapi spec part of this endpoint.
 
     The result needs to be added to the `apispec` instance manually.
@@ -68,10 +72,10 @@ def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, O
     if endpoint.deprecated_urls is not None:
         for url, werk_id in endpoint.deprecated_urls.items():
             deprecate_self |= url == endpoint.path
-            yield url, _marshmallow_endpoint_to_operation_dict(spec, endpoint, werk_id)
+            yield _marshmallow_endpoint_to_doc_endpoint(url, spec, endpoint, werk_id)
 
     if not deprecate_self:
-        yield endpoint.path, _marshmallow_endpoint_to_operation_dict(spec, endpoint)
+        yield _marshmallow_endpoint_to_doc_endpoint(endpoint.path, spec, endpoint)
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
@@ -126,9 +130,12 @@ DEFAULT_STATUS_CODE_SCHEMAS = {
 }
 
 
-def _marshmallow_endpoint_to_operation_dict(
-    spec: APISpec, endpoint: Endpoint, werk_id: int | None = None
-) -> OperationObject:
+def _marshmallow_endpoint_to_doc_endpoint(
+    effective_path: str,
+    spec: APISpec,
+    endpoint: Endpoint,
+    werk_id: int | None = None,
+) -> DocEndpoint:
     assert endpoint.func is not None, "This object must be used in a decorator environment."
     assert endpoint.operation_id is not None, "This object must be used in a decorator environment."
 
@@ -169,7 +176,15 @@ def _marshmallow_endpoint_to_operation_dict(
         status_descriptions=endpoint.status_descriptions,
         does_redirects=endpoint.does_redirects,
     )
-    return _to_operation_dict(spec, spec_endpoint, schema_definitions, werk_id)
+    return DocEndpoint(
+        path=endpoint.path,
+        effective_path=effective_path,
+        method=endpoint.method,
+        family_name=family_name,
+        doc_group=endpoint.tag_group,
+        doc_sort_index=endpoint.sort,
+        operation_object=_to_operation_dict(spec, spec_endpoint, schema_definitions, werk_id),
+    )
 
 
 def _to_operation_dict(

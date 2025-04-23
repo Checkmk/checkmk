@@ -192,6 +192,10 @@ class MKLivestatusSocketClosed(MKLivestatusSocketError):
     pass
 
 
+class MKLivestatusCertificateError(MKLivestatusSocketError):
+    pass
+
+
 class MKLivestatusConfigError(MKLivestatusException):
     pass
 
@@ -824,6 +828,9 @@ class SingleSiteConnection(Helpers):
             if code == "413":
                 raise MKLivestatusPayloadTooLargeError(error_info)
 
+            if code == "495":
+                raise MKLivestatusCertificateError(error_info)
+
             if code == "502":
                 raise MKLivestatusBadGatewayError(error_info)
 
@@ -859,6 +866,13 @@ class SingleSiteConnection(Helpers):
 
         except suppress_exceptions:
             raise
+
+        except MKLivestatusCertificateError as e:
+            raise MKLivestatusCertificateError(
+                "SSL certificate verification failed. "
+                "The remote certificate(s) might not be trusted. Edit this site's Livestatus encryption to trust them. "
+                "Technical error: %s" % e
+            )
 
         except Exception as e:
             # Catches

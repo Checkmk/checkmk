@@ -68,8 +68,13 @@ class StatParagprahParser(ParagraphParser):
     def parse(self, line: list[str]) -> None:
         stat: dict[str, str] = {}
         for kv_pair in line[1:]:
-            key, value = kv_pair.split("=")
-            stat[key] = value
+            try:
+                key, value = kv_pair.split("=")
+                stat[key] = value
+            except ValueError:
+                # sometimes we get multiple device numbers on the same line
+                # e.g.: 253:0 253:1 rbytes=559349760 wbytes=334268297216 rios=3910 wios=6265888 dbytes=0 dios=0
+                continue
         self.stat[line[0]] = stat
 
 

@@ -1899,7 +1899,7 @@ def _ldap_sync_simple(
         attr_value = ldap_user[attr][0]
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
         if user_attr == "disable_notifications":
-            return {user_attr: {"disable": attr_value == "TRUE"}}
+            return {user_attr: {"disable": True} if ldap_user[attr][0] == "TRUE" else {}}
         return {user_attr: attr_value}
     return {}
 

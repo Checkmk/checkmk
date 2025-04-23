@@ -33,7 +33,7 @@ SMART_POSIX_ALL = [
 
 SECTION_SMART_POSIX_ALL = Section(
     devices={
-        ("DELLBOSS VD", "dd8b62ae0b480010"): ATAAll(
+        "DELLBOSS VD dd8b62ae0b480010": ATAAll(
             device=ATADevice(protocol="ATA", name="/dev/sdb"),
             model_name="DELLBOSS VD",
             serial_number="dd8b62ae0b480010",
@@ -65,7 +65,7 @@ SMART_POSIX_SCAN_ARG = [
 def test_parse_smart_posix_scan_arg() -> None:
     assert parse_smart_posix(SMART_POSIX_SCAN_ARG) == Section(
         devices={
-            ("SAMSUNG MZ7L31T9HBLT-00A07", "S6ESNC0W622008"): ATAAll(
+            "SAMSUNG MZ7L31T9HBLT-00A07 S6ESNC0W622008": ATAAll(
                 device=ATADevice(protocol="ATA", name="/dev/bus/0"),
                 model_name="SAMSUNG MZ7L31T9HBLT-00A07",
                 serial_number="S6ESNC0W622008",
@@ -257,7 +257,7 @@ def test_parse_smart_posix_scan_arg() -> None:
                 ),
                 temperature=Temperature(current=27),
             ),
-            ("DELL PERC H740P Mini", "0098f53cb2b061dd2c00f4f469f0a7ce"): SCSIAll(
+            "DELL PERC H740P Mini 0098f53cb2b061dd2c00f4f469f0a7ce": SCSIAll(
                 device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
                 model_name="DELL PERC H740P Mini",
                 serial_number="0098f53cb2b061dd2c00f4f469f0a7ce",

@@ -22,16 +22,14 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.temperature import check_temperature
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
-from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import ATAAll, ATADevice, Section
 
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
 
 def discovery_smart_ata_temp(
-    params: DiscoveryParam,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> DiscoveryResult:
@@ -39,14 +37,14 @@ def discovery_smart_ata_temp(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    for key, disk in devices.items():
+    for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.temperature is not None:
-            yield Service(item=get_item(disk, params["item_type"][0]), parameters={"key": key})
+            yield Service(item=item)
 
 
 def check_smart_ata_temp(
     item: str,
-    params: TempAndDiscoveredParams,
+    params: TempParamDict,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> CheckResult:
@@ -54,7 +52,7 @@ def check_smart_ata_temp(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    if not isinstance(disk := devices.get(params["key"]), ATAAll) or disk.temperature is None:
+    if not isinstance(disk := devices.get(item), ATAAll) or disk.temperature is None:
         return
 
     yield from check_temperature(
@@ -70,8 +68,6 @@ check_plugin_smart_ata_temp = CheckPlugin(
     sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_ata_temp,
-    discovery_ruleset_name="smart_ata",
-    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_ata_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
@@ -85,7 +81,6 @@ type AtaLevels = (
 
 
 class AtaDiscoveredParams(TypedDict):
-    key: Required[tuple[str, str]]
     id_5: Required[int | None]
     id_10: Required[int | None]
     id_184: Required[int | None]
@@ -122,7 +117,6 @@ DEFAULT_PARAMS: AtaRuleSetParams = {
 
 
 def discover_smart_ata(
-    params: DiscoveryParam,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> DiscoveryResult:
@@ -130,10 +124,9 @@ def discover_smart_ata(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    for key, disk in devices.items():
+    for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.ata_smart_attributes is not None:
             parameters: AtaDiscoveredParams = {
-                "key": key,
                 "id_5": entry.raw.value if (entry := disk.by_id(5)) is not None else None,
                 "id_10": entry.raw.value if (entry := disk.by_id(10)) is not None else None,
                 "id_184": entry.raw.value if (entry := disk.by_id(184)) is not None else None,
@@ -143,10 +136,7 @@ def discover_smart_ata(
                 "id_197": entry.raw.value if (entry := disk.by_id(197)) is not None else None,
                 "id_199": entry.raw.value if (entry := disk.by_id(199)) is not None else None,
             }
-            yield Service(
-                item=get_item(disk, params["item_type"][0]),
-                parameters=parameters,
-            )
+            yield Service(item=item, parameters=parameters)
 
 
 def check_smart_ata(
@@ -177,7 +167,7 @@ def _check_smart_ata(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    if not isinstance(disk := devices.get(params["key"]), ATAAll):
+    if not isinstance(disk := devices.get(item), ATAAll):
         return
 
     if (reallocated_sector_count := disk.by_id(5)) is not None:
@@ -335,8 +325,6 @@ check_plugin_smart_ata_stats = CheckPlugin(
     ],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_ata,
-    discovery_ruleset_name="smart_ata",
-    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_ata,
     check_ruleset_name="smart_ata",
     check_default_parameters=DEFAULT_PARAMS,

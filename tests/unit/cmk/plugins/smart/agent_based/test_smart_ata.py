@@ -41,7 +41,7 @@ STRING_TABLE_ATA = [
 
 SECTION_ATA = Section(
     devices={
-        ("WDC WD3200BUCT-63TWBY0", "XXXATA"): ATAAll(
+        "WDC WD3200BUCT-63TWBY0 XXXATA": ATAAll(
             device=ATADevice(protocol="ATA", name="/dev/sda"),
             model_name="WDC WD3200BUCT-63TWBY0",
             serial_number="XXXATA",
@@ -116,7 +116,7 @@ SECTION_ATA = Section(
 
 SECTION_SCAN_ARG = Section(
     devices={
-        ("WDC WD3200BUCT-63TWBY0", "XXXATA"): SCSIAll(
+        "WDC WD3200BUCT-63TWBY0 XXXATA": SCSIAll(
             device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
             model_name="WDC WD3200BUCT-63TWBY0",
             serial_number="XXXATA",
@@ -135,15 +135,13 @@ def test_parse_smart_ata() -> None:
 def test_discover_smart_ata_stat() -> None:
     assert list(
         discover_smart_ata(
-            {"item_type": ("device_name", None)},
             SECTION_ATA,
             SECTION_SCAN_ARG,
         )
     ) == [
         Service(
-            item="/dev/sda",
+            item="WDC WD3200BUCT-63TWBY0 XXXATA",
             parameters={
-                "key": ("WDC WD3200BUCT-63TWBY0", "XXXATA"),
                 "id_5": 0,
                 "id_10": 0,
                 "id_184": None,
@@ -159,7 +157,6 @@ def test_discover_smart_ata_stat() -> None:
 
 def test_check_smart_ata_stat() -> None:
     ata_params: AtaParams = DEFAULT_PARAMS | {  # type: ignore[assignment]
-        "key": ("WDC WD3200BUCT-63TWBY0", "XXXATA"),
         "id_5": 0,
         "id_10": 0,
         "id_184": None,
@@ -171,7 +168,7 @@ def test_check_smart_ata_stat() -> None:
     }
     assert list(
         _check_smart_ata(
-            "/dev/sda",
+            "WDC WD3200BUCT-63TWBY0 XXXATA",
             ata_params,
             SECTION_ATA,
             SECTION_SCAN_ARG,
@@ -276,7 +273,6 @@ def test_check_command_timeout_critical() -> None:
 def test_check_smart_ata_configured() -> None:
     services = list(
         discover_smart_ata(
-            {"item_type": ("device_name", None)},
             SECTION_ATA,
             SECTION_SCAN_ARG,
         )

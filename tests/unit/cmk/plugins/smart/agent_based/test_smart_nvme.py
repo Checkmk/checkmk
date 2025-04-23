@@ -31,7 +31,7 @@ STRING_TABLE_NVME = [
 
 SECTION_NVME = Section(
     devices={
-        ("PC601 NVMe SK hynix 512GB", "XXXNVMe"): NVMeAll(
+        "PC601 NVMe SK hynix 512GB XXXNVMe": NVMeAll(
             device=NVMeDevice(protocol="NVMe", name="/dev/nvme0"),
             model_name="PC601 NVMe SK hynix 512GB",
             serial_number="XXXNVMe",
@@ -60,13 +60,10 @@ def test_parse_smart_nvme() -> None:
 
 
 def test_discover_smart_nvme_stat() -> None:
-    assert list(
-        discover_smart_nvme({"item_type": ("device_name", None)}, SECTION_NVME, SECTION_NVME)
-    ) == [
+    assert list(discover_smart_nvme(SECTION_NVME, SECTION_NVME)) == [
         Service(
-            item="/dev/nvme0",
+            item="PC601 NVMe SK hynix 512GB XXXNVMe",
             parameters={
-                "key": ("PC601 NVMe SK hynix 512GB", "XXXNVMe"),
                 "critical_warning": 0,
                 "media_errors": 0,
             },
@@ -76,13 +73,12 @@ def test_discover_smart_nvme_stat() -> None:
 
 def test_check_smart_nvme_stat() -> None:
     params: NVMeParams = {  # type: ignore[assignment]
-        "key": ("PC601 NVMe SK hynix 512GB", "XXXNVMe"),
         "critical_warning": 0,
         "media_errors": 0,
     } | DEFAULT_PARAMS
     assert list(
         check_smart_nvme(
-            "/dev/nvme0",
+            "PC601 NVMe SK hynix 512GB XXXNVMe",
             params,
             SECTION_NVME,
             SECTION_NVME,
@@ -111,7 +107,6 @@ def test_check_smart_nvme_stat() -> None:
 
 def test_check_smart_nvme_levels() -> None:
     params: NVMeParams = {  # type: ignore[assignment]
-        "key": ("PC601 NVMe SK hynix 512GB", "XXXNVMe"),
         "critical_warning": 0,
         "media_errors": 0,
     } | {
@@ -125,7 +120,7 @@ def test_check_smart_nvme_levels() -> None:
     }
     assert list(
         check_smart_nvme(
-            "/dev/nvme0",
+            "PC601 NVMe SK hynix 512GB XXXNVMe",
             params,
             SECTION_NVME,
             SECTION_NVME,

@@ -23,7 +23,7 @@ def test_parse_smart_scsi() -> None:
     section = parse_smart_posix(STRING_TABLE_SCSI)
     assert section == Section(
         devices={
-            ("TOSHIBA AL13SXB60EN", "XXX"): SCSIAll(
+            "TOSHIBA AL13SXB60EN XXX": SCSIAll(
                 model_name="TOSHIBA AL13SXB60EN",
                 serial_number="XXX",
                 device=SCSIDevice(protocol="SCSI", name="/dev/da5"),
@@ -53,7 +53,7 @@ def test_parse_smart_scsi_7_3_regression() -> None:
     section = parse_smart_posix(string_table_scsi)
     assert section == Section(
         devices={
-            ("DELL PERC H740P Mini", "serialxxx"): SCSIAll(
+            "DELL PERC H740P Mini serialxxx": SCSIAll(
                 device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
                 model_name="DELL PERC H740P Mini",
                 serial_number="serialxxx",

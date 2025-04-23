@@ -20,58 +20,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import (
     CheckParameters,
-    DiscoveryParameters,
     HostAndItemCondition,
     Topic,
-)
-
-
-def _formspec_discovery_smart() -> Dictionary:
-    return Dictionary(
-        title=Title("Service discovery"),
-        elements={
-            "item_type": DictElement(
-                required=False,
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Select the type of item to discover"),
-                    prefill=DefaultValue(value="model_serial"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="model_serial",
-                            title=Title("Model - Serial"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="device_name",
-                            title=Title("Device name"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                    ],
-                ),
-            ),
-        },
-    )
-
-
-rule_spec_smart_ata_discovery = DiscoveryParameters(
-    title=Title("SMART ATA discovery"),
-    topic=Topic.STORAGE,
-    parameter_form=_formspec_discovery_smart,
-    name="smart_ata",
-)
-
-rule_spec_smart_nvme_discovery = DiscoveryParameters(
-    title=Title("SMART NVMe discovery"),
-    topic=Topic.STORAGE,
-    parameter_form=_formspec_discovery_smart,
-    name="smart_nvme",
-)
-
-rule_spec_smart_scsi_discovery = DiscoveryParameters(
-    title=Title("SMART SCSI discovery"),
-    topic=Topic.STORAGE,
-    parameter_form=_formspec_discovery_smart,
-    name="smart_scsi",
 )
 
 
@@ -241,7 +191,6 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             ),
         },
         ignored_elements=(  # to render `AtaDiscoveredParams` correctly
-            "key",
             "id_5",
             "id_10",
             "id_184",
@@ -385,7 +334,6 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
             ),
         },
         ignored_elements=(  # to render `NVMeDiscoveredParams` correctly
-            "key",
             "critical_warning",
             "media_errors",
         ),

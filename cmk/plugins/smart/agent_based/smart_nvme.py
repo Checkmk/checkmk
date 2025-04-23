@@ -19,14 +19,12 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.temperature import check_temperature
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
-from .smart import DiscoveryParam, get_item, TempAndDiscoveredParams
 from .smart_posix import NVMeAll, NVMeDevice, Section
 
 
 def discovery_smart_nvme_temp(
-    params: DiscoveryParam,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> DiscoveryResult:
@@ -34,20 +32,17 @@ def discovery_smart_nvme_temp(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    for key, disk in devices.items():
+    for item, disk in devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
-            yield Service(
-                item=get_item(disk, params["item_type"][0]),
-                parameters={"key": key},
-            )
+            yield Service(item=item)
 
 
 def check_smart_nvme_temp(
     item: str,
-    params: TempAndDiscoveredParams,
+    params: TempParamDict,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> CheckResult:
@@ -56,7 +51,7 @@ def check_smart_nvme_temp(
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
     if (
-        not isinstance(disk := devices.get(params["key"]), NVMeAll)
+        not isinstance(disk := devices.get(item), NVMeAll)
         or disk.nvme_smart_health_information_log is None
         or disk.nvme_smart_health_information_log.temperature is None
     ):
@@ -75,8 +70,6 @@ check_plugin_smart_nvme_temp = CheckPlugin(
     sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_nvme_temp,
-    discovery_ruleset_name="smart_nvme",
-    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_nvme_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
@@ -105,7 +98,6 @@ class NVMeRuleSetParams(TypedDict):
 
 
 class NVMeDiscoveredParams(TypedDict):
-    key: Required[tuple[str, str]]
     critical_warning: Required[int]
     media_errors: Required[int]
 
@@ -126,7 +118,6 @@ DEFAULT_PARAMS: NVMeRuleSetParams = {
 
 
 def discover_smart_nvme(
-    params: DiscoveryParam,
     section_smart_posix_all: Section | None,
     section_smart_posix_scan_arg: Section | None,
 ) -> DiscoveryResult:
@@ -134,20 +125,16 @@ def discover_smart_nvme(
         **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
-    for key, disk in devices.items():
+    for item, disk in devices.items():
         if (
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
             parameters: NVMeDiscoveredParams = {
-                "key": key,
                 "critical_warning": disk.nvme_smart_health_information_log.critical_warning,
                 "media_errors": disk.nvme_smart_health_information_log.media_errors,
             }
-            yield Service(
-                item=get_item(disk, params["item_type"][0]),
-                parameters=parameters,
-            )
+            yield Service(item=item, parameters=parameters)
 
 
 def check_smart_nvme(
@@ -161,7 +148,7 @@ def check_smart_nvme(
         **(section_smart_posix_all.devices if section_smart_posix_all else {}),
     }
     if (
-        not isinstance(disk := devices.get(params["key"]), NVMeAll)
+        not isinstance(disk := devices.get(item), NVMeAll)
         or disk.nvme_smart_health_information_log is None
     ):
         return
@@ -289,9 +276,7 @@ check_plugin_smart_nvme_stats = CheckPlugin(
     sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_nvme,
-    discovery_ruleset_name="smart_nvme",
-    discovery_default_parameters={"item_type": ("device_name", None)},
     check_function=check_smart_nvme,
     check_ruleset_name="smart_nvme",
-    check_default_parameters={},  # needed to pass discovery parameters along!
+    check_default_parameters=DEFAULT_PARAMS,
 )

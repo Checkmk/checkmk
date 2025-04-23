@@ -119,7 +119,7 @@ class CantOpenDevice(BaseModel, frozen=True):
 
 @dataclass(frozen=True)
 class Section:
-    devices: Mapping[tuple[str, str], NVMeAll | ATAAll | SCSIAll]
+    devices: Mapping[str, NVMeAll | ATAAll | SCSIAll]
     failures: Sequence[FailureAll | CantOpenDevice]
 
 
@@ -131,12 +131,12 @@ def parse_smart_posix(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
     scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
     failures: list[FailureAll | CantOpenDevice] = []
-    devices: dict[tuple[str, str], NVMeAll | ATAAll | SCSIAll] = {}
+    devices: dict[str, NVMeAll | ATAAll | SCSIAll] = {}
     for scan in scans:
         if isinstance(scan, (FailureAll | CantOpenDevice)):
             failures.append(scan)
         else:
-            devices[(scan.model_name, scan.serial_number)] = scan
+            devices[f"{scan.model_name} {scan.serial_number}"] = scan
     return Section(devices=devices, failures=failures)
 
 

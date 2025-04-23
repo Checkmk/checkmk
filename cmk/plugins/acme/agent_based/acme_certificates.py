@@ -5,7 +5,7 @@
 
 
 import time
-from typing import Dict, Tuple, TypedDict
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -26,7 +26,7 @@ class CheckParamT(TypedDict):
     expire_lower: LevelsT
 
 
-Section = Dict[str, Tuple[str, str, str]]
+Section = dict[str, tuple[str, str, str]]
 
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca

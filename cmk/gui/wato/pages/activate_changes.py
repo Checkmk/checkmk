@@ -248,6 +248,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         _changes.add_change(
             action_name="changes-discarded",
             text=msg,
+            user_id=user.id,
             domains=ABCConfigDomain.enabled_domains(),
             need_restart=True,
         )

@@ -259,6 +259,7 @@ class ABCBIMode(WatoMode):
         _changes.add_change(
             action_name=action_name,
             text=text,
+            user_id=user.id,
             domains=[ConfigDomainGUI()],
             sites=site_ids,
         )

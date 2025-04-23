@@ -36,6 +36,7 @@ from cmk.utils.user import UserId
 from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
@@ -647,6 +648,7 @@ def add_changes_after_editing_broker_connection(
     add_change(
         action_name="edit-sites",
         text=change_message,
+        user_id=user.id,
         need_sync=True,
         need_restart=True,
         sites=[omd_site()] + sites,
@@ -673,6 +675,7 @@ def add_changes_after_editing_site_connection(
     add_change(
         action_name="edit-sites",
         text=change_message,
+        user_id=user.id,
         sites=sites_to_update,
         # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
         # significant more time to restart than the other domains, we now try to be more specific
@@ -715,6 +718,7 @@ def add_changes_after_editing_site_connection(
         add_change(
             action_name="edit-sites",
             text=change_message,
+            user_id=user.id,
             sites=[omd_site()],
             domains=[ConfigDomainGUI()],
         )

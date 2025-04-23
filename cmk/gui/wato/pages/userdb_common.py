@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -208,6 +209,7 @@ def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId]) -> No
     _changes.add_change(
         action_name=action_name,
         text=text,
+        user_id=user.id,
         domains=[ConfigDomainGUI()],
         sites=sites,
     )

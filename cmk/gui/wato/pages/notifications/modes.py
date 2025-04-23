@@ -538,6 +538,7 @@ class ABCNotificationsMode(ABCEventsMode):
         _changes.add_change(
             action_name=action_name,
             text=text,
+            user_id=user.id,
             need_restart=False,
         )
 
@@ -3428,6 +3429,7 @@ class ABCNotificationParameterMode(WatoMode):
         _changes.add_change(
             action_name=action_name,
             text=text,
+            user_id=user.id,
             need_restart=False,
         )
 
@@ -3739,6 +3741,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     def _add_change(self, *, action_name: str, text: str) -> None:
         _changes.add_change(
             action_name=action_name,
+            user_id=user.id,
             text=text,
             need_restart=False,
         )

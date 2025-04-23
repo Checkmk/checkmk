@@ -22,6 +22,7 @@ from cmk.utils.timeperiod import (
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
@@ -119,6 +120,7 @@ def delete_timeperiod(name: TimeperiodName) -> None:
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Deleted time period %s") % name,
+        user_id=user.id,
     )
 
 
@@ -135,6 +137,7 @@ def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Modified time period %s") % name,
+        user_id=user.id,
     )
 
 
@@ -151,6 +154,7 @@ def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Created new time period %s") % name,
+        user_id=user.id,
     )
 
 

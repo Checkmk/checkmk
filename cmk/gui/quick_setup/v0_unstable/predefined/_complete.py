@@ -356,6 +356,7 @@ def _create_and_save_special_agent_bundle(
     add_change(
         action_name="create-quick-setup",
         text=_("Created Quick setup {bundle_id}").format(bundle_id=bundle_id),
+        user_id=user.id,
         prevent_discard_changes=True,
     )
 

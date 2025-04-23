@@ -460,6 +460,7 @@ class Discovery:
         _changes.add_service_change(
             action_name="set-autochecks",
             text=message,
+            user_id=user.id,
             object_ref=self._host.object_ref(),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([self._host.name()])},
@@ -719,6 +720,7 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
         _changes.add_service_change(
             action_name="update-host-labels",
             text=message,
+            user_id=user.id,
             object_ref=host.object_ref(),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
@@ -1013,6 +1015,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
         _changes.add_service_change(
             action_name="refresh-autochecks",
             text=_("Refreshed check configuration of host '%s'") % host.name(),
+            user_id=user.id,
             object_ref=host.object_ref(),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},

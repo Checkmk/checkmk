@@ -45,6 +45,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.check_mk_automations import (
@@ -718,6 +719,7 @@ class Ruleset:
             action_name="new-rule",
             text=_l('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
+            user_id=user.id,
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
@@ -760,6 +762,7 @@ class Ruleset:
             action_name="new-rule",
             text=_('Created new rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), folder.alias_path()),
+            user_id=user.id,
             sites=folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
@@ -929,6 +932,7 @@ class Ruleset:
             action_name="edit-rule",
             text=_l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
+            user_id=user.id,
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
             object_ref=rule.object_ref(),
@@ -947,6 +951,7 @@ class Ruleset:
                 action_name="edit-rule",
                 text=_l('Deleted rule #%d in ruleset "%s" in folder "%s"')
                 % (index, self.title(), rule.folder.alias_path()),
+                user_id=user.id,
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
             )
@@ -965,6 +970,7 @@ class Ruleset:
             action_name="edit-ruleset",
             text=_l('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
             % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
+            user_id=user.id,
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
         )

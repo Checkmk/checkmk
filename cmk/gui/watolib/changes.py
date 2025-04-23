@@ -18,7 +18,6 @@ import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.config import active_config
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
@@ -36,9 +35,9 @@ def add_change(
     *,
     action_name: str,
     text: LogMessage,
+    user_id: UserId | None,
     object_ref: ObjectRef | None = None,
     diff_text: str | None = None,
-    add_user: bool = True,
     need_sync: bool | None = None,
     need_restart: bool | None = None,
     need_apache_reload: bool | None = None,
@@ -55,7 +54,7 @@ def add_change(
         action=action_name,
         message=text,
         object_ref=object_ref,
-        user_id=user.id if add_user else UserId(""),
+        user_id=user_id,
         use_git=active_config.wato_use_git,
         diff_text=diff_text,
     )
@@ -67,7 +66,7 @@ def add_change(
         action_name,
         text,
         object_ref,
-        add_user,
+        user_id,
         need_sync,
         need_restart,
         need_apache_reload,
@@ -96,7 +95,7 @@ class ActivateChangesWriter:
         action_name: str,
         text: LogMessage,
         object_ref: ObjectRef | None,
-        add_user: bool,
+        user_id: UserId | None,
         need_sync: bool | None,
         need_restart: bool | None,
         need_apache_reload: bool | None,
@@ -126,7 +125,7 @@ class ActivateChangesWriter:
                 action_name,
                 text,
                 object_ref,
-                add_user,
+                user_id,
                 need_sync,
                 need_restart,
                 need_apache_reload,
@@ -146,7 +145,7 @@ class ActivateChangesWriter:
         action_name: str,
         text: LogMessage,
         object_ref: ObjectRef | None,
-        add_user: bool,
+        user_id: UserId | None,
         need_sync: bool | None,
         need_restart: bool | None,
         need_apache_reload: bool | None,
@@ -178,7 +177,7 @@ class ActivateChangesWriter:
                 "action_name": action_name,
                 "text": "%s" % text,
                 "object": object_ref,
-                "user_id": user.id if add_user else None,
+                "user_id": user_id,
                 "domains": [d.ident() for d in domains],
                 "time": time.time(),
                 "need_sync": need_sync,
@@ -197,6 +196,7 @@ def add_service_change(
     *,
     action_name: str,
     text: str,
+    user_id: UserId | None,
     object_ref: ObjectRef,
     domains: Sequence[ABCConfigDomain],
     domain_settings: DomainSettings,
@@ -207,6 +207,7 @@ def add_service_change(
     add_change(
         action_name=action_name,
         text=text,
+        user_id=user_id,
         object_ref=object_ref,
         sites=[site_id],
         diff_text=diff_text,

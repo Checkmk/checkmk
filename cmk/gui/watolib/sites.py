@@ -46,6 +46,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
     has_wato_slave_sites,
     is_replication_enabled,
@@ -581,6 +582,7 @@ class SiteManagement:
         cmk.gui.watolib.changes.add_change(
             action_name="edit-sites",
             text=_("Deleted site %s") % site_id,
+            user_id=user.id,
             domains=domains,
             # Exclude site which is about to be removed. The activation won't be executed for that
             # site anymore, so there is no point in adding a change for this site

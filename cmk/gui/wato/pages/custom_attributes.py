@@ -17,6 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -195,11 +196,13 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             _changes.add_change(
                 action_name="edit-%sattr" % self._type,
                 text=_("Create new %s attribute %s") % (self._type, self._name),
+                user_id=user.id,
             )
         else:
             _changes.add_change(
                 action_name="edit-%sattr" % self._type,
                 text=_("Modified %s attribute %s") % (self._type, self._name),
+                user_id=user.id,
             )
             self._attr["title"] = title
             self._attr["topic"] = topic
@@ -516,6 +519,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
         _changes.add_change(
             action_name="edit-%sattrs" % self._type,
             text=_("Deleted attribute %s") % (delname),
+            user_id=user.id,
         )
         return redirect(self.mode_url())
 

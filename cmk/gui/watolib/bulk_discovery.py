@@ -473,6 +473,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 result.self_new_host_labels,
                 result.self_total_host_labels,
             ),
+            user_id=user.id,
             object_ref=host.object_ref(),
             domains=[config_domain_registry[CORE_DOMAIN]],
             domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},

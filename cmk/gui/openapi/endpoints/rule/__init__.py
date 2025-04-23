@@ -182,6 +182,7 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
         action_name="edit-rule",
         text=_l('Changed properties of rule "%s", moved from folder "%s" to top of folder "%s"')
         % (source_entry.rule.id, source_entry.folder.title(), dest_folder.title()),
+        user_id=user.id,
         sites=list(set(affected_sites)),
         object_ref=source_entry.rule.object_ref(),
     )

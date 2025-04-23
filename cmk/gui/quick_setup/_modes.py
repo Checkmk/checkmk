@@ -280,6 +280,7 @@ class ModeEditConfigurationBundles(WatoMode):
         add_change(
             action_name="delete-quick-setup",
             text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
+            user_id=user.id,
             prevent_discard_changes=prevent_discard_changes,
         )
 

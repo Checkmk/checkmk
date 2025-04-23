@@ -252,6 +252,7 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
     add_change(
         action_name="ding",
         text="dong",
+        user_id=UserId("calvin"),
         sites=[SiteId("a")],
     )
     add_to_site_mock.assert_called_once()
@@ -261,6 +262,7 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
         add_change(
             action_name="ding",
             text="dong",
+            user_id=UserId("calvin"),
             sites=[SiteId("a")],
         )
     add_to_site_mock.assert_not_called()
@@ -269,6 +271,7 @@ def test_disable_activate_changes_writer(mocker: MockerFixture, request_context:
     add_change(
         action_name="ding",
         text="dong",
+        user_id=UserId("calvin"),
         sites=[SiteId("a")],
     )
     add_to_site_mock.assert_called_once()

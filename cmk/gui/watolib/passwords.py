@@ -53,6 +53,7 @@ def _add_change(ident: str, change_type: str) -> None:
         add_change(
             action_name="add-password",
             text=f"Added the password {ident}",
+            user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
         )
@@ -60,6 +61,7 @@ def _add_change(ident: str, change_type: str) -> None:
         add_change(
             action_name="edit-password",
             text=f"Edited the password '{ident}'",
+            user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
         )
@@ -67,6 +69,7 @@ def _add_change(ident: str, change_type: str) -> None:
         add_change(
             action_name="delete-password",
             text=f"Removed the password '{ident}'",
+            user_id=user.id,
             domains=[ConfigDomainCore()],
             sites=None,
         )

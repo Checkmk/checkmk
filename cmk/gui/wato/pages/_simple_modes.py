@@ -20,6 +20,7 @@ from typing import Any, cast, Generic, TypeVar
 from cmk.ccc.site import SiteId
 
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms
@@ -38,6 +39,7 @@ from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Heade
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -164,12 +166,14 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         *,
         action: str,
         text: str,
+        user_id: UserId | None,
         affected_sites: list[SiteId] | None,
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
         _changes.add_change(
             action_name=f"{action}-{self._mode_type.type_name()}",
             text=text,
+            user_id=user_id,
             domains=self._mode_type.affected_config_domains(),
             sites=affected_sites,
         )
@@ -268,6 +272,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         self._add_change(
             action="delete",
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
+            user_id=user.id,
             affected_sites=self._mode_type.affected_sites(entry),
         )
         self._store.save(entries)
@@ -719,6 +724,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             self._add_change(
                 action="add",
                 text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                user_id=user.id,
                 affected_sites=self._mode_type.affected_sites(self._entry),
             )
         else:
@@ -736,6 +742,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             self._add_change(
                 action="edit",
                 text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                user_id=user.id,
                 affected_sites=affected_sites,
             )
 

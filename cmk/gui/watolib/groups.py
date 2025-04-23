@@ -171,6 +171,7 @@ def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> N
     add_change(
         action_name=action_name,
         text=text,
+        user_id=user.id,
         sites=customer_api().customer_group_sites(group),
     )
 

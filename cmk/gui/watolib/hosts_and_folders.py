@@ -2194,6 +2194,7 @@ class Folder(FolderProtocol):
         add_change(
             action_name="new-folder",
             text=_l("Created new folder %s") % new_subfolder.alias_path(),
+            user_id=user.id,
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
@@ -2220,6 +2221,7 @@ class Folder(FolderProtocol):
         add_change(
             action_name="delete-folder",
             text=_l("Deleted folder %s") % subfolder.alias_path(),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
         )
@@ -2292,6 +2294,7 @@ class Folder(FolderProtocol):
         add_change(
             action_name="move-folder",
             text=_l("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+            user_id=user.id,
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
@@ -2347,6 +2350,7 @@ class Folder(FolderProtocol):
         add_change(
             action_name="edit-folder",
             text=_l("Edited properties of folder %s") % self.title(),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
@@ -2428,6 +2432,7 @@ class Folder(FolderProtocol):
         add_change(
             action_name="create-host",
             text=_l("Created new host %s.") % host_name,
+            user_id=user.id,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
@@ -2462,6 +2467,7 @@ class Folder(FolderProtocol):
             add_change(
                 action_name="delete-host",
                 text=_l("Deleted host %s") % host_name,
+                user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=[host.site_id()],
                 domains=[config_domain_registry[CORE_DOMAIN]],
@@ -2577,6 +2583,7 @@ class Folder(FolderProtocol):
                     new_folder_text,
                     target_folder._id,
                 ),
+                user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=affected_sites,
             )
@@ -2628,6 +2635,7 @@ class Folder(FolderProtocol):
             action_name="rename-parent",
             text=_l('Renamed parent from %s to %s in folder "%s"')
             % (oldname, newname, self.alias_path()),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
         )
@@ -3387,6 +3395,7 @@ class Host:
         add_change(
             action_name="edit-host",
             text=_l("Modified host %s.") % self.name(),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
@@ -3425,6 +3434,7 @@ class Host:
         add_change(
             action_name="edit-host",
             text=_l("Removed explicit attributes of host %s.") % self.name(),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
@@ -3479,6 +3489,7 @@ class Host:
         add_change(
             action_name="rename-node",
             text=_l("Renamed cluster node from %s into %s.") % (oldname, newname),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3496,6 +3507,7 @@ class Host:
         add_change(
             action_name="rename-parent",
             text=_l("Renamed parent from %s into %s.") % (oldname, newname),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3506,6 +3518,7 @@ class Host:
         add_change(
             action_name="rename-host",
             text=_l("Renamed host from %s into %s.") % (self.name(), new_name),
+            user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,

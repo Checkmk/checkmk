@@ -31,6 +31,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
     make_simple_form_page_menu,
@@ -123,6 +124,7 @@ class ModeRoles(WatoMode):
             _changes.add_change(
                 action_name="edit-roles",
                 text=_("Deleted role '%s'") % role_id,
+                user_id=user.id,
                 sites=get_login_sites(),
             )
 
@@ -132,6 +134,7 @@ class ModeRoles(WatoMode):
             _changes.add_change(
                 action_name="edit-roles",
                 text=_("Created new role '%s'") % role_id,
+                user_id=user.id,
                 sites=get_login_sites(),
             )
 
@@ -269,6 +272,7 @@ class ModeRoleTwoFactor(WatoMode):
         _changes.add_change(
             action_name="edit-roles",
             text=_("Modified user role '%s'") % self._role_id,
+            user_id=user.id,
             sites=get_login_sites(),
         )
         return redirect(mode_url(ModeRoles.name()))
@@ -353,6 +357,7 @@ class ModeEditRole(WatoMode):
         _changes.add_change(
             action_name="edit-roles",
             text=_("Modified user role '%s'") % new_id,
+            user_id=user.id,
             sites=get_login_sites(),
         )
         return url

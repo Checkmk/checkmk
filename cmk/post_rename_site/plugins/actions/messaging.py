@@ -10,6 +10,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import get_all_replicated_sites
 from cmk.gui.watolib.broker_certificates import (
     clean_remote_sites_certs,
@@ -38,6 +39,7 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
     add_change(
         action_name="edit-sites",
         text=_("Renamed site %s") % old_site_id,
+        user_id=user.id,
         domains=[ConfigDomainGUI()],
         sites=list(get_all_replicated_sites()),
         need_restart=True,

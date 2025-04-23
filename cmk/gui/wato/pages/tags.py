@@ -20,6 +20,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -212,6 +213,7 @@ class ModeTags(ABCTagMode):
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed tag group %s (%s)") % (message, del_id),
+                user_id=user.id,
             )
             if isinstance(message, str):
                 flash(message)
@@ -276,6 +278,7 @@ class ModeTags(ABCTagMode):
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
+                user_id=user.id,
             )
             if isinstance(message, str):
                 flash(message)
@@ -298,6 +301,7 @@ class ModeTags(ABCTagMode):
         _changes.add_change(
             action_name="edit-tags",
             text=_("Changed order of tag groups"),
+            user_id=user.id,
         )
         return None
 
@@ -791,6 +795,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             _changes.add_change(
                 action_name="edit-hosttags",
                 text=_("Created new host tag group '%s'") % changed_tag_group.id,
+                user_id=user.id,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -819,6 +824,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         _changes.add_change(
             action_name="edit-hosttags",
             text=_("Edited host tag group %s (%s)") % (message, self._id),
+            user_id=user.id,
         )
         if isinstance(message, str):
             flash(message)

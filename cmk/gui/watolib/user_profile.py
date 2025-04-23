@@ -121,7 +121,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
                 add_change(
                     action_name="edit-users",
                     text=_l("Password changed (sync failed: %s)") % result.error_text,
-                    add_user=False,
+                    user_id=None,
                     sites=[result.site_id],
                     need_restart=False,
                 )
@@ -173,7 +173,11 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
     _synchronize_profiles_to_sites(logger, profiles_to_synchronize)
 
     if changes and active_config.wato_enabled and not is_wato_slave_site():
-        add_change(action_name="edit-users", text="<br>".join(changes), add_user=False)
+        add_change(
+            action_name="edit-users",
+            text="<br>".join(changes),
+            user_id=None,
+        )
 
 
 def push_user_profiles_to_site_transitional_wrapper(

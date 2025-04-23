@@ -218,6 +218,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                 action_name="edit-ruleset",
                 text=_l("Renamed host in %d rulesets of folder %s")
                 % (len(changed_folder_rulesets), folder.title()),
+                user_id=user.id,
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
             )
@@ -252,6 +253,7 @@ def _rename_hosts_in_check_mk(
         add_change(
             action_name="renamed-hosts",
             text=message,
+            user_id=user.id,
             sites=[site_id],
             need_restart=False,
             prevent_discard_changes=True,

@@ -86,6 +86,7 @@ def add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
     add_change(
         action_name="edit-users",
         text=_l("Profile changed (sync failed: %s)") % result,
+        user_id=user.id,
         sites=[site_id],
         need_restart=False,
     )

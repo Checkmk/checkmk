@@ -274,6 +274,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
             add_change(
                 action_name="cmk-update-config",
                 text="Successfully updated Checkmk configuration",
+                user_id=None,
                 need_sync=True,
             )
 

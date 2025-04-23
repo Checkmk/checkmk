@@ -1618,6 +1618,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         _changes.add_change(
             action_name=action_name,
             text=text,
+            user_id=user.id,
             domains=[self._config_domain],
             sites=_get_event_console_sync_sites(),
         )
@@ -2658,6 +2659,7 @@ def _add_change_for_sites(
     _changes.add_change(
         action_name=action_name,
         text=text,
+        user_id=user.id,
         domains=[config_domain],
         sites=sites_,
     )

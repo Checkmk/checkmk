@@ -402,6 +402,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         _changes.add_change(
             action_name="edit-configvar",
             text=msg,
+            user_id=user.id,
             sites=self._affected_sites(),
             domains=[(domain := self._config_variable.domain())],
             need_restart=self._config_variable.need_restart(),
@@ -599,6 +600,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         _changes.add_change(
             action_name="edit-configvar",
             text=msg,
+            user_id=user.id,
             domains=[(domain := config_variable.domain())],
             need_restart=config_variable.need_restart(),
             need_apache_reload=config_variable.need_apache_reload(),

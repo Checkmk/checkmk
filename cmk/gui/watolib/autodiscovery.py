@@ -89,6 +89,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 add_service_change(
                     action_name="autodiscovery",
                     text=message,
+                    user_id=user.id,
                     object_ref=host.object_ref(),
                     domains=[config_domain_registry[CORE_DOMAIN]],
                     domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},

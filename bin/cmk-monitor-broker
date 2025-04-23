@@ -95,7 +95,7 @@ _delete_tracing() {
 }
 
 query() {
-    _get_user_config | curl --config - "http://localhost:${MANAGEMENT_API_PORT}/${1}"
+    _get_user_config | curl --config - --fail "http://localhost:${MANAGEMENT_API_PORT}/${1}"
 }
 
 enable_tracing() {

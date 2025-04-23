@@ -74,23 +74,27 @@ def analyse_cluster_labels(
 
 
 def discover_host_labels(
-    host_name: HostName,
+    node_name: HostName,
     host_label_plugins: SectionMap[HostLabelPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Sequence[_HostLabel]:
+    """Discover host labels for a node.
+
+    This function makes no sense to be called for a cluster.
+    """
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
             host_label_plugins,
-            host_key=HostKey(host_name, SourceType.HOST),
+            host_key=HostKey(node_name, SourceType.HOST),
             providers=providers,
             on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
             host_label_plugins,
-            host_key=HostKey(host_name, SourceType.MANAGEMENT),
+            host_key=HostKey(node_name, SourceType.MANAGEMENT),
             providers=providers,
             on_error=on_error,
         ),

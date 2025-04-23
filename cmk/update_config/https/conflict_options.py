@@ -23,6 +23,7 @@ class ConflictType(enum.Enum):
     cant_construct_url = "cant-construct-url"
     cant_migrate_proxy = "cant-migrate-proxy"
     cant_have_regex_and_string = "cant-have-regex-and-string"
+    v2_checks_certificates = "v2-checks-certificates"
 
 
 class SSLIncompatible(enum.Enum):
@@ -278,6 +279,35 @@ class CantHaveRegexAndString(enum.Enum):
         return "must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`, but not both"
 
 
+class V2ChecksCertificates(enum.Enum):
+    skip = "skip"
+    keep = "keep"
+    disable = "disable"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.v2_checks_certificates
+
+    @classmethod
+    def default(cls) -> "V2ChecksCertificates":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case V2ChecksCertificates.skip:
+                return "do not migrate rule"
+            case V2ChecksCertificates.keep:
+                return "migrate with certificate validation"
+            case V2ChecksCertificates.disable:
+                return "create the rule and ignore certificates"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return (
+            "v1 did not check if the certificate is valid while v2 checks the validity by default"
+        )
+
+
 class Config(BaseModel):
     ssl_incompatible: SSLIncompatible = SSLIncompatible.default()
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.default()
@@ -289,6 +319,7 @@ class Config(BaseModel):
     v1_checks_redirect_response: V1ChecksRedirectResponse = V1ChecksRedirectResponse.default()
     cant_construct_url: CantConstructURL = CantConstructURL.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
+    v2_checks_certificates: V2ChecksCertificates = V2ChecksCertificates.default()
 
 
 def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
@@ -319,6 +350,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
     _add_argument(parser, V1ChecksRedirectResponse, V1ChecksRedirectResponse.default())
     _add_argument(parser, CantConstructURL, CantConstructURL.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
+    _add_argument(parser, V2ChecksCertificates, V2ChecksCertificates.default())
     return parser
 
 

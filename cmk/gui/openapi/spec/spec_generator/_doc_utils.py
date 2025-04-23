@@ -3,23 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
-import hashlib
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from collections.abc import Callable, Mapping
 
 from apispec import APISpec
 from apispec.utils import dedent
-from marshmallow import Schema
-from marshmallow.fields import Field
-from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
-    LocationType,
     OpenAPITag,
-    RawParameter,
-    SchemaParameter,
     TagGroup,
 )
 from cmk.gui.permissions import permission_registry
@@ -278,58 +270,6 @@ def _permission_descriptions(
 
     _add_desc(perms, 0, _description)
     return "\n".join(_description) + "\n"
-
-
-def _coalesce_schemas(
-    parameters: Sequence[tuple[LocationType, Sequence[RawParameter]]],
-) -> Sequence[SchemaParameter]:
-    rv: list[SchemaParameter] = []
-    for location, params in parameters:
-        if not params:
-            continue
-
-        to_convert: dict[str, Field] = {}
-        for param in params:
-            if isinstance(param, SchemaMeta):
-                rv.append({"in": location, "schema": param})
-            else:
-                to_convert.update(param)
-
-        if to_convert:
-            rv.append({"in": location, "schema": _to_named_schema(to_convert)})
-
-    return rv
-
-
-def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
-    attrs: dict[str, Any] = _patch_regex(fields_.copy())
-    attrs["Meta"] = type(
-        "GeneratedMeta",
-        (Schema.Meta,),
-        {"register": True},
-    )
-    _hash = hashlib.sha256()
-
-    def _update(d_):
-        for key, value in sorted(d_.items()):
-            _hash.update(str(key).encode("utf-8"))
-            if hasattr(value, "metadata"):
-                _update(value.metadata)
-            else:
-                _hash.update(str(value).encode("utf-8"))
-
-    _update(fields_)
-
-    name = f"GeneratedSchema{_hash.hexdigest()}"
-    schema_cls: type[Schema] = type(name, (Schema,), attrs)
-    return schema_cls
-
-
-def _patch_regex(fields: dict[str, Field]) -> dict[str, Field]:
-    for _, value in fields.items():
-        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
-            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
-    return fields
 
 
 def _docstring_description(docstring: str | None) -> str | None:

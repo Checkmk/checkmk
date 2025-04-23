@@ -4,11 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import hashlib
 import http.client
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 from apispec import APISpec
+from marshmallow import Schema
+from marshmallow.fields import Field
+from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
 from cmk.gui.openapi.restful_objects import Endpoint
@@ -28,6 +32,7 @@ from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import (
     ContentObject,
     ErrorStatusCodeInt,
+    LocationType,
     OpenAPIParameter,
     OpenAPITag,
     OperationObject,
@@ -35,11 +40,11 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     PathItem,
     RawParameter,
     ResponseType,
+    SchemaParameter,
     StatusCodeInt,
 )
 from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
 from cmk.gui.openapi.spec.spec_generator._doc_utils import (
-    _coalesce_schemas,
     _docstring_description,
     _docstring_name,
     add_tag,
@@ -455,3 +460,55 @@ class MarshmallowResponses:
             "content": {"application/problem+json": {"schema": error_schema}},
         }
         return response
+
+
+def _coalesce_schemas(
+    parameters: Sequence[tuple[LocationType, Sequence[RawParameter]]],
+) -> Sequence[SchemaParameter]:
+    rv: list[SchemaParameter] = []
+    for location, params in parameters:
+        if not params:
+            continue
+
+        to_convert: dict[str, Field] = {}
+        for param in params:
+            if isinstance(param, SchemaMeta):
+                rv.append({"in": location, "schema": param})
+            else:
+                to_convert.update(param)
+
+        if to_convert:
+            rv.append({"in": location, "schema": _to_named_schema(to_convert)})
+
+    return rv
+
+
+def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
+    attrs: dict[str, Any] = _patch_regex(fields_.copy())
+    attrs["Meta"] = type(
+        "GeneratedMeta",
+        (Schema.Meta,),
+        {"register": True},
+    )
+    _hash = hashlib.sha256()
+
+    def _update(d_):
+        for key, value in sorted(d_.items()):
+            _hash.update(str(key).encode("utf-8"))
+            if hasattr(value, "metadata"):
+                _update(value.metadata)
+            else:
+                _hash.update(str(value).encode("utf-8"))
+
+    _update(fields_)
+
+    name = f"GeneratedSchema{_hash.hexdigest()}"
+    schema_cls: type[Schema] = type(name, (Schema,), attrs)
+    return schema_cls
+
+
+def _patch_regex(fields: dict[str, Field]) -> dict[str, Field]:
+    for _, value in fields.items():
+        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
+            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
+    return fields

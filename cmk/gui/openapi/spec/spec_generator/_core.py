@@ -413,7 +413,7 @@ from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
-from cmk.gui.openapi.spec.spec_generator._operations import _operation_dicts
+from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import _operation_dicts
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins

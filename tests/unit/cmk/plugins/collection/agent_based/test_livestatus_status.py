@@ -10,8 +10,6 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.checkengine.parameters import Parameters
-
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import livestatus_status
 
@@ -668,7 +666,7 @@ def test_check_new_counters_in_oldstabe(
     yielded_results = list(
         livestatus_status._generate_livestatus_results(
             "oldstable",
-            Parameters(livestatus_status.livestatus_status_default_levels),
+            livestatus_status.livestatus_status_default_levels,
             PARSED_STATUS,
             PARSED_SSL,
             {
@@ -771,7 +769,7 @@ def test_check() -> None:
         yielded_results = list(
             livestatus_status._generate_livestatus_results(
                 "heute",
-                Parameters(livestatus_status.livestatus_status_default_levels),
+                livestatus_status.livestatus_status_default_levels,
                 PARSED_STATUS,
                 PARSED_SSL,
                 {

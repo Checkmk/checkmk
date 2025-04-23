@@ -46,16 +46,17 @@ def _parse_status_txt(status_txt: str) -> Status:
 
 
 def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
+    section: ipmi_utils.Section = {}
+
     # This function deals with several generations of ipmi-sensors output.
     # In Werk #16691 we made the output of the linux agent and the special agent
     # consistent, except for an additional header line not filtered by the linux agent.
     # For now: strip a potential header here, and deal with the output the way we did
     # before. Simplify this once we stop supporting the older agent.
-    if string_table[0][0].strip() == "ID":
-        string_table = string_table[1:]
-
-    section: ipmi_utils.Section = {}
     for line in string_table:
+        # The string table may contain multiple header lines.
+        if line[0].strip() == "ID":
+            continue
         _sid, sensorname, *reading_levels_and_more, status_txt = (
             x.strip(" \n\t\x00") for x in line
         )

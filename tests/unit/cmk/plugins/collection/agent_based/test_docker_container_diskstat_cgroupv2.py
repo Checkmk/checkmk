@@ -70,7 +70,7 @@ AGENT_OUTPUT_59_SEC = """[time]
 253:2 rbytes=434176 wbytes=4841472 rios=106 wios=1182 dbytes=0 dios=0
 259:0 rbytes=559349760 wbytes=0 rios=3910 wios=8674915 dbytes=0 dios=0
 253:0 rbytes=559349760 wbytes=334268297216 rios=3910 wios=6265888 dbytes=0 dios=0
-253:1 rbytes=558915584 wbytes=334263455744 rios=3804 wios=6158994 dbytes=0 dios=0
+253:1 253:8 rbytes=558915584 wbytes=334263455744 rios=3804 wios=6158994 dbytes=0 dios=0
 [names]
 dm-0 253:0
 dm-1 253:1

@@ -37,10 +37,10 @@ from cmk.gui.openapi.permission_tracking import (
     is_permission_tracking_enabled,
 )
 from cmk.gui.openapi.restful_objects.api_error import ApiError
-from cmk.gui.openapi.restful_objects.content_decoder import KnownContentType
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
 from cmk.gui.openapi.restful_objects.params import to_schema
 from cmk.gui.openapi.restful_objects.type_defs import (
+    AcceptFieldType,
     EndpointTarget,
     ErrorStatusCodeInt,
     ETagBehaviour,
@@ -84,7 +84,6 @@ T = TypeVar("T")
 K = TypeVar("K")
 V = TypeVar("V")
 
-AcceptFieldType = KnownContentType | list[KnownContentType]
 Version = str
 WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
 

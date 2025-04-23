@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects.api_error import ApiError
-from cmk.gui.openapi.restful_objects.decorators import AcceptFieldType
 from cmk.gui.openapi.restful_objects.type_defs import (
+    AcceptFieldType,
     EndpointFamilyName,
     EndpointTarget,
     ErrorStatusCodeInt,

@@ -6,7 +6,7 @@
 import http.client
 import io
 import tarfile
-from typing import Any, Literal
+from typing import Any
 
 from marshmallow import Schema
 
@@ -15,11 +15,6 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestContentTypeException,
     RestAPIRequestDataValidationException,
 )
-
-KnownContentType = Literal[
-    "application/json",
-    "application/gzip",
-]
 
 
 def json_decoder(request: Request, request_schema: type[Schema] | None) -> dict[str, Any] | None:

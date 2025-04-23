@@ -219,6 +219,12 @@ CollectionItem = dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]
 
+KnownContentType = Literal[
+    "application/json",
+    "application/gzip",
+]
+AcceptFieldType = KnownContentType | list[KnownContentType]
+
 
 class LinkType(TypedDict):
     rel: str

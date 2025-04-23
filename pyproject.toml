@@ -99,12 +99,6 @@ ignore = [
 "cmk/checkengine/plugin_backend/utils.py" = [
   "UP007", # Use `X | Y` for type annotations
 ]
-"packages/cmk-rulesets/*" = [
-  "UP007", # Use `X | Y` for type annotations
-]
-"packages/cmk-agent-based/*" = [
-  "UP007", # Use `X | Y` for type annotations
-]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

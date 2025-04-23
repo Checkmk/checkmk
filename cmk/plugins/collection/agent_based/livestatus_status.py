@@ -29,6 +29,8 @@ from cmk.plugins.lib.livestatus_status import LivestatusSection
 # accept_passive_host_checks;accept_passive_service_checks;cached_log_messages;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;host_checks;host_checks_rate;interval_length;last_command_check;last_log_rotation;livecheck_overflows;livecheck_overflows_rate;livechecks;livechecks_rate;livestatus_active_connections;livestatus_queued_connections;livestatus_threads;livestatus_version;log_messages;log_messages_rate;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_services;obsess_over_hosts;obsess_over_services;process_performance_data;program_start;program_version;requests;requests_rate;service_checks;service_checks_rate
 # 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
 
+_PEM_PATH_TEMPLATE = "/omd/sites/{site}/etc/ssl/sites/{site}.pem"
+
 livestatus_status_default_levels = {
     "site_stopped": 2,
     "execute_host_checks": 2,
@@ -129,6 +131,13 @@ def check_livestatus_status(
     )
 
 
+def _make_levels(raw_days: tuple[float | None, float | None]) -> None | tuple[float, float]:
+    match raw_days:
+        case float(w), float(c):
+            return (w * 86400.0, c * 86400.0)
+    return None
+
+
 def _check_livestatus_cert(
     section_livestatus_ssl_certs: LivestatusSection,
     item: str,
@@ -140,29 +149,28 @@ def _check_livestatus_cert(
     # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
-    pem_path = f"/omd/sites/{item}/etc/ssl/sites/{item}.pem"
-    valid_until_str = (
-        None
-        if section_livestatus_ssl_certs is None
-        else section_livestatus_ssl_certs.get(item, {}).get(pem_path)
+    if not (
+        valid_until_str := section_livestatus_ssl_certs.get(item, {}).get(
+            _PEM_PATH_TEMPLATE.format(site=item)
+        )
+    ):
+        return
+
+    valid_until = int(valid_until_str)
+    yield Result(
+        state=State.OK,
+        notice="Site certificate valid until %s" % render.date(valid_until),
     )
-    if valid_until_str:
-        valid_until = int(valid_until_str)
-        yield Result(
-            state=State.OK,
-            notice="Site certificate valid until %s" % render.date(valid_until),
-        )
-        secs_left = valid_until - this_time
-        warn_d, crit_d = params["site_cert_days"]
-        yield from check_levels_v1(
-            value=secs_left,
-            label="Expiring in",
-            levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
-            render_func=render.timespan,
-            notice_only=True,
-            boundaries=(0, None),
-        )
-        yield Metric("site_cert_days", secs_left / 86400.0)
+    secs_left = valid_until - this_time
+    yield from check_levels_v1(
+        value=secs_left,
+        label="Expiring in",
+        levels_lower=_make_levels(params["site_cert_days"]),
+        render_func=render.timespan,
+        notice_only=True,
+        boundaries=(0, None),
+    )
+    yield Metric("site_cert_days", secs_left / 86400.0)
 
 
 def _generate_livestatus_results(  # pylint: disable=too-many-branches

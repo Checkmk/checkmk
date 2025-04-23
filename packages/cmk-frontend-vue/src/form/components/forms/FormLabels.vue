@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { type Suggestion } from '@/components/suggestions'
 import CmkList from '@/components/CmkList'
 import { onBeforeUpdate, ref, watch } from 'vue'
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
@@ -93,6 +94,14 @@ const addItem = (item: string | null) => {
   selectedValue.value = null
 }
 
+function filterKeyValuePairs(element: Suggestion) {
+  const key = element.name.split(':')[0]
+  if (key === undefined) {
+    return true
+  }
+  return !(key in value.value)
+}
+
 const deleteItem = (index: number) => {
   keyValuePairs.value.splice(index, 1)
   value.value = arrayToStringMapping(keyValuePairs.value)
@@ -120,7 +129,7 @@ const deleteItem = (index: number) => {
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
-      :filter-on="keyValuePairs"
+      :filter="filterKeyValuePairs"
       @keydown.enter="
         (e: KeyboardEvent) => {
           const v = (e.target as HTMLInputElement).value

@@ -30,7 +30,6 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        filterOn: [],
         size: 7,
         id: 'test'
       }
@@ -44,7 +43,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Search...',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -74,7 +72,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test'
       }
@@ -96,7 +93,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test'
       }
@@ -118,7 +114,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test'
       }
@@ -141,7 +136,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {
@@ -169,7 +163,6 @@ describe('FormAutocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
         size: 7,
         id: 'test',
         'onUpdate:modelValue': (option: string | null) => {

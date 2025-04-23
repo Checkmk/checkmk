@@ -12,6 +12,7 @@ from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.type_defs import (
     ErrorStatusCodeInt,
     ETagBehaviour,
+    OperationObject,
     RawParameter,
     StatusCodeInt,
     TagGroup,
@@ -30,6 +31,7 @@ class MarshmallowSchemaDefinitions:
 
 @dataclass
 class SpecEndpoint:
+    # TODO: shift the implementation to the respective endpoint implementation
     title: str
     description: str | None
     path: str
@@ -44,3 +46,14 @@ class SpecEndpoint:
     permissions_required: permissions.BasePerm | None
     permissions_description: Mapping[str, str] | None
     does_redirects: bool
+
+
+@dataclass
+class DocEndpoint:
+    path: str
+    effective_path: str
+    method: str
+    family_name: str
+    doc_group: TagGroup
+    doc_sort_index: int
+    operation_object: OperationObject

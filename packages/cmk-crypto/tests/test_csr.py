@@ -13,10 +13,12 @@ from dateutil.relativedelta import relativedelta
 from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,
+)
+from cmk.crypto.keys import PrivateKey
+from cmk.crypto.x509 import (
     SubjectAlternativeName,
     X509Name,
 )
-from cmk.crypto.keys import PrivateKey
 
 
 @pytest.mark.parametrize(

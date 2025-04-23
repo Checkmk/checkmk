@@ -37,10 +37,12 @@ from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
+)
+from cmk.crypto.keys import PrivateKey
+from cmk.crypto.x509 import (
     SubjectAlternativeName,
     X509Name,
 )
-from cmk.crypto.keys import PrivateKey
 
 logger = logging.getLogger("cmk.web.background-job")
 _ORG_TEMPLATE = "Checkmk Site {}"

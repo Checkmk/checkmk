@@ -16,13 +16,9 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
 
-from cmk.crypto.certificate import (
-    Certificate,
-    CertificateWithPrivateKey,
-    SubjectAlternativeName,
-    X509Name,
-)
+from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+from cmk.crypto.x509 import SubjectAlternativeName, X509Name
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:

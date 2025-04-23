@@ -24,6 +24,7 @@ py_library(
         "cmk/crypto/secrets.py",
         "cmk/crypto/symmetric.py",
         "cmk/crypto/totp.py",
+        "cmk/crypto/x509.py",
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],

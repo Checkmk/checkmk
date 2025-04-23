@@ -12,7 +12,7 @@ from typing import NoReturn
 
 import pytest
 import time_machine
-from cryptography import x509
+from cryptography import x509 as pyca_x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.crypto.certificate import (
@@ -21,12 +21,14 @@ from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
     InvalidExpiryError,
     PersistedCertificateWithPrivateKey,
-    SubjectAlternativeName,
-    X509Name,
 )
 from cmk.crypto.keys import InvalidSignatureError, PrivateKey
 from cmk.crypto.password import Password
 from cmk.crypto.pem import PEMDecodingError
+from cmk.crypto.x509 import (
+    SubjectAlternativeName,
+    X509Name,
+)
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
@@ -323,12 +325,12 @@ JxDm8nhVOD3txg6wadiqhhdB
 """
     )
     cert = Certificate.load_pem(pem)
-    with pytest.raises(x509.ExtensionNotFound):
+    with pytest.raises(pyca_x509.ExtensionNotFound):
         # The tested cert does not set the key usage extension at all,
         # this should not prevent certificate signing.
         # Only if the extension is there but the key_cert_sign bit is missing the cert should not be
         # used for signing.
         # This is a regression test.
-        cert._cert.extensions.get_extension_for_class(x509.KeyUsage)  # noqa: SLF001
+        cert._cert.extensions.get_extension_for_class(pyca_x509.KeyUsage)  # noqa: SLF001
 
     assert cert.may_sign_certificates()

@@ -32,8 +32,9 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
-from cmk.crypto.certificate import Certificate, CertificatePEM, X509Name
+from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.x509 import X509Name
 
 
 @dataclass

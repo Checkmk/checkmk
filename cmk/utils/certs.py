@@ -25,10 +25,10 @@ from cmk.crypto.certificate import (
     CertificatePEM,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
-    SubjectAlternativeName,
 )
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.crypto.x509 import SubjectAlternativeName
 
 
 class _CNTemplate:

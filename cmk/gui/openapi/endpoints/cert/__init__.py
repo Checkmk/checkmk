@@ -36,7 +36,8 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
-from cmk.crypto.certificate import CertificateSigningRequest, SubjectAlternativeName
+from cmk.crypto.certificate import CertificateSigningRequest
+from cmk.crypto.x509 import SubjectAlternativeName
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 

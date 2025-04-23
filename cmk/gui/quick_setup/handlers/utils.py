@@ -179,6 +179,10 @@ def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormDat
         widget_as_dict["items"] = [
             get_stage_components_from_widget(item, prefill_data) for item in widget.items
         ]
+        if isinstance(widget, Collapsible) and (items := widget_as_dict.get("items", [])):
+            widget_as_dict["open"] = any(
+                item.get("form_spec", {}).get("data", {}) for item in items
+            )
         return widget_as_dict
 
     if isinstance(widget, FormSpecWrapper):

@@ -441,14 +441,31 @@ def main() -> int:
 def _generate_spec(
     spec: APISpec, target: EndpointTarget, site: SiteId, validate: bool = True
 ) -> dict[str, Any]:
+    undocumented_tag_groups = set("Undocumented Endpoint")
+
+    if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
+        undocumented_tag_groups.add("Checkmk Internal")
+
+    populate_spec(spec, target, undocumented_tag_groups, str(site))
+    generated_spec = spec.to_dict()
+    _add_cookie_auth(generated_spec, site)
+    if not validate:
+        return generated_spec
+
+    # TODO: Need to investigate later what is going on here after cleaning up a bit further
+    openapi_spec_validator.validate(generated_spec)  # type: ignore[arg-type]
+    return generated_spec
+
+
+def populate_spec(
+    spec: APISpec,
+    target: EndpointTarget,
+    undocumented_tag_groups: set[str],
+    site_name: str,
+) -> APISpec:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
-
-    undocumented_tag_groups = ["Undocumented Endpoint"]
-
-    if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
-        undocumented_tag_groups.append("Checkmk Internal")
 
     def module_name(func: Any) -> str:
         return f"{func.__module__}.{func.__name__}"
@@ -474,15 +491,7 @@ def _generate_spec(
             spec.path(path=path, operations={str(k): v for k, v in operation_dict.items()})
 
     del seen_paths
-
-    generated_spec = spec.to_dict()
-    _add_cookie_auth(generated_spec, site)
-    if not validate:
-        return generated_spec
-
-    # TODO: Need to investigate later what is going on here after cleaning up a bit further
-    openapi_spec_validator.validate(generated_spec)  # type: ignore[arg-type]
-    return generated_spec
+    return spec
 
 
 _SECURITY_SCHEMES = {

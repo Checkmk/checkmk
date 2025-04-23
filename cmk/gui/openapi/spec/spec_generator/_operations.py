@@ -4,17 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import enum
 import http.client
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 from apispec import APISpec
 from werkzeug.utils import import_string
 
-from cmk.ccc.site import SiteId
-
-from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.api_error import (
     api_custom_error_schema,
@@ -43,19 +39,19 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
 from cmk.gui.openapi.spec.spec_generator._doc_utils import (
-    _add_once,
-    _build_description,
     _coalesce_schemas,
     _docstring_description,
     _docstring_name,
-    _permission_descriptions,
+    add_tag,
+    build_spec_description,
+    build_tag_obj_from_family,
+    DefaultStatusCodeDescription,
+    endpoint_title_and_description_from_docstring,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import (
     MarshmallowSchemaDefinitions,
     SpecEndpoint,
 )
-from cmk.gui.permissions import permission_registry
-from cmk.gui.utils import permission_verification as permissions
 
 
 def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, OperationObject]]:
@@ -71,27 +67,6 @@ def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, O
 
     if not deprecate_self:
         yield endpoint.path, _marshmallow_endpoint_to_operation_dict(spec, endpoint)
-
-
-class DefaultStatusCodeDescription(enum.Enum):
-    Code406 = "The requests accept headers can not be satisfied."
-    Code401 = "The user is not authorized to do this request."
-    Code403 = "Configuration via Setup is disabled."
-    Code404 = "The requested object has not be found."
-    Code422 = "The request could not be processed."
-    Code423 = "The resource is currently locked."
-    Code405 = "Method not allowed: This request is only allowed with other HTTP methods."
-    Code409 = "The request is in conflict with the stored resource."
-    Code415 = "The submitted content-type is not supported."
-    Code302 = (
-        "Either the resource has moved or has not yet completed. "
-        "Please see this resource for further information."
-    )
-    Code400 = "Parameter or validation failure."
-    Code412 = "The value of the If-Match header doesn't match the object's ETag."
-    Code428 = "The required If-Match header is missing."
-    Code200 = "The operation was done successfully."
-    Code204 = "Operation done successfully. No further output."
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
@@ -153,12 +128,12 @@ def _marshmallow_endpoint_to_operation_dict(
     assert endpoint.operation_id is not None, "This object must be used in a decorator environment."
 
     if (family_name := endpoint.family_name) is not None:
-        family_tag_obj = _build_tag_obj_from_family(family_name)
+        family_tag_obj = build_tag_obj_from_family(family_name)
     else:
         family_name, family_tag_obj = _build_tag_obj_from_module(
             import_string(endpoint.func.__module__)
         )
-    _add_tag(spec, family_tag_obj, tag_group=endpoint.tag_group)
+    add_tag(spec, family_tag_obj, tag_group=endpoint.tag_group)
 
     schema_definitions = MarshmallowSchemaDefinitions(
         query_params=endpoint.query_params,
@@ -168,7 +143,7 @@ def _marshmallow_endpoint_to_operation_dict(
         error_schemas=endpoint.error_schemas,
     )
 
-    endpoint_title, endpoint_description = _endpoint_title_and_description_from_docstring(
+    endpoint_title, endpoint_description = endpoint_title_and_description_from_docstring(
         endpoint.func,
         endpoint.operation_id,
     )
@@ -190,25 +165,6 @@ def _marshmallow_endpoint_to_operation_dict(
         does_redirects=endpoint.does_redirects,
     )
     return _to_operation_dict(spec, spec_endpoint, schema_definitions, werk_id)
-
-
-def _endpoint_title_and_description_from_docstring(
-    endpoint_func: Callable, operation_id: str
-) -> tuple[str, str | None]:
-    module_obj = import_string(endpoint_func.__module__)
-
-    try:
-        docstring_name = _docstring_name(endpoint_func.__doc__)
-    except ValueError as exc:
-        raise ValueError(
-            f"Function {module_obj.__name__}:{endpoint_func.__name__} has no docstring."
-        ) from exc
-
-    if not docstring_name:
-        raise RuntimeError(f"Please put a docstring onto {operation_id}")
-
-    docstring_description = _docstring_description(endpoint_func.__doc__)
-    return docstring_name, docstring_description
 
 
 def _to_operation_dict(
@@ -252,7 +208,7 @@ def _to_operation_dict(
 
     operation_spec: OperationSpecType = {
         "tags": [spec_endpoint.family_name],
-        "description": _build_spec_description(
+        "description": build_spec_description(
             endpoint_description=spec_endpoint.description,
             werk_id=werk_id,
             permissions_required=spec_endpoint.permissions_required,
@@ -318,49 +274,6 @@ def _to_operation_dict(
         del operation_spec["parameters"]
 
     return {spec_endpoint.method: operation_spec}
-
-
-def _build_spec_description(
-    endpoint_description: str | None,
-    werk_id: int | None,
-    permissions_required: permissions.BasePerm | None,
-    permissions_description: Mapping[str, str] | None,
-) -> str:
-    # The validator will complain on empty descriptions being set, even though it's valid.
-    spec_description = _build_description(endpoint_description, werk_id)
-
-    if permissions_required is not None:
-        # Check that all the names are known to the system.
-        for perm in permissions_required.iter_perms():
-            if isinstance(perm, permissions.OkayToIgnorePerm):
-                continue
-
-            if perm.name not in permission_registry:
-                # NOTE:
-                #   See rest_api.py. dynamic_permission() have to be loaded before request
-                #   for this to work reliably.
-                raise RuntimeError(
-                    f'Permission "{perm}" is not registered in the permission_registry.'
-                )
-
-        # Write permission documentation in openapi spec.
-        if permissions_spec_description := _permission_descriptions(
-            permissions_required, permissions_description
-        ):
-            if not spec_description:
-                spec_description += "\n\n"
-            spec_description += permissions_spec_description
-
-    return spec_description
-
-
-def _build_tag_obj_from_family(family_name: str) -> OpenAPITag:
-    """Build a tag object from the endpoint family definition"""
-    family = endpoint_family_registry.get(family_name)
-    if family is None:
-        raise ValueError(f"Family {family_name} not found in registry")
-
-    return family.to_openapi_tag()
 
 
 def _build_tag_obj_from_module(module_obj: Any) -> tuple[str, OpenAPITag]:
@@ -542,41 +455,3 @@ class MarshmallowResponses:
             "content": {"application/problem+json": {"schema": error_schema}},
         }
         return response
-
-
-def _add_tag(spec: APISpec, tag: OpenAPITag, tag_group: str | None = None) -> None:
-    name = tag["name"]
-    if name in [t["name"] for t in spec._tags]:
-        return
-
-    spec.tag(dict(tag))
-    if tag_group is not None:
-        _assign_to_tag_group(spec, tag_group, name)
-
-
-def _assign_to_tag_group(spec: APISpec, tag_group: str, name: str) -> None:
-    for group in spec.options.setdefault("x-tagGroups", []):
-        if group["name"] == tag_group:
-            group["tags"].append(name)
-            break
-    else:
-        raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
-
-
-def _add_cookie_auth(check_dict: dict[str, Any], site: SiteId) -> None:
-    """Add the cookie authentication schema to the spec.
-
-    We do this here, because every site has a different cookie name and such can't be predicted
-    before this code here actually runs.
-    """
-    schema_name = "cookieAuth"
-    _add_once(check_dict["security"], {schema_name: []})
-    check_dict["components"]["securitySchemes"][schema_name] = {
-        "in": "cookie",
-        "name": f"auth_{site}",
-        "type": "apiKey",
-        "description": "Any user of Checkmk, who has already logged in, and thus got a cookie "
-        "assigned, can use the REST API. Some actions may or may not succeed due "
-        "to group and permission restrictions. This authentication method has the"
-        "least precedence.",
-    }

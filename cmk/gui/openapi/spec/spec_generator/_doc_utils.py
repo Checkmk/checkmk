@@ -2,19 +2,130 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import hashlib
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from apispec import APISpec
 from apispec.utils import dedent
 from marshmallow import Schema
 from marshmallow.fields import Field
 from marshmallow.schema import SchemaMeta
+from werkzeug.utils import import_string
 
-from cmk.gui.openapi.restful_objects.type_defs import LocationType, RawParameter, SchemaParameter
+from cmk.gui.openapi import endpoint_family_registry
+from cmk.gui.openapi.restful_objects.type_defs import (
+    LocationType,
+    OpenAPITag,
+    RawParameter,
+    SchemaParameter,
+    TagGroup,
+)
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
+
+
+class DefaultStatusCodeDescription(enum.Enum):
+    Code406 = "The requests accept headers can not be satisfied."
+    Code401 = "The user is not authorized to do this request."
+    Code403 = "Configuration via Setup is disabled."
+    Code404 = "The requested object has not be found."
+    Code422 = "The request could not be processed."
+    Code423 = "The resource is currently locked."
+    Code405 = "Method not allowed: This request is only allowed with other HTTP methods."
+    Code409 = "The request is in conflict with the stored resource."
+    Code415 = "The submitted content-type is not supported."
+    Code302 = (
+        "Either the resource has moved or has not yet completed. "
+        "Please see this resource for further information."
+    )
+    Code400 = "Parameter or validation failure."
+    Code412 = "The value of the If-Match header doesn't match the object's ETag."
+    Code428 = "The required If-Match header is missing."
+    Code200 = "The operation was done successfully."
+    Code204 = "Operation done successfully. No further output."
+
+
+def endpoint_title_and_description_from_docstring(
+    endpoint_func: Callable, operation_id: str
+) -> tuple[str, str | None]:
+    module_obj = import_string(endpoint_func.__module__)
+
+    try:
+        docstring_name = _docstring_name(endpoint_func.__doc__)
+    except ValueError as exc:
+        raise ValueError(
+            f"Function {module_obj.__name__}:{endpoint_func.__name__} has no docstring."
+        ) from exc
+
+    if not docstring_name:
+        raise RuntimeError(f"Please put a docstring onto {operation_id}")
+
+    docstring_description = _docstring_description(endpoint_func.__doc__)
+    return docstring_name, docstring_description
+
+
+def build_spec_description(
+    endpoint_description: str | None,
+    werk_id: int | None,
+    permissions_required: permissions.BasePerm | None,
+    permissions_description: Mapping[str, str] | None,
+) -> str:
+    # The validator will complain on empty descriptions being set, even though it's valid.
+    spec_description = _build_description(endpoint_description, werk_id)
+
+    if permissions_required is not None:
+        # Check that all the names are known to the system.
+        for perm in permissions_required.iter_perms():
+            if isinstance(perm, permissions.OkayToIgnorePerm):
+                continue
+
+            if perm.name not in permission_registry:
+                # NOTE:
+                #   See rest_api.py. dynamic_permission() have to be loaded before request
+                #   for this to work reliably.
+                raise RuntimeError(
+                    f'Permission "{perm}" is not registered in the permission_registry.'
+                )
+
+        # Write permission documentation in openapi spec.
+        if permissions_spec_description := _permission_descriptions(
+            permissions_required, permissions_description
+        ):
+            if not spec_description:
+                spec_description += "\n\n"
+            spec_description += permissions_spec_description
+
+    return spec_description
+
+
+def build_tag_obj_from_family(family_name: str) -> OpenAPITag:
+    """Build a tag object from the endpoint family definition"""
+    family = endpoint_family_registry.get(family_name)
+    if family is None:
+        raise ValueError(f"Family {family_name} not found in registry")
+
+    return family.to_openapi_tag()
+
+
+def add_tag(spec: APISpec, tag: OpenAPITag, tag_group: TagGroup | None = None) -> None:
+    name = tag["name"]
+    if name in [t["name"] for t in spec._tags]:
+        return
+
+    spec.tag(dict(tag))
+    if tag_group is not None:
+        _assign_to_tag_group(spec, tag_group, name)
+
+
+def _assign_to_tag_group(spec: APISpec, tag_group: TagGroup, name: str) -> None:
+    for group in spec.options.setdefault("x-tagGroups", []):
+        if group["name"] == tag_group:
+            group["tags"].append(name)
+            break
+    else:
+        raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
 
 
 def _build_description(description_text: str | None, werk_id: int | None = None) -> str:
@@ -190,13 +301,6 @@ def _coalesce_schemas(
     return rv
 
 
-def _patch_regex(fields: dict[str, Field]) -> dict[str, Field]:
-    for _, value in fields.items():
-        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
-            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
-    return fields
-
-
 def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
     attrs: dict[str, Any] = _patch_regex(fields_.copy())
     attrs["Meta"] = type(
@@ -219,6 +323,13 @@ def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
     name = f"GeneratedSchema{_hash.hexdigest()}"
     schema_cls: type[Schema] = type(name, (Schema,), attrs)
     return schema_cls
+
+
+def _patch_regex(fields: dict[str, Field]) -> dict[str, Field]:
+    for _, value in fields.items():
+        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
+            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
+    return fields
 
 
 def _docstring_description(docstring: str | None) -> str | None:
@@ -268,31 +379,3 @@ def _docstring_name(docstring: str | None) -> str:
         raise ValueError("No name for the module defined. Please add a docstring!")
 
     return [part.strip() for part in dedent(docstring).split("\n\n", 1)][0]
-
-
-def _add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
-    """Add an entry to a collection, only once.
-
-    Examples:
-
-        >>> l = []
-        >>> _add_once(l, {'foo': []})
-        >>> l
-        [{'foo': []}]
-
-        >>> _add_once(l, {'foo': []})
-        >>> l
-        [{'foo': []}]
-
-    Args:
-        coll:
-        to_add:
-
-    Returns:
-
-    """
-    if to_add in coll:
-        return None
-
-    coll.append(to_add)
-    return None

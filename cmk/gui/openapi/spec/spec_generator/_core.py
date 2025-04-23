@@ -413,7 +413,7 @@ from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
-from cmk.gui.openapi.spec.spec_generator._operations import _add_cookie_auth, _operation_dicts
+from cmk.gui.openapi.spec.spec_generator._operations import _operation_dicts
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
@@ -600,3 +600,50 @@ def _redoc_spec() -> ReDocSpec:
         ],
         "security": [{sec_scheme_name: []} for sec_scheme_name in _SECURITY_SCHEMES],
     }
+
+
+def _add_cookie_auth(check_dict: dict[str, Any], site: SiteId) -> None:
+    """Add the cookie authentication schema to the spec.
+
+    We do this here, because every site has a different cookie name and such can't be predicted
+    before this code here actually runs.
+    """
+    schema_name = "cookieAuth"
+    _add_once(check_dict["security"], {schema_name: []})
+    check_dict["components"]["securitySchemes"][schema_name] = {
+        "in": "cookie",
+        "name": f"auth_{site}",
+        "type": "apiKey",
+        "description": "Any user of Checkmk, who has already logged in, and thus got a cookie "
+        "assigned, can use the REST API. Some actions may or may not succeed due "
+        "to group and permission restrictions. This authentication method has the"
+        "least precedence.",
+    }
+
+
+def _add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
+    """Add an entry to a collection, only once.
+
+    Examples:
+
+        >>> l = []
+        >>> _add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+        >>> _add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+    Args:
+        coll:
+        to_add:
+
+    Returns:
+
+    """
+    if to_add in coll:
+        return None
+
+    coll.append(to_add)
+    return None

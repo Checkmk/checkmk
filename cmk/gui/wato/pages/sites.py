@@ -1373,6 +1373,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", _("Offline: No valid multisite URL configured")
 
+        if remote_omd_status["rabbitmq"] == 5:
+            return "disabled", _("Disabled")
+
         remote_port = site["message_broker_port"]
         try:
             connection_status = check_remote_connection(
@@ -1399,11 +1402,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
                 return "cross", _("Connection to port %s refused: Invalid certificate")
             case ConnectionRefused.CLOSED:
-                match remote_omd_status["rabbitmq"]:
-                    case 1:
-                        return "cross", _("Not available")
-                    case 5:
-                        return "disabled", _("Disabled")
+                return "cross", _("Not available")
 
                 return "cross", _("Connection to port %s refused") % (remote_port,)
             case _:

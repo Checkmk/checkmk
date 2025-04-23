@@ -755,11 +755,11 @@ _RESULTS = [
         state=State.OK,
         notice="Site certificate valid until 3017-10-01",
     ),
+    Metric("site_cert_days", 375948.7452314815),
     Result(
         state=State.OK,
         notice="Expiring in: 1029 years 363 days",
     ),
-    Metric("site_cert_days", 375948.7452314815),
 ]
 
 

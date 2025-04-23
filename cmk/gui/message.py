@@ -147,7 +147,7 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
                 updated = True
 
     if updated:
-        save_gui_messages(messages)
+        save_gui_messages(messages, user_id)
 
     return messages
 

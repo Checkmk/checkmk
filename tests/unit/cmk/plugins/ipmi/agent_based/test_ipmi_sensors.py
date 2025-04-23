@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.ipmi_sensors.agent_based import ipmi_sensors
+from cmk.plugins.ipmi.agent_based import ipmi_sensors
 from cmk.plugins.lib import ipmi as ipmi_utils
 
 _STRING_TABLES = [

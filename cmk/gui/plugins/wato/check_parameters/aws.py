@@ -1432,42 +1432,6 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _parameter_valuespec_aws_dynamodb_limits() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "number_of_tables",
-                vs_aws_limits(
-                    _("Number of tables"),
-                    256,
-                    unit="tables",
-                    title_default="Default limit set by AWS",
-                ),
-            ),
-            (
-                "read_capacity",
-                vs_aws_limits(_("Read capacity"), 80000, unit="RCU"),
-            ),
-            (
-                "write_capacity",
-                vs_aws_limits(_("Write capacity"), 80000, unit="WCU"),
-            ),
-        ]
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_dynamodb_limits",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_dynamodb_limits,
-        title=lambda: _("AWS/DynamoDB Limits"),
-    )
-)
-
-
 def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
     elements_extr: list[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),

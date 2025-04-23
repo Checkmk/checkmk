@@ -34,6 +34,7 @@ def test_builtin_autocompleters_registered() -> None:
         expected += [
             "add_to_report_choices",
             "graph_template_for_combined_graph",
+            "combined_graphs",
         ]
 
     assert sorted(registered) == sorted(expected)

@@ -15,6 +15,8 @@ from cmk.gui.valuespec import autocompleter_registry
 
 @pytest.fixture(name="expected_autocompleters")
 def fixture_expected_autocompleters() -> list[str]:
+    # ATTENTION! The Checkmk Grafana plugin requires the following autocompletes!
+    # Please contact the grafana component members before removing one from this list!
     autocompleters = [
         "sites",
         "monitored_hostname",
@@ -27,6 +29,8 @@ def fixture_expected_autocompleters() -> list[str]:
 
     if is_enterprise_repo():
         autocompleters.append("graph_template_for_combined_graph")
+        autocompleters.append("combined_graphs")
+        # Please read the comment above!
 
     return autocompleters
 
@@ -125,4 +129,25 @@ def test_openapi_graph_template_for_combined_graph_autocompleter(clients: Client
         "graph_template_for_combined_graph",
         {"strict": True},
         "",
+    )
+
+
+@pytest.mark.skipif(
+    not is_enterprise_repo(),
+    reason="combined_graphs is not available in CRE",
+)
+def test_openapi_combined_graphs_autocompleter(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    # this is needed for the checkmk grafana plugin. please get in touch with the component members
+    # if you have to adapt this test.
+    clients.AutoComplete.invoke(
+        "combined_graphs",
+        {
+            "presentation": "lines",
+            "mode": "metric",
+            "datasource": "services",
+            "single_infos": ["host"],
+            "context": {},
+        },
     )

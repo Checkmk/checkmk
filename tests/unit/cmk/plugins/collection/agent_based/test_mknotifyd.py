@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.mknotifyd import (  # Queue,
     check_mknotifyd,
     check_mknotifyd_connection,
+    check_mknotifyd_connection_v2,
     Connection,
     discover_mknotifyd,
     discover_mknotifyd_connection,
@@ -28,7 +29,7 @@ from cmk.plugins.collection.agent_based.mknotifyd import (  # Queue,
 INFO_ERROR = [["1571212728"], ["[EX]"], ["Binary file (standard input) matches"]]
 SECTION_ERROR = MkNotifySection(
     timestamp=1571212728.0,
-    sites={"EX": Site(spools={}, connections={})},
+    sites={"EX": Site(spools={}, connections={}, connections_v2={})},
 )
 
 INFO_STANDARD = [
@@ -88,6 +89,8 @@ SECTION_STANDARD = MkNotifySection(
                     notifications_received=47,
                     connect_time=30,
                 ),
+            },
+            connections_v2={
                 "remote_site": Connection(
                     type_="incoming",
                     state="established",
@@ -164,6 +167,8 @@ SECTION_CONNECTION_COOLDOWN = MkNotifySection(
                     notifications_sent=0,
                     notifications_received=0,
                 ),
+            },
+            connections_v2={
                 "remote_site": Connection(
                     type_="incoming",
                     state="cooldown",
@@ -216,6 +221,7 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
             updated=1571212726,
             version="2019.10.14",
             connections={},
+            connections_v2={},
             spools={
                 "Corrupted": Spool(count=1, oldest=1571212726, youngest=1571212726),
                 "Deferred": Spool(count=3, oldest=1571212726, youngest=1571212726),
@@ -249,12 +255,14 @@ SECTION_TIMESTAMP_PER_SITE = MkNotifySection(
             version="2019.10.14",
             spools={},
             connections={},
+            connections_v2={},
         ),
         "morgen": Site(
             updated=1571212726,
             version="2019.10.14",
             spools={},
             connections={},
+            connections_v2={},
         ),
     },
     timestamp=1571212728.0,
@@ -417,6 +425,19 @@ def test_check_mknotifyd(
             ],
             id="old connection check, monitored but not discovered",
         ),
+    ],
+)
+def test_check_mknotifyd_connection(
+    item: str,
+    expected_output: Sequence[object],
+    section: MkNotifySection,
+) -> None:
+    assert list(check_mknotifyd_connection(item, section)) == expected_output
+
+
+@pytest.mark.parametrize(
+    "item, section, expected_output",
+    [
         pytest.param(
             "heute Notification Spooler connection to remote_site",
             SECTION_STANDARD,
@@ -446,9 +467,9 @@ def test_check_mknotifyd(
         ),
     ],
 )
-def test_check_mknotifyd_connection(
+def test_check_mknotifyd_connection_v2(
     item: str,
     expected_output: Sequence[object],
     section: MkNotifySection,
 ) -> None:
-    assert list(check_mknotifyd_connection(item, section)) == expected_output
+    assert list(check_mknotifyd_connection_v2(item, section)) == expected_output

@@ -2276,7 +2276,7 @@
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements.txt": "72991d9c131b739faceaf1d5e0055f86f7c1b30de15601049732696459c227d6",
+          "@@//requirements.txt": "8b70febfb101c2b3a42c9d08a9b7a6b12ad4d25f3ed015e7cf99b0e372fa8bdc",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_mypy~//mypy/private/requirements.txt": "5fef4723b02210e3f231d2b55e4894e43d669077b30e91e4303f5c14115af981",

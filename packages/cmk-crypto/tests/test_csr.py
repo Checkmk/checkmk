@@ -16,7 +16,8 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import (
-    SubjectAlternativeName,
+    SAN,
+    SubjectAlternativeNames,
     X509Name,
 )
 
@@ -82,21 +83,28 @@ def test_subject_alternative_names(
     self_signed_cert: CertificateWithPrivateKey,
     self_signed_ec_cert: CertificateWithPrivateKey,
 ) -> None:
-    """test the CSRs somewhat complicated SANS handling:"""
+    """test setting subject alt names either from the CSR or overriding it"""
     subject_key = self_signed_ec_cert.private_key
-    subject_names = [
-        SubjectAlternativeName.dns_name("test.example.com"),
-        SubjectAlternativeName.uuid(UUID("12345678-1234-5678-1234-567812345678")),
-    ]
+
+    csr_sans = SubjectAlternativeNames(
+        [
+            SAN.dns_name("test.example.com"),
+            SAN.checkmk_site("test_site"),
+        ]
+    )
     csr = CertificateSigningRequest.create(
         subject_name=X509Name.create(common_name="csr_test", organization_name="csr_test_org"),
         subject_private_key=subject_key,
-        subject_alternative_names=subject_names,
+        subject_alternative_names=csr_sans,
     )
 
-    cert = self_signed_cert.sign_csr(csr, expiry=relativedelta(days=1))
+    cert1 = self_signed_cert.sign_csr(csr, expiry=relativedelta(days=1))
+    assert cert1.subject_alternative_names == csr_sans
 
-    assert cert.get_subject_alt_names() == [
-        "test.example.com",
-        "urn:uuid:12345678-1234-5678-1234-567812345678",
-    ]
+    override_sans = SubjectAlternativeNames(
+        [SAN.uuid(UUID("12345678-1234-5678-1234-567812345678"))]
+    )
+    cert2 = self_signed_cert.sign_csr(
+        csr, expiry=relativedelta(days=1), subject_alternative_names=override_sans
+    )
+    assert cert2.subject_alternative_names == override_sans

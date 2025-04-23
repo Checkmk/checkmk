@@ -31,6 +31,7 @@ py_library(
     deps = [
         requirement("bcrypt"),
         requirement("cryptography"),
+        requirement("pyasn1"),
         requirement("python-dateutil"),
     ],
 )

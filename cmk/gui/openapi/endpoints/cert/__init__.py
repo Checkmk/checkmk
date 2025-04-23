@@ -37,7 +37,7 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
 from cmk.crypto.certificate import CertificateSigningRequest
-from cmk.crypto.x509 import SubjectAlternativeName
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
@@ -81,7 +81,7 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
         expiry=relativedelta(
             months=config.active_config.agent_controller_certificates["lifetime_in_months"]
         ),
-        subject_alternative_names=[SubjectAlternativeName.dns_name(csr_.subject.common_name)],
+        subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(csr_.subject.common_name)]),
     )
     log_security_event(
         CertManagementEvent(

@@ -18,7 +18,7 @@ from cmk.utils.certs import CN_TEMPLATE, RootCA
 
 from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
-from cmk.crypto.x509 import SubjectAlternativeName, X509Name
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
@@ -236,11 +236,12 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
         issuer_name=peters_mom.certificate.subject,
     )
     peter_root_ca = RootCA(peter_cert, peter_key)
+    alt_names = SubjectAlternativeNames([SAN.dns_name("peters_daughter")])
     with time_machine.travel(datetime.fromtimestamp(567892121, tz=ZoneInfo("UTC"))):
         daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
             common_name="peters_daughter",
             organization="Checkmk Testing",
-            subject_alternative_names=[SubjectAlternativeName.dns_name("peters_daughter")],
+            subject_alternative_names=alt_names,
             expiry=relativedelta(days=100),
             key_size=1024,
         )
@@ -252,7 +253,5 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
-    assert daughter_cert.get_subject_alt_names() == ["peters_daughter"], (
-        "subject alt name is the daughter"
-    )
+    assert daughter_cert.subject_alternative_names == alt_names, "subject alt name is the daughter"
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"

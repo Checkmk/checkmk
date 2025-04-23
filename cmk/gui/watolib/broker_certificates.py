@@ -40,7 +40,8 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import (
-    SubjectAlternativeName,
+    SAN,
+    SubjectAlternativeNames,
     X509Name,
 )
 
@@ -124,7 +125,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         signed = central_ca_bundle.sign_csr(
             csr,
             relativedelta(years=2),
-            [SubjectAlternativeName.dns_name(csr.subject.common_name)],
+            SubjectAlternativeNames([SAN.dns_name(csr.subject.common_name)]),
         )
 
         remote_broker_certs = messaging.BrokerCertificates(

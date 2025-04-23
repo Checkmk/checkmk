@@ -58,7 +58,7 @@ from .keys import (
 from .password import Password
 from .pem import _PEMData, PEMDecodingError
 from .x509 import (
-    SubjectAlternativeName,
+    SubjectAlternativeNames,
     X509Name,
 )
 
@@ -84,7 +84,7 @@ class CertificateWithPrivateKey(NamedTuple):
         common_name: str,
         organization: str,
         organizational_unit: str | None = None,
-        subject_alternative_names: list[SubjectAlternativeName]
+        subject_alternative_names: SubjectAlternativeNames
         | None = None,  # None means no SAN extension is added
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
@@ -166,7 +166,7 @@ class CertificateWithPrivateKey(NamedTuple):
         common_name: str,
         organization: str,
         organizational_unit: str | None = None,
-        subject_alternative_names: list[SubjectAlternativeName] | None = None,
+        subject_alternative_names: SubjectAlternativeNames | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         is_ca: bool = False,
@@ -200,7 +200,7 @@ class CertificateWithPrivateKey(NamedTuple):
         self,
         csr: CertificateSigningRequest,
         expiry: relativedelta,
-        subject_alternative_names: list[SubjectAlternativeName] | None = None,
+        subject_alternative_names: SubjectAlternativeNames | None = None,
     ) -> Certificate:
         """
         Create a certificate by signing a certificate signing request.
@@ -330,7 +330,7 @@ class Certificate:
         # subject info
         subject_public_key: PublicKey,
         subject_name: X509Name,
-        subject_alternative_names: list[SubjectAlternativeName] | None,
+        subject_alternative_names: SubjectAlternativeNames | None,
         # cert properties
         expiry: relativedelta,
         start_date: datetime,
@@ -401,10 +401,7 @@ class Certificate:
 
         if subject_alternative_names is not None:
             builder = builder.add_extension(
-                pyca_x509.extensions.SubjectAlternativeName(
-                    n.name for n in subject_alternative_names
-                ),
-                critical=False,
+                subject_alternative_names.to_extension(), critical=False
             )
 
         hash_algo = (
@@ -594,18 +591,13 @@ class Certificate:
         """
         return self._cert.fingerprint(algorithm.value)
 
-    def get_subject_alt_names(self) -> list[str]:
-        try:
-            ext = self._cert.extensions.get_extension_for_oid(
-                pyca_x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value
-            assert isinstance(ext, pyca_x509.extensions.SubjectAlternativeName)
-            sans = ext.get_values_for_type(pyca_x509.DNSName)
-            sans.extend(ext.get_values_for_type(pyca_x509.UniformResourceIdentifier))
-        except pyca_x509.ExtensionNotFound:
-            return []
+    @property
+    def subject_alternative_names(self) -> SubjectAlternativeNames | None:
+        """Get the subject alternative names from the certificate.
 
-        return sans
+        Returns None if the extension is not present.
+        """
+        return SubjectAlternativeNames.find_extension(self._cert.extensions)
 
     @staticmethod
     def _is_timezone_aware(dt: datetime) -> bool:
@@ -650,7 +642,7 @@ class CertificateSigningRequest:
         cls,
         subject_name: X509Name,
         subject_private_key: PrivateKey,
-        subject_alternative_names: list[SubjectAlternativeName] | None = None,
+        subject_alternative_names: SubjectAlternativeNames | None = None,
     ) -> CertificateSigningRequest:
         """Create a new Certificate Signing Request
 
@@ -671,10 +663,7 @@ class CertificateSigningRequest:
 
         if subject_alternative_names is not None:
             builder = builder.add_extension(
-                pyca_x509.extensions.SubjectAlternativeName(
-                    n.name for n in subject_alternative_names
-                ),
-                critical=False,
+                subject_alternative_names.to_extension(), critical=False
             )
 
         return cls(builder.sign(subject_private_key._key, hash_algo))  # noqa: SLF001
@@ -694,26 +683,9 @@ class CertificateSigningRequest:
         return self.csr.is_signature_valid
 
     @property
-    def subject_alternative_names(self) -> list[SubjectAlternativeName] | None:
-        sans: list[SubjectAlternativeName] = []
-        try:
-            ext = self.csr.extensions.get_extension_for_oid(
-                pyca_x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value
-            assert isinstance(ext, pyca_x509.extensions.SubjectAlternativeName)
-            # get_values_for_type returns strings unfortunately, so we need to cast them back
-            sans.extend(
-                SubjectAlternativeName(pyca_x509.DNSName(n))
-                for n in ext.get_values_for_type(pyca_x509.DNSName)
-            )
-            sans.extend(
-                SubjectAlternativeName(pyca_x509.UniformResourceIdentifier(n))
-                for n in ext.get_values_for_type(pyca_x509.UniformResourceIdentifier)
-            )
-        except pyca_x509.ExtensionNotFound:
-            return None
-
-        return sans
+    def subject_alternative_names(self) -> SubjectAlternativeNames | None:
+        """Get the subject alternative names from the CSR, if present."""
+        return SubjectAlternativeNames.find_extension(self.csr.extensions)
 
     def dump_pem(self) -> CertificateSigningRequestPEM:
         """Return the CSR in PEM format"""

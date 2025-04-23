@@ -26,7 +26,8 @@ from cmk.crypto.keys import InvalidSignatureError, PrivateKey
 from cmk.crypto.password import Password
 from cmk.crypto.pem import PEMDecodingError
 from cmk.crypto.x509 import (
-    SubjectAlternativeName,
+    SAN,
+    SubjectAlternativeNames,
     X509Name,
 )
 
@@ -225,7 +226,7 @@ def test_verify_is_signed_by() -> None:
 
 def test_default_subject_alt_names(self_signed_cert: CertificateWithPrivateKey) -> None:
     """check that the self-signed cert does not come with SANs"""
-    assert self_signed_cert.certificate.get_subject_alt_names() == []
+    assert self_signed_cert.certificate.subject_alternative_names is None
 
 
 def test_ec_cert() -> None:
@@ -280,23 +281,25 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
 @pytest.mark.parametrize(
     "sans",
     (
-        ([]),
-        (["foo.bar", "bar.foo"]),
+        (SubjectAlternativeNames([])),
+        (SubjectAlternativeNames([SAN.dns_name(n) for n in ["foo.bar", "bar.foo"]])),
     ),
 )
-def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: list[str]) -> None:
+def test_subject_alt_names(
+    self_signed_cert: CertificateWithPrivateKey, sans: SubjectAlternativeNames
+) -> None:
     """test setting and retrieval of subject-alt-names (DNS)"""
     assert (
         Certificate._create(  # noqa: SLF001
             subject_public_key=self_signed_cert.private_key.public_key,
             subject_name=X509Name.create(common_name="sans_test"),
-            subject_alternative_names=[SubjectAlternativeName.dns_name(n) for n in sans],
+            subject_alternative_names=sans,
             expiry=relativedelta(days=1),
             start_date=datetime.now(UTC),
             is_ca=False,
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),
-        ).get_subject_alt_names()
+        ).subject_alternative_names
         == sans
     )
 

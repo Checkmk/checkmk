@@ -1979,6 +1979,7 @@ pyasn1==0.6.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-crypto/requirements.in
     #   pyasn1-modules
     #   pysmb
     #   pysnmp-lextudio

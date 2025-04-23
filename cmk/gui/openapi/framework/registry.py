@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 
+from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -16,8 +17,29 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointPermissions,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.restful_objects.type_defs import EndpointKey
+from cmk.gui.openapi.restful_objects.type_defs import (
+    AcceptFieldType,
+    EndpointKey,
+    ETagBehaviour,
+    StatusCodeInt,
+    TagGroup,
+)
 from cmk.gui.openapi.restful_objects.utils import endpoint_ident
+from cmk.gui.utils.permission_verification import BasePerm
+
+
+@dataclass(frozen=True, slots=True)
+class RequestEndpoint:
+    handler: Callable  # TODO: change to HandlerFunction
+    method: HTTPMethod
+    accept: AcceptFieldType
+    content_type: str
+    etag: ETagBehaviour | None
+    operation_id: str
+    doc_group: TagGroup
+    additional_status_codes: Sequence[StatusCodeInt]
+    update_config_generation: bool
+    permissions_required: BasePerm | None
 
 
 @dataclass
@@ -35,6 +57,21 @@ class EndpointDefinition:
             method=self.metadata.method,
             route_path=self.metadata.path,
             content_type=self.metadata.content_type,
+        )
+
+    def request_endpoint(self) -> RequestEndpoint:
+        """Representation of the endpoint with attributes needed to handle a request"""
+        return RequestEndpoint(
+            handler=self.handler.handler,
+            method=self.metadata.method,
+            accept=self.metadata.accept,
+            content_type=self.metadata.content_type,
+            etag=self.behavior.etag,
+            operation_id=f"{self.metadata.family}.{self.handler.handler.__name__}",
+            doc_group=self.doc.group,
+            additional_status_codes=self.handler.additional_status_codes or [],
+            update_config_generation=self.behavior.update_config_generation,
+            permissions_required=self.permissions.required,
         )
 
 

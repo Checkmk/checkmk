@@ -129,6 +129,42 @@ def check_livestatus_status(
     )
 
 
+def _check_livestatus_cert(
+    section_livestatus_ssl_certs: LivestatusSection,
+    item: str,
+    this_time: float,
+    params: Mapping[str, Any],
+) -> CheckResult:
+    # cert_valid_until should only be empty in one case that we know of so far:
+    # the value is collected via the linux special agent with the command 'date'
+    # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
+    # the 'date'-command will return an error and thus no result
+    # this happens e.g. for hacky raspberry pi setups that are not officially supported
+    pem_path = f"/omd/sites/{item}/etc/ssl/sites/{item}.pem"
+    valid_until_str = (
+        None
+        if section_livestatus_ssl_certs is None
+        else section_livestatus_ssl_certs.get(item, {}).get(pem_path)
+    )
+    if valid_until_str:
+        valid_until = int(valid_until_str)
+        yield Result(
+            state=State.OK,
+            notice="Site certificate valid until %s" % render.date(valid_until),
+        )
+        secs_left = valid_until - this_time
+        warn_d, crit_d = params["site_cert_days"]
+        yield from check_levels_v1(
+            value=secs_left,
+            label="Expiring in",
+            levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
+            render_func=render.timespan,
+            notice_only=True,
+            boundaries=(0, None),
+        )
+        yield Metric("site_cert_days", secs_left / 86400.0)
+
+
 def _generate_livestatus_results(
     item: str,
     params: Mapping[str, Any],
@@ -269,34 +305,8 @@ def _generate_livestatus_results(
         notice="Core version: %s" % status["program_version"].replace("Check_MK", "Checkmk"),
     )
 
-    # cert_valid_until should only be empty in one case that we know of so far:
-    # the value is collected via the linux special agent with the command 'date'
-    # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
-    # the 'date'-command will return an error and thus no result
-    # this happens e.g. for hacky raspberry pi setups that are not officially supported
-    pem_path = f"/omd/sites/{item}/etc/ssl/sites/{item}.pem"
-    valid_until_str = (
-        None
-        if section_livestatus_ssl_certs is None
-        else section_livestatus_ssl_certs.get(item, {}).get(pem_path)
-    )
-    if valid_until_str:
-        valid_until = int(valid_until_str)
-        yield Result(
-            state=State.OK,
-            notice="Site certificate valid until %s" % render.date(valid_until),
-        )
-        secs_left = valid_until - this_time
-        warn_d, crit_d = params["site_cert_days"]
-        yield from check_levels_v1(
-            value=secs_left,
-            label="Expiring in",
-            levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
-            render_func=render.timespan,
-            notice_only=True,
-            boundaries=(0, None),
-        )
-        yield Metric("site_cert_days", secs_left / 86400.0)
+    if section_livestatus_ssl_certs is not None:
+        yield from _check_livestatus_cert(section_livestatus_ssl_certs, item, this_time, params)
 
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),

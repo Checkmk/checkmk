@@ -89,6 +89,15 @@ _STRING_TABLES = [
             " 'OK'",
         ],
     ],
+    [
+        ["ID ", " Name ", " Type ", " Reading ", " Units ", " Event"],
+        ["4 ", " CPU Temp ", " Temperature ", " 42.00 ", " C ", " 'OK'"],
+        ["71 ", " System Temp ", " Temperature ", " 22.00 ", " C ", " 'OK'"],
+        ["138 ", " Peripheral Temp ", " Temperature ", " 31.00 ", " C ", " 'OK'"],
+        ["ID ", " Name ", " Type ", " Reading ", " Units ", " Event"],
+        ["607 ", " FAN1 ", " Fan ", " 7700.00 ", " RPM ", " 'OK'"],
+        ["674 ", " FAN2 ", " Fan ", " 7700.00 ", " RPM ", " 'OK'"],
+    ],
 ]
 
 _SECTIONS = [
@@ -383,6 +392,27 @@ _SECTIONS = [
             crit_high=None,
             type_="Temperature",
         )
+    },
+    {
+        "CPU_Temp": ipmi_utils.Sensor(status_txt="OK", unit="C", value=42.0, type_="Temperature"),
+        "System_Temp": ipmi_utils.Sensor(
+            status_txt="OK", unit="C", value=22.0, type_="Temperature"
+        ),
+        "Peripheral_Temp": ipmi_utils.Sensor(
+            status_txt="OK", unit="C", value=31.0, type_="Temperature"
+        ),
+        "FAN1": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="RPM",
+            value=7700.0,
+            type_="Fan",
+        ),
+        "FAN2": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="RPM",
+            value=7700.0,
+            type_="Fan",
+        ),
     },
 ]
 

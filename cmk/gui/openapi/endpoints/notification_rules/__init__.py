@@ -118,7 +118,11 @@ def show_rule(params: Mapping[str, Any]) -> Response:
     all_rules = get_notification_rules()
     if rule := all_rules.get(NotificationRuleID(params["rule_id"])):
         return serve_json(_serialize_notification_rule(rule))
-    return Response(status=404)
+    raise ProblemException(
+        status=404,
+        title=_("The requested notification rule was not found"),
+        detail=_("The rule_id %s does not exist.") % params["rule_id"],
+    )
 
 
 @Endpoint(

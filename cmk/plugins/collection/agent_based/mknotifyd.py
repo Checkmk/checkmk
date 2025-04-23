@@ -90,6 +90,7 @@ class Connection:
 class Site:
     spools: dict[str, Spool]
     connections: dict[str, Connection]
+    connections_v2: dict[str, Connection]
     version: str | None = None
     updated: int | None = None
 
@@ -198,11 +199,13 @@ def parse_mknotifyd(
             site_name = line[1:-1]
             spools: dict[str, Spool] = {}
             connections: dict[str, Connection] = {}
+            connections_v2: dict[str, Connection] = {}
             index, version, updated = _parse_site_data(index, data)
 
             site_entry = Site(
                 spools=spools,
                 connections=connections,
+                connections_v2=connections_v2,
                 version=version,
                 updated=updated,
             )
@@ -217,7 +220,7 @@ def parse_mknotifyd(
             elif varname == "Connection":
                 index, connection = _get_connection(index, data)
                 # for "mknotifyd.connection_v2"
-                site_entry.connections[connected_site] = connection
+                site_entry.connections_v2[connected_site] = connection
                 # keep the "mknotifyd.connection" services working
                 site_entry.connections[value] = connection
 
@@ -362,17 +365,7 @@ def discover_mknotifyd_connection(section: MkNotifySection) -> DiscoveryResult:
 _V2_SERVICE_NAMING = "Notification Spooler connection to"
 
 
-def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResult:
-    # "mknotifyd.connection_v2"
-    if _V2_SERVICE_NAMING in item:
-        site_name, connection_name = item.split(f" {_V2_SERVICE_NAMING} ", 1)
-    # "mknotifyd.connection"
-    else:
-        site_name, connection_name = item.split("-", 1)
-
-    if site_name not in section.sites:
-        return
-
+def _check_mknotify_connection(connection: Connection, section: MkNotifySection) -> CheckResult:
     states = {
         "established": (0, "Alive"),
         "cooldown": (2, "Connection failed or terminated"),
@@ -380,36 +373,45 @@ def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResu
         "connecting": (2, "Trying to connect"),
     }
 
+    state, summary = states[connection.state]
+    yield Result(state=State(state), summary=summary)
+
+    if connection.status_message is not None:
+        yield Result(state=State.OK, summary=connection.status_message)
+
+    if connection.state == "established":
+        age = section.timestamp - connection.since
+        yield from check_levels(age, label="Uptime", render_func=render.timespan)
+
+        if connection.connect_time is not None:
+            yield from check_levels(
+                connection.connect_time,
+                label="Connect time",
+                render_func=render.timespan,
+            )
+
+    if connection.notifications_sent:
+        yield from check_levels(
+            connection.notifications_sent,
+            render_func=str,
+            label="Notifications sent",
+        )
+    if connection.notifications_received:
+        yield from check_levels(
+            connection.notifications_received,
+            render_func=str,
+            label="Notifications received",
+        )
+
+
+def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResult:
+    site_name, connection_name = item.split("-", 1)
+
+    if site_name not in section.sites:
+        return
+
     if (connection := section.sites[site_name].connections.get(connection_name)) is not None:
-        state, summary = states[connection.state]
-        yield Result(state=State(state), summary=summary)
-
-        if connection.status_message is not None:
-            yield Result(state=State.OK, summary=connection.status_message)
-
-        if connection.state == "established":
-            age = section.timestamp - connection.since
-            yield from check_levels(age, label="Uptime", render_func=render.timespan)
-
-            if connection.connect_time is not None:
-                yield from check_levels(
-                    connection.connect_time,
-                    label="Connect time",
-                    render_func=render.timespan,
-                )
-
-        if connection.notifications_sent:
-            yield from check_levels(
-                connection.notifications_sent,
-                render_func=str,
-                label="Notifications sent",
-            )
-        if connection.notifications_received:
-            yield from check_levels(
-                connection.notifications_received,
-                render_func=str,
-                label="Notifications received",
-            )
+        yield from _check_mknotify_connection(connection, section)
 
 
 check_plugin_mknotifyd_connection = CheckPlugin(
@@ -421,15 +423,19 @@ check_plugin_mknotifyd_connection = CheckPlugin(
 )
 
 
+def check_mknotifyd_connection_v2(item: str, section: MkNotifySection) -> CheckResult:
+    site_name, connection_name = item.split(f" {_V2_SERVICE_NAMING} ", 1)
+
+    if site_name not in section.sites:
+        return
+
+    if (connection := section.sites[site_name].connections_v2.get(connection_name)) is not None:
+        yield from _check_mknotify_connection(connection, section)
+
+
 def discover_mknotifyd_connection_v2(section: MkNotifySection) -> DiscoveryResult:
     for site_name, site in section.sites.items():
-        for connection_name in site.connections:
-            try:
-                ip_address(connection_name)
-                # item of old discovered "mknotifyd.connection"
-                continue
-            except ValueError:
-                pass
+        for connection_name in site.connections_v2:
             yield Service(item=f"{site_name} Notification Spooler connection to {connection_name}")
 
 
@@ -438,5 +444,5 @@ check_plugin_mknotifyd_connection_v2 = CheckPlugin(
     service_name="OMD %s",
     sections=["mknotifyd"],
     discovery_function=discover_mknotifyd_connection_v2,
-    check_function=check_mknotifyd_connection,
+    check_function=check_mknotifyd_connection_v2,
 )

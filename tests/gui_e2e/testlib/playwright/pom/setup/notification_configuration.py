@@ -55,6 +55,10 @@ class NotificationConfiguration(CmkPage):
         """
         return self.main_area.locator().get_by_role("button", name="clone & edit")
 
+    @property
+    def notification_rule_rows(self) -> Locator:
+        return self.main_area.locator("table.data >> tr.data")
+
     @overload
     def _notification_rule_row(self, rule_id: str) -> Locator: ...
 
@@ -131,15 +135,33 @@ class NotificationConfiguration(CmkPage):
         expect(locator).to_have_text(re.compile(rf"^\s{previous_count}$"))
 
     def rule_conditions(self, rule_number: int = 0) -> Locator:
-        return self._notification_rule_row(rule_number).get_by_role(
-            "cell", name=re.compile("condition")
+        return self._notification_rule_row(rule_number).locator("td.rule_conditions")
+
+    def _rule_conditions_foldable(self, rule_number: int = 0) -> Locator:
+        return self.rule_conditions(rule_number).locator("div.foldable")
+
+    def _are_rule_conditions_closed(self, rule_number: int = 0) -> bool:
+        rule_conditions_foldable_class = self._rule_conditions_foldable(rule_number).get_attribute(
+            "class"
+        )
+        if rule_conditions_foldable_class is None:
+            error_message = "Rule conditions foldable has not class attribute"
+            raise AttributeError(error_message)
+
+        return "closed" in rule_conditions_foldable_class
+
+    def _rule_conditions_foldable_header(self, rule_number: int = 0) -> Locator:
+        return self._rule_conditions_foldable(rule_number).locator("div.foldable_header")
+
+    def notification_rule_condition(self, rule_number: int, condition_name: str) -> Locator:
+        return (
+            self.rule_conditions(rule_number)
+            .get_by_role("cell", name=condition_name)
+            .locator("+ td")
         )
 
-    def expand_conditions(self, expand: bool = True, rule_number: int = 0) -> None:
-        conditions = self.rule_conditions(rule_number)
-        # "Match host event type" should be in the default conditions
-        expanded = conditions.get_by_role("cell", name="Match host event type").is_visible()
-        if not expanded and expand:
-            conditions.click()
+    def expand_conditions(self, rule_number: int = 0) -> None:
+        if self._are_rule_conditions_closed(rule_number):
+            self._rule_conditions_foldable_header(rule_number).click()
         else:
-            logger.debug("Conditions are already visible.")
+            logger.debug("Conditions are already expanded.")

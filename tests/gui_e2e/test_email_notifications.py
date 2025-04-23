@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import re
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
@@ -192,7 +191,6 @@ def test_filesystem_email_notifications(
             test_site.schedule_check(host_name, checkmk_agent)
 
 
-@pytest.mark.skip(reason="Test failing. See CMK-23100.")
 def test_email_notifications_host_filters(
     modify_notification_rule: str,
     dashboard_page: Dashboard,
@@ -211,18 +209,18 @@ def test_email_notifications_host_filters(
 
     # pre-condition for this test to be successful
     expect(
-        notification_configuration_page.main_area.locator().get_by_role(
-            "cell", name=re.compile("conditions")
-        ),
+        notification_configuration_page.notification_rule_rows,
         message="Only one notification rule expected",
     ).to_have_count(1)
 
     notification_configuration_page.expand_conditions()
 
     expect(
-        notification_configuration_page.main_area.locator().get_by_text(host_name),
+        notification_configuration_page.notification_rule_condition(
+            rule_number=0, condition_name="Match hosts:"
+        ),
         message=f"Expected host '{host_name}' in rule conditions",
-    ).not_to_have_count(0)
+    ).to_have_text(host_name)
 
     edit_notification_rule_page = EditNotificationRule(
         notification_configuration_page.page, rule_position=0
@@ -230,6 +228,6 @@ def test_email_notifications_host_filters(
     edit_notification_rule_page.expand_host_filters()
     edit_notification_rule_page.hosts_dropdown_list().click()
     expect(
-        edit_notification_rule_page.main_area.locator().get_by_text(host_name),
+        edit_notification_rule_page.hosts_dropdown_list(),
         message=f"Expected rule to be filtered by host: '{host_name}'",
-    ).to_have_count(1)
+    ).to_contain_text(host_name)

@@ -82,7 +82,7 @@ def dump_source(source: Source) -> str:
         if snmp_config.snmp_version is SNMPVersion.V3:
             credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
-            credentials_text = "Community: %r" % snmp_config.credentials
+            credentials_text = f"Community: {snmp_config.credentials!r}"
 
         bulk = "yes" if snmp_config.use_bulkwalk else "no"
 

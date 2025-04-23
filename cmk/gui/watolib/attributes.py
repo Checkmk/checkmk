@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from types import NoneType
+from typing import Literal
+
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.converter import SimplePassword
@@ -75,7 +78,10 @@ def SNMPCredentials(
     allow_none: bool = False,
     for_ec: bool = False,
 ) -> Alternative:
-    def alternative_match(x):
+    def alternative_match(x: object) -> Literal[0, 1, 2, 3]:
+        if not isinstance(x, tuple | str | NoneType):
+            raise MKGeneralException("invalid SNMP credential type %s" % type(x))
+
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
             if x is None or len(x) == 2:
@@ -93,7 +99,7 @@ def SNMPCredentials(
                 return 2  # authNoPriv
             if len(x) == 6:
                 return 3  # authPriv
-        raise MKGeneralException("invalid SNMP credential format %s" % x)
+        raise MKGeneralException("invalid SNMP credential format %s" % tuple("***" for _ in x))
 
     def allow_none_match(x: object) -> int:
         return 0 if x is None else (alternative_match(x) + 1)

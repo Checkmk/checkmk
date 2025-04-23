@@ -2927,7 +2927,6 @@ class AutomationDiagHost(Automation):
             credentials: SNMPCredentials = snmp_config.credentials
 
             if snmpv3_use:
-                snmpv3_credentials = [snmpv3_use]
                 if snmpv3_use in ["authNoPriv", "authPriv"]:
                     if (
                         not isinstance(snmpv3_auth_proto, str)
@@ -2935,22 +2934,30 @@ class AutomationDiagHost(Automation):
                         or not isinstance(snmpv3_security_password, str)
                     ):
                         raise TypeError()
-                    snmpv3_credentials.extend(
-                        [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password]
-                    )
+                    if snmpv3_use == "authPriv":
+                        if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
+                            snmpv3_privacy_password, str
+                        ):
+                            raise TypeError()
+                        credentials = (
+                            snmpv3_use,
+                            snmpv3_auth_proto,
+                            snmpv3_security_name,
+                            snmpv3_security_password,
+                            snmpv3_privacy_proto,
+                            snmpv3_privacy_password,
+                        )
+                    else:
+                        credentials = (
+                            snmpv3_use,
+                            snmpv3_auth_proto,
+                            snmpv3_security_name,
+                            snmpv3_security_password,
+                        )
                 else:
                     if not isinstance(snmpv3_security_name, str):
                         raise TypeError()
-                    snmpv3_credentials.extend([snmpv3_security_name])
-
-                if snmpv3_use == "authPriv":
-                    if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
-                        snmpv3_privacy_password, str
-                    ):
-                        raise TypeError()
-                    snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
-
-                credentials = tuple(snmpv3_credentials)
+                    credentials = (snmpv3_use, snmpv3_security_name)
         else:
             credentials = snmp_community or (
                 snmp_config.credentials

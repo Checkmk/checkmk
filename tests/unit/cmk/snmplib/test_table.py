@@ -246,7 +246,6 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
             backend=Backend(
                 dataclasses.replace(
                     SNMPConfig,
-                    credentials=(),  # for `is_snmpv3_host`
                     snmpv3_contexts=[
                         SNMPContextConfig(
                             section=section_name,

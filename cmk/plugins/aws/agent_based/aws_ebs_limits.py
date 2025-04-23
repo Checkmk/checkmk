@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits, parse_aws
+from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits_legacy, parse_aws
 
 AWS_EBS_LIMITS_DEFAULT_PARAMS = {
     "block_store_snapshots": (None, 80.0, 90.0),
@@ -77,7 +77,7 @@ def check_aws_ebs_limits(
     item: str, params: Mapping[str, Any], section: AWSLimitsByRegion
 ) -> CheckResult:
     if (region_limits := section.get(item)) is not None:
-        yield from check_aws_limits("ebs", params, region_limits)
+        yield from check_aws_limits_legacy("ebs", params, region_limits)
 
 
 check_plugin_aws_ebs_limits = CheckPlugin(

@@ -8,7 +8,7 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.aws.lib import (
     aws_region_to_monitor,
-    check_aws_limits,
+    check_aws_limits_legacy,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
     GenericAWSSection,
@@ -614,10 +614,10 @@ def test_parse_aws_limits_generic() -> None:
         ),
     ],
 )
-def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
+def test_check_aws_limits_legacy(test_input: list[list], output: CheckResult) -> None:
     assert (
         list(
-            check_aws_limits(
+            check_aws_limits_legacy(
                 "sns",
                 {
                     "topics_fifo": (None, 80.0, 90.0),

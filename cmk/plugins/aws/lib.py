@@ -125,9 +125,12 @@ def is_valid_aws_limits_perf_data(perfvar: str) -> bool:
     return perfvar not in exclude_aws_limits_perf_vars
 
 
-def check_aws_limits(
+def check_aws_limits_legacy(
     aws_service: str, params: Mapping[str, Any], parsed_region_data: list[list]
 ) -> CheckResult:
+    """
+    Deprecated check_aws_limits function as this is based upon Valuespecs for setting levels of the underlying check.
+    """
     for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
         try:
             p_limit, warn, crit = params[resource_key]

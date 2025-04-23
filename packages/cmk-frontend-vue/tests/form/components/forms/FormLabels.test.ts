@@ -133,34 +133,31 @@ describe('FormLabels', () => {
   })
 
   test.for([
-    ['missing value', `asd:`, 0],
-    ['already chosen label', EXISTING_LABEL_CONCAT, 0],
-    ['same key prefix', `${EXISTING_LABEL_KEY}:something`, 1] // this is a bug!
-  ] as Array<[string, string, number]>)(
-    'should suggest nothing for %s',
-    async ([_name, label, expectedCount]) => {
-      renderFormWithData({
-        spec,
-        data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
-        backendValidation: []
-      })
+    ['missing value', `asd:`],
+    ['already chosen label', EXISTING_LABEL_CONCAT],
+    ['same key prefix', `${EXISTING_LABEL_KEY}:something`]
+  ] as Array<[string, string]>)('should suggest nothing for %s', async ([_name, label]) => {
+    renderFormWithData({
+      spec,
+      data: { [EXISTING_LABEL_KEY]: EXISTING_LABEL_VALUE },
+      backendValidation: []
+    })
 
-      async function assertNumberOfOptions(number: number) {
-        await waitFor(async () => expect(screen.queryAllByRole('option')).toHaveLength(number))
-      }
-
-      const dropdown = screen.getByRole('combobox')
-      await userEvent.click(dropdown)
-      const labelInput = screen.getByRole('textbox', { name: 'filter' })
-
-      // we want to assert that the list is empty, so we have to make sure there is something before
-      await fireEvent.update(labelInput, 'something:anything')
-      await assertNumberOfOptions(1)
-
-      await fireEvent.update(labelInput, label)
-      await assertNumberOfOptions(expectedCount)
+    async function assertNumberOfOptions(number: number) {
+      await waitFor(async () => expect(screen.queryAllByRole('option')).toHaveLength(number))
     }
-  )
+
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const labelInput = screen.getByRole('textbox', { name: 'filter' })
+
+    // we want to assert that the list is empty, so we have to make sure there is something before
+    await fireEvent.update(labelInput, 'something:anything')
+    await assertNumberOfOptions(1)
+
+    await fireEvent.update(labelInput, label)
+    await assertNumberOfOptions(0)
+  })
 
   test('should allow remove label', async () => {
     const { getCurrentData } = renderFormWithData({

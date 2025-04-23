@@ -13,7 +13,7 @@ const props = defineProps<{
   id?: string
   placeholder: string
   autocompleter?: Autocompleter
-  filterOn: string[]
+  filter?: (element: Suggestion) => boolean
   startOfGroup?: boolean
   size: number
   label?: string
@@ -30,13 +30,13 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
     return newValue
   }
 
-  const result: Array<Suggestion> = []
-
-  result.push(
-    ...newValue.choices
-      .filter((element: Suggestion) => element.name.length > 0 && element.title.length > 0)
-      .filter((element: Suggestion) => !props.filterOn.includes(element.name))
+  let result: Array<Suggestion> = newValue.choices.filter(
+    (element: Suggestion) => element.name.length > 0 && element.title.length > 0
   )
+
+  if (props.filter !== undefined) {
+    result = result.filter(props.filter)
+  }
 
   return new Response(result)
 }

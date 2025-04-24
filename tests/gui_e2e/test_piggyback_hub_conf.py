@@ -38,9 +38,11 @@ class HubEnableActions(enum.Enum):
 class HubDisableActions(enum.Enum):
     """The piggyback-hub can be disabled by
     * navigating to its specific global setting page, unchecking the relevant checkbox and saving
+    * resetting the global settings to factory settings
     """
 
     SAVE = enum.auto()
+    RESET = enum.auto()
 
 
 def _enable_hub_globally(
@@ -65,6 +67,9 @@ def _disable_hub_globally(
             settings_page = EditPiggybackHubGlobally(dashboard_page.page)
             settings_page.disable_hub()
             settings_page.save_button.click()
+        case HubDisableActions.RESET:
+            settings_page = EditPiggybackHubGlobally(dashboard_page.page)
+            settings_page.to_factory_settings()
         case _:
             assert_never(disable_action)
 
@@ -95,6 +100,9 @@ def _disable_hub_site_specific(
             site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
             site_specific_settings_page.disable_hub()
             site_specific_settings_page.save_button.click()
+        case HubDisableActions.RESET:
+            site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
+            site_specific_settings_page.to_factory_settings()
         case _:
             assert_never(disable_action)
 
@@ -264,6 +272,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
 @pytest.mark.parametrize(
@@ -372,10 +381,46 @@ def test_enabled_on_remote__disable_on_central__error(
         ), f"Piggyback-hub was disabled for central site '{test_site.id}' although it should remain enabled"
 
 
+def test_enabled_on_remote__disable_on_central_by_reset__error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+) -> None:
+    """Test that disabling the piggyback-hub site-specific for the central site by resetting to factory setting fails if it is enabled for a remote site"""
+
+    with _setup_settings(
+        None,
+        {
+            "gui_e2e_central": {"site_piggyback_hub": True},
+            "gui_e2e_remote": {"site_piggyback_hub": True},
+        },
+        test_site,
+        [remote_site],
+    ):
+        original_settings = test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)[
+            "sites"
+        ][test_site.id]["globals"]
+
+        # when
+        _disable_hub_site_specific(dashboard_page, test_site.id, HubDisableActions.RESET)
+
+        # then
+        dashboard_page.main_area.check_error(
+            "The piggyback-hub cannot be enabled for a remote site if it is disabled for the central site"
+        )
+        assert (
+            test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
+                test_site.id
+            ]["globals"]
+            == original_settings
+        ), f"Piggyback-hub was disabled for central site '{test_site.id}' although it should remain enabled"
+
+
 @pytest.mark.parametrize(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
 @pytest.mark.parametrize(
@@ -433,6 +478,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
     ["disable_action"],
     [
         pytest.param(HubDisableActions.SAVE, id="save"),
+        pytest.param(HubDisableActions.RESET, id="reset"),
     ],
 )
 def test_enabled_on_remote__disable_globally__error(
@@ -467,6 +513,7 @@ def test_enabled_on_remote__disable_globally__error(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
 @pytest.mark.parametrize(

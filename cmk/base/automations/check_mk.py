@@ -984,7 +984,6 @@ def _execute_autodiscovery(
                         schedule_discovery_check=_schedule_discovery_check,
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
-                        autodiscovery_queue=autodiscovery_queue,
                         reference_time=rediscovery_reference_time,
                         oldest_queued=oldest_queued,
                         enforced_services=config_cache.enforced_services_table(
@@ -992,6 +991,12 @@ def _execute_autodiscovery(
                         ),
                         on_error=on_error,
                     )
+                    # delete the file even in error case, otherwise we might be causing the same error
+                    # every time the cron job runs
+                    (autodiscovery_queue.path / str(host_name)).unlink(
+                        missing_ok=True
+                    )  # TODO: should be a method of autodiscovery_queue
+
                 if discovery_result:
                     discovery_results[host_name] = discovery_result
                     activation_required |= activate_host

@@ -15,7 +15,6 @@ from typing import assert_never, Generic, Literal, TypeVar
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
-from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -432,7 +431,6 @@ def autodiscovery(
     schedule_discovery_check: Callable[[HostName], object],
     rediscovery_parameters: RediscoveryParameters,
     invalidate_host_config: Callable[[], object],
-    autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
     enforced_services: Container[ServiceID],
@@ -473,9 +471,6 @@ def autodiscovery(
         # for offline hosts the error message is empty. This is to remain
         # compatible with the automation code
         console.verbose(f"  failed: {result.error_text or 'host is offline'}")
-        # delete the file even in error case, otherwise we might be causing the same error
-        # every time the cron job runs
-        (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
         return None, False
 
     something_changed = (
@@ -510,8 +505,6 @@ def autodiscovery(
 
         # Now ensure that the discovery service is updated right after the changes
         schedule_discovery_check(host_name)
-
-    (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     return (result, activation_required) if something_changed else (None, False)
 

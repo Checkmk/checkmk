@@ -4,39 +4,55 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import MutableMapping
+from typing import Literal, Required, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     get_rate,
     get_value_store,
     Metric,
+    NoLevelsT,
     render,
     Result,
     Service,
     State,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 from .smart_posix import ATAAll, ATADevice, Section
 
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
 
-def discovery_smart_ata_temp(section: Section) -> DiscoveryResult:
-    for disk in section:
+def discovery_smart_ata_temp(
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.temperature is not None:
-            yield Service(item=disk.device.name)
+            yield Service(item=item)
 
 
-def check_smart_ata_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
-    if (disk := _get_disk_ata(section, item)) is None:
-        return
-
-    if disk.temperature is None:
+def check_smart_ata_temp(
+    item: str,
+    params: TempParamDict,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> CheckResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(item), ATAAll) or disk.temperature is None:
         return
 
     yield from check_temperature(
@@ -49,7 +65,7 @@ def check_smart_ata_temp(item: str, params: TempParamType, section: Section) -> 
 
 check_plugin_smart_ata_temp = CheckPlugin(
     name="smart_ata_temp",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_ata_temp,
     check_function=check_smart_ata_temp,
@@ -58,37 +74,107 @@ check_plugin_smart_ata_temp = CheckPlugin(
 )
 
 
-def discover_smart_ata(section: Section) -> DiscoveryResult:
-    for disk in section:
+type AtaLevels = (
+    tuple[Literal["levels_upper"], FixedLevelsT[int] | NoLevelsT]
+    | tuple[Literal["discovered_value"], None]
+)
+
+
+class AtaDiscoveredParams(TypedDict):
+    id_5: Required[int | None]
+    id_10: Required[int | None]
+    id_184: Required[int | None]
+    id_187: Required[int | None]
+    id_188: Required[int | None]
+    id_196: Required[int | None]
+    id_197: Required[int | None]
+    id_199: Required[int | None]
+
+
+class AtaRuleSetParams(TypedDict):
+    levels_5: AtaLevels
+    levels_10: AtaLevels
+    levels_184: AtaLevels
+    levels_187: AtaLevels
+    levels_196: AtaLevels
+    levels_197: AtaLevels
+    levels_199: AtaLevels
+
+
+class AtaParams(AtaRuleSetParams, AtaDiscoveredParams):
+    pass
+
+
+DEFAULT_PARAMS: AtaRuleSetParams = {
+    "levels_5": ("discovered_value", None),
+    "levels_10": ("discovered_value", None),
+    "levels_184": ("discovered_value", None),
+    "levels_187": ("discovered_value", None),
+    "levels_196": ("discovered_value", None),
+    "levels_197": ("discovered_value", None),
+    "levels_199": ("discovered_value", None),
+}
+
+
+def discover_smart_ata(
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.ata_smart_attributes is not None:
-            yield Service(
-                item=disk.device.name,
-                parameters={
-                    str(id_): entry.raw.value
-                    for id_ in [5, 10, 184, 187, 188, 197, 199]
-                    if (entry := disk.by_id(id_)) is not None
-                },
-            )
+            parameters: AtaDiscoveredParams = {
+                "id_5": entry.raw.value if (entry := disk.by_id(5)) is not None else None,
+                "id_10": entry.raw.value if (entry := disk.by_id(10)) is not None else None,
+                "id_184": entry.raw.value if (entry := disk.by_id(184)) is not None else None,
+                "id_187": entry.raw.value if (entry := disk.by_id(187)) is not None else None,
+                "id_188": entry.raw.value if (entry := disk.by_id(188)) is not None else None,
+                "id_196": entry.raw.value if (entry := disk.by_id(196)) is not None else None,
+                "id_197": entry.raw.value if (entry := disk.by_id(197)) is not None else None,
+                "id_199": entry.raw.value if (entry := disk.by_id(199)) is not None else None,
+            }
+            yield Service(item=item, parameters=parameters)
 
 
-def check_smart_ata(item: str, params: Mapping[str, int | None], section: Section) -> CheckResult:
-    yield from _check_smart_ata(item, params, section, get_value_store(), time.time())
+def check_smart_ata(
+    item: str,
+    params: AtaParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> CheckResult:
+    yield from _check_smart_ata(
+        item,
+        params,
+        section_smart_posix_all,
+        section_smart_posix_scan_arg,
+        get_value_store(),
+        time.time(),
+    )
 
 
 def _check_smart_ata(
     item: str,
-    params: Mapping[str, int | None],
-    section: Section,
+    params: AtaParams,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
     value_store: MutableMapping[str, object],
     now: float,
 ) -> CheckResult:
-    if (disk := _get_disk_ata(section, item)) is None:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(item), ATAAll):
         return
 
     if (reallocated_sector_count := disk.by_id(5)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_5"],
             value=reallocated_sector_count.raw.value,
-            discovered_value=params.get("5"),
+            discovered_value=params.get("id_5"),
             label="Reallocated sectors",
             metric_name="harddrive_reallocated_sectors",
         )
@@ -102,9 +188,10 @@ def _check_smart_ata(
         )
 
     if (spin_retries := disk.by_id(10)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_10"],
             value=spin_retries.raw.value,
-            discovered_value=params.get("10"),
+            discovered_value=params.get("id_10"),
             label="Spin retries",
             metric_name="harddrive_spin_retries",
         )
@@ -118,17 +205,19 @@ def _check_smart_ata(
         )
 
     if (end_to_end_errors := disk.by_id(184)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_184"],
             value=end_to_end_errors.raw.value,
-            discovered_value=params.get("184"),
+            discovered_value=params.get("id_184"),
             label="End-to-End Errors",
             metric_name="harddrive_end_to_end_errors",
         )
 
     if (uncorrectable_errors := disk.by_id(187)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_187"],
             value=uncorrectable_errors.raw.value,
-            discovered_value=params.get("187"),
+            discovered_value=params.get("id_187"),
             label="Uncorrectable errors",
             metric_name="harddrive_uncorrectable_errors",
         )
@@ -136,9 +225,10 @@ def _check_smart_ata(
     yield from _check_command_timeout(disk, value_store, now)
 
     if (reallocated_events := disk.by_id(196)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_196"],
             value=reallocated_events.raw.value,
-            discovered_value=params.get("196"),
+            discovered_value=params.get("id_196"),
             label="Reallocated events",
             metric_name="harddrive_reallocated_events",
         )
@@ -149,36 +239,47 @@ def _check_smart_ata(
         )
 
     if (pending_sectors := disk.by_id(197)) is not None:
-        yield from _check_against_discovery(
+        yield from _check_against_params(
+            param=params["levels_197"],
             value=pending_sectors.raw.value,
-            discovered_value=params.get("197"),
+            discovered_value=params.get("id_197"),
             label="Pending sectors",
             metric_name="harddrive_pending_sectors",
         )
 
     if (crc_errors := disk.by_id(199)) is not None:
         if crc_errors.name == "UDMA_CRC_Error_Count":
-            yield from _check_against_discovery(
+            yield from _check_against_params(
+                param=params["levels_199"],
                 value=crc_errors.raw.value,
-                discovered_value=params.get("199"),
+                discovered_value=params.get("id_199"),
                 label="UDMA CRC errors",
                 metric_name="harddrive_udma_crc_errors",
             )
         else:
-            yield from _check_against_discovery(
+            yield from _check_against_params(
+                param=params["levels_199"],
                 value=crc_errors.raw.value,
-                discovered_value=params.get("199"),
+                discovered_value=params.get("id_199"),
                 label="CRC errors",
                 metric_name="harddrive_crc_errors",
             )
 
 
-def _get_disk_ata(section: Section, item: str) -> ATAAll | None:
-    for d in section:
-        if isinstance(d.device, ATADevice) and d.device.name == item:
-            return d
-
-    return None
+def _check_against_params(
+    param: AtaLevels, value: int, discovered_value: int | None, label: str, metric_name: str
+) -> CheckResult:
+    match param[1]:
+        case None:
+            yield from _check_against_discovery(value, discovered_value, label, metric_name)
+        case levels_upper:
+            yield from check_levels(
+                value=value,
+                levels_upper=levels_upper,
+                label=label,
+                render_func=str,
+                metric_name=metric_name,
+            )
 
 
 def _check_against_discovery(
@@ -218,9 +319,13 @@ def _check_command_timeout(
 
 check_plugin_smart_ata_stats = CheckPlugin(
     name="smart_ata_stats",
-    sections=["smart_posix_all"],
+    sections=[
+        "smart_posix_all",
+        "smart_posix_scan_arg",
+    ],
     service_name="SMART %s Stats",
     discovery_function=discover_smart_ata,
     check_function=check_smart_ata,
-    check_default_parameters={},  # needed to pass discovery parameters along!
+    check_ruleset_name="smart_ata",
+    check_default_parameters=DEFAULT_PARAMS,
 )

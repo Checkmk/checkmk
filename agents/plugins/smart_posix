@@ -21,8 +21,14 @@ main() {
         exit
     fi
     echo "<<<smart_posix_all:sep(0)>>>"
-    smartctl --scan | awk '{print $1}' | while read -r DEVICE; do
+    smartctl --scan | awk '{print $1}' | while IFS= read -r DEVICE; do
         smartctl --all --json=c "$DEVICE"
+        printf "\n"
+    done
+    echo "<<<smart_posix_scan_arg:sep(0)>>>"
+    smartctl --scan | awk 'BEGIN{FS="#"} {print $1}' | while read -r DEVICE_ARGS; do
+        # Run smartctl with the extracted device information
+        printf "%s\n" "$DEVICE_ARGS" | xargs smartctl --all --json=c
         printf "\n"
     done
 }

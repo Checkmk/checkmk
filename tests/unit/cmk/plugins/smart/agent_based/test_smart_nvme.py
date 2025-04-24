@@ -9,12 +9,18 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.smart.agent_based.smart_nvme import check_smart_nvme, discover_smart_nvme
+from cmk.plugins.smart.agent_based.smart_nvme import (
+    check_smart_nvme,
+    DEFAULT_PARAMS,
+    discover_smart_nvme,
+    NVMeParams,
+)
 from cmk.plugins.smart.agent_based.smart_posix import (
     NVMeAll,
     NVMeDevice,
     NVMeHealth,
-    parse_smart_posix_all,
+    parse_smart_posix,
+    Section,
 )
 
 STRING_TABLE_NVME = [
@@ -23,40 +29,60 @@ STRING_TABLE_NVME = [
     ],
 ]
 
-SECTION_NVME = [
-    NVMeAll(
-        device=NVMeDevice(protocol="NVMe", name="/dev/nvme0"),
-        nvme_smart_health_information_log=NVMeHealth(
-            power_on_hours=9944,
-            power_cycles=2982,
-            critical_warning=0,
-            media_errors=0,
-            available_spare=100,
-            available_spare_threshold=50,
-            temperature=44,
-            percentage_used=2,
-            num_err_log_entries=0,
-            data_units_read=46988993,
-            data_units_written=41549752,
-        ),
-    )
-]
+SECTION_NVME = Section(
+    devices={
+        "PC601 NVMe SK hynix 512GB XXXNVMe": NVMeAll(
+            device=NVMeDevice(protocol="NVMe", name="/dev/nvme0"),
+            model_name="PC601 NVMe SK hynix 512GB",
+            serial_number="XXXNVMe",
+            nvme_smart_health_information_log=NVMeHealth(
+                power_on_hours=9944,
+                power_cycles=2982,
+                critical_warning=0,
+                media_errors=0,
+                available_spare=100,
+                available_spare_threshold=50,
+                temperature=44,
+                percentage_used=2,
+                num_err_log_entries=0,
+                data_units_read=46988993,
+                data_units_written=41549752,
+            ),
+        )
+    },
+    failures=[],
+)
 
 
 def test_parse_smart_nvme() -> None:
-    section = parse_smart_posix_all(STRING_TABLE_NVME)
+    section = parse_smart_posix(STRING_TABLE_NVME)
     assert section == SECTION_NVME
 
 
 def test_discover_smart_nvme_stat() -> None:
-    assert list(discover_smart_nvme(SECTION_NVME)) == [
-        Service(item="/dev/nvme0", parameters={"critical_warning": 0, "media_errors": 0}),
+    assert list(discover_smart_nvme(SECTION_NVME, SECTION_NVME)) == [
+        Service(
+            item="PC601 NVMe SK hynix 512GB XXXNVMe",
+            parameters={
+                "critical_warning": 0,
+                "media_errors": 0,
+            },
+        ),
     ]
 
 
 def test_check_smart_nvme_stat() -> None:
+    params: NVMeParams = {  # type: ignore[assignment]
+        "critical_warning": 0,
+        "media_errors": 0,
+    } | DEFAULT_PARAMS
     assert list(
-        check_smart_nvme("/dev/nvme0", {"critical_warning": 0, "media_errors": 0}, SECTION_NVME)
+        check_smart_nvme(
+            "PC601 NVMe SK hynix 512GB XXXNVMe",
+            params,
+            SECTION_NVME,
+            SECTION_NVME,
+        )
     ) == [
         Result(state=State.OK, summary="Powered on: 1 year 49 days"),
         Metric("uptime", 35798400.0),
@@ -76,4 +102,50 @@ def test_check_smart_nvme_stat() -> None:
         Metric("nvme_data_units_read", 24058364416000.0),
         Result(state=State.OK, summary="Data units written: 19.3 TiB"),
         Metric("nvme_data_units_written", 21273473024000.0),
+    ]
+
+
+def test_check_smart_nvme_levels() -> None:
+    params: NVMeParams = {  # type: ignore[assignment]
+        "critical_warning": 0,
+        "media_errors": 0,
+    } | {
+        "levels_critical_warning": ("levels_upper", ("fixed", (0, 1))),
+        "levels_media_errors": ("levels_upper", ("fixed", (0, 1))),
+        "levels_available_spare": ("levels_lower", ("fixed", (101, 10))),
+        "levels_spare_percentage_used": ("fixed", (0, 90)),
+        "levels_error_information_log_entries": ("fixed", (0, 1)),
+        "levels_data_units_read": ("fixed", (0, 2638827906662400)),
+        "levels_data_units_written": ("fixed", (0, 1759218604441600)),
+    }
+    assert list(
+        check_smart_nvme(
+            "PC601 NVMe SK hynix 512GB XXXNVMe",
+            params,
+            SECTION_NVME,
+            SECTION_NVME,
+        )
+    ) == [
+        Result(state=State.OK, summary="Powered on: 1 year 49 days"),
+        Metric("uptime", 35798400.0),
+        Result(state=State.OK, summary="Power cycles: 2982"),
+        Metric("harddrive_power_cycles", 2982.0),
+        Result(state=State.WARN, summary="Critical warning: 0 (warn/crit at 0/1)"),
+        Metric("nvme_critical_warning", 0.0, levels=(0.0, 1.0)),
+        Result(state=State.WARN, summary="Media and data integrity errors: 0 (warn/crit at 0/1)"),
+        Metric("nvme_media_and_data_integrity_errors", 0.0, levels=(0.0, 1.0)),
+        Result(
+            state=State.WARN, summary="Available spare: 100.00% (warn/crit below 101.00%/10.00%)"
+        ),
+        Metric("nvme_available_spare", 100.0),
+        Result(state=State.WARN, summary="Percentage used: 2.00% (warn/crit at 0%/90.00%)"),
+        Metric("nvme_spare_percentage_used", 2.0, levels=(0.0, 90.0)),
+        Result(state=State.WARN, summary="Error information log entries: 0 (warn/crit at 0/1)"),
+        Metric("nvme_error_information_log_entries", 0.0, levels=(0.0, 1.0)),
+        Result(state=State.WARN, summary="Data units read: 21.9 TiB (warn/crit at 0 B/2.34 PiB)"),
+        Metric("nvme_data_units_read", 24058364416000.0, levels=(0.0, 2638827906662400.0)),
+        Result(
+            state=State.WARN, summary="Data units written: 19.3 TiB (warn/crit at 0 B/1.56 PiB)"
+        ),
+        Metric("nvme_data_units_written", 21273473024000.0, levels=(0.0, 1759218604441600.0)),
     ]

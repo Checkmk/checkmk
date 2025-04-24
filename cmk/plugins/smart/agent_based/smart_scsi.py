@@ -11,22 +11,35 @@ from cmk.agent_based.v2 import (
     get_value_store,
     Service,
 )
-from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 from .smart_posix import SCSIAll, SCSIDevice, Section
 
 
-def discovery_smart_scsi_temp(section: Section) -> DiscoveryResult:
-    for disk in section:
+def discovery_smart_scsi_temp(
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> DiscoveryResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    for item, disk in devices.items():
         if isinstance(disk.device, SCSIDevice) and disk.temperature is not None:
-            yield Service(item=disk.device.name)
+            yield Service(item=item)
 
 
-def check_smart_scsi_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
-    if (disk := _get_disk_scsi(section, item)) is None:
-        return
-
-    if disk.temperature is None:
+def check_smart_scsi_temp(
+    item: str,
+    params: TempParamDict,
+    section_smart_posix_all: Section | None,
+    section_smart_posix_scan_arg: Section | None,
+) -> CheckResult:
+    devices = {
+        **(section_smart_posix_scan_arg.devices if section_smart_posix_scan_arg else {}),
+        **(section_smart_posix_all.devices if section_smart_posix_all else {}),
+    }
+    if not isinstance(disk := devices.get(item), SCSIAll) or disk.temperature is None:
         return
 
     yield from check_temperature(
@@ -37,17 +50,9 @@ def check_smart_scsi_temp(item: str, params: TempParamType, section: Section) ->
     )
 
 
-def _get_disk_scsi(section: Section, item: str) -> SCSIAll | None:
-    for d in section:
-        if isinstance(d.device, SCSIDevice) and d.device.name == item:
-            return d
-
-    return None
-
-
 check_plugin_smart_scsi_temp = CheckPlugin(
     name="smart_scsi_temp",
-    sections=["smart_posix_all"],
+    sections=["smart_posix_all", "smart_posix_scan_arg"],
     service_name="Temperature SMART %s",
     discovery_function=discovery_smart_scsi_temp,
     check_function=check_smart_scsi_temp,

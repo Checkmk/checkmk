@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Literal
 
-import pydantic
+from pydantic import AliasChoices, BaseModel, Field, RootModel
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -14,31 +15,31 @@ from cmk.agent_based.v2 import (
 )
 
 
-class Temperature(pydantic.BaseModel, frozen=True):
+class Temperature(BaseModel, frozen=True):
     current: int
 
 
-class SCSIDevice(pydantic.BaseModel, frozen=True):
+class SCSIDevice(BaseModel, frozen=True):
     # Not implemented, but needs to be handled in schema
     protocol: Literal["SCSI"]
     name: str
 
 
-class ATADevice(pydantic.BaseModel, frozen=True):
+class ATADevice(BaseModel, frozen=True):
     protocol: Literal["ATA"]
     name: str
 
 
-class NVMeDevice(pydantic.BaseModel, frozen=True):
+class NVMeDevice(BaseModel, frozen=True):
     protocol: Literal["NVMe"]
     name: str
 
 
-class ATARawValue(pydantic.BaseModel, frozen=True):
+class ATARawValue(BaseModel, frozen=True):
     value: int
 
 
-class ATATableEntry(pydantic.BaseModel, frozen=True):
+class ATATableEntry(BaseModel, frozen=True):
     id: int
     name: str
     value: int
@@ -46,12 +47,14 @@ class ATATableEntry(pydantic.BaseModel, frozen=True):
     raw: ATARawValue
 
 
-class ATATable(pydantic.BaseModel, frozen=True):
+class ATATable(BaseModel, frozen=True):
     table: Sequence[ATATableEntry]
 
 
-class ATAAll(pydantic.BaseModel, frozen=True):
+class ATAAll(BaseModel, frozen=True):
     device: ATADevice
+    model_name: str
+    serial_number: str
     ata_smart_attributes: ATATable | None = None
     temperature: Temperature | None = None
 
@@ -64,7 +67,7 @@ class ATAAll(pydantic.BaseModel, frozen=True):
         return None
 
 
-class NVMeHealth(pydantic.BaseModel, frozen=True):
+class NVMeHealth(BaseModel, frozen=True):
     power_on_hours: int
     power_cycles: int
     critical_warning: int
@@ -78,33 +81,71 @@ class NVMeHealth(pydantic.BaseModel, frozen=True):
     data_units_written: int
 
 
-class NVMeAll(pydantic.BaseModel, frozen=True):
+class NVMeAll(BaseModel, frozen=True):
     device: NVMeDevice
+    model_name: str
+    serial_number: str
     nvme_smart_health_information_log: NVMeHealth | None = None
 
 
-class SCSIAll(pydantic.BaseModel, frozen=True):
+class SCSIAll(BaseModel, frozen=True):
     device: SCSIDevice
+    model_name: str = Field(..., validation_alias=AliasChoices("model_name", "scsi_model_name"))
+    serial_number: str
     temperature: Temperature | None = None
 
 
-class FailureAll(pydantic.BaseModel, frozen=True):
+class FailureAll(BaseModel, frozen=True):
     device: None = None  # happens on permission denied.
 
 
-Section = Sequence[NVMeAll | ATAAll | SCSIAll | FailureAll]
+class SmartctlError(BaseModel, frozen=True):
+    # From the `smartctl` code:
+    # command line did not parse, or internal error occurred in smartctl (0x01<<0)
+    # device open failed (0x01<<1)
+    # device is in low power mode and -n option requests to exit (0x01<<1)
+    # read device identity (ATA only) failed (0x01<<1)
+    # smart command failed, or ATA identify device structure missing information (0x01<<2)
+
+    # If any of the errors above occur, we assume that no SMART data can be collected. We then allow
+    # the data to be discarded.
+    exit_status: Literal[1, 2, 3, 4, 5, 6, 7]
 
 
-class ParseSection(pydantic.RootModel):
-    root: NVMeAll | ATAAll | SCSIAll | FailureAll
+class CantOpenDevice(BaseModel, frozen=True):
+    device: SCSIDevice | ATADevice | NVMeDevice
+    smartctl: SmartctlError
 
 
-def parse_smart_posix_all(string_table: StringTable) -> Section:
+@dataclass(frozen=True)
+class Section:
+    devices: Mapping[str, NVMeAll | ATAAll | SCSIAll]
+    failures: Sequence[FailureAll | CantOpenDevice]
+
+
+class ParseSection(RootModel):
+    root: NVMeAll | ATAAll | SCSIAll | FailureAll | CantOpenDevice
+
+
+def parse_smart_posix(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
-    return [ParseSection.model_validate_json(line[0]).root for line in string_table]
+    scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
+    failures: list[FailureAll | CantOpenDevice] = []
+    devices: dict[str, NVMeAll | ATAAll | SCSIAll] = {}
+    for scan in scans:
+        if isinstance(scan, (FailureAll | CantOpenDevice)):
+            failures.append(scan)
+        else:
+            devices[f"{scan.model_name} {scan.serial_number}"] = scan
+    return Section(devices=devices, failures=failures)
 
 
 agent_section_smart_posix_all = AgentSection(
     name="smart_posix_all",
-    parse_function=parse_smart_posix_all,
+    parse_function=parse_smart_posix,
+)
+
+agent_section_smart_posix_scan_arg = AgentSection(
+    name="smart_posix_scan_arg",
+    parse_function=parse_smart_posix,
 )

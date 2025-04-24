@@ -61,6 +61,21 @@ class Sensor:
             "critical": State.CRIT,
         }.get(dev_state.lower())
 
+    @staticmethod
+    def _to_levels(warn: float | None, crit: float | None) -> LevelsT[float]:
+        if crit is None:
+            return "no_levels", None
+
+        return "fixed", (warn if warn is not None else crit, crit)
+
+    @property
+    def levels_upper(self) -> LevelsT[float]:
+        return self._to_levels(self.warn_high, self.crit_high)
+
+    @property
+    def levels_lower(self) -> LevelsT[float]:
+        return self._to_levels(self.warn_low, self.crit_low)
+
 
 Section = dict[str, Sensor]
 IgnoreParams = Mapping[str, Sequence[str]]
@@ -160,16 +175,6 @@ def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLeve
     }
 
 
-def _sensor_levels_to_check_levels_fixed(
-    sensor_warn: float | None,
-    sensor_crit: float | None,
-) -> LevelsT[float]:
-    if sensor_crit is None:
-        return "no_levels", None
-    warn = sensor_warn if sensor_warn is not None else sensor_crit
-    return "fixed", (warn, sensor_crit)
-
-
 def _check_status(
     sensor: Sensor,
     status_txt_mapping: StatusTxtMapping,
@@ -221,8 +226,8 @@ def _check_ipmi_detailed(
 
     yield from check_levels(
         value=sensor.value,
-        levels_upper=_sensor_levels_to_check_levels_fixed(sensor.warn_high, sensor.crit_high),
-        levels_lower=_sensor_levels_to_check_levels_fixed(sensor.warn_low, sensor.crit_low),
+        levels_upper=sensor.levels_upper,
+        levels_lower=sensor.levels_lower,
         render_func=_unit_to_render_func(sensor.unit),
         metric_name=metric_name,
     )

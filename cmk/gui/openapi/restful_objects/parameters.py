@@ -30,6 +30,7 @@ OPTIONAL_FOLDER_NAME = {
         description="A folder name.",
         metadata={"should_exist": True},
         required=False,
+        example="~",
     )
 }
 

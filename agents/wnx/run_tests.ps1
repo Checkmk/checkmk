@@ -161,7 +161,7 @@ function Invoke-UnitTest([bool]$run, [String]$name, [String]$cmdline) {
         $env:WNX_TEST_ROOT = $wnx_test_root
         Write-Host "Using temporary directory $wnx_test_root..." -Foreground White
         Invoke-PrepareTests "$wnx_test_root\test"
-        New-Item -Path "$wnx_test_root\watest32.exe" -ItemType SymbolicLink -Value "$arte\watest32.exe" > nul
+        Copy-Item -Path ".\build\watest\Win32\Release\watest32.exe" -Destination "$wnx_test_root\watest32.exe" -Force > nul
         & net stop WinRing0_1_2_0
         & "$wnx_test_root\watest32.exe" "--gtest_filter=$cmdline"
         if ($LASTEXITCODE -ne 0) {
@@ -212,8 +212,8 @@ function Invoke-RegressionTest() {
         New-Item -ItemType Directory -Path $data_dir -ErrorAction Stop > nul
         Remove-NetFirewallRule -DisplayName "AllowRegression" 2> nul
         New-NetFirewallRule -DisplayName "AllowRegression" -Direction Inbound -Program "$wnx_test_root\check_mk_agent.exe" -RemoteAddress LocalSubnet -Action Allow >nul
-        Copy-Item $arte\check_mk_agent.exe  $wnx_test_root\check_mk_agent.exe > nul
-        Copy-Item $arte\check_mk.yml $wnx_test_root\test\root\check_mk.yml > nul
+        Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe  $wnx_test_root\check_mk_agent.exe > nul
+        Copy-Item .\install\resources\check_mk.yml $wnx_test_root\test\root\check_mk.yml > nul
         &  xcopy "..\windows\plugins\*.*" "$wnx_test_root\test\root\plugins" "/D" "/Y" > nul
         $env:WNX_REGRESSION_BASE_DIR = "$wnx_test_root"
         $env:WNX_INTEGRATION_BASE_DIR = ""
@@ -278,10 +278,10 @@ function Invoke-IntegrationTest() {
         New-NetFirewallRule -DisplayName "AllowIntegration2" -Direction Inbound -Program "$data_dir\bin\cmk-agent-ctl.exe" -RemoteAddress LocalSubnet -Action Allow > nul
 
         Write-Host "Copy exe..." -Foreground White
-        Copy-Item $arte\check_mk_agent.exe  $wnx_test_root\check_mk_agent.exe > nul
+        Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe  $wnx_test_root\check_mk_agent.exe > nul
 
         Write-Host "Copy yml..." -Foreground White
-        Copy-Item $arte\check_mk.yml $wnx_test_root\test\root\check_mk.yml > nul
+        Copy-Item .\install\resources\check_mk.yml $wnx_test_root\test\root\check_mk.yml > nul
         &  xcopy "..\windows\plugins\*.*" "$wnx_test_root\test\root\plugins\" "/D" "/Y" > nul
         $env:WNX_REGRESSION_BASE_DIR = ""
         $env:WNX_INTEGRATION_BASE_DIR = "$wnx_test_root"

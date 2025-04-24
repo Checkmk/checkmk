@@ -12,24 +12,17 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore]
-    resolve_schema_instance,
-)
-from marshmallow import Schema
 
 from cmk.utils.jsontype import JsonSerializable
 
-from cmk.gui import fields
-from cmk.gui.fields.base import BaseSchema
-from cmk.gui.openapi.restful_objects.params import fill_out_path_template, marshmallow_to_openapi
-from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
+from cmk.gui.openapi.restful_objects.params import fill_out_path_template
+from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 from cmk.gui.openapi.spec.spec_generator._type_defs import (
-    MarshmallowSchemaDefinitions,
     SpecEndpoint,
 )
 
@@ -113,7 +106,6 @@ request = urllib.request.Request(
     {%- if request_schema %}
     data=json.dumps({{
             request_schema |
-            to_dict |
             to_python |
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
@@ -173,7 +165,6 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
 {%- endif %}
 {%- if request_schema %}
   --data '{{ request_schema |
-          to_dict |
           to_json(indent=2, sort_keys=True) |
           _escape_single_quotes |
           indent(skip_lines=1, spaces=8) }}' \\
@@ -213,7 +204,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
-{{ request_schema | to_dict | httpie_request_body | indent(spaces=4) }}
+{{ request_schema | httpie_request_body | indent(spaces=4) }}
 {%- endif %}
 {%- if content_type == 'application/octet-stream' %}
     --download \\
@@ -256,7 +247,6 @@ resp = session.{{ method }}(
     {%- if request_schema %}
     json={{
             request_schema |
-            to_dict |
             to_python |
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
@@ -323,50 +313,6 @@ def first_sentence(text: str) -> str:
     return "".join(re.split(r"(\w\.)", text)[:2])
 
 
-def field_value(field: fields.Field) -> str:
-    return field.metadata["example"]
-
-
-def to_dict(schema: BaseSchema) -> dict[str, str]:
-    """Convert a Schema-class to a dict-representation.
-
-    Examples:
-
-        >>> from cmk.gui.fields.utils import BaseSchema
-        >>> from cmk import fields
-        >>> class SayHello(BaseSchema):
-        ...      message = fields.String(example="Hello world!")
-        ...      message2 = fields.String(example="Hello Bob!")
-        >>> to_dict(SayHello())
-        {'message': 'Hello world!', 'message2': 'Hello Bob!'}
-
-        >>> class Nobody(BaseSchema):
-        ...      expects = fields.String()
-        >>> to_dict(Nobody())
-        Traceback (most recent call last):
-        ...
-        KeyError: "Field 'Nobody.expects' has no 'example'"
-
-    Args:
-        schema:
-            A Schema instance with all it's fields having an `example` key.
-
-    Returns:
-        A dict with the field-names as a key and their example as value.
-
-    """
-    if (schema_example := schema.schema_example) is not None:
-        return schema_example
-
-    ret = {}
-    for name, field in schema.declared_fields.items():
-        try:
-            ret[name] = field.metadata["example"]
-        except KeyError as exc:
-            raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
-    return ret
-
-
 def _transform_params(param_list):
     """Transform a list of parameters to a dict addressable by name.
 
@@ -422,7 +368,7 @@ def httpie_request_body(examples: JsonObject) -> str:
     """
 
     Args:
-        examples: a field to example dict, as created by `to_dict`
+        examples: a field to example dict
 
     Returns:
         a str that httpie can use as a request body specification
@@ -448,10 +394,12 @@ def httpie_request_body(examples: JsonObject) -> str:
 def code_samples(
     spec: APISpec,
     spec_endpoint: SpecEndpoint,
-    schema_definitions: MarshmallowSchemaDefinitions,
-    header_params: Sequence[RawParameter],
-    path_params: Sequence[RawParameter],
-    query_params: Sequence[RawParameter],
+    request_schema_example: Mapping[str, object] | None,
+    multiple_request_schemas: bool,
+    includes_redirect: bool,
+    header_params: Sequence[OpenAPIParameter],
+    path_params: Sequence[OpenAPIParameter],
+    query_params: Sequence[OpenAPIParameter],
     site_name: str,
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
@@ -461,7 +409,6 @@ def code_samples(
     env = _jinja_environment(spec)
     result: list[CodeSample] = []
     for example in CODE_EXAMPLES:
-        schema = _get_schema(schema_definitions.request_schema)
         result.append(
             {
                 "label": example.label,
@@ -474,16 +421,14 @@ def code_samples(
                     password="test123",
                     content_type=spec_endpoint.content_type,
                     does_redirects=spec_endpoint.does_redirects,
-                    path_params=marshmallow_to_openapi(path_params, "path"),
-                    query_params=marshmallow_to_openapi(query_params, "query"),
-                    header_params=marshmallow_to_openapi(header_params, "header"),
-                    includes_redirect=(
-                        "redirect" in schema.declared_fields if schema is not None else False
-                    ),
+                    path_params=_extract_example(path_params),
+                    query_params=_extract_example(query_params),
+                    header_params=_extract_example(header_params),
+                    includes_redirect=includes_redirect,
                     request_endpoint=spec_endpoint.path,
                     request_method=spec_endpoint.method,
-                    request_schema=schema,
-                    request_schema_multiple=_schema_is_multiple(schema_definitions.request_schema),
+                    request_schema=request_schema_example,
+                    request_schema_multiple=multiple_request_schemas,
                     formatted_if_statement=formatted_if_statement_for_responses(
                         list(spec_endpoint.expected_status_codes),
                         spec_endpoint.content_type == "application/octet-stream",
@@ -495,6 +440,45 @@ def code_samples(
             }
         )
     return result
+
+
+def _extract_example(parameters: Sequence[Mapping[str, object]]) -> Sequence[dict[str, object]]:
+    # TODO: to be cleaned up
+    out = []
+    for param in parameters:
+        new = dict(param)
+        if "example" in param:
+            pass
+        elif (examples := param.get("examples")) and isinstance(examples, list):
+            new["example"] = examples[0]
+        elif (schema := param.get("schema")) and isinstance(schema, dict):
+            if "example" in schema:
+                new["example"] = schema["example"]
+            elif (examples := schema.get("examples")) and isinstance(examples, list):
+                new["example"] = examples[0]
+            elif "default" in schema:
+                new["example"] = schema["default"]
+        elif (
+            (c := param.get("content"))
+            and isinstance(c, dict)
+            and (content := c.get("application/json"))
+            and isinstance(c, dict)
+        ):
+            if "example" in content:
+                new["example"] = content["example"]
+            elif (schema := content.get("schema")) and isinstance(schema, dict):
+                if "example" in schema:
+                    new["example"] = schema["example"]
+                elif (examples := schema.get("examples")) and isinstance(examples, list):
+                    new["example"] = examples[0]
+                elif "default" in schema:
+                    new["example"] = schema["default"]
+
+        if "example" not in new:
+            raise ValueError("Missing example for parameter", new)
+        out.append(new)
+
+    return out
 
 
 def format_nicely(value: Any, indent_level: int = 0) -> str:
@@ -524,43 +508,6 @@ def format_nicely(value: Any, indent_level: int = 0) -> str:
     return repr(value)
 
 
-def _get_schema(schema: str | type[Schema] | None) -> Schema | None:
-    """Get the schema instance of a schema name or class.
-
-    In case of OneOfSchema classes, the first dispatched schema is being returned.
-
-    Args:
-        schema:
-            Either
-
-    Returns:
-        A schema instance.
-
-    """
-    if schema is None:
-        return None
-
-    # NOTE:
-    # In case of a "OneOfSchema" instance, we don't really have any fields on this Schema
-    # as it is just there for dispatching. The real fields are on the dispatched classes.
-    # We just take the first one and go with that, as we have no way of letting the user chose
-    # the dispatching-key by himself (this is a limitation of ReDoc).
-    _schema: Schema = resolve_schema_instance(schema)
-    if _schema_is_multiple(schema):
-        type_schemas = _schema.type_schemas  # type: ignore[attr-defined]
-        first_key = list(type_schemas.keys())[0]
-        _schema = resolve_schema_instance(type_schemas[first_key])
-
-    return _schema
-
-
-def _schema_is_multiple(schema: str | type[Schema] | None) -> bool:
-    if schema is None:
-        return False
-    _schema = resolve_schema_instance(schema)
-    return bool(getattr(_schema, "type_schemas", None))
-
-
 @functools.lru_cache
 def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     """Create a map with code templates, ready to render.
@@ -572,7 +519,6 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     ...     path = 'foo'
     ...     method = 'get'
     ...     content_type = 'application/json'
-    ...     request_schema = _get_schema('CreateHost')
 
     >>> endpoint = Endpoint()  # doctest: +SKIP
 
@@ -589,8 +535,8 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     ...     does_redirects=endpoint.does_redirects,
     ...     request_endpoint=endpoint.path,
     ...     request_method=endpoint.method,
-    ...     request_schema=_get_schema(endpoint.request_schema),
-    ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
+    ...     request_schema={"field_name": "example_value"},
+    ...     request_schema_multiple=False,
     ... )
 
     """
@@ -609,8 +555,6 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
         fill_out_parameters=fill_out_parameters,
         first_sentence=first_sentence,
         indent=indent,
-        field_value=field_value,
-        to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,
         to_python=format_nicely,

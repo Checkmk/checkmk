@@ -10,6 +10,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 from apispec import APISpec
+from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 from marshmallow.fields import Field
 from marshmallow.schema import SchemaMeta
@@ -285,13 +286,20 @@ def _to_operation_dict(
             },
         }
 
+    schema = _get_schema(schema_definitions.request_schema)
+    if schema is not None:
+        includes_redirect = "redirect" in schema.declared_fields
+    else:
+        includes_redirect = False
     operation_spec["x-codeSamples"] = code_samples(
         spec,
         spec_endpoint,
-        schema_definitions,
-        header_params=header_params,
-        path_params=path_params,
-        query_params=query_params,
+        request_schema_example=to_dict(schema) if schema else None,
+        multiple_request_schemas=_schema_is_multiple(schema_definitions.request_schema),
+        includes_redirect=includes_redirect,
+        header_params=marshmallow_to_openapi(header_params, "header"),
+        path_params=marshmallow_to_openapi(path_params, "path"),
+        query_params=marshmallow_to_openapi(query_params, "query"),
         site_name=site_name,
     )
 
@@ -481,6 +489,87 @@ class MarshmallowResponses:
             "content": {"application/problem+json": {"schema": error_schema}},
         }
         return response
+
+
+def _get_schema(
+    schema: str | type[Schema] | None,
+) -> Schema | None:
+    """Get the schema instance of a schema name or class.
+
+    In case of OneOfSchema classes, the first dispatched schema is being returned.
+
+    Args:
+        schema:
+            Either
+
+    Returns:
+        A schema instance.
+
+    """
+    if schema is None:
+        return None
+    # NOTE:
+    # In case of a "OneOfSchema" instance, we don't really have any fields on this Schema
+    # as it is just there for dispatching. The real fields are on the dispatched classes.
+    # We just take the first one and go with that, as we have no way of letting the user chose
+    # the dispatching-key by himself (this is a limitation of ReDoc).
+    _schema: Schema = resolve_schema_instance(schema)
+    if _schema_is_multiple(schema):
+        type_schemas = _schema.type_schemas  # type: ignore[attr-defined]
+        first_key = list(type_schemas.keys())[0]
+        _schema = resolve_schema_instance(type_schemas[first_key])
+
+    if not hasattr(_schema, "schema_example"):
+        raise ValueError(f"Schema {schema} does not have a schema_example attribute.")
+
+    return _schema
+
+
+def _schema_is_multiple(schema: str | type[Schema] | None) -> bool:
+    if schema is None:
+        return False
+    _schema = resolve_schema_instance(schema)
+    return bool(getattr(_schema, "type_schemas", None))
+
+
+def to_dict(schema: Schema) -> dict[str, str]:
+    """Convert a Schema-class to a dict-representation.
+
+    Examples:
+
+        >>> from cmk.gui.fields.utils import BaseSchema
+        >>> from cmk import fields
+        >>> class SayHello(BaseSchema):
+        ...      message = fields.String(example="Hello world!")
+        ...      message2 = fields.String(example="Hello Bob!")
+        >>> to_dict(SayHello())
+        {'message': 'Hello world!', 'message2': 'Hello Bob!'}
+
+        >>> class Nobody(BaseSchema):
+        ...      expects = fields.String()
+        >>> to_dict(Nobody())
+        Traceback (most recent call last):
+        ...
+        KeyError: "Field 'Nobody.expects' has no 'example'"
+
+    Args:
+        schema:
+            A Schema instance with all it's fields having an `example` key.
+
+    Returns:
+        A dict with the field-names as a key and their example as value.
+
+    """
+    if (schema_example := getattr(schema, "schema_example", None)) is not None:
+        return schema_example
+
+    ret = {}
+    for name, field in schema.declared_fields.items():
+        try:
+            ret[name] = field.metadata["example"]
+        except KeyError as exc:
+            raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
+    return ret
 
 
 def _coalesce_schemas(

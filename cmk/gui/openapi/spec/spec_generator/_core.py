@@ -407,14 +407,23 @@ from cmk.utils.paths import omd_root
 
 from cmk.gui import main_modules
 from cmk.gui.openapi import endpoint_registry
+from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
+from cmk.gui.openapi.framework.registry import (
+    EndpointDefinition,
+    versioned_endpoint_registry,
+    VersionedEndpointRegistry,
+)
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 from cmk.gui.openapi.spec.plugin_pydantic import CheckmkPydanticPlugin
 from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc_endpoints
+from cmk.gui.openapi.spec.spec_generator._doc_pydantic import pydantic_endpoint_to_doc_endpoint
+from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
@@ -447,7 +456,7 @@ def _generate_spec(
     if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
         undocumented_tag_groups.add("Checkmk Internal")
 
-    populate_spec(spec, target, undocumented_tag_groups, str(omd_site()))
+    populate_spec(APIVersion.V1, spec, target, undocumented_tag_groups, str(omd_site()))
     generated_spec = spec.to_dict()
     _add_cookie_auth(generated_spec, site)
     if not validate:
@@ -459,43 +468,108 @@ def _generate_spec(
 
 
 def populate_spec(
+    api_version: APIVersion,
     spec: APISpec,
     target: EndpointTarget,
     undocumented_tag_groups: set[str],
     site_name: str,
 ) -> APISpec:
-    endpoint: Endpoint
-
     methods = ["get", "put", "post", "delete"]
 
-    def module_name(func: Any) -> str:
-        return f"{func.__module__}.{func.__name__}"
-
-    def sort_key(e: Endpoint) -> tuple[str | int, ...]:
-        return e.sort, module_name(e.func), methods.index(e.method), e.path
+    def sort_key(e: DocEndpoint) -> tuple[str | int, ...]:
+        return e.doc_sort_index, e.family_name, methods.index(e.method), e.path, e.effective_path
 
     seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
-    for endpoint in sorted(endpoint_registry, key=sort_key):
-        if target in endpoint.blacklist_in or endpoint.tag_group in undocumented_tag_groups:
-            continue
+    doc_endpoints = []
 
-        for doc_endpoint in marshmallow_doc_endpoints(spec, endpoint, site_name):
-            ident = doc_endpoint.method, doc_endpoint.path
-            if ident in seen_paths:
-                raise ValueError(
-                    f"{ident} has already been defined.\n\n"
-                    f"This one: {doc_endpoint.operation_object}\n\n"
-                    f"The previous one: {seen_paths[ident]}\n\n"
-                )
-            seen_paths[ident] = doc_endpoint.operation_object
-            spec.path(
-                path=doc_endpoint.path,
-                operations={str(k): v for k, v in doc_endpoint.operation_object.items()},
+    marshmallow_endpoints, versioned_endpoints = get_endpoints_for_version(
+        api_version=api_version,
+        legacy_registry=endpoint_registry,
+        versioned_registry=versioned_endpoint_registry,
+    )
+
+    marshmallow_endpoint: Endpoint
+    for marshmallow_endpoint in marshmallow_endpoints:
+        if (
+            target in marshmallow_endpoint.blacklist_in
+            or marshmallow_endpoint.tag_group in undocumented_tag_groups
+        ):
+            continue
+        doc_endpoints.extend(
+            [
+                doc_endpoint
+                for doc_endpoint in marshmallow_doc_endpoints(spec, marshmallow_endpoint, site_name)
+            ]
+        )
+
+    for versioned_endpoint in versioned_endpoints:
+        if (
+            target in versioned_endpoint.doc.exclude_in_targets
+            or versioned_endpoint.doc.group in undocumented_tag_groups
+        ):
+            continue
+        doc_endpoints.append(
+            pydantic_endpoint_to_doc_endpoint(spec, versioned_endpoint.spec_endpoint(), site_name)
+        )
+
+    for doc_endpoint in sorted(doc_endpoints, key=sort_key):
+        ident = doc_endpoint.method, doc_endpoint.path
+        if ident in seen_paths:
+            raise ValueError(
+                f"{ident} has already been defined.\n\n"
+                f"This one: {doc_endpoint.operation_object}\n\n"
+                f"The previous one: {seen_paths[ident]}\n\n"
             )
+        seen_paths[ident] = doc_endpoint.operation_object
+        spec.path(
+            path=doc_endpoint.effective_path,
+            operations={str(k): v for k, v in doc_endpoint.operation_object.items()},
+        )
 
     del seen_paths
     return spec
+
+
+def get_endpoints_for_version(
+    api_version: APIVersion,
+    legacy_registry: EndpointRegistry,
+    versioned_registry: VersionedEndpointRegistry,
+) -> tuple[list[Endpoint], list[EndpointDefinition]]:
+    # TODO: consolidate version lookup with routing
+    all_versions = APIConfig.get_released_versions()
+    applicable_versions = [v for v in all_versions if v <= api_version]
+
+    version_legacy_endpoints = {}
+    version_endpoints = {}
+
+    for legacy_endpoint in legacy_registry:
+        ident = legacy_endpoint.ident
+
+        if (
+            not legacy_endpoint.removed_in_version
+            or legacy_endpoint.removed_in_version > api_version
+        ):
+            version_legacy_endpoints[ident] = legacy_endpoint
+
+    for version in applicable_versions:
+        for versioned_endpoint in versioned_registry.specified_endpoints(version):
+            ident = versioned_endpoint.ident
+
+            if (
+                versioned_endpoint.removed_in_version is None
+                or versioned_endpoint.removed_in_version > api_version
+            ):
+                # If this endpoint identifier exists in legacy endpoints, it overrides it
+                if ident in version_legacy_endpoints:
+                    del version_legacy_endpoints[ident]
+
+                version_endpoints[ident] = versioned_endpoint
+
+    legacy_endpoints = list(version_legacy_endpoints.values())
+    versioned_endpoints = list(version_endpoints.values())
+
+    return legacy_endpoints, versioned_endpoints
 
 
 _SECURITY_SCHEMES = {

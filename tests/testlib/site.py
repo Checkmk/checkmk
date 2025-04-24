@@ -692,6 +692,15 @@ class Site:
     def path(self, rel_path: str | Path) -> Path:
         return self.root / rel_path
 
+    def file_mtime(self, rel_path: str | Path) -> float:
+        """Return the last modification time of a file."""
+        try:
+            stdout = self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read file '{rel_path}'!")
+            raise excp
+        return float(stdout)
+
     def read_file(self, rel_path: str | Path) -> str:
         try:
             stdout = self.check_output(["cat", self.path(rel_path).as_posix()])

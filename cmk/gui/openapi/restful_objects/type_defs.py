@@ -383,6 +383,7 @@ OpenAPIParameter = TypedDict(
         "allowEmptyValue": bool,
         "example": Any,
         "schema": SchemaType | type[Schema],
+        "content": dict[str, dict[str, object]],
     },
     total=False,
 )

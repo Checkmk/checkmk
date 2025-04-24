@@ -413,6 +413,7 @@ from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
+from cmk.gui.openapi.spec.plugin_pydantic import CheckmkPydanticPlugin
 from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc_endpoints
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
@@ -522,6 +523,7 @@ def _make_spec() -> apispec.APISpec:
         __version__,
         "3.1.1",
         plugins=[
+            CheckmkPydanticPlugin(),
             MarshmallowPlugin(),
             apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]
             CheckmkMarshmallowPlugin(),

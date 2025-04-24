@@ -408,8 +408,7 @@ if __name__ == "__main__":
     # See if we have mtr
     mtr_bin = _which("mtr")
     if mtr_bin is None:
-        if debug:
-            sys.stdout.write("Could not find mtr binary\n")
+        sys.stderr.write("Could not find mtr binary\n")
         sys.exit(0)
 
     # Parse config

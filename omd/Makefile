@@ -132,6 +132,7 @@ BOM := bill-of-materials.json
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
 	$(PIPENV) run ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
+	cd $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5/ ; $(RM) utils.pm ; ln -s ../../../nagios/plugins/utils.pm .
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)

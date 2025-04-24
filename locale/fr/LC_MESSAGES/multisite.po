@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-04-23 10:46+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/dev/fr/"
@@ -3202,6 +3202,10 @@ msgstr "Connexions acceptées par seconde"
 #, fuzzy
 msgid "Accepted packages/s"
 msgstr "Paquets acceptés/s"
+
+#, fuzzy
+msgid "Accepting peer"
+msgstr "Vitesse de fonctionnement"
 
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
@@ -7880,10 +7884,6 @@ msgstr "Rechargement automatique des pages"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Rechargement automatique de la page dans %d secondes."
-
-#, python-brace-format
-msgid "Automatic rediscovery parameter {param} not implemented"
-msgstr ""
 
 msgid "Automatic renewal"
 msgstr "Renouvellement automatique"
@@ -15086,17 +15086,7 @@ msgstr "Se connecter sans mot de passe"
 msgid "Connect without proxy"
 msgstr "Se connecter sans proxy"
 
-#, fuzzy
-msgid "Connectee"
-msgstr "déconnecté"
-
-msgid "Connecter"
-msgstr "Connecteur"
-
 msgid "Connecter and connectee sites must be different."
-msgstr ""
-
-msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
 msgid "Connection"
@@ -34723,6 +34713,10 @@ msgstr "Initialisation de la découverte..."
 
 msgid "Initializing shards"
 msgstr "Initialisation des shards"
+
+#, fuzzy
+msgid "Initiating peer"
+msgstr "Initiateur"
 
 msgid "Initiator"
 msgstr "Initiateur"
@@ -56985,6 +56979,12 @@ msgstr "Sélectionner le type de port d'interface"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Sélectionnez les métriques à envoyer à InfluxDB"
 
+msgid ""
+"Select one user from a contact group with access to all hosts and services. "
+"This will prevent duplicate notifications, as selecting multiple users will "
+"trigger separate notifications."
+msgstr ""
+
 msgid "Select packages"
 msgstr "Sélectionnez les forfaits"
 
@@ -68167,6 +68167,10 @@ msgid "The requested item %s does not exist"
 msgstr "L'élément demandé %s n'existe pas"
 
 #, fuzzy
+msgid "The requested notification rule was not found"
+msgstr "Règle de notification supprimée %d de l'utilisateur %s"
+
+#, fuzzy
 msgid "The requested pack_id does not exist"
 msgstr "Le pack de règles demandé n'existe pas"
 
@@ -68636,6 +68640,9 @@ msgid ""
 msgstr ""
 "Les sites %s n'utilisent pas le Checkmk Microcore. Vous ne pourrez pas "
 "utiliser les métriques des hôtes surveillés par ces sites."
+
+msgid "The sites initiating and accepting the connection must be specified."
+msgstr ""
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -79062,10 +79069,6 @@ msgstr "Faire correspondre les étiquettes de service"
 msgid "Update service parameters"
 msgstr "Exemple de paramètres"
 
-#, fuzzy
-msgid "Update service params"
-msgstr "Faire correspondre les étiquettes de service"
-
 msgid "Update site DNS Cache"
 msgstr "Mise à jour du cache DNS du site"
 
@@ -85689,7 +85692,8 @@ msgid ""
 "themselves will be sent in both directions: from the connecter to the "
 "connectee and vice versa. Note that the order in which you choose the sites "
 "here still might matter, depending on your network restrictions: The "
-"connecter must be able to establish a TCP connection to the connectee."
+"initiating peer must be able to establish a TCP connection to the accepting "
+"peer."
 msgstr ""
 
 msgid ""
@@ -87825,14 +87829,6 @@ msgstr "configuration"
 msgid "configure"
 msgstr "configurer"
 
-#, fuzzy
-msgid "connectee"
-msgstr "déconnecté"
-
-#, fuzzy
-msgid "connecter"
-msgstr "déconnecté"
-
 msgid "connection"
 msgstr "connexion"
 
@@ -89778,6 +89774,25 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Connectee"
+#~ msgstr "déconnecté"
+
+#~ msgid "Connecter"
+#~ msgstr "Connecteur"
+
+#, fuzzy
+#~ msgid "Update service params"
+#~ msgstr "Faire correspondre les étiquettes de service"
+
+#, fuzzy
+#~ msgid "connectee"
+#~ msgstr "déconnecté"
+
+#, fuzzy
+#~ msgid "connecter"
+#~ msgstr "déconnecté"
 
 #, fuzzy
 #~ msgid ""

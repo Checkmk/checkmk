@@ -3192,6 +3192,10 @@ msgstr "Conexiuni acceptate pe secundă"
 msgid "Accepted packages/s"
 msgstr "Pachete acceptate"
 
+#, fuzzy
+msgid "Accepting peer"
+msgstr "Viteza de funcționare"
+
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
 "might be a security issue because man-in-the-middle attacks are not "
@@ -7836,10 +7840,6 @@ msgstr "Reîncărcarea automată a paginii"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Reîncărcarea automată a paginii în %d secunde."
-
-#, python-brace-format
-msgid "Automatic rediscovery parameter {param} not implemented"
-msgstr "Parametrul de redescoperire automată {param} nu este implementat"
 
 msgid "Automatic renewal"
 msgstr "Reînnoire automată"
@@ -15010,18 +15010,7 @@ msgstr "Conectare fără parolă"
 msgid "Connect without proxy"
 msgstr "Conectare fără proxy"
 
-#, fuzzy
-msgid "Connectee"
-msgstr "Conectați-vă"
-
-#, fuzzy
-msgid "Connecter"
-msgstr "Conectați-vă"
-
 msgid "Connecter and connectee sites must be different."
-msgstr ""
-
-msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
 msgid "Connection"
@@ -34521,6 +34510,10 @@ msgstr "Inițializarea descoperirii..."
 
 msgid "Initializing shards"
 msgstr "Inițializarea cioburilor"
+
+#, fuzzy
+msgid "Initiating peer"
+msgstr "Inițiator"
 
 msgid "Initiator"
 msgstr "Inițiator"
@@ -56578,6 +56571,12 @@ msgstr "Selectați tipul de port de interfață"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Selectați metricile pentru a trimite la InfluxDB"
 
+msgid ""
+"Select one user from a contact group with access to all hosts and services. "
+"This will prevent duplicate notifications, as selecting multiple users will "
+"trigger separate notifications."
+msgstr ""
+
 msgid "Select packages"
 msgstr "Selectați pachetele"
 
@@ -67757,6 +67756,10 @@ msgstr "Graficul solicitat nu există"
 msgid "The requested item %s does not exist"
 msgstr "Elementul solicitat %s nu există"
 
+#, fuzzy
+msgid "The requested notification rule was not found"
+msgstr "Regulă de notificare ștearsă %d a utilizatorului %s"
+
 msgid "The requested pack_id does not exist"
 msgstr "ID-ul de pachet solicitat nu există"
 
@@ -68228,6 +68231,9 @@ msgid ""
 msgstr ""
 "Site-urile %s nu utilizează Checkmk Microcore. Nu veți putea utiliza "
 "metricile gazdelor monitorizate de aceste site-uri."
+
+msgid "The sites initiating and accepting the connection must be specified."
+msgstr ""
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -78550,10 +78556,6 @@ msgstr "Actualizarea etichetelor de serviciu"
 msgid "Update service parameters"
 msgstr "Exemplu pentru parametri"
 
-#, fuzzy
-msgid "Update service params"
-msgstr "Actualizarea etichetelor de serviciu"
-
 msgid "Update site DNS Cache"
 msgstr "Actualizați site-ul DNS Cache"
 
@@ -85084,7 +85086,8 @@ msgid ""
 "themselves will be sent in both directions: from the connecter to the "
 "connectee and vice versa. Note that the order in which you choose the sites "
 "here still might matter, depending on your network restrictions: The "
-"connecter must be able to establish a TCP connection to the connectee."
+"initiating peer must be able to establish a TCP connection to the accepting "
+"peer."
 msgstr ""
 
 msgid ""
@@ -87191,14 +87194,6 @@ msgstr "configurare"
 msgid "configure"
 msgstr "configurați"
 
-#, fuzzy
-msgid "connectee"
-msgstr "deconectat"
-
-#, fuzzy
-msgid "connecter"
-msgstr "deconectat"
-
 msgid "connection"
 msgstr "conexiune"
 
@@ -89149,6 +89144,30 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, python-brace-format
+#~ msgid "Automatic rediscovery parameter {param} not implemented"
+#~ msgstr "Parametrul de redescoperire automată {param} nu este implementat"
+
+#, fuzzy
+#~ msgid "Connectee"
+#~ msgstr "Conectați-vă"
+
+#, fuzzy
+#~ msgid "Connecter"
+#~ msgstr "Conectați-vă"
+
+#, fuzzy
+#~ msgid "Update service params"
+#~ msgstr "Actualizarea etichetelor de serviciu"
+
+#, fuzzy
+#~ msgid "connectee"
+#~ msgstr "deconectat"
+
+#, fuzzy
+#~ msgid "connecter"
+#~ msgstr "deconectat"
 
 #, fuzzy
 #~ msgid ""

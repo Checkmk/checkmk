@@ -3170,6 +3170,10 @@ msgstr "Geaccepteerde verbindingen per seconde"
 msgid "Accepted packages/s"
 msgstr "Geaccepteerde pakketten/s"
 
+#, fuzzy
+msgid "Accepting peer"
+msgstr "Werksnelheid"
+
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
 "might be a security issue because man-in-the-middle attacks are not "
@@ -7837,10 +7841,6 @@ msgstr "Automatisch herladen van pagina's"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
-
-#, python-brace-format
-msgid "Automatic rediscovery parameter {param} not implemented"
-msgstr ""
 
 #, fuzzy
 msgid "Automatic renewal"
@@ -14999,18 +14999,7 @@ msgstr "Verbinden zonder wachtwoord"
 msgid "Connect without proxy"
 msgstr "Verbinden zonder proxy"
 
-#, fuzzy
-msgid "Connectee"
-msgstr "Connect"
-
-#, fuzzy
-msgid "Connecter"
-msgstr "Connect"
-
 msgid "Connecter and connectee sites must be different."
-msgstr ""
-
-msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
 msgid "Connection"
@@ -34443,6 +34432,10 @@ msgstr "Initialisatie van ontdekking..."
 
 msgid "Initializing shards"
 msgstr "Scherven initialiseren"
+
+#, fuzzy
+msgid "Initiating peer"
+msgstr "Initiatiefnemer"
 
 msgid "Initiator"
 msgstr "Initiatiefnemer"
@@ -56513,6 +56506,12 @@ msgstr "Selecteer type interfacepoort"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Selecteer metrieken om naar InfluxDB te sturen"
 
+msgid ""
+"Select one user from a contact group with access to all hosts and services. "
+"This will prevent duplicate notifications, as selecting multiple users will "
+"trigger separate notifications."
+msgstr ""
+
 msgid "Select packages"
 msgstr "Kies pakketten"
 
@@ -67587,6 +67586,10 @@ msgid "The requested item %s does not exist"
 msgstr "Het gevraagde item %s bestaat niet"
 
 #, fuzzy
+msgid "The requested notification rule was not found"
+msgstr "Verwijderde notificatie regel %d van gebruiker %s"
+
+#, fuzzy
 msgid "The requested pack_id does not exist"
 msgstr "Het gevraagde regelpakket bestaat niet"
 
@@ -68052,6 +68055,9 @@ msgid ""
 msgstr ""
 "De sites %s gebruiken de Checkmk Microcore niet. U zult niet in staat zijn "
 "om metrieken te gebruiken van hosts die door deze sites worden gemonitord."
+
+msgid "The sites initiating and accepting the connection must be specified."
+msgstr ""
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -78386,10 +78392,6 @@ msgstr "Overeenkomende dienst labels"
 msgid "Update service parameters"
 msgstr "Voorbeeld voor parameters"
 
-#, fuzzy
-msgid "Update service params"
-msgstr "Overeenkomende dienst labels"
-
 msgid "Update site DNS Cache"
 msgstr "DNS-cache van site bijwerken"
 
@@ -84912,7 +84914,8 @@ msgid ""
 "themselves will be sent in both directions: from the connecter to the "
 "connectee and vice versa. Note that the order in which you choose the sites "
 "here still might matter, depending on your network restrictions: The "
-"connecter must be able to establish a TCP connection to the connectee."
+"initiating peer must be able to establish a TCP connection to the accepting "
+"peer."
 msgstr ""
 
 msgid ""
@@ -87007,14 +87010,6 @@ msgstr "configuratie"
 msgid "configure"
 msgstr "configureren"
 
-#, fuzzy
-msgid "connectee"
-msgstr "losgekoppeld"
-
-#, fuzzy
-msgid "connecter"
-msgstr "losgekoppeld"
-
 msgid "connection"
 msgstr "aansluiting"
 
@@ -88969,6 +88964,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Connectee"
+#~ msgstr "Connect"
+
+#, fuzzy
+#~ msgid "Connecter"
+#~ msgstr "Connect"
+
+#, fuzzy
+#~ msgid "Update service params"
+#~ msgstr "Overeenkomende dienst labels"
+
+#, fuzzy
+#~ msgid "connectee"
+#~ msgstr "losgekoppeld"
+
+#, fuzzy
+#~ msgid "connecter"
+#~ msgstr "losgekoppeld"
 
 #, fuzzy
 #~ msgid ""

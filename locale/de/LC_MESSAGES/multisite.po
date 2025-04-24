@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-23 10:46+0000\n"
+"PO-Revision-Date: 2025-04-24 13:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3150,6 +3150,9 @@ msgstr "Angenommene Verbindungen pro Sekunde"
 
 msgid "Accepted packages/s"
 msgstr "Akzeptierte Pakete/s"
+
+msgid "Accepting peer"
+msgstr "Annehmender Peer"
 
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
@@ -7647,11 +7650,6 @@ msgstr "Seite automatisch aktualisieren"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Seite wird in %d Sekunden neu geladen."
-
-#, python-brace-format
-msgid "Automatic rediscovery parameter {param} not implemented"
-msgstr ""
-"Automatischer Wiederherstellungsparameter {param} ist nicht implementiert"
 
 msgid "Automatic renewal"
 msgstr "Automatische Verlängerung"
@@ -14535,19 +14533,9 @@ msgstr "Verbinden ohne Passwort"
 msgid "Connect without proxy"
 msgstr "Verbinden ohne Proxy"
 
-msgid "Connectee"
-msgstr "Verbindungsannehmende Instanz"
-
-msgid "Connecter"
-msgstr "Verbindungsaufbauende Instanz"
-
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 "Die Instanzen von Vermittler und Ansprechpartner müssen unterschiedlich sein."
-
-msgid "Connecter and connectee sites must be specified."
-msgstr ""
-"Die Instanzen von Vermittler und Ansprechpartner müssen festgelegt werden."
 
 msgid "Connection"
 msgstr "Verbindung"
@@ -33199,6 +33187,9 @@ msgstr "Initialisierung der Erkennung..."
 
 msgid "Initializing shards"
 msgstr "Anzahl sich initialisierender Shards"
+
+msgid "Initiating peer"
+msgstr "Initiierender Peer"
 
 msgid "Initiator"
 msgstr "Urheber"
@@ -54232,6 +54223,15 @@ msgstr "Schnittstellentyp auswählen"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Auswahl der an InfluxDB zu sendenden Metriken"
 
+msgid ""
+"Select one user from a contact group with access to all hosts and services. "
+"This will prevent duplicate notifications, as selecting multiple users will "
+"trigger separate notifications."
+msgstr ""
+"Wählen Sie einen einzelnen Benutzer aus einer Kontaktgruppe mit Zugriff auf "
+"alle Hosts und Services. Dies verhindert doppelte Benachrichtigungen, da die "
+"Auswahl mehrerer Benutzer jeweils separate Benachrichtigungen auslöst."
+
 msgid "Select packages"
 msgstr "Pakete auswählen"
 
@@ -65206,6 +65206,9 @@ msgstr "Der angefragte Graph existiert nicht"
 msgid "The requested item %s does not exist"
 msgstr "Das angeforderte Element %s existiert nicht"
 
+msgid "The requested notification rule was not found"
+msgstr "Die angeforderte Benachrichtigungsregel wurde nicht gefunden"
+
 msgid "The requested pack_id does not exist"
 msgstr "Die angeforderte pack_id existiert nicht"
 
@@ -65693,6 +65696,10 @@ msgid ""
 msgstr ""
 "Die Instanzen %s nutzen nicht den Checkmk Micro Core. Sie können keine "
 "Metriken von Hosts, die von diesen Instanzen überwacht werden, benutzen."
+
+#, fuzzy
+msgid "The sites initiating and accepting the connection must be specified."
+msgstr "Wählen Sie die Instanz aus, welche die TCP-Verbindung annehmen soll."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -75482,9 +75489,6 @@ msgstr "Service-Labels aktualisieren"
 msgid "Update service parameters"
 msgstr "Service-Parameter aktualisieren"
 
-msgid "Update service params"
-msgstr "Service-Parameter aktualisieren"
-
 msgid "Update site DNS Cache"
 msgstr "DNS-Cache der Instanz aktualisieren"
 
@@ -81745,13 +81749,15 @@ msgstr ""
 "restlichen Einträge werden mit der 'Show all' Option unter dem letzten "
 "Eintrag des Themas verfügbar."
 
+#, fuzzy
 msgid ""
 "You can define pairs of sites here that will be able to directly "
 "communicate, without routing the messages via the central site. Messages "
 "themselves will be sent in both directions: from the connecter to the "
 "connectee and vice versa. Note that the order in which you choose the sites "
 "here still might matter, depending on your network restrictions: The "
-"connecter must be able to establish a TCP connection to the connectee."
+"initiating peer must be able to establish a TCP connection to the accepting "
+"peer."
 msgstr ""
 "Hier können Sie Paare von Instanzen definieren, die direkt miteinander "
 "kommunizieren können, ohne die Nachrichten über die Zentralinstanz zu "
@@ -83915,12 +83921,6 @@ msgstr "Konfiguration"
 msgid "configure"
 msgstr "konfigurieren"
 
-msgid "connectee"
-msgstr "Ansprechpartner"
-
-msgid "connecter"
-msgstr "Vermittler"
-
 msgid "connection"
 msgstr "Verbindung"
 
@@ -85827,6 +85827,30 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-brace-format
+#~ msgid "Automatic rediscovery parameter {param} not implemented"
+#~ msgstr ""
+#~ "Automatischer Wiederherstellungsparameter {param} ist nicht implementiert"
+
+#~ msgid "Connectee"
+#~ msgstr "Verbindungsannehmende Instanz"
+
+#~ msgid "Connecter"
+#~ msgstr "Verbindungsaufbauende Instanz"
+
+#~ msgid "Connecter and connectee sites must be specified."
+#~ msgstr ""
+#~ "Die Instanzen von Vermittler und Ansprechpartner müssen festgelegt werden."
+
+#~ msgid "Update service params"
+#~ msgstr "Service-Parameter aktualisieren"
+
+#~ msgid "connectee"
+#~ msgstr "Ansprechpartner"
+
+#~ msgid "connecter"
+#~ msgstr "Vermittler"
 
 #~ msgid ""
 #~ "Only care about hosts that receive data from resources which name matches "

@@ -3156,6 +3156,10 @@ msgstr "Connessioni accettate al secondo"
 msgid "Accepted packages/s"
 msgstr "Pacchetti accettati"
 
+#, fuzzy
+msgid "Accepting peer"
+msgstr "Velocità di funzionamento"
+
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
 "might be a security issue because man-in-the-middle attacks are not "
@@ -7770,10 +7774,6 @@ msgstr "Ricaricamento automatico della pagina"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Ricaricamento automatico della pagina in %d secondi."
-
-#, python-brace-format
-msgid "Automatic rediscovery parameter {param} not implemented"
-msgstr ""
 
 msgid "Automatic renewal"
 msgstr "Rinnovo automatico"
@@ -14862,18 +14862,7 @@ msgstr "Connettersi senza password"
 msgid "Connect without proxy"
 msgstr "Connettersi senza proxy"
 
-#, fuzzy
-msgid "Connectee"
-msgstr "Collegare"
-
-#, fuzzy
-msgid "Connecter"
-msgstr "Collegare"
-
 msgid "Connecter and connectee sites must be different."
-msgstr ""
-
-msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
 msgid "Connection"
@@ -34165,6 +34154,10 @@ msgstr "Inizializzazione della scoperta..."
 
 msgid "Initializing shards"
 msgstr "Inizializzazione dei frammenti"
+
+#, fuzzy
+msgid "Initiating peer"
+msgstr "Iniziatore"
 
 msgid "Initiator"
 msgstr "Iniziatore"
@@ -56049,6 +56042,12 @@ msgstr "Seleziona il tipo di porta dell'interfaccia"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Selezionare le metriche da inviare a InfluxDB"
 
+msgid ""
+"Select one user from a contact group with access to all hosts and services. "
+"This will prevent duplicate notifications, as selecting multiple users will "
+"trigger separate notifications."
+msgstr ""
+
 msgid "Select packages"
 msgstr "Seleziona i pacchetti"
 
@@ -67034,6 +67033,10 @@ msgstr "Il grafico richiesto non esiste"
 msgid "The requested item %s does not exist"
 msgstr "L'elemento richiesto %s non esiste"
 
+#, fuzzy
+msgid "The requested notification rule was not found"
+msgstr "Regola di notifica cancellata %d dell'utente %s"
+
 msgid "The requested pack_id does not exist"
 msgstr "Il pack_id richiesto non esiste"
 
@@ -67501,6 +67504,9 @@ msgid ""
 msgstr ""
 "I siti %s non utilizzano Checkmk Microcore. Non sarà possibile utilizzare le "
 "metriche degli host monitorati da questi siti."
+
+msgid "The sites initiating and accepting the connection must be specified."
+msgstr ""
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -77718,10 +77724,6 @@ msgstr "Aggiornare le etichette di servizio"
 msgid "Update service parameters"
 msgstr "Esempio di parametri"
 
-#, fuzzy
-msgid "Update service params"
-msgstr "Aggiornare le etichette di servizio"
-
 msgid "Update site DNS Cache"
 msgstr "Aggiornare la cache DNS del sito"
 
@@ -84185,7 +84187,8 @@ msgid ""
 "themselves will be sent in both directions: from the connecter to the "
 "connectee and vice versa. Note that the order in which you choose the sites "
 "here still might matter, depending on your network restrictions: The "
-"connecter must be able to establish a TCP connection to the connectee."
+"initiating peer must be able to establish a TCP connection to the accepting "
+"peer."
 msgstr ""
 
 msgid ""
@@ -86268,14 +86271,6 @@ msgstr "configurazione"
 msgid "configure"
 msgstr "configurare"
 
-#, fuzzy
-msgid "connectee"
-msgstr "scollegato"
-
-#, fuzzy
-msgid "connecter"
-msgstr "scollegato"
-
 msgid "connection"
 msgstr "collegamento"
 
@@ -88203,6 +88198,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy
+#~ msgid "Connectee"
+#~ msgstr "Collegare"
+
+#, fuzzy
+#~ msgid "Connecter"
+#~ msgstr "Collegare"
+
+#, fuzzy
+#~ msgid "Update service params"
+#~ msgstr "Aggiornare le etichette di servizio"
+
+#, fuzzy
+#~ msgid "connectee"
+#~ msgstr "scollegato"
+
+#, fuzzy
+#~ msgid "connecter"
+#~ msgstr "scollegato"
 
 #, fuzzy
 #~ msgid ""

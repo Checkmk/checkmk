@@ -18,7 +18,6 @@ from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
-from marshmallow import fields as ma_fields
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
@@ -35,12 +34,12 @@ from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi import endpoint_registry as legacy_endpoint_registry
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
-from cmk.gui.openapi.framework.registry import EndpointDefinition, versioned_endpoint_registry
-from cmk.gui.openapi.restful_objects import Endpoint
-from cmk.gui.openapi.restful_objects.parameters import (
+from cmk.gui.openapi.framework.headers import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
+from cmk.gui.openapi.framework.registry import EndpointDefinition, versioned_endpoint_registry
+from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.utils import format_to_routing_path
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
@@ -76,11 +75,6 @@ EXCEPTION_STATUS: dict[type[Exception], int] = {
 PathArgs = Mapping[str, Any]
 
 type EndpointIdent = str
-
-
-def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
-    assert len(header) == 1
-    return next(iter(header))
 
 
 def crash_report_response(exc: Exception) -> WSGIApplication:
@@ -166,6 +160,15 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     )
 
 
+def _add_checkmk_headers(response: Response) -> None:
+    """Add Checkmk headers to the response.
+
+    Adds the Checkmk version and edition to the response headers.
+    """
+    response.headers[HEADER_CHECKMK_VERSION["name"]] = cmk_version.__version__
+    response.headers[HEADER_CHECKMK_EDITION["name"]] = cmk_version.edition(paths.omd_root).short
+
+
 class VersionedEndpointAdapter(AbstractWSGIApp):
     """Wrap an EndpointDefinition
 
@@ -199,12 +202,9 @@ class LegacyEndpointAdapter(AbstractWSGIApp):
 
         # Create the response
         with self.endpoint.register_permission_tracking():
-            wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
+            wsgi_app: Response = self.endpoint.wrapped(ParameterDict(path_args))
 
-        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_VERSION)] = cmk_version.__version__
-        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition(
-            paths.omd_root
-        ).short
+        _add_checkmk_headers(wsgi_app)
 
         # Serve the response
         return wsgi_app(environ, start_response)

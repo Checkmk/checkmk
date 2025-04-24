@@ -14,18 +14,18 @@ from marshmallow.fields import Field
 from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
+from cmk.gui.openapi.framework.headers import (
+    CONTENT_TYPE,
+    ETAG_HEADER,
+    ETAG_IF_MATCH_HEADER,
+    HEADER_CHECKMK_EDITION,
+    HEADER_CHECKMK_VERSION,
+)
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.api_error import (
     api_custom_error_schema,
     api_default_error_schema,
     ApiError,
-)
-from cmk.gui.openapi.restful_objects.parameters import (
-    CONTENT_TYPE,
-    ETAG_HEADER_PARAM,
-    ETAG_IF_MATCH_HEADER,
-    HEADER_CHECKMK_EDITION,
-    HEADER_CHECKMK_VERSION,
 )
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import (
@@ -202,12 +202,12 @@ def _to_operation_dict(
 
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
-        openapi_header = marshmallow_to_openapi([header_to_add], "header")[0]
+        openapi_header = header_to_add.copy()
         del openapi_header["in"]
         response_headers[openapi_header.pop("name")] = openapi_header
 
     if spec_endpoint.etag in ("output", "both"):
-        etag_header = marshmallow_to_openapi([ETAG_HEADER_PARAM], "header")[0]
+        etag_header = ETAG_HEADER.copy()
         del etag_header["in"]
         response_headers[etag_header.pop("name")] = etag_header
 
@@ -247,7 +247,7 @@ def _to_operation_dict(
     else:
         operation_spec["operationId"] = spec_endpoint.operation_id
 
-    header_params: list[RawParameter] = []
+    header_params: list[OpenAPIParameter] = []
     query_params: Sequence[RawParameter] = (
         schema_definitions.query_params if schema_definitions.query_params is not None else []
     )
@@ -263,14 +263,16 @@ def _to_operation_dict(
 
     # While we define the parameters separately to be able to use them for validation, the
     # OpenAPI spec expects them to be listed in on place, so here we bunch them together.
-    operation_spec["parameters"] = _coalesce_schemas(
-        [
-            ("header", header_params),
-            ("query", query_params),
-            ("path", path_params),
-        ]
+    parameters = header_params.copy()
+    parameters.extend(
+        _coalesce_schemas(
+            [
+                ("query", query_params),
+                ("path", path_params),
+            ]
+        )
     )
-
+    operation_spec["parameters"] = parameters
     operation_spec["responses"] = responses
 
     if schema_definitions.request_schema is not None:
@@ -294,7 +296,7 @@ def _to_operation_dict(
         request_schema_example=to_dict(schema) if schema else None,
         multiple_request_schemas=_schema_is_multiple(schema_definitions.request_schema),
         includes_redirect=includes_redirect,
-        header_params=marshmallow_to_openapi(header_params, "header"),
+        header_params=header_params,
         path_params=marshmallow_to_openapi(path_params, "path"),
         query_params=marshmallow_to_openapi(query_params, "query"),
         site_name=site_name,

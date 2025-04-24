@@ -896,12 +896,13 @@ def _execute_autodiscovery(
     on_error = OnError.IGNORE
 
     hosts_config = config_cache.hosts_config
-    all_hosts = frozenset(
-        itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
-    )
+    all_hosts = frozenset(itertools.chain(hosts_config.hosts, hosts_config.shadow_hosts))
     for host_name in autodiscovery_queue:
-        if host_name not in all_hosts:
-            console.verbose(f"  Removing mark '{host_name}' (host not configured")
+        if host_name in hosts_config.clusters:
+            console.verbose(f"  Removing mark '{host_name}' (host is a cluster)")
+            (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
+        elif host_name not in all_hosts:
+            console.verbose(f"  Removing mark '{host_name}' (host not configured)")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
@@ -961,7 +962,6 @@ def _execute_autodiscovery(
                     hosts_config = config_cache.hosts_config
                     discovery_result, activate_host = autodiscovery(
                         host_name,
-                        is_cluster=host_name in config_cache.hosts_config.clusters,
                         cluster_nodes=config_cache.nodes(host_name),
                         active_hosts={
                             hn

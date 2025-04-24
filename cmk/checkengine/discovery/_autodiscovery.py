@@ -418,7 +418,6 @@ def _make_diff(
 def autodiscovery(
     host_name: HostName,
     *,
-    is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     active_hosts: Container[HostName],
     ruleset_matcher: RulesetMatcher,
@@ -450,7 +449,7 @@ def autodiscovery(
 
     result = automation_discovery(
         host_name,
-        is_cluster=is_cluster,
+        is_cluster=False,
         cluster_nodes=cluster_nodes,
         active_hosts=active_hosts,
         ruleset_matcher=ruleset_matcher,

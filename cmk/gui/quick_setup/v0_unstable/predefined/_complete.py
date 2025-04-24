@@ -119,6 +119,11 @@ def create_passwords(
     passwords: Mapping[str, str],
     bundle_id: BundleId,
 ) -> Sequence[CreatePassword]:
+    """Create the password entities.
+
+    The owner is set to Administrators! So this should only be used for users that are allowed to
+    edit all passwords.
+    """
     return [
         CreatePassword(
             id=pw_id,
@@ -127,7 +132,7 @@ def create_passwords(
                 comment="",
                 docu_url="",
                 password=password,
-                owned_by=user.id,
+                owned_by=None,
                 shared_with=[],
             ),
         )
@@ -231,6 +236,30 @@ def _convert_explicit_passwords_to_stored_passwords(
     return params_with_converted_passwords
 
 
+def _extract_explicit_password_entities(
+    bundle_id: BundleId,
+    parameter_form: Dictionary,
+    all_stages_form_data: ParsedFormData,
+    params: Mapping[str, object],
+) -> tuple[Mapping[str, object], Sequence[CreatePassword]]:
+    """Extracts the explicit passwords from the form data and creates password entities for them."""
+    collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+
+    stored_passwords = load_passwords()
+    # We need to filter out the passwords that are already stored in the password store since
+    # they should be independent of the configuration bundle
+    explicit_passwords = {
+        pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
+    }
+    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
+
+    password_entities = create_passwords(
+        passwords=explicit_passwords,
+        bundle_id=bundle_id,
+    )
+    return params, password_entities
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -251,15 +280,15 @@ def _create_and_save_special_agent_bundle(
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 
-    collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
-
-    stored_passwords = load_passwords()
-    # We need to filter out the passwords that are already stored in the password store since they
-    # should be independent of the configuration bundle
-    explicit_passwords = {
-        pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
-    }
-    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
+    password_entities: Sequence[CreatePassword] | None
+    if user.may("wato.edit_all_passwords"):
+        # We only extract the passwords if the user can edit all passwords. This is mainly because
+        # we would otherwise need to specify a contact group for the passwords.
+        params, password_entities = _extract_explicit_password_entities(
+            bundle_id, parameter_form, all_stages_form_data, params
+        )
+    else:
+        password_entities = None
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
@@ -282,10 +311,7 @@ def _create_and_save_special_agent_bundle(
                     host_name=validated_host_name, folder=folder, site_id=site_id
                 )
             ],
-            passwords=create_passwords(
-                passwords=explicit_passwords,
-                bundle_id=bundle_id,
-            ),
+            passwords=password_entities,
             rules=[
                 create_rule(
                     params=params,

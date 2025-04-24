@@ -29,11 +29,14 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.utils import paths
 
 from cmk.gui import session
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi import endpoint_registry as legacy_endpoint_registry
+from cmk.gui.openapi.framework import RawRequestData
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
+from cmk.gui.openapi.framework.handler import handle_endpoint_request
 from cmk.gui.openapi.framework.headers import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
@@ -179,9 +182,38 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         super().__init__(debug)
         self.endpoint = endpoint
 
+    def __repr__(self) -> str:
+        return f"<VersionedEndpointAdapter {self.endpoint.metadata.method} {self.endpoint.metadata.path}>"
+
+    @staticmethod
+    def _query_args() -> dict[str, list[str]]:
+        query_args = request.args
+        return {key: query_args.getlist(key) for key in query_args}
+
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        # TODO: implement endpoint handling logic
-        raise NotImplementedError
+        path_args = environ[ARGS_KEY]
+        request_data: RawRequestData = {
+            "body": request.data,
+            "path": path_args,
+            "query": self._query_args(),
+            "headers": request.headers,
+        }
+
+        is_testing = str(request.environ.get("paste.testing", "False")).lower() == "true"
+
+        # Create the response
+        # TODO: permission tracking?
+        response = handle_endpoint_request(
+            endpoint=self.endpoint.request_endpoint(),
+            request_data=request_data,
+            wato_enabled=active_config.wato_enabled,
+            wato_use_git=active_config.wato_use_git,
+            is_testing=is_testing,
+        )
+        _add_checkmk_headers(response)
+
+        # Serve the response
+        return response(environ, start_response)
 
 
 class LegacyEndpointAdapter(AbstractWSGIApp):

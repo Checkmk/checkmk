@@ -41,6 +41,20 @@ def _edition_short_from_pkg_path(package_path: str) -> str:
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
+def _file_exists_in_package(package_path: str, cmk_version: str, version_rel_path: str) -> bool:
+    omd_version = _get_omd_version(cmk_version, package_path)
+
+    file_list = _get_paths_from_package(package_path)
+
+    if package_path.endswith(".deb") or package_path.endswith(".rpm"):
+        return f"/opt/omd/versions/{omd_version}/{version_rel_path}" in file_list
+
+    if package_path.endswith(".cma"):
+        return f"{omd_version}/{version_rel_path}" in file_list
+
+    raise NotImplementedError()
+
+
 def _get_file_from_package(package_path: str, cmk_version: str, version_rel_path: str) -> bytes:
     omd_version = _get_omd_version(cmk_version, package_path)
 
@@ -474,3 +488,38 @@ def test_bom_csv_synchronous(bom_json: Bom, license_csv_rows: list[dict[str, str
             assert row["Version"] == openssl_version
         if row["Name"] == "Python module: certifi":
             assert row["Version"] in certifi_versions
+
+
+AGENT_PLUGINS_PREFIX = [
+    "apache_status",
+    "isc_dhcpd",
+    "mk_ceph",
+    "mk_docker",
+    "mk_filestats",
+    "mk_inotify",
+    "mk_jolokia",
+    "mk_logwatch",
+    "mk_mongodb",
+    "mk_postgres",
+    "mk_sap",
+    "mk_tinkerforge",
+    "mtr",
+    "nginx_status",
+    "plesk_backups",
+    "plesk_domains",
+    "unitrends_replication",
+]
+
+
+def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
+    if package_path.endswith(".tar.gz"):
+        pytest.skip(
+            "Skipping test for source package as it is more interessting for the install-able packages."
+        )
+
+    for prefix in AGENT_PLUGINS_PREFIX:
+        for suffix in (".py", "_2.py"):
+            filename = f"{prefix}{suffix}"
+            assert _file_exists_in_package(
+                package_path, cmk_version, f"share/check_mk/agents/plugins/{filename}"
+            ), f"File {filename} is missing in {package_path}"

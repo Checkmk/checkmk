@@ -68,7 +68,7 @@ ignore = [
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
-"non-free/cmk-update-agent/cmk_update_agent.py" = [
+"non-free/packages/cmk-update-agent/cmk_update_agent.py" = [
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP009", # UTF-8 encoding declaration is unnecessary
   "UP017", # Use `datetime.UTC` alias

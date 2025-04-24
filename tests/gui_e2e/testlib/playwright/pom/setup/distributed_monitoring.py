@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import re
 from enum import StrEnum
@@ -184,6 +185,10 @@ class DistributedMonitoring(CmkPage):
         login_page = LoginRemoteSite(self.page, remote_site, navigate_to_page=False)
         login_page.fill_login_form(credentials)
         login_page.login_button.click()
+
+    def site_specific_global_configuration(self, site_id: str) -> Locator:
+        """Configure the site-specific global settings"""
+        return self.main_area.locator(f"a[href*='mode=edit_site_globals&site={site_id}']")
 
 
 class AddSiteConnection(CmkPage):

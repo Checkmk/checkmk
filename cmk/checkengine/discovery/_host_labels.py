@@ -130,6 +130,7 @@ def _discover_host_labels_for_source_type(
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Mapping[str, _HostLabel]:
+    """This function only makes sense to be called for a node (not a cluster)."""
     host_labels = {}
     try:
         parsed_results = _all_parsing_results(host_key, providers)

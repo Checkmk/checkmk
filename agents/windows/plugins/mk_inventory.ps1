@@ -125,6 +125,14 @@ function getWMIObject2 {
                 $value = [System.Management.ManagementDateTimeConverter]::ToDmtfDateTime($value)
             }
 
+            # Append Update Build Revision (UBR) to the version property
+            if ($label -eq "version") {
+                $ubr = (Get-ItemProperty -Path "${HKLM}SOFTWARE\Microsoft\Windows NT\CurrentVersion").UBR
+                if($ubr){
+                    $value = "$value.$ubr"
+                }
+            }
+
             $values += $value
         }
         Write-Output ($values -join "|")

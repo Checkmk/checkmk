@@ -5,6 +5,7 @@
 
 import logging
 import re
+from abc import ABC
 from typing import override
 from urllib.parse import quote_plus
 
@@ -48,3 +49,51 @@ class GlobalSettings(CmkPage):
         logger.info("Search for setting: %s", search_text)
         self._searchbar.fill(search_text)
         self.main_area.locator().get_by_role(role="button", name="Submit").click()
+
+
+class EditGlobalSetting(CmkPage, ABC):
+    """General "edit global settings" page"""
+
+    page_title: str = "Edit global setting"
+    dropdown_buttons: list[str] = ["Setting", "Display", "Help"]
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        self.main_area.check_page_title(self.page_title)
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    @property
+    def save_button(self) -> Locator:
+        return self.main_area.get_suggestion("Save")
+
+
+class EditPiggybackHubGlobally(EditGlobalSetting):
+    """Page to edit the global setting 'Enable piggyback-hub'"""
+
+    @override
+    def navigate(self) -> None:
+        _setting_name = "Enable piggyback-hub"
+        logger.info("Navigate to '%s' setting page", _setting_name)
+        settings_page = GlobalSettings(self.page)
+        settings_page.search_settings(_setting_name)
+        settings_page.setting_link(_setting_name).click()
+        self.page.wait_for_url(
+            url=re.compile(quote_plus("varname=site_piggyback_hub")), wait_until="load"
+        )
+
+    @property
+    def _current_setting_checkbox(self) -> Locator:
+        current_setting_label = "label[for='cb_ve']"
+        return self.main_area.locator(current_setting_label)
+
+    def enable_hub(self) -> None:
+        if not self._current_setting_checkbox.is_checked():
+            self._current_setting_checkbox.click()
+
+    def disable_hub(self) -> None:
+        if self._current_setting_checkbox.is_checked():
+            self._current_setting_checkbox.click()

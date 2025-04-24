@@ -15,6 +15,8 @@ from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import (
     EditPiggybackHubGlobally,
     EditPiggybackHubSiteSpecific,
+    GlobalSettings,
+    SiteSpecificGlobalSettings,
 )
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -30,18 +32,22 @@ SITE_CONF_REL_PATH = Path("etc/omd/site.conf")
 class HubEnableActions(enum.Enum):
     """The piggyback-hub can be enabled by
     * navigating to its specific global setting page, checking the relevant checkbox and saving
+    * toggling its setting in the global settings page
     """
 
     SAVE = enum.auto()
+    TOGGLE = enum.auto()
 
 
 class HubDisableActions(enum.Enum):
     """The piggyback-hub can be disabled by
     * navigating to its specific global setting page, unchecking the relevant checkbox and saving
+    * toggling its setting in the global settings page
     * resetting the global settings to factory settings
     """
 
     SAVE = enum.auto()
+    TOGGLE = enum.auto()
     RESET = enum.auto()
 
 
@@ -54,6 +60,9 @@ def _enable_hub_globally(
             settings_page = EditPiggybackHubGlobally(dashboard_page.page)
             settings_page.enable_hub()
             settings_page.save_button.click()
+        case HubEnableActions.TOGGLE:
+            global_settings_page = GlobalSettings(dashboard_page.page)
+            global_settings_page.toggle("Enable piggyback-hub")
         case _:
             assert_never(enable_actions)
 
@@ -67,6 +76,9 @@ def _disable_hub_globally(
             settings_page = EditPiggybackHubGlobally(dashboard_page.page)
             settings_page.disable_hub()
             settings_page.save_button.click()
+        case HubDisableActions.TOGGLE:
+            global_settings_page = GlobalSettings(dashboard_page.page)
+            global_settings_page.toggle("Enable piggyback-hub")
         case HubDisableActions.RESET:
             settings_page = EditPiggybackHubGlobally(dashboard_page.page)
             settings_page.to_factory_settings()
@@ -85,6 +97,11 @@ def _enable_hub_site_specific(
             site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
             site_specific_settings_page.enable_hub()
             site_specific_settings_page.save_button.click()
+        case HubEnableActions.TOGGLE:
+            site_specific_global_settings_page = SiteSpecificGlobalSettings(
+                dashboard_page.page, site_id
+            )
+            site_specific_global_settings_page.toggle("Enable piggyback-hub")
         case _:
             assert_never(enable_action)
 
@@ -100,6 +117,11 @@ def _disable_hub_site_specific(
             site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
             site_specific_settings_page.disable_hub()
             site_specific_settings_page.save_button.click()
+        case HubDisableActions.TOGGLE:
+            site_specific_global_settings_page = SiteSpecificGlobalSettings(
+                dashboard_page.page, site_id
+            )
+            site_specific_global_settings_page.toggle("Enable piggyback-hub")
         case HubDisableActions.RESET:
             site_specific_settings_page = EditPiggybackHubSiteSpecific(dashboard_page.page, site_id)
             site_specific_settings_page.to_factory_settings()
@@ -173,6 +195,7 @@ def _wait_for_file_change(site: Site, file_path: Path, original_mtime: float) ->
     ["enable_action"],
     [
         pytest.param(HubEnableActions.SAVE, id="save"),
+        pytest.param(HubEnableActions.TOGGLE, id="toggle"),
     ],
 )
 @pytest.mark.parametrize(
@@ -227,6 +250,7 @@ def test_disabled_on_central__enable_on_remote__error(
     ["enable_action"],
     [
         pytest.param(HubEnableActions.SAVE, id="save"),
+        pytest.param(HubEnableActions.TOGGLE, id="toggle"),
     ],
 )
 @pytest.mark.parametrize(
@@ -253,7 +277,6 @@ def test_enabled_on_central__enable_on_remote__no_error(
     enable_action: HubEnableActions,
 ) -> None:
     """Test that enabling the piggyback-hub site-specific for a remote site works if it is enabled for the central site"""
-    # given
     with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
@@ -274,6 +297,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.TOGGLE, {"site_piggyback_hub": False}, id="toggle"),
         pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
@@ -327,6 +351,7 @@ def test_enabled_on_remote__disable_on_remote__no_error(
     ["disable_action"],
     [
         pytest.param(HubDisableActions.SAVE, id="save"),
+        pytest.param(HubDisableActions.TOGGLE, id="toggle"),
     ],
 )
 @pytest.mark.parametrize(
@@ -356,7 +381,6 @@ def test_enabled_on_remote__disable_on_central__error(
     disable_action: HubDisableActions,
 ) -> None:
     """Test that disabling the piggyback-hub site-specific for the central site fails if it is enabled for a remote site"""
-    # given
     with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
         original_settings = (
             test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
@@ -426,6 +450,7 @@ def test_enabled_on_remote__disable_on_central_by_reset__error(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.TOGGLE, {"site_piggyback_hub": False}, id="toggle"),
         pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
@@ -484,6 +509,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
     ["disable_action"],
     [
         pytest.param(HubDisableActions.SAVE, id="save"),
+        pytest.param(HubDisableActions.TOGGLE, id="toggle"),
         pytest.param(HubDisableActions.RESET, id="reset"),
     ],
 )
@@ -519,6 +545,7 @@ def test_enabled_on_remote__disable_globally__error(
     ["disable_action", "expected_settings"],
     [
         pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+        pytest.param(HubDisableActions.TOGGLE, {"site_piggyback_hub": False}, id="toggle"),
         pytest.param(HubDisableActions.RESET, {}, id="reset"),
     ],
 )
@@ -566,6 +593,7 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
     ["enable_action"],
     [
         pytest.param(HubEnableActions.SAVE, id="save"),
+        pytest.param(HubEnableActions.TOGGLE, id="toggle"),
     ],
 )
 def test_disabled_on_central__enable_globally__error(
@@ -600,6 +628,7 @@ def test_disabled_on_central__enable_globally__error(
     ["enable_action"],
     [
         pytest.param(HubEnableActions.SAVE, id="save"),
+        pytest.param(HubEnableActions.TOGGLE, id="toggle"),
     ],
 )
 def test_unset_on_central_and_remote__enable_globally__no_error(

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, TypedDict
+from dataclasses import dataclass
+from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -13,6 +14,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     get_value_store,
     OIDCached,
+    OIDEnd,
     Service,
     SNMPSection,
     SNMPTree,
@@ -27,49 +29,77 @@ from cmk.plugins.lib.brocade import (
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 
-class Port(TypedDict):
+@dataclass(frozen=True, kw_only=True)
+class Info:
+    index: int
     port_name: str
-    temp: int
     phystate: int
     opstate: int
     admstate: int
-    voltage: float
-    current: float
-    rx_power: float
-    tx_power: float
     is_isl: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class SFPMetrics:
+    index: int
+    temp: int  # °C
+    voltage: float  # V
+    current: float  # A
+    rx_power: float  # dBm
+    tx_power: float  # dBm
+
+
+@dataclass(frozen=True, kw_only=True)
+class Port:
+    info: Info
+    values: SFPMetrics
 
 
 Section = Mapping[int, Port]
 
 
+def _parse_port_info(
+    fcport_info_list: StringTable,
+    fcport_isl_list: StringTable,
+) -> dict[int, Info]:
+    isl_list = [int(x[0]) for x in fcport_isl_list]
+    return {
+        int(fcport_info[0]): Info(
+            index=int(fcport_info[0]),
+            port_name=fcport_info[4],
+            phystate=int(fcport_info[1]),
+            opstate=int(fcport_info[2]),
+            admstate=int(fcport_info[3]),
+            is_isl=int(fcport_info[0]) in isl_list,
+        )
+        for fcport_info in fcport_info_list
+    }
+
+
+def _parse_port_values(raw_values: StringTable) -> dict[int, SFPMetrics]:
+    return {
+        int(values[5].split(".")[-1]): SFPMetrics(
+            index=int(values[5].split(".")[-1]),
+            temp=int(values[0]),
+            voltage=float(values[1]) / 1000,
+            current=float(values[2]) / 1000,
+            rx_power=float(values[3]),
+            tx_power=float(values[4]),
+        )
+        for values in raw_values
+        if values[0] != "NA"
+    }
+
+
 def parse_brocade_sfp(string_table: Sequence[StringTable]) -> Section:
-    parsed: dict[int, Port] = {}
+    port_infos = _parse_port_info(string_table[0], string_table[1])
+    port_values = _parse_port_values(string_table[2])
 
-    isl_ports = [int(x[0]) for x in string_table[1]]
-
-    for fcport_info, values in zip(string_table[0], string_table[2]):
-        # Observed in the wild: Either all of the values are present
-        # or none of them.
-        if values[0] == "NA":
-            continue
-
-        port_index = int(fcport_info[0])
-
-        parsed[port_index] = {
-            "port_name": fcport_info[4],
-            "temp": int(values[0]),  # °C
-            "phystate": int(fcport_info[1]),
-            "opstate": int(fcport_info[2]),
-            "admstate": int(fcport_info[3]),
-            "voltage": float(values[1]) / 1000,  # mV -> V
-            "current": float(values[2]) / 1000,  # mA -> A
-            "rx_power": float(values[3]),  # dBm
-            "tx_power": float(values[4]),  # dBm
-            "is_isl": bool(port_index in isl_ports),
-        }
-
-    return parsed
+    return {
+        port_index: Port(info=info, values=values)
+        for port_index, info in port_infos.items()
+        if (values := port_values.get(port_index)) is not None
+    }
 
 
 snmp_section_brocade_sfp = SNMPSection(
@@ -111,6 +141,7 @@ snmp_section_brocade_sfp = SNMPSection(
                 "3",  # swSfpCurrent
                 "4",  # swSfpRxPower
                 "5",  # swSfpTxPower
+                OIDEnd(),
             ],
         ),
     ],
@@ -119,19 +150,19 @@ snmp_section_brocade_sfp = SNMPSection(
 
 def discover_brocade_sfp(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     number_of_ports = len(section)
-    for port_index, port_info in section.items():
+    for port_index, port in section.items():
         if brocade_fcport_inventory_this_port(
-            admstate=port_info["admstate"],
-            phystate=port_info["phystate"],
-            opstate=port_info["opstate"],
+            admstate=port.info.admstate,
+            phystate=port.info.phystate,
+            opstate=port.info.opstate,
             settings=params,
         ):
             yield Service(
                 item=brocade_fcport_getitem(
                     number_of_ports=number_of_ports,
                     index=port_index,
-                    portname=port_info["port_name"],
-                    is_isl=port_info["is_isl"],
+                    portname=port.info.port_name,
+                    is_isl=port.info.is_isl,
                     settings=params,
                 )
             )
@@ -152,12 +183,14 @@ def check_brocade_sfp_temp(item: str, params: TempParamDict, section: Section) -
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
-    if port_index not in section:
+    if (port := section.get(port_index)) is None:
         return
-    port_info = section[port_index]
 
     yield from check_temperature(
-        port_info["temp"], params, unique_name=item, value_store=get_value_store()
+        port.values.temp,
+        params,
+        unique_name=item,
+        value_store=get_value_store(),
     )
 
 
@@ -191,9 +224,9 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
     #       item to brocade.include and do the same
     #       for brocade.fcport.
     port_index = int(item.split()[0]) + 1
-    if port_index not in section:
+
+    if (port := section.get(port_index)) is None:
         return
-    port_info = section[port_index]
 
     # levels are given in an uncommon order at the rulespec
     # We have crit_lower, warn_lower, warn_upper, crit_upper
@@ -205,7 +238,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         return (v[2], v[3]) if (v := params.get(key)) else None
 
     yield from check_levels_v1(
-        port_info["rx_power"],
+        port.values.rx_power,
         metric_name="input_signal_power_dbm",
         levels_lower=_levels_lower("rx_power"),
         levels_upper=_levels_upper("rx_power"),
@@ -213,7 +246,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         label="Rx",
     )
     yield from check_levels_v1(
-        port_info["tx_power"],
+        port.values.tx_power,
         metric_name="output_signal_power_dbm",
         levels_lower=_levels_lower("tx_power"),
         levels_upper=_levels_upper("tx_power"),
@@ -221,7 +254,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         label="Tx",
     )
     yield from check_levels_v1(
-        port_info["current"],
+        port.values.current,
         metric_name="current",
         levels_lower=_levels_lower("current"),
         levels_upper=_levels_upper("current"),
@@ -229,7 +262,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         label="Current",
     )
     yield from check_levels_v1(
-        port_info["voltage"],
+        port.values.voltage,
         metric_name="voltage",
         levels_lower=_levels_lower("voltage"),
         levels_upper=_levels_upper("voltage"),

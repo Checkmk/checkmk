@@ -46,6 +46,17 @@
 #          3          1 hp3
 #          4          1 hp4
 
+# Version >2 with QDevcie
+# <<<pvecm_nodes>>>
+#
+# Membership information
+# ~~~~~~~~~~~~~~~~~~~~~~
+#     Nodeid      Votes    Qdevice Name
+#          1          1    A,V,NMW hp1 (local)
+#          2          1    A,V,NMW hp2
+#          0          1            QDevice
+#
+
 
 # mypy: disable-error-code="var-annotated"
 
@@ -68,6 +79,11 @@ def parse_pvecm_nodes(string_table):
             parse_func = _parse_version_gt_2
             continue
 
+        if line == ["Nodeid", "Votes", "Qdevice", "Name"]:
+            header = ["node_id", "votes", "qdevice", "name"]
+            parse_func = _parse_version_gt_2_with_qdevice
+            continue
+
         if header is None:
             continue
 
@@ -86,6 +102,14 @@ def _parse_version_eq_2(line, header):
 
 def _parse_version_gt_2(line, header):
     return " ".join(line[2:]), dict(zip(header[:2], line[:2]))
+
+
+def _parse_version_gt_2_with_qdevice(line, header):
+    if len(line) > 3:
+        name = " ".join(line[3:])
+    else:
+        name = line[2]  # QDevice
+    return name, dict(zip(header[:3], line[:3]))
 
 
 def inventory_pvecm_nodes(parsed):

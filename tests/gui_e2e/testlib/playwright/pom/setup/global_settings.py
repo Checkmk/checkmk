@@ -47,6 +47,15 @@ class GlobalSettings(CmkPage):
         self._searchbar.fill(search_text)
         self.main_area.locator().get_by_role(role="button", name="Submit").click()
 
+    def _toggle_button(self, var_name: str) -> Locator:
+        self.search_settings(var_name)
+        return self.main_area.locator().get_by_role("link", name="Click to toggle this setting")
+
+    def toggle(self, var_name: str) -> None:
+        """Toggle a setting on or off."""
+        logger.info("Toggle setting: %s", var_name)
+        self.main_area.click_and_wait(self._toggle_button(var_name))
+
 
 class EditGlobalSetting(CmkPage, ABC):
     """General "edit global settings" page"""
@@ -167,6 +176,15 @@ class SiteSpecificGlobalSettings(CmkPage):
         logger.info("Search for setting: %s", search_text)
         self._searchbar.fill(search_text)
         self.main_area.locator().get_by_role(role="button", name="Submit").click()
+
+    def _toggle_button(self, var_name: str) -> Locator:
+        self.search_settings(var_name)
+        return self.main_area.locator().get_by_role("link", name="Click to toggle this setting")
+
+    def toggle(self, var_name: str) -> None:
+        """Toggle a setting on or off."""
+        logger.info("Toggle setting: %s", var_name)
+        self.main_area.click_and_wait(self._toggle_button(var_name))
 
 
 class EditSiteSpecificGlobalSetting(CmkPage, ABC):

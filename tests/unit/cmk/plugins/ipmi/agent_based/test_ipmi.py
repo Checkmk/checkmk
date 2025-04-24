@@ -8,7 +8,7 @@ import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.ipmi.agent_based import ipmi
-from cmk.plugins.lib import ipmi as ipmi_utils
+from cmk.plugins.ipmi.lib import ipmi as ipmi_utils
 
 SECTION_IPMI = ipmi.parse_ipmi(
     [

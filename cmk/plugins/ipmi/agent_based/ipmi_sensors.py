@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import ipmi as ipmi_utils
+from cmk.plugins.ipmi.lib import ipmi as ipmi_utils
 
 _NA_VALUES = {"NA", "N/A"}
 

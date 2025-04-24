@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.lib import ipmi
+from cmk.plugins.ipmi.lib import ipmi
 
 
 @pytest.mark.parametrize(

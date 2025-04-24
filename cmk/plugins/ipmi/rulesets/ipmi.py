@@ -2,10 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Any, assert_never, Literal, TypedDict
+from collections.abc import Mapping
+from typing import Any, assert_never, Literal
 
+from cmk.plugins.ipmi.lib.ipmi import DiscoveryMode, StateMapping, UserLevels
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -24,29 +24,12 @@ from cmk.rulesets.v1.form_specs import (
     SimpleLevels,
     String,
 )
-from cmk.rulesets.v1.form_specs import LevelsConfigModel as LevelsT
 from cmk.rulesets.v1.rule_specs import (
     CheckParameters,
     DiscoveryParameters,
     HostAndItemCondition,
     Topic,
 )
-
-# TODO: Remove temporary type definitions
-IgnoreParams = Mapping[str, Sequence[str]]
-DiscoveryMode = tuple[Literal["summarize"], None] | tuple[Literal["single"], IgnoreParams]
-
-
-class StateMapping(TypedDict):
-    ipmi_state: str
-    target_state: int
-
-
-@dataclass(frozen=True)
-class UserLevels:
-    sensor_name: str
-    upper: LevelsT[float]
-    lower: LevelsT[float]
 
 
 def _ignored_dict_elements(when: Literal["discovery", "summary"]) -> Mapping[str, DictElement]:

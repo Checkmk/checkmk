@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import ipmi
+from cmk.plugins.ipmi.lib import ipmi
 
 # Example of output from ipmi:
 # <<<ipmi>>>

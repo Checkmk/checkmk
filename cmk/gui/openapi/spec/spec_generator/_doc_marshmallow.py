@@ -2,12 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import hashlib
 import http.client
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from types import ModuleType
 
 from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
@@ -41,7 +39,6 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     PathItem,
     RawParameter,
     ResponseType,
-    SchemaParameter,
     StatusCodeInt,
 )
 from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
@@ -310,7 +307,7 @@ def _to_operation_dict(
     return {spec_endpoint.method: operation_spec}
 
 
-def _build_tag_obj_from_module(module_obj: Any) -> tuple[str, OpenAPITag]:
+def _build_tag_obj_from_module(module_obj: ModuleType) -> tuple[str, OpenAPITag]:
     """Build a tag object from the module's docstring"""
     docstring_name = _docstring_name(module_obj.__doc__)
     tag_obj: OpenAPITag = {
@@ -422,8 +419,7 @@ class MarshmallowResponses:
         # 2xx responses
         if 200 in expected_status_codes:
             if response_schema:
-                content: ContentObject
-                content = {content_type: {"schema": response_schema}}
+                content: ContentObject = {content_type: {"schema": response_schema}}
             elif content_type.startswith("application/") or content_type.startswith("image/"):
                 content = {
                     content_type: {
@@ -456,7 +452,7 @@ class MarshmallowResponses:
         status_descriptions: Mapping[StatusCodeInt, str] | None,
         status_code: StatusCodeInt,
         description: str,
-        content: dict[str, Any] | None = None,
+        content: dict[str, dict[str, object]] | None = None,
         headers: dict[str, OpenAPIParameter] | None = None,
     ) -> PathItem:
         if status_descriptions and status_code in status_descriptions:
@@ -574,8 +570,8 @@ def to_dict(schema: Schema) -> dict[str, str]:
 
 def _coalesce_schemas(
     parameters: Sequence[tuple[LocationType, Sequence[RawParameter]]],
-) -> Sequence[SchemaParameter]:
-    rv: list[SchemaParameter] = []
+) -> Sequence[OpenAPIParameter]:
+    rv: list[OpenAPIParameter] = []
     for location, params in parameters:
         if not params:
             continue
@@ -594,7 +590,7 @@ def _coalesce_schemas(
 
 
 def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
-    attrs: dict[str, Any] = _patch_regex(fields_.copy())
+    attrs: dict[str, Field | type] = dict(_patch_regex(fields_.copy()))
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),

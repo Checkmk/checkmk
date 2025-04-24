@@ -5,7 +5,7 @@
 
 import re
 from collections import abc
-from collections.abc import ItemsView, Sequence
+from collections.abc import ItemsView, Mapping, Sequence
 
 from marshmallow import Schema
 
@@ -244,7 +244,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
 
 def fill_out_path_template(
     orig_path: str,
-    parameters: dict[str, OpenAPIParameter],
+    parameters: Mapping[str, OpenAPIParameter],
 ) -> str:
     """Fill out a simple template.
 
@@ -266,13 +266,18 @@ def fill_out_path_template(
 
     """
     path = orig_path
-    for path_param in PARAM_RE.findall(path):
+    for path_param in PARAM_RE.findall(path):  # type: str
         if path_param not in parameters:
             raise ValueError(f"Parameter {path_param!r} needed, but not supplied in {parameters!r}")
 
         param_spec = parameters[path_param]
-        if "example" not in param_spec:
+        example = param_spec.get("example")
+        if example is None:
             raise ValueError(f"Parameter {path_param!r} of path {orig_path!r} has no example.")
+        if not isinstance(example, str):
+            raise TypeError(
+                f"Parameter {path_param!r} of path {orig_path!r} has an invalid example."
+            )
 
-        path = path.replace("{" + path_param + "}", param_spec["example"])
+        path = path.replace("{" + path_param + "}", example)
     return path

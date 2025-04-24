@@ -429,15 +429,6 @@ class CodeSample(TypedDict, total=True):
 
 ParameterReference = str
 
-SchemaParameter = TypedDict(
-    "SchemaParameter",
-    {
-        "in": LocationType,
-        "schema": type[Schema],
-    },
-    total=True,
-)
-
 OperationSpecType = TypedDict(
     "OperationSpecType",
     {
@@ -446,7 +437,7 @@ OperationSpecType = TypedDict(
         "tags": list[str],
         "description": str,
         "responses": ResponseType,
-        "parameters": Sequence[SchemaParameter],
+        "parameters": Sequence[OpenAPIParameter],
         "requestBody": dict[str, Any],
         "summary": str,
         "deprecated": bool,

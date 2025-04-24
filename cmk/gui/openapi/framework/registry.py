@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointBehavior,
     EndpointDoc,
@@ -52,8 +53,7 @@ class VersionedSpecEndpoint:
     doc_sort_index: int
     deprecated_werk_id: int | None
     handler: Callable
-    # TODO: replace object with ApiErrorDataclass
-    error_schemas: Mapping[ErrorStatusCodeInt, object] | None
+    error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None
     status_descriptions: Mapping[StatusCodeInt, str] | None
     additional_status_codes: Sequence[StatusCodeInt] | None
     method: HTTPMethod

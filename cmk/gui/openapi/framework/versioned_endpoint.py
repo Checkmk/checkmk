@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.restful_objects.api_error import ApiError
+from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.restful_objects.type_defs import (
     AcceptFieldType,
     EndpointFamilyName,
@@ -37,8 +37,7 @@ class EndpointHandler:
     function signature is used to parse the respective doc schemas as well as used for request
     and response validation"""
 
-    # TODO: ApiError needs to be changed to the equivalent dataclass error
-    error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]] | None = None
+    error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None = None
     """A dictionary of error schemas. The keys are the HTTP status codes and the values are the
     schemas."""
 

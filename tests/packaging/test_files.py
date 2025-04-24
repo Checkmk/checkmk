@@ -173,19 +173,19 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
 @cache
 def _get_paths_from_package(path_to_package: str) -> list[str]:
     if path_to_package.endswith(".rpm"):
-        paths = subprocess.check_output(
+        return subprocess.check_output(
             ["rpm", "-qlp", path_to_package], encoding="utf-8"
         ).splitlines()
-    elif path_to_package.endswith(".deb"):
-        paths = []
-        for line in subprocess.check_output(
-            ["dpkg", "-c", path_to_package], encoding="utf-8"
-        ).splitlines():
-            paths.append(line.split()[5].lstrip("."))
-    else:
-        raise NotImplementedError()
 
-    return paths
+    if path_to_package.endswith(".deb"):
+        return [
+            line.split()[5].lstrip(".")
+            for line in subprocess.check_output(
+                ["dpkg", "-c", path_to_package], encoding="utf-8"
+            ).splitlines()
+        ]
+
+    raise NotImplementedError()
 
 
 def test_cma_only_contains_version_paths(package_path: str, cmk_version: str) -> None:

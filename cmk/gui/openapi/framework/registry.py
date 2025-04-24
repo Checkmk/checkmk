@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.gui.http import HTTPMethod
@@ -20,6 +20,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.openapi.restful_objects.type_defs import (
     AcceptFieldType,
     EndpointKey,
+    ErrorStatusCodeInt,
     ETagBehaviour,
     StatusCodeInt,
     TagGroup,
@@ -40,6 +41,27 @@ class RequestEndpoint:
     additional_status_codes: Sequence[StatusCodeInt]
     update_config_generation: bool
     permissions_required: BasePerm | None
+
+
+@dataclass(slots=True, frozen=True)
+class VersionedSpecEndpoint:
+    operation_id: str
+    path: str
+    family: str
+    doc_group: TagGroup
+    doc_sort_index: int
+    deprecated_werk_id: int | None
+    handler: Callable
+    # TODO: replace object with ApiErrorDataclass
+    error_schemas: Mapping[ErrorStatusCodeInt, object] | None
+    status_descriptions: Mapping[StatusCodeInt, str] | None
+    additional_status_codes: Sequence[StatusCodeInt] | None
+    method: HTTPMethod
+    content_type: str
+    etag: ETagBehaviour | None
+    permissions_required: BasePerm | None
+    permissions_description: Mapping[str, str] | None
+    accept: AcceptFieldType
 
 
 @dataclass
@@ -72,6 +94,27 @@ class EndpointDefinition:
             additional_status_codes=self.handler.additional_status_codes or [],
             update_config_generation=self.behavior.update_config_generation,
             permissions_required=self.permissions.required,
+        )
+
+    def spec_endpoint(self) -> VersionedSpecEndpoint:
+        # TODO: separate models from other attributes
+        return VersionedSpecEndpoint(
+            operation_id=f"{self.metadata.family}.{self.handler.handler.__name__}",
+            path=self.metadata.path,
+            family=self.metadata.family,
+            doc_group=self.doc.group,
+            doc_sort_index=self.doc.sort_index,
+            deprecated_werk_id=self.doc.sort_index,
+            handler=self.handler.handler,
+            error_schemas=self.handler.error_schemas,
+            status_descriptions=self.handler.status_descriptions,
+            additional_status_codes=self.handler.additional_status_codes,
+            method=self.metadata.method,
+            content_type=self.metadata.content_type,
+            etag=self.behavior.etag,
+            permissions_required=self.permissions.required,
+            permissions_description=self.permissions.descriptions,
+            accept=self.metadata.accept,
         )
 
 

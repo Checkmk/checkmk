@@ -126,7 +126,7 @@ def automation_discovery(
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryResult:
-    console.verbose("  Doing discovery with '{settings!r}'...")
+    console.verbose(f"  Doing discovery with '{settings!r}'...")
     results = {
         host_name: DiscoveryResult(),
         **{node: DiscoveryResult() for node in cluster_nodes},

@@ -166,12 +166,17 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
 
 
 def iter_relevant_files(basepath: Path) -> Iterable[Path]:
-    exclusions = (
+    exclusions = [
         basepath / "agents",  # There are so many optional imports...
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "tests",
-    )
+    ]
+    if is_enterprise_repo():
+        # Not deployed with the Checkmk site Python environment, but required by tests in the
+        # cmk-update-agent package
+        exclusions.append(basepath / "non-free/packages/cmk-update-agent")
+
     exclusions_from_exclusions = (basepath / "agents/plugins/mk_jolokia.py",)
 
     for source_file_path in iter_sourcefiles(basepath):

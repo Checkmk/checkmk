@@ -65,6 +65,7 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
             "cmk-update-agent-32.spec",
             "build",
             "BUILD",
+            "pyproject.toml",
         ],
         [],
     ),

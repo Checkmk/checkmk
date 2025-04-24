@@ -177,6 +177,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_TRACE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-trace/' || true"
 
+    - NAME: CHANGED_CMK_UPDATE_AGENT_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-update-agent/' || true"
+
     - NAME: CHANGED_LIVESTATUS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/livestatus/' || true"
 
@@ -646,6 +649,14 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-trace package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-trace.txt"
+
+    - NAME: "Package cmk-update-agent"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_UPDATE_AGENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "non-free/packages/cmk-update-agent"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-update-agent.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-update-agent files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-update-agent.txt"
 
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES

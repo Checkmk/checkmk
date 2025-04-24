@@ -1660,6 +1660,34 @@ class Site:
             self.read_global_settings(relative_path) | update,
         )
 
+    def read_site_specific_settings(
+        self, relative_path: Path
+    ) -> dict[str, dict[str, dict[str, object]]]:
+        site_specific_settings: dict[str, dict[str, dict[str, object]]] = {"sites": {}}
+        exec(self.read_file(relative_path), {}, site_specific_settings)
+        return site_specific_settings
+
+    def write_site_specific_settings(
+        self,
+        relative_path: Path,
+        site_specific_settings: Mapping[str, Mapping[str, object]],
+    ) -> None:
+        self.write_text_file(
+            relative_path,
+            "\n".join(f"{key} = {repr(val)}" for key, val in site_specific_settings.items()),
+        )
+
+    def update_site_specific_settings(
+        self, relative_path: Path, update: Mapping[str, Mapping[str, object]]
+    ) -> None:
+        current_settings = self.read_site_specific_settings(relative_path)
+        for site_id, updated_site_settings in update.items():
+            if site_id not in current_settings["sites"]:
+                current_settings["sites"][site_id] = {}
+            current_settings["sites"][site_id].update(updated_site_settings)
+
+        self.write_site_specific_settings(relative_path, current_settings)
+
 
 @dataclass(frozen=True)
 class GlobalSettingsUpdate:

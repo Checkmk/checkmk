@@ -121,15 +121,10 @@ def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
     # Test implements process as described in:
     # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies
     unpinned_packages = [req for req in loaded_requirements.keys() if not loaded_requirements[req]]
-    try:
-        assert not unpinned_packages, (
-            "The following packages are not pinned: %s. "
-            "For the sake of reproducibility, all packages must be pinned to a version!"
-        ) % " ,".join(unpinned_packages)
-    except AssertionError:
-        env_branch = f"{branch_from_env(env_var='GERRIT_BRANCH', fallback='fallback')}"
-        base_branch = current_base_branch_name()
-        logging.getLogger().warning(f"Base branch: {base_branch}, env_branch: {env_branch}")
+    assert not unpinned_packages, (
+        "The following packages are not pinned: %s. "
+        "For the sake of reproducibility, all packages must be pinned to a version!"
+    ) % " ,".join(unpinned_packages)
 
 
 def is_python_file(file_path: Path) -> bool:

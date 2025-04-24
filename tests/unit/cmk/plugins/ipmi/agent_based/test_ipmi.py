@@ -196,7 +196,7 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
     "discovery_params, discovery_results",
     [
         (
-            {"discovery_mode": ("summarize", {})},
+            {"discovery_mode": ("summarize", None)},
             [Service(item="Summary", parameters={}, labels=[])],
         ),
         (
@@ -1143,7 +1143,7 @@ def test_regression_discovery(
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.36 Volts"),
-                Metric("MEM_1.35V", 1.36, levels=(None, 1.61)),
+                Metric("MEM_1.35V", 1.36, levels=(1.61, 1.61)),
             ],
         ),
         (
@@ -1167,7 +1167,7 @@ def test_regression_discovery(
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="48.00 Watts"),
-                Metric("Total_Power", 48.0, levels=(None, 498.0)),
+                Metric("Total_Power", 48.0, levels=(498.0, 498.0)),
             ],
         ),
         (
@@ -1191,7 +1191,7 @@ def test_regression_discovery(
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="0.00 %"),
-                Metric("SEL_Level", 0.0, levels=(90.0, None)),
+                Metric("SEL_Level", 0.0),
             ],
         ),
         (

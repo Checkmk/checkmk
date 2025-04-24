@@ -58,7 +58,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -82,7 +82,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -129,7 +129,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 C"),
-                Metric("value", 1.04, levels=(None, 1.13)),
+                Metric("value", 1.04, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -153,7 +153,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: nc (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -181,7 +181,7 @@ from cmk.plugins.lib import ipmi
                     summary="2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)",
                     details="2.10 Volts (warn/crit at 1.13 Volts/1.13 Volts)",
                 ),
-                Metric("PCH_1.05V", 2.1, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 2.1, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -209,24 +209,20 @@ from cmk.plugins.lib import ipmi
                     summary="0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)",
                     details="0.50 Volts (warn/crit below 0.97 Volts/0.97 Volts)",
                 ),
-                Metric("PCH_1.05V", 0.5, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 0.5, levels=(1.13, 1.13)),
             ],
         ),
         (
             "PCH_1.05V",
-            (
-                {
-                    "numerical_sensor_levels": [
-                        (
-                            "PCH_1.05V",
-                            {
-                                "lower": (1.0, 2.0),
-                                "upper": (1.0, 4.0),
-                            },
-                        )
-                    ]
-                }
-            ),
+            {
+                "numerical_sensor_levels": [
+                    {
+                        "sensor_name": "PCH_1.05V",
+                        "lower": ("fixed", (1.0, 2.0)),
+                        "upper": ("fixed", (1.0, 4.0)),
+                    },
+                ]
+            },
             ipmi.Sensor(
                 status_txt="ok",
                 unit="Volts",
@@ -245,28 +241,25 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
                 Result(
                     state=State.CRIT,
-                    summary="PCH_1.05V: 1.04 Volts (warn/crit below 1.00 Volts/2.00 Volts)",
-                    details="PCH_1.05V: 1.04 Volts (warn/crit below 1.00 Volts/2.00 Volts)",
+                    summary="PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts) (warn/crit below 1.00 Volts/2.00 Volts)",
+                    details="PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts) (warn/crit below 1.00 Volts/2.00 Volts)",
                 ),
             ],
         ),
         (
             "PCH_1.05V",
-            (
-                {
-                    "numerical_sensor_levels": [
-                        (
-                            "PCH_1.05V",
-                            {
-                                "upper": (1.0, 4.0),
-                            },
-                        )
-                    ]
-                }
-            ),
+            {
+                "numerical_sensor_levels": [
+                    {
+                        "sensor_name": "PCH_1.05V",
+                        "upper": ("fixed", (1.0, 4.0)),
+                        "lower": ("no_levels", None),
+                    },
+                ]
+            },
             ipmi.Sensor(
                 status_txt="ok",
                 unit="Volts",
@@ -285,7 +278,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
                 Result(
                     state=State.WARN,
                     summary="PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)",
@@ -295,7 +288,7 @@ from cmk.plugins.lib import ipmi
         ),
         (
             "PCH_1.05V",
-            ({"sensor_states": [("ok", 3)]}),
+            {"sensor_states": [{"ipmi_state": "ok", "target_state": 3}]},
             ipmi.Sensor(
                 status_txt="ok",
                 unit="Volts",
@@ -314,7 +307,7 @@ from cmk.plugins.lib import ipmi
                     details="Status: ok (service state set by user-configured rules)",
                 ),
                 Result(state=State.OK, summary="1.04 Volts"),
-                Metric("PCH_1.05V", 1.04, levels=(None, 1.13)),
+                Metric("PCH_1.05V", 1.04, levels=(1.13, 1.13)),
             ],
         ),
         (
@@ -585,7 +578,7 @@ SECTION = {
             ],
         ),
         (
-            ({"ignored_sensors": ["CPU", "VCORE"]}),
+            {"ignored_sensors": ["CPU", "VCORE"]},
             lambda txt: State.OK,
             [
                 Metric("ambient_temp", 18.5),
@@ -637,7 +630,7 @@ SECTION = {
             ],
         ),
         (
-            ({"ignored_sensorstates": ["ns", "nr", "na"]}),
+            {"ignored_sensorstates": ["ns", "nr", "na"]},
             lambda txt: State.OK,
             [
                 Metric("ambient_temp", 18.5),
@@ -693,12 +686,10 @@ SECTION = {
             ],
         ),
         (
-            (
-                {
-                    "ignored_sensorstates": ["ns", "nr", "na"],
-                    "sensor_states": [("ok", 1)],
-                }
-            ),
+            {
+                "ignored_sensorstates": ["ns", "nr", "na"],
+                "sensor_states": [{"ipmi_state": "ok", "target_state": 1}],
+            },
             lambda txt: State.OK,
             [
                 Metric("ambient_temp", 18.5),
@@ -757,18 +748,15 @@ SECTION = {
             ],
         ),
         (
-            (
-                {
-                    "numerical_sensor_levels": [
-                        (
-                            "PCH_1.05V",
-                            {
-                                "upper": (1.0, 4.0),
-                            },
-                        )
-                    ]
-                }
-            ),
+            {
+                "numerical_sensor_levels": [
+                    {
+                        "sensor_name": "PCH_1.05V",
+                        "upper": ("fixed", (1.0, 4.0)),
+                        "lower": ("no_levels", None),
+                    },
+                ]
+            },
             lambda txt: State.OK,
             [
                 Metric("ambient_temp", 18.5),

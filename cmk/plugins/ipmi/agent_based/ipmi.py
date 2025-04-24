@@ -259,7 +259,7 @@ def discover_ipmi(
     yield from ipmi.discover_individual_sensors(
         {
             "ignored_sensorstates": ["ns", "nr", "na"],
-            **ignore_params,
+            **(ignore_params or {}),
         },
         _merge_sections(section_ipmi, section_ipmi_discrete),
     )

@@ -498,7 +498,7 @@ def test_parse_ipmi_sensors(
             {
                 "discovery_mode": (
                     "summarize",
-                    {},
+                    None,
                 )
             },
             [
@@ -542,14 +542,14 @@ def test_discover_ipmi_sensors(
                     details="Status: OK (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="21.00 C"),
-                Metric("value", 21.0, levels=(None, 48.0)),
+                Metric("value", 21.0, levels=(48.0, 48.0)),
             ],
         ),
         pytest.param(
             "Power_Supply_PS2_Status",
             {
                 "sensor_states": [
-                    ("Presence detected", 3),
+                    {"ipmi_state": "Presence detected", "target_state": 3},
                 ],
             },
             _SECTIONS[1],
@@ -565,12 +565,11 @@ def test_discover_ipmi_sensors(
             "Voltage_AVCC",
             {
                 "numerical_sensor_levels": [
-                    (
-                        "Voltage_AVCC",
-                        {
-                            "upper": (1, 2),
-                        },
-                    ),
+                    {
+                        "sensor_name": "Voltage_AVCC",
+                        "upper": ("fixed", (1, 2)),
+                        "lower": ("no_levels", None),
+                    },
                 ],
             },
             _SECTIONS[1],
@@ -597,7 +596,7 @@ def test_discover_ipmi_sensors(
                     details="Status: nc (service state derived from sensor events)",
                 ),
                 Result(state=State.OK, summary="20.00 C"),
-                Metric("value", 20.0, levels=(None, 42.0)),
+                Metric("value", 20.0, levels=(42.0, 42.0)),
             ],
         ),
     ],

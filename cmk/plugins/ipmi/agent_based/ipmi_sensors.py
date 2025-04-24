@@ -128,7 +128,7 @@ def discover_ipmi_sensors(
         yield Service(item="Summary FreeIPMI")
         return
 
-    yield from ipmi_utils.discover_individual_sensors(ignore_params, section)
+    yield from ipmi_utils.discover_individual_sensors(ignore_params or {}, section)
 
 
 def _status_txt_mapping(status_txt: str) -> State:

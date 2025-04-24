@@ -7,8 +7,16 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -57,18 +65,23 @@ class Sensor:
 Section = dict[str, Sensor]
 IgnoreParams = Mapping[str, Sequence[str]]
 StatusTxtMapping = Callable[[str], State]
+DiscoveryMode = tuple[Literal["summarize"], None] | tuple[Literal["single"], IgnoreParams]
+
+
+class StateMapping(TypedDict):
+    ipmi_state: str
+    target_state: int
 
 
 @dataclass(frozen=True)
 class UserLevels:
-    upper: tuple[float, float] | None
-    lower: tuple[float, float] | None
+    sensor_name: str
+    upper: LevelsT[float]
+    lower: LevelsT[float]
 
 
 class DiscoveryParams(TypedDict):
-    discovery_mode: (
-        tuple[Literal["summarize"], IgnoreParams] | tuple[Literal["single"], IgnoreParams]
-    )
+    discovery_mode: DiscoveryMode
 
 
 def discover_individual_sensors(
@@ -142,35 +155,32 @@ def _unit_to_render_func(unit: str) -> Callable[[float], str]:
 
 def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLevels]:
     return {
-        sensorname: UserLevels(
-            upper=levels.get("upper"),
-            lower=levels.get("lower"),
-        )
-        for sensorname, levels in reversed(params.get("numerical_sensor_levels", []))
+        levels["sensor_name"]: UserLevels(**levels)
+        for levels in reversed(params.get("numerical_sensor_levels", []))
     }
 
 
 def _sensor_levels_to_check_levels_fixed(
     sensor_warn: float | None,
     sensor_crit: float | None,
-) -> tuple[float, float] | None:
+) -> LevelsT[float]:
     if sensor_crit is None:
-        return None
+        return "no_levels", None
     warn = sensor_warn if sensor_warn is not None else sensor_crit
-    return warn, sensor_crit
+    return "fixed", (warn, sensor_crit)
 
 
 def _check_status(
     sensor: Sensor,
     status_txt_mapping: StatusTxtMapping,
-    user_configured_states: Iterable[tuple[str, int]],
+    user_configured_states: Iterable[StateMapping],
     label: str,
 ) -> Result:
     summary = f"{label}: {sensor.status_txt}"
-    for status_txt_beginning, mon_state_int in user_configured_states:
-        if sensor.status_txt.startswith(status_txt_beginning):
+    for state_map in user_configured_states:
+        if sensor.status_txt.startswith(state_map["ipmi_state"]):
             return Result(
-                state=State(mon_state_int),
+                state=State(state_map["target_state"]),
                 summary=summary,
                 details=f"{summary} (service state set by user-configured rules)",
             )
@@ -200,40 +210,27 @@ def _check_ipmi_detailed(
     if sensor.value is None:
         return
 
-    metric = None
+    metric_name = None
     if not temperature_metrics_only:
-        metric = Metric(
-            item.replace("/", "_"),
-            sensor.value,
-            levels=(sensor.warn_high, sensor.crit_high),
-        )
+        metric_name = item.replace("/", "_")
 
     # Do not save performance data for FANs. This produces a lot of data and is - in my
     # opinion - useless.
     elif "temp" in item.lower() or "temp" in (sensor.type_ or "").lower() or sensor.unit == "C":
-        metric = Metric(
-            "value",
-            sensor.value,
-            levels=(None, sensor.crit_high),
-        )
+        metric_name = "value"
 
-    sensor_result, *_ = check_levels_v1(
-        sensor.value,
+    yield from check_levels(
+        value=sensor.value,
         levels_upper=_sensor_levels_to_check_levels_fixed(sensor.warn_high, sensor.crit_high),
         levels_lower=_sensor_levels_to_check_levels_fixed(sensor.warn_low, sensor.crit_low),
         render_func=_unit_to_render_func(sensor.unit),
+        metric_name=metric_name,
     )
-    yield Result(
-        state=sensor_result.state,
-        summary=sensor_result.summary,
-    )
-    if metric:
-        yield metric
 
     user_levels_map = _compile_user_levels_map(params)
     if levels := user_levels_map.get(item):
-        yield from check_levels_v1(
-            sensor.value,
+        yield from check_levels(
+            value=sensor.value,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
             render_func=_unit_to_render_func(sensor.unit),
@@ -287,13 +284,14 @@ def _check_individual_sensors(
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
-            (sensor_result,) = check_levels_v1(
+            sensor_result, *_ = check_levels(
                 sensor.value,
                 levels_upper=levels.upper,
                 levels_lower=levels.lower,
                 render_func=_unit_to_render_func(sensor.unit),
                 label=sensor_name,
             )
+            assert isinstance(sensor_result, Result)
             result = Result(
                 state=State.worst(status_result.state, sensor_result.state),
                 notice=sensor_result.summary,

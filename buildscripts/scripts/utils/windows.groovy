@@ -10,13 +10,10 @@ def build(Map args) {
 
     dir(artifacts_dir) {
         stage("Download  artifacts") {
-            if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {
+            if (args.TARGET == "test_integration") {
                 copyArtifacts(
                     projectName: "${jenkins_base_folder}/winagt-build",
                 )
-            }
-
-            if (args.TARGET == "test_integration") {
                 copyArtifacts(
                     projectName: "${jenkins_base_folder}/winagt-build-modules",
                 )
@@ -75,10 +72,7 @@ def build(Map args) {
                 "packages/host/mk-sql",
                 "call run.cmd --all",
                 "mk-sql.exe"] :
-            (args.TARGET == "test_unit") ? [
-                "agents/wnx",
-                "call run.cmd --test",
-                "unit_tests_results.zip"] :
+
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
                 "call run_tests.cmd --component --integration",

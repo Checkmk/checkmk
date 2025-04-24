@@ -71,6 +71,28 @@ class EditGlobalSetting(CmkPage, ABC):
     def save_button(self) -> Locator:
         return self.main_area.get_suggestion("Save")
 
+    @property
+    def factory_settings_button(self) -> Locator:
+        reset_option_1 = self.main_area.get_suggestion("Reset to default")
+        # button is named differently depending on current settings
+        if reset_option_1.is_visible():
+            return reset_option_1
+        return self.main_area.get_suggestion("Remove explicit setting")
+
+    @property
+    def reset_confirmation_window(self) -> Locator:
+        return self.main_area.locator("div[class*='confirm_popup']")
+
+    @property
+    def reset_confirmation_button(self) -> Locator:
+        return self.reset_confirmation_window.get_by_role("button", name="Reset")
+
+    def to_factory_settings(self) -> None:
+        """Reset and confirm the reset if reset is possible"""
+        self.factory_settings_button.click()
+        if self.reset_confirmation_window.is_visible():
+            self.reset_confirmation_button.click()
+
 
 class EditPiggybackHubGlobally(EditGlobalSetting):
     """Page to edit the global setting 'Enable piggyback-hub'"""
@@ -192,6 +214,28 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
     @property
     def save_button(self) -> Locator:
         return self.main_area.get_suggestion("Save")
+
+    @property
+    def factory_settings_button(self) -> Locator:
+        reset_option_1 = self.main_area.get_suggestion("Reset to default")
+        # button is named differently depending on current settings
+        if reset_option_1.is_visible():
+            return reset_option_1
+        return self.main_area.get_suggestion("Remove explicit setting")
+
+    @property
+    def reset_confirmation_window(self) -> Locator:
+        return self.main_area.locator("div[class*='confirm_popup']")
+
+    @property
+    def reset_confirmation_button(self) -> Locator:
+        return self.reset_confirmation_window.get_by_role("button", name="Reset")
+
+    def to_factory_settings(self) -> None:
+        """Reset and confirm the reset if reset is possible"""
+        self.factory_settings_button.click()
+        if self.reset_confirmation_window.is_visible():
+            self.reset_confirmation_button.click()
 
 
 class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):

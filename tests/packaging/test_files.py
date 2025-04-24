@@ -184,6 +184,13 @@ def _get_paths_from_package(path_to_package: str) -> list[str]:
                 ["dpkg", "-c", path_to_package], encoding="utf-8"
             ).splitlines()
         ]
+    if path_to_package.endswith(".cma"):
+        return [
+            line
+            for line in subprocess.check_output(
+                ["tar", "tzf", path_to_package], encoding="utf-8"
+            ).splitlines()
+        ]
 
     raise NotImplementedError()
 

@@ -446,7 +446,7 @@ def _generate_spec(
     if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
         undocumented_tag_groups.add("Checkmk Internal")
 
-    populate_spec(spec, target, undocumented_tag_groups)
+    populate_spec(spec, target, undocumented_tag_groups, str(omd_site()))
     generated_spec = spec.to_dict()
     _add_cookie_auth(generated_spec, site)
     if not validate:
@@ -461,6 +461,7 @@ def populate_spec(
     spec: APISpec,
     target: EndpointTarget,
     undocumented_tag_groups: set[str],
+    site_name: str,
 ) -> APISpec:
     endpoint: Endpoint
 
@@ -478,7 +479,7 @@ def populate_spec(
         if target in endpoint.blacklist_in or endpoint.tag_group in undocumented_tag_groups:
             continue
 
-        for doc_endpoint in marshmallow_doc_endpoints(spec, endpoint):
+        for doc_endpoint in marshmallow_doc_endpoints(spec, endpoint, site_name):
             ident = doc_endpoint.method, doc_endpoint.path
             if ident in seen_paths:
                 raise ValueError(

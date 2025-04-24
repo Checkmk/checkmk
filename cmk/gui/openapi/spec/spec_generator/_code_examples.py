@@ -22,8 +22,6 @@ from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore
 )
 from marshmallow import Schema
 
-from cmk.ccc.site import omd_site
-
 from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
@@ -454,6 +452,7 @@ def code_samples(
     header_params: Sequence[RawParameter],
     path_params: Sequence[RawParameter],
     query_params: Sequence[RawParameter],
+    site_name: str,
 ) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
@@ -470,7 +469,7 @@ def code_samples(
                 "source": env.get_template(example.label)
                 .render(
                     hostname="localhost",
-                    site=omd_site(),
+                    site=site_name,
                     username="automation",
                     password="test123",
                     content_type=spec_endpoint.content_type,

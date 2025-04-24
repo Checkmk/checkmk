@@ -63,6 +63,7 @@ from cmk.gui.openapi.spec.spec_generator._type_defs import (
 def marshmallow_doc_endpoints(
     spec: APISpec,
     endpoint: Endpoint,
+    site_name: str,
 ) -> Iterator[DocEndpoint]:
     """Generate the openapi spec part of this endpoint.
 
@@ -72,10 +73,10 @@ def marshmallow_doc_endpoints(
     if endpoint.deprecated_urls is not None:
         for url, werk_id in endpoint.deprecated_urls.items():
             deprecate_self |= url == endpoint.path
-            yield _marshmallow_endpoint_to_doc_endpoint(url, spec, endpoint, werk_id)
+            yield _marshmallow_endpoint_to_doc_endpoint(url, spec, endpoint, site_name, werk_id)
 
     if not deprecate_self:
-        yield _marshmallow_endpoint_to_doc_endpoint(endpoint.path, spec, endpoint)
+        yield _marshmallow_endpoint_to_doc_endpoint(endpoint.path, spec, endpoint, site_name)
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
@@ -134,6 +135,7 @@ def _marshmallow_endpoint_to_doc_endpoint(
     effective_path: str,
     spec: APISpec,
     endpoint: Endpoint,
+    site_name: str,
     werk_id: int | None = None,
 ) -> DocEndpoint:
     assert endpoint.func is not None, "This object must be used in a decorator environment."
@@ -183,7 +185,9 @@ def _marshmallow_endpoint_to_doc_endpoint(
         family_name=family_name,
         doc_group=endpoint.tag_group,
         doc_sort_index=endpoint.sort,
-        operation_object=_to_operation_dict(spec, spec_endpoint, schema_definitions, werk_id),
+        operation_object=_to_operation_dict(
+            spec, spec_endpoint, schema_definitions, site_name, werk_id
+        ),
     )
 
 
@@ -191,6 +195,7 @@ def _to_operation_dict(
     spec: APISpec,
     spec_endpoint: SpecEndpoint,
     schema_definitions: MarshmallowSchemaDefinitions,
+    site_name: str,
     werk_id: int | None = None,
 ) -> OperationObject:
     assert spec_endpoint.operation_id is not None, (
@@ -287,6 +292,7 @@ def _to_operation_dict(
         header_params=header_params,
         path_params=path_params,
         query_params=query_params,
+        site_name=site_name,
     )
 
     # If we don't have any parameters we remove the empty list, so the spec will not have it.

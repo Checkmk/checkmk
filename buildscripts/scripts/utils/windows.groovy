@@ -69,10 +69,7 @@ def build(Map args) {
                 "packages/host/mk-sql",
                 "call run.cmd --all",
                 "mk-sql.exe"] :
-            (args.TARGET == "test_unit") ? [
-                "agents/wnx",
-                "call run.cmd --test",
-                "unit_tests_results.zip"] :
+
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
                 "call run_tests.cmd --component --integration",

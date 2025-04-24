@@ -8,8 +8,9 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.openapi.framework._types import DataclassInstance
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
+from cmk.gui.openapi.framework.model.response import ApiErrorDataclass, TypedResponse
 from cmk.gui.openapi.restful_objects.type_defs import (
     AcceptFieldType,
     EndpointFamilyName,
@@ -22,6 +23,10 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.utils import permission_verification as permissions
 
+# the generic argument T will currently not be used, but this is the only way to specify a bound
+# on dataclasses
+type HandlerFunction[T: DataclassInstance] = Callable[..., TypedResponse[T | None]]
+
 
 @dataclass(slots=True, frozen=True)
 class EndpointHandler:
@@ -31,8 +36,7 @@ class EndpointHandler:
         * all attributes are version specific and can therefore change depending on the version
     """
 
-    # TODO: this needs to be extended with the dataclass syntax
-    handler: Callable
+    handler: HandlerFunction
     """The endpoint body function. This function is called when the endpoint is invoked. The
     function signature is used to parse the respective doc schemas as well as used for request
     and response validation"""

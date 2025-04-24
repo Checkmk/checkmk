@@ -16,6 +16,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointHandler,
     EndpointMetadata,
     EndpointPermissions,
+    HandlerFunction,
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.type_defs import (
@@ -32,7 +33,7 @@ from cmk.gui.utils.permission_verification import BasePerm
 
 @dataclass(frozen=True, slots=True)
 class RequestEndpoint:
-    handler: Callable  # TODO: change to HandlerFunction
+    handler: HandlerFunction
     method: HTTPMethod
     accept: AcceptFieldType
     content_type: str

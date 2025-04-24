@@ -16,6 +16,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import (
     EditPiggybackHubGlobally,
     EditPiggybackHubSiteSpecific,
 )
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -152,6 +153,14 @@ def _setup_settings(
                 central_site.delete_file(path)
 
 
+def _wait_for_file_change(site: Site, file_path: Path, original_mtime: float) -> None:
+    def _file_has_changed() -> bool:
+        current_mtime = site.file_mtime(file_path)
+        return current_mtime > original_mtime
+
+    wait_until(_file_has_changed, timeout=10)
+
+
 @pytest.mark.parametrize(
     ["enable_action"],
     [
@@ -204,6 +213,105 @@ def test_disabled_on_central__enable_on_remote__error(
         ), (
             f"Piggyback-hub was enabled for remote site '{remote_site.id}' although it should remain disabled"
         )
+
+
+@pytest.mark.parametrize(
+    ["enable_action"],
+    [
+        pytest.param(HubEnableActions.SAVE, id="save"),
+    ],
+)
+@pytest.mark.parametrize(
+    ["global_settings", "site_specific_settings"],
+    [
+        pytest.param(
+            {"site_piggyback_hub": False},
+            {"gui_e2e_central": {"site_piggyback_hub": True}},
+            id="central site-specific enabled, globally disabled",
+        ),
+        pytest.param(
+            {"site_piggyback_hub": True},
+            {"gui_e2e_remote": {"site_piggyback_hub": False}},
+            id="globally enabled",
+        ),
+    ],
+)
+def test_enabled_on_central__enable_on_remote__no_error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+    global_settings: Mapping[str, object],
+    site_specific_settings: Mapping[str, Mapping[str, object]] | None,
+    enable_action: HubEnableActions,
+) -> None:
+    """Test that enabling the piggyback-hub site-specific for a remote site works if it is enabled for the central site"""
+    # given
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+
+        # when
+        _enable_hub_site_specific(dashboard_page, remote_site.id, enable_action)
+
+        _wait_for_file_change(test_site, SITE_SPECIFIC_SETTINGS_REL_PATH, original_mtime)
+
+        # then
+        assert test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
+            remote_site.id
+        ]["globals"] == {"site_piggyback_hub": True}, (
+            f"Expected piggyback-hub to be enabled for remote site '{remote_site.id}'"
+        )
+
+
+@pytest.mark.parametrize(
+    ["disable_action", "expected_settings"],
+    [
+        pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+    ],
+)
+@pytest.mark.parametrize(
+    ["global_settings", "site_specific_settings"],
+    [
+        pytest.param(
+            None,
+            {
+                "gui_e2e_central": {"site_piggyback_hub": True},
+                "gui_e2e_remote": {"site_piggyback_hub": True},
+            },
+            id="central site-specific enabled",
+        ),
+        pytest.param(
+            {"site_piggyback_hub": True},
+            {"gui_e2e_remote": {"site_piggyback_hub": True}},
+            id="globally enabled",
+        ),
+    ],
+)
+def test_enabled_on_remote__disable_on_remote__no_error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+    global_settings: Mapping[str, object] | None,
+    site_specific_settings: Mapping[str, Mapping[str, object]],
+    disable_action: HubDisableActions,
+    expected_settings: Mapping[str, object],
+) -> None:
+    """Test that disabling the piggyback-hub site-specific for a remote site works in general"""
+    # given
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+
+        # when
+        _disable_hub_site_specific(dashboard_page, remote_site.id, disable_action)
+
+        _wait_for_file_change(test_site, SITE_SPECIFIC_SETTINGS_REL_PATH, original_mtime)
+
+        # then
+        assert (
+            test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
+                remote_site.id
+            ]["globals"]
+            == expected_settings
+        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site.id}'"
 
 
 @pytest.mark.parametrize(
@@ -269,6 +377,63 @@ def test_enabled_on_remote__disable_on_central__error(
 
 
 @pytest.mark.parametrize(
+    ["disable_action", "expected_settings"],
+    [
+        pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+    ],
+)
+@pytest.mark.parametrize(
+    ["global_settings", "site_specific_settings"],
+    [
+        pytest.param(
+            None,
+            {"gui_e2e_central": {"site_piggyback_hub": True}},
+            id="globally not set",
+        ),
+        pytest.param(
+            {"site_piggyback_hub": False},
+            {"gui_e2e_central": {"site_piggyback_hub": True}},
+            id="globally disabled",
+        ),
+        pytest.param(
+            {"site_piggyback_hub": True},
+            {
+                "gui_e2e_central": {"site_piggyback_hub": True},
+                "gui_e2e_remote": {"site_piggyback_hub": False},
+            },
+            id="globally enabled, remote site-specific disabled",
+        ),
+    ],
+)
+def test_disabled_on_remote_site__disable_on_central__no_error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+    global_settings: dict[str, object] | None,
+    site_specific_settings: dict[str, dict[str, object]],
+    disable_action: HubDisableActions,
+    expected_settings: dict[str, object],
+) -> None:
+    """Test that disabling the piggyback-hub site-specific for the central site works if it is not enabled for any remote sites"""
+    # given
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+
+        # when
+        _disable_hub_site_specific(dashboard_page, test_site.id, disable_action)
+
+        _wait_for_file_change(test_site, SITE_SPECIFIC_SETTINGS_REL_PATH, original_mtime)
+
+        # then
+        assert (
+            test_site.read_site_specific_settings(SITE_SPECIFIC_SETTINGS_REL_PATH)["sites"][
+                test_site.id
+            ]["globals"]
+            == expected_settings
+        ), f"Expected piggyback-hub to be disabled for remote site '{remote_site.id}'"
+
+
+@pytest.mark.parametrize(
     ["disable_action"],
     [
         pytest.param(HubDisableActions.SAVE, id="save"),
@@ -299,6 +464,52 @@ def test_enabled_on_remote__disable_globally__error(
         )
         assert test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH) == original_settings, (
             "Piggyback-hub was disabled globally although it should remain enabled"
+        )
+
+
+@pytest.mark.parametrize(
+    ["disable_action", "expected_settings"],
+    [
+        pytest.param(HubDisableActions.SAVE, {"site_piggyback_hub": False}, id="save"),
+    ],
+)
+@pytest.mark.parametrize(
+    ["global_settings", "site_specific_settings"],
+    [
+        pytest.param(
+            {"site_piggyback_hub": True},
+            {"gui_e2e_central": {"site_piggyback_hub": True}},
+            id="central site-specific enabled",
+        ),
+        pytest.param(
+            {"site_piggyback_hub": True},
+            {"gui_e2e_remote": {"site_piggyback_hub": False}},
+            id="remote site-specific disabled",
+        ),
+    ],
+)
+def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+    global_settings: Mapping[str, object] | None,
+    site_specific_settings: Mapping[str, Mapping[str, object]] | None,
+    disable_action: HubDisableActions,
+    expected_settings: Mapping[str, object],
+) -> None:
+    """Test that disabling the piggyback-hub globally works if it is not enabled for any remote sites or it is enabled for the central site"""
+    # given
+    with _setup_settings(global_settings, site_specific_settings, test_site, [remote_site]):
+        original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
+
+        # when
+        _disable_hub_globally(dashboard_page, disable_action)
+
+        _wait_for_file_change(test_site, GLOBAL_SETTINGS_REL_PATH, original_mtime)
+
+        # then
+        assert test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH) == expected_settings, (
+            "Piggyback-hub was not successfully disabled globally"
         )
 
 
@@ -334,3 +545,31 @@ def test_disabled_on_central__enable_globally__error(
         assert test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH) == original_settings, (
             "Piggyback-hub was enabled globally although it should remain disabled"
         )
+
+
+@pytest.mark.parametrize(
+    ["enable_action"],
+    [
+        pytest.param(HubEnableActions.SAVE, id="save"),
+    ],
+)
+def test_unset_on_central_and_remote__enable_globally__no_error(
+    test_site: Site,
+    remote_site: Site,
+    dashboard_page: Dashboard,
+    enable_action: HubEnableActions,
+) -> None:
+    """Test that enabling the piggyback-hub globally works if it is not disabled for the central site"""
+    # given
+    with _setup_settings(None, None, test_site, [remote_site]):
+        original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
+
+        # when
+        _enable_hub_globally(dashboard_page, enable_action)
+
+        _wait_for_file_change(test_site, GLOBAL_SETTINGS_REL_PATH, original_mtime)
+
+        # then
+        assert test_site.read_global_settings(GLOBAL_SETTINGS_REL_PATH) == {
+            "site_piggyback_hub": True
+        }, "Piggyback-hub was not successfully enabled globally"

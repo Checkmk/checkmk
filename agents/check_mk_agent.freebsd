@@ -52,10 +52,11 @@ inpath() {
 
 init_sudo() {
     if inpath sudo && [ "$(whoami)" != "root" ]; then
-        sudo_as_root() { sudo --non-interactive "$@"; }
+        ROOT_OR_SUDO="sudo --non-interactive"
     else
-        sudo_as_root() { "$@"; }
+        ROOT_OR_SUDO=""
     fi
+    export ROOT_OR_SUDO
 }
 
 get_file_atime() {
@@ -667,7 +668,7 @@ run_purely_synchronous_sections() {
         fi
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        ${ROOT_OR_SUDO} mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
     # Check status of qmail mailqueue

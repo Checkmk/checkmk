@@ -41,10 +41,11 @@ inpath() {
 
 init_sudo() {
     if inpath sudo && [ "$(whoami)" != "root" ]; then
-        sudo_as_root() { sudo --non-interactive "$@"; }
+        ROOT_OR_SUDO="sudo --non-interactive"
     else
-        sudo_as_root() { "$@"; }
+        ROOT_OR_SUDO=""
     fi
+    export ROOT_OR_SUDO
 }
 
 get_file_atime() {
@@ -605,7 +606,7 @@ section_diskstat() {
     grep -E ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
-        sudo_as_root dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+        ${ROOT_OR_SUDO} dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
     fi
     if [ -d /dev/vx/dsk ]; then
         echo '[vx_dsk]'
@@ -893,7 +894,7 @@ section_postfix() {
         fi
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        ${ROOT_OR_SUDO} mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 }
 
@@ -918,7 +919,7 @@ section_nullmailer() {
 section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
-        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; MK_SOURCE_AGENT=yes . '${0}'; sudo_as_root omd status --bare || true"
+        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; ${ROOT_OR_SUDO} omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
 

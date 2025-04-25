@@ -13,8 +13,8 @@ def create_requirements_file(name, outs):
         name = name,
         outs = outs,
         cmd = """
-           echo "%s" > $@
-        """ % packages[name],
+           echo "%s %s" > $@
+        """ % (packages[name], get_pip_options(name)),
     )
 
 def build_python_module(name, srcs, outs, cmd, **kwargs):
@@ -93,7 +93,6 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      {pip_add_opts} \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 
     tar cf $@ $$MODULE_NAME

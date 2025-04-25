@@ -1,6 +1,6 @@
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "all_requirements")
-load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file", "get_pip_options")
+load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file")
 
 config_setting(
     name = "git_ssl_no_verify",
@@ -31,14 +31,12 @@ config_setting(
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
             module_name = module,
-            pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             module_name = module,
-            pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
@@ -66,14 +64,12 @@ build_python_module(
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
             module_name = MODULE_NETAPP,
-            pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_NETAPP_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             module_name = MODULE_NETAPP,
-            pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_NETAPP_SOURCE,
         ),

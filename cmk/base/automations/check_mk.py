@@ -305,6 +305,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         config_cache = loading_result.config_cache
         ruleset_matcher = config_cache.ruleset_matcher
+        hosts_config = config_cache.hosts_config
         service_name_config = config_cache.make_passive_service_name_config()
         autochecks_config = config.AutochecksConfigurer(
             config_cache, plugins.check_plugins, service_name_config
@@ -337,7 +338,8 @@ class AutomationDiscovery(DiscoveryAutomation):
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
-        for hostname in hostnames:
+        # sort clusters last, to have them operate with the new nodes host labels.
+        for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
 
             def section_error_handling(
                 section_name: SectionName,
@@ -352,10 +354,9 @@ class AutomationDiscovery(DiscoveryAutomation):
                     rtc_package=None,
                 )
 
-            hosts_config = config_cache.hosts_config
             results[hostname] = automation_discovery(
                 hostname,
-                is_cluster=hostname in config_cache.hosts_config.clusters,
+                is_cluster=is_cluster,
                 cluster_nodes=config_cache.nodes(hostname),
                 active_hosts={
                     hn

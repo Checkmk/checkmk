@@ -131,6 +131,7 @@ ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 def automation_discovery(
     host_name: HostName,
     *,
+    # in the bulk discovery case, we might be dealing with a cluster
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     active_hosts: Container[HostName],
@@ -195,7 +196,7 @@ def automation_discovery(
             error_handling=section_error_handling,
         )
 
-        if settings.update_host_labels:
+        if settings.update_host_labels and not is_cluster:
             host_labels = QualifiedDiscovery[HostLabel](
                 preexisting=DiscoveredHostLabelsStore(host_name).load(),
                 current=discover_host_labels(

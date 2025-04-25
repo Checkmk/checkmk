@@ -206,11 +206,6 @@ def automation_discovery(
                     on_error=on_error,
                 ),
             )
-            results[host_name].host_labels.new = len(host_labels.new)
-            results[host_name].host_labels.changed = len(host_labels.changed)
-            results[host_name].host_labels.removed = len(host_labels.vanished)
-            results[host_name].host_labels.kept = len(host_labels.unchanged)
-
             DiscoveredHostLabelsStore(host_name).save(host_labels.present)
             if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
                 # Rulesets for service discovery can match based on the hosts labels.
@@ -289,6 +284,12 @@ def automation_discovery(
         else:
             set_autochecks_of_real_hosts(host_name, new_services_by_host[host_name])
 
+        results[host_name].host_labels = TransitionCounter(
+            new=len(host_labels.new),
+            changed=len(host_labels.changed),
+            removed=len(host_labels.vanished),
+            kept=len(host_labels.unchanged),
+        )
         results[host_name].diff_text = _make_diff(
             host_labels.vanished,
             host_labels.new,

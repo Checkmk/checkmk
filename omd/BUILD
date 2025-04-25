@@ -35,6 +35,7 @@ create_venv(
         #added here instead of above because of disappearing file
         "//omd/packages/Python:python_tar",
         "//omd/packages/heirloom-pkgtools",
+        "//omd/packages/lcab",
         "//omd/packages/maintenance",
         "//omd/packages/mk-livestatus",
         "//omd/packages/mod_fcgid",

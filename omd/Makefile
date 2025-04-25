@@ -28,7 +28,6 @@ PACKAGES := \
     erlang \
     libgsf \
     cpp-libs \
-    lcab \
     msitools \
     apache-omd \
     xinetd \

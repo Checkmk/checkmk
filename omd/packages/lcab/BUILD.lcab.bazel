@@ -29,3 +29,10 @@ configure_make(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "lcab_bin",
+    srcs = [":lcab"],
+    output_group = "lcab",
+    visibility = ["//visibility:public"],
+)

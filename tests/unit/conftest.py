@@ -5,8 +5,10 @@
 
 import json
 import logging
+import logging.handlers
 import os
 import pprint
+import queue
 import shutil
 import tempfile
 from collections.abc import Callable, Generator, Iterable, Iterator
@@ -470,6 +472,21 @@ def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     with patch.object(cmk.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
         yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:
+    """cmk.utils.log.security_event.log_security_event implicitly opens a file logger upon it's
+    first call which we want to avoid in the unit test context."""
+    q: queue.Queue[logging.LogRecord] = queue.Queue()
+    queue_handler = logging.handlers.QueueHandler(q)
+
+    logger = logging.getLogger("cmk_security")
+    logger.addHandler(queue_handler)
+    try:
+        yield q
+    finally:
+        logger.removeHandler(queue_handler)
 
 
 @pytest.fixture(name="monkeypatch_module", scope="module")

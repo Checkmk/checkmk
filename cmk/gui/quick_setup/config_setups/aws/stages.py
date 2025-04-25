@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -218,32 +218,46 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
-class _EC2RecapMessage:
-    @staticmethod
-    def _cre_message() -> str:
-        return _(
-            "Hosts for EC2 instances need to be created manually, please check the %s."
-        ) % HTMLWriter.render_a(
-            _("documentation"),
-            href=doc_reference_url(DocReference.AWS_MANUAL_VM),
-        )
-
-    message: Callable[[], str] = _cre_message
+class _CreateEC2:
+    handle_automatically: bool = False
 
 
-ec2_recap_message = _EC2RecapMessage()
+ec2_creation = _CreateEC2()
 
 
 def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
-    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    messages: list[Text | NoteText] = [
+        Text(text=title),
+        Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+    ]
     if "ec2" in parsed_data.get(FormSpecId("configure_services_to_monitor"), {}).get(
         "services", []
     ):
-        message += " " + ec2_recap_message.message()
-    return [
-        Text(text=title),
-        Text(text=message),
-    ]
+        if not ec2_creation.handle_automatically:
+            messages.append(
+                Text(
+                    text=_(
+                        "Hosts for EC2 instances need to be created manually, please check the %s."
+                    )
+                    % HTMLWriter.render_a(
+                        _("documentation"),
+                        href=doc_reference_url(DocReference.AWS_MANUAL_VM),
+                    )
+                )
+            )
+        else:
+            messages.extend(
+                [
+                    Text(text=_("EC2 instances may take a few minutes to show up.")),
+                    Text(),
+                    NoteText(
+                        text=_(
+                            "Note: This will also enable the dynamic configuration, which regularly activates all pending changes on the selected site."
+                        )
+                    ),
+                ]
+            )
+    return messages
 
 
 def recap_found_services(

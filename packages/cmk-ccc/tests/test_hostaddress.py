@@ -18,7 +18,7 @@ def test_duplicate_hosts() -> None:
         HostName("trois"),
     )
     hosts_config = Hosts(hosts=hostnames, clusters=(), shadow_hosts=())
-    assert list(hosts_config.duplicates(lambda *args, **kw: True)) == ["deux", "trois"]
+    assert list(hosts_config.duplicates(lambda _hn: True)) == ["deux", "trois"]
 
 
 @pytest.mark.parametrize(

@@ -19,6 +19,7 @@ from ._autodiscovery import (
     automation_discovery,
     DiscoveryResult,
     get_host_services_by_host_name,
+    ServiceTransitionCounter,
 )
 from ._commandline import commandline_discovery
 from ._filters import RediscoveryParameters
@@ -63,6 +64,7 @@ __all__ = [
     "QualifiedDiscovery",
     "RediscoveryParameters",
     "remove_autochecks_of_host",
+    "ServiceTransitionCounter",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
     "set_autochecks_for_effective_host",

@@ -248,21 +248,7 @@ def test_automation_inventory_not_existing_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts == {
-        "xxxhost": DiscoveryResult(
-            clustered_new=0,
-            clustered_old=0,
-            clustered_vanished=0,
-            diff_text=None,
-            error_text="",
-            self_kept=0,
-            self_new=0,
-            self_new_host_labels=0,
-            self_removed=0,
-            self_total=0,
-            self_total_host_labels=0,
-        )
-    }
+    assert result.hosts == {"xxxhost": DiscoveryResult(error_text="")}
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -274,21 +260,7 @@ def test_automation_discovery_not_existing_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts == {
-        "xxxhost": DiscoveryResult(
-            clustered_new=0,
-            clustered_old=0,
-            clustered_vanished=0,
-            diff_text=None,
-            error_text="",
-            self_kept=0,
-            self_new=0,
-            self_new_host_labels=0,
-            self_removed=0,
-            self_total=0,
-            self_total_host_labels=0,
-        )
-    }
+    assert result.hosts == {"xxxhost": DiscoveryResult(error_text="")}
 
 
 # old alias, drop after 2.2 release

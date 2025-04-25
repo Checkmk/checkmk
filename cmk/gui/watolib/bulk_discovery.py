@@ -23,6 +23,7 @@ from cmk.checkengine.discovery import (
     DiscoverySettingFlags,
     DiscoverySettings,
     DiscoveryValueSpecModel,
+    ServiceTransitionCounter,
 )
 
 from cmk.gui.background_job import (
@@ -318,11 +319,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface.send_progress_update(
             _("Services: %d total (%d added, %d changed, %d removed, %d kept)")
             % (
-                self._num_services_total,
-                self._num_services_added,
-                self._num_services_changed,
-                self._num_services_removed,
-                self._num_services_kept,
+                self._num_services.total,
+                self._num_services.new,
+                self._num_services.changed,
+                self._num_services.removed,
+                self._num_services.kept,
             )
         )
 
@@ -366,11 +367,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_hosts_succeeded = 0
         self._num_hosts_skipped = 0
         self._num_hosts_failed = 0
-        self._num_services_added = 0
-        self._num_services_changed = 0
-        self._num_services_removed = 0
-        self._num_services_kept = 0
-        self._num_services_total = 0
+        self._num_services = ServiceTransitionCounter()
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
@@ -441,11 +438,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 )
 
     def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
-        self._num_services_added += result.self_new
-        self._num_services_changed += result.self_changed
-        self._num_services_removed += result.self_removed
-        self._num_services_kept += result.self_kept
-        self._num_services_total += result.self_total
+        self._num_services += result.services
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
@@ -470,11 +463,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             )
             % (
                 host.name(),
-                result.self_total,
-                result.self_new,
-                result.self_changed,
-                result.self_removed,
-                result.self_kept,
+                result.services.total,
+                result.services.new,
+                result.services.changed,
+                result.services.removed,
+                result.services.kept,
                 result.self_total_host_labels,
                 result.self_new_host_labels,
             ),

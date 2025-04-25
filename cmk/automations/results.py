@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, field
-from typing import Any, Literal, TypedDict, TypeVar
+from typing import Any, Literal, Self, TypedDict, TypeVar
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -26,7 +26,7 @@ from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry, ServiceTransitionCounter
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
@@ -73,21 +73,61 @@ class ABCAutomationResult(ABC):
         return SerializedResult(repr(astuple(self)))
 
 
+def _serialize_discovery_report(
+    report: SingleHostDiscoveryResult, for_cmk_version: cmk_version.Version
+) -> Mapping[str, object]:
+    if for_cmk_version >= cmk_version.Version.from_str("2.5.0b1"):
+        return asdict(report)
+
+    return {
+        "self_new": report.services.new,
+        "self_changed": report.services.changed,
+        "self_removed": report.services.removed,
+        "self_kept": report.services.kept,
+        "self_new_host_labels": report.self_new_host_labels,
+        "self_total_host_labels": report.self_total_host_labels,
+        "clustered_new": report.clustered_new,
+        "clustered_old": report.clustered_old,
+        "clustered_vanished": report.clustered_vanished,
+        "clustered_ignored": report.clustered_ignored,
+        "error_text": report.error_text,
+        "diff_text": report.diff_text,
+    }
+
+
+def _deserialize_discovery_report(
+    serialized: Mapping[str, Any],
+) -> SingleHostDiscoveryResult:
+    return SingleHostDiscoveryResult(
+        services=ServiceTransitionCounter(**serialized["services"]),
+        self_new_host_labels=serialized["self_new_host_labels"],
+        self_total_host_labels=serialized["self_total_host_labels"],
+        clustered_new=serialized["clustered_new"],
+        clustered_old=serialized["clustered_old"],
+        clustered_vanished=serialized["clustered_vanished"],
+        clustered_ignored=serialized["clustered_ignored"],
+        error_text=serialized["error_text"],
+        diff_text=serialized["diff_text"],
+    )
+
+
 @dataclass
 class ServiceDiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]
 
-    def _to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
-        return {k: asdict(v) for k, v in self.hosts.items()}
+    def _to_dict(
+        self, for_cmk_version: cmk_version.Version
+    ) -> Mapping[HostName, Mapping[str, Any]]:
+        return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
 
     @staticmethod
     def _from_dict(
         serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
-        return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
+        return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(repr(self._to_dict()))
+        return SerializedResult(repr(self._to_dict(for_cmk_version)))
 
     @classmethod
     def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
@@ -200,20 +240,24 @@ class AutodiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]
     changes_activated: bool
 
-    def _hosts_to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
-        return {k: asdict(v) for k, v in self.hosts.items()}
+    def _hosts_to_dict(
+        self, for_cmk_version: cmk_version.Version
+    ) -> Mapping[HostName, Mapping[str, Any]]:
+        return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
 
     @staticmethod
     def _hosts_from_dict(
         serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
-        return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
+        return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(repr((self._hosts_to_dict(), self.changes_activated)))
+        return SerializedResult(
+            repr((self._hosts_to_dict(for_cmk_version), self.changes_activated))
+        )
 
     @classmethod
-    def deserialize(cls, serialized_result: SerializedResult) -> AutodiscoveryResult:
+    def deserialize(cls, serialized_result: SerializedResult) -> Self:
         hosts, changes_activated = literal_eval(serialized_result)
         return cls(cls._hosts_from_dict(hosts), changes_activated)
 

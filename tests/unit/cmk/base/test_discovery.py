@@ -715,9 +715,9 @@ def test__get_post_discovery_services(
     count_new, count_kept, count_removed = result_counts
 
     assert sorted(new_item_names) == sorted(result_new_item_names)
-    assert result.self_new == count_new
-    assert result.self_kept == count_kept
-    assert result.self_removed == count_removed
+    assert result.services.new == count_new
+    assert result.services.kept == count_kept
+    assert result.services.removed == count_removed
 
 
 def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:

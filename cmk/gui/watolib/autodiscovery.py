@@ -54,11 +54,11 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             " and %d host labels (%d added)"
         ) % (
             hostname,
-            discovery_result.self_total,
-            discovery_result.self_new,
-            discovery_result.self_changed,
-            discovery_result.self_removed,
-            discovery_result.self_kept,
+            discovery_result.services.total,
+            discovery_result.services.new,
+            discovery_result.services.changed,
+            discovery_result.services.removed,
+            discovery_result.services.kept,
             discovery_result.self_total_host_labels,
             discovery_result.self_new_host_labels,
         )

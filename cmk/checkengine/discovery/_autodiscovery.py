@@ -9,7 +9,6 @@ import dataclasses
 import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
-from dataclasses import dataclass
 from typing import assert_never, Generic, Literal, TypeVar
 
 import cmk.ccc.debug
@@ -53,13 +52,36 @@ from ._utils import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
 __all__ = ["get_host_services_by_host_name", "discovery_by_host"]
 
 
-@dataclass
+@dataclasses.dataclass
+class ServiceTransitionCounter:
+    new: int = 0
+    changed: int = 0
+    removed: int = 0
+    kept: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.new + self.changed + self.removed + self.kept
+
+    def __iadd__(self, other: ServiceTransitionCounter) -> ServiceTransitionCounter:
+        self.new += other.new
+        self.changed += other.changed
+        self.removed += other.removed
+        self.kept += other.kept
+        return self
+
+    def __add__(self, other: ServiceTransitionCounter) -> ServiceTransitionCounter:
+        return ServiceTransitionCounter(
+            new=self.new + other.new,
+            changed=self.changed + other.changed,
+            removed=self.removed + other.removed,
+            kept=self.kept + other.kept,
+        )
+
+
+@dataclasses.dataclass
 class DiscoveryResult:
-    self_new: int = 0
-    self_changed: int = 0
-    self_removed: int = 0
-    self_kept: int = 0
-    self_total: int = 0
+    services: ServiceTransitionCounter = dataclasses.field(default_factory=ServiceTransitionCounter)
     self_new_host_labels: int = 0
     self_total_host_labels: int = 0
     clustered_new: int = 0
@@ -149,7 +171,7 @@ def automation_discovery(
         # this is a weird way of updating changed services:
         # forgetting the old onces, add adding changed ones, that now appear to be "new"
         if settings.update_changed_service_labels and settings.update_changed_service_parameters:
-            results[host_name].self_removed += sum(
+            results[host_name].services.removed += sum(
                 # this is cluster-aware!
                 remove_autochecks_of_host(node, host_name, autochecks_config.effective_host)
                 for node in (cluster_nodes if is_cluster else [host_name])
@@ -275,7 +297,6 @@ def automation_discovery(
             raise
         results[host_name].error_text = str(e)
 
-    results[host_name].self_total = results[host_name].self_new + results[host_name].self_kept
     # For now, we only return the result for the host itself
     return results[host_name]
 
@@ -310,7 +331,7 @@ def _get_post_discovery_autocheck_services(
                         for s in discovered_services_with_nodes
                         if service_filters.new(get_service_description(host_name, s.service.newer))
                     }
-                    result.self_new += len(new)
+                    result.services.new += len(new)
                     post_discovery_services.update(new)
 
             case "unchanged" | "ignored":
@@ -318,7 +339,7 @@ def _get_post_discovery_autocheck_services(
                 post_discovery_services.update(
                     (s.service.newer.id(), s) for s in discovered_services_with_nodes
                 )
-                result.self_kept += len(discovered_services_with_nodes)
+                result.services.kept += len(discovered_services_with_nodes)
 
             case "changed":
                 for entry in discovered_services_with_nodes:
@@ -346,9 +367,9 @@ def _get_post_discovery_autocheck_services(
                     )
                     post_discovery_services[service.newer.id()] = new_entry
                     if new_entry.service.new != new_entry.service.previous:
-                        result.self_changed += 1
+                        result.services.changed += 1
                     else:
-                        result.self_kept += 1
+                        result.services.kept += 1
 
             case "vanished":
                 # keep item, if we are currently only looking for new services
@@ -357,11 +378,11 @@ def _get_post_discovery_autocheck_services(
                     if settings.remove_vanished_services and service_filters.vanished(
                         get_service_description(host_name, entry.service.newer)
                     ):
-                        result.self_removed += 1
+                        result.services.removed += 1
                     else:
                         post_discovery_services[entry.service.newer.id()] = entry
 
-                        result.self_kept += 1
+                        result.services.kept += 1
 
             case _:
                 if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
@@ -482,10 +503,9 @@ def autodiscovery(
         return None, False
 
     something_changed = (
-        result.self_new != 0
-        or result.self_changed != 0
-        or result.self_removed != 0
-        or result.self_kept != result.self_total
+        result.services.new != 0
+        or result.services.changed != 0
+        or result.services.removed != 0
         or result.clustered_new != 0
         or result.clustered_vanished != 0
         or result.self_new_host_labels != 0
@@ -496,8 +516,8 @@ def autodiscovery(
         activation_required = False
     else:
         console.verbose_no_lf(
-            f"{result.self_total} services ({result.self_new} added, {result.self_changed} changed, "
-            f"{result.self_removed} removed, {result.self_kept} kept, {result.clustered_new} clustered new, "
+            f"{result.services.total} services ({result.services.new} added, {result.services.changed} changed, "
+            f"{result.services.removed} removed, {result.services.kept} kept, {result.clustered_new} clustered new, "
             f"{result.clustered_vanished}  clustered vanished) "
             f"and {result.self_total_host_labels} host labels ({result.self_new_host_labels} added). "
         )

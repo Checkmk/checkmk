@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -76,32 +77,8 @@ def test_serialization() -> None:
 
 class TestDiscoveryResult:
     HOSTS = {
-        HostName("host_1"): SingleHostDiscoveryResult(
-            clustered_new=0,
-            clustered_old=0,
-            clustered_vanished=0,
-            diff_text=None,
-            error_text="",
-            self_kept=0,
-            self_new=0,
-            self_new_host_labels=0,
-            self_removed=0,
-            self_total=0,
-            self_total_host_labels=0,
-        ),
-        HostName("host_2"): SingleHostDiscoveryResult(
-            clustered_new=1,
-            clustered_old=2,
-            clustered_vanished=3,
-            diff_text="something changed",
-            error_text="error",
-            self_kept=4,
-            self_new=5,
-            self_new_host_labels=6,
-            self_removed=7,
-            self_total=8,
-            self_total_host_labels=9,
-        ),
+        HostName("host_1"): SingleHostDiscoveryResult(),
+        HostName("host_2"): SingleHostDiscoveryResult(),
     }
 
     def test_serialization(self) -> None:
@@ -110,6 +87,24 @@ class TestDiscoveryResult:
                 cmk_version.Version.from_str(cmk_version.__version__)
             )
         ) == ServiceDiscoveryResult(self.HOSTS)
+
+    def test_serialization_to_past(self) -> None:
+        assert literal_eval(
+            ServiceDiscoveryResult(self.HOSTS).serialize(cmk_version.Version.from_str("2.4.0p1"))
+        )["host_1"] == {
+            "self_new": 0,
+            "self_changed": 0,
+            "self_removed": 0,
+            "self_kept": 0,
+            "self_new_host_labels": 0,
+            "self_total_host_labels": 0,
+            "clustered_ignored": 0,
+            "clustered_new": 0,
+            "clustered_old": 0,
+            "clustered_vanished": 0,
+            "error_text": None,
+            "diff_text": None,
+        }
 
 
 class TestTryDiscoveryResult:

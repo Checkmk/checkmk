@@ -134,7 +134,15 @@ def automation_discovery(
         results[host_name].error_text = ""
         return results[host_name]
 
+    service_changes_requested = (
+        settings.add_new_services
+        or settings.remove_vanished_services
+        or settings.update_changed_service_labels
+        or settings.update_changed_service_parameters
+    )
+
     try:
+        # TODO: I really think it's time to clean this up.
         # in "refresh" mode we first need to remove all previously discovered
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
@@ -181,7 +189,7 @@ def automation_discovery(
                 # Rulesets for service discovery can match based on the hosts labels.
                 ruleset_matcher.clear_caches()
 
-            if not settings.add_new_services and not settings.remove_vanished_services:
+            if not service_changes_requested:
                 results[host_name].diff_text = _make_diff(
                     host_labels.vanished, host_labels.new, (), ()
                 )

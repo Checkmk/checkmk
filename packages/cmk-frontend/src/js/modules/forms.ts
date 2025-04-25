@@ -55,6 +55,21 @@ interface CheckMKTagifyData extends Tagify.BaseTagData {
     state: TagifyState;
 }
 
+function getFormContainer(element: HTMLElement): HTMLFormElement | null {
+    let formElement: HTMLFormElement | null = null;
+
+    let currentNode = element;
+    while (currentNode.tagName !== "FORM") {
+        if (currentNode.tagName === "BODY") {
+            break;
+        }
+        currentNode = currentNode?.parentNode as HTMLElement;
+    }
+
+    formElement = currentNode as HTMLFormElement;
+    return formElement;
+}
+
 export async function confirm_on_form_leave(
     container: HTMLElement,
     _: Record<string, string>,
@@ -116,6 +131,13 @@ export function enable_select2_dropdowns(
             minimumResultsForSearch: 5,
             templateResult: format_select2_item,
             templateSelection: format_select2_item,
+        });
+
+        elements.on("change", $event => {
+            const form = getFormContainer($event.target);
+            if (form !== null) {
+                form.dispatchEvent(new Event("change"));
+            }
         });
     })();
 

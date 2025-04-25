@@ -37,7 +37,7 @@ from cmk.checkengine.discovery import (
     discover_host_labels,
     discover_services,
     DiscoveryCheckParameters,
-    DiscoveryResult,
+    DiscoveryReport,
     DiscoverySettingFlags,
     DiscoverySettings,
     DiscoveryValueSpecModel,
@@ -695,7 +695,7 @@ def test__get_post_discovery_services(
     result_new_item_names: list[str],
     result_counts: tuple[int, int, int],
 ) -> None:
-    result = DiscoveryResult()
+    result = DiscoveryReport()
 
     service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 

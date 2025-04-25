@@ -53,7 +53,7 @@ __all__ = ["get_host_services_by_host_name", "discovery_by_host"]
 
 
 @dataclasses.dataclass
-class ServiceTransitionCounter:
+class TransitionCounter:
     new: int = 0
     changed: int = 0
     removed: int = 0
@@ -63,15 +63,19 @@ class ServiceTransitionCounter:
     def total(self) -> int:
         return self.new + self.changed + self.removed + self.kept
 
-    def __iadd__(self, other: ServiceTransitionCounter) -> ServiceTransitionCounter:
+    @property
+    def has_changes(self) -> bool:
+        return self.new > 0 or self.changed > 0 or self.removed > 0
+
+    def __iadd__(self, other: TransitionCounter) -> TransitionCounter:
         self.new += other.new
         self.changed += other.changed
         self.removed += other.removed
         self.kept += other.kept
         return self
 
-    def __add__(self, other: ServiceTransitionCounter) -> ServiceTransitionCounter:
-        return ServiceTransitionCounter(
+    def __add__(self, other: TransitionCounter) -> TransitionCounter:
+        return TransitionCounter(
             new=self.new + other.new,
             changed=self.changed + other.changed,
             removed=self.removed + other.removed,
@@ -80,10 +84,9 @@ class ServiceTransitionCounter:
 
 
 @dataclasses.dataclass
-class DiscoveryResult:
-    services: ServiceTransitionCounter = dataclasses.field(default_factory=ServiceTransitionCounter)
-    self_new_host_labels: int = 0
-    self_total_host_labels: int = 0
+class DiscoveryReport:
+    services: TransitionCounter = dataclasses.field(default_factory=TransitionCounter)
+    host_labels: TransitionCounter = dataclasses.field(default_factory=TransitionCounter)
     clustered_new: int = 0
     clustered_old: int = 0
     clustered_vanished: int = 0
@@ -145,11 +148,11 @@ def automation_discovery(
     enforced_services: Container[ServiceID],
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
-) -> DiscoveryResult:
+) -> DiscoveryReport:
     console.verbose(f"  Doing discovery with '{settings!r}'...")
     results = {
-        host_name: DiscoveryResult(),
-        **{node: DiscoveryResult() for node in cluster_nodes},
+        host_name: DiscoveryReport(),
+        **{node: DiscoveryReport() for node in cluster_nodes},
     }
     if host_name not in active_hosts:
         results[host_name].error_text = ""
@@ -179,7 +182,7 @@ def automation_discovery(
         fetched = fetcher(host_name, ip_address=None)
         host_sections = parser((f[0], f[1]) for f in fetched)
         if failed_sources_results := [r for r in summarizer(host_sections) if r.state != 0]:
-            return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
+            return DiscoveryReport(error_text=", ".join(r.summary for r in failed_sources_results))
 
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
@@ -202,8 +205,10 @@ def automation_discovery(
                     on_error=on_error,
                 ),
             )
-            results[host_name].self_new_host_labels = len(host_labels.new)
-            results[host_name].self_total_host_labels = len(host_labels.present)
+            results[host_name].host_labels.new = len(host_labels.new)
+            results[host_name].host_labels.changed = len(host_labels.changed)
+            results[host_name].host_labels.removed = len(host_labels.vanished)
+            results[host_name].host_labels.kept = len(host_labels.unchanged)
 
             DiscoveredHostLabelsStore(host_name).save(host_labels.present)
             if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
@@ -304,7 +309,7 @@ def _get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
-    result: DiscoveryResult,
+    result: DiscoveryReport,
     get_service_description: Callable[[HostName, AutocheckEntry], ServiceName],
     settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
@@ -463,7 +468,7 @@ def autodiscovery(
     oldest_queued: float,
     enforced_services: Container[ServiceID],
     on_error: OnError,
-) -> tuple[DiscoveryResult | None, bool]:
+) -> tuple[DiscoveryReport | None, bool]:
     reason = _may_rediscover(
         rediscovery_parameters=rediscovery_parameters,
         reference_time=reference_time,
@@ -502,12 +507,10 @@ def autodiscovery(
         return None, False
 
     something_changed = (
-        result.services.new != 0
-        or result.services.changed != 0
-        or result.services.removed != 0
+        result.services.has_changes
+        or result.host_labels.has_changes
         or result.clustered_new != 0
         or result.clustered_vanished != 0
-        or result.self_new_host_labels != 0
     )
 
     if not something_changed:
@@ -518,7 +521,8 @@ def autodiscovery(
             f"{result.services.total} services ({result.services.new} added, {result.services.changed} changed, "
             f"{result.services.removed} removed, {result.services.kept} kept, {result.clustered_new} clustered new, "
             f"{result.clustered_vanished}  clustered vanished) "
-            f"and {result.self_total_host_labels} host labels ({result.self_new_host_labels} added). "
+            f"and {result.host_labels.total} host labels ({result.host_labels.new} added, {result.host_labels.changed} changed, "
+            f"{result.host_labels.removed} removed, {result.host_labels.kept} kept). "
         )
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,

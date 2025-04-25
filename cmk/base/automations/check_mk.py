@@ -139,7 +139,7 @@ from cmk.checkengine.discovery import (
     CheckPreview,
     CheckPreviewEntry,
     DiscoveryMode,
-    DiscoveryResult,
+    DiscoveryReport,
     DiscoverySettings,
     get_check_preview,
     set_autochecks_for_effective_host,
@@ -313,7 +313,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             plugins.check_plugins, service_name_config
         )
 
-        results: dict[HostName, DiscoveryResult] = {}
+        results: dict[HostName, DiscoveryReport] = {}
 
         parser = CMKParser(
             config_cache.parser_factory(),
@@ -828,7 +828,7 @@ automations.register(AutomationAutodiscovery())
 def _execute_autodiscovery(
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
-) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
+) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):

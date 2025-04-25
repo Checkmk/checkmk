@@ -29,7 +29,7 @@ from cmk.automations.results import (
 )
 
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
 

@@ -17,9 +17,9 @@ from ._autochecks import (
 from ._autodiscovery import (
     autodiscovery,
     automation_discovery,
-    DiscoveryResult,
+    DiscoveryReport,
     get_host_services_by_host_name,
-    ServiceTransitionCounter,
+    TransitionCounter,
 )
 from ._commandline import commandline_discovery
 from ._filters import RediscoveryParameters
@@ -54,7 +54,7 @@ __all__ = [
     "DiscoverySettings",
     "DiscoverySettingFlags",
     "DiscoveryValueSpecModel",
-    "DiscoveryResult",
+    "DiscoveryReport",
     "execute_check_discovery",
     "find_plugins",
     "get_check_preview",
@@ -64,7 +64,7 @@ __all__ = [
     "QualifiedDiscovery",
     "RediscoveryParameters",
     "remove_autochecks_of_host",
-    "ServiceTransitionCounter",
+    "TransitionCounter",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
     "set_autochecks_for_effective_host",

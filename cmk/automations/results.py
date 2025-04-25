@@ -26,8 +26,7 @@ from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.discovery import CheckPreviewEntry, ServiceTransitionCounter
-from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryReport, TransitionCounter
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import AutocheckEntry
@@ -74,7 +73,7 @@ class ABCAutomationResult(ABC):
 
 
 def _serialize_discovery_report(
-    report: SingleHostDiscoveryResult, for_cmk_version: cmk_version.Version
+    report: DiscoveryReport, for_cmk_version: cmk_version.Version
 ) -> Mapping[str, object]:
     if for_cmk_version >= cmk_version.Version.from_str("2.5.0b1"):
         return asdict(report)
@@ -84,8 +83,8 @@ def _serialize_discovery_report(
         "self_changed": report.services.changed,
         "self_removed": report.services.removed,
         "self_kept": report.services.kept,
-        "self_new_host_labels": report.self_new_host_labels,
-        "self_total_host_labels": report.self_total_host_labels,
+        "self_new_host_labels": report.host_labels.new,
+        "self_total_host_labels": report.host_labels.total,
         "clustered_new": report.clustered_new,
         "clustered_old": report.clustered_old,
         "clustered_vanished": report.clustered_vanished,
@@ -97,11 +96,10 @@ def _serialize_discovery_report(
 
 def _deserialize_discovery_report(
     serialized: Mapping[str, Any],
-) -> SingleHostDiscoveryResult:
-    return SingleHostDiscoveryResult(
-        services=ServiceTransitionCounter(**serialized["services"]),
-        self_new_host_labels=serialized["self_new_host_labels"],
-        self_total_host_labels=serialized["self_total_host_labels"],
+) -> DiscoveryReport:
+    return DiscoveryReport(
+        services=TransitionCounter(**serialized["services"]),
+        host_labels=TransitionCounter(**serialized["host_labels"]),
         clustered_new=serialized["clustered_new"],
         clustered_old=serialized["clustered_old"],
         clustered_vanished=serialized["clustered_vanished"],
@@ -113,7 +111,7 @@ def _deserialize_discovery_report(
 
 @dataclass
 class ServiceDiscoveryResult(ABCAutomationResult):
-    hosts: Mapping[HostName, SingleHostDiscoveryResult]
+    hosts: Mapping[HostName, DiscoveryReport]
 
     def _to_dict(
         self, for_cmk_version: cmk_version.Version
@@ -123,7 +121,7 @@ class ServiceDiscoveryResult(ABCAutomationResult):
     @staticmethod
     def _from_dict(
         serialized: Mapping[HostName, Mapping[str, Any]],
-    ) -> Mapping[HostName, SingleHostDiscoveryResult]:
+    ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
@@ -237,7 +235,7 @@ result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
 
 @dataclass
 class AutodiscoveryResult(ABCAutomationResult):
-    hosts: Mapping[HostName, SingleHostDiscoveryResult]
+    hosts: Mapping[HostName, DiscoveryReport]
     changes_activated: bool
 
     def _hosts_to_dict(
@@ -248,7 +246,7 @@ class AutodiscoveryResult(ABCAutomationResult):
     @staticmethod
     def _hosts_from_dict(
         serialized: Mapping[HostName, Mapping[str, Any]],
-    ) -> Mapping[HostName, SingleHostDiscoveryResult]:
+    ) -> Mapping[HostName, DiscoveryReport]:
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:

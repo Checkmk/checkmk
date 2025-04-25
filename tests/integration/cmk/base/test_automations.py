@@ -21,7 +21,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 
-from cmk.checkengine.discovery import DiscoveryResult
+from cmk.checkengine.discovery import DiscoveryReport
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
@@ -248,7 +248,7 @@ def test_automation_inventory_not_existing_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts == {"xxxhost": DiscoveryResult(error_text="")}
+    assert result.hosts == {"xxxhost": DiscoveryReport(error_text="")}
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -260,7 +260,7 @@ def test_automation_discovery_not_existing_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts == {"xxxhost": DiscoveryResult(error_text="")}
+    assert result.hosts == {"xxxhost": DiscoveryReport(error_text="")}
 
 
 # old alias, drop after 2.2 release

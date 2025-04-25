@@ -8,7 +8,7 @@ from cmk.ccc.site import omd_site
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 
-from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -51,7 +51,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
     ) -> str:
         return _(
             "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
-            " and %d host labels (%d added)"
+            " and %d host labels (%d added, %d changed, %d removed, %d kept)"
         ) % (
             hostname,
             discovery_result.services.total,
@@ -59,8 +59,11 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             discovery_result.services.changed,
             discovery_result.services.removed,
             discovery_result.services.kept,
-            discovery_result.self_total_host_labels,
-            discovery_result.self_new_host_labels,
+            discovery_result.host_labels.total,
+            discovery_result.host_labels.new,
+            discovery_result.host_labels.changed,
+            discovery_result.host_labels.removed,
+            discovery_result.host_labels.kept,
         )
 
     def execute(self, job_interface: BackgroundProcessInterface) -> None:

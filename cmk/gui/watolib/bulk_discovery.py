@@ -19,11 +19,11 @@ from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
 from cmk.checkengine.discovery import (
-    DiscoveryResult,
+    DiscoveryReport,
     DiscoverySettingFlags,
     DiscoverySettings,
     DiscoveryValueSpecModel,
-    ServiceTransitionCounter,
+    TransitionCounter,
 )
 
 from cmk.gui.background_job import (
@@ -313,8 +313,14 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             )
         )
         job_interface.send_progress_update(
-            _("Host labels: %d total (%d added)")
-            % (self._num_host_labels_total, self._num_host_labels_added)
+            _("Host labels: %d total (%d added, %d changed, %d removed, %d kept)")
+            % (
+                self._num_host_labels.total,
+                self._num_host_labels.new,
+                self._num_host_labels.changed,
+                self._num_host_labels.removed,
+                self._num_host_labels.kept,
+            )
         )
         job_interface.send_progress_update(
             _("Services: %d total (%d added, %d changed, %d removed, %d kept)")
@@ -367,9 +373,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_hosts_succeeded = 0
         self._num_hosts_skipped = 0
         self._num_hosts_failed = 0
-        self._num_services = ServiceTransitionCounter()
-        self._num_host_labels_total = 0
-        self._num_host_labels_added = 0
+        self._num_services = TransitionCounter()
+        self._num_host_labels = TransitionCounter()
 
     def _process_discovery_error(
         self,
@@ -437,12 +442,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
                 )
 
-    def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
+    def _process_service_counts_for_host(self, result: DiscoveryReport) -> None:
         self._num_services += result.services
-        self._num_host_labels_added += result.self_new_host_labels
-        self._num_host_labels_total += result.self_total_host_labels
+        self._num_host_labels += result.host_labels
 
-    def _process_discovery_result_for_host(self, host: Host, result: DiscoveryResult) -> str:
+    def _process_discovery_result_for_host(self, host: Host, result: DiscoveryReport) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")
@@ -459,7 +463,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             action_name="bulk-discovery",
             text=_(
                 "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
-                "and %d host labels (%d added)"
+                "and %d host labels (%d added, %d changed, %d removed, %d kept)"
             )
             % (
                 host.name(),
@@ -468,8 +472,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 result.services.changed,
                 result.services.removed,
                 result.services.kept,
-                result.self_total_host_labels,
-                result.self_new_host_labels,
+                result.host_labels.total,
+                result.host_labels.new,
+                result.host_labels.changed,
+                result.host_labels.removed,
+                result.host_labels.kept,
             ),
             user_id=user.id,
             object_ref=host.object_ref(),

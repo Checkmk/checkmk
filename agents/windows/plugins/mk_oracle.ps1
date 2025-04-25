@@ -218,7 +218,7 @@ $ASYNC_PROC_PATH = "$MK_TEMPDIR\async_proc.txt"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | The following functions create SQL queries for ORACLE and output     |
-#   | them to stdout. All queries output the database name or the instane  |
+#   | them to stdout. All queries output the database name or the instance  |
 #   | name as first column.                                                |
 #   '----------------------------------------------------------------------'
 
@@ -375,7 +375,7 @@ function is_async_running ($fullPath) {
 
      # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
      # Our async process always contains `$fullPath` in their own command line.
-     $command_line = (Get-WmiObject -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").commandline
+     $command_line = (Get-CimInstance -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").CommandLine
 
      if ($command_line -like "*$fullPath*") {
           return $true

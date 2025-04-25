@@ -300,7 +300,7 @@ class AdditionalIfData(NamedTuple):
 SectionExtended = Collection[AdditionalIfData]
 
 # TODO(sk): remove this after deprecation of the corresponding plug-in winperf_if.ps1
-# NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
+# NOTE: this case os for command `Get-CimInstance -ClassName Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
 # 2 down

@@ -50,7 +50,7 @@ if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVer
 if ([Environment]::OSVersion.Version.Major -ge "5"){
 	Write-Host "<<<winperf_if_win32_networkadapter:sep(9)>>>"
 	Write-Host "Node`tMACAddress`tName`tNetConnectionID`tNetConnectionStatus`tSpeed`tGUID"
-	foreach ($net in Get-WmiObject Win32_NetworkAdapter)
+	foreach ($net in Get-CimInstance -ClassName Win32_NetworkAdapter)
 	{
 		if ($net.netconnectionid){
 			Write-Host      $env:COMPUTERNAME "`t"`

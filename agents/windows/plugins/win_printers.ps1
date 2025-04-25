@@ -11,13 +11,19 @@ $pshost = get-host
 $pswindow = $pshost.ui.rawui
 
 $newsize = $pswindow.buffersize
-$newsize.height = 300
-$newsize.width = 150
-$pswindow.buffersize = $newsize
+# Only set if larger than current window size and within reasonable limits
+$newsize.height = [Math]::Max($pswindow.windowsize.height, 300)
+$newsize.width = [Math]::Max($pswindow.windowsize.width, 150)
+
+try {
+    $pswindow.buffersize = $newsize
+} catch {
+    # Ignore errors if the buffer size is invalid
+}
 
 Write-Host "<<<win_printers>>>"
-$Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, Jobs | Sort Name
-$Data_Set2 = Get-WmiObject win32_printer | ?{$_.PortName -notmatch '^TS'} | Select Name, @{name="Jobs";exp={$null}}, PrinterStatus, DetectedErrorState | Sort Name
+$Data_Set1 = Get-CimInstance -ClassName Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, Jobs | Sort Name
+$Data_Set2 = Get-CimInstance -ClassName Win32_Printer | ?{$_.PortName -notmatch '^TS'} | Select Name, @{name = "Jobs"; exp = {$null}}, PrinterStatus, DetectedErrorState | Sort Name
 
 #
 #  Merge the Job counts from Data_Set1 into Data_set2
@@ -30,10 +36,10 @@ $d1 = $data_set1[0]
 
 foreach ($d2 in $Data_Set2) {
   #
-  #  iterate through data_set1 elements until their "Name" >= the curent data_set2 element's "Name"
+  #  iterate through data_set1 elements until their "Name" >= the current data_set2 element's "Name"
   #
   while ($d1 -ne $null -and $d1.Name -lt $d2.Name) {
-	$d1 = $data_set1[++$i]
+    $d1 = $data_set1[++$i]
   }
   #
   #  if we have a match, store the "Jobs" value from data_set1 in data_set2,

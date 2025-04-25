@@ -13,17 +13,17 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 check_info = {}
 
 # <<<rds_licenses:sep(44)>>>
-# KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
-# 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000
-# 2,A02-5.00-EX,6,3,Windows 2000 Server,0,-1,0,-1,20351231230000.000000-000
-# 3,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,250,250,0,20230209121549.000000-000
-# 14,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,1050,731,319,20380101081108.000000-000
-# 16,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,23,27,20380101150128.000000-000
-# 17,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,18,32,20380101110453.000000-000
-# 18,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,65,22,43,20380101083530.000000-000
-# 19,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,600,0,600,20380101083248.000000-000
-# 4,C50-6.02-S,2,1,Windows Server 2012,4,300,0,300,20380101000000.000000-000
-# 3,C50-10.01-S,5,1,Windows Server 2019,6,2000,1,1999,20380101093636.000000-000
+# KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLicenses,AvailableLicenses,ExpirationDate
+# 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,01/01/2036 00:00:00
+# 2,A02-5.00-EX,6,3,Windows 2000 Server,0,-1,0,-1,01/01/2030 00:00:00
+# 3,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,250,250,0,01/02/2045 00:00:00
+# 14,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,1050,731,319,01/08/2023 00:00:00
+# 16,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,23,27,01/04/2026 00:00:00
+# 17,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,18,32,01/06/2032 00:00:00
+# 18,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,65,22,43,01/01/2035 00:00:00
+# 19,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,600,0,600,01/01/2036 00:00:00
+# 4,C50-6.02-S,2,1,Windows Server 2012,4,300,0,300,01/01/2035 00:00:00
+# 3,C50-10.01-S,5,1,Windows Server 2019,6,2000,1,1999,01/01/2031 00:00:00
 
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties

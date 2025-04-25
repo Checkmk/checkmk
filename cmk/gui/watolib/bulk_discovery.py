@@ -316,10 +316,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             % (self._num_host_labels_total, self._num_host_labels_added)
         )
         job_interface.send_progress_update(
-            _("Services: %d total (%d added, %d removed, %d kept)")
+            _("Services: %d total (%d added, %d changed, %d removed, %d kept)")
             % (
                 self._num_services_total,
                 self._num_services_added,
+                self._num_services_changed,
                 self._num_services_removed,
                 self._num_services_kept,
             )
@@ -366,6 +367,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_hosts_skipped = 0
         self._num_hosts_failed = 0
         self._num_services_added = 0
+        self._num_services_changed = 0
         self._num_services_removed = 0
         self._num_services_kept = 0
         self._num_services_total = 0
@@ -440,6 +442,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
         self._num_services_added += result.self_new
+        self._num_services_changed += result.self_changed
         self._num_services_removed += result.self_removed
         self._num_services_kept += result.self_kept
         self._num_services_total += result.self_total
@@ -462,17 +465,18 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         add_service_change(
             action_name="bulk-discovery",
             text=_(
-                "Did service discovery on host %s: %d added, %d removed, %d kept, "
-                "%d total services and %d host labels added, %d host labels total"
+                "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
+                "and %d host labels (%d added)"
             )
             % (
                 host.name(),
+                result.self_total,
                 result.self_new,
+                result.self_changed,
                 result.self_removed,
                 result.self_kept,
-                result.self_total,
-                result.self_new_host_labels,
                 result.self_total_host_labels,
+                result.self_new_host_labels,
             ),
             user_id=user.id,
             object_ref=host.object_ref(),

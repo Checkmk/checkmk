@@ -50,16 +50,17 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         hostname: str, discovery_result: SingleHostDiscoveryResult
     ) -> str:
         return _(
-            "Did service discovery on host %s: %d added, %d removed, %d kept, "
-            "%d total services and %d host labels added, %d host labels total"
+            "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
+            " and %d host labels (%d added)"
         ) % (
             hostname,
+            discovery_result.self_total,
             discovery_result.self_new,
+            discovery_result.self_changed,
             discovery_result.self_removed,
             discovery_result.self_kept,
-            discovery_result.self_total,
-            discovery_result.self_new_host_labels,
             discovery_result.self_total_host_labels,
+            discovery_result.self_new_host_labels,
         )
 
     def execute(self, job_interface: BackgroundProcessInterface) -> None:

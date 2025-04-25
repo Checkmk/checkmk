@@ -496,12 +496,10 @@ def autodiscovery(
         activation_required = False
     else:
         console.verbose_no_lf(
-            f"  {result.self_new} new, {result.self_removed} removed, "
-            f"{result.self_kept} kept, {result.self_changed} changed, "
-            f"{result.self_total} total services "
-            f"and {result.self_new_host_labels} new host labels. "
-            f"clustered new {result.clustered_new}, clustered vanished "
-            f"{result.clustered_vanished}"
+            f"{result.self_total} services ({result.self_new} added, {result.self_changed} changed, "
+            f"{result.self_removed} removed, {result.self_kept} kept, {result.clustered_new} clustered new, "
+            f"{result.clustered_vanished}  clustered vanished) "
+            f"and {result.self_total_host_labels} host labels ({result.self_new_host_labels} added). "
         )
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,

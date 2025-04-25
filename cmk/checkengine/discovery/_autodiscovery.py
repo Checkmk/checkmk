@@ -207,10 +207,6 @@ def automation_discovery(
                 ),
             )
             DiscoveredHostLabelsStore(host_name).save(host_labels.present)
-            if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
-                # Rulesets for service discovery can match based on the hosts labels.
-                ruleset_matcher.clear_caches()
-
             if not service_changes_requested:
                 results[host_name].diff_text = _make_diff(
                     host_labels.vanished, host_labels.new, (), ()
@@ -228,6 +224,10 @@ def automation_discovery(
                 preexisting=unchanged_labels,
                 current=unchanged_labels,
             )
+
+        if host_labels.new or host_labels.vanished or host_labels.changed:
+            # Rulesets for service discovery can match based on the hosts labels.
+            ruleset_matcher.clear_caches()
 
         # Compute current state of new and existing checks
         services_by_host_name = get_host_services_by_host_name(

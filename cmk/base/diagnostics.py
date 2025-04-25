@@ -29,6 +29,7 @@ import livestatus
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import site, store
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
 
@@ -57,7 +58,6 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
 )
-from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section

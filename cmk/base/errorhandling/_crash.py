@@ -13,11 +13,11 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting
 from cmk.ccc.crash_reporting import CrashInfo
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 

@@ -13,9 +13,9 @@ from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F4
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 

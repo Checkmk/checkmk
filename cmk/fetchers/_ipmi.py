@@ -21,9 +21,9 @@ if TYPE_CHECKING:
     import pyghmi.ipmi.sdr as ipmi_sdr
 
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc.hostaddress import HostAddress
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
 
 from ._abstract import Fetcher, Mode

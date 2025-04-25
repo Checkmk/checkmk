@@ -8,9 +8,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.ccc import version as cmk_version
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 

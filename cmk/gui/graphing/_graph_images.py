@@ -16,9 +16,8 @@ from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.hostaddress import HostName
 
 from cmk.gui import pdf
 from cmk.gui.config import active_config

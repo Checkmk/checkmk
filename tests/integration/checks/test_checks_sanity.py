@@ -19,7 +19,8 @@ from tests.testlib.site import Site
 from tests.testlib.utils import ServiceInfo
 from tests.testlib.version import edition_from_env
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)

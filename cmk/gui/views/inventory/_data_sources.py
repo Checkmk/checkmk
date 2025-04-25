@@ -8,7 +8,8 @@ from collections.abc import Iterable, Sequence
 
 from livestatus import LivestatusResponse, OnlySites
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.structured_data import RetentionInterval, SDValue
 
 from cmk.gui import sites

@@ -7,9 +7,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     HistoryEntry,
     HistoryPath,

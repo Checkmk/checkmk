@@ -10,10 +10,11 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result

@@ -11,10 +11,10 @@ from logging import Logger
 from pathlib import Path
 from typing import NamedTuple, override
 
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext

@@ -8,10 +8,10 @@ from typing import Any, Literal
 
 from marshmallow import ValidationError
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 
 import cmk.utils.tags
-from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
 
 from cmk.gui import fields as gui_fields

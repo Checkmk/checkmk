@@ -12,7 +12,8 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec

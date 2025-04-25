@@ -6,9 +6,9 @@
 import pytest
 
 from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 
 from cmk.snmplib import SNMPBackendEnum
 

@@ -15,8 +15,8 @@ import pytest
 from tests.testlib.common.repo import repo_path
 
 from cmk.ccc import store
+from cmk.ccc.hostaddress import HostName
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _deserialize_retention_interval,
     _make_meta_and_raw_tree,

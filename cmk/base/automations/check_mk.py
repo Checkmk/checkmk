@@ -32,6 +32,7 @@ import livestatus
 import cmk.ccc.debug
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.version import edition_supports_nagvis
 
 import cmk.utils.password_store
@@ -44,7 +45,6 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str

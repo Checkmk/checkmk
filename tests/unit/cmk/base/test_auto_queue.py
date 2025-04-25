@@ -9,8 +9,9 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.hostaddress import HostName
 
 
 @pytest.fixture(name="auto_queue")

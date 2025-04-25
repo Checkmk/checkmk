@@ -9,7 +9,8 @@ from pathlib import Path
 
 from livestatus import SingleSiteConnection
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.servicename import ServiceName
 
 from cmk.agent_based.prediction_backend import PredictionInfo

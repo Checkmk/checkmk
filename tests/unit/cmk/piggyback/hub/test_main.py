@@ -8,7 +8,7 @@ from multiprocessing import Event as make_event
 from pathlib import Path
 from unittest.mock import Mock
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
 from cmk.piggyback.hub._config import (

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 
 def test_duplicate_hosts() -> None:

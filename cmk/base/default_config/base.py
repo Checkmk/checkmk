@@ -6,8 +6,9 @@
 from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.host_storage import FolderAttributesForBase
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password

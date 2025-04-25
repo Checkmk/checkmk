@@ -24,9 +24,9 @@ from typing import Any, Literal, Protocol
 from urllib.parse import quote as url_quote
 
 import cmk.ccc.debug  # pylint: disable=cmk-module-layer-violation
+from cmk.ccc.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation

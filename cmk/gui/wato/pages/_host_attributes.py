@@ -8,9 +8,9 @@ from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import forms

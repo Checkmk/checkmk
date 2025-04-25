@@ -57,6 +57,14 @@ py_library(
 )
 
 py_library(
+    name = "hostaddress",
+    srcs = ["cmk/ccc/hostaddress.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
     name = "i18n",
     srcs = ["cmk/ccc/i18n.py"],
     imports = ["."],

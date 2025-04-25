@@ -18,12 +18,12 @@ from typing import Any, Final, IO, Literal
 import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 import cmk.utils.config_path
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler

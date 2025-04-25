@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import assert_never
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.checkengine.fetcher import FetcherType
 

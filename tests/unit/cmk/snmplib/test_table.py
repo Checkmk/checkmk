@@ -16,8 +16,8 @@ from pytest import MonkeyPatch
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import MKSNMPError
+from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.sectionname import SectionName
 

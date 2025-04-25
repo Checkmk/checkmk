@@ -21,12 +21,12 @@ from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec

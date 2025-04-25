@@ -6,7 +6,7 @@
 from logging import getLogger
 from pathlib import Path
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager

@@ -15,13 +15,13 @@ from typing import Any, Literal, NamedTuple
 from pydantic import BaseModel, Field
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Version
 
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.rulesets.definition import RuleGroup

@@ -7,8 +7,9 @@ from collections.abc import Callable, Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils import config_warnings, password_store
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.discover_plugins import PluginLocation

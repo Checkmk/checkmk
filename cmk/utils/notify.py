@@ -12,11 +12,11 @@ from logging import Logger
 from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_object_from_file, save_object_to_file
 
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir

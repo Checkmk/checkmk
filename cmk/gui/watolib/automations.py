@@ -31,12 +31,12 @@ from livestatus import sanitize_site_configuration, SiteConfiguration
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 

@@ -17,11 +17,11 @@ import json
 
 import cmk.ccc.debug
 import cmk.ccc.plugin_registry
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils
 import cmk.utils.render
-from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 

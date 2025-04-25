@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 
 @pytest.mark.parametrize(

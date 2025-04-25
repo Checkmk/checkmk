@@ -20,10 +20,10 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.gui.config import active_config

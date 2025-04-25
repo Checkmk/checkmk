@@ -9,9 +9,8 @@ from datetime import datetime, UTC
 import time_machine
 from pytest import MonkeyPatch
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.hostaddress import HostName
 
 import cmk.ec.export as ec
 

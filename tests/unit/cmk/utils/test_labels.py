@@ -9,8 +9,9 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ABCLabelConfig, DiscoveredHostLabelsStore, LabelManager
 
 

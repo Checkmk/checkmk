@@ -14,11 +14,11 @@ from typing import Protocol
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.caching import cache_manager, DictCache
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 

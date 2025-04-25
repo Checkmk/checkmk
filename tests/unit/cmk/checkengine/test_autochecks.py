@@ -11,8 +11,9 @@ import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer

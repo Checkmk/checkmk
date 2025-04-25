@@ -13,7 +13,8 @@ import pytest
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 

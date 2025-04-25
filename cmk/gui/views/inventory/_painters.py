@@ -6,9 +6,9 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import TypedDict
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaTree,

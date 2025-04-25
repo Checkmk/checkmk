@@ -17,10 +17,10 @@ from typing import (
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec

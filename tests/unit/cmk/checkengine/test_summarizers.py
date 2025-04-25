@@ -9,8 +9,8 @@ import time
 import pytest
 
 from cmk.ccc.exceptions import MKAgentError, MKTimeout
+from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult

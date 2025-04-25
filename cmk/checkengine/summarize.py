@@ -18,9 +18,9 @@ from cmk.ccc.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.resulttype as result
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult

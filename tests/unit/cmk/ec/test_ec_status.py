@@ -9,7 +9,7 @@ import pytest
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer

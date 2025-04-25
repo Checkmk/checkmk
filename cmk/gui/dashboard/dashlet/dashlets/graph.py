@@ -11,10 +11,10 @@ from typing import Any, Generic, Literal, TypeVar
 import livestatus
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
 
 from cmk.gui import sites

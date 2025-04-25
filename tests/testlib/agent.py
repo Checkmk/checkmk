@@ -31,7 +31,7 @@ from tests.testlib.utils import (
     run,
 )
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

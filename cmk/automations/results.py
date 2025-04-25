@@ -14,12 +14,12 @@ from dataclasses import asdict, astuple, dataclass, field
 from typing import Any, Literal, TypedDict, TypeVar
 
 from cmk.ccc import version as cmk_version
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks

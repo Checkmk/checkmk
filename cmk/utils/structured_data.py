@@ -20,8 +20,7 @@ from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?

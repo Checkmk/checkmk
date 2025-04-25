@@ -9,7 +9,7 @@ from contextlib import suppress
 from functools import lru_cache
 from typing import Final, Literal
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 _HostCondition = (
     tuple[Literal["exact_match"], str] | tuple[Literal["regular_expression"], str] | None

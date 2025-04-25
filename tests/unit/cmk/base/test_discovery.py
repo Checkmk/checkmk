@@ -15,9 +15,9 @@ from pytest import MonkeyPatch
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.exceptions import OnError
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName

@@ -16,11 +16,11 @@ from typing import Annotated, assert_never, final, Literal, TypeVar
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 
 from cmk.utils import pnp_cleanup
-from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 

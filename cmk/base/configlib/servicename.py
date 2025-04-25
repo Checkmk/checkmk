@@ -7,8 +7,9 @@ import contextlib
 from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Final
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.caching import cache_manager
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.servicename import Item, ServiceName

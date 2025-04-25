@@ -6,10 +6,10 @@
 import time
 from collections.abc import Mapping
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.render
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.tags import TagGroupID, TagID

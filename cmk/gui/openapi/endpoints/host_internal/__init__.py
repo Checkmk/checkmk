@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from typing import Any, Literal
 from uuid import UUID
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 
 from cmk.utils.agent_registration import (
@@ -18,7 +19,6 @@ from cmk.utils.agent_registration import (
     get_uuid_link_manager,
     HostAgentConnectionMode,
 )
-from cmk.utils.hostaddress import HostName
 
 from cmk.gui.agent_registration import PermissionSectionAgentRegistration
 from cmk.gui.exceptions import MKAuthException

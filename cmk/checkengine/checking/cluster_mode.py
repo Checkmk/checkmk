@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any, Final, Literal, NamedTuple, Protocol
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugins import CheckPlugin, ServiceID

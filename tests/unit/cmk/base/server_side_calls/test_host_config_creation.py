@@ -8,8 +8,9 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils import ip_lookup
-from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
 

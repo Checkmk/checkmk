@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib.common.repo import is_enterprise_repo
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 

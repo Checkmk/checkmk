@@ -7,9 +7,8 @@ from collections.abc import Callable, Mapping
 from functools import partial
 from uuid import uuid4
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-
-from cmk.utils.hostaddress import HostName
 
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import (

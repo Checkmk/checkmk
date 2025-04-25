@@ -11,10 +11,10 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelSource
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 

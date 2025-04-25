@@ -20,10 +20,10 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.tags
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 

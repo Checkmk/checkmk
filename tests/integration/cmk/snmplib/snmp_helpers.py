@@ -9,7 +9,7 @@ from pathlib import Path
 
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import (
     BackendSNMPTree,

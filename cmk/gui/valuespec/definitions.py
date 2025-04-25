@@ -60,6 +60,7 @@ from dateutil.tz import tzlocal
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress as HostAddressType
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
@@ -68,7 +69,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.regex
 from cmk.utils import dateutils
-from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer

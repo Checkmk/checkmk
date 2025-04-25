@@ -14,10 +14,10 @@ from pathlib import Path
 from tests.testlib.common.repo import qa_test_data_path
 
 from cmk.ccc.exceptions import OnError
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.resulttype as result
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 from cmk.utils.resulttype import OK
 
 from cmk.fetchers import Mode

@@ -11,9 +11,9 @@ from collections.abc import Iterator
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.redis import disable_redis
 
 from cmk.gui.background_job._interface import BackgroundProcessInterface

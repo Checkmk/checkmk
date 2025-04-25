@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 
 class AutoQueue(Iterable[HostName]):

@@ -11,9 +11,9 @@ from livestatus import OnlySites
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 

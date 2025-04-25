@@ -8,10 +8,10 @@ import sys
 from contextlib import suppress
 
 import cmk.ccc.debug
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.password_store import core_password_store_path
 
 from cmk.checkengine.plugin_backend import (

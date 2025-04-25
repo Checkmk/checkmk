@@ -10,10 +10,10 @@ from typing import Literal, Protocol
 import livestatus
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.servicename import ServiceName

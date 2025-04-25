@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.sectionname import MutableSectionMap
 
 from cmk.checkengine.fetcher import HostKey

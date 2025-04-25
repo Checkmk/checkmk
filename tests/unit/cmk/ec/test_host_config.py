@@ -7,7 +7,8 @@ import logging
 
 import pytest
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.ec.core_queries import HostInfo

@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 
 class ValidateIPv4(Validator):

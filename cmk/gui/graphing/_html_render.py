@@ -14,10 +14,10 @@ from typing import Any
 from livestatus import MKLivestatusNotFoundError
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.render
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 

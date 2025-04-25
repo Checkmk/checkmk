@@ -9,7 +9,8 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Protocol
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName

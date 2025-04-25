@@ -9,10 +9,10 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName

@@ -7,10 +7,10 @@ import json
 from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.hostaddress import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request

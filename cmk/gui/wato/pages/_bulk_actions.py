@@ -6,7 +6,7 @@
 import re
 from collections.abc import Callable, Sequence
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request

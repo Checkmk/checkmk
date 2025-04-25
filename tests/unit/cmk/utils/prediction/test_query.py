@@ -5,7 +5,8 @@
 
 from livestatus import LocalConnection
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection, SiteName
 from cmk.utils.prediction import DataStat, PredictionData
 from cmk.utils.prediction._query import PredictionQuerier

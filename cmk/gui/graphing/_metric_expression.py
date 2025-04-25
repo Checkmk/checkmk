@@ -10,9 +10,9 @@ from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import Literal, override
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.servicename import ServiceName

@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.render
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,

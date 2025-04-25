@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 from cmk.plugins.lib.prometheus_form_elements import api_request_authentication, connection
 from cmk.rulesets.v1 import Help, Label, Message, Title

@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 
 # Get's replaced by the actual implementation in non CRE editions

@@ -23,10 +23,10 @@ from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
 

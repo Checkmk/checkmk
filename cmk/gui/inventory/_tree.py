@@ -12,8 +12,9 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     deserialize_tree,
     ImmutableTree,

@@ -10,9 +10,8 @@ import pytest
 
 from livestatus import SiteConfiguration
 
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
-
-from cmk.utils.hostaddress import HostAddress
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import GlobalSettings

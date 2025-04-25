@@ -11,8 +11,8 @@ from typing import (
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import (

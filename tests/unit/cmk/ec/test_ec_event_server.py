@@ -7,7 +7,7 @@ import logging
 
 from tests.unit.cmk.ec.helpers import new_event
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config, MatchGroups, ServiceLevel

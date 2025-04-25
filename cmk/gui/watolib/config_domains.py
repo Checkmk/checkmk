@@ -23,13 +23,13 @@ from pydantic import BaseModel
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui.background_job import (

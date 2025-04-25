@@ -7,9 +7,9 @@ from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
 
 from cmk.gui.exceptions import MKUserError

@@ -5,9 +5,9 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import pagetypes, visuals

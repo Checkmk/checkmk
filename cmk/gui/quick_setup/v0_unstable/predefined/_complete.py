@@ -6,10 +6,10 @@
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec

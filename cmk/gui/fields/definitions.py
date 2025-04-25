@@ -24,10 +24,10 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups

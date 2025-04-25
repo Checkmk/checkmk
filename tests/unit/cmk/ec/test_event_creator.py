@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,

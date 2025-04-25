@@ -25,13 +25,13 @@ from typing import assert_never
 import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKIPAddressLookupError
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName

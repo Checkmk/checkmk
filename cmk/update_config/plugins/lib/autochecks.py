@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from cmk.ccc import debug
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.discovery import AutochecksStore

@@ -16,9 +16,9 @@ from marshmallow import Schema as marshmallow_Schema
 from livestatus import LivestatusOutputFormat, LivestatusResponse
 
 from cmk.ccc import plugin_registry
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName

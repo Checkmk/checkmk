@@ -10,9 +10,9 @@ from collections.abc import Collection, Iterator
 from typing import Final, overload
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.tags
-from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms

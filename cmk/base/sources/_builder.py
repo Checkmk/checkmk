@@ -11,8 +11,9 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import assert_never, Final, Literal
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.tags import ComputedDataSources, TagID
 

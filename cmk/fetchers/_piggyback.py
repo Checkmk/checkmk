@@ -9,8 +9,9 @@ import time
 from collections.abc import Sequence
 from typing import Final
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 

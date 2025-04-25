@@ -8,10 +8,10 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
 
 import cmk.gui.watolib.hosts_and_folders

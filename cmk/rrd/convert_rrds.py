@@ -6,7 +6,7 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from .config import read_hostnames, RRDConfig
 from .interface import RRDInterface

@@ -9,7 +9,7 @@ import os
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 import cmk.ec.export as ec
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory

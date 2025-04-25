@@ -6,7 +6,8 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
+
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
 

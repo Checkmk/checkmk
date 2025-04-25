@@ -19,8 +19,7 @@ from typing import Any
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb

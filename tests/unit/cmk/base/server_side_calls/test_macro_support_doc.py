@@ -15,9 +15,9 @@ import pytest
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as base_config
 from cmk.base.config import ConfigCache

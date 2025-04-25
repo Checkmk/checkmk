@@ -41,11 +41,11 @@ import cmk.ccc.profile
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils import log
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.translations import translate_hostname

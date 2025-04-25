@@ -12,7 +12,7 @@ from tests.integration.linux_test_host import create_linux_test_host
 from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 _RELATIVE_PATH_PNP_RRDS = Path("var", "pnp4nagios", "perfdata")
 _RELATIVE_PATH_CMC_RRDS = Path("var", "check_mk", "rrd")

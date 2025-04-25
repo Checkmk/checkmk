@@ -8,10 +8,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, TypedDict
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import load_object_from_file
 
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 RRD_CONFIG_FOLDER = "rrd_config"

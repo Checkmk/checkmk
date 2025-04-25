@@ -11,9 +11,9 @@ from pydantic import BaseModel
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.resulttype import Result
 

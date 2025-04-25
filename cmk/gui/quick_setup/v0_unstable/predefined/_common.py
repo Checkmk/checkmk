@@ -7,7 +7,7 @@ import re
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, cast
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgentInput
 

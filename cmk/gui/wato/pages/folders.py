@@ -9,7 +9,8 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import override, TypeVar
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroupID, TagID
 

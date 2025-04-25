@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 
 import time_machine
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config

@@ -6,8 +6,7 @@
 from pathlib import Path
 
 from cmk.ccc.crash_reporting import VersionInfo
-
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.base.errorhandling import CheckCrashReport, CheckDetails
 

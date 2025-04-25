@@ -14,9 +14,9 @@ from typing import assert_never, Literal
 from pydantic import BaseModel
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config

@@ -8,10 +8,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeVar
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec

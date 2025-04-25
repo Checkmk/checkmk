@@ -9,7 +9,8 @@ import logging
 import rrdtool  # type: ignore[import-not-found]
 
 # NOTE: rrdtool is missing type hints
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.log import verbosity_to_log_level
 
 from cmk.rrd.convert_rrds import convert_rrds

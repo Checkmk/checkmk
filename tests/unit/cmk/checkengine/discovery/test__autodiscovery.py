@@ -6,7 +6,7 @@
 
 from collections.abc import Mapping
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
 from cmk.checkengine.discovery._autodiscovery import get_host_services_by_host_name

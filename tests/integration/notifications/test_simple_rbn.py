@@ -12,7 +12,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from .watch_log import WatchLog
 

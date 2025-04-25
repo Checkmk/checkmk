@@ -7,7 +7,8 @@ import logging
 import time
 from typing import Final
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem

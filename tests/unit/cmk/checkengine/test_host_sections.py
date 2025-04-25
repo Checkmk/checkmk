@@ -5,7 +5,8 @@
 
 from typing import TypeAlias
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.fetcher import HostKey, SourceType

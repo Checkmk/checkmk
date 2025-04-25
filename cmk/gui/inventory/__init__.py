@@ -15,10 +15,10 @@ from typing import Any, Literal, TypedDict
 import livestatus
 
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.structured_data import SDRawTree, serialize_tree
 
 from cmk.gui import sites

@@ -13,8 +13,9 @@ import pytest
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 
 from cmk.base import config
 

@@ -18,8 +18,9 @@ from tests.testlib.pytest_helpers.marks import (
 )
 from tests.testlib.site import Site
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

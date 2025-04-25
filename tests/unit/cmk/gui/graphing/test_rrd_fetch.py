@@ -8,9 +8,9 @@ from contextlib import contextmanager
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
 

@@ -11,7 +11,7 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

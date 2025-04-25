@@ -25,6 +25,7 @@ from redis.client import Pipeline
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -48,7 +49,6 @@ from cmk.utils.host_storage import (
     StandardHostsStorage,
     StorageFormat,
 )
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable

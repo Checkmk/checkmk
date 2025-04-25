@@ -10,8 +10,8 @@ from typing import NamedTuple
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 
 from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion

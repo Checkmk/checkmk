@@ -11,9 +11,9 @@ from typing import NamedTuple
 
 from livestatus import lqencode
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
 from cmk.gui.data_source import data_source_registry

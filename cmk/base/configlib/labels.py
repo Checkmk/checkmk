@@ -6,7 +6,8 @@
 import dataclasses
 from collections.abc import Callable, Mapping, Sequence
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.labels import ABCLabelConfig, Labels
 from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,

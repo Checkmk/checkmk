@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 

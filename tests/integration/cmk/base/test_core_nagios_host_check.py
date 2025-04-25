@@ -14,7 +14,7 @@ from tests.integration.linux_test_host import create_linux_test_host
 
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 
 @contextmanager

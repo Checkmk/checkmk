@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from re import Pattern
 from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
-from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+from cmk.ccc.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 from cmk.checkengine.plugins import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 

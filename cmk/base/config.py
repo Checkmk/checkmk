@@ -40,6 +40,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils
@@ -55,7 +56,6 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources

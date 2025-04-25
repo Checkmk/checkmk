@@ -9,9 +9,9 @@ from typing import Any
 from livestatus import lqencode
 
 from cmk.ccc import store
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites

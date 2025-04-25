@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import cluster_mode

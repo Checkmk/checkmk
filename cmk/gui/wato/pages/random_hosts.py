@@ -8,7 +8,7 @@ for test and development."""
 import random
 from collections.abc import Collection
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb

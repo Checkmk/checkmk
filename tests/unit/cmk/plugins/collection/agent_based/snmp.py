@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import (
     BackendSNMPTree,

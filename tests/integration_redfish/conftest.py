@@ -20,7 +20,7 @@ from tests.testlib.site import (
     tracing_config_from_env,
 )
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from .lib import (
     create_special_agent_host,

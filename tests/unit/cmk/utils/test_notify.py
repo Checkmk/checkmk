@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.notify
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
 from cmk.utils.notify import NotificationHostConfig, read_notify_host_file, write_notify_host_file
 from cmk.utils.tags import TagGroupID, TagID
 

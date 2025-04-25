@@ -14,9 +14,9 @@ from typing import assert_never, Generic, Literal, TypeVar
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root

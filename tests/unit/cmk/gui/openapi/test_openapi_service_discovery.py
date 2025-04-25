@@ -14,7 +14,8 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName

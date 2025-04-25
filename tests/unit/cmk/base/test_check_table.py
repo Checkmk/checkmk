@@ -11,7 +11,8 @@ import pytest
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 

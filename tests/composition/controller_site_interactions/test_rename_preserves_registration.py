@@ -13,7 +13,7 @@ from tests.testlib.agent import (
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 
 def _test_rename_preserves_registration(

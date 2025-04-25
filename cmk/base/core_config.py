@@ -15,6 +15,7 @@ from typing import Literal
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.store import lock_checkmk_configuration
 
 import cmk.utils.config_path
@@ -22,7 +23,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path

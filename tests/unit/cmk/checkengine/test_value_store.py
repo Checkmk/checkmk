@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.checkengine import value_store
 from cmk.checkengine.plugins import CheckPluginName, ServiceID

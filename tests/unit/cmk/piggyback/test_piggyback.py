@@ -6,9 +6,10 @@
 
 import pprint
 
+from cmk.ccc.hostaddress import HostAddress
+
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostAddress
 
 from cmk.piggyback import backend
 

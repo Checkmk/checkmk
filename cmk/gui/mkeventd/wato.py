@@ -33,6 +33,7 @@ from livestatus import LocalConnection, MKLivestatusSocketError
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 
@@ -40,7 +41,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.translations
-from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
 # It's OK to import centralized config load logic

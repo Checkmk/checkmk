@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostName
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.labels import merge_cluster_labels
 from cmk.utils.log import console

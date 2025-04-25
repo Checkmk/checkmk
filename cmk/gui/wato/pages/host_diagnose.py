@@ -10,8 +10,7 @@ from collections.abc import Collection
 from typing import NotRequired, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 

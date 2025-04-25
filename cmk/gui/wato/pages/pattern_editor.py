@@ -7,9 +7,8 @@
 import re
 from collections.abc import Collection, Iterable, Sequence
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.plugins import CheckPluginName
 

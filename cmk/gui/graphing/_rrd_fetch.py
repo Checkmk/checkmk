@@ -15,10 +15,10 @@ from livestatus import livestatus_lql
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 

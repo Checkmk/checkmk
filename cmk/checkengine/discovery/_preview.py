@@ -9,10 +9,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cmk.ccc.exceptions import OnError
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName

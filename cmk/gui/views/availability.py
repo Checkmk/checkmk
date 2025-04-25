@@ -10,10 +10,10 @@ import time
 from collections.abc import Iterator
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 

@@ -7,8 +7,9 @@
 
 import os
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 
 
 def has_inventory(hostname: HostName) -> bool:

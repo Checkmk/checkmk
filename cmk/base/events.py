@@ -21,9 +21,9 @@ import livestatus
 
 import cmk.ccc.daemon
 import cmk.ccc.debug
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
 from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict

@@ -20,6 +20,7 @@ import livestatus
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
@@ -27,7 +28,6 @@ from cmk.utils import password_store, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup

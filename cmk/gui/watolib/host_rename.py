@@ -13,12 +13,12 @@ from typing import Any
 from pydantic import BaseModel
 
 from cmk.ccc import store
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 

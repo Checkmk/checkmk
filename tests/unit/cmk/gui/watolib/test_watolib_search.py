@@ -13,7 +13,8 @@ from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 from redis import Redis
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import GetConfigurationResult

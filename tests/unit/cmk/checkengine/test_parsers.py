@@ -14,8 +14,9 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
 

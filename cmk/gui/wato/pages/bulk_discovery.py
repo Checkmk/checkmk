@@ -9,7 +9,7 @@ import copy
 from collections.abc import Collection
 from typing import cast, override
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.checkengine.discovery import DiscoverySettings
 

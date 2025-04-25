@@ -13,7 +13,7 @@ from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import Site
 from tests.testlib.utils import ServiceInfo
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

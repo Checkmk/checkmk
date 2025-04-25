@@ -9,8 +9,9 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
+from cmk.ccc.hostaddress import HostName
+
 import cmk.utils.resulttype as result
-from cmk.utils.hostaddress import HostName
 
 from cmk.fetchers import PiggybackFetcher
 

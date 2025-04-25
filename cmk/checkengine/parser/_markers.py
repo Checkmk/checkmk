@@ -7,8 +7,9 @@ import re
 from collections.abc import Sequence
 from typing import NamedTuple
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import translate_raw_host_name, TranslationOptions
 

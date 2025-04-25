@@ -5,10 +5,10 @@
 
 
 from cmk.ccc import version
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostAddress
 
 from cmk.gui.form_specs.private import ListExtended  # pylint: disable=cmk-module-layer-violation
 

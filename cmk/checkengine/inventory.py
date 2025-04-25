@@ -14,10 +14,10 @@ from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
 import cmk.ccc.debug
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (

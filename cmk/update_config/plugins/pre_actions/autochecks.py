@@ -8,7 +8,8 @@ import itertools
 from logging import Logger
 from typing import override
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.log import VERBOSE
 
 from cmk.checkengine.plugins import CheckPluginName

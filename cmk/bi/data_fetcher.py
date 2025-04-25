@@ -11,9 +11,9 @@ from pathlib import Path
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import tmp_dir
 
 from cmk.bi.lib import (

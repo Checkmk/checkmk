@@ -19,10 +19,10 @@ from typing import assert_never, Final, Literal, NamedTuple
 
 from pydantic import BaseModel
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore, TextSerializer
 from cmk.ccc.version import __version__, Version
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.servicename import Item, ServiceName

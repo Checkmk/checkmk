@@ -11,10 +11,10 @@ from pathlib import Path
 from typing import NamedTuple, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID

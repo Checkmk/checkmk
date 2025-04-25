@@ -21,7 +21,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress
 
 from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk, SNMPVersion
 

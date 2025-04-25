@@ -11,7 +11,8 @@ modified via rules."""
 import functools
 from collections.abc import Callable, Collection, Container, Iterator
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
 

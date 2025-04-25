@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import (
     BackendOIDSpec,

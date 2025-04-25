@@ -27,8 +27,9 @@ from tests.plugins_siteless.helpers import (
 )
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks

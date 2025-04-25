@@ -22,6 +22,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 import cmk.utils.cleanup
 import cmk.utils.password_store
@@ -41,7 +42,6 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist

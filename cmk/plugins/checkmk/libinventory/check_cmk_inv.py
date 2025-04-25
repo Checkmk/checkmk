@@ -12,13 +12,13 @@ from pathlib import Path
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import OnError
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.cpu_tracking import CPUTracker
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 
 from cmk.fetchers import Mode as FetchMode

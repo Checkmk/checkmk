@@ -16,9 +16,9 @@ from typing import Any, Final, TypedDict
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.hostaddress import HostName
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _

@@ -18,8 +18,9 @@ from typing import (
     TypeVar,
 )
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.global_ident_type import GlobalIdent
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
     LabelGroups,

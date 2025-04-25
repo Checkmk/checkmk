@@ -15,9 +15,9 @@ from redis import ConnectionError as RedisConnectionError
 
 from livestatus import LocalConnection, MKLivestatusSocketError
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import log_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 

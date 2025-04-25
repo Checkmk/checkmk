@@ -7,7 +7,8 @@ from collections.abc import Callable, Iterable, Sequence
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results

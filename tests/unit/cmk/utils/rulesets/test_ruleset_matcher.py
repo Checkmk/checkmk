@@ -12,7 +12,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.rulesets.ruleset_matcher import (
     matches_tag_condition,
     RuleConditionsSpec,

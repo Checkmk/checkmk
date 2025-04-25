@@ -8,7 +8,7 @@ import socket
 import time
 from typing import Any, override
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 from cmk.ec.event import Event
 

@@ -14,9 +14,8 @@ from typing import Literal, TypedDict
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
-
-from cmk.utils.hostaddress import HostAddress, HostName
 
 # State transitions (probably incomplete):
 #   {ack, open, counting} => closed

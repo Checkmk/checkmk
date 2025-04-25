@@ -11,10 +11,10 @@ from enum import Enum
 
 from livestatus import Command, MultiSiteConnection
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.expressions import QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments

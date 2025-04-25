@@ -5,9 +5,9 @@
 
 from collections.abc import Iterator
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDPath
 
 from cmk.gui.config import active_config

@@ -16,9 +16,9 @@ from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets import ruleset_matcher

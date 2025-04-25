@@ -12,10 +12,10 @@ from pydantic import BaseModel
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import edition_supports_nagvis
 
 from cmk.utils import paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
 from cmk.gui import forms

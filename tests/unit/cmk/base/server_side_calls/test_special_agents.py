@@ -11,8 +11,9 @@ from typing import NamedTuple
 
 import pytest
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils import password_store
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (

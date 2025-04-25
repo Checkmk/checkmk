@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils
-from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import deserialize_tree, serialize_tree
 
 from cmk.gui.inventory._history import get_history, load_delta_tree, load_latest_delta_tree

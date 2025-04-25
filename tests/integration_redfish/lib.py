@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from tests.testlib.site import Site
 
-from cmk.utils.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName
 
 _THIS_DIR = Path(__file__).parent
 

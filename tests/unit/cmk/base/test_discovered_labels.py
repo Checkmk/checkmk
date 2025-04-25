@@ -9,9 +9,9 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
     _Label,
     DiscoveredHostLabelsStore,

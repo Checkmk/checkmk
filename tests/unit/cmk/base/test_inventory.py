@@ -8,11 +8,12 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     _serialize_retention_interval,

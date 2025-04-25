@@ -12,9 +12,9 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
 import cmk.ccc.debug
+from cmk.ccc.hostaddress import HostAddress
 
 import cmk.utils.resulttype as result
-from cmk.utils.hostaddress import HostAddress
 
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult

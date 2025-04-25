@@ -136,6 +136,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:daemon",
     "//packages/cmk-ccc:debug",
     "//packages/cmk-ccc:exceptions",
+    "//packages/cmk-ccc:hostaddress",
     "//packages/cmk-ccc:i18n",
     "//packages/cmk-ccc:plugin-registry",
     "//packages/cmk-ccc:profile",

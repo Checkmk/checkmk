@@ -138,6 +138,7 @@ from cmk.checkengine.discovery import (
     automation_discovery,
     CheckPreview,
     CheckPreviewEntry,
+    DiscoveryMode,
     DiscoveryResult,
     DiscoverySettings,
     get_check_preview,
@@ -273,9 +274,20 @@ class AutomationDiscovery(DiscoveryAutomation):
         file_cache_options = FileCacheOptions(use_outdated=True)
 
         if len(args) < 2:
-            raise MKAutomationError("Need two arguments: DiscoverySettings HOSTNAME")
+            raise MKAutomationError(
+                "Need two arguments: %s " % "DiscoveryMode|DiscoverySettings HOSTNAME"
+            )
 
-        settings = DiscoverySettings.from_automation_arg(args[0])
+        # TODO 2.3 introduced a new format but has to be compatible for 2.2.
+        # Can be removed one day
+        if (discovery_settings := args[0]) in ["new", "remove", "fixall", "refresh"]:
+            settings = DiscoverySettings.from_discovery_mode(
+                DiscoveryMode.from_str(discovery_settings)
+            )
+        else:
+            # 2.3 format
+            settings = DiscoverySettings.from_json(discovery_settings)
+
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()

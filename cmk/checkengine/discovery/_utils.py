@@ -69,8 +69,16 @@ class DiscoverySettings:
         return json.dumps(asdict(self))
 
     @classmethod
-    def from_json(cls, mode: str) -> DiscoverySettings:
-        return cls(**json.loads(mode))
+    def from_automation_arg(cls, mode: str) -> DiscoverySettings:
+        raw = json.loads(mode)
+        # 2.3 format misses some keys.
+        return cls(
+            update_host_labels=raw.get("update_host_labels", False),
+            add_new_services=raw.get("add_new_services", False),
+            remove_vanished_services=raw.get("remove_vanished_services", False),
+            update_changed_service_labels=raw.get("update_changed_service_labels", False),
+            update_changed_service_parameters=raw.get("update_changed_service_parameters", False),
+        )
 
 
 class DiscoveryMode(enum.Enum):

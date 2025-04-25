@@ -142,11 +142,13 @@ _ALL = [
     "daemon",
     "debug",
     "exceptions",
+    "hostaddress",
     "i18n",
     "plugin-registry",
     "profile",
     "site",
     "store",
+    "user",
     "version",
 ]
 

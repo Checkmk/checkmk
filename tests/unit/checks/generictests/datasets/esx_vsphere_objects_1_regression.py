@@ -38,6 +38,7 @@ info = [
     ["virtualmachine", "virt1-", "10.1.1.112", "poweredOn"],
     ["virtualmachine", "Schulungs_ESXi", "10.1.1.112", "poweredOff"],
     ["virtualmachine", "virt1-", "10.1.1.112", "poweredOn"],
+    ["template", "tpl-dummy", "1.2.3.4", "poweredOff"],
 ]
 
 discovery = {
@@ -68,6 +69,7 @@ discovery = {
         ("VM virt1-1.4.2", {}),
         ("VM win2003", {}),
         ("VM win2016rechner", {}),
+        ("Template tpl-dummy", {})
     ],
     "count": [(None, {})],
 }
@@ -219,12 +221,18 @@ checks = {
             {"states": {"unknown": 3, "poweredOn": 0, "poweredOff": 1, "suspended": 1}},
             [(0, "power state: poweredOn", []), (0, "running on [10.1.1.111]", [])],
         ),
+        (
+            "Template tpl-dummy",
+            {"states": {"unknown": 3, "poweredOn": 0, "poweredOff": 1, "suspended": 1}},
+            [(0, "power state: poweredOff", []), (0, "defined on [1.2.3.4]", [])],
+        ),
     ],
     "count": [
         (
             None,
             {},
             [
+                (0, "Templates: 1", [("templates", 1, None, None, None, None)]),
                 (0, "Virtualmachines: 24", [("vms", 24, None, None, None, None)]),
                 (0, "Hostsystems: 2", [("hosts", 2, None, None, None, None)]),
             ],

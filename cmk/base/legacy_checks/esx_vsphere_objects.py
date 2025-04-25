@@ -18,24 +18,24 @@
 # virtualmachine  LinuxV
 # virtualmachine  OpenSUSE_I
 
-
-import collections
+from itertools import chain
+from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 
-vsphere_object_names = {
-    "hostsystem": "HostSystem",
-    "virtualmachine": "VM",
-}
+vsphere_object_names = {"hostsystem": "HostSystem", "virtualmachine": "VM", "template": "Template"}
+
+
+class Obj(NamedTuple):
+    name: str
+    hostsystem: str
+    state: str
 
 
 def parse_esx_vsphere_objects(string_table):
     parsed = {}
-    Obj = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
-        "Obj", ["name", "hostsystem", "state"]
-    )
     for line in string_table:
         if len(line) < 2:
             continue
@@ -73,15 +73,23 @@ def check_esx_vsphere_objects(item, params, parsed):
         yield 3, "Missing item: %s" % item
         return
 
+    what, name = item.split()
+
     if not obj.state:
-        what, name = item.split()
-        if what == "VM":
-            yield 3, "Virtual machine %s is missing" % name
-        else:
-            yield 3, "No data about host system %s" % name
+        match what:
+            case "VM":
+                yield 3, "Virtual machine %s is missing" % name
+            case "Template":
+                yield 3, "Template %s is missing" % name
+            case _:
+                yield 3, "No data about host system %s" % name
         return
 
-    state = params.get("states", {}).get(obj.state, 3)
+    if what == "Template":
+        # Templates cannot be powered on, so the state is always OK.
+        state = 0
+    else:
+        state = params.get("states", {}).get(obj.state, 3)
     yield state, "power state: %s" % obj.state
 
     if obj.hostsystem:
@@ -118,6 +126,9 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
     if params is None:
         params = {}
 
+    templates = [o for o in parsed.values() if o.name.startswith("Template ")]
+    yield 0, "Templates: %d" % len(templates), [("templates", len(templates))]
+
     virtualmachines = [o for o in parsed.values() if o.name.startswith("VM ")]
     yield 0, "Virtualmachines: %d" % len(virtualmachines), [("vms", len(virtualmachines))]
 
@@ -129,7 +140,13 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
     for distribution in params.get("distribution", []):
         ruled_vms = distribution.get("vm_names", [])
-        hosts = sorted({vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms})
+        hosts = sorted(
+            {
+                vm.hostsystem
+                for vm in chain(virtualmachines, templates)
+                if vm.name.split(" ", 1)[-1] in ruled_vms
+            }
+        )
         count = len(hosts)
         if count < distribution["hosts_count"]:
             yield (

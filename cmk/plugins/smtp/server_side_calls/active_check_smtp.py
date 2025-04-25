@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Literal
 
 from pydantic import BaseModel
@@ -14,6 +14,8 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     IPAddressFamily,
+    IPv4Config,
+    IPv6Config,
     replace_macros,
     Secret,
 )
@@ -26,12 +28,15 @@ class AuthParameters(BaseModel):
     password: Secret
 
 
+_IpFamilyTag = Literal["primary", "ipv4", "ipv6"]
+
+
 class Parameters(BaseModel):
     name: str
     hostname: str | None = None
     expect: str | None = None
     port: int | None = None
-    address_family: Literal["primary", "ipv4", "ipv6"] = "primary"
+    address_family: _IpFamilyTag = "primary"
     commands: list[str] | None = None
     command_responses: list[str] | None = None
     from_address: str | None = None
@@ -44,32 +49,60 @@ class Parameters(BaseModel):
 
 
 def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Literal["-6", "-4"]]:
-    # Use the address family of the monitored host by default
-    used_family = (
-        params.address_family
-        if params.address_family != "primary"
-        else ("ipv6" if host_config.primary_ip_config.family is IPAddressFamily.IPV6 else "ipv4")
-    )
+    # return host and address family to use
+    target_host = replace_macros(params.hostname, host_config.macros) if params.hostname else None
+    if ip_config := _get_host_ip_config(host_config, params.address_family):
+        host = target_host or ip_config.address
+        return host, "-4" if ip_config.family is IPAddressFamily.IPV4 else "-6"
 
-    if used_family == "ipv6":
-        if (ipv6 := host_config.ipv6_config) is None:
-            raise ValueError("IPv6 is not configured for host")
-        return ipv6.address, "-6"
+    if target_host:
+        # special case to keep compatibility with 2.3 and earlier
+        # WATO has configured hostname in check but family as primary, which is absent
+        if params.address_family == "primary":
+            return target_host, "-4"
 
-    if (ipv4 := host_config.ipv4_config) is None:
-        raise ValueError("IPv4 is not configured for host")
-    return ipv4.address, "-4"
+        return target_host, "-4" if params.address_family == "ipv4" else "-6"
+
+    if params.address_family == "ipv6":
+        # special case: ipv6 is enforced and must be presented in host config
+        raise ValueError("IPv6 is not configured for host")
+
+    # standard case, hostname is absent( by active check) and IP stack is absent too
+    raise ValueError("Host IP stack absent")
+
+
+def _get_host_ip_config(
+    host_config: HostConfig, tag: _IpFamilyTag
+) -> IPv6Config | IPv4Config | None:
+    # returns None if we have to deal with NoIp host
+    match tag:
+        case "ipv4":  # in GUI  it means ANY config
+            return host_config.ipv4_config or host_config.ipv6_config
+        case "ipv6":
+            return host_config.ipv6_config
+        case "primary":
+            try:
+                primary = host_config.primary_ip_config
+                assert isinstance(primary, IPv6Config | IPv4Config)  # keep mypy happy
+                return primary
+            except ValueError:
+                # to catch host_config.primary_ip_config exception
+                return None
 
 
 def check_smtp_arguments(
     params: Parameters, host_config: HostConfig
 ) -> Iterable[ActiveCheckCommand]:
-    address, ip_option = _get_ip_option(params, host_config)
+    yield ActiveCheckCommand(
+        service_description=_check_smtp_desc(params.name, host_config),
+        command_arguments=_create_commad_line(params, host_config),
+    )
 
+
+def _create_commad_line(params: Parameters, host_config: HostConfig) -> Sequence[str | Secret]:
     args: list[str | Secret] = [
         *(("-e", params.expect) if params.expect else ()),
         *(("-p", str(params.port)) if params.port else ()),
-        ip_option,
     ]
     for s in params.commands or ():
         args.extend(("-C", s))
@@ -103,13 +136,10 @@ def check_smtp_arguments(
         crit = params.cert_days[1][1] / 86400.0
         args.extend(("-D", f"{warn:.0f},{crit:.0f}"))
 
-    address = replace_macros(params.hostname, host_config.macros) if params.hostname else address
-    args.extend(("-H", address))
+    address, ip_option = _get_ip_option(params, host_config)
+    args.extend((ip_option, "-H", address))
 
-    yield ActiveCheckCommand(
-        service_description=_check_smtp_desc(params.name, host_config),
-        command_arguments=args,
-    )
+    return args
 
 
 def _check_smtp_desc(name: str, host_config: HostConfig) -> str:

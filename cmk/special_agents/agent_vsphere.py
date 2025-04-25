@@ -1601,7 +1601,8 @@ def get_vm_power_states(
         runtime_host = vm_data.get("runtime.host", "")  # Can we drop the .get() here?
         running_on = hostsystems.get(runtime_host, runtime_host)
         power_state = vm_data.get("runtime.powerState")
-        vm_info = f"virtualmachine\t{used_hostname}\t{running_on}\t{power_state}"
+        object_type = "template" if vm_data.get("config.template") == "true" else "virtualmachine"
+        vm_info = f"{object_type}\t{used_hostname}\t{running_on}\t{power_state}"
 
         if opt.vm_pwr_display == "vm":
             piggy_data.setdefault(used_hostname, []).append(vm_info)

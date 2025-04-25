@@ -16,6 +16,7 @@ info = [
     ["virtualmachine", "Server", "10.1.1.111", "poweredOff"],
     ["virtualmachine", "virt1-1.4.2", "10.1.1.112", "poweredOff"],
     ["virtualmachine", "Schulungs_ESXi", "10.1.1.112", "poweredOff"],
+    ["template", "Dummy-Template", "1.2.3.4", "poweredOff"]
 ]
 
 discovery = {
@@ -26,6 +27,7 @@ discovery = {
         ("VM Schulungs_ESXi", {}),
         ("VM Server", {}),
         ("VM virt1-1.4.2", {}),
+        ("Template Dummy-Template", {}),
     ],
     "count": [(None, {})],
 }
@@ -36,6 +38,7 @@ checks = {
             None,
             {"distribution": [{"hosts_count": 2, "state": 2, "vm_names": ["Grafana", "Server"]}]},
             [
+                (0, "Templates: 1", [("templates", 1, None, None, None, None)]),
                 (0, "Virtualmachines: 4", [("vms", 4, None, None, None, None)]),
                 (0, "Hostsystems: 2", [("hosts", 2, None, None, None, None)]),
                 (2, "VMs Grafana, Server are running on 1 host: 10.1.1.111", []),
@@ -49,6 +52,7 @@ checks = {
                 ]
             },
             [
+                (0, "Templates: 1", [("templates", 1, None, None, None, None)]),
                 (0, "Virtualmachines: 4", [("vms", 4, None, None, None, None)]),
                 (0, "Hostsystems: 2", [("hosts", 2, None, None, None, None)]),
             ],
@@ -57,6 +61,7 @@ checks = {
             None,
             {},
             [
+                (0, "Templates: 1", [("templates", 1, None, None, None, None)]),
                 (0, "Virtualmachines: 4", [("vms", 4, None, None, None, None)]),
                 (0, "Hostsystems: 2", [("hosts", 2, None, None, None, None)]),
             ],

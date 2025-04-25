@@ -25,7 +25,9 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                     element_template=Dictionary(
                         elements={
                             "vm_names": DictElement(
-                                parameter_form=List(element_template=String(), title=Title("VMs")),
+                                parameter_form=List(
+                                    element_template=String(), title=Title("VMs / Templates")
+                                ),
                                 required=True,
                             ),
                             "hosts_count": DictElement(
@@ -45,7 +47,7 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                     ),
                     title=Title("VM distribution"),
                     help_text=Help(
-                        "You can specify lists of VM names and a number of hosts,"
+                        "You can specify lists of VM or template names and a number of hosts,"
                         " to make sure the specified VMs are distributed across at least so many hosts."
                         " E.g. provide two VM names and set 'Number of hosts' to two,"
                         " to make sure those VMs are not running on the same host."

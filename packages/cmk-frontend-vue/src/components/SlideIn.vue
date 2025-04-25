@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import {
   DialogClose,
   DialogTitle,
@@ -25,20 +25,21 @@ export interface SlideInProps {
   }
 }
 
-defineProps<SlideInProps>()
+const props = defineProps<SlideInProps>()
 const emit = defineEmits(['close'])
 
-const scrollContainerRef = ref<InstanceType<typeof CmkScrollContainer> | null>(null)
+const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
 
-const focusOnSlideInContent = async () => {
-  await nextTick(() => {
-    ;(
-      scrollContainerRef.value?.$el.querySelector(
-        'input, select, textarea, button, object, a, area[href], [tabindex]'
-      ) as HTMLElement
-    )?.focus()
-  })
-}
+watch(
+  () => props.open,
+  async (isOpen) => {
+    if (isOpen) {
+      await nextTick(() => {
+        dialogContentRef.value?.$el.focus()
+      })
+    }
+  }
+)
 </script>
 
 <template>
@@ -47,19 +48,21 @@ const focusOnSlideInContent = async () => {
       <DialogOverlay class="slide-in__overlay" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <DialogContent
+        ref="dialogContentRef"
         class="cmk-vue-app slide-in__container"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
-        @open-auto-focus="focusOnSlideInContent"
+        @open-auto-focus.prevent
+        @close-auto-focus.prevent
       >
         <DialogTitle v-if="header" class="slide-in__title">
           <CmkLabel variant="title">{{ header.title }}</CmkLabel>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-            <CmkIcon name="close" size="xsmall" />
+            <CmkIcon aria-label="Close" name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
 
-        <CmkScrollContainer ref="scrollContainerRef" type="outer" class="slide-in__content">
+        <CmkScrollContainer type="outer" class="slide-in__content">
           <slot />
         </CmkScrollContainer>
       </DialogContent>

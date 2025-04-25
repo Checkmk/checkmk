@@ -122,7 +122,6 @@ ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 
 
 # determine changed services on host.
-# param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept

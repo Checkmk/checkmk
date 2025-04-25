@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Callable
 
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -42,6 +41,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     FormSpecWrapper,
     ListOfWidgets,
+    NoteText,
     Text,
     Widget,
 )
@@ -203,32 +203,46 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
-class _GCERecapMessage:
-    @staticmethod
-    def _cre_message() -> str:
-        return _(
-            "Hosts for virtual machines need to be created manually, please check the %s."
-        ) % HTMLWriter.render_a(
-            _("documentation"),
-            href=doc_reference_url(DocReference.GCP_MANUAL_VM),
-        )
-
-    message: Callable[[], str] = _cre_message
+class _CreateVM:
+    handle_automatically: bool = False
 
 
-gce_recap_message = _GCERecapMessage()
+vm_creation = _CreateVM()
 
 
 def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
-    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    messages: list[Text | NoteText] = [
+        Text(text=title),
+        Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+    ]
     if "gce" in parsed_data.get(FormSpecId("configure_advanced"), {}).get("piggyback", {}).get(
         "piggyback_services", []
     ):
-        message += " " + gce_recap_message.message()
-    return [
-        Text(text=title),
-        Text(text=message),
-    ]
+        if vm_creation.handle_automatically:
+            messages.extend(
+                [
+                    Text(text=_("Virtual machines may take a few minutes to show up.")),
+                    Text(),
+                    NoteText(
+                        text=_(
+                            "Note: This will also enable the dynamic configuration, which regularly activates all pending changes on the selected site."
+                        )
+                    ),
+                ]
+            )
+        else:
+            messages.append(
+                Text(
+                    text=_(
+                        "Hosts for virtual machines need to be created manually, please check the %s."
+                    )
+                    % HTMLWriter.render_a(
+                        _("documentation"),
+                        href=doc_reference_url(DocReference.GCP_MANUAL_VM),
+                    )
+                )
+            )
+    return messages
 
 
 def recap_found_services(

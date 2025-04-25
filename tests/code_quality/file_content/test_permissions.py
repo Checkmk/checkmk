@@ -66,10 +66,10 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
             "build",
             "BUILD",
             "pyproject.toml",
+            "ci.json",
         ],
         [],
     ),
-    ("omd/packages/enterprise/alert_handlers/*", is_executable, [], []),
     ("omd/packages/enterprise/alert_handlers/*", is_executable, [], []),
 ]
 

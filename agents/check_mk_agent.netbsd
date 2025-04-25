@@ -43,6 +43,13 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
+if inpath sudo && [ "$(whoami)" != "root" ]; then
+    ROOT_OR_SUDO="sudo --non-interactive"
+else
+    ROOT_OR_SUDO=""
+fi
+export ROOT_OR_SUDO
+
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]; then
     set -xv
@@ -143,7 +150,7 @@ section_misc_sections() {
 
     if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
         echo '<<<postfix_mailq>>>'
-        sudo_as_root mailq | tail -n 6
+        ${ROOT_OR_SUDO} mailq | tail -n 6
     fi
 }
 

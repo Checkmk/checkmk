@@ -39,10 +39,11 @@ inpath() {
 
 init_sudo() {
     if inpath sudo && [ "$(whoami)" != "root" ]; then
-        sudo_as_root() { sudo --non-interactive "$@"; }
+        ROOT_OR_SUDO="sudo --non-interactive"
     else
-        sudo_as_root() { "$@"; }
+        ROOT_OR_SUDO=""
     fi
+    export ROOT_OR_SUDO
 }
 
 get_file_atime() {
@@ -888,7 +889,7 @@ section_diskstat() {
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
-            sudo_as_root dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+            ${ROOT_OR_SUDO} dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
         fi
         if [ -d /dev/vx/dsk ]; then
             echo '[vx_dsk]'
@@ -1197,7 +1198,7 @@ section_mailqueue() {
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
-        sudo_as_root mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+        ${ROOT_OR_SUDO} mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
     # Check status of qmail mailqueue
@@ -1225,8 +1226,7 @@ section_mailqueue() {
 section_omd_status() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
-        export -f sudo_as_root
-        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; sudo_as_root omd status --bare || true"
+        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; ${ROOT_OR_SUDO} omd status --bare || true"
     fi
 }
 
@@ -1288,11 +1288,16 @@ section_veritas_cluster() {
     if [ -x /opt/VRTSvcs/bin/haclus ]; then
         echo "<<<veritas_vcs>>>"
         vcshost=$(hostname | cut -d. -f1)
-        waitmax -s 9 2 sudo_as_root /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
-        waitmax -s 9 2 sudo_as_root /opt/VRTSvcs/bin/hasys -display -attribute SysState
-        waitmax -s 9 2 sudo_as_root /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus
-        waitmax -s 9 2 sudo_as_root /opt/VRTSvcs/bin/hares -display -sys "${vcshost}" -attribute State -localclus
-        waitmax -s 9 2 sudo_as_root /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
+        # shellcheck disable=SC2086
+        waitmax -s 9 2 ${ROOT_OR_SUDO} /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
+        # shellcheck disable=SC2086
+        waitmax -s 9 2 ${ROOT_OR_SUDO} /opt/VRTSvcs/bin/hasys -display -attribute SysState
+        # shellcheck disable=SC2086
+        waitmax -s 9 2 ${ROOT_OR_SUDO} /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus
+        # shellcheck disable=SC2086
+        waitmax -s 9 2 ${ROOT_OR_SUDO} /opt/VRTSvcs/bin/hares -display -sys "${vcshost}" -attribute State -localclus
+        # shellcheck disable=SC2086
+        waitmax -s 9 2 ${ROOT_OR_SUDO} /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
     fi
 }
 

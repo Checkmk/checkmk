@@ -56,7 +56,7 @@ def discover_acme_fan(section: Section) -> DiscoveryResult:
     ]
 
 
-def check_acme_fan(item: str, params: dict, section: Section) -> CheckResult:
+def check_acme_fan(item: str, section: Section) -> CheckResult:
     if item in section:
         value_str, state = section[item]
 
@@ -69,6 +69,4 @@ check_plugin_acme_fan = CheckPlugin(
     service_name="Fan %s",
     discovery_function=discover_acme_fan,
     check_function=check_acme_fan,
-    check_ruleset_name="hw_fans_perc",
-    check_default_parameters={},
 )

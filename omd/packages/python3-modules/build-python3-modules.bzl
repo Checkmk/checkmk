@@ -4,6 +4,8 @@ def get_pip_options(module_name):
     return {
         # * avoid compiling with BLAS support - we don't need super fast numpy (yet)
         "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
+        # pillow in version 11.2 and above would require libavif>=1.0.0 which is per default not available on debian-12, see https://github.com/radarhere/Pillow/commit/7d50816f0a6e607b04f9bdc8af7482a29ba578e3 and as we don't need avif support, we simply disable it
+        "pillow": "--config-settings=avif=disable",
     }.get(module_name, "")
 
 def create_requirements_file(name, outs):

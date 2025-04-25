@@ -39,7 +39,6 @@ from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksStore,
     merge_cluster_autochecks,
-    remove_autochecks_of_host,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
@@ -167,19 +166,6 @@ def automation_discovery(
     )
 
     try:
-        # TODO: I really think it's time to clean this up.
-        # in "refresh" mode we first need to remove all previously discovered
-        # checks of the host, so that _get_host_services() does show us the
-        # new discovered check parameters.
-        # this is a weird way of updating changed services:
-        # forgetting the old onces, add adding changed ones, that now appear to be "new"
-        if settings.update_changed_service_labels and settings.update_changed_service_parameters:
-            results[host_name].services.removed += sum(
-                # this is cluster-aware!
-                remove_autochecks_of_host(node, host_name, autochecks_config.effective_host)
-                for node in (cluster_nodes if is_cluster else [host_name])
-            )
-
         fetched = fetcher(host_name, ip_address=None)
         host_sections = parser((f[0], f[1]) for f in fetched)
         if failed_sources_results := [r for r in summarizer(host_sections) if r.state != 0]:

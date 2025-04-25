@@ -5575,6 +5575,10 @@ msgid "Alert handlers will handle state changes."
 msgstr "Les gestionnaires d'alertes gèrent les changements d'état."
 
 #, fuzzy
+msgid "Alert if value has increased since discovery"
+msgstr "Découverte automatique des services"
+
+#, fuzzy
 msgid "Alert manager rule state"
 msgstr "État de la règle du gestionnaire d'alerte"
 
@@ -11137,6 +11141,10 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "Erreurs CRC"
 
+#, fuzzy
+msgid "CRC errors (id 199)"
+msgstr "Erreurs CRC"
+
 msgid "CRC errors rate"
 msgstr "Taux d'erreurs CRC"
 
@@ -14573,6 +14581,10 @@ msgstr "Configuration"
 #, fuzzy
 msgid "Configure host and regions"
 msgstr "Configuration"
+
+#, fuzzy
+msgid "Configure levels"
+msgstr "Conteneurs niveaux inférieurs"
 
 #, no-python-format
 msgid ""
@@ -23112,6 +23124,9 @@ msgstr ", en fonctionnement nulle part"
 
 msgid "End-Time"
 msgstr "Fin des temps"
+
+msgid "End-to-End Errors (id 184)"
+msgstr ""
 
 msgid "End-to-end latency"
 msgstr "Latence de bout en bout"
@@ -49441,6 +49456,10 @@ msgstr "Pods en attente : Espace de nommage"
 msgid "Pending requests"
 msgstr "Demandes en cours"
 
+#, fuzzy
+msgid "Pending sectors (id 197)"
+msgstr "Services en attente"
+
 msgid "Pending security updates"
 msgstr "Mises à jour de sécurité en attente"
 
@@ -52958,6 +52977,14 @@ msgstr "Nombre réel (REAL)"
 msgid "Real-time checks"
 msgstr "Contrôles en temps réel"
 
+#, fuzzy
+msgid "Reallocated events (id 196)"
+msgstr "Événements de réaffectation de disques durs"
+
+#, fuzzy
+msgid "Reallocated sectors (id 5)"
+msgstr "Secteurs réaffectés sur le disque dur"
+
 #, python-format
 msgid "Reason: %s"
 msgstr "Motif : %s"
@@ -55931,6 +55958,12 @@ msgstr "SLA : début à la période %s, retour en arrière %s périodes"
 
 msgid "SLES License"
 msgstr "Licence SLES"
+
+msgid "SMART ATA"
+msgstr ""
+
+msgid "SMART NVMe"
+msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "Surveillance des disques durs SMART (Linux)"
@@ -61371,6 +61404,9 @@ msgstr "Vitesse"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Vitesse des groupes d'interface (Netapp uniquement)"
+
+msgid "Spin retries (id 10)"
+msgstr ""
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -78654,6 +78690,10 @@ msgstr "Taille non comprimée en mémoire"
 msgid "Uncompressed size in memory"
 msgstr "Taille non comprimée en mémoire"
 
+#, fuzzy
+msgid "Uncorrectable Errors (id 187)"
+msgstr "Mots de code non corrigibles"
+
 msgid "Uncorrectable codewords"
 msgstr "Mots de code non corrigibles"
 
@@ -80553,6 +80593,10 @@ msgid "Use the status of the Check_MK Service"
 msgstr ""
 
 msgid "Use the status of the service..."
+msgstr "Utiliser le statut du service..."
+
+#, fuzzy
+msgid "Use the threshold reported by the device"
 msgstr "Utiliser le statut du service..."
 
 msgid "Use this condition to select hosts based on the configured host labels."

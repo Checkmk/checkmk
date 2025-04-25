@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-04-24 13:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -5407,6 +5407,10 @@ msgstr "Alert Handler, die verteilt werden sollen"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
 
+#, fuzzy
+msgid "Alert if value has increased since discovery"
+msgstr "Automatische Service-Erkennung durchführen"
+
 msgid "Alert manager rule state"
 msgstr "Zustand der Alertmanager-Regel"
 
@@ -10691,6 +10695,10 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "CRC-Fehler"
 
+#, fuzzy
+msgid "CRC errors (id 199)"
+msgstr "CRC-Fehler"
+
 msgid "CRC errors rate"
 msgstr "CRC Fehlerrate"
 
@@ -14018,6 +14026,10 @@ msgstr "Host und Einrichtung konfigurieren"
 
 msgid "Configure host and regions"
 msgstr "Host und Regionen konfigurieren"
+
+#, fuzzy
+msgid "Configure levels"
+msgstr "Untergrenzen konfigurieren"
 
 #, no-python-format
 msgid ""
@@ -22189,6 +22201,9 @@ msgstr "Hier Wachsen beenden"
 
 msgid "End-Time"
 msgstr "End-Zeit"
+
+msgid "End-to-End Errors (id 184)"
+msgstr ""
 
 msgid "End-to-end latency"
 msgstr "End-to-End Latenz"
@@ -47112,6 +47127,10 @@ msgstr "Ausstehende Pods: Namespace"
 msgid "Pending requests"
 msgstr "Ausstehende Anfragen"
 
+#, fuzzy
+msgid "Pending sectors (id 197)"
+msgstr "Services im Zustand PENDING"
+
 msgid "Pending security updates"
 msgstr "Anstehende Sicherheitsupdates"
 
@@ -50423,6 +50442,14 @@ msgstr "Reelle Zahl (REAL)"
 msgid "Real-time checks"
 msgstr "Echtzeit-Checks"
 
+#, fuzzy
+msgid "Reallocated events (id 196)"
+msgstr "Festplatten-Reallokierungen"
+
+#, fuzzy
+msgid "Reallocated sectors (id 5)"
+msgstr "Reallozierte Sektoren"
+
 #, python-format
 msgid "Reason: %s"
 msgstr "Grund: %s"
@@ -53225,6 +53252,12 @@ msgstr "SLA: starte bei Periode %s, blicke zurück %s Perioden"
 
 msgid "SLES License"
 msgstr "SLES-Lizenz"
+
+msgid "SMART ATA"
+msgstr ""
+
+msgid "SMART NVMe"
+msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMART Festplatten-Monitoring (Linux)"
@@ -58496,6 +58529,9 @@ msgstr "Geschwindigkeit"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Geschwindigkeit der Schnittstellengruppen (nur Netapp)"
+
+msgid "Spin retries (id 10)"
+msgstr ""
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -75096,6 +75132,10 @@ msgstr "Unkomprimierte Größe"
 msgid "Uncompressed size in memory"
 msgstr "Unkomprimierte Größe im Speicher"
 
+#, fuzzy
+msgid "Uncorrectable Errors (id 187)"
+msgstr "Nicht korrigierbare Schlüsselwörter"
+
 msgid "Uncorrectable codewords"
 msgstr "Nicht korrigierbare Schlüsselwörter"
 
@@ -76892,6 +76932,10 @@ msgid "Use the status of the Check_MK Service"
 msgstr "Den Zustand des Check_MK Service verwenden"
 
 msgid "Use the status of the service..."
+msgstr "Den Zustand verwenden von Service..."
+
+#, fuzzy
+msgid "Use the threshold reported by the device"
 msgstr "Den Zustand verwenden von Service..."
 
 msgid "Use this condition to select hosts based on the configured host labels."

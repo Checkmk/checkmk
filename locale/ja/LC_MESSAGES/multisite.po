@@ -5258,6 +5258,10 @@ msgstr "デプロイするアラートハンドラー"
 msgid "Alert handlers will handle state changes."
 msgstr "アラートハンドラーは状態の変化を処理します。"
 
+#, fuzzy
+msgid "Alert if value has increased since discovery"
+msgstr "自動サービス検出を実行する"
+
 msgid "Alert manager rule state"
 msgstr "アラートマネージャのルール状況"
 
@@ -10513,6 +10517,10 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "CRCエラー"
 
+#, fuzzy
+msgid "CRC errors (id 199)"
+msgstr "CRCエラー"
+
 msgid "CRC errors rate"
 msgstr "CRCエラー率"
 
@@ -13752,6 +13760,10 @@ msgstr "コンフィギュレーション"
 #, fuzzy
 msgid "Configure host and regions"
 msgstr "コンフィギュレーション"
+
+#, fuzzy
+msgid "Configure levels"
+msgstr "下位レベル設定"
 
 #, no-python-format
 msgid ""
@@ -21827,6 +21839,9 @@ msgstr "ここで成長終了"
 
 msgid "End-Time"
 msgstr "終了時間"
+
+msgid "End-to-End Errors (id 184)"
+msgstr ""
 
 msgid "End-to-end latency"
 msgstr "エンドツーエンドのレイテンシ"
@@ -46929,6 +46944,10 @@ msgstr "保留中のpod: 名前空間"
 msgid "Pending requests"
 msgstr "保留中の要求"
 
+#, fuzzy
+msgid "Pending sectors (id 197)"
+msgstr "保留中のサービス"
+
 msgid "Pending security updates"
 msgstr "保留中のセキュリティ更新"
 
@@ -50242,6 +50261,14 @@ msgstr "実数(REAL)"
 msgid "Real-time checks"
 msgstr "リアルタイムチェック"
 
+#, fuzzy
+msgid "Reallocated events (id 196)"
+msgstr "ハードドライブの再割り当てされたイベント"
+
+#, fuzzy
+msgid "Reallocated sectors (id 5)"
+msgstr "ハードドライブの再割り当てされたセクター"
+
 #, python-format
 msgid "Reason: %s"
 msgstr "理由:%s"
@@ -53066,6 +53093,12 @@ msgstr "SLA: 期間 %s で開始し、%s 期間を振り返る"
 
 msgid "SLES License"
 msgstr "SLESライセンス"
+
+msgid "SMART ATA"
+msgstr ""
+
+msgid "SMART NVMe"
+msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMARTハードディスク監視(Linux)"
@@ -58218,6 +58251,9 @@ msgstr "速度"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "インターフェイスグループの速度(Netappのみ)"
+
+msgid "Spin retries (id 10)"
+msgstr ""
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -74094,6 +74130,10 @@ msgstr "非圧縮サイズ"
 msgid "Uncompressed size in memory"
 msgstr "メモリ内の非圧縮サイズ"
 
+#, fuzzy
+msgid "Uncorrectable Errors (id 187)"
+msgstr "修正不可能なコードワード"
+
 msgid "Uncorrectable codewords"
 msgstr "修正不可能なコードワード"
 
@@ -75883,6 +75923,10 @@ msgid "Use the status of the Check_MK Service"
 msgstr "Check_MKサービスのステータスを使用する"
 
 msgid "Use the status of the service..."
+msgstr "サービスのステータスを使用します..."
+
+#, fuzzy
+msgid "Use the threshold reported by the device"
 msgstr "サービスのステータスを使用します..."
 
 msgid "Use this condition to select hosts based on the configured host labels."

@@ -5542,6 +5542,10 @@ msgid "Alert handlers will handle state changes."
 msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 
 #, fuzzy
+msgid "Alert if value has increased since discovery"
+msgstr "Voer automatische service ontdekking uit"
+
+#, fuzzy
 msgid "Alert manager rule state"
 msgstr "Waarschuwing mangager regel staat"
 
@@ -11086,6 +11090,10 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "CRC fouten"
 
+#, fuzzy
+msgid "CRC errors (id 199)"
+msgstr "CRC fouten"
+
 msgid "CRC errors rate"
 msgstr "CRC-foutenpercentage"
 
@@ -14486,6 +14494,10 @@ msgstr "Configuratie"
 #, fuzzy
 msgid "Configure host and regions"
 msgstr "Configuratie"
+
+#, fuzzy
+msgid "Configure levels"
+msgstr "Containers lagere niveaus"
 
 #, no-python-format
 msgid ""
@@ -22943,6 +22955,9 @@ msgstr ""
 
 msgid "End-Time"
 msgstr "Eindtijd"
+
+msgid "End-to-End Errors (id 184)"
+msgstr ""
 
 msgid "End-to-end latency"
 msgstr "End-to-end latentie"
@@ -49071,6 +49086,10 @@ msgstr "In afwachting van pods: Namespace"
 msgid "Pending requests"
 msgstr "Hangende aanvragen"
 
+#, fuzzy
+msgid "Pending sectors (id 197)"
+msgstr "In afwachting van diensten"
+
 msgid "Pending security updates"
 msgstr "In afwachting van beveiligingsupdates"
 
@@ -52545,6 +52564,14 @@ msgstr "Reëel getal (REAL)"
 msgid "Real-time checks"
 msgstr "Controles in real time"
 
+#, fuzzy
+msgid "Reallocated events (id 196)"
+msgstr "Gebeurtenissen met opnieuw toewijzen van harde schijf"
+
+#, fuzzy
+msgid "Reallocated sectors (id 5)"
+msgstr "Harddrive opnieuw toegewezen sectoren"
+
 #, python-format
 msgid "Reason: %s"
 msgstr "Reden: %s"
@@ -55468,6 +55495,12 @@ msgstr "SLA: begin bij periode %s, kijk terug %s perioden"
 
 msgid "SLES License"
 msgstr "SLES Licentie"
+
+msgid "SMART ATA"
+msgstr ""
+
+msgid "SMART NVMe"
+msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMART harddisk monitoring (Linux)"
@@ -60849,6 +60882,9 @@ msgstr "Snelheid"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Snelheid van interfacegroepen (alleen Netapp)"
+
+msgid "Spin retries (id 10)"
+msgstr ""
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -77973,6 +78009,10 @@ msgstr "Niet-gecomprimeerde grootte in geheugen"
 msgid "Uncompressed size in memory"
 msgstr "Niet-gecomprimeerde grootte in geheugen"
 
+#, fuzzy
+msgid "Uncorrectable Errors (id 187)"
+msgstr "Niet-corrigeerbare codewoorden"
+
 msgid "Uncorrectable codewords"
 msgstr "Niet-corrigeerbare codewoorden"
 
@@ -79843,6 +79883,10 @@ msgid "Use the status of the Check_MK Service"
 msgstr "Gebruik de status van de dienst..."
 
 msgid "Use the status of the service..."
+msgstr "Gebruik de status van de dienst..."
+
+#, fuzzy
+msgid "Use the threshold reported by the device"
 msgstr "Gebruik de status van de dienst..."
 
 msgid "Use this condition to select hosts based on the configured host labels."

@@ -5549,6 +5549,10 @@ msgstr "Manipulatori de alertă care trebuie implementați"
 msgid "Alert handlers will handle state changes."
 msgstr "Gestionarii de alerte vor gestiona schimbările de stare."
 
+#, fuzzy
+msgid "Alert if value has increased since discovery"
+msgstr "Efectuați descoperirea automată a serviciilor"
+
 msgid "Alert manager rule state"
 msgstr "Starea regulii de gestionare a alertelor"
 
@@ -11111,6 +11115,10 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "Erori CRC"
 
+#, fuzzy
+msgid "CRC errors (id 199)"
+msgstr "Erori CRC"
+
 msgid "CRC errors rate"
 msgstr "Rata erorilor CRC"
 
@@ -14498,6 +14506,10 @@ msgstr "Configurație"
 #, fuzzy
 msgid "Configure host and regions"
 msgstr "Configurație"
+
+#, fuzzy
+msgid "Configure levels"
+msgstr "Configurați nivelurile inferioare"
 
 #, no-python-format
 msgid ""
@@ -22981,6 +22993,9 @@ msgstr "Sfârșitul creșterii aici"
 
 msgid "End-Time"
 msgstr "Sfârșitul timpului"
+
+msgid "End-to-End Errors (id 184)"
+msgstr ""
 
 msgid "End-to-end latency"
 msgstr "Latență de la un capăt la altul"
@@ -49129,6 +49144,10 @@ msgstr "Păstăi în așteptare: Spațiul de nume"
 msgid "Pending requests"
 msgstr "Cereri în așteptare"
 
+#, fuzzy
+msgid "Pending sectors (id 197)"
+msgstr "Servicii în așteptare"
+
 msgid "Pending security updates"
 msgstr "Actualizări de securitate în așteptare"
 
@@ -52609,6 +52628,14 @@ msgstr "Număr real (REAL)"
 msgid "Real-time checks"
 msgstr "Verificări în timp real"
 
+#, fuzzy
+msgid "Reallocated events (id 196)"
+msgstr "Evenimente de realocare a hard disk-ului"
+
+#, fuzzy
+msgid "Reallocated sectors (id 5)"
+msgstr "Sectoare realocate pe hard disk"
+
 #, python-format
 msgid "Reason: %s"
 msgstr "Motivul: %s"
@@ -55536,6 +55563,12 @@ msgstr "SLA: începe de la perioada %s, privește înapoi %s perioade"
 
 msgid "SLES License"
 msgstr "Licență SLES"
+
+msgid "SMART ATA"
+msgstr ""
+
+msgid "SMART NVMe"
+msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "Monitorizarea SMART a harddisk-ului (Linux)"
@@ -61004,6 +61037,9 @@ msgstr "Viteză"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Viteza grupurilor de interfețe (numai Netapp)"
+
+msgid "Spin retries (id 10)"
+msgstr ""
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -78146,6 +78182,10 @@ msgstr "Dimensiunea necomprimată în memorie"
 msgid "Uncompressed size in memory"
 msgstr "Dimensiunea necomprimată în memorie"
 
+#, fuzzy
+msgid "Uncorrectable Errors (id 187)"
+msgstr "Cuvinte de cod necorectabile"
+
 msgid "Uncorrectable codewords"
 msgstr "Cuvinte de cod necorectabile"
 
@@ -80012,6 +80052,10 @@ msgid "Use the status of the Check_MK Service"
 msgstr "Utilizați starea serviciului..."
 
 msgid "Use the status of the service..."
+msgstr "Utilizați starea serviciului..."
+
+#, fuzzy
+msgid "Use the threshold reported by the device"
 msgstr "Utilizați starea serviciului..."
 
 msgid "Use this condition to select hosts based on the configured host labels."

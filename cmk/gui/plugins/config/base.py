@@ -15,8 +15,6 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
-from cmk.checkengine.discovery import DiscoverySettingFlags
-
 from cmk.gui.type_defs import (
     BuiltinIconVisibility,
     CustomHostAttrSpec,
@@ -347,13 +345,11 @@ class CREConfig:
         default_factory=lambda: {
             "mode": (
                 "custom",
-                DiscoverySettingFlags(
-                    add_new_services=False,
-                    remove_vanished_services=False,
-                    update_changed_service_labels=False,
-                    update_changed_service_parameters=False,
-                    update_host_labels=True,
-                ),
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
             ),
             "selection": (True, False, False, False),
             "performance": (True, 10),

@@ -17,8 +17,9 @@ from werkzeug.test import create_environ
 from tests.unit.cmk.gui.users import create_and_destroy_user
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.user import UserId
 
 from cmk.gui import auth, http, login
 from cmk.gui.config import load_config

@@ -21,11 +21,11 @@ import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import locked
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagID
-from cmk.utils.user import UserId
 
 import cmk.gui.visuals
 from cmk.gui import sites

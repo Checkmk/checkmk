@@ -10,8 +10,9 @@ import string
 from collections.abc import Iterator
 from datetime import datetime
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 from cmk.gui import config
 from cmk.gui.session import SuperUserContext

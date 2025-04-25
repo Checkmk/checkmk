@@ -7,7 +7,7 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header

@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username

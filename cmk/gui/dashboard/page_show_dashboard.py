@@ -15,9 +15,9 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb

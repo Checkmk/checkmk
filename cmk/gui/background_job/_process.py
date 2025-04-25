@@ -24,11 +24,11 @@ from setproctitle import setthreadtitle
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate, MKTimeout
+from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
-from cmk.utils.user import UserId
 
 from cmk.gui import log
 from cmk.gui.crash_handler import create_gui_crash_report

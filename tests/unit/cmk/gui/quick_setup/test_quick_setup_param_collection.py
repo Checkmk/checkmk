@@ -5,10 +5,10 @@
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import (

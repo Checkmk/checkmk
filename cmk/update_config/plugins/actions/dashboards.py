@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from logging import Logger
 from typing import cast, override
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.dashboard import get_all_dashboards

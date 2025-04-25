@@ -26,7 +26,7 @@ from tests.testlib.unit.rest_api_client import (
     Response,
 )
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.type_defs import SessionInfo
 

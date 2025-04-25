@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.structured_data import SDKey, SDPath
-from cmk.utils.user import UserId
 
 from cmk.gui import inventory
 from cmk.gui.data_source import data_source_registry

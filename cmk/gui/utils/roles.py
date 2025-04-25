@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Final, Literal
 
 from cmk.ccc import store
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui import permissions
 from cmk.gui.config import active_config

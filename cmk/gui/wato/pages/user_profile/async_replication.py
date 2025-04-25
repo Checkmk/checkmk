@@ -11,8 +11,7 @@ from livestatus import SiteConfiguration
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb

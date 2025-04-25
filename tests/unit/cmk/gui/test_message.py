@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.message import _parse_message, Message, MessageText, MessageV0
 

@@ -11,8 +11,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
-from cmk.utils.user import UserId
 
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.http import request

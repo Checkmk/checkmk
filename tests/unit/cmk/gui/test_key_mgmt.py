@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.site import SiteId
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import key_mgmt
 from cmk.gui.type_defs import Key

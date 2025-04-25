@@ -8,9 +8,10 @@ from typing import Any, NamedTuple
 
 from livestatus import LocalConnection
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.user import UserId
 
 _ContactgroupName = str
 _HostGroupName = str

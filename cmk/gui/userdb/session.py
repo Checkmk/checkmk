@@ -21,9 +21,9 @@ from dataclasses import asdict
 from datetime import datetime
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 from cmk.utils.local_secrets import AuthenticationSecret
-from cmk.utils.user import UserId
 
 from cmk.gui import utils
 from cmk.gui.config import active_config

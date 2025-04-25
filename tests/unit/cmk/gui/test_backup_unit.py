@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 from cmk.gui.backup.pages import ModeBackupEditKey
 from cmk.gui.logged_in import user

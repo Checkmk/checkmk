@@ -14,6 +14,7 @@ from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
@@ -22,7 +23,6 @@ from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.user import UserId
 
 import cmk.gui.utils
 from cmk.gui.config import active_config

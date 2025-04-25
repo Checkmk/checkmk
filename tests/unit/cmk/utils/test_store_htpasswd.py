@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.utils.htpasswd import Entries, Htpasswd
 

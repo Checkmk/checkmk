@@ -21,7 +21,7 @@ from tests.unit.cmk.web_test_app import (
     WebTestAppForCMK,
 )
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import login
 

@@ -6,7 +6,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (

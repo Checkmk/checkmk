@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import CheckCredentialsResult, htpasswd

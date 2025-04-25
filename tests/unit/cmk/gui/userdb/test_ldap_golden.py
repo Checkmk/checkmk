@@ -15,7 +15,7 @@ import ldap  # type: ignore[import-untyped]
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig

@@ -15,9 +15,9 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.user import UserId
 
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit

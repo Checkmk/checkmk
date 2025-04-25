@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Generic, Literal, TypedDict, TypeVar
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.type_defs import Users, UserSpec
 

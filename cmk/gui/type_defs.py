@@ -15,13 +15,13 @@ from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, Ty
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.utils.structured_data import SDPath
-from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString

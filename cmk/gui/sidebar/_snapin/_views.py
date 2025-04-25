@@ -7,7 +7,7 @@
 import pprint
 from collections.abc import Callable
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import pagetypes
 from cmk.gui.config import active_config

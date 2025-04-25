@@ -24,11 +24,11 @@ from cmk.ccc.store import (
     save_text_to_file,
     save_to_mk_file,
 )
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
-from cmk.utils.user import UserId
 
 import cmk.gui.pages
 from cmk.gui import hooks, utils

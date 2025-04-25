@@ -6,7 +6,7 @@ import json
 import time
 from typing import Any
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import bi as bi
 from cmk.gui.bi import bi_config_aggregation_function_registry

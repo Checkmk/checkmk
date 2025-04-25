@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.log.security_event import SecurityEvent
-from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import AuthType
 

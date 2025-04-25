@@ -16,9 +16,9 @@ from cryptography.hazmat.primitives.serialization import Encoding, load_pem_priv
 from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.log.security_event import SecurityEvent
-from cmk.utils.user import UserId
 
 from cmk.crypto.certificate import (
     Certificate,

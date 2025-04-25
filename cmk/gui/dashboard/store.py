@@ -8,9 +8,9 @@ from typing import Any
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config

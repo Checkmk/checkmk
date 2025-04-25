@@ -6,10 +6,11 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, cast, Final, get_args, Literal
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.notify_types import HostEventType, ServiceEventType
 from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.converter import Tuple

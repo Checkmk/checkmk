@@ -7,8 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc import store
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.crypto.password_hashing import PasswordHash
 

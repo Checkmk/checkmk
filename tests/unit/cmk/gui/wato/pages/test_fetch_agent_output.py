@@ -12,11 +12,11 @@ from pytest_mock import MockerFixture
 from tests.testlib.common.repo import repo_path
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.user import UserId
 
 from cmk.automations.results import GetAgentOutputResult
 

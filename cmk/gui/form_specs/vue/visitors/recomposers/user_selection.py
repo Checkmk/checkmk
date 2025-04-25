@@ -5,8 +5,7 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import (

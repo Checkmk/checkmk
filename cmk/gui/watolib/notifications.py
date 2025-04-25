@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any, cast, NotRequired, TypedDict
 
 from cmk.ccc import store
+from cmk.ccc.user import UserId
 
 from cmk.utils.notify_types import (
     EventRule,
@@ -44,7 +45,6 @@ from cmk.utils.notify_types import (
     NotifyPlugin,
     PluginNameWithParameters,
 )
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.i18n import _

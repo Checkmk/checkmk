@@ -24,6 +24,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -33,7 +34,6 @@ from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.regex import regex, REGEX_ID
 from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
-from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD

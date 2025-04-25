@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from functools import partial
 from typing import override
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response

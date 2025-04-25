@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 from uuid import uuid4
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric

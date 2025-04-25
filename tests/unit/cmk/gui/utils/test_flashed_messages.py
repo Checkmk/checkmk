@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import login
 from cmk.gui.session import session

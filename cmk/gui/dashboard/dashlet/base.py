@@ -9,8 +9,9 @@ import urllib.parse
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids

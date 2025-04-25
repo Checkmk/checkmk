@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options

@@ -110,6 +110,14 @@ py_library(
 )
 
 py_library(
+    name = "user",
+    srcs = ["cmk/ccc/user.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
     name = "version",
     srcs = ["cmk/ccc/version.py"],
     imports = ["."],

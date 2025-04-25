@@ -16,10 +16,10 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Edition, edition, Version
 
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 from cmk.gui import hooks, permissions, site_config
 from cmk.gui.config import active_config

@@ -35,10 +35,10 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 import cmk.gui.pages
 from cmk.gui import sites, userdb

@@ -7,8 +7,7 @@ from collections.abc import Generator
 import pytest
 
 from cmk.ccc.site import SiteId
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.type_defs import UserObject, UserSpec

@@ -17,10 +17,10 @@ from urllib.parse import quote_plus
 import livestatus
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.user import UserId
 
 from cmk.gui import log, visuals
 from cmk.gui.config import active_config, Config

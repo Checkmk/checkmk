@@ -15,10 +15,10 @@ from tests.unit.cmk.gui.users import create_and_destroy_user
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.user import UserId
 
 from cmk.gui import permissions
 from cmk.gui.config import (

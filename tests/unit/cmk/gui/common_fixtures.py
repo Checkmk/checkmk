@@ -16,8 +16,9 @@ from tests.unit.cmk.web_test_app import (
     WebTestAppForCMK,
 )
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.log
-from cmk.utils.user import UserId
 
 import cmk.gui.config as config_module
 import cmk.gui.watolib.password_store

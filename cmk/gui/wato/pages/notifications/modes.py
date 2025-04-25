@@ -20,6 +20,7 @@ from livestatus import LivestatusResponse
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -38,7 +39,6 @@ from cmk.utils.notify_types import (
     NotifyPluginInfo,
 )
 from cmk.utils.statename import host_state_name, service_state_name
-from cmk.utils.user import UserId
 
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log

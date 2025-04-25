@@ -5,7 +5,7 @@
 
 from dataclasses import asdict
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor

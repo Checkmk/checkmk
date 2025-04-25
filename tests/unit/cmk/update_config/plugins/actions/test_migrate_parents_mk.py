@@ -11,10 +11,10 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.user import UserId
 
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 

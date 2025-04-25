@@ -14,11 +14,11 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.store import save_object_to_file
+from cmk.ccc.user import UserId
 
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.escaping import escape
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids

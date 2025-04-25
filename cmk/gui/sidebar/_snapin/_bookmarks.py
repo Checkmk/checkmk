@@ -10,8 +10,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Self, TypedDict
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.urls import is_allowed_url
-from cmk.utils.user import UserId
 
 from cmk.gui import pagetypes
 from cmk.gui.exceptions import MKUserError

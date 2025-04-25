@@ -12,12 +12,12 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.user import UserId
 
 from cmk.gui import hooks, site_config, userdb
 from cmk.gui.config import active_config

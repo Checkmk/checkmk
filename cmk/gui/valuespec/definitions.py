@@ -61,6 +61,7 @@ from dateutil.tz import tzlocal
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
 
 import cmk.utils.log
@@ -72,7 +73,6 @@ from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
-from cmk.utils.user import UserId
 
 from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config

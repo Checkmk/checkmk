@@ -9,10 +9,10 @@ from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 import cmk.utils
 from cmk.utils.setup_search_index import request_index_update
-from cmk.utils.user import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.git

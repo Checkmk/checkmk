@@ -6,7 +6,7 @@ import base64
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor

@@ -11,10 +11,10 @@ from typing import Any, Literal, TypeGuard, TypeVar
 from livestatus import OnlySites
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name
-from cmk.utils.user import UserId
 
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig

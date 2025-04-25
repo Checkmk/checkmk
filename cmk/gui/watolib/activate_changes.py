@@ -44,6 +44,7 @@ from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.hostaddress import HostName
@@ -51,7 +52,6 @@ from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.user import UserId
 from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

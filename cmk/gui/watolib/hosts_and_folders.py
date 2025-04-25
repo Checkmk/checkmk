@@ -27,6 +27,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 
 import cmk.utils.paths
@@ -53,7 +54,6 @@ from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult
 

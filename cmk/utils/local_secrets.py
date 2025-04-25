@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import assert_never
 
 from cmk.ccc import store
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import LocalSecret, Secret

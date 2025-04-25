@@ -14,10 +14,10 @@ from flask import Flask
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 from cmk.utils.local_secrets import DistributedSetupSecret
-from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 

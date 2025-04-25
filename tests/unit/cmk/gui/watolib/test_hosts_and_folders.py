@@ -24,10 +24,10 @@ from pytest import MonkeyPatch
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config

@@ -9,10 +9,10 @@ import shutil
 import time
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 import cmk.utils.resulttype as result
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
-from cmk.utils.user import UserId
 
 from cmk.gui import log
 from cmk.gui.http import request

@@ -13,9 +13,9 @@ from getpass import getpass
 from pathlib import Path
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.user import UserId
 
 from cmk.utils.paths import htpasswd_file
-from cmk.utils.user import UserId
 
 from cmk.gui.utils.htpasswd import Htpasswd
 

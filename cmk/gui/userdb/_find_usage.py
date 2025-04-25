@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.notify_types import EventRule
-from cmk.utils.user import UserId
 
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request

@@ -17,9 +17,9 @@ from flask.sessions import SessionInterface, SessionMixin
 
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.user import UserId
 
 from cmk.gui import config, userdb
 from cmk.gui.auth import (

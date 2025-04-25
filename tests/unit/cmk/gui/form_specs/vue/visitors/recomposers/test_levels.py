@@ -7,7 +7,7 @@ from typing import Any, Literal, TypeVar
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,

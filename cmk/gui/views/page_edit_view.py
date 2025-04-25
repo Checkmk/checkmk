@@ -13,9 +13,9 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils.structured_data import SDPath
-from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.config import active_config

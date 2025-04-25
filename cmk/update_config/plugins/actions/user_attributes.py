@@ -7,8 +7,9 @@ from datetime import datetime
 from logging import Logger
 from typing import override
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.local_secrets import AutomationUserSecret
-from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb import load_users, save_users

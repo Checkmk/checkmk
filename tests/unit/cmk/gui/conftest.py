@@ -42,10 +42,11 @@ from tests.unit.cmk.web_test_app import (
     WebTestAppRequestHandler,
 )
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 

@@ -20,10 +20,10 @@ from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 import cmk.utils
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

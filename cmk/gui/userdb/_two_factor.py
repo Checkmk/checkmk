@@ -5,7 +5,7 @@
 
 import ast
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.type_defs import TwoFactorCredentials
 

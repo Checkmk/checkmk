@@ -14,12 +14,12 @@ import pytest
 import time_machine
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.utils.structured_data import deserialize_tree
-from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.config import active_config

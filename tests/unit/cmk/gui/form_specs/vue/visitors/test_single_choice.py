@@ -6,8 +6,7 @@
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, VisitorOptions

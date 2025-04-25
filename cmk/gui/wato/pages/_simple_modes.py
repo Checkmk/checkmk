@@ -18,9 +18,9 @@ from collections.abc import Mapping
 from typing import Any, cast, Generic, TypeVar
 
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.urls import is_allowed_url
-from cmk.utils.user import UserId
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import forms

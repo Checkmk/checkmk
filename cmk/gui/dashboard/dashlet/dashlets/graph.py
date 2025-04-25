@@ -12,10 +12,10 @@ import livestatus
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize

@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, NamedTuple, TypedDict
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 import cmk.gui.watolib.git
 from cmk.gui.utils import escaping

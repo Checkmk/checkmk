@@ -33,12 +33,12 @@ from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like he
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 

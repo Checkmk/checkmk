@@ -17,9 +17,9 @@ from pytest import MonkeyPatch
 from tests.testlib.common.repo import is_managed_repo
 
 import cmk.ccc.version
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # pylint: disable-unused-import

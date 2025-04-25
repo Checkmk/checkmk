@@ -16,11 +16,11 @@ from typing import Literal, NamedTuple, override, TypeGuard
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.cron import CronJob, CronJobRegistry

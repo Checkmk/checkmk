@@ -20,9 +20,9 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.ccc import version
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config

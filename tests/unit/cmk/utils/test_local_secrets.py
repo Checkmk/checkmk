@@ -5,8 +5,9 @@
 
 import pytest
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.local_secrets import AutomationUserSecret
-from cmk.utils.user import UserId
 
 
 def test_automation_user_secret(patch_omd_site: None) -> None:

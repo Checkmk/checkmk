@@ -16,10 +16,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.paths
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config

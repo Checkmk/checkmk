@@ -6,7 +6,7 @@
 from logging import Logger
 from typing import Generic, override, Protocol, TypeVar
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.pagetypes import (

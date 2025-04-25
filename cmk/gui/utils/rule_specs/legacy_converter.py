@@ -11,11 +11,11 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Literal, Self, TypeVar
 
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.user import UserId
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups

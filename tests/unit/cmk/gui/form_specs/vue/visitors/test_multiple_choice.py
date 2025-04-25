@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.user import UserId
+from cmk.ccc.user import UserId
 
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import (

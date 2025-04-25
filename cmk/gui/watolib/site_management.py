@@ -29,9 +29,9 @@ from livestatus import (
 
 from cmk.ccc import version
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.customer import customer_api

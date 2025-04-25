@@ -26,12 +26,12 @@ from livestatus import (
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.paths import omd_root
-from cmk.utils.user import UserId
 
 import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log

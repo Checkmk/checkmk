@@ -10,10 +10,10 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator
 from typing import cast, Literal, overload
 
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths, render
-from cmk.utils.user import UserId
 
 from cmk.gui import background_job, forms, gui_background_job, userdb
 from cmk.gui.background_job import JobTarget

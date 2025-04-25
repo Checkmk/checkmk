@@ -16,11 +16,11 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Version
 
 from cmk.utils import paths
 from cmk.utils.html import replace_state_markers
-from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 

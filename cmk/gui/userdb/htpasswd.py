@@ -5,8 +5,9 @@
 
 from pathlib import Path
 
+from cmk.ccc.user import UserId
+
 import cmk.utils.paths
-from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

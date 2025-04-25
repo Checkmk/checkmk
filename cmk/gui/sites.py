@@ -24,13 +24,13 @@ from livestatus import (
 )
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g

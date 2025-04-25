@@ -12,13 +12,13 @@ from urllib.parse import unquote
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site, url_prefix
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.urls import is_allowed_url
-from cmk.utils.user import UserId
 
 import cmk.gui.mobile
 from cmk.gui import userdb

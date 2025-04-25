@@ -15,11 +15,11 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 import cmk.utils.paths
 from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 

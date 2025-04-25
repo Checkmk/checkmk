@@ -29,10 +29,10 @@ from fido2.webauthn import (
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.user import UserId
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb

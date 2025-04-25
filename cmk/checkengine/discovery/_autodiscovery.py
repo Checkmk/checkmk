@@ -16,7 +16,7 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -222,7 +222,17 @@ def automation_discovery(
                 )
                 return results[host_name]
         else:
-            host_labels = QualifiedDiscovery.empty()
+            unchanged_labels = (
+                merge_cluster_labels(
+                    [DiscoveredHostLabelsStore(node).load() for node in cluster_nodes]
+                )
+                if is_cluster
+                else DiscoveredHostLabelsStore(host_name).load()
+            )
+            host_labels = QualifiedDiscovery(
+                preexisting=unchanged_labels,
+                current=unchanged_labels,
+            )
 
         # Compute current state of new and existing checks
         services_by_host_name = get_host_services_by_host_name(

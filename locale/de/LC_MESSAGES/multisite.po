@@ -42787,6 +42787,9 @@ msgstr ""
 "Notieren Sie sich die generierte Zugangsschlüssel-ID und den geheimen "
 "Zugangsschlüssel."
 
+msgid "Note that <tt>mtr</tt> must be installed on the monitored system."
+msgstr ""
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."

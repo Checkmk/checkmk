@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-from .constants import DebStep, OS, PkgStep, RpmStep, SolStep, WindowsConfigContent
+from ._constants import DebStep, OS, PkgStep, RpmStep, SolStep, WindowsConfigContent
 
 
 def _validate_type(

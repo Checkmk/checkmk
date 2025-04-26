@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
-from .function_types import (
+from cmk.bakery.v1 import (
     BakeryPlugin,
     create_bakery_plugin,
     FilesFunction,

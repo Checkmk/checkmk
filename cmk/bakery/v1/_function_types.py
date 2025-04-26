@@ -9,7 +9,7 @@ import string
 from collections.abc import Callable, Iterator, Sequence
 from typing import Final, NamedTuple, Self
 
-from .artifact_types import (
+from ._artifact_types import (
     Plugin,
     PluginConfig,
     Scriptlet,

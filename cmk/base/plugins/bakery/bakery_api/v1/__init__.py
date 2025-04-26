@@ -8,22 +8,24 @@ import shlex
 # For an explanation of what is what see comments in __all__definition at the end
 from cmk.utils import password_store
 
-from cmk.base.api.bakery.artifact_types import (
+from cmk.bakery.v1 import (
+    DebStep,
+    FileGenerator,
+    OS,
     Plugin,
     PluginConfig,
+    RpmStep,
     Scriptlet,
+    ScriptletGenerator,
+    SolStep,
     SystemBinary,
     SystemConfig,
+    WindowsConfigContent,
     WindowsConfigEntry,
+    WindowsConfigGenerator,
     WindowsConfigItems,
     WindowsGlobalConfigEntry,
     WindowsSystemConfigEntry,
-)
-from cmk.base.api.bakery.constants import DebStep, OS, RpmStep, SolStep, WindowsConfigContent
-from cmk.base.api.bakery.function_types import (
-    FileGenerator,
-    ScriptletGenerator,
-    WindowsConfigGenerator,
 )
 
 from . import register

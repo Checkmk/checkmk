@@ -653,10 +653,42 @@ _COMPONENTS = (
         Component("tests.integration.cmk.cee.robotmk"),
         _allow_default_plus_component_under_test,
     ),
+    (Component("cmk.bakery"), _allow()),  # only allow itself, this is the future :-)
+    (
+        Component("cmk.base.api.bakery"),
+        _allow(
+            "cmk.bakery",
+            "cmk.ccc",
+            "cmk.utils",
+        ),
+    ),
+    (
+        Component("cmk.base.cee.bakery"),
+        _allow(
+            "cmk.bakery",
+            "cmk.base.api.bakery",
+            "cmk.base.plugins.bakery.bakery_api",
+            "cmk.base.cee.cap",
+            "cmk.base.cee.plugins.bakery.bakery_api",
+            "cmk.crypto.certificate",
+            "cmk.cee.robotmk.bakery",
+            "cmk.ccc",
+            "cmk.cee.bakery",
+            "cmk.utils",
+        ),
+    ),
     (Component("cmk.base.check_legacy_includes"), _is_allowed_for_legacy_checks),
     (Component("cmk.base.legacy_checks"), _is_allowed_for_legacy_checks),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
+    (
+        Component("cmk.base.plugins.bakery.bakery_api"),
+        _allow(
+            "cmk.bakery",
+            "cmk.base.api.bakery",
+            "cmk.utils",
+        ),
+    ),
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
     (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),

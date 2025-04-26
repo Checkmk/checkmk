@@ -766,6 +766,11 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_discovery_status(self, hostname: str) -> str:
         job_status_response = self.get_discovery_job_status(hostname)
+
+        if job_status_response["extensions"]["state"] == "exception":
+            progress_log = job_status_response["extensions"]["logs"]["progress"]
+            raise RuntimeError(f"Job failed with the following output:\n{'\n'.join(progress_log)}")
+
         status: str = job_status_response["extensions"]["state"]
         return status
 
@@ -782,10 +787,11 @@ class ServiceDiscoveryAPI(BaseAPI):
     ) -> None:
         with self.session.wait_for_completion(timeout, "get", "discover_services"):
             self.run_discovery(hostname, mode)
-            discovery_status = self.get_discovery_status(hostname)
-            assert (
-                discovery_status == "finished"
-            ), f"Unexpected service discovery status: {discovery_status}"
+
+        discovery_status = self.get_discovery_status(hostname)
+        assert (
+            discovery_status == "finished"
+        ), f"Unexpected service discovery status: {discovery_status}"
 
     def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
         response = self.session.get(f"/objects/service_discovery/{hostname}")

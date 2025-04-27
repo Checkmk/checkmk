@@ -33,6 +33,7 @@ from cmk.update_config.https.conflict_options import (
     CantConstructURL,
     CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
+    CantIgnoreCertificateValidation,
     CantPostData,
     Config,
     ConflictType,
@@ -46,7 +47,10 @@ from cmk.update_config.https.conflict_options import (
 from cmk.update_config.https.conflicts import _migrate_expect_response, Conflict, detect_conflicts
 from cmk.update_config.https.migrate import migrate
 
-KEEP_CONFIGURATION = Config(v2_checks_certificates=V2ChecksCertificates.keep)
+KEEP_CONFIGURATION = Config(
+    v2_checks_certificates=V2ChecksCertificates.keep,
+    cant_ignore_certificate_validation=CantIgnoreCertificateValidation.keep,
+)
 
 HOST_1 = {"address": ("direct", "[::1]"), "virthost": "[::1]"}
 
@@ -1038,7 +1042,10 @@ def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) 
         ),
         (
             EXAMPLE_75,
-            Config(cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore),
+            Config(
+                cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore,
+                cant_ignore_certificate_validation=CantIgnoreCertificateValidation.keep,
+            ),
         ),
         (
             EXAMPLE_89,
@@ -1930,4 +1937,7 @@ def test_detect_ssl_default_conflict() -> None:
     assert detect_conflicts(Config(), EXAMPLE_79) == Conflict(
         type_=ConflictType.v2_checks_certificates,
         mode_fields=["ssl"],
+    )
+    assert detect_conflicts(Config(), EXAMPLE_75) == Conflict(
+        type_=ConflictType.cant_ignore_certificate_validation,
     )

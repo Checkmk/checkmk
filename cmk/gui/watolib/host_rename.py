@@ -73,6 +73,9 @@ def perform_rename_hosts(
     def update_interface(message: str) -> None:
         job_interface.send_progress_update(message)
 
+    pprint_value = active_config.wato_pprint_config
+    use_git = active_config.wato_use_git
+
     actions: list[str] = []
 
     # 1. Fix Setup configuration itself ----------------
@@ -102,7 +105,7 @@ def perform_rename_hosts(
             update_interface(_("Renaming host(s) in parents..."))
             this_host_actions.extend(_rename_parents(oldname, newname))
             update_interface(_("Renaming host(s) in rule sets..."))
-            this_host_actions.extend(_rename_host_in_rulesets(oldname, newname))
+            this_host_actions.extend(_rename_host_in_rulesets(oldname, newname, use_git=use_git))
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
                 update_interface(_("Renaming host(s) in %s...") % hook.title)
@@ -117,13 +120,13 @@ def perform_rename_hosts(
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
     update_interface(_("This might take some time and involves a core restart..."))
     renamings_by_site = group_renamings_by_site(successful_renamings)
-    action_counts = _rename_hosts_in_check_mk(renamings_by_site)
+    action_counts = _rename_hosts_in_check_mk(renamings_by_site, use_git=use_git)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
     update_interface(_("Renaming host(s) in notification rules..."))
     for folder, oldname, newname in successful_renamings:
-        actions += _rename_host_in_event_rules(oldname, newname)
+        actions += _rename_host_in_event_rules(oldname, newname, pprint_value=pprint_value)
         actions += _rename_host_in_multisite(oldname, newname)
 
     # 4. Trigger updates in decoupled (e.g. edition specific) features
@@ -190,7 +193,7 @@ def _rename_host_in_parents(
     return ["parents"] * len(parents), folder_parent_renamed
 
 
-def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
+def _rename_host_in_rulesets(oldname: HostName, newname: HostName, *, use_git: bool) -> list[str]:
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
 
@@ -208,7 +211,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                         action="edit-rule",
                         message=f'Renamed host condition from "{oldname}" to "{newname}"',
                         user_id=user.id,
-                        use_git=active_config.wato_use_git,
+                        use_git=use_git,
                         diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )
@@ -221,7 +224,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                 user_id=user.id,
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
-                use_git=active_config.wato_use_git,
+                use_git=use_git,
             )
             rulesets.save_folder()
 
@@ -242,6 +245,8 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
 
 def _rename_hosts_in_check_mk(
     renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
+    *,
+    use_git: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
     for site_id, name_pairs in renamings_by_site.items():
@@ -258,7 +263,7 @@ def _rename_hosts_in_check_mk(
             sites=[site_id],
             need_restart=False,
             prevent_discard_changes=True,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
 
         new_counts = rename_hosts(
@@ -270,7 +275,12 @@ def _rename_hosts_in_check_mk(
     return action_counts
 
 
-def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[str]:
+def _rename_host_in_event_rules(
+    oldname: HostName,
+    newname: HostName,
+    *,
+    pprint_value: bool,
+) -> list[str]:
     actions = []
 
     users = userdb.load_users(lock=True)
@@ -284,7 +294,7 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
-        NotificationRuleConfigFile().save(nrules, pprint_value=active_config.wato_pprint_config)
+        NotificationRuleConfigFile().save(nrules, pprint_value)
 
     if some_user_changed:
         userdb.save_users(users, datetime.now())

@@ -28,7 +28,7 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
     the current OMD call terminate.
     """
 
-    processes = _site_user_processes(username, exclude_current_and_parents=True)
+    processes = _site_user_processes(username)
     if not processes:
         return
 
@@ -67,8 +67,8 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
         ok()
 
 
-def kill_site_user_processes(username: str, exclude_current_and_parents: bool = False) -> None:
-    processes = _site_user_processes(username, exclude_current_and_parents)
+def kill_site_user_processes(username: str) -> None:
+    processes = _site_user_processes(username)
     tries = 5
     while tries > 0 and processes:
         for process in processes[:]:
@@ -112,9 +112,9 @@ def _get_current_and_parent_processes() -> list[psutil.Process]:
     return processes
 
 
-def _site_user_processes(username: str, exclude_current_and_parents: bool) -> list[psutil.Process]:
+def _site_user_processes(username: str) -> list[psutil.Process]:
     """Return list of all running site user processes (that are not excluded)"""
-    exclude = set(_get_current_and_parent_processes()) if exclude_current_and_parents else set()
+    exclude = set(_get_current_and_parent_processes())
     processes_of_site_user = set()
     for process in psutil.process_iter():
         try:

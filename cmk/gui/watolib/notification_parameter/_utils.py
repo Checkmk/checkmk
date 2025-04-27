@@ -15,6 +15,7 @@ from cmk.utils.notify_types import (
     NotificationParameterMethod,
 )
 
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
@@ -82,7 +83,7 @@ def save_notification_parameter(
     config_file = NotificationParameterConfigFile()
     notification_parameter = config_file.load_for_modification()
     notification_parameter.setdefault(parameter_method, {})[parameter_id] = item
-    config_file.save(notification_parameter)
+    config_file.save(notification_parameter, pprint_value=active_config.wato_pprint_config)
 
     return NotificationParameterDescription(
         ident=parameter_id, description=item["general"]["description"]

@@ -284,7 +284,7 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
-        NotificationRuleConfigFile().save(nrules)
+        NotificationRuleConfigFile().save(nrules, pprint_value=active_config.wato_pprint_config)
 
     if some_user_changed:
         userdb.save_users(users, datetime.now())

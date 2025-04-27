@@ -120,7 +120,7 @@ class ModeRoles(WatoMode):
 
         if request.var("_delete"):
             role_id = RoleID(request.get_ascii_input_mandatory("_delete"))
-            userroles.delete_role(role_id)
+            userroles.delete_role(role_id, pprint_value=active_config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-roles",
                 text=_("Deleted role '%s'") % role_id,
@@ -131,7 +131,7 @@ class ModeRoles(WatoMode):
 
         elif request.var("_clone"):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
-            userroles.clone_role(role_id)
+            userroles.clone_role(role_id, pprint_value=active_config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-roles",
                 text=_("Created new role '%s'") % role_id,
@@ -269,7 +269,12 @@ class ModeRoleTwoFactor(WatoMode):
 
         self._role.two_factor = True
 
-        userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=self._role_id)
+        userroles.update_role(
+            role=self._role,
+            old_roleid=self._role_id,
+            new_roleid=self._role_id,
+            pprint_value=active_config.wato_pprint_config,
+        )
         userroles.logout_users_with_role(self._role_id)
         _changes.add_change(
             action_name="edit-roles",
@@ -354,7 +359,12 @@ class ModeEditRole(WatoMode):
             self._role.two_factor = bool(html.get_checkbox("two_factor"))
 
         userroles.update_permissions(self._role, request.itervars(prefix="perm_"))
-        userroles.update_role(role=self._role, old_roleid=self._role_id, new_roleid=RoleID(new_id))
+        userroles.update_role(
+            role=self._role,
+            old_roleid=self._role_id,
+            new_roleid=RoleID(new_id),
+            pprint_value=active_config.wato_pprint_config,
+        )
         self._role_id = RoleID(new_id)
 
         _changes.add_change(

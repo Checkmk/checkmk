@@ -26,4 +26,4 @@ class SampleConfigGeneratorABCGroups(SampleConfigGenerator):
     def generate(self) -> None:
         # A contact group for all hosts and services
         groups: AllGroupSpecs = {"contact": {GroupName("all"): self._all_group_spec()}}
-        save_group_information(groups)
+        save_group_information(groups, pprint_value=True)

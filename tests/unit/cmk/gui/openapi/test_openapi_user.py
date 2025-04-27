@@ -962,7 +962,7 @@ def _internal_attributes(user_attributes):
 def test_openapi_new_user_with_cloned_role(
     clients: ClientRegistry, monkeypatch: MonkeyPatch
 ) -> None:
-    cloned_role: UserRole = clone_role(RoleID("admin"))
+    cloned_role: UserRole = clone_role(RoleID("admin"), pprint_value=False)
     username = f"new_user_with_role_{cloned_role.name}"
     fullname = f"NewUser_{cloned_role.name}"
 

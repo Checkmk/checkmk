@@ -60,6 +60,7 @@ def _tag_test_cfg():
 @pytest.fixture()
 def test_cfg() -> Iterator[tags.TagConfig]:
     multisite_dir = Path(cmk.gui.watolib.utils.multisite_dir())
+    multisite_dir.mkdir(parents=True, exist_ok=True)
     tags_mk = multisite_dir / "tags.mk"
     hosttags_mk = multisite_dir / "hosttags.mk"
 
@@ -89,7 +90,7 @@ def test_tag_config_load(request_context: None, test_cfg: tags.TagConfig) -> Non
     assert len(test_cfg.aux_tag_list.get_tags()) == 1
 
 
-@pytest.mark.usefixtures("request_context", "test_cfg")
+@pytest.mark.usefixtures("test_cfg")
 def test_tag_config_save(mocker: MockerFixture) -> None:
     export_mock = mocker.patch.object(cmk.gui.watolib.tags, "_export_hosttags_to_php")
 
@@ -107,7 +108,7 @@ def test_tag_config_save(mocker: MockerFixture) -> None:
             }
         )
     )
-    config_file.save(cfg.get_dict_format())
+    config_file.save(cfg.get_dict_format(), pprint_value=False)
 
     export_mock.assert_called_once()
     base_config_mock.assert_called_once()

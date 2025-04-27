@@ -439,7 +439,7 @@ class RulesetCollection:
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> bool:
         RuleConfigFile(Path(folder.rules_file_path())).save_rulesets_and_unknown_rulesets(
-            rulesets, unknown_rulesets
+            rulesets, unknown_rulesets, pprint_value=active_config.wato_pprint_config
         )
 
         # check if this contains a password. If so, the password file must be updated
@@ -797,15 +797,18 @@ class Ruleset:
             self._rules[folder.path()].append(rule)
             self._rules_by_id[rule.id] = rule
 
-    def to_config(self, folder: Folder) -> str:
+    def to_config(self, folder: Folder, pprint_value: bool) -> str:
         return self.format_raw_value(
             self.name,
             (r.to_config() for r in self._rules[folder.path()]),
             self.is_optional(),
+            pprint_value=pprint_value,
         )
 
     @staticmethod
-    def format_raw_value(name: str, rule_specs: Iterable[RuleSpec], is_optional: bool) -> str:
+    def format_raw_value(
+        name: str, rule_specs: Iterable[RuleSpec], is_optional: bool, pprint_value: bool
+    ) -> str:
         content = ""
 
         if ":" in name:
@@ -825,7 +828,7 @@ class Ruleset:
         for rule_spec in rule_specs:
             # When using pprint we get a deterministic representation of the
             # data structures because it cares about sorting of the dict keys
-            if active_config.wato_use_git:
+            if pprint_value:
                 text = pprint.pformat(rule_spec)
             else:
                 text = repr(rule_spec)
@@ -1722,27 +1725,31 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         self,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+        pprint_value: bool,
     ) -> None:
-        self._save_and_validate_folder(self.folder, rulesets, unknown_rulesets)
+        self._save_and_validate_folder(self.folder, rulesets, unknown_rulesets, pprint_value)
 
-    def save(self, cfg: Mapping[RulesetName, Any]) -> None:
-        self._save_and_validate_folder(self.folder, cfg, {})
+    def save(self, cfg: Mapping[RulesetName, Any], pprint_value: bool) -> None:
+        self._save_and_validate_folder(self.folder, cfg, {}, pprint_value)
 
     @staticmethod
     def _save_and_validate_folder(
         folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+        pprint_value: bool,
     ) -> None:
         store.mkdir(folder.tree.get_root_dir())
         content = [
             *(
-                ruleset.to_config(folder)
+                ruleset.to_config(folder, pprint_value)
                 for _name, ruleset in sorted(rulesets.items())
                 if not ruleset.is_empty_in_folder(folder)
             ),
             *(
-                Ruleset.format_raw_value(varname, raw_value, False)
+                Ruleset.format_raw_value(
+                    varname, raw_value, is_optional=False, pprint_value=pprint_value
+                )
                 for varname, raw_value in sorted(unknown_rulesets.get(folder.path(), {}).items())
             ),
         ]

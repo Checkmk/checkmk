@@ -48,8 +48,7 @@ def test_update_ldap_connection_not_changed() -> None:
             "type": "ldap",
         }
     )
-    with gui_context():
-        UserConnectionConfigFile().save([connection])
+    UserConnectionConfigFile().save([connection], pprint_value=False)
 
     UpdateLDAPConnections(
         name="update_ldap_connections",
@@ -84,9 +83,8 @@ def test_update_ldap_connection_directory_type() -> None:
         "cache_livetime": 300,
         "type": "ldap",
     }
+    UserConnectionConfigFile().save([connection], pprint_value=False)  # type: ignore[list-item]
     with gui_context():
-        UserConnectionConfigFile().save([connection])  # type: ignore[list-item]
-
         UpdateLDAPConnections(
             name="update_ldap_connections",
             title="Update LDAP connections",
@@ -120,9 +118,8 @@ def test_update_ldap_connection_separate_server_and_directory_type() -> None:
         "cache_livetime": 300,
         "type": "ldap",
     }
+    UserConnectionConfigFile().save([connection], pprint_value=False)  # type: ignore[list-item]
     with gui_context():
-        UserConnectionConfigFile().save([connection])  # type: ignore[list-item]
-
         UpdateLDAPConnections(
             name="update_ldap_connections",
             title="Update LDAP connections",

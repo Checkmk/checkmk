@@ -127,7 +127,6 @@ def test_validation_on_saving_notification_params(
         save_notification_parameter(registry, "dummy_params", params)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_get_list_of_notification_parameter() -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
@@ -140,7 +139,8 @@ def test_get_list_of_notification_parameter() -> None:
                     parameter_properties={"test_param": "bar"},
                 )
             }
-        }
+        },
+        pprint_value=False,
     )
 
     # WHEN
@@ -165,7 +165,8 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
                     parameter_properties={"test_param": "bar"},
                 )
             }
-        }
+        },
+        pprint_value=False,
     )
 
     # WHEN
@@ -178,7 +179,6 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
     assert param.data["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
 
-@pytest.mark.usefixtures("request_context")
 def test_get_notification_parameter_throws_keyerror(
     registry: NotificationParameterRegistry,
 ) -> None:
@@ -204,7 +204,8 @@ def test_get_notification_parameter_doesnt_just_return_from_disk(
                     },
                 )
             }
-        }
+        },
+        pprint_value=False,
     )
 
     # WHEN

@@ -53,7 +53,7 @@ class SomeStore(WatoSimpleConfigFile[SomeSpec]):
     # def validate(self, raw: object) -> SomeSpec:
     #     return SomeSpec(**vars(raw))
 
-    def save(self, cfg: dict[str, SomeSpec]) -> None:
+    def save(self, cfg: dict[str, SomeSpec], pprint_value: bool) -> None:
         self._value = cfg[self._config_variable]
 
 

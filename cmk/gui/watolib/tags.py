@@ -20,7 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 from cmk.gui import hooks
-from cmk.gui.config import load_config
+from cmk.gui.config import active_config, load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
@@ -55,17 +55,17 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
 
         return cfg
 
-    def save(self, cfg: TagConfigSpec) -> None:
-        self._save_gui_config(cfg)
-        self._save_base_config(cfg)
+    def save(self, cfg: TagConfigSpec, pprint_value: bool) -> None:
+        self._save_gui_config(cfg, pprint_value)
+        self._save_base_config(cfg, pprint_value)
         _export_hosttags_to_php(cfg)
 
-    def _save_gui_config(self, cfg: TagConfigSpec) -> None:
-        super().save(cfg)
+    def _save_gui_config(self, cfg: TagConfigSpec, pprint_value: bool) -> None:
+        super().save(cfg, pprint_value)
 
-    def _save_base_config(self, cfg: TagConfigSpec) -> None:
+    def _save_base_config(self, cfg: TagConfigSpec, pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
+        store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg, pprint_value)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:
@@ -98,7 +98,9 @@ def update_tag_config(tag_config: TagConfig) -> None:
 
     """
     user.need_permission("wato.hosttags")
-    TagConfigFile().save(tag_config.get_dict_format())
+    TagConfigFile().save(
+        tag_config.get_dict_format(), pprint_value=active_config.wato_pprint_config
+    )
     _update_tag_dependencies()
     hooks.call("tags-changed")
 

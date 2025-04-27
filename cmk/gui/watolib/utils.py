@@ -70,10 +70,6 @@ def get_value_formatter() -> Callable[[Any], str]:
     return repr
 
 
-def format_config_value(value: Any) -> str:
-    return get_value_formatter()(value)
-
-
 def mk_repr(x: Any) -> bytes:
     return base64.b64encode(repr(x).encode())
 

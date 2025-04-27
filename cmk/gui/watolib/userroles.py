@@ -28,6 +28,7 @@ RoleID = NewType("RoleID", str)
 
 def clone_role(
     role_id: RoleID,
+    pprint_value: bool,
     new_role_id: str | None = None,
     new_alias: str | None = None,
     two_factor: bool | None = None,
@@ -55,7 +56,9 @@ def clone_role(
         permissions=role_to_clone.permissions,
     )
     all_roles[RoleID(new_role_id)] = cloned_user_role
-    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value
+    )
 
     return cloned_user_role
 
@@ -80,7 +83,7 @@ def role_exists(role_id: RoleID) -> bool:
     return False
 
 
-def delete_role(role_id: RoleID) -> None:
+def delete_role(role_id: RoleID, pprint_value: bool) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_delete: UserRole = get_role(role_id)
 
@@ -100,7 +103,9 @@ def delete_role(role_id: RoleID) -> None:
     rename_user_role(role_id, None)  # Remove from existing users
 
     del all_roles[role_id]
-    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value
+    )
 
 
 def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
@@ -160,11 +165,13 @@ def update_permissions(role: UserRole, new_permissions: Iterator[tuple[str, str]
                 pass  # Already at defaults
 
 
-def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID) -> None:
+def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID, pprint_value: bool) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     del all_roles[old_roleid]
     all_roles[new_roleid] = role
-    UserRolesConfigFile().save({role.name: role.to_dict() for role in all_roles.values()})
+    UserRolesConfigFile().save(
+        {role.name: role.to_dict() for role in all_roles.values()}, pprint_value
+    )
 
 
 def logout_users_with_role(role_id: RoleID) -> None:

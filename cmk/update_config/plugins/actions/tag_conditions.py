@@ -10,6 +10,7 @@ from typing import override
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import AuxTagList, BuiltinTagConfig, TagConfig, TagGroup, TagGroupID, TagID
 
+from cmk.gui.config import active_config
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.tags import TagConfigFile
 
@@ -28,7 +29,9 @@ class UpdateNotificationTagConditions(UpdateAction):
                 continue
             assert isinstance(host_tags, list)
             rule["match_hosttags"] = transform_host_tags(host_tags, tag_groups, aux_tag_list)
-        NotificationRuleConfigFile().save(notification_rules)
+        NotificationRuleConfigFile().save(
+            notification_rules, pprint_value=active_config.wato_pprint_config
+        )
 
 
 def get_tag_config() -> tuple[Sequence[TagGroup], AuxTagList]:

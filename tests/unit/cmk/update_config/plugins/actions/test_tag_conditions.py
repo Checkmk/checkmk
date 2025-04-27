@@ -242,10 +242,10 @@ def test_update_notification_conditions(
     notification_rule: list[EventRule],
     updated_rule: list[EventRule],
 ) -> None:
-    with gui_context():
-        NotificationRuleConfigFile().save(notification_rule)
-        TagConfigFile().save(test_tag_cfg.get_dict_format())
+    NotificationRuleConfigFile().save(notification_rule, pprint_value=False)
+    TagConfigFile().save(test_tag_cfg.get_dict_format(), pprint_value=False)
 
+    with gui_context():
         UpdateNotificationTagConditions(
             name="notification_tag_conditions",
             title="Notification host tag conditions",

@@ -37,7 +37,7 @@ def save_password(ident: str, details: Password, new_password: bool = False) -> 
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = details
-    password_store.save(entries)
+    password_store.save(entries, pprint_value=active_config.wato_pprint_config)
     _add_change(ident, change_type="new" if new_password else "edit")
 
 
@@ -45,7 +45,7 @@ def remove_password(ident: str) -> None:
     password_store = PasswordStore()
     entries = load_passwords_to_modify()
     _ = entries.pop(ident)
-    password_store.save(entries)
+    password_store.save(entries, pprint_value=active_config.wato_pprint_config)
     _add_change(ident, change_type="delete")
 
 

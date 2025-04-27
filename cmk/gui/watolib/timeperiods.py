@@ -53,8 +53,8 @@ class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
     def load_timeperiod_specs_for_modification(self) -> dict[TimeperiodName, TimeperiodSpec]:
         return {TimeperiodName(n): s for n, s in self.load_for_modification().items()}
 
-    def save_timeperiod_specs(self, timeperiods: TimeperiodSpecs) -> None:
-        self.save({_project(n): s for n, s in timeperiods.items()})
+    def save_timeperiod_specs(self, timeperiods: TimeperiodSpecs, pprint_value: bool) -> None:
+        self.save({_project(n): s for n, s in timeperiods.items()}, pprint_value)
 
 
 # basically the inverse of TimeperiodName
@@ -68,8 +68,10 @@ def load_timeperiods() -> TimeperiodSpecs:
     return add_builtin_timeperiods(TimePeriodsConfigFile().load_timeperiod_specs_for_reading())
 
 
-def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
-    TimePeriodsConfigFile().save_timeperiod_specs(remove_builtin_timeperiods(timeperiods))
+def save_timeperiods(timeperiods: TimeperiodSpecs, pprint_value: bool) -> None:
+    TimePeriodsConfigFile().save_timeperiod_specs(
+        remove_builtin_timeperiods(timeperiods), pprint_value
+    )
     cleanup_timeperiod_caches()
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
@@ -117,7 +119,7 @@ def delete_timeperiod(name: TimeperiodName) -> None:
     if usages := list(find_usages_of_timeperiod(name)):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
-    save_timeperiods(time_periods)
+    save_timeperiods(time_periods, pprint_value=active_config.wato_pprint_config)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Deleted time period %s") % name,
@@ -135,7 +137,7 @@ def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         raise TimePeriodNotFoundError()
 
     existing_timeperiods[name] = timeperiod
-    save_timeperiods(existing_timeperiods)
+    save_timeperiods(existing_timeperiods, pprint_value=active_config.wato_pprint_config)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Modified time period %s") % name,
@@ -153,7 +155,7 @@ def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         raise TimePeriodAlreadyExistsError()
 
     existing_timeperiods[name] = timeperiod
-    save_timeperiods(existing_timeperiods)
+    save_timeperiods(existing_timeperiods, pprint_value=active_config.wato_pprint_config)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Created new time period %s") % name,

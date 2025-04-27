@@ -162,7 +162,7 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
 
     # Delete group
     group = groups.pop(name)
-    save_group_information(all_groups)
+    save_group_information(all_groups, pprint_value=active_config.wato_pprint_config)
     _add_group_change(
         group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
     )
@@ -212,7 +212,7 @@ def _set_group(
     all_groups.setdefault(group_type, {})
     all_groups[group_type].setdefault(name, {})
     all_groups[group_type][name] = extra_info
-    save_group_information(all_groups)
+    save_group_information(all_groups, pprint_value=active_config.wato_pprint_config)
 
     if group_type == "contact":
         hooks.call("contactgroups-saved", all_groups)

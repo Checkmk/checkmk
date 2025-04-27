@@ -384,7 +384,9 @@ class SiteManagement:
     ) -> tuple[SiteId, SiteId]:
         broker_connections = cls.get_broker_connections()
         broker_connections[ConnectionId(save_id)] = connection
-        BrokerConnectionsConfigFile().save(broker_connections)
+        BrokerConnectionsConfigFile().save(
+            broker_connections, pprint_value=active_config.wato_pprint_config
+        )
         return connection.connectee.site_id, connection.connecter.site_id
 
     @classmethod
@@ -402,7 +404,9 @@ class SiteManagement:
 
         connection = broker_connections[connection_id]
         del broker_connections[connection_id]
-        BrokerConnectionsConfigFile().save(broker_connections)
+        BrokerConnectionsConfigFile().save(
+            broker_connections, pprint_value=active_config.wato_pprint_config
+        )
 
         return connection.connectee.site_id, connection.connecter.site_id
 
@@ -512,7 +516,7 @@ class SiteManagement:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        SitesConfigFile().save(sites)
+        SitesConfigFile().save(sites, pprint_value=active_config.wato_pprint_config)
 
         # Do not activate when just the site's global settings have
         # been edited

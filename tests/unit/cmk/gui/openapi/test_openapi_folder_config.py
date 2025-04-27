@@ -1064,6 +1064,7 @@ def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistr
                 "shared_with": [],
             },
         },
+        pprint_value=False,
     )
 
     no_force_delete_subfolder_result = clients.Folder.delete(

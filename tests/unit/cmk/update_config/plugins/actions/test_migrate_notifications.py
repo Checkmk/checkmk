@@ -89,9 +89,8 @@ def make_pw_store_user_independent(monkeypatch: MonkeyPatch) -> None:
 
 
 def migrate_parameters(rule_config: list[EventRule]) -> dict[str, NotificationParameterSpec]:
+    NotificationRuleConfigFile().save(rule_config, pprint_value=False)
     with application_and_request_context():
-        NotificationRuleConfigFile().save(rule_config)
-
         MigrateNotifications(
             name="migrate_notification_parameters",
             title="Migrate notification parameters",

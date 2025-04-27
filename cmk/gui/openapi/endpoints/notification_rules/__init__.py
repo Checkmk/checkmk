@@ -20,6 +20,7 @@ from typing import Any
 
 from cmk.utils.notify_types import NotificationRuleID
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -81,6 +82,7 @@ def _create_or_update_rule(
         all_rules[rule_from_request.rule_id] = rule_from_request
         NotificationRuleConfigFile().save(
             [rule.to_mk_file_format() for rule in all_rules.values()],
+            pprint_value=active_config.wato_pprint_config,
         )
     except BulkNotAllowedException as exc:
         raise ProblemException(
@@ -209,7 +211,9 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     if rule_id in all_rules:
         del all_rules[rule_id]
         updated_rules = [rule.to_mk_file_format() for rule in all_rules.values()]
-        NotificationRuleConfigFile().save(updated_rules)
+        NotificationRuleConfigFile().save(
+            updated_rules, pprint_value=active_config.wato_pprint_config
+        )
 
     return Response(status=204)
 

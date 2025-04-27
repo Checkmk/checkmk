@@ -10,8 +10,6 @@ from unittest.mock import patch
 import pytest
 from pytest import FixtureRequest
 
-from tests.unit.cmk.web_test_app import SetConfig
-
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -414,38 +412,37 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config(
-    monkeypatch: pytest.MonkeyPatch,
     wato_use_git: bool,
     expected_result: str,
-    set_config: SetConfig,
 ) -> None:
-    with set_config(wato_use_git=wato_use_git):
-        ruleset = rulesets.Ruleset(
-            RuleGroup.CheckgroupParameters("local"),
-            ruleset_matcher.get_tag_to_group_map(active_config.tags),
-        )
-        ruleset.replace_folder_config(
-            folder_tree().root_folder(),
-            [
-                {
-                    "id": "1",
-                    "value": "VAL",
-                    "condition": {
-                        "host_name": ["HOSTLIST"],
-                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    },
+    ruleset = rulesets.Ruleset(
+        RuleGroup.CheckgroupParameters("local"),
+        ruleset_matcher.get_tag_to_group_map(active_config.tags),
+    )
+    ruleset.replace_folder_config(
+        folder_tree().root_folder(),
+        [
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
                 },
-                {
-                    "id": "2",
-                    "value": "VAL2",
-                    "condition": {
-                        "host_name": ["HOSTLIST"],
-                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    },
+            },
+            {
+                "id": "2",
+                "value": "VAL2",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
                 },
-            ],
-        )
-        assert ruleset.to_config(folder_tree().root_folder()) == expected_result
+            },
+        ],
+    )
+    assert (
+        ruleset.to_config(folder_tree().root_folder(), pprint_value=wato_use_git) == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -475,42 +472,39 @@ checkgroup_parameters['local'] = [
 )
 def test_ruleset_to_config_sub_folder(
     with_admin_login: UserId,
-    monkeypatch: pytest.MonkeyPatch,
     wato_use_git: bool,
     expected_result: str,
-    set_config: SetConfig,
 ) -> None:
-    with set_config(wato_use_git=wato_use_git):
-        ruleset = rulesets.Ruleset(
-            RuleGroup.CheckgroupParameters("local"),
-            ruleset_matcher.get_tag_to_group_map(active_config.tags),
-        )
+    ruleset = rulesets.Ruleset(
+        RuleGroup.CheckgroupParameters("local"),
+        ruleset_matcher.get_tag_to_group_map(active_config.tags),
+    )
 
-        folder_tree().create_missing_folders("abc")
-        folder = folder_tree().folder("abc")
+    folder_tree().create_missing_folders("abc")
+    folder = folder_tree().folder("abc")
 
-        ruleset.replace_folder_config(
-            folder,
-            [
-                {
-                    "id": "1",
-                    "value": "VAL",
-                    "condition": {
-                        "host_name": ["HOSTLIST"],
-                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    },
+    ruleset.replace_folder_config(
+        folder,
+        [
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
                 },
-                {
-                    "id": "2",
-                    "value": "VAL2",
-                    "condition": {
-                        "host_name": ["HOSTLIST"],
-                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
-                    },
+            },
+            {
+                "id": "2",
+                "value": "VAL2",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
                 },
-            ],
-        )
-        assert ruleset.to_config(folder) == expected_result
+            },
+        ],
+    )
+    assert ruleset.to_config(folder, pprint_value=wato_use_git) == expected_result
 
 
 def test_rule_clone() -> None:

@@ -6,6 +6,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.userdb import LDAPUserConnectionConfig, UserConnectionConfigFile
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -25,7 +26,7 @@ class UpdateLDAPConnections(UpdateAction):
                 migrated |= self._migrate_config(connection)
 
         if migrated:
-            config_file.save(connections)
+            config_file.save(connections, pprint_value=active_config.wato_pprint_config)
 
     def _migrate_config(self, cfg: LDAPUserConnectionConfig) -> bool:
         migrated = False

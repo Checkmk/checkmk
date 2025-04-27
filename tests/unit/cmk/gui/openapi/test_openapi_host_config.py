@@ -65,7 +65,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     all_bundles.pop(bundle_id)
-    store.save(all_bundles)
+    store.save(all_bundles, pprint_value=False)
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:

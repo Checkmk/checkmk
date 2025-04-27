@@ -277,7 +277,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             user_id=user.id,
             affected_sites=self._mode_type.affected_sites(entry),
         )
-        self._store.save(entries)
+        self._store.save(entries, pprint_value=active_config.wato_pprint_config)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
@@ -753,7 +753,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries: dict[str, _T]) -> None:
-        self._store.save(entries)
+        self._store.save(entries, pprint_value=active_config.wato_pprint_config)
 
     def page(self, form_name: str = "edit") -> None:
         html.enable_help_toggle()

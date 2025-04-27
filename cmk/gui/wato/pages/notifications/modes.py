@@ -860,7 +860,9 @@ class ModeNotifications(ABCNotificationsMode):
                 self._get_notification_rules(),
                 "notification",
                 _("notification rule"),
-                NotificationRuleConfigFile().save,
+                lambda c: NotificationRuleConfigFile().save(
+                    c, pprint_value=active_config.wato_pprint_config
+                ),
             )
 
         if back_mode := request.var("back_mode"):
@@ -3164,7 +3166,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return NotificationRuleConfigFile().load_for_reading()
 
     def _save_rules(self, rules: list[EventRule]) -> None:
-        NotificationRuleConfigFile().save(rules)
+        NotificationRuleConfigFile().save(rules, pprint_value=active_config.wato_pprint_config)
 
     def _user_id(self):
         return None
@@ -3424,7 +3426,9 @@ class ABCNotificationParameterMode(WatoMode):
         self,
         parameters: NotificationParameterSpecs,
     ) -> None:
-        NotificationParameterConfigFile().save(parameters)
+        NotificationParameterConfigFile().save(
+            parameters, pprint_value=active_config.wato_pprint_config
+        )
 
     def _add_change(self, *, action_name: str, text: str) -> None:
         _changes.add_change(
@@ -3913,7 +3917,9 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 rule = deepcopy(notifications_rules[self._clone_nr])
                 rule["rule_id"] = new_notification_rule_id()
                 notifications_rules.append(rule)
-                NotificationRuleConfigFile().save(notifications_rules)
+                NotificationRuleConfigFile().save(
+                    notifications_rules, pprint_value=active_config.wato_pprint_config
+                )
                 self._edit_nr = len(notifications_rules) - 1
             except IndexError:
                 raise MKUserError(None, _("Notification rule does not exist."))

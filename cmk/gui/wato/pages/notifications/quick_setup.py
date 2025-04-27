@@ -1963,7 +1963,7 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
     notifications_rules += [
         migrate_to_event_rule(cast(NotificationQuickSetupSpec, all_stages_form_data))
     ]
-    config_file.save(notifications_rules)
+    config_file.save(notifications_rules, pprint_value=active_config.wato_pprint_config)
 
 
 def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
@@ -1975,7 +1975,7 @@ def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
                 cast(NotificationQuickSetupSpec, all_stages_form_data)
             )
             break
-    config_file.save(notification_rules)
+    config_file.save(notification_rules, pprint_value=active_config.wato_pprint_config)
 
 
 def load_notifications(object_id: str) -> ParsedFormData:

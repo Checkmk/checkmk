@@ -47,6 +47,7 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
@@ -641,7 +642,9 @@ def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> Noti
             {new_params_id: new_notification_parameter_item}
         )
 
-    NotificationParameterConfigFile().save(notification_parameters)
+    NotificationParameterConfigFile().save(
+        notification_parameters, pprint_value=active_config.wato_pprint_config
+    )
     return (notify_plugin[0], new_params_id)
 
 

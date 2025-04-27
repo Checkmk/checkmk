@@ -44,6 +44,6 @@ def test_role_file_validation(monkeypatch: MonkeyPatch) -> None:
     }
 
     roles_config_file = UserRolesConfigFile()
-    roles_config_file.save(raw)
+    roles_config_file.save(raw, pprint_value=False)
 
     roles_config_file.read_file_and_validate()

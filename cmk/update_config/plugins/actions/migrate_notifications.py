@@ -18,6 +18,7 @@ from cmk.utils.notify_types import (
 )
 from cmk.utils.paths import check_mk_config_dir, omd_root
 
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
@@ -102,10 +103,16 @@ class MigrateNotifications(UpdateAction):
             rule["notify_plugin"] = (method, parameter_id)
             updated_notification_rules.append(rule)
 
-        NotificationParameterConfigFile().save(parameters_per_method)
+        NotificationParameterConfigFile().save(
+            parameters_per_method,
+            pprint_value=active_config.wato_pprint_config,
+        )
         logger.debug("       Saved migrated notification parameters")
 
-        NotificationRuleConfigFile().save(updated_notification_rules)
+        NotificationRuleConfigFile().save(
+            updated_notification_rules,
+            pprint_value=active_config.wato_pprint_config,
+        )
         logger.debug("       Saved migrated notification rules")
 
     def _backup_notification_config(self, logger: Logger) -> None:

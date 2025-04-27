@@ -1274,26 +1274,28 @@ def update_suffixes(cfg: list[ConfigurableUserConnectionSpec]) -> None:
             LDAPUserConnector(connection)
 
 
-def request_to_delete_ldap_connection(ldap_id: str) -> None:
+def request_to_delete_ldap_connection(ldap_id: str, pprint_value: bool) -> None:
     config_file = UserConnectionConfigFile()
     all_connections = UserConnectionConfigFile().load_for_modification()
     updated_connections = [c for c in all_connections if c["id"] != ldap_id]
     update_suffixes(updated_connections)
-    config_file.save(updated_connections)
+    config_file.save(updated_connections, pprint_value)
 
 
-def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectionInterface:
+def request_to_create_ldap_connection(
+    ldap_data: APIConnection, pprint_value: bool
+) -> LDAPConnectionInterface:
     connection = LDAPConnectionInterface.from_api_request(ldap_data)
     config_file = UserConnectionConfigFile()
     all_connections = config_file.load_for_modification()
     all_connections.append(connection.to_mk_format())
     update_suffixes(all_connections)
-    config_file.save(all_connections)
+    config_file.save(all_connections, pprint_value)
     return connection
 
 
 def request_to_edit_ldap_connection(
-    ldap_id: str, ldap_data: APIConnection
+    ldap_id: str, ldap_data: APIConnection, pprint_value: bool
 ) -> LDAPConnectionInterface:
     if ldap_data["ldap_connection"]["connection_suffix"]["state"] == "enabled":
         for ldap_connection in [
@@ -1313,5 +1315,5 @@ def request_to_edit_ldap_connection(
     modified_connections = [c for c in all_connections if c["id"] != ldap_id]
     modified_connections.append(connection.to_mk_format())
     update_suffixes(modified_connections)
-    config_file.save(modified_connections)
+    config_file.save(modified_connections, pprint_value)
     return connection

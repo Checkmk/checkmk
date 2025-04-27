@@ -546,7 +546,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     all_bundles.pop(bundle_id)
-    store.save(all_bundles)
+    store.save(all_bundles, pprint_value=False)
 
     if content is None:
         os.remove(rules_mk)

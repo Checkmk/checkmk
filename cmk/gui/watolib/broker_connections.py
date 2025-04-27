@@ -16,7 +16,6 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils import paths
 
-from cmk.gui.config import active_config
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 
 
@@ -52,14 +51,14 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
             }
         )
 
-    def save(self, cfg: BrokerConnections) -> None:
+    def save(self, cfg: BrokerConnections, pprint_value: bool) -> None:
         connections_dict = {k: asdict(v) for k, v in cfg.items()}
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             str(self._config_file_path),
             self._config_variable,
             connections_dict,
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value,
         )
 
 

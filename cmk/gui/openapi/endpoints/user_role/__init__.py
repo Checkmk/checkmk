@@ -36,6 +36,7 @@ from typing import Any
 
 from marshmallow import ValidationError
 
+from cmk.gui.config import active_config
 from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -157,6 +158,7 @@ def create_userrole(params: Mapping[str, Any]) -> Response:
         new_role_id=body.get("new_role_id"),
         new_alias=body.get("new_alias"),
         two_factor=body.get("enforce_two_factor_authentication"),
+        pprint_value=active_config.wato_pprint_config,
     )
     return serve_json(serialize_user_role(cloned_user_role))
 
@@ -185,7 +187,7 @@ def delete_userrole(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     role_id = RoleID(params["role_id"])
-    userroles.delete_role(RoleID(role_id))
+    userroles.delete_role(RoleID(role_id), pprint_value=active_config.wato_pprint_config)
     return Response(status=204)
 
 
@@ -251,6 +253,7 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
         role=userrole_to_edit,
         old_roleid=RoleID(existing_roleid),
         new_roleid=RoleID(userrole_to_edit.name),
+        pprint_value=active_config.wato_pprint_config,
     )
     return serve_json(data=serialize_user_role(userrole_to_edit))
 

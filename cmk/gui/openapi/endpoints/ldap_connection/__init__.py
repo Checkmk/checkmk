@@ -22,6 +22,7 @@ Documentation: https://docs.checkmk.com/latest/en/ldap.html.
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
@@ -144,7 +145,9 @@ def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
     ldap_id = params["ldap_connection_id"]
     if (connection := request_ldap_connection(ldap_id=ldap_id)) is not None:
         require_etag(hash_of_dict(connection.api_response()))
-        request_to_delete_ldap_connection(params["ldap_connection_id"])
+        request_to_delete_ldap_connection(
+            params["ldap_connection_id"], pprint_value=active_config.wato_pprint_config
+        )
     return Response(status=204)
 
 
@@ -163,7 +166,9 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.seeall")
     user.need_permission("wato.users")
-    connection = request_to_create_ldap_connection(params["body"])
+    connection = request_to_create_ldap_connection(
+        params["body"], pprint_value=active_config.wato_pprint_config
+    )
     return response_with_etag_created_from_dict(
         serve_json(_serialize_ldap_connection(connection)),
         connection.api_response(),
@@ -194,7 +199,11 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
     ldap_data = params["body"]
     ldap_data["general_properties"]["id"] = ldap_id
     try:
-        updated_connection = request_to_edit_ldap_connection(ldap_data=ldap_data, ldap_id=ldap_id)
+        updated_connection = request_to_edit_ldap_connection(
+            ldap_data=ldap_data,
+            ldap_id=ldap_id,
+            pprint_value=active_config.wato_pprint_config,
+        )
     except MKUserError as exc:
         raise ProblemException(
             title=f"There was problem when trying to update the LDAP connection with ldap_id {ldap_id}",

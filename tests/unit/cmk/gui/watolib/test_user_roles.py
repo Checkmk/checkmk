@@ -39,17 +39,17 @@ def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch, request_contex
         )
         for roleid in default_roles.keys():
             with should_raise_a_mkusererror():
-                userroles.delete_role(roleid)
+                userroles.delete_role(roleid, pprint_value=False)
 
 
 def test_deleting_cloned_user_roles(request_context: None) -> None:
-    userroles.clone_role(RoleID("admin"))
+    userroles.clone_role(RoleID("admin"), pprint_value=False)
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (
         len(all_roles) == 5 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE else 4
     )
-    userroles.delete_role(RoleID("adminx"))
+    userroles.delete_role(RoleID("adminx"), pprint_value=False)
     roles_after_deletion: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (
         len(roles_after_deletion) == 4
@@ -62,7 +62,7 @@ def test_cloning_user_roles(request_context: None) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
 
     for roleid in default_roles.keys():
-        userroles.clone_role(roleid)
+        userroles.clone_role(roleid, pprint_value=False)
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (

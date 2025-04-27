@@ -23,6 +23,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.aux_tags.schemas import (
@@ -124,7 +125,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
             detail=str(e),
         )
 
-    update_tag_config(tag_config)
+    update_tag_config(tag_config, pprint_value=active_config.wato_pprint_config)
     return serve_json(data=_serialize_aux_tag(aux_tag))
 
 
@@ -152,7 +153,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
         help=params["body"].get("help", existing_tag.help),
     )
     tag_config.update_aux_tag(TagID(params["aux_tag_id"]), aux_tag)
-    update_tag_config(tag_config)
+    update_tag_config(tag_config, pprint_value=active_config.wato_pprint_config)
     return serve_json(data=_serialize_aux_tag(aux_tag))
 
 
@@ -180,7 +181,7 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
             detail=str(exc),
         )
 
-    update_tag_config(tag_config)
+    update_tag_config(tag_config, pprint_value=active_config.wato_pprint_config)
     return Response(status=204)
 
 

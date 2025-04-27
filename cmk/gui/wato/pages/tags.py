@@ -210,7 +210,7 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config)
+            update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed tag group %s (%s)") % (message, del_id),
@@ -276,7 +276,7 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config)
+            update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
             _changes.add_change(
                 action_name="edit-tags",
                 text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
@@ -299,7 +299,7 @@ class ModeTags(ABCTagMode):
             self._tag_config.validate_config()
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
-        update_tag_config(self._tag_config)
+        update_tag_config(self._tag_config, pprint_value=active_config.wato_pprint_config)
         self._load_effective_config()
         _changes.add_change(
             action_name="edit-tags",
@@ -706,7 +706,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
 
-        update_tag_config(changed_hosttags_config)
+        update_tag_config(changed_hosttags_config, pprint_value=active_config.wato_pprint_config)
 
         return redirect(makeuri(request, []))
 
@@ -795,7 +795,9 @@ class ModeEditTagGroup(ABCEditTagMode):
                 changed_hosttags_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(changed_hosttags_config)
+            update_tag_config(
+                changed_hosttags_config, pprint_value=active_config.wato_pprint_config
+            )
             _changes.add_change(
                 action_name="edit-hosttags",
                 text=_("Created new host tag group '%s'") % changed_tag_group.id,
@@ -825,7 +827,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message is False:
             return FinalizeRequest(code=200)
 
-        update_tag_config(changed_hosttags_config)
+        update_tag_config(changed_hosttags_config, pprint_value=active_config.wato_pprint_config)
         _changes.add_change(
             action_name="edit-hosttags",
             text=_("Edited host tag group %s (%s)") % (message, self._id),

@@ -18,20 +18,16 @@ import pty
 import pwd
 import re
 import shutil
-import signal
 import subprocess
 import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
-from contextlib import suppress
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
 from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, override
 from uuid import uuid4
-
-import psutil
 
 import omdlib
 import omdlib.backup
@@ -89,6 +85,7 @@ from omdlib.tmpfs import (
 )
 from omdlib.type_defs import CommandOptions, Config, ConfigChoiceHasError, Replacements
 from omdlib.update import ManageUpdate
+from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
     find_processes_of_user,
     group_exists,
@@ -3552,111 +3549,6 @@ def verify_directory_write_access(site: SiteContext) -> None:
             "the backup. Missing write access on the following paths:\n\n"
             "    %s" % "\n    ".join(wrong)
         )
-
-
-def terminate_site_user_processes(username: str, verbose: bool) -> None:
-    """Sends a SIGTERM to all running site processes and waits up to 5 seconds for termination
-
-    In case one or more processes are still running after the timeout, the method will make
-    the current OMD call terminate.
-    """
-
-    processes = site_user_processes(username, exclude_current_and_parents=True)
-    if not processes:
-        return
-
-    sys.stdout.write("Stopping %d remaining site processes..." % len(processes))
-
-    timeout_at = time.time() + 5
-    sent_terminate = False
-    while processes and time.time() < timeout_at:
-        for process in processes[:]:
-            try:
-                if not sent_terminate:
-                    if verbose:
-                        sys.stdout.write("%d..." % process.pid)
-                    os.kill(process.pid, signal.SIGTERM)
-                else:
-                    os.kill(process.pid, signal.SIG_DFL)
-            except OSError as e:
-                if e.errno == errno.ESRCH:  # No such process
-                    processes.remove(process)
-                else:
-                    raise
-
-        sent_terminate = True
-        time.sleep(0.1)
-
-    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
-        sys.exit(
-            "\n".join(
-                [
-                    "\nFailed to stop remaining site processes:",
-                    *remaining_processes_descriptions,
-                ]
-            )
-        )
-    else:
-        ok()
-
-
-def kill_site_user_processes(username: str, exclude_current_and_parents: bool = False) -> None:
-    processes = site_user_processes(username, exclude_current_and_parents)
-    tries = 5
-    while tries > 0 and processes:
-        for process in processes[:]:
-            try:
-                logger.log(VERBOSE, "Killing process %d...", process.pid)
-                os.kill(process.pid, signal.SIGKILL)
-            except OSError as e:
-                if e.errno == errno.ESRCH:
-                    processes.remove(process)  # No such process
-                else:
-                    raise
-        time.sleep(1)
-        tries -= 1
-
-    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
-        sys.exit(
-            "\n".join(
-                [
-                    "\nFailed to kill site processes:",
-                    *remaining_processes_descriptions,
-                ]
-            )
-        )
-
-
-def _descriptions_of_remaining_processes(
-    remaining_processes: Iterable[psutil.Process],
-) -> Generator[str]:
-    for process in remaining_processes:
-        with suppress(psutil.NoSuchProcess):
-            yield f"{process.pid}, command line: `{' '.join(process.cmdline()).strip()}`, status: {process.status()}"
-
-
-def get_current_and_parent_processes() -> list[psutil.Process]:
-    """Return list of the current process and parent process tree till pid 0"""
-    processes = []
-    process: psutil.Process | None = psutil.Process()
-    while process and process.pid != 0:
-        processes.append(process)
-        process = process.parent()
-    return processes
-
-
-def site_user_processes(username: str, exclude_current_and_parents: bool) -> list[psutil.Process]:
-    """Return list of all running site user processes (that are not excluded)"""
-    exclude = set(get_current_and_parent_processes()) if exclude_current_and_parents else set()
-    processes_of_site_user = set()
-    for process in psutil.process_iter():
-        try:
-            process_owner = process.username()
-        except psutil.NoSuchProcess:
-            continue
-        if process_owner == username:
-            processes_of_site_user.add(process)
-    return list(processes_of_site_user - exclude)
 
 
 def postprocess_restore_as_root(

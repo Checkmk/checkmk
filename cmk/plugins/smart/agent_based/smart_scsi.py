@@ -26,6 +26,16 @@ def discovery_smart_scsi_temp(
     }
     for item, disk in devices.items():
         if isinstance(disk.device, SCSIDevice) and disk.temperature is not None:
+            # On a controller temperature is set to zero, see `scsiCheckIE` in `smartmoontools`.
+            # These are not values reported by the drive, but rather values made up by `smartctl`.
+            if disk.temperature.current == 0 and disk.temperature.drive_trip == 0:
+                continue
+            if (
+                disk.temperature.current == 0
+                and disk.scsi_temperature is not None
+                and disk.scsi_temperature.drive_trip == 0
+            ):
+                continue
             yield Service(item=item)
 
 

@@ -10,6 +10,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     SCSIAll,
     SCSIDevice,
     SCSIMissingModel,
+    SCSITemperature,
     Section,
     Temperature,
 )
@@ -30,7 +31,7 @@ def test_parse_smart_scsi() -> None:
                 model_name="TOSHIBA AL13SXB60EN",
                 serial_number="XXX",
                 device=SCSIDevice(protocol="SCSI", name="/dev/da5"),
-                temperature=Temperature(current=41),
+                temperature=Temperature(current=41, drive_trip=65),
             )
         },
         failures=[],
@@ -67,6 +68,7 @@ def test_parse_smart_scsi_7_3_regression() -> None:
                 model_name="DELL PERC H740P Mini",
                 serial_number="serialxxx",
                 temperature=Temperature(current=0),
+                scsi_temperature=SCSITemperature(drive_trip=0),
             ),
         },
         failures=[],

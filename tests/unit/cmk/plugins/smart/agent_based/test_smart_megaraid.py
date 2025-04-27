@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 
 from cmk.plugins.smart.agent_based.smart_posix import (
     ATAAll,
@@ -16,6 +15,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     parse_smart_posix,
     SCSIAll,
     SCSIDevice,
+    SCSITemperature,
     Section,
     SmartctlError,
     Temperature,
@@ -263,6 +263,7 @@ SECTION_SMART_POSIX_SCAN_ARG = Section(
             model_name="DELL PERC H740P Mini",
             serial_number="0098f53cb2b061dd2c00f4f469f0a7ce",
             temperature=Temperature(current=0),
+            scsi_temperature=SCSITemperature(drive_trip=0),
         ),
     },
     failures=[
@@ -278,7 +279,6 @@ def test_parse_smart_posix_scan_arg() -> None:
     assert parse_smart_posix(SMART_POSIX_SCAN_ARG) == SECTION_SMART_POSIX_SCAN_ARG
 
 
-@pytest.mark.xfail(strict=True)
 def test_discover_temperature_scsi() -> None:
     services = list(
         discovery_smart_scsi_temp(SECTION_SMART_POSIX_ALL, SECTION_SMART_POSIX_SCAN_ARG)

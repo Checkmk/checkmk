@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
 
 class Temperature(BaseModel, frozen=True):
     current: int
+    drive_trip: int | None = None
 
 
 class SCSIDevice(BaseModel, frozen=True):
@@ -88,11 +89,18 @@ class NVMeAll(BaseModel, frozen=True):
     nvme_smart_health_information_log: NVMeHealth | None = None
 
 
+class SCSITemperature(BaseModel, frozen=True):
+    # Where this variable is found depends on the smartctl version, either under `temperature` or
+    # `scsi_temperature`.
+    drive_trip: int
+
+
 class SCSIAll(BaseModel, frozen=True):
     device: SCSIDevice
     model_name: str = Field(..., validation_alias=AliasChoices("model_name", "scsi_model_name"))
     serial_number: str
     temperature: Temperature | None = None
+    scsi_temperature: SCSITemperature | None = None
 
 
 class SCSIMissingModel(BaseModel, frozen=True):

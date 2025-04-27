@@ -17,7 +17,6 @@ import os
 import pty
 import pwd
 import re
-import shlex
 import shutil
 import signal
 import subprocess
@@ -3633,7 +3632,7 @@ def _descriptions_of_remaining_processes(
 ) -> Generator[str]:
     for process in remaining_processes:
         with suppress(psutil.NoSuchProcess):
-            yield f"{process.pid}, command line: `{shlex.join(process.cmdline())}`, status: {process.status()}"
+            yield f"{process.pid}, command line: `{' '.join(process.cmdline()).strip()}`, status: {process.status()}"
 
 
 def get_current_and_parent_processes() -> list[psutil.Process]:

@@ -50,10 +50,17 @@ def _make_bundle(
     return BundleId(bundle_id), bundle
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_create_config_bundle_empty() -> None:
+@pytest.mark.usefixtures("request_context")
+def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
-    create_config_bundle(bundle_id, bundle, CreateBundleEntities(), pprint_value=False)
+    create_config_bundle(
+        bundle_id,
+        bundle,
+        CreateBundleEntities(),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.hosts is None
@@ -61,25 +68,56 @@ def test_create_config_bundle_empty() -> None:
     assert references.passwords is None
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_create_config_bundle_duplicate_id() -> None:
+@pytest.mark.usefixtures("request_context")
+def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
-    create_config_bundle(bundle_id, bundle, CreateBundleEntities(), pprint_value=False)
+    create_config_bundle(
+        bundle_id,
+        bundle,
+        CreateBundleEntities(),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
 
     with pytest.raises(MKGeneralException, match="already exists"):
-        create_config_bundle(bundle_id, bundle, CreateBundleEntities(), pprint_value=False)
+        create_config_bundle(
+            bundle_id,
+            bundle,
+            CreateBundleEntities(),
+            user_id=with_admin_login,
+            pprint_value=False,
+            use_git=False,
+        )
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_delete_config_bundle_empty() -> None:
+@pytest.mark.usefixtures("request_context")
+def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
-    create_config_bundle(bundle_id, bundle, CreateBundleEntities(), pprint_value=False)
-    delete_config_bundle(bundle_id, pprint_value=False)
+    create_config_bundle(
+        bundle_id,
+        bundle,
+        CreateBundleEntities(),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
+    delete_config_bundle(
+        bundle_id,
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
 
 
 def test_delete_config_bundle_unknown_id() -> None:
     with pytest.raises(MKGeneralException, match="does not exist"):
-        delete_config_bundle(BundleId("unknown"), pprint_value=False)
+        delete_config_bundle(
+            BundleId("unknown"),
+            user_id=UserId("harry"),
+            pprint_value=False,
+            use_git=False,
+        )
 
 
 @pytest.fixture(
@@ -101,8 +139,8 @@ def mock_delete_host_automation(monkeypatch: pytest.MonkeyPatch) -> Iterable[Non
     yield
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login", "mock_delete_host_automation")
-def test_create_and_delete_config_bundle_hosts(other_folder: str) -> None:
+@pytest.mark.usefixtures("request_context", "mock_delete_host_automation")
+def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     tree = folder_tree()
     hosts = [
@@ -120,21 +158,34 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str) -> None:
         ),
     ]
     before_create_host_count = len(Host.all())
-    create_config_bundle(bundle_id, bundle, CreateBundleEntities(hosts=hosts), pprint_value=False)
+    create_config_bundle(
+        bundle_id,
+        bundle,
+        CreateBundleEntities(hosts=hosts),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
+
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.hosts is not None
     assert len(references.hosts) == 2
     assert len(Host.all()) - before_create_host_count == 2
 
-    delete_config_bundle(bundle_id, pprint_value=False)
+    delete_config_bundle(
+        bundle_id,
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.hosts is None
     assert len(Host.all()) == before_create_host_count, "Expected created hosts to be deleted"
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login", "mock_update_passwords_merged_file")
-def test_create_and_delete_config_bundle_passwords() -> None:
+@pytest.mark.usefixtures("request_context", "mock_update_passwords_merged_file")
+def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     passwords = [
         CreatePassword(
@@ -152,7 +203,12 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     ]
     before_create_password_count = len(load_passwords())
     create_config_bundle(
-        bundle_id, bundle, CreateBundleEntities(passwords=passwords), pprint_value=False
+        bundle_id,
+        bundle,
+        CreateBundleEntities(passwords=passwords),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -160,7 +216,12 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     assert len(references.passwords) == 2
     assert len(load_passwords()) - before_create_password_count == 2
 
-    delete_config_bundle(bundle_id, pprint_value=False)
+    delete_config_bundle(
+        bundle_id,
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
     assert len(load_passwords()) == before_create_password_count, (
@@ -168,8 +229,8 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_create_and_delete_config_bundle_rules(other_folder: str) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
     ruleset_name = "checkgroup_parameters:local"
     rules = [
@@ -201,14 +262,26 @@ def test_create_and_delete_config_bundle_rules(other_folder: str) -> None:
         )
 
     before_create_rules_count = _len_rules()
-    create_config_bundle(bundle_id, bundle, CreateBundleEntities(rules=rules), pprint_value=False)
+    create_config_bundle(
+        bundle_id,
+        bundle,
+        CreateBundleEntities(rules=rules),
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references.rules is not None
     assert len(references.rules) == 2
     assert _len_rules() - before_create_rules_count == 2
 
-    delete_config_bundle(bundle_id, pprint_value=False)
+    delete_config_bundle(
+        bundle_id,
+        user_id=with_admin_login,
+        pprint_value=False,
+        use_git=False,
+    )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
 
     assert references_after_delete.rules is None

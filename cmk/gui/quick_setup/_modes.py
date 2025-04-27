@@ -276,7 +276,12 @@ class ModeEditConfigurationBundles(WatoMode):
         else:
             raise MKGeneralException("Not implemented")
 
-        delete_config_bundle(bundle_id, pprint_value=active_config.wato_pprint_config)
+        delete_config_bundle(
+            bundle_id,
+            user_id=user.id,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
         add_change(
             action_name="delete-quick-setup",
             text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
@@ -796,7 +801,13 @@ class ModeConfigurationBundle(WatoMode):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if request.has_var("_clean_up"):
-            delete_config_bundle_objects(self._bundle_id, None)
+            delete_config_bundle_objects(
+                self._bundle_id,
+                bundle_group=None,
+                user_id=user.id,
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
             return redirect(mode_url("changelog"))
 
         if request.has_var("_save"):

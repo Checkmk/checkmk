@@ -19,13 +19,13 @@ from typing import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
@@ -224,12 +224,24 @@ def edit_config_bundle_configuration(
 
 
 def _validate_and_prepare_create_calls(
-    bundle_ident: GlobalIdent, entities: CreateBundleEntities
+    bundle_ident: GlobalIdent,
+    entities: CreateBundleEntities,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
 ) -> list[CreateFunction]:
     create_functions = []
     if entities.passwords:
         create_functions.append(
-            _prepare_create_passwords(bundle_ident, entities.passwords, load_passwords())
+            _prepare_create_passwords(
+                bundle_ident,
+                entities.passwords,
+                load_passwords(),
+                user_id=user_id,
+                pprint_value=pprint_value,
+                use_git=use_git,
+            )
         )
     if entities.hosts:
         create_functions.append(_prepare_create_hosts(bundle_ident, entities.hosts))
@@ -245,7 +257,13 @@ def _validate_and_prepare_create_calls(
 
 
 def create_config_bundle(
-    bundle_id: BundleId, bundle: ConfigBundle, entities: CreateBundleEntities, pprint_value: bool
+    bundle_id: BundleId,
+    bundle: ConfigBundle,
+    entities: CreateBundleEntities,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
 ) -> None:
     bundle_ident = GlobalIdent(
         site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
@@ -256,7 +274,13 @@ def create_config_bundle(
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" already exists.')
 
     try:
-        create_functions = _validate_and_prepare_create_calls(bundle_ident, entities)
+        create_functions = _validate_and_prepare_create_calls(
+            bundle_ident,
+            entities,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
+        )
     except Exception as e:
         raise MKGeneralException(
             f'Configuration bundle "{bundle_id}" failed validation: {e}'
@@ -268,11 +292,22 @@ def create_config_bundle(
         for create_function in create_functions:
             create_function()
     except Exception as e:
-        delete_config_bundle(bundle_id, pprint_value)
+        delete_config_bundle(
+            bundle_id,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
+        )
         raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
 
 
-def delete_config_bundle(bundle_id: BundleId, pprint_value: bool) -> None:
+def delete_config_bundle(
+    bundle_id: BundleId,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
@@ -281,10 +316,23 @@ def delete_config_bundle(bundle_id: BundleId, pprint_value: bool) -> None:
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
     store.save(all_bundles, pprint_value)
-    delete_config_bundle_objects(bundle_id, bundle["group"])
+    delete_config_bundle_objects(
+        bundle_id,
+        bundle_group=bundle["group"],
+        user_id=user_id,
+        pprint_value=pprint_value,
+        use_git=use_git,
+    )
 
 
-def delete_config_bundle_objects(bundle_id: BundleId, bundle_group: str | None) -> None:
+def delete_config_bundle_objects(
+    bundle_id: BundleId,
+    *,
+    bundle_group: str | None,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     references = identify_bundle_references(bundle_group, {bundle_id})[bundle_id]
 
     # delete resources in inverse order to create, as rules may reference hosts for example
@@ -293,7 +341,12 @@ def delete_config_bundle_objects(bundle_id: BundleId, bundle_group: str | None) 
     if references.hosts:
         _delete_hosts(references.hosts)
     if references.passwords:
-        _delete_passwords(references.passwords)
+        _delete_passwords(
+            references.passwords,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
+        )
     if references.dcd_connections:
         _delete_dcd_connections(references.dcd_connections)
 
@@ -380,6 +433,10 @@ def _prepare_create_passwords(
     bundle_ident: GlobalIdent,
     create_passwords: Collection[CreatePassword],
     all_passwords: Mapping[str, Password],
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
 ) -> CreateFunction:
     for password in create_passwords:
         if password["id"] in all_passwords:
@@ -394,21 +451,27 @@ def _prepare_create_passwords(
                 pw["id"],
                 spec,
                 new_password=True,
-                user_id=user.id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                user_id=user_id,
+                pprint_value=pprint_value,
+                use_git=use_git,
             )
 
     return create
 
 
-def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
+def _delete_passwords(
+    passwords: Iterable[tuple[str, Password]],
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     for password_id, _password in passwords:
         remove_password(
             password_id,
-            user_id=user.id,
-            pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            user_id=user_id,
+            pprint_value=pprint_value,
+            use_git=use_git,
         )
 
 

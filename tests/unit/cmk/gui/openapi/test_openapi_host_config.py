@@ -28,6 +28,7 @@ from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import (
@@ -60,7 +61,9 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        user_id=user.id,
         pprint_value=False,
+        use_git=False,
     )
     yield bundle_id, program_id
     store = ConfigBundleStore()

@@ -326,7 +326,9 @@ def _create_and_save_special_agent_bundle(
                 bundle_id, site_id, validated_host_name, folder
             ),
         ),
+        user_id=user.id,
         pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
     is_local = site_is_local(active_config, site_id)
@@ -344,7 +346,12 @@ def _create_and_save_special_agent_bundle(
             progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
 
             progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
-            delete_config_bundle(BundleId(bundle_id), pprint_value=active_config.wato_pprint_config)
+            delete_config_bundle(
+                BundleId(bundle_id),
+                user_id=user.id,
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
             progress_logger.update_progress_step_status(
                 "delete_config_bundle", StepStatus.COMPLETED
             )

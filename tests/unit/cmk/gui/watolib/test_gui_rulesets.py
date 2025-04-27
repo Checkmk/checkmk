@@ -34,6 +34,7 @@ from cmk.base.config import LoadingResult
 
 import cmk.gui.utils
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.rule_specs import legacy_converter
@@ -585,7 +586,9 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        user_id=user.id,
         pprint_value=False,
+        use_git=False,
     )
 
     folder = folder_tree().root_folder()

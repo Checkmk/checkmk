@@ -19,6 +19,7 @@ from typing import Any, cast
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import TimeperiodSpec
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.time_periods.request_schemas import (
@@ -35,7 +36,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import FIELDS, problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
+from cmk.gui.watolib.timeperiods import create_timeperiod as do_create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
@@ -101,7 +102,13 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     time_period = _to_checkmk_format(
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
-    _create_timeperiod(name, time_period)
+    do_create_timeperiod(
+        name,
+        time_period,
+        user_id=user.id,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
 
@@ -150,7 +157,13 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         exceptions=_format_exceptions(body.get("exceptions", parsed_time_period["exceptions"])),
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
-    modify_timeperiod(name, updated_time_period)
+    modify_timeperiod(
+        name,
+        updated_time_period,
+        user_id=user.id,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     return _serve_time_period(_get_time_period_domain_object(name, updated_time_period))
 
 
@@ -170,7 +183,12 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.timeperiods")
     name = params["name"]
     try:
-        delete_timeperiod(name)
+        delete_timeperiod(
+            name,
+            user_id=user.id,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
     except TimePeriodBuiltInError:

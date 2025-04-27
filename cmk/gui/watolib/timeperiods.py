@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.user import UserId
 
 from cmk.utils.timeperiod import (
     add_builtin_timeperiods,
@@ -19,11 +20,9 @@ from cmk.utils.timeperiod import (
     TimeperiodSpecs,
 )
 
-from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
@@ -110,7 +109,13 @@ def load_timeperiod(name: TimeperiodName) -> TimeperiodSpec:
     return timeperiod
 
 
-def delete_timeperiod(name: TimeperiodName) -> None:
+def delete_timeperiod(
+    name: TimeperiodName,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
     time_periods = TimePeriodsConfigFile().load_timeperiod_specs_for_modification()
@@ -119,16 +124,23 @@ def delete_timeperiod(name: TimeperiodName) -> None:
     if usages := list(find_usages_of_timeperiod(name)):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
-    save_timeperiods(time_periods, pprint_value=active_config.wato_pprint_config)
+    save_timeperiods(time_periods, pprint_value)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Deleted time period %s") % name,
-        user_id=user.id,
-        use_git=active_config.wato_use_git,
+        user_id=user_id,
+        use_git=use_git,
     )
 
 
-def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
+def modify_timeperiod(
+    name: TimeperiodName,
+    timeperiod: TimeperiodSpec,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
@@ -137,16 +149,23 @@ def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         raise TimePeriodNotFoundError()
 
     existing_timeperiods[name] = timeperiod
-    save_timeperiods(existing_timeperiods, pprint_value=active_config.wato_pprint_config)
+    save_timeperiods(existing_timeperiods, pprint_value)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Modified time period %s") % name,
-        user_id=user.id,
-        use_git=active_config.wato_use_git,
+        user_id=user_id,
+        use_git=use_git,
     )
 
 
-def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
+def create_timeperiod(
+    name: TimeperiodName,
+    timeperiod: TimeperiodSpec,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
@@ -155,12 +174,12 @@ def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
         raise TimePeriodAlreadyExistsError()
 
     existing_timeperiods[name] = timeperiod
-    save_timeperiods(existing_timeperiods, pprint_value=active_config.wato_pprint_config)
+    save_timeperiods(existing_timeperiods, pprint_value)
     _changes.add_change(
         action_name="edit-timeperiods",
         text=_("Created new time period %s") % name,
-        user_id=user.id,
-        use_git=active_config.wato_use_git,
+        user_id=user_id,
+        use_git=use_git,
     )
 
 

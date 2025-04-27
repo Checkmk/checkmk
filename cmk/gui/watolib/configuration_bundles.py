@@ -25,7 +25,6 @@ from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
@@ -212,13 +211,15 @@ def read_config_bundle(bundle_id: BundleId) -> ConfigBundle:
     raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
 
-def edit_config_bundle_configuration(bundle_id: BundleId, bundle: ConfigBundle) -> None:
+def edit_config_bundle_configuration(
+    bundle_id: BundleId, bundle: ConfigBundle, pprint_value: bool
+) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     if bundle_id not in all_bundles:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
     all_bundles[bundle_id] = bundle
-    store.save(all_bundles, pprint_value=active_config.wato_pprint_config)
+    store.save(all_bundles, pprint_value)
 
 
 def _validate_and_prepare_create_calls(
@@ -243,7 +244,7 @@ def _validate_and_prepare_create_calls(
 
 
 def create_config_bundle(
-    bundle_id: BundleId, bundle: ConfigBundle, entities: CreateBundleEntities
+    bundle_id: BundleId, bundle: ConfigBundle, entities: CreateBundleEntities, pprint_value: bool
 ) -> None:
     bundle_ident = GlobalIdent(
         site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
@@ -261,16 +262,16 @@ def create_config_bundle(
         ) from e
 
     all_bundles[bundle_id] = bundle
-    store.save(all_bundles, pprint_value=active_config.wato_pprint_config)
+    store.save(all_bundles, pprint_value)
     try:
         for create_function in create_functions:
             create_function()
     except Exception as e:
-        delete_config_bundle(bundle_id)
+        delete_config_bundle(bundle_id, pprint_value)
         raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
 
 
-def delete_config_bundle(bundle_id: BundleId) -> None:
+def delete_config_bundle(bundle_id: BundleId, pprint_value: bool) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
@@ -278,7 +279,7 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
 
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
-    store.save(all_bundles, pprint_value=active_config.wato_pprint_config)
+    store.save(all_bundles, pprint_value)
     delete_config_bundle_objects(bundle_id, bundle["group"])
 
 

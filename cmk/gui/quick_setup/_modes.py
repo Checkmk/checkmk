@@ -276,7 +276,7 @@ class ModeEditConfigurationBundles(WatoMode):
         else:
             raise MKGeneralException("Not implemented")
 
-        delete_config_bundle(bundle_id)
+        delete_config_bundle(bundle_id, pprint_value=active_config.wato_pprint_config)
         add_change(
             action_name="delete-quick-setup",
             text=_("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
@@ -809,6 +809,8 @@ class ModeConfigurationBundle(WatoMode):
                     "comment": config["_comment"],
                 }
             )
-            edit_config_bundle_configuration(self._bundle_id, self._bundle)
+            edit_config_bundle_configuration(
+                self._bundle_id, self._bundle, pprint_value=active_config.wato_pprint_config
+            )
 
         return redirect(self.parent_mode().mode_url(varname=self._bundle_group))

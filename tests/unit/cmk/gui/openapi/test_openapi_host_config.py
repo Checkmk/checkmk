@@ -60,6 +60,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        pprint_value=False,
     )
     yield bundle_id, program_id
     store = ConfigBundleStore()

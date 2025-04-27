@@ -60,7 +60,9 @@ class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
 contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
 
 
-def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
+def add_group(
+    name: GroupName, group_type: GroupType, extra_info: GroupSpec, pprint_value: bool
+) -> None:
     check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -78,13 +80,15 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
     if name in groups:
         raise MKUserError("name", _("Sorry, there is already a group with that name"))
 
-    _set_group(all_groups, group_type, name, extra_info)
+    _set_group(all_groups, group_type, name, extra_info, pprint_value)
     _add_group_change(
         extra_info, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
     )
 
 
-def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
+def edit_group(
+    name: GroupName, group_type: GroupType, extra_info: GroupSpec, pprint_value: bool
+) -> None:
     check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -94,7 +98,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
 
     old_group_backup = copy.deepcopy(groups[name])
 
-    _set_group(all_groups, group_type, name, extra_info)
+    _set_group(all_groups, group_type, name, extra_info, pprint_value)
     customer = customer_api()
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         old_customer = customer.get_customer_id(old_group_backup)
@@ -140,7 +144,7 @@ class UnknownGroupException(Exception): ...
 class GroupInUseException(Exception): ...
 
 
-def delete_group(name: GroupName, group_type: GroupType) -> None:
+def delete_group(name: GroupName, group_type: GroupType, pprint_value: bool) -> None:
     check_modify_group_permissions(group_type)
     # Check if group exists
     all_groups = load_group_information()
@@ -162,7 +166,7 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
 
     # Delete group
     group = groups.pop(name)
-    save_group_information(all_groups, pprint_value=active_config.wato_pprint_config)
+    save_group_information(all_groups, pprint_value)
     _add_group_change(
         group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
     )
@@ -198,6 +202,7 @@ def _set_group(
     group_type: GroupType,
     name: GroupName,
     extra_info: GroupSpec,
+    pprint_value: bool,
 ) -> None:
     # Check if this alias is used elsewhere
     alias = extra_info.get("alias")
@@ -212,7 +217,7 @@ def _set_group(
     all_groups.setdefault(group_type, {})
     all_groups[group_type].setdefault(name, {})
     all_groups[group_type][name] = extra_info
-    save_group_information(all_groups, pprint_value=active_config.wato_pprint_config)
+    save_group_information(all_groups, pprint_value)
 
     if group_type == "contact":
         hooks.call("contactgroups-saved", all_groups)

@@ -515,6 +515,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        pprint_value=False,
     )
 
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")

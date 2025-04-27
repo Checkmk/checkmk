@@ -575,6 +575,7 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        pprint_value=False,
     )
 
     folder = folder_tree().root_folder()

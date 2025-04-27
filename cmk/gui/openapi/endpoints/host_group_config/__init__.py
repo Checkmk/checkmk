@@ -27,6 +27,7 @@ from cmk.ccc import version
 
 from cmk.utils import paths
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
@@ -89,7 +90,7 @@ def create(params: Mapping[str, Any]) -> Response:
     group_details = {"alias": body["alias"]}
     if version.edition(paths.omd_root) is version.Edition.CME:
         group_details = update_customer_info(group_details, body["customer"])
-    groups.add_group(name, "host", group_details)
+    groups.add_group(name, "host", group_details, pprint_value=active_config.wato_pprint_config)
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 
@@ -112,7 +113,9 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 
     host_group_names = []
     for group_name, group_details in host_group_details.items():
-        groups.add_group(group_name, "host", group_details)
+        groups.add_group(
+            group_name, "host", group_details, pprint_value=active_config.wato_pprint_config
+        )
         host_group_names.append(group_name)
 
     host_groups = fetch_specific_groups(host_group_names, "host")
@@ -148,7 +151,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     name = params["name"]
     try:
-        groups.delete_group(name, "host")
+        groups.delete_group(name, "host", pprint_value=active_config.wato_pprint_config)
     except GroupInUseException as exc:
         raise ProblemException(
             status=409,
@@ -181,7 +184,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     for group_name in body["entries"]:
         try:
-            groups.delete_group(group_name, "host")
+            groups.delete_group(group_name, "host", pprint_value=active_config.wato_pprint_config)
         except GroupInUseException as exc:
             raise ProblemException(
                 status=409,
@@ -214,7 +217,12 @@ def update(params: Mapping[str, Any]) -> Response:
     name = params["name"]
     group = fetch_group(name, "host")
     constructors.require_etag(constructors.hash_of_dict(group))
-    groups.edit_group(name, "host", updated_group_details(name, "host", params["body"]))
+    groups.edit_group(
+        name,
+        "host",
+        updated_group_details(name, "host", params["body"]),
+        pprint_value=active_config.wato_pprint_config,
+    )
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
 
@@ -238,7 +246,9 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     body = params["body"]
     entries = body["entries"]
-    updated_host_groups = update_groups("host", entries)
+    updated_host_groups = update_groups(
+        "host", entries, pprint_value=active_config.wato_pprint_config
+    )
     return serve_json(serialize_group_list("host_group_config", updated_host_groups))
 
 

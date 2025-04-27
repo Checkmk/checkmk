@@ -100,13 +100,15 @@ def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject
     return _serializer
 
 
-def update_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> list[GroupSpec]:
+def update_groups(
+    group_type: GroupType, entries: list[dict[str, Any]], pprint_value: bool
+) -> list[GroupSpec]:
     groups = []
     for details in entries:
         name = details["name"]
         group_details = details["attributes"]
         updated_details = updated_group_details(name, group_type, group_details)
-        edit_group(name, group_type, updated_details)
+        edit_group(name, group_type, updated_details, pprint_value)
         groups.append(name)
 
     return fetch_specific_groups(groups, group_type)

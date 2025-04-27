@@ -117,7 +117,7 @@ class MigratableValue(V1Value):
         if isinstance(self.host.address, tuple):
             hostname = self.host.virthost or self.host.address[1]
         else:
-            hostname = self.host.virthost or "$HOSTADDRESS$"
+            hostname = self.host.virthost or "$HOSTNAME$"
         return _build_url(scheme, hostname, self.host.port, path)
 
 

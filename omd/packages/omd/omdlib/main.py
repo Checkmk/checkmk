@@ -2295,7 +2295,7 @@ def main_rm(
         if not kill:
             bail_out("User '%s' still logged in or running processes." % site.name)
         else:
-            kill_site_user_processes(site, exclude_current_and_parents=True)
+            kill_site_user_processes(site.name, exclude_current_and_parents=True)
 
     if tmpfs_mounted(site.name):
         unmount_tmpfs(site, kill=kill)
@@ -3080,7 +3080,7 @@ def main_init_action(
         # When the whole site is about to be stopped check for remaining
         # processes and terminate them
         if command == "stop" and not args and exit_status == 0:
-            terminate_site_user_processes(site, global_opts)
+            terminate_site_user_processes(site.name, global_opts.verbose)
             # Even if we are not explicitly executing an unmount of the tmpfs, this may be the
             # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
             save_tmpfs_dump(site.dir, site.tmp_dir)
@@ -3517,7 +3517,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions) -> 
 
     sys.stdout.write("Stopping site processes...\n")
     stop_site(site)
-    kill_site_user_processes(site, exclude_current_and_parents=True)
+    kill_site_user_processes(site.name, exclude_current_and_parents=True)
     ok()
 
     unmount_tmpfs(site)
@@ -3554,14 +3554,14 @@ def verify_directory_write_access(site: SiteContext) -> None:
         )
 
 
-def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions) -> None:
+def terminate_site_user_processes(username: str, verbose: bool) -> None:
     """Sends a SIGTERM to all running site processes and waits up to 5 seconds for termination
 
     In case one or more processes are still running after the timeout, the method will make
     the current OMD call terminate.
     """
 
-    processes = site_user_processes(site, exclude_current_and_parents=True)
+    processes = site_user_processes(username, exclude_current_and_parents=True)
     if not processes:
         return
 
@@ -3573,7 +3573,7 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         for process in processes[:]:
             try:
                 if not sent_terminate:
-                    if global_opts.verbose:
+                    if verbose:
                         sys.stdout.write("%d..." % process.pid)
                     os.kill(process.pid, signal.SIGTERM)
                 else:
@@ -3588,7 +3588,7 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         time.sleep(0.1)
 
     if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
-        bail_out(
+        sys.exit(
             "\n".join(
                 [
                     "\nFailed to stop remaining site processes:",
@@ -3600,8 +3600,8 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         ok()
 
 
-def kill_site_user_processes(site: SiteContext, exclude_current_and_parents: bool = False) -> None:
-    processes = site_user_processes(site, exclude_current_and_parents)
+def kill_site_user_processes(username: str, exclude_current_and_parents: bool = False) -> None:
+    processes = site_user_processes(username, exclude_current_and_parents)
     tries = 5
     while tries > 0 and processes:
         for process in processes[:]:
@@ -3617,7 +3617,7 @@ def kill_site_user_processes(site: SiteContext, exclude_current_and_parents: boo
         tries -= 1
 
     if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
-        bail_out(
+        sys.exit(
             "\n".join(
                 [
                     "\nFailed to kill site processes:",
@@ -3645,9 +3645,7 @@ def get_current_and_parent_processes() -> list[psutil.Process]:
     return processes
 
 
-def site_user_processes(
-    site: SiteContext, exclude_current_and_parents: bool
-) -> list[psutil.Process]:
+def site_user_processes(username: str, exclude_current_and_parents: bool) -> list[psutil.Process]:
     """Return list of all running site user processes (that are not excluded)"""
     exclude = set(get_current_and_parent_processes()) if exclude_current_and_parents else set()
     processes_of_site_user = set()
@@ -3656,7 +3654,7 @@ def site_user_processes(
             process_owner = process.username()
         except psutil.NoSuchProcess:
             continue
-        if process_owner == site.name:
+        if process_owner == username:
             processes_of_site_user.add(process)
     return list(processes_of_site_user - exclude)
 

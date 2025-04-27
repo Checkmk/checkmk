@@ -8,6 +8,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     parse_smart_posix,
     SCSIAll,
     SCSIDevice,
+    SCSIMissingModel,
     Section,
     Temperature,
 )
@@ -61,4 +62,25 @@ def test_parse_smart_scsi_7_3_regression() -> None:
             ),
         },
         failures=[],
+    )
+
+
+def test_parse_missing_model_name() -> None:
+    """Samsung SSD 870 EVO 2TB does not yield a model name if passed `-d scsi`
+
+    This happened on one of our internal servers, so we can gather more data if necessary. See
+    `SCSIMissingModel` for details.
+    """
+    string_table = [
+        [
+            '{"json_format_version":[1,0],"smartctl":{"version":[7,3],"svn_revision":"5338","platform_info":"x86_64-linux-6.8.12-8-pve","build_info":"(local build)","argv":["smartctl","--all","--json=c","/dev/sdc","-d","scsi"],"exit_status":0},"local_time":{"time_t":1745560960,"asctime":"Fri Apr 25 08:02:40 2025 CEST"},"device":{"name":"/dev/sdc","info_name":"/dev/sdc","type":"scsi","protocol":"SCSI"},"user_capacity":{"blocks":3907029168,"bytes":2000398934016},"logical_block_size":512,"scsi_lb_provisioning":{"name":"fully provisioned","value":0,"management_enabled":{"name":"LBPME","value":-1},"read_zeros":{"name":"LBPRZ","value":0}},"rotation_rate":0,"form_factor":{"scsi_value":3,"name":"2.5 inches"},"logical_unit_id":"0x5002538f31b1fd8f","serial_number":"S6PPNJ0RB04XXX","device_type":{"scsi_terminology":"Peripheral Device Type [PDT]","scsi_value":0,"name":"disk"},"smart_support":{"available":true,"enabled":true},"temperature_warning":{"enabled":false},"smart_status":{"passed":true},"scsi_percentage_used_endurance_indicator":11,"temperature":{"current":21,"drive_trip":70},"power_on_time":{"hours":26195,"minutes":0}}'
+        ],
+        [
+            '{"json_format_version":[1,0],"smartctl":{"version":[7,3],"svn_revision":"5338","platform_info":"x86_64-linux-6.8.12-8-pve","build_info":"(local build)","argv":["smartctl","--all","--json=c","/dev/sdd","-d","scsi"],"exit_status":0},"local_time":{"time_t":1745560960,"asctime":"Fri Apr 25 08:02:40 2025 CEST"},"device":{"name":"/dev/sdd","info_name":"/dev/sdd","type":"scsi","protocol":"SCSI"},"user_capacity":{"blocks":3907029168,"bytes":2000398934016},"logical_block_size":512,"scsi_lb_provisioning":{"name":"fully provisioned","value":0,"management_enabled":{"name":"LBPME","value":-1},"read_zeros":{"name":"LBPRZ","value":0}},"rotation_rate":0,"form_factor":{"scsi_value":3,"name":"2.5 inches"},"logical_unit_id":"0x5002538f31b1fd8b","serial_number":"S6PPNJ0RB04XXX","device_type":{"scsi_terminology":"Peripheral Device Type [PDT]","scsi_value":0,"name":"disk"},"smart_support":{"available":true,"enabled":true},"temperature_warning":{"enabled":false},"smart_status":{"passed":true},"scsi_percentage_used_endurance_indicator":11,"temperature":{"current":22,"drive_trip":70},"power_on_time":{"hours":26195,"minutes":0}}'
+        ],
+    ]
+
+    section = parse_smart_posix(string_table)
+    assert sum(1 for scan in section.failures if isinstance(scan, SCSIMissingModel)) == len(
+        string_table
     )

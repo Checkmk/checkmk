@@ -95,6 +95,16 @@ class SCSIAll(BaseModel, frozen=True):
     temperature: Temperature | None = None
 
 
+class SCSIMissingModel(BaseModel, frozen=True):
+    # `smartctl` only yields the model name if the vendor identification of the SCSI inquiry
+    # starts with "ATA". We don't know why, but we can't discover the disk without the model name.
+    # This appears to only happen if `-d scsi` is passed. This means only
+    # `<<<smart_posix_scan_arg>>>` is affected and discarding this data is safe.
+    device: SCSIDevice
+    model_name: None = Field(None, validation_alias=AliasChoices("model_name", "scsi_model_name"))
+    serial_number: str
+
+
 class FailureAll(BaseModel, frozen=True):
     device: None = None  # happens on permission denied.
 
@@ -120,20 +130,20 @@ class CantOpenDevice(BaseModel, frozen=True):
 @dataclass(frozen=True)
 class Section:
     devices: Mapping[str, NVMeAll | ATAAll | SCSIAll]
-    failures: Sequence[FailureAll | CantOpenDevice]
+    failures: Sequence[FailureAll | CantOpenDevice | SCSIMissingModel]
 
 
 class ParseSection(RootModel):
-    root: NVMeAll | ATAAll | SCSIAll | FailureAll | CantOpenDevice
+    root: NVMeAll | ATAAll | SCSIAll | FailureAll | CantOpenDevice | SCSIMissingModel
 
 
 def parse_smart_posix(string_table: StringTable) -> Section:
     # Each line contains the output of `smartctl --all --json`.
     scans = [ParseSection.model_validate_json(line[0]).root for line in string_table]
-    failures: list[FailureAll | CantOpenDevice] = []
+    failures: list[FailureAll | CantOpenDevice | SCSIMissingModel] = []
     devices: dict[str, NVMeAll | ATAAll | SCSIAll] = {}
     for scan in scans:
-        if isinstance(scan, (FailureAll | CantOpenDevice)):
+        if isinstance(scan, (FailureAll | CantOpenDevice | SCSIMissingModel)):
             failures.append(scan)
         else:
             devices[f"{scan.model_name} {scan.serial_number}"] = scan

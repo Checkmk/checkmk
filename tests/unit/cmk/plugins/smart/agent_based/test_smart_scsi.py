@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v2 import Service
 from cmk.plugins.smart.agent_based.smart_posix import (
     parse_smart_posix,
     SCSIAll,
@@ -12,6 +13,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     Section,
     Temperature,
 )
+from cmk.plugins.smart.agent_based.smart_scsi import discovery_smart_scsi_temp
 
 STRING_TABLE_SCSI = [  # unmodified except for serial number
     [
@@ -33,6 +35,12 @@ def test_parse_smart_scsi() -> None:
         },
         failures=[],
     )
+
+
+def test_discover_temperature_scsi() -> None:
+    section = parse_smart_posix(STRING_TABLE_SCSI)
+    services = list(discovery_smart_scsi_temp(section, None))
+    assert [Service(item="TOSHIBA AL13SXB60EN XXX")] == services
 
 
 def test_parse_smart_scsi_7_3_regression() -> None:

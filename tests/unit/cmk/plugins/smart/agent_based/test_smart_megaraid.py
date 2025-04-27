@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.plugins.smart.agent_based.smart_posix import (
     ATAAll,
     ATADevice,
@@ -18,6 +20,7 @@ from cmk.plugins.smart.agent_based.smart_posix import (
     SmartctlError,
     Temperature,
 )
+from cmk.plugins.smart.agent_based.smart_scsi import discovery_smart_scsi_temp
 
 SMART_POSIX_ALL = [
     [
@@ -61,213 +64,223 @@ SMART_POSIX_SCAN_ARG = [
     ],
 ]
 
+SECTION_SMART_POSIX_SCAN_ARG = Section(
+    devices={
+        "SAMSUNG MZ7L31T9HBLT-00A07 S6ESNC0W622008": ATAAll(
+            device=ATADevice(protocol="ATA", name="/dev/bus/0"),
+            model_name="SAMSUNG MZ7L31T9HBLT-00A07",
+            serial_number="S6ESNC0W622008",
+            ata_smart_attributes=ATATable(
+                table=[
+                    ATATableEntry(
+                        id=5,
+                        name="Reallocated_Sector_Ct",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=9,
+                        name="Power_On_Hours",
+                        value=97,
+                        thresh=0,
+                        raw=ATARawValue(value=11464),
+                    ),
+                    ATATableEntry(
+                        id=12,
+                        name="Power_Cycle_Count",
+                        value=99,
+                        thresh=0,
+                        raw=ATARawValue(value=47),
+                    ),
+                    ATATableEntry(
+                        id=177,
+                        name="Wear_Leveling_Count",
+                        value=99,
+                        thresh=5,
+                        raw=ATARawValue(value=27),
+                    ),
+                    ATATableEntry(
+                        id=179,
+                        name="Used_Rsvd_Blk_Cnt_Tot",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=180,
+                        name="Unused_Rsvd_Blk_Cnt_Tot",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=1728),
+                    ),
+                    ATATableEntry(
+                        id=181,
+                        name="Program_Fail_Cnt_Total",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=182,
+                        name="Erase_Fail_Count_Total",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=183,
+                        name="Runtime_Bad_Block",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=184,
+                        name="End-to-End_Error",
+                        value=100,
+                        thresh=97,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=187,
+                        name="Reported_Uncorrect",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=190,
+                        name="Airflow_Temperature_Cel",
+                        value=73,
+                        thresh=0,
+                        raw=ATARawValue(value=27),
+                    ),
+                    ATATableEntry(
+                        id=194,
+                        name="Temperature_Celsius",
+                        value=73,
+                        thresh=0,
+                        raw=ATARawValue(value=197570134043),
+                    ),
+                    ATATableEntry(
+                        id=195,
+                        name="Hardware_ECC_Recovered",
+                        value=200,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=197,
+                        name="Current_Pending_Sector",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=199,
+                        name="UDMA_CRC_Error_Count",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=202,
+                        name="Unknown_SSD_Attribute",
+                        value=100,
+                        thresh=10,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=235,
+                        name="Unknown_Attribute",
+                        value=99,
+                        thresh=0,
+                        raw=ATARawValue(value=35),
+                    ),
+                    ATATableEntry(
+                        id=241,
+                        name="Total_LBAs_Written",
+                        value=99,
+                        thresh=0,
+                        raw=ATARawValue(value=30471720553),
+                    ),
+                    ATATableEntry(
+                        id=242,
+                        name="Total_LBAs_Read",
+                        value=99,
+                        thresh=0,
+                        raw=ATARawValue(value=114305652735),
+                    ),
+                    ATATableEntry(
+                        id=243,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=244,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=0),
+                    ),
+                    ATATableEntry(
+                        id=245,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=65535),
+                    ),
+                    ATATableEntry(
+                        id=246,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=65535),
+                    ),
+                    ATATableEntry(
+                        id=247,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=65535),
+                    ),
+                    ATATableEntry(
+                        id=251,
+                        name="Unknown_Attribute",
+                        value=100,
+                        thresh=0,
+                        raw=ATARawValue(value=33611104576),
+                    ),
+                ]
+            ),
+            temperature=Temperature(current=27),
+        ),
+        "DELL PERC H740P Mini 0098f53cb2b061dd2c00f4f469f0a7ce": SCSIAll(
+            device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
+            model_name="DELL PERC H740P Mini",
+            serial_number="0098f53cb2b061dd2c00f4f469f0a7ce",
+            temperature=Temperature(current=0),
+        ),
+    },
+    failures=[
+        CantOpenDevice(
+            device=SCSIDevice(protocol="SCSI", name="/dev/sdb"),
+            smartctl=SmartctlError(exit_status=4),
+        )
+    ],
+)
+
 
 def test_parse_smart_posix_scan_arg() -> None:
-    assert parse_smart_posix(SMART_POSIX_SCAN_ARG) == Section(
-        devices={
-            "SAMSUNG MZ7L31T9HBLT-00A07 S6ESNC0W622008": ATAAll(
-                device=ATADevice(protocol="ATA", name="/dev/bus/0"),
-                model_name="SAMSUNG MZ7L31T9HBLT-00A07",
-                serial_number="S6ESNC0W622008",
-                ata_smart_attributes=ATATable(
-                    table=[
-                        ATATableEntry(
-                            id=5,
-                            name="Reallocated_Sector_Ct",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=9,
-                            name="Power_On_Hours",
-                            value=97,
-                            thresh=0,
-                            raw=ATARawValue(value=11464),
-                        ),
-                        ATATableEntry(
-                            id=12,
-                            name="Power_Cycle_Count",
-                            value=99,
-                            thresh=0,
-                            raw=ATARawValue(value=47),
-                        ),
-                        ATATableEntry(
-                            id=177,
-                            name="Wear_Leveling_Count",
-                            value=99,
-                            thresh=5,
-                            raw=ATARawValue(value=27),
-                        ),
-                        ATATableEntry(
-                            id=179,
-                            name="Used_Rsvd_Blk_Cnt_Tot",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=180,
-                            name="Unused_Rsvd_Blk_Cnt_Tot",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=1728),
-                        ),
-                        ATATableEntry(
-                            id=181,
-                            name="Program_Fail_Cnt_Total",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=182,
-                            name="Erase_Fail_Count_Total",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=183,
-                            name="Runtime_Bad_Block",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=184,
-                            name="End-to-End_Error",
-                            value=100,
-                            thresh=97,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=187,
-                            name="Reported_Uncorrect",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=190,
-                            name="Airflow_Temperature_Cel",
-                            value=73,
-                            thresh=0,
-                            raw=ATARawValue(value=27),
-                        ),
-                        ATATableEntry(
-                            id=194,
-                            name="Temperature_Celsius",
-                            value=73,
-                            thresh=0,
-                            raw=ATARawValue(value=197570134043),
-                        ),
-                        ATATableEntry(
-                            id=195,
-                            name="Hardware_ECC_Recovered",
-                            value=200,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=197,
-                            name="Current_Pending_Sector",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=199,
-                            name="UDMA_CRC_Error_Count",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=202,
-                            name="Unknown_SSD_Attribute",
-                            value=100,
-                            thresh=10,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=235,
-                            name="Unknown_Attribute",
-                            value=99,
-                            thresh=0,
-                            raw=ATARawValue(value=35),
-                        ),
-                        ATATableEntry(
-                            id=241,
-                            name="Total_LBAs_Written",
-                            value=99,
-                            thresh=0,
-                            raw=ATARawValue(value=30471720553),
-                        ),
-                        ATATableEntry(
-                            id=242,
-                            name="Total_LBAs_Read",
-                            value=99,
-                            thresh=0,
-                            raw=ATARawValue(value=114305652735),
-                        ),
-                        ATATableEntry(
-                            id=243,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=244,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=0),
-                        ),
-                        ATATableEntry(
-                            id=245,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=65535),
-                        ),
-                        ATATableEntry(
-                            id=246,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=65535),
-                        ),
-                        ATATableEntry(
-                            id=247,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=65535),
-                        ),
-                        ATATableEntry(
-                            id=251,
-                            name="Unknown_Attribute",
-                            value=100,
-                            thresh=0,
-                            raw=ATARawValue(value=33611104576),
-                        ),
-                    ]
-                ),
-                temperature=Temperature(current=27),
-            ),
-            "DELL PERC H740P Mini 0098f53cb2b061dd2c00f4f469f0a7ce": SCSIAll(
-                device=SCSIDevice(protocol="SCSI", name="/dev/sda"),
-                model_name="DELL PERC H740P Mini",
-                serial_number="0098f53cb2b061dd2c00f4f469f0a7ce",
-                temperature=Temperature(current=0),
-            ),
-        },
-        failures=[
-            CantOpenDevice(
-                device=SCSIDevice(protocol="SCSI", name="/dev/sdb"),
-                smartctl=SmartctlError(exit_status=4),
-            )
-        ],
+    assert parse_smart_posix(SMART_POSIX_SCAN_ARG) == SECTION_SMART_POSIX_SCAN_ARG
+
+
+@pytest.mark.xfail(strict=True)
+def test_discover_temperature_scsi() -> None:
+    services = list(
+        discovery_smart_scsi_temp(SECTION_SMART_POSIX_ALL, SECTION_SMART_POSIX_SCAN_ARG)
     )
+    assert services == []

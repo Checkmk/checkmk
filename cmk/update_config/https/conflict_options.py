@@ -24,6 +24,7 @@ class ConflictType(enum.Enum):
     cant_migrate_proxy = "cant-migrate-proxy"
     cant_have_regex_and_string = "cant-have-regex-and-string"
     v2_checks_certificates = "v2-checks-certificates"
+    cant_ignore_certificate_validation = "cant-ignore-certificate-validation"
 
 
 class SSLIncompatible(enum.Enum):
@@ -308,6 +309,33 @@ class V2ChecksCertificates(enum.Enum):
         )
 
 
+class CantIgnoreCertificateValidation(enum.Enum):
+    skip = "skip"
+    keep = "keep"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.cant_ignore_certificate_validation
+
+    @classmethod
+    def default(cls) -> "CantIgnoreCertificateValidation":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case CantIgnoreCertificateValidation.skip:
+                return "do not migrate rule"
+            case CantIgnoreCertificateValidation.keep:
+                return "create the rule with certificate validation"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return (
+            "v1 checks the certificate age and ignores other validation errors but v2 must "
+            "validate the certificate when checking the age"
+        )
+
+
 class Config(BaseModel):
     ssl_incompatible: SSLIncompatible = SSLIncompatible.default()
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.default()
@@ -320,6 +348,9 @@ class Config(BaseModel):
     cant_construct_url: CantConstructURL = CantConstructURL.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
     v2_checks_certificates: V2ChecksCertificates = V2ChecksCertificates.default()
+    cant_ignore_certificate_validation: CantIgnoreCertificateValidation = (
+        CantIgnoreCertificateValidation.default()
+    )
 
 
 def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
@@ -351,6 +382,9 @@ def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
     _add_argument(parser, CantConstructURL, CantConstructURL.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
     _add_argument(parser, V2ChecksCertificates, V2ChecksCertificates.default())
+    _add_argument(
+        parser, CantIgnoreCertificateValidation, CantIgnoreCertificateValidation.default()
+    )
     return parser
 
 

@@ -17,6 +17,7 @@ from cmk.update_config.https.conflict_options import (
     CantConstructURL,
     CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
+    CantIgnoreCertificateValidation,
     CantPostData,
     Config,
     ConflictType,
@@ -262,14 +263,17 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_=ConflictType.v1_checks_redirect_response,
                 mode_fields=["onredirect", "expect_response"],
             )
-    elif (
-        config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip
-        and value.disable_sni  # Cert mode is always https
-    ):
-        return Conflict(
-            type_=ConflictType.cant_disable_sni_with_https,
-            disable_sni=True,
-        )
+    else:
+        # Cert mode is always https
+        if config.cant_ignore_certificate_validation is CantIgnoreCertificateValidation.skip:
+            return Conflict(
+                type_=ConflictType.cant_ignore_certificate_validation,
+            )
+        if config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip and value.disable_sni:
+            return Conflict(
+                type_=ConflictType.cant_disable_sni_with_https,
+                disable_sni=True,
+            )
 
     migratable_value = MigratableValue.model_validate(value.model_dump())
     if config.cant_construct_url is CantConstructURL.skip:

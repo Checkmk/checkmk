@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any
 
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.configuration_entity import folder as folder_endpoints
@@ -97,7 +98,13 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     data = body["data"]
 
     try:
-        data = save_configuration_entity(entity_type, entity_type_specifier, data, None)
+        data = save_configuration_entity(
+            entity_type,
+            entity_type_specifier,
+            data,
+            object_id=None,
+            pprint_value=active_config.wato_pprint_config,
+        )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)
 
@@ -122,7 +129,13 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     data = body["data"]
 
     try:
-        data = save_configuration_entity(entity_type, entity_type_specifier, data, entity_id)
+        data = save_configuration_entity(
+            entity_type,
+            entity_type_specifier,
+            data,
+            object_id=entity_id,
+            pprint_value=active_config.wato_pprint_config,
+        )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)
 

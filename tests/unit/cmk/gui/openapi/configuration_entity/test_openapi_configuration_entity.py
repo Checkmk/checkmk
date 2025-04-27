@@ -90,7 +90,8 @@ def test_update_configuration_entity(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
         },
-        None,
+        object_id=None,
+        pprint_value=False,
     )
 
     # WHEN
@@ -169,7 +170,8 @@ def test_list_configuration_entities(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
-        None,
+        object_id=None,
+        pprint_value=False,
     )
 
     # WHEN
@@ -195,7 +197,8 @@ def test_get_configuration_entity(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
-        None,
+        object_id=None,
+        pprint_value=False,
     )
 
     # WHEN

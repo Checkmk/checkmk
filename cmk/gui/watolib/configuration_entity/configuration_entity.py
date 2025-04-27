@@ -46,6 +46,7 @@ def save_configuration_entity(
     entity_type_specifier: str,
     data: object,
     object_id: EntityId | None,
+    pprint_value: bool,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
 
@@ -58,7 +59,8 @@ def save_configuration_entity(
                 notification_parameter_registry,
                 NotificationParameterMethod(entity_type_specifier),
                 data,
-                NotificationParameterID(object_id) if object_id else None,
+                object_id=NotificationParameterID(object_id) if object_id else None,
+                pprint_value=pprint_value,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(param.ident), description=param.description

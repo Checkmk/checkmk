@@ -83,6 +83,8 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "bar"}},
         },
+        object_id=None,
+        pprint_value=False,
     )
 
     # THEN
@@ -124,7 +126,13 @@ def test_validation_on_saving_notification_params(
 ) -> None:
     # WHEN
     with pytest.raises(FormSpecValidationError):
-        save_notification_parameter(registry, "dummy_params", params)
+        save_notification_parameter(
+            registry,
+            "dummy_params",
+            params,
+            object_id=None,
+            pprint_value=False,
+        )
 
 
 def test_get_list_of_notification_parameter() -> None:

@@ -65,7 +65,8 @@ RULE_ID = {
 
 def _create_or_update_rule(
     incoming_rule_config: APINotificationRule,
-    rule_id: NotificationRuleID | None = None,
+    rule_id: NotificationRuleID | None,
+    pprint_value: bool,
 ) -> Response:
     all_rules: NotificationRules = get_notification_rules()
     rule_from_request = NotificationRule.from_api_request(incoming_rule_config)
@@ -81,7 +82,10 @@ def _create_or_update_rule(
     try:
         all_rules[rule_from_request.rule_id] = rule_from_request
         NotificationRuleConfigFile().save(
-            [rule.to_mk_file_format() for rule in all_rules.values()],
+            [
+                rule.to_mk_file_format(pprint_value=active_config.wato_pprint_config)
+                for rule in all_rules.values()
+            ],
             pprint_value=active_config.wato_pprint_config,
         )
     except BulkNotAllowedException as exc:
@@ -166,6 +170,8 @@ def post_rule(params: Mapping[str, Any]) -> Response:
     incoming_rule: APINotificationRule = params["body"]["rule_config"]
     return _create_or_update_rule(
         incoming_rule_config=incoming_rule,
+        rule_id=None,
+        pprint_value=active_config.wato_pprint_config,
     )
 
 
@@ -188,6 +194,7 @@ def put_rule(params: Mapping[str, Any]) -> Response:
     return _create_or_update_rule(
         incoming_rule_config=incoming_rule,
         rule_id=NotificationRuleID(params["rule_id"]),
+        pprint_value=active_config.wato_pprint_config,
     )
 
 
@@ -210,7 +217,10 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     all_rules: NotificationRules = get_notification_rules()
     if rule_id in all_rules:
         del all_rules[rule_id]
-        updated_rules = [rule.to_mk_file_format() for rule in all_rules.values()]
+        updated_rules = [
+            rule.to_mk_file_format(pprint_value=active_config.wato_pprint_config)
+            for rule in all_rules.values()
+        ]
         NotificationRuleConfigFile().save(
             updated_rules, pprint_value=active_config.wato_pprint_config
         )

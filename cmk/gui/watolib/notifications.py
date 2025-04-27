@@ -47,7 +47,6 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui import userdb
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
@@ -620,7 +619,9 @@ def _get_parameters_for_rule_with_id(
     return (notify_plugin_name, parameters_for_method[params_id]["parameter_properties"])
 
 
-def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> NotifyPlugin:
+def _create_parameters_for_rule(
+    notify_plugin: PluginNameWithParameters, pprint_value: bool
+) -> NotifyPlugin:
     if notify_plugin[1] is None:
         return (notify_plugin[0], None)
 
@@ -642,9 +643,7 @@ def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> Noti
             {new_params_id: new_notification_parameter_item}
         )
 
-    NotificationParameterConfigFile().save(
-        notification_parameters, pprint_value=active_config.wato_pprint_config
-    )
+    NotificationParameterConfigFile().save(notification_parameters, pprint_value)
     return (notify_plugin[0], new_params_id)
 
 
@@ -693,13 +692,15 @@ class NotificationRule:
         }
         return r
 
-    def to_mk_file_format(self) -> EventRule:
+    def to_mk_file_format(self, pprint_value: bool) -> EventRule:
         r: dict[str, Any] = {"rule_id": self.rule_id}
         notify_method = self.notification_method.to_mk_file_format()
         if "bulk" in notify_method:
             r["bulk"] = notify_method["bulk"]
 
-        r["notify_plugin"] = _create_parameters_for_rule(notify_method["notify_plugin"])
+        r["notify_plugin"] = _create_parameters_for_rule(
+            notify_method["notify_plugin"], pprint_value
+        )
 
         r.update(self.rule_properties.to_mk_file_format() | self.conditions.to_mk_file_format())
 

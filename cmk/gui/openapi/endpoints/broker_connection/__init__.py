@@ -24,6 +24,7 @@ from livestatus import BrokerConnections, ConnectionId
 
 from cmk.ccc.site import SiteId
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.definitions import ConnectionIdentifier
 from cmk.gui.http import Response
@@ -141,7 +142,9 @@ def _get_broker_connection(connection_id: str) -> BrokerConnectionConfig:
 def _validate_and_save_boker_connection(
     connection_id_request: str,
     connection_request: dict[str, dict[str, SiteId]],
+    *,
     is_new_connection: bool,
+    pprint_value: bool,
 ) -> BrokerConnectionConfig:
     connection_info = BrokerConnectionInfo(
         connecter=SiteConnectionInfo(site_id=connection_request["connecter"]["site_id"]),
@@ -151,7 +154,10 @@ def _validate_and_save_boker_connection(
     connection_obj = BrokerConnectionConfig.from_external(connection_id_request, connection_info)
     internal_config = connection_obj.to_internal()
     site_to_update = SitesApiMgr().validate_and_save_broker_connection(
-        ConnectionId(connection_id_request), internal_config, is_new_connection
+        ConnectionId(connection_id_request),
+        internal_config,
+        is_new=is_new_connection,
+        pprint_value=pprint_value,
     )
 
     add_changes_after_editing_broker_connection(
@@ -184,6 +190,7 @@ def create_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_id_request=connection_id_request,
             connection_request=connection_request,
             is_new_connection=True,
+            pprint_value=active_config.wato_pprint_config,
         )
     except MKUserError as exc:
         return _validation_error(exc)
@@ -218,6 +225,7 @@ def edit_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_id_request=connection_id_request,
             connection_request=connection_request,
             is_new_connection=False,
+            pprint_value=active_config.wato_pprint_config,
         )
     except MKUserError as exc:
         return _validation_error(exc)

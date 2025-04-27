@@ -380,21 +380,24 @@ class SiteManagement:
 
     @classmethod
     def _save_broker_connection_config(
-        cls, save_id: str, connection: BrokerConnection
+        cls, save_id: str, connection: BrokerConnection, pprint_value: bool
     ) -> tuple[SiteId, SiteId]:
         broker_connections = cls.get_broker_connections()
         broker_connections[ConnectionId(save_id)] = connection
-        BrokerConnectionsConfigFile().save(
-            broker_connections, pprint_value=active_config.wato_pprint_config
-        )
+        BrokerConnectionsConfigFile().save(broker_connections, pprint_value)
         return connection.connectee.site_id, connection.connecter.site_id
 
     @classmethod
     def validate_and_save_broker_connection(
-        cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
+        cls,
+        connection_id: ConnectionId,
+        connection: BrokerConnection,
+        *,
+        is_new: bool,
+        pprint_value: bool,
     ) -> tuple[SiteId, SiteId]:
         cls._validate_broker_connection(connection_id, connection, is_new)
-        return cls._save_broker_connection_config(connection_id, connection)
+        return cls._save_broker_connection_config(connection_id, connection, pprint_value)
 
     @classmethod
     def delete_broker_connection(cls, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:

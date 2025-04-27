@@ -623,10 +623,18 @@ class SitesApiMgr:
         return self.site_mgmt.get_broker_connections()
 
     def validate_and_save_broker_connection(
-        self, connection_id: ConnectionId, broker_connection: BrokerConnection, is_new: bool
+        self,
+        connection_id: ConnectionId,
+        broker_connection: BrokerConnection,
+        *,
+        is_new: bool,
+        pprint_value: bool,
     ) -> tuple[SiteId, SiteId]:
         return self.site_mgmt.validate_and_save_broker_connection(
-            connection_id, broker_connection, is_new
+            connection_id,
+            broker_connection,
+            is_new=is_new,
+            pprint_value=pprint_value,
         )
 
     def delete_broker_connection(self, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:

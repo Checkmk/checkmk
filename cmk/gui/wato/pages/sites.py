@@ -704,7 +704,10 @@ class ModeEditBrokerConnection(WatoMode):
         )
 
         self._site_mgmt.validate_and_save_broker_connection(
-            raw_site_spec["unique_id"], connection, self._is_new
+            raw_site_spec["unique_id"],
+            connection,
+            is_new=self._is_new,
+            pprint_value=active_config.wato_pprint_config,
         )
         msg = add_changes_after_editing_broker_connection(
             connection_id=raw_site_spec["unique_id"],

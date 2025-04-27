@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.password_store import Password
 
 from cmk.gui import userdb
-from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
@@ -33,50 +34,58 @@ def sorted_contact_group_choices(only_own: bool = False) -> list[tuple[str, str]
     return sorted(contact_group_choices(only_own), key=lambda x: x[1])
 
 
-def save_password(ident: str, details: Password, new_password: bool = False) -> None:
+def save_password(
+    ident: str,
+    details: Password,
+    *,
+    new_password: bool,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = details
-    password_store.save(entries, pprint_value=active_config.wato_pprint_config)
-    _add_change(ident, change_type="new" if new_password else "edit")
-
-
-def remove_password(ident: str) -> None:
-    password_store = PasswordStore()
-    entries = load_passwords_to_modify()
-    _ = entries.pop(ident)
-    password_store.save(entries, pprint_value=active_config.wato_pprint_config)
-    _add_change(ident, change_type="delete")
-
-
-def _add_change(ident: str, change_type: str) -> None:
-    if change_type == "new":  # create password
+    password_store.save(entries, pprint_value)
+    if new_password:
         add_change(
             action_name="add-password",
             text=f"Added the password {ident}",
-            user_id=user.id,
+            user_id=user_id,
             domains=[ConfigDomainCore()],
             sites=None,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
-    elif change_type == "edit":
+    else:
         add_change(
             action_name="edit-password",
             text=f"Edited the password '{ident}'",
-            user_id=user.id,
+            user_id=user_id,
             domains=[ConfigDomainCore()],
             sites=None,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
-    else:  # delete
-        add_change(
-            action_name="delete-password",
-            text=f"Removed the password '{ident}'",
-            user_id=user.id,
-            domains=[ConfigDomainCore()],
-            sites=None,
-            use_git=active_config.wato_use_git,
-        )
+
+
+def remove_password(
+    ident: str,
+    *,
+    user_id: UserId | None,
+    pprint_value: bool,
+    use_git: bool,
+) -> None:
+    password_store = PasswordStore()
+    entries = load_passwords_to_modify()
+    _ = entries.pop(ident)
+    password_store.save(entries, pprint_value)
+    add_change(
+        action_name="delete-password",
+        text=f"Removed the password '{ident}'",
+        user_id=user_id,
+        domains=[ConfigDomainCore()],
+        sites=None,
+        use_git=use_git,
+    )
 
 
 def password_exists(ident: str) -> bool:

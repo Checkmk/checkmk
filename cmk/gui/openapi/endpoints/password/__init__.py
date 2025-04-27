@@ -10,6 +10,7 @@ from cmk.ccc import version
 from cmk.utils import paths
 from cmk.utils.password_store import Password
 
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
@@ -100,7 +101,14 @@ def create_password(params: Mapping[str, Any]) -> Response:
     password_details["owned_by"] = mutually_exclusive_fields(
         str, body, "owned_by", "editable_by", default="admin"
     )
-    save_password(ident, cast(Password, password_details), new_password=True)
+    save_password(
+        ident,
+        cast(Password, password_details),
+        new_password=True,
+        user_id=user.id,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     return _serve_password(ident, load_password(ident))
 
 
@@ -135,7 +143,14 @@ def update_password(params: Mapping[str, Any]) -> Response:
             detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
     password_details.update(body)
-    save_password(ident, password_details)
+    save_password(
+        ident,
+        password_details,
+        new_password=False,
+        user_id=user.id,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     return _serve_password(ident, load_password(ident))
 
 
@@ -167,7 +182,12 @@ def delete_password(params: Mapping[str, Any]) -> Response:
             title=f'Password "{ident}" is not known.',
             detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
-    remove_password(ident)
+    remove_password(
+        ident,
+        user_id=user.id,
+        pprint_value=active_config.wato_pprint_config,
+        use_git=active_config.wato_use_git,
+    )
     return Response(status=204)
 
 

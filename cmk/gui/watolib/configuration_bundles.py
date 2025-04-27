@@ -25,6 +25,7 @@ from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
@@ -389,14 +390,26 @@ def _prepare_create_passwords(
             spec = pw["spec"]
             spec["locked_by"] = bundle_ident
             spec["owned_by"] = user.id
-            save_password(pw["id"], spec, new_password=True)
+            save_password(
+                pw["id"],
+                spec,
+                new_password=True,
+                user_id=user.id,
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
 
     return create
 
 
 def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
     for password_id, _password in passwords:
-        remove_password(password_id)
+        remove_password(
+            password_id,
+            user_id=user.id,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
 
 
 def _iter_all_rules(rulespecs: set[str] | None) -> Iterable[tuple[Folder, int, Rule]]:

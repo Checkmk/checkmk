@@ -59,6 +59,8 @@ from cmk.utils.paths import (
     discovered_host_labels_dir,
     local_agent_based_plugins_dir,
     local_checks_dir,
+    local_cmk_addons_plugins_dir,
+    local_cmk_plugins_dir,
     logwatch_dir,
     nagios_startscript,
     omd_root,
@@ -1827,6 +1829,8 @@ class AutomationRestart(Automation):
         for checks_path in [
             local_checks_dir,
             local_agent_based_plugins_dir,
+            local_cmk_addons_plugins_dir,
+            local_cmk_plugins_dir,
         ]:
             if not checks_path.exists():
                 continue

@@ -13,6 +13,7 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_objects import (
     check_esx_vsphere_objects_count,
     discovery_esx_vsphere_objects,
     ObjectCountParams,
+    ObjectDiscoveryParams,
     parse_esx_vsphere_objects,
     StateParams,
     VmInfo,
@@ -28,6 +29,14 @@ STRING_TABLE = [
     ["template", "Dummy-Template", "1.2.3.4", "poweredOff"],
 ]
 STATE_PARAMS = StateParams(unknown=3, poweredOn=0, poweredOff=1, suspended=1, standBy=1)
+HOST_VM_SERVICES = [
+    Service(item="HostSystem 10.1.1.112"),
+    Service(item="HostSystem 10.1.1.111"),
+    Service(item="VM Grafana"),
+    Service(item="VM Server"),
+    Service(item="VM virt1-1.4.2"),
+    Service(item="VM Schulungs_ESXi"),
+]
 
 
 def test_parse() -> None:
@@ -56,16 +65,29 @@ def test_parse() -> None:
     }
 
 
-def test_discovery() -> None:
-    assert list(discovery_esx_vsphere_objects(parse_esx_vsphere_objects(STRING_TABLE))) == [
-        Service(item="HostSystem 10.1.1.112"),
-        Service(item="HostSystem 10.1.1.111"),
-        Service(item="VM Grafana"),
-        Service(item="VM Server"),
-        Service(item="VM virt1-1.4.2"),
-        Service(item="VM Schulungs_ESXi"),
-        Service(item="Template Dummy-Template"),
-    ]
+@pytest.mark.parametrize(
+    ["params", "expected"],
+    [
+        pytest.param(
+            {"templates": True},
+            HOST_VM_SERVICES
+            + [
+                Service(item="Template Dummy-Template"),
+            ],
+            id="With templates",
+        ),
+        pytest.param({"templates": False}, HOST_VM_SERVICES, id="Without templates"),
+    ],
+)
+def test_discovery(params: ObjectDiscoveryParams, expected: list[Service]) -> None:
+    assert (
+        list(
+            discovery_esx_vsphere_objects(
+                params=params, section=parse_esx_vsphere_objects(STRING_TABLE)
+            )
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

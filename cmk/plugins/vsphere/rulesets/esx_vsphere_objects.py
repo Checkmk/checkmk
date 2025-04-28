@@ -5,8 +5,9 @@
 import re
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     DefaultValue,
     DictElement,
     Dictionary,
@@ -15,7 +16,12 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+from cmk.rulesets.v1.rule_specs import (
+    CheckParameters,
+    DiscoveryParameters,
+    HostAndItemCondition,
+    Topic,
+)
 
 ITEM_PATTERN = re.compile("(^VM|HostSystem) (.*)$")
 
@@ -113,4 +119,30 @@ rule_spec_esx_vsphere_objects = CheckParameters(
             custom_validate=(validators.LengthInRange(min_value=1), _validate_item),
         ),
     ),
+)
+
+
+def _parameter_form_discovery() -> Dictionary:
+    return Dictionary(
+        elements={
+            "templates": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    label=Label("Discover templates"),
+                    help_text=Help(
+                        "Control whether VM templates should be monitored. "
+                        "Check this box to create services for VM templates."
+                    ),
+                    prefill=DefaultValue(True),
+                ),
+            )
+        },
+    )
+
+
+rule_spec_esx_vsphere_objects_discovery = DiscoveryParameters(
+    name="esx_vsphere_objects_discovery",
+    title=Title("ESX VM template discovery"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_discovery,
 )

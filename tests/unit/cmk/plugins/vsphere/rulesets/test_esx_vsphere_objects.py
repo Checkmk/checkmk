@@ -10,7 +10,10 @@ from cmk.ccc.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.plugins.vsphere.rulesets.esx_vsphere_objects import rule_spec_esx_vsphere_objects
+from cmk.plugins.vsphere.rulesets.esx_vsphere_objects import (
+    rule_spec_esx_vsphere_objects,
+    rule_spec_esx_vsphere_objects_discovery,
+)
 from cmk.rulesets.v1.form_specs import ServiceState
 
 
@@ -22,7 +25,7 @@ from cmk.rulesets.v1.form_specs import ServiceState
         pytest.param({"poweredOff": ServiceState.CRIT}),
     ],
 )
-def test_rulespec(partial_value: Mapping[str, int]) -> None:
+def test_check_rulespec(partial_value: Mapping[str, int]) -> None:
     value = {
         "states": {
             "standBy": ServiceState.WARN,
@@ -39,3 +42,18 @@ def test_rulespec(partial_value: Mapping[str, int]) -> None:
     ).valuespec
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        pytest.param({"templates": True}),
+        pytest.param({"templates": False}),
+    ],
+)
+def test_discovery_rulespec(params: Mapping[str, bool]) -> None:
+    valuespec = convert_to_legacy_rulespec(
+        rule_spec_esx_vsphere_objects_discovery, Edition.CRE, lambda x: x
+    ).valuespec
+    valuespec.validate_datatype(params, "")
+    valuespec.validate_value(params, "")

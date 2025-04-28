@@ -64,6 +64,10 @@ class ObjectCountParams(TypedDict):
     state: int
 
 
+class ObjectDiscoveryParams(TypedDict):
+    templates: bool
+
+
 ObjectCountParamsMapping = Mapping[Literal["distribution"], list[ObjectCountParams]]
 ParsedSection = Mapping[str, VmInfo]
 StateParamsMapping = Mapping[Literal["states"], StateParams]
@@ -97,9 +101,12 @@ def parse_esx_vsphere_objects(string_table: StringTable) -> ParsedSection:
 #   '----------------------------------------------------------------------'
 
 
-def discovery_esx_vsphere_objects(section: ParsedSection) -> DiscoveryResult:
-    for key in section:
-        yield Service(item=key)
+def discovery_esx_vsphere_objects(
+    params: ObjectDiscoveryParams, section: ParsedSection
+) -> DiscoveryResult:
+    for key, vm_info in section.items():
+        if vm_info.vmtype != "Template" or params["templates"]:
+            yield Service(item=key)
 
 
 def check_esx_vsphere_objects(
@@ -138,6 +145,8 @@ check_plugin_esx_vsphere_objects = CheckPlugin(
     name="esx_vsphere_objects",
     service_name="%s",
     discovery_function=discovery_esx_vsphere_objects,
+    discovery_ruleset_name="esx_vsphere_objects_discovery",
+    discovery_default_parameters={"templates": True},
     check_function=check_esx_vsphere_objects,
     check_ruleset_name="esx_vsphere_objects",
     check_default_parameters={

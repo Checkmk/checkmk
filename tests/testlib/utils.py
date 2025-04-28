@@ -526,6 +526,7 @@ def restart_httpd() -> None:
 class ServiceInfo:
     state: int
     summary: str
+    extra_columns: dict[str, Any]
 
 
 def get_services_with_status(

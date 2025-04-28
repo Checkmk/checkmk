@@ -10,7 +10,7 @@ from cmk.ccc.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.plugins.vsphere.lib import QueryType
+from cmk.plugins.vsphere.lib.special_agent import QueryType
 from cmk.plugins.vsphere.rulesets.special_agent import rule_spec_special_agent_vsphere
 
 

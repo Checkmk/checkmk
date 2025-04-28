@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.vsphere.lib import QueryType
+from cmk.plugins.vsphere.lib.special_agent import QueryType
 from cmk.plugins.vsphere.server_side_calls.special_agent import special_agent_vsphere
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 

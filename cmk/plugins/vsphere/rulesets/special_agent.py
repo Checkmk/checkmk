@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import cast, Literal
 
-from cmk.plugins.vsphere.lib import InfoSelection, QueryType
+from cmk.plugins.vsphere.lib.special_agent import InfoSelection, QueryType
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,

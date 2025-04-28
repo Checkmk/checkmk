@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 from cmk.server_side_calls.v1._utils import Secret
 
-from ..lib import InfoSelection, QueryType
+from ..lib.special_agent import InfoSelection, QueryType
 
 
 class Params(BaseModel):

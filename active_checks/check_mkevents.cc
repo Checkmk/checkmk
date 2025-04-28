@@ -9,14 +9,15 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -174,15 +175,14 @@ int main(int argc, char **argv) {
             ioError("Cannot set socket reveive timeout");
         }
 
-        struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
+        sockaddr_in addr{};
         addr.sin_family = AF_INET;
         inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(struct sockaddr_in)) == -1) {
+                      sizeof(sockaddr_in)) == -1) {
             ioError("Cannot connect to event console at " +
                     remote_hostipaddress + ":" + std::to_string(remote_port));
         }

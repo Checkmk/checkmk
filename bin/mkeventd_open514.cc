@@ -11,6 +11,7 @@
    That can then simply use filedescriptor 3 and receive syslog
    messages */
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -19,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <string>
 #include <vector>
 
 #define SYSLOG_PORT 514
@@ -42,7 +44,7 @@ void open_syslog(int syslog_fd) {
             exit(1);
         }
         // Bind it to the port (this requires privileges)
-        struct sockaddr_in addr;
+        sockaddr_in addr{};
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = INADDR_ANY;
@@ -115,7 +117,7 @@ void open_syslog_tcp(int syslog_tcp_fd) {
             exit(1);
         } else {
             // Bind it to the port (this requires privileges)
-            struct sockaddr_in addr;
+            sockaddr_in addr{};
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SYSLOG_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;
@@ -189,7 +191,7 @@ void open_snmptrap(int snmptrap_fd) {
             exit(1);
         } else {
             // Bind it to the port (this requires privileges)
-            struct sockaddr_in addr;
+            sockaddr_in addr{};
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SNMPTRAP_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;

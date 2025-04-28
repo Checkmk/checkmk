@@ -15,7 +15,7 @@ ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${
 COPY --from=slim /usr/local/lib/python3.9/distutils optional_file* /usr/lib/python3.9/distutils
 
 RUN \
-    if [ "$PYTHON_VERSION_MAJ_MIN" = "2.7" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.4" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.5" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.6" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.7" ]; then \
+    if [ "$PYTHON_VERSION_MAJ_MIN" = "2.7" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.4" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.5" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.6" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.7" ] || [ "$PYTHON_VERSION_MAJ_MIN" = "3.8" ]; then \
         GET_PIP_URL="https://bootstrap.pypa.io/pip/$PYTHON_VERSION_MAJ_MIN/get-pip.py" ; \
     else \
     GET_PIP_URL="https://bootstrap.pypa.io/get-pip.py" ; \

@@ -240,7 +240,7 @@ def main() {
         dir("${deliverables_dir}") {
             /// BOM shall have a unique name, see CMK-16483
             sh("""
-                cp omd/bill-of-materials.json check-mk-${params.EDITION}-${cmk_version_rc_aware}-bill-of-materials.json
+                cp omd/bill-of-materials.json check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.json
             """);
         }
 

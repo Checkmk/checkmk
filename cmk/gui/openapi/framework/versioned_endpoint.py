@@ -187,7 +187,7 @@ class VersionedEndpoint:
     versions: Mapping[APIVersion, EndpointHandler]
     """A mapping of the version to the version specific endpoint handler"""
 
-    behavior: EndpointBehavior
+    behavior: EndpointBehavior = field(default_factory=EndpointBehavior)
     """The REST API and Checkmk specific behavior properties of the endpoint"""
 
     removed_in_version: APIVersion | None = None

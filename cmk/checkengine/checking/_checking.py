@@ -19,7 +19,7 @@ from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import InventoryPaths, make_meta, TreeStore
+from cmk.utils.structured_data import make_meta, TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
@@ -148,11 +148,11 @@ def _do_inventory_actions_during_checking_for(
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
 ) -> None:
-    tree_store = TreeStore(InventoryPaths(cmk.utils.paths.omd_root).status_data_dir)
+    tree_store = TreeStore(cmk.utils.paths.omd_root)
 
     if not params.status_data_inventory:
         # includes cluster case
-        tree_store.remove(host_name=host_name)
+        tree_store.remove_status_data_tree(host_name=host_name)
         return  # nothing to do here
 
     status_data_tree = inventorize_status_data_of_real_host(
@@ -164,7 +164,7 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree:
-        tree_store.save(
+        tree_store.save_status_data_tree(
             host_name=host_name,
             tree=status_data_tree,
             meta=make_meta(do_archive=False),

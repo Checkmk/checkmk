@@ -2622,13 +2622,14 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
 
     inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
+    # TODO move mkdirs to related TreeStore
     store.makedirs(inv_paths.inventory_dir)
     store.makedirs(inv_paths.archive_dir)
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = plugins.inventory_plugins
 
-    tree_store = TreeStore(inv_paths.inventory_dir)
+    tree_store = TreeStore(cmk.utils.paths.omd_root)
 
     for hostname in hostnames:
 
@@ -2656,7 +2657,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         section.section_begin(hostname)
         section.section_step("Inventorizing")
         try:
-            previous_tree = tree_store.load(host_name=hostname)
+            previous_tree = tree_store.load_inventory_tree(host_name=hostname)
             if hostname in hosts_config.clusters:
                 check_results = inventory.inventorize_cluster(
                     config_cache.nodes(hostname),
@@ -2737,9 +2738,8 @@ def execute_active_check_inventory(
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
 ) -> Sequence[ActiveCheckResult]:
-    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-    tree_or_archive_store = TreeOrArchiveStore(inv_paths.inventory_dir, inv_paths.archive_dir)
-    previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
+    tree_or_archive_store = TreeOrArchiveStore(cmk.utils.paths.omd_root)
+    previous_tree = tree_or_archive_store.load_previous_inventory_tree(host_name=host_name)
 
     if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
@@ -2769,6 +2769,7 @@ def execute_active_check_inventory(
             previous_tree=previous_tree,
         )
 
+    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
     if result.no_data_or_files:
         AutoQueue(inv_paths.auto_dir).add(host_name)
     else:
@@ -2783,10 +2784,10 @@ def execute_active_check_inventory(
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
             console.verbose("Archive current inventory tree.")
-            tree_or_archive_store.archive(host_name=host_name)
+            tree_or_archive_store.archive_inventory_tree(host_name=host_name)
         if save_tree_actions.do_save:
             console.verbose("Save new inventory tree.")
-            tree_or_archive_store.save(
+            tree_or_archive_store.save_inventory_tree(
                 host_name=host_name,
                 tree=result.inventory_tree,
                 meta=make_meta(do_archive=save_tree_actions.do_archive),

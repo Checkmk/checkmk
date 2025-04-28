@@ -147,15 +147,12 @@ def _load_tree_from_file(
         # just for security reasons
         return ImmutableTree()
 
+    tree_store = TreeStore(cmk.utils.paths.omd_root)
     match tree_type:
         case "inventory":
-            return TreeStore(InventoryPaths(cmk.utils.paths.omd_root).inventory_dir).load(
-                host_name=host_name
-            )
+            return tree_store.load_inventory_tree(host_name=host_name)
         case "status_data":
-            return TreeStore(InventoryPaths(cmk.utils.paths.omd_root).status_data_dir).load(
-                host_name=host_name
-            )
+            return tree_store.load_status_data_tree(host_name=host_name)
 
 
 @request_memoize()

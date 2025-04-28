@@ -1689,6 +1689,20 @@ def _load_tree(filepath: Path) -> ImmutableTree:
     return ImmutableTree()
 
 
+def _save_tree(
+    file_path: Path, file_path_gz: Path, tree: MutableTree, meta: SDMeta, pretty: bool
+) -> None:
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    raw_tree = serialize_tree(tree)
+    store.save_object_to_file(file_path, raw_tree, pretty=pretty)
+
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+        f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
+    store.save_bytes_to_file(file_path_gz, buf.getvalue())
+
+
 class SDMeta(TypedDict):
     version: Literal["1"]
     do_archive: bool
@@ -1757,70 +1771,73 @@ def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTr
 
 
 class TreeStore:
-    def __init__(self, inventory_dir: Path) -> None:
-        self.inventory_dir = inventory_dir
-        self._last_filepath = inventory_dir / ".last"
+    def __init__(self, omd_root: Path) -> None:
+        self.inv_paths = InventoryPaths(omd_root)
 
-    def load(self, *, host_name: HostName) -> ImmutableTree:
-        return _load_tree(self._tree_file(host_name))
+    def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
+        return _load_tree(self.inv_paths.inventory_tree(host_name))
 
-    def save(
-        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    def save_inventory_tree(
+        self, host_name: HostName, *, tree: MutableTree, meta: SDMeta, pretty: bool = False
     ) -> None:
-        self.inventory_dir.mkdir(parents=True, exist_ok=True)
-
-        tree_file = self._tree_file(host_name)
-
-        raw_tree = serialize_tree(tree)
-        store.save_object_to_file(tree_file, raw_tree, pretty=pretty)
-
-        buf = io.BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
-        store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
-
+        _save_tree(
+            self.inv_paths.inventory_tree(host_name),
+            self.inv_paths.inventory_tree_gz(host_name),
+            tree,
+            meta,
+            pretty,
+        )
         # Inform Livestatus about the latest inventory update
-        self._last_filepath.touch()
+        self.inv_paths.marker_file.touch()
 
-    def remove(self, *, host_name: HostName) -> None:
-        self._tree_file(host_name).unlink(missing_ok=True)
-        self._gz_file(host_name).unlink(missing_ok=True)
+    def remove_inventory_tree(self, *, host_name: HostName) -> None:
+        self.inv_paths.inventory_tree(host_name).unlink(missing_ok=True)
+        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
-    def _tree_file(self, host_name: HostName) -> Path:
-        return self.inventory_dir / str(host_name)
+    def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
+        return _load_tree(self.inv_paths.status_data_tree(host_name))
 
-    def _gz_file(self, host_name: HostName) -> Path:
-        return self.inventory_dir / f"{host_name}.gz"
+    def save_status_data_tree(
+        self, host_name: HostName, *, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    ) -> None:
+        _save_tree(
+            self.inv_paths.status_data_tree(host_name),
+            self.inv_paths.status_data_tree_gz(host_name),
+            tree,
+            meta,
+            pretty,
+        )
+        # Inform Livestatus about the latest inventory update
+        self.inv_paths.marker_file.touch()
+
+    def remove_status_data_tree(self, *, host_name: HostName) -> None:
+        self.inv_paths.status_data_tree(host_name).unlink(missing_ok=True)
+        self.inv_paths.status_data_tree_gz(host_name).unlink(missing_ok=True)
 
 
 class TreeOrArchiveStore(TreeStore):
-    def __init__(self, inventory_dir: Path, archive_dir: Path) -> None:
-        super().__init__(inventory_dir)
-        self.archive_dir = archive_dir
-
-    def load_previous(self, *, host_name: HostName) -> ImmutableTree:
-        if (tree_file := self._tree_file(host_name)).exists():
+    def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
+        if (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
             return _load_tree(tree_file)
 
         try:
             latest_archive_tree_file = max(
-                self._archive_host_dir(host_name).iterdir(), key=lambda tp: int(tp.name)
+                self.inv_paths.archive_host(host_name).iterdir(),
+                key=lambda tp: int(tp.name),
             )
         except (FileNotFoundError, ValueError):
             return ImmutableTree()
 
         return _load_tree(latest_archive_tree_file)
 
-    def _archive_host_dir(self, host_name: HostName) -> Path:
-        return self.archive_dir / str(host_name)
-
-    def archive(self, *, host_name: HostName) -> None:
-        if not (tree_file := self._tree_file(host_name)).exists():
+    def archive_inventory_tree(self, *, host_name: HostName) -> None:
+        if not (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
             return
-        target_dir = self._archive_host_dir(host_name)
-        target_dir.mkdir(parents=True, exist_ok=True)
-        tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
-        self._gz_file(host_name).unlink(missing_ok=True)
+
+        archive_host = self.inv_paths.archive_host(host_name)
+        archive_host.mkdir(parents=True, exist_ok=True)
+        tree_file.rename(archive_host / str(int(tree_file.stat().st_mtime)))
+        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
 
 @dataclass(frozen=True)

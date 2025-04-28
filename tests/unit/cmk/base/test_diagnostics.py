@@ -560,9 +560,7 @@ def test_diagnostics_element_checkmk_overview_error(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree, error
 ):
     inv_paths = InventoryPaths(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
-        TreeStore(inv_paths.inventory_dir), ""
-    )
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(TreeStore(tmp_path), "")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -631,9 +629,7 @@ def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
     inv_paths = InventoryPaths(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
-        TreeStore(inv_paths.inventory_dir), ""
-    )
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(TreeStore(tmp_path), "")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 

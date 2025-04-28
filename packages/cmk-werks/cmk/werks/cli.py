@@ -1091,7 +1091,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     if args.count is None:
         per_project = "\n".join(
-            "{project}: {len(ids)}" for project, ids in stash.ids_by_project.items()
+            f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items()
         )
         sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
         sys.exit(0)

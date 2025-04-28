@@ -29,6 +29,8 @@ from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
 from cmk.bi.type_defs import frozen_aggregations_dir
 
+_LOGGER = logger.getChild("web.bi.compilation")
+
 
 class ConfigStatus(TypedDict):
     configfile_timestamp: float
@@ -44,7 +46,6 @@ class BICompiler:
         self._sites_callback = sites_callback
         self._bi_configuration_file = bi_configuration_file
 
-        self._logger = logger.getChild("web.bi.compilation")
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
         self._path_compilation_lock = Path(get_cache_dir(), "compilation.LOCK")
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
@@ -196,7 +197,7 @@ class BICompiler:
             if aggr_id.endswith(".new") or aggr_id in self._compiled_aggregations:
                 continue
 
-            self._logger.debug("Loading cached aggregation results %s" % aggr_id)
+            _LOGGER.debug("Loading cached aggregation results %s" % aggr_id)
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(
                 store.load_object_from_pickle_file(path_object, default={})
             )
@@ -206,7 +207,7 @@ class BICompiler:
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
         if not self._compilation_required(current_configstatus):
-            self._logger.debug("No compilation required")
+            _LOGGER.debug("No compilation required")
             return
 
         with store.locked(self._path_compilation_lock):
@@ -214,7 +215,7 @@ class BICompiler:
             # Another apache might have done the job
             current_configstatus = self.compute_current_configstatus()
             if not self._compilation_required(current_configstatus):
-                self._logger.debug("No compilation required. An other process already compiled it")
+                _LOGGER.debug("No compilation required. An other process already compiled it")
                 return
 
             self.prepare_for_compilation(current_configstatus["online_sites"])
@@ -223,14 +224,14 @@ class BICompiler:
                 start = time.perf_counter()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 end = time.perf_counter()
-                self._logger.debug(f"Compilation of {aggregation.id} took {end - start:f}")
+                _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
             for aggr_id, compiled_aggr in self._compiled_aggregations.items():
                 start = time.perf_counter()
                 result = compiled_aggr.serialize()
                 end = time.perf_counter()
-                self._logger.debug(
+                _LOGGER.debug(
                     "Schema dump %s took config took %f (%d branches)"
                     % (aggr_id, end - start, len(compiled_aggr.branches))
                 )
@@ -308,7 +309,7 @@ class BICompiler:
             if self._path_compilation_timestamp.exists():
                 compilation_timestamp = float(self._path_compilation_timestamp.read_text())
         except (FileNotFoundError, ValueError) as e:
-            self._logger.warning("Can not determine compilation timestamp %s" % str(e))
+            _LOGGER.warning("Can not determine compilation timestamp %s" % str(e))
         return compilation_timestamp
 
     def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:

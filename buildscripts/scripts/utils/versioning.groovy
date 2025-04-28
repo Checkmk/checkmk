@@ -208,12 +208,6 @@ def patch_folders(edition) {
     }
 }
 
-def patch_demo(EDITION) {
-    if (EDITION == 'free') {
-        sh('''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make''');
-    }
-}
-
 def set_version(cmk_version) {
     sh("make NEW_VERSION=${cmk_version} setversion");
 }
@@ -221,7 +215,6 @@ def set_version(cmk_version) {
 def configure_checkout_folder(edition, cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
-    patch_demo(edition);
     set_version(cmk_version);
 }
 

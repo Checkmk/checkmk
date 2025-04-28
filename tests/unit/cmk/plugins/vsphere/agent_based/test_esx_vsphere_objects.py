@@ -7,7 +7,8 @@ from typing import Literal
 
 import pytest
 
-from cmk.base.legacy_checks.esx_vsphere_objects import (
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.plugins.vsphere.agent_based.esx_vsphere_objects import (
     check_esx_vsphere_objects,
     check_esx_vsphere_objects_count,
     discovery_esx_vsphere_objects,
@@ -16,8 +17,6 @@ from cmk.base.legacy_checks.esx_vsphere_objects import (
     StateParams,
     VmInfo,
 )
-
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 
 STRING_TABLE = [
     ["hostsystem", "10.1.1.112", "", "poweredOn"],

@@ -149,6 +149,7 @@ def main() {
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
+                        EDITION: params.EDITION,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                     ],
                     build_params_no_check: [

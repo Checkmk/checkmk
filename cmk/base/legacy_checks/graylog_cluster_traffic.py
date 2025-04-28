@@ -44,10 +44,15 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
         ("output", "Output"),
         ("decoded", "Decoded"),
     ]:
-        traffic_value = parsed.get(key, []).get(parsed["to"])
+        traffic_value = parsed.get(key)
         if traffic_value is not None:
+            try:
+                latest_entry = sorted(traffic_value, reverse=True)[0]
+            except IndexError:
+                continue
+
             yield check_levels(
-                traffic_value,
+                traffic_value[latest_entry],
                 "graylog_%s" % key,
                 params.get(key),
                 infoname=infotext,

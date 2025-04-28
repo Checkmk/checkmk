@@ -12,9 +12,11 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_objects import (
     check_esx_vsphere_objects,
     check_esx_vsphere_objects_count,
     discovery_esx_vsphere_objects,
+    parse_esx_vsphere_objects,
+)
+from cmk.plugins.vsphere.lib.esx_vsphere_objects import (
     ObjectCountParams,
     ObjectDiscoveryParams,
-    parse_esx_vsphere_objects,
     StateParams,
     VmInfo,
 )

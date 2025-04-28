@@ -18,10 +18,7 @@
 # virtualmachine  LinuxV
 # virtualmachine  OpenSUSE_I
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 from itertools import chain
-from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -34,43 +31,15 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-
-vsphere_object_names = {"hostsystem": "HostSystem", "virtualmachine": "VM", "template": "Template"}
-
-
-@dataclass
-class VmInfo:
-    name: str
-    vmtype: str
-    hostsystem: str
-    state: str
-
-    @property
-    def service_name(self) -> str:
-        return f"{self.vmtype} {self.name}"
-
-
-class StateParams(TypedDict):
-    standBy: int
-    poweredOn: int
-    poweredOff: int
-    suspended: int
-    unknown: int
-
-
-class ObjectCountParams(TypedDict):
-    vm_names: list[str]
-    hosts_count: int
-    state: int
-
-
-class ObjectDiscoveryParams(TypedDict):
-    templates: bool
-
-
-ObjectCountParamsMapping = Mapping[Literal["distribution"], list[ObjectCountParams]]
-ParsedSection = Mapping[str, VmInfo]
-StateParamsMapping = Mapping[Literal["states"], StateParams]
+from cmk.plugins.vsphere.lib.esx_vsphere_objects import (
+    ObjectCountParamsMapping,
+    ObjectDiscoveryParams,
+    ParsedSection,
+    StateParams,
+    StateParamsMapping,
+    VmInfo,
+    VSPHERE_OBJECT_NAMES,
+)
 
 
 def parse_esx_vsphere_objects(string_table: StringTable) -> ParsedSection:
@@ -82,7 +51,7 @@ def parse_esx_vsphere_objects(string_table: StringTable) -> ParsedSection:
             line += [""] * (4 - len(line))
         vm_info = VmInfo(
             name=line[1],
-            vmtype=vsphere_object_names.get(line[0], "Unknown Object"),
+            vmtype=VSPHERE_OBJECT_NAMES.get(line[0], "Unknown Object"),
             hostsystem=line[2],
             state=line[3],
         )

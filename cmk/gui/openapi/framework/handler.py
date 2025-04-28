@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 from typing import Annotated, get_args, get_origin
 
 from werkzeug.datastructures import MIMEAccept
@@ -31,6 +32,10 @@ from cmk.gui.openapi.utils import (
 )
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
+
+from cmk import trace
+
+tracer = trace.get_tracer()
 
 type ApiResponseModel[T: DataclassInstance] = T
 """Some dataclass that was returned from the endpoint."""
@@ -86,8 +91,10 @@ def _create_response(
     if add_etag and response_json is not None:
         headers["ETag"] = etag_of_dict(response_json).to_header()
 
+    # TODO: improve the flow
+    response_bytes = json.dumps(response_json)
     return Response(
-        response=response_json,
+        response=response_bytes,
         status=status_code,
         headers=headers,
         content_type=content_type,
@@ -116,6 +123,7 @@ def _validate_direct_response(response: Response) -> None:
         )
 
 
+@tracer.instrument("handle_endpoint_request")
 def handle_endpoint_request(
     endpoint: RequestEndpoint,
     request_data: RawRequestData,

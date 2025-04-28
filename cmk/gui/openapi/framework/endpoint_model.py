@@ -374,7 +374,7 @@ class EndpointModel[**P, T]:
             body = convert_request_body(self.request_body_type, content_type, request_data["body"])
         else:
             # we don't set it to None, so that we get the pydantic validation error
-            body = request_data["body"]
+            body = request_data["body"] or None
         prepared_data: _PreparedRequestData = {
             "body": body,
             "path": request_data["path"],

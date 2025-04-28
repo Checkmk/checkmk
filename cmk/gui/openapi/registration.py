@@ -42,6 +42,7 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from .spec import spec_generator_job
@@ -49,6 +50,7 @@ from .spec import spec_generator_job
 
 def register(
     endpoint_registry: EndpointRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:

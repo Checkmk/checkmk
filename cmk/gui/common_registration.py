@@ -50,6 +50,7 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
@@ -141,6 +142,7 @@ def register(
     host_attribute_topic_registry: HostAttributeTopicRegistry,
     replication_path_registry: ReplicationPathRegistry,
     endpoint_registry: EndpointRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     user_connector_registry: UserConnectorRegistry,
     layout_registry: LayoutRegistry,
@@ -280,7 +282,9 @@ def register(
     graphing.register(page_registry, config_variable_registry, autocompleter_registry)
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
-    openapi_registration.register(endpoint_registry, endpoint_family_registry, job_registry)
+    openapi_registration.register(
+        endpoint_registry, versioned_endpoint_registry, endpoint_family_registry, job_registry
+    )
 
     register_userroles(config_file_registry)
     groups_io.register(config_file_registry)

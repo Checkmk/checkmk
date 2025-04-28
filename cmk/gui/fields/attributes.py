@@ -618,6 +618,21 @@ class LockedBy(BaseSchema, CheckmkTuple):
     )
 
 
+AuthProtocolType = typing.Literal[
+    "MD5-96", "SHA-1-96", "SHA-2-224", "SHA-2-256", "SHA-2-384", "SHA-2-512"
+]
+PrivacyProtocolType = typing.Literal[
+    "CBC-DES",
+    "AES-128",
+    "3DES-EDE",
+    "AES-192",
+    "AES-256",
+    "AES-192-Blumenthal",
+    "AES-256-Blumenthal",
+]
+
+
+# should be in sync with AuthProtocolType
 AUTH_PROT_MAP = {
     "MD5-96": "md5",
     "SHA-1-96": "sha",
@@ -627,6 +642,7 @@ AUTH_PROT_MAP = {
     "SHA-2-512": "SHA-512",
 }
 
+# should be in sync with PrivacyProtocolType
 PRIV_PROT_MAP = {
     "CBC-DES": "DES",
     "AES-128": "AES",

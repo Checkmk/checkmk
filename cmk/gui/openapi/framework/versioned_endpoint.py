@@ -64,9 +64,6 @@ class EndpointMetadata:
     """The link relation of the endpoint. This relation is used to identify an endpoint
     for linking. This has to be unique in its module."""
 
-    family: EndpointFamilyName
-    """The endpoint family name this endpoint belongs to."""
-
     method: HTTPMethod
     """The HTTP method under which the endpoint should be accessible. Methods are written
     lowercase in the OpenAPI YAML-file, though both upper and lower-cased method-names
@@ -139,7 +136,10 @@ class EndpointPermissions:
 class EndpointDoc:
     """Properties for the documentation of the endpoint."""
 
-    group: TagGroup = "Setup"
+    family: EndpointFamilyName
+    """The endpoint family name this endpoint belongs to."""
+
+    group: TagGroup
     """The documentation group the endpoint belongs to."""
 
     sort_index: int = 0

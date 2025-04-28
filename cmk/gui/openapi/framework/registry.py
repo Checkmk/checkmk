@@ -90,7 +90,7 @@ class EndpointDefinition:
             accept=self.metadata.accept,
             content_type=self.metadata.content_type,
             etag=self.behavior.etag,
-            operation_id=f"{self.metadata.family}.{self.handler.handler.__name__}",
+            operation_id=f"{self.doc.family}.{self.handler.handler.__name__}",
             doc_group=self.doc.group,
             additional_status_codes=self.handler.additional_status_codes or [],
             update_config_generation=self.behavior.update_config_generation,
@@ -100,9 +100,9 @@ class EndpointDefinition:
     def spec_endpoint(self) -> VersionedSpecEndpoint:
         # TODO: separate models from other attributes
         return VersionedSpecEndpoint(
-            operation_id=f"{self.metadata.family}.{self.handler.handler.__name__}",
+            operation_id=f"{self.doc.family}.{self.handler.handler.__name__}",
             path=self.metadata.path,
-            family=self.metadata.family,
+            family=self.doc.family,
             doc_group=self.doc.group,
             doc_sort_index=self.doc.sort_index,
             deprecated_werk_id=self.doc.sort_index,
@@ -132,7 +132,7 @@ class VersionedEndpointRegistry:
         Registers the endpoint with all its handlers for different API versions.
         """
 
-        endpoint_family = endpoint_family_registry.get(endpoint.metadata.family)
+        endpoint_family = endpoint_family_registry.get(endpoint.doc.family)
         assert endpoint_family is not None
         endpoint_key = (endpoint_family.name, endpoint.metadata.link_relation)
 

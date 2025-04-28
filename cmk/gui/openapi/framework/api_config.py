@@ -46,6 +46,7 @@ class APIConfig:
 
     RELEASED_VERSIONS_IN_ORDER = [
         APIVersion.V1,  # Legacy version (includes all marshmallow endpoints)
+        APIVersion.UNSTABLE,
     ]
 
     DEVELOPMENT_VERSIONS: Sequence[APIVersion] = []

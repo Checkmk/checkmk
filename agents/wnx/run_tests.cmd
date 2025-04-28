@@ -30,8 +30,8 @@ if "%~1"=="--component"     (set int_arg_component=1)     & (set int_arg_build=1
 if "%~1"=="-E"              (set int_arg_ext=1)           & (set int_arg_build=1)     & shift & goto CheckOpts
 if "%~1"=="--ext"           (set int_arg_ext=1)           & (set int_arg_build=1)     & shift & goto CheckOpts
 
-if "%~1"=="-S"              (set int_arg_simulation=1)    & shift & goto CheckOpts
-if "%~1"=="--simulation"    (set int_arg_simulation=1)    & shift & goto CheckOpts
+if "%~1"=="-S"              (set int_arg_simulation=1)    & (set int_arg_build=1)     & shift & goto CheckOpts
+if "%~1"=="--simulation"    (set int_arg_simulation=1)    & (set int_arg_build=1)     & shift & goto CheckOpts
 
 if "%~1"=="-I"              (set int_arg_integration=1)   & (set int_arg_build=1)     & shift & goto CheckOpts
 if "%~1"=="--integration"   (set int_arg_integration=1)   & (set int_arg_build=1)     & shift & goto CheckOpts

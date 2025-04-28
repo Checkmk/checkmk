@@ -2553,7 +2553,9 @@ class ConfigCache:
             passwords,
             password_store_file,
             ExecutableFinder(
-                cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
+                # NOTE: we can't ignore these, they're an API promise.
+                cmk.utils.paths.local_special_agents_dir,
+                cmk.utils.paths.special_agents_dir,
             ),
         )
         for agentname, params_seq in host_special_agents:

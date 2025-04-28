@@ -10,50 +10,44 @@ from typing import Final
 
 import pytest
 
-from tests.testlib.common.repo import repo_path
-
 from cmk.ccc import version as checkmk_version
 
 from cmk.utils import password_store
 
 from cmk.discover_plugins import family_libexec_dir
+from cmk.plugins.activemq.special_agent import agent_activemq
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
+from cmk.plugins.allnet_ip_sensoric.special_agent import agent_allnet_ip_sensoric
+from cmk.plugins.aws.special_agent import agent_aws, agent_aws_status
+from cmk.plugins.azure.special_agent import agent_azure, agent_azure_status
 from cmk.plugins.bazel.lib import agent as agent_bazel
+from cmk.plugins.checkmk.special_agents import agent_bi
+from cmk.plugins.cisco.special_agent import agent_cisco_prime
+from cmk.plugins.cisco_meraki.special_agent import agent_cisco_meraki
+from cmk.plugins.couchbase.special_agent import agent_couchbase
+from cmk.plugins.datadog.special_agent import agent_datadog
+from cmk.plugins.elasticsearch.special_agent import agent_elasticsearch
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
-from cmk.plugins.graylog.special_agents import agent_graylog
+from cmk.plugins.graylog.special_agent import agent_graylog
+from cmk.plugins.hivemanager_ng.special_agent import agent_hivemanager_ng
 from cmk.plugins.innovaphone.special_agent import agent_innovaphone
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
+from cmk.plugins.jira.special_agent import agent_jira
 from cmk.plugins.kube.special_agents import agent_kube
+from cmk.plugins.mobileiron.special_agent import agent_mobileiron
+from cmk.plugins.mqtt.special_agent import agent_mqtt
 from cmk.plugins.netapp.special_agent import agent_netapp_ontap
 from cmk.plugins.prometheus.special_agents import agent_prometheus
+from cmk.plugins.proxmox_ve.special_agent import agent_proxmox_ve
+from cmk.plugins.pure_storage_fa.special_agent import agent_pure_storage_fa
+from cmk.plugins.rabbitmq.special_agent import agent_rabbitmq
 from cmk.plugins.redfish.special_agents import agent_redfish, agent_redfish_power
+from cmk.plugins.smb.special_agent import agent_smb_share
+from cmk.plugins.splunk.special_agent import agent_splunk
+from cmk.plugins.storeonce4x.special_agent import agent_storeonce4x
 from cmk.server_side_calls_backend import load_special_agents
-from cmk.special_agents import (
-    agent_activemq,
-    agent_allnet_ip_sensoric,
-    agent_aws,
-    agent_aws_status,
-    agent_azure,
-    agent_azure_status,
-    agent_bi,
-    agent_cisco_meraki,
-    agent_cisco_prime,
-    agent_couchbase,
-    agent_datadog,
-    agent_elasticsearch,
-    agent_hivemanager_ng,
-    agent_jira,
-    agent_mobileiron,
-    agent_mqtt,
-    agent_proxmox_ve,
-    agent_pure_storage_fa,
-    agent_rabbitmq,
-    agent_smb_share,
-    agent_splunk,
-    agent_storeonce4x,
-)
 
 agent_otel: ModuleType | None = None
 try:
@@ -287,11 +281,20 @@ def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: Mod
 
 def test_special_agents_location() -> None:
     """Make sure all executables are where we expect them"""
-    assert not {
-        plugin.name
+    assert all(
+        (family_libexec_dir(location.module) / f"agent_{plugin.name}").exists()
         for location, plugin in load_special_agents(raise_errors=True).items()
-        if not (
-            (family_libexec_dir(location.module) / f"agent_{plugin.name}").exists()
-            or (repo_path() / f"agents/special/agent_{plugin.name}").exists()
-        )
-    }
+    )
+
+
+@pytest.mark.parametrize(
+    "module",
+    [m for m in TESTED_SA_MODULES.values() if m is not None],
+)
+def test_user_agent_string(module: ModuleType) -> None:
+    try:
+        user_agent = module.USER_AGENT
+    except AttributeError:
+        return
+    assert user_agent.startswith("checkmk-special-")
+    assert user_agent.endswith(f"-{checkmk_version.__version__}")

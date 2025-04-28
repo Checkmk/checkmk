@@ -141,23 +141,6 @@ def _is_default_allowed_import(
     return _is_allowed_import(imported) or imported.in_component(component)
 
 
-def _is_allowed_for_special_agent_executable(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return (
-        # still OK, but is on its way out.
-        imported.in_component(Component("cmk.special_agents"))
-        or (
-            # allow all `cmk.plugins.<FAMILY>.special_agents`
-            imported.in_component(Component("cmk.plugins"))
-            and len(imported.parts) >= 4
-            and imported.parts[3] == "special_agents"
-        )
-    )
-
-
 def _allow_default_plus_checkers(
     *,
     imported: ModuleName,
@@ -655,7 +638,6 @@ def _is_allowed_for_rrd(
 
 
 _COMPONENTS = (
-    (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
@@ -854,16 +836,8 @@ class CMKModuleLayerChecker(BaseChecker):
             return explicit_component == component
 
         return (
-            (
-                component == Component("cmk.notification_plugins")
-                and importing_path.is_below("notifications")
-            )
-            or (
-                component == Component("agents.special")
-                and importing_path.is_below("agents/special")
-            )
-            or (
-                component == Component("cmk.active_checks")
-                and importing_path.is_below("active_checks")
-            )
+            component == Component("cmk.notification_plugins")
+            and importing_path.is_below("notifications")
+        ) or (
+            component == Component("cmk.active_checks") and importing_path.is_below("active_checks")
         )

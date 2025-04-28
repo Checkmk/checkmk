@@ -13,7 +13,7 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.users import create_and_destroy_user
 
-from cmk.special_agents.agent_bi import (
+from cmk.plugins.checkmk.special_agents.agent_bi import (
     AgentBiAutomationUserAuthentication,
     AgentBiConfig,
     AgentBiUserAuthentication,

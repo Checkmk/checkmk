@@ -5,7 +5,7 @@
 
 
 from cmk.plugins.azure.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
-from cmk.special_agents.agent_azure import ALL_METRICS
+from cmk.plugins.azure.special_agent.agent_azure import ALL_METRICS
 
 
 def test_all_services_present_in_gui():

@@ -130,7 +130,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude __init__.py \
 	    --exclude check_mk_agent.spec \
-	    --exclude special/lib \
 	    --exclude plugins/Makefile \
 	    --exclude plugins/*.checksum \
 	    --exclude plugins/__init__.py \
@@ -138,7 +137,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    plugins \
 	    sap \
 	    scripts \
-	    special \
 	    z_os \
 	    check-mk-agent_$(CMK_VERSION)-1_all.deb \
 	    check-mk-agent-$(CMK_VERSION)-1.noarch.rpm \

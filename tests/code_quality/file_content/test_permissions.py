@@ -29,8 +29,6 @@ _GLOBAL_EXCLUDES = [
 _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
     # globbing pattern                check function,   explicit excludes, exclude patterns
     ("active_checks/*", is_executable, ["Makefile", "check_mkevents.cc"], []),
-    ("agents/special/agent_*", is_executable, [], []),
-    ("agents/special/lib/*", is_not_executable, [], []),
     ("agents/check_mk_agent.*", is_executable, ["check_mk_agent.spec"], []),
     (
         "agents/plugins/*",

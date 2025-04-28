@@ -219,7 +219,7 @@ py_library(
     name = "lib_cmk_repo_no_meraki",
     srcs = glob(
         include = ["**/*.py"],
-        exclude = ["special_agents/agent_cisco_meraki.py"],
+        exclude = ["plugins/cisco_meraki/special_agent/agent_cisco_meraki.py"],
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],

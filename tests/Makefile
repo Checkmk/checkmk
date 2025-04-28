@@ -392,7 +392,7 @@ test-mypy-agent-cisco-meraki:
 	    $(MYPY_ADDOPTS) \
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
-	    -- cmk/special_agents/agent_cisco_meraki.py
+	    -- cmk/plugins/cisco_meraki/special_agent/agent_cisco_meraki.py
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

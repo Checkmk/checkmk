@@ -1201,6 +1201,8 @@ class Site:
             )
             for proc in site_procs[:10]:
                 logger.warning("  [%s] %s: %s", proc.pid, proc.info["name"], proc.info["cmdline"])
+            if "--ignore-running-procs" in sys.argv:
+                return
             raise AssertionError(
                 "Site '%s' has still %d processes running after stopping!"
                 % (self.id, len(site_procs))

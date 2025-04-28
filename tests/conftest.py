@@ -197,6 +197,12 @@ logging.getLogger("faker").setLevel(logging.ERROR)
 def pytest_addoption(parser):
     """Register options to pytest"""
     parser.addoption(
+        "--ignore-running-procs",
+        action="store_true",
+        default=False,
+        help="Ignore running processes after site shutdown.",
+    )
+    parser.addoption(
         "--fail-on-log-exception",
         action="store_true",
         default=False,

@@ -411,18 +411,31 @@ class Site:
         self,
         hostname: str,
         pending: bool | None = None,
+        extra_columns: Sequence[str] = (),
     ) -> dict[str, ServiceInfo]:
         """Return dict for all services in the given site and host.
 
         If pending=True, return the pending services only.
         """
         services = {}
+
+        mandatory_columns = ["state", "plugin_output"]
+
+        columns = mandatory_columns + [
+            column for column in extra_columns if column not in mandatory_columns
+        ]
+
         for service in self.openapi.services.get_host_services(
-            hostname, columns=["state", "plugin_output"], pending=pending
+            hostname, columns=columns, pending=pending
         ):
             services[service["extensions"]["description"]] = ServiceInfo(
                 state=service["extensions"]["state"],
                 summary=service["extensions"]["plugin_output"],
+                extra_columns={
+                    column: service["extensions"][column]
+                    for column in extra_columns
+                    if column in service["extensions"]
+                },
             )
         return services
 

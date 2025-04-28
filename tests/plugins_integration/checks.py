@@ -365,14 +365,28 @@ def setup_site(site: Site, dump_path: Path, dump_dirs: Sequence[Path] | None = N
 
 
 @contextmanager
-def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterator:
+def setup_host(
+    site: Site,
+    host_name: str,
+    skip_cleanup: bool = False,
+    management_board: bool = False,
+) -> Iterator:
     logger.info('Creating host "%s"...', host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
         "tag_agent": ("no-agent" if "snmp" in host_name else "cmk-agent"),
     }
-    if "snmp" in host_name:
+
+    if management_board:
+        host_attributes.update(
+            {
+                "tag_agent": "no-agent",
+                "management_protocol": "snmp",
+            }
+        )
+    elif "snmp" in host_name:
         host_attributes["tag_snmp_ds"] = "snmp-v2"
+
     site.openapi.hosts.create(
         hostname=host_name,
         folder="/snmp" if "snmp" in host_name else "/agent",

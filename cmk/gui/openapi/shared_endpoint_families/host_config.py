@@ -43,5 +43,5 @@ A host_config object can have the following relations present in `links`:
 
 """
     ),
-    tag_group="Setup",
+    doc_group="Setup",
 )

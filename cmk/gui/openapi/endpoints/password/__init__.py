@@ -49,7 +49,7 @@ stored passwords. You are also able to fetch a list of passwrods or individual p
 however, the password itself is not returned for security reasons.
 """
     ),
-    tag_group="Setup",
+    doc_group="Setup",
 )
 
 PERMISSIONS = permissions.AllPerm(

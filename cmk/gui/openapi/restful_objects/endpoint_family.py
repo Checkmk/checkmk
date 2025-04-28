@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 
-from cmk.gui.openapi.restful_objects.type_defs import EndpointFamilyName, OpenAPITag
+from cmk.gui.openapi.restful_objects.type_defs import EndpointFamilyName, OpenAPITag, TagGroup
 
 
 @dataclass
@@ -18,7 +18,7 @@ class EndpointFamily:
     description: str
     """Detailed description of the endpoint family."""
 
-    tag_group: str = "Setup"
+    doc_group: TagGroup = "Setup"
     """The tag group this endpoint family belongs to in the OpenAPI spec. The family tag_group can
     be overwritten on an endpoint level"""
 

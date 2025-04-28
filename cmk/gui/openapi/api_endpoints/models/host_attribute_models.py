@@ -25,7 +25,7 @@ def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
     return tag_id
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(kw_only=True)
 class BaseHostTagGroupModel:
     tag_address_family: (
         Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("address_family")))]

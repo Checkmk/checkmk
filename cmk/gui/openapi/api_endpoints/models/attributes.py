@@ -11,6 +11,7 @@ from annotated_types import Ge, Interval, MaxLen, MinLen
 
 from cmk.gui.fields.attributes import AuthProtocolType, PrivacyProtocolType
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 
 
 @dataclass(kw_only=True, slots=True)
@@ -255,4 +256,19 @@ class MetaDataModel:
     created_by: str | None | ApiOmitted = api_field(
         description="The user id under which this object has been created.",
         default_factory=ApiOmitted,
+    )
+
+
+@dataclass(kw_only=True)
+class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
+    """Class for custom host attributes and tag groups."""
+
+    # TODO: validate the attribute key as well as value possibly with Annotated?
+    dynamic_fields: dict[str, str] = api_field(
+        description=(
+            "The property name must be\n\n"
+            " * A custom host attribute\n"
+            " * A custom tag group starting with `tag_`\n"
+        ),
+        default_factory=dict,
     )

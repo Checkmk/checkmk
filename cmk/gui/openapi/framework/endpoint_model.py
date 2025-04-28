@@ -21,9 +21,9 @@ from pydantic_core import InitErrorDetails
 
 from cmk.gui.openapi.framework._types import (
     DataclassInstance,
-    FromHeader,
-    FromPath,
-    FromQuery,
+    HeaderParam,
+    PathParam,
+    QueryParam,
     RawRequestData,
 )
 from cmk.gui.openapi.framework.content_types import convert_request_body
@@ -45,14 +45,14 @@ class Parameter:
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class QueryParameter(Parameter):
+class _QueryParameter(Parameter):
     is_list: bool = False
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class Parameters:
     path: dict[str, Parameter] = dataclasses.field(default_factory=dict)
-    query: dict[str, QueryParameter] = dataclasses.field(default_factory=dict)
+    query: dict[str, _QueryParameter] = dataclasses.field(default_factory=dict)
     headers: dict[str, Parameter] = dataclasses.field(default_factory=dict)
     query_aliases: dict[str, str] = dataclasses.field(default_factory=dict)
     header_aliases: dict[str, str] = dataclasses.field(default_factory=dict)
@@ -83,6 +83,7 @@ def _parameter_default(parameter: inspect.Parameter) -> object:
 
 
 def _separate_parameters(signature: inspect.Signature) -> Parameters:
+    # TODO: separate validation and parsing logic
     path = {}
     query = {}
     headers = {}
@@ -105,9 +106,9 @@ def _separate_parameters(signature: inspect.Signature) -> Parameters:
         if get_origin(parameter_type) is Annotated:
             for annotation in get_args(parameter_type):
                 match annotation:
-                    case FromPath() | FromHeader() | FromQuery() if has_source:
+                    case PathParam() | HeaderParam() | QueryParam() if has_source:
                         raise ValueError(f"Multiple sources for parameter '{name}'")
-                    case FromPath(description=description, example=example):
+                    case PathParam(description=description, example=example):
                         has_source = True
                         path[name] = Parameter(
                             annotation=parameter_type,
@@ -115,7 +116,7 @@ def _separate_parameters(signature: inspect.Signature) -> Parameters:
                             description=description,
                             example=example,
                         )
-                    case FromHeader(alias=alias, description=description, example=example):
+                    case HeaderParam(alias=alias, description=description, example=example):
                         has_source = True
                         # headers are case-insensitive, so we need to normalize the name and alias
                         name = name.casefold()
@@ -131,11 +132,11 @@ def _separate_parameters(signature: inspect.Signature) -> Parameters:
                         )
                         if alias:
                             header_aliases[name] = alias.casefold()
-                    case FromQuery(
+                    case QueryParam(
                         alias=alias, description=description, example=example, is_list=is_list
                     ):
                         has_source = True
-                        query[name] = QueryParameter(
+                        query[name] = _QueryParameter(
                             annotation=parameter_type,
                             default=default,
                             description=description,

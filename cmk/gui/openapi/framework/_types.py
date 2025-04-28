@@ -39,7 +39,7 @@ class _BaseParameterAnnotation:
         )
 
 
-class FromPath(_BaseParameterAnnotation):
+class PathParam(_BaseParameterAnnotation):
     __slots__ = ()
 
 
@@ -61,11 +61,11 @@ class _AliasedParameterAnnotation(_BaseParameterAnnotation):
         )
 
 
-class FromHeader(_AliasedParameterAnnotation):
+class HeaderParam(_AliasedParameterAnnotation):
     __slots__ = ()
 
 
-class FromQuery(_AliasedParameterAnnotation):
+class QueryParam(_AliasedParameterAnnotation):
     __slots__ = ("is_list",)
 
     def __init__(
@@ -85,7 +85,7 @@ class FromQuery(_AliasedParameterAnnotation):
 __all__ = [
     "DataclassInstance",
     "RawRequestData",
-    "FromPath",
-    "FromHeader",
-    "FromQuery",
+    "PathParam",
+    "HeaderParam",
+    "QueryParam",
 ]

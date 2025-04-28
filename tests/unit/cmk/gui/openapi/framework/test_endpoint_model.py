@@ -13,13 +13,13 @@ import pytest
 from pydantic import ValidationError
 from werkzeug.datastructures import Headers
 
-from cmk.gui.openapi.framework import FromHeader, FromPath, FromQuery, RawRequestData
+from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam, RawRequestData
 from cmk.gui.openapi.framework.endpoint_model import (
+    _QueryParameter,
     _separate_parameters,
     EndpointModel,
     Parameter,
     Parameters,
-    QueryParameter,
 )
 
 
@@ -29,11 +29,13 @@ class _TestBody:
     str_field: str
 
 
-_PATH_PARAM = FromPath(description="Path parameter", example="example")
-_QUERY_PARAM = FromQuery(description="Query parameter", example="example")
-_QUERY_PARAM_ALIASED = FromQuery(description="Query parameter", example="example", alias="alias")
-_HEADER_PARAM = FromHeader(description="Header parameter", example="example")
-_HEADER_PARAM_ALIASED = FromHeader(description="Header parameter", example="example", alias="alias")
+_PATH_PARAM = PathParam(description="Path parameter", example="example")
+_QUERY_PARAM = QueryParam(description="Query parameter", example="example")
+_QUERY_PARAM_ALIASED = QueryParam(description="Query parameter", example="example", alias="alias")
+_HEADER_PARAM = HeaderParam(description="Header parameter", example="example")
+_HEADER_PARAM_ALIASED = HeaderParam(
+    description="Header parameter", example="example", alias="alias"
+)
 
 
 def _empty_endpoint_handler() -> None:
@@ -85,14 +87,20 @@ def _all_endpoint_handler(
 
 def _error_duplicate_query_endpoint_handler(
     query_param: Annotated[str, _QUERY_PARAM],
-    aliased_query_param: Annotated[str, FromQuery(description="", example="", alias="query_param")],
+    aliased_query_param: Annotated[
+        str, QueryParam(description="", example="", alias="query_param")
+    ],
 ) -> None:
     raise NotImplementedError
 
 
 def _error_alias_conflict_query_endpoint_handler(
-    query_param: Annotated[str, FromQuery(description="", example="", alias="aliased_query_param")],
-    aliased_query_param: Annotated[str, FromQuery(description="", example="", alias="query_param")],
+    query_param: Annotated[
+        str, QueryParam(description="", example="", alias="aliased_query_param")
+    ],
+    aliased_query_param: Annotated[
+        str, QueryParam(description="", example="", alias="query_param")
+    ],
 ) -> None:
     raise NotImplementedError
 
@@ -100,7 +108,7 @@ def _error_alias_conflict_query_endpoint_handler(
 def _error_duplicate_header_endpoint_handler(
     header_param: Annotated[str, _HEADER_PARAM],
     aliased_header_param: Annotated[
-        str, FromHeader(description="", example="", alias="header_param")
+        str, HeaderParam(description="", example="", alias="header_param")
     ],
 ) -> None:
     raise NotImplementedError
@@ -108,10 +116,10 @@ def _error_duplicate_header_endpoint_handler(
 
 def _error_alias_conflict_header_endpoint_handler(
     header_param: Annotated[
-        str, FromHeader(description="", example="", alias="aliased_header_param")
+        str, HeaderParam(description="", example="", alias="aliased_header_param")
     ],
     aliased_header_param: Annotated[
-        str, FromHeader(description="", example="", alias="header_param")
+        str, HeaderParam(description="", example="", alias="header_param")
     ],
 ) -> None:
     raise NotImplementedError
@@ -128,7 +136,7 @@ def _error_no_annotation_endpoint_handler(who_knows) -> None:  # type: ignore[no
 def _params(
     *,
     path: dict[str, Parameter] | None = None,
-    query: dict[str, QueryParameter] | None = None,
+    query: dict[str, _QueryParameter] | None = None,
     query_aliases: dict[str, str] | None = None,
     headers: dict[str, Parameter] | None = None,
     header_aliases: dict[str, str] | None = None,
@@ -164,7 +172,7 @@ def _params(
             _query_endpoint_handler,
             _params(
                 query={
-                    "query_param": QueryParameter(
+                    "query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM],  # type: ignore[arg-type]
                         default=dataclasses.MISSING,
                         description="Query parameter",
@@ -177,7 +185,7 @@ def _params(
             _aliased_query_endpoint_handler,
             _params(
                 query={
-                    "aliased_query_param": QueryParameter(
+                    "aliased_query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM_ALIASED],  # type: ignore[arg-type]
                         default=dataclasses.MISSING,
                         description="Query parameter",
@@ -227,13 +235,13 @@ def _params(
                     )
                 },
                 query={
-                    "query_param": QueryParameter(
+                    "query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM],  # type: ignore[arg-type]
                         default=dataclasses.MISSING,
                         description="Query parameter",
                         example="example",
                     ),
-                    "aliased_query_param": QueryParameter(
+                    "aliased_query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM_ALIASED],  # type: ignore[arg-type]
                         default=dataclasses.MISSING,
                         description="Query parameter",
@@ -415,7 +423,7 @@ def test_input_model_missing_fields(request_data: RawRequestData) -> None:
 
 def test_query_parameter_list() -> None:
     def _query_list_test(
-        query_param: Annotated[list[str], FromQuery(description="", example="", is_list=True)],
+        query_param: Annotated[list[str], QueryParam(description="", example="", is_list=True)],
     ) -> None:
         raise NotImplementedError
 

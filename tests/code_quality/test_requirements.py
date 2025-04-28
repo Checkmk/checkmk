@@ -349,7 +349,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "annotated_types",  # temporarily will be used in follow commit for validation
     "setuptools-scm",
     "snmpsim-lextudio",
     "python-multipart",  # needed by fastapi

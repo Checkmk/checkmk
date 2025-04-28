@@ -144,7 +144,7 @@ SOCKET ListenSocket::acceptConnection() const {
 
 int ExternalPort::xmain(int PORT) {
     int server_fd, new_socket;
-    struct sockaddr_in address;
+    sockaddr_in address{};
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};

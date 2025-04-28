@@ -162,8 +162,11 @@ int main(int argc, char **argv) {
             exit(1);
         }
         fd = ::socket(AF_INET, SOCK_DGRAM, 0);
-        struct sockaddr_in servaddr;
-        bzero(&servaddr, sizeof(servaddr));
+        if (fd == -1) {
+          std::cerr << "ERROR: could not create socket" << std::endl;
+          exit(1);
+        }
+        sockaddr_in servaddr{};
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr(remote);
         servaddr.sin_port = htons(514);

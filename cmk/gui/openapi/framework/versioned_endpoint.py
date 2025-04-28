@@ -139,8 +139,9 @@ class EndpointDoc:
     family: EndpointFamilyName
     """The endpoint family name this endpoint belongs to."""
 
-    group: TagGroup
-    """The documentation group the endpoint belongs to."""
+    group: TagGroup | None = None
+    """The documentation group the endpoint belongs to. If unspecified, the endpoint will take its
+    family's doc group."""
 
     sort_index: int = 0
     """The index used to sort the endpoint within the endpoint family"""

@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.gui.http import HTTPMethod
-from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -19,6 +18,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     HandlerFunction,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.restful_objects.endpoint_family import endpoint_family_registry, EndpointFamily
 from cmk.gui.openapi.restful_objects.type_defs import (
     AcceptFieldType,
     EndpointKey,
@@ -70,6 +70,7 @@ class EndpointDefinition:
     metadata: EndpointMetadata
     permissions: EndpointPermissions
     doc: EndpointDoc
+    family: EndpointFamily
     handler: EndpointHandler
     behavior: EndpointBehavior
     removed_in_version: APIVersion | None
@@ -82,6 +83,10 @@ class EndpointDefinition:
             content_type=self.metadata.content_type,
         )
 
+    @property
+    def doc_group(self) -> TagGroup:
+        return self.doc.group or self.family.doc_group
+
     def request_endpoint(self) -> RequestEndpoint:
         """Representation of the endpoint with attributes needed to handle a request"""
         return RequestEndpoint(
@@ -91,7 +96,7 @@ class EndpointDefinition:
             content_type=self.metadata.content_type,
             etag=self.behavior.etag,
             operation_id=f"{self.doc.family}.{self.handler.handler.__name__}",
-            doc_group=self.doc.group,
+            doc_group=self.doc_group,
             additional_status_codes=self.handler.additional_status_codes or [],
             update_config_generation=self.behavior.update_config_generation,
             permissions_required=self.permissions.required,
@@ -103,7 +108,7 @@ class EndpointDefinition:
             operation_id=f"{self.doc.family}.{self.handler.handler.__name__}",
             path=self.metadata.path,
             family=self.doc.family,
-            doc_group=self.doc.group,
+            doc_group=self.doc_group,
             doc_sort_index=self.doc.sort_index,
             deprecated_werk_id=self.doc.sort_index,
             handler=self.handler.handler,
@@ -148,6 +153,7 @@ class VersionedEndpointRegistry:
                 metadata=endpoint.metadata,
                 permissions=endpoint.permissions,
                 doc=endpoint.doc,
+                family=endpoint_family,
                 handler=handler,
                 behavior=endpoint.behavior,
                 removed_in_version=endpoint.removed_in_version,

@@ -81,7 +81,7 @@ def load_delta_tree(
     )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
-        _sort_corrupted_history_files(history_store.archive_dir, history.corrupted),
+        _sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
     )
 
 
@@ -103,5 +103,5 @@ def get_history(
         filter_tree=filter_tree,
     )
     return history.entries, _sort_corrupted_history_files(
-        history_store.archive_dir, history.corrupted
+        history_store.inv_paths.archive_dir, history.corrupted
     )

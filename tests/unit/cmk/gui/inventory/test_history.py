@@ -18,11 +18,7 @@ from cmk.gui.inventory._history import get_history, load_delta_tree, load_latest
 
 def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
     history, corrupted_history_files = get_history(
-        HistoryStore(
-            inventory_dir=tmp_path / "inventory",
-            archive_dir=tmp_path / "archive",
-            delta_cache_dir=tmp_path / "delta_cache",
-        ),
+        HistoryStore(tmp_path),
         HostName("inv-host"),
     )
     assert len(history) == 0
@@ -30,16 +26,12 @@ def test_get_history_empty(tmp_path: Path, request_context: None) -> None:
 
 
 def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: None) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
 
@@ -50,33 +42,29 @@ def test_get_history_archive_but_no_inv_tree(tmp_path: Path, request_context: No
 
 
 def test_get_history(tmp_path: Path, request_context: None) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "1",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "1",
         serialize_tree(deserialize_tree({"inv": "attr-1"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "2",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "2",
         serialize_tree(deserialize_tree({"inv-2": "attr"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "3",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "3",
         serialize_tree(deserialize_tree({"inv": "attr-3"})),
     )
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
@@ -105,7 +93,7 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         sorted(
             [
                 fp.name
-                for fp in (tmp_path / "delta_cache" / hostname).iterdir()
+                for fp in (tmp_path / "var/check_mk/inventory_delta_cache" / hostname).iterdir()
                 # Timestamp of current inventory tree is not static
                 if not fp.name.startswith("3_")
             ]
@@ -123,19 +111,15 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
 
 
 def test_get_history_corrupted_files(tmp_path: Path, request_context: None) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
-    archive_dir = tmp_path / "archive" / hostname
+    archive_dir = tmp_path / "var/check_mk/inventory_archive" / hostname
     archive_dir.mkdir(parents=True, exist_ok=True)
     (archive_dir / "foo").touch()
 
     history, corrupted_history_files = get_history(history_store, hostname)
     assert not history
-    assert corrupted_history_files == ["archive/inv-host/foo"]
+    assert corrupted_history_files == ["inventory_archive/inv-host/foo"]
 
 
 @pytest.mark.parametrize(
@@ -153,33 +137,29 @@ def test_load_delta_tree(
     expected_raw_delta_tree: dict,
     request_context: None,
 ) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "1",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "1",
         serialize_tree(deserialize_tree({"inv": "attr-1"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "2",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "2",
         serialize_tree(deserialize_tree({"inv-2": "attr"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "3",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "3",
         serialize_tree(deserialize_tree({"inv": "attr-3"})),
     )
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
@@ -194,33 +174,29 @@ def test_load_delta_tree(
 
 
 def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "1",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "1",
         serialize_tree(deserialize_tree({"inv": "attr-1"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "2",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "2",
         serialize_tree(deserialize_tree({"inv-2": "attr"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "3",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "3",
         serialize_tree(deserialize_tree({"inv": "attr-3"})),
     )
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
@@ -230,37 +206,33 @@ def test_load_delta_tree_no_such_timestamp(tmp_path: Path, request_context: None
 
 
 def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "1",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "1",
         serialize_tree(deserialize_tree({"inv": "attr-1"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "2",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "2",
         serialize_tree(deserialize_tree({"inv-2": "attr"})),
     )
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "3",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "3",
         serialize_tree(deserialize_tree({"inv": "attr-3"})),
     )
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
-    search_timestamp = int((tmp_path / "inventory" / hostname).stat().st_mtime)
+    search_timestamp = int((tmp_path / "var/check_mk/inventory" / hostname).stat().st_mtime)
 
     delta_tree, corrupted_history_files = load_delta_tree(history_store, hostname, search_timestamp)
 
@@ -272,16 +244,12 @@ def test_load_latest_delta_tree(tmp_path: Path, request_context: None) -> None:
 def test_load_latest_delta_tree_no_archive_and_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
@@ -291,22 +259,18 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree(
 def test_load_latest_delta_tree_one_archive_and_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
 
     # current tree
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "inventory" / hostname,
+        tmp_path / "var/check_mk/inventory" / hostname,
         serialize_tree(deserialize_tree({"inv": "attr"})),
     )
 
@@ -318,16 +282,12 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree(
 def test_load_latest_delta_tree_one_archive_and_no_inv_tree(
     tmp_path: Path, request_context: None
 ) -> None:
-    history_store = HistoryStore(
-        inventory_dir=tmp_path / "inventory",
-        archive_dir=tmp_path / "archive",
-        delta_cache_dir=tmp_path / "delta_cache",
-    )
+    history_store = HistoryStore(tmp_path)
     hostname = HostName("inv-host")
 
     # history
     cmk.ccc.store.save_object_to_file(
-        tmp_path / "archive" / hostname / "0",
+        tmp_path / "var/check_mk/inventory_archive" / hostname / "0",
         serialize_tree(deserialize_tree({"inv": "attr-0"})),
     )
 

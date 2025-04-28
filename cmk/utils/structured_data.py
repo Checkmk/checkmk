@@ -1869,15 +1869,13 @@ class HistoryEntry:
 
 
 class HistoryStore:
-    def __init__(self, *, inventory_dir: Path, archive_dir: Path, delta_cache_dir: Path) -> None:
-        self.inventory_dir = inventory_dir
-        self.archive_dir = archive_dir
-        self.delta_cache_dir = delta_cache_dir
+    def __init__(self, omd_root: Path) -> None:
+        self.inv_paths = InventoryPaths(omd_root)
         self._lookup: dict[Path, ImmutableTree] = {}
 
     def files(self, *, host_name: HostName) -> HistoryPaths:
         try:
-            archive_file_paths = sorted((self.archive_dir / str(host_name)).iterdir())
+            archive_file_paths = sorted(self.inv_paths.archive_host(host_name).iterdir())
         except FileNotFoundError:
             return HistoryPaths(paths=[], corrupted=[])
 
@@ -1891,7 +1889,7 @@ class HistoryStore:
             except ValueError:
                 corrupted.append(file_path)
 
-        tree_file = self.inventory_dir / str(host_name)
+        tree_file = self.inv_paths.inventory_tree(host_name)
         try:
             paths.append(HistoryPath(path=tree_file, timestamp=int(tree_file.stat().st_mtime)))
         except FileNotFoundError:
@@ -1899,20 +1897,15 @@ class HistoryStore:
 
         return HistoryPaths(paths=paths, corrupted=corrupted)
 
-    def _delta_cache_host_tree_file(
-        self, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
-    ) -> Path:
-        return self.delta_cache_dir / str(host_name) / f"{previous_timestamp}_{current_timestamp}"
-
     def load_history_entry(
         self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
     ) -> HistoryEntry | None:
         try:
             raw = store.load_object_from_file(
-                self._delta_cache_host_tree_file(
+                self.inv_paths.delta_cache_tree(
                     host_name,
-                    previous_timestamp,
-                    current_timestamp,
+                    str(previous_timestamp),
+                    str(current_timestamp),
                 ),
                 default=None,
             )
@@ -1939,10 +1932,10 @@ class HistoryStore:
         entry: HistoryEntry,
     ) -> None:
         store.save_text_to_file(
-            self._delta_cache_host_tree_file(
+            self.inv_paths.delta_cache_tree(
                 host_name,
-                previous_timestamp,
-                current_timestamp,
+                str(previous_timestamp),
+                str(current_timestamp),
             ),
             repr((entry.new, entry.changed, entry.removed, serialize_delta_tree(entry.delta_tree))),
         )

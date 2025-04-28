@@ -9,7 +9,6 @@ import json
 import shutil
 from collections.abc import Mapping
 from datetime import timedelta
-from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import livestatus
@@ -19,7 +18,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.structured_data import SDRawTree, serialize_tree
+from cmk.utils.structured_data import InventoryPaths, SDRawTree, serialize_tree
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -233,55 +232,49 @@ def page_host_inv_api() -> None:
 class InventoryHousekeeping:
     def __init__(self) -> None:
         super().__init__()
-        self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
-        self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
-        self._inventory_delta_cache_path = Path(cmk.utils.paths.inventory_delta_cache_dir)
+        self.inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
 
     def run(self):
-        if (
-            not self._inventory_delta_cache_path.exists()
-            or not self._inventory_archive_path.exists()
-        ):
+        if not self.inv_paths.delta_cache_dir.exists() or not self.inv_paths.archive_dir.exists():
             return
 
         inventory_archive_hosts = {
-            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
+            x.name for x in self.inv_paths.archive_dir.iterdir() if x.is_dir()
         }
         inventory_delta_cache_hosts = {
-            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()
+            x.name for x in self.inv_paths.delta_cache_dir.iterdir() if x.is_dir()
         }
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
         for foldername in folders_to_delete:
-            shutil.rmtree(str(self._inventory_delta_cache_path / foldername))
+            shutil.rmtree(str(self.inv_paths.delta_cache_host(HostName(foldername))))
 
         inventory_delta_cache_hosts -= folders_to_delete
-        for hostname in inventory_delta_cache_hosts:
-            available_timestamps = self._get_timestamps_for_host(hostname)
-            for filename in [
-                x.name
-                for x in (self._inventory_delta_cache_path / hostname).iterdir()
-                if not x.is_dir()
+        for raw_host_name in inventory_delta_cache_hosts:
+            host_name = HostName(raw_host_name)
+            available_timestamps = self._get_timestamps_for_host(host_name)
+            for file_path in [
+                x for x in self.inv_paths.delta_cache_host(host_name).iterdir() if not x.is_dir()
             ]:
                 delete = False
                 try:
-                    first, second = filename.split("_")
+                    first, second = file_path.name.split("_")
                     if first not in available_timestamps or second not in available_timestamps:
                         delete = True
                 except ValueError:
                     delete = True
                 if delete:
-                    (self._inventory_delta_cache_path / hostname / filename).unlink()
+                    file_path.unlink()
 
-    def _get_timestamps_for_host(self, hostname):
+    def _get_timestamps_for_host(self, host_name: HostName) -> set[str]:
         timestamps = {"None"}  # 'None' refers to the histories start
         try:
-            timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
+            timestamps.add("%d" % self.inv_paths.inventory_tree(host_name).stat().st_mtime)
         except OSError:
             pass
 
         for filename in [
-            x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()
+            x for x in self.inv_paths.archive_host(host_name).iterdir() if not x.is_dir()
         ]:
             timestamps.add(filename.name)
         return timestamps

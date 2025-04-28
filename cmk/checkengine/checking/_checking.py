@@ -7,7 +7,6 @@
 import itertools
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
-from pathlib import Path
 from typing import NamedTuple
 
 from cmk.ccc.hostaddress import HostName
@@ -20,7 +19,7 @@ from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import make_meta, TreeStore
+from cmk.utils.structured_data import InventoryPaths, make_meta, TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
@@ -149,7 +148,7 @@ def _do_inventory_actions_during_checking_for(
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
 ) -> None:
-    tree_store = TreeStore(Path(cmk.utils.paths.status_data_dir))
+    tree_store = TreeStore(InventoryPaths(cmk.utils.paths.omd_root).status_data_dir)
 
     if not params.status_data_inventory:
         # includes cluster case

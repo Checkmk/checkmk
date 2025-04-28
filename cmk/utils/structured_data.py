@@ -1646,6 +1646,43 @@ class ImmutableDeltaTree:
 #   '----------------------------------------------------------------------'
 
 
+class InventoryPaths:
+    def __init__(self, omd_root: Path) -> None:
+        self.inventory_dir = omd_root / "var/check_mk/inventory"
+        self.status_data_dir = omd_root / "tmp/check_mk/status_data"
+        self.archive_dir = omd_root / "var/check_mk/inventory_archive"
+        self.delta_cache_dir = omd_root / "var/check_mk/inventory_delta_cache"
+        self.auto_dir = omd_root / "var/check_mk/autoinventory"
+
+    @property
+    def marker_file(self) -> Path:
+        return self.inventory_dir / ".last"
+
+    def inventory_tree(self, host_name: HostName) -> Path:
+        return self.inventory_dir / str(host_name)
+
+    def inventory_tree_gz(self, host_name: HostName) -> Path:
+        return self.inventory_tree(host_name).with_suffix(".gz")
+
+    def status_data_tree(self, host_name: HostName) -> Path:
+        return self.status_data_dir / str(host_name)
+
+    def status_data_tree_gz(self, host_name: HostName) -> Path:
+        return self.status_data_tree(host_name).with_suffix(".gz")
+
+    def archive_host(self, host_name: HostName) -> Path:
+        return self.archive_dir / str(host_name)
+
+    def archive_tree(self, host_name: HostName, file_name: str) -> Path:
+        return self.archive_host(host_name) / file_name
+
+    def delta_cache_host(self, host_name: HostName) -> Path:
+        return self.delta_cache_dir / str(host_name)
+
+    def delta_cache_tree(self, host_name: HostName, previous: str, current: str) -> Path:
+        return self.delta_cache_host(host_name) / f"{previous}_{current}"
+
+
 def _load_tree(filepath: Path) -> ImmutableTree:
     if raw_tree := store.load_object_from_file(filepath, default=None):
         return deserialize_tree(raw_tree)
@@ -1759,7 +1796,7 @@ class TreeStore:
 class TreeOrArchiveStore(TreeStore):
     def __init__(self, inventory_dir: Path, archive_dir: Path) -> None:
         super().__init__(inventory_dir)
-        self.archive_dir = Path(archive_dir)
+        self.archive_dir = archive_dir
 
     def load_previous(self, *, host_name: HostName) -> ImmutableTree:
         if (tree_file := self._tree_file(host_name)).exists():

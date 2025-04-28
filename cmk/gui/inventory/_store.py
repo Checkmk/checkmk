@@ -5,14 +5,15 @@
 
 """Helpers to access the stored inventory data"""
 
-import os
-
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
+from cmk.utils.structured_data import InventoryPaths
 
 
-def has_inventory(hostname: HostName) -> bool:
+def has_inventory(host_name: HostName) -> bool:
     return (
-        os.path.exists(f"{cmk.utils.paths.inventory_output_dir}/{hostname}") if hostname else False
+        InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host_name).exists()
+        if host_name
+        else False
     )

@@ -10,7 +10,6 @@ import itertools
 import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
 import cmk.ccc.debug
@@ -22,6 +21,7 @@ from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
+    InventoryPaths,
     MutableTree,
     parse_visible_raw_path,
     RawIntervalFromConfig,
@@ -228,15 +228,15 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
     if any(hs.sections or hs.piggybacked_raw_data for hs in host_sections):
         return False
 
-    if Path(cmk.utils.paths.inventory_output_dir, str(host_name)).exists():
+    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
+    if inv_paths.inventory_tree(host_name).exists():
         return False
 
-    if Path(cmk.utils.paths.status_data_dir, str(host_name)).exists():
+    if inv_paths.status_data_tree(host_name).exists():
         return False
 
-    if (archive := Path(cmk.utils.paths.inventory_archive_dir, str(host_name))).exists() and any(
-        archive.iterdir()
-    ):
+    archive_host = inv_paths.archive_host(host_name)
+    if archive_host.exists() and any(archive_host.iterdir()):
         return False
 
     return True

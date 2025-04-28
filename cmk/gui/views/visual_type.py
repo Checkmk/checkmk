@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.structured_data import HistoryStore, ImmutableDeltaTree, ImmutableTree, SDPath
+from cmk.utils.structured_data import (
+    HistoryStore,
+    ImmutableDeltaTree,
+    ImmutableTree,
+    InventoryPaths,
+    SDPath,
+)
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -166,12 +171,13 @@ def _get_inventory_tree(
     if cache_id in tree_cache:
         return tree_cache[cache_id]
 
+    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
     tree: ImmutableTree | ImmutableDeltaTree = (
         load_latest_delta_tree(
             HistoryStore(
-                inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
-                archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
-                delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
+                inventory_dir=inv_paths.inventory_dir,
+                archive_dir=inv_paths.archive_dir,
+                delta_cache_dir=inv_paths.delta_cache_dir,
             ),
             hostname,
         )

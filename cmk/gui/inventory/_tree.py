@@ -18,6 +18,7 @@ import cmk.utils.paths
 from cmk.utils.structured_data import (
     deserialize_tree,
     ImmutableTree,
+    InventoryPaths,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
@@ -148,9 +149,13 @@ def _load_tree_from_file(
 
     match tree_type:
         case "inventory":
-            return TreeStore(Path(cmk.utils.paths.inventory_output_dir)).load(host_name=host_name)
+            return TreeStore(InventoryPaths(cmk.utils.paths.omd_root).inventory_dir).load(
+                host_name=host_name
+            )
         case "status_data":
-            return TreeStore(Path(cmk.utils.paths.status_data_dir)).load(host_name=host_name)
+            return TreeStore(InventoryPaths(cmk.utils.paths.omd_root).status_data_dir).load(
+                host_name=host_name
+            )
 
 
 @request_memoize()
@@ -209,8 +214,8 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
 
 def get_short_inventory_filepath(hostname: HostName) -> Path:
     return (
-        Path(cmk.utils.paths.inventory_output_dir)
-        .joinpath(hostname)
+        InventoryPaths(cmk.utils.paths.omd_root)
+        .inventory_tree(hostname)
         .relative_to(cmk.utils.paths.omd_root)
     )
 

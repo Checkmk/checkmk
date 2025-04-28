@@ -8,7 +8,6 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from pathlib import Path
 from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
@@ -24,6 +23,7 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    InventoryPaths,
     RetentionInterval,
     SDDeltaValue,
     SDKey,
@@ -333,11 +333,12 @@ def ajax_inv_render_tree() -> None:
 
     tree: ImmutableTree | ImmutableDeltaTree
     if tree_id := request.get_ascii_input_mandatory("tree_id", ""):
+        inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
         tree, corrupted_history_files = inventory.load_delta_tree(
             HistoryStore(
-                inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
-                archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
-                delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
+                inventory_dir=inv_paths.inventory_dir,
+                archive_dir=inv_paths.archive_dir,
+                delta_cache_dir=inv_paths.delta_cache_dir,
             ),
             host_name,
             int(tree_id),

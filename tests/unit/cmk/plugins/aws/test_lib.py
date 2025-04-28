@@ -8,6 +8,8 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.aws.lib import (
     aws_region_to_monitor,
+    AWSLimits,
+    check_aws_limits,
     check_aws_limits_legacy,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
@@ -622,6 +624,91 @@ def test_check_aws_limits_legacy(test_input: list[list], output: CheckResult) ->
                 {
                     "topics_fifo": (None, 80.0, 90.0),
                     "topics_standard": (None, 80.0, 90.0),
+                },
+                test_input,
+            )
+        )
+        == output
+    )
+
+
+@pytest.mark.parametrize(
+    "test_input, output",
+    [
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 2, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 2),
+                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Metric("aws_sns_topics_fifo", 1),
+                Result(state=State.OK, notice="FIFO Topics Limit: 1 (of max. 1000), 0.10%"),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 100001, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 100001),
+                Result(
+                    state=State.CRIT,
+                    summary="Standard Topics Limit: 100001 (of max. 100000), 100.00% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("aws_sns_topics_fifo", 1),
+                Result(state=State.OK, notice="FIFO Topics Limit: 1 (of max. 1000), 0.10%"),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 2, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1001, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 2),
+                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Metric("aws_sns_topics_fifo", 1001),
+                Result(
+                    state=State.CRIT,
+                    summary="FIFO Topics Limit: 1001 (of max. 1000), 100.10% (warn/crit at 80.00%/90.00%)",
+                ),
+            ],
+        ),
+        (
+            [
+                ["topics_standard", "Standard Topics Limit", 100000, 100001, str],
+                ["topics_fifo", "FIFO Topics Limit", 1000, 1001, str],
+            ],
+            [
+                Metric("aws_sns_topics_standard", 100001),
+                Result(
+                    state=State.CRIT,
+                    summary="Standard Topics Limit: 100001 (of max. 100000), 100.00% (warn/crit at 80.00%/90.00%)",
+                ),
+                Metric("aws_sns_topics_fifo", 1001),
+                Result(
+                    state=State.CRIT,
+                    summary="FIFO Topics Limit: 1001 (of max. 1000), 100.10% (warn/crit at 80.00%/90.00%)",
+                ),
+            ],
+        ),
+    ],
+)
+def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
+    default_limit: AWSLimits = {
+        "absolute": ("aws_default_limit", None),
+        "percentage": {"warn": 80.0, "crit": 90.0},
+    }
+    assert (
+        list(
+            check_aws_limits(
+                "sns",
+                {
+                    "topics_fifo": ("set_levels", default_limit),
+                    "topics_standard": ("set_levels", default_limit),
                 },
                 test_input,
             )

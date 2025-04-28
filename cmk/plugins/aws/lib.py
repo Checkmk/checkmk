@@ -6,10 +6,11 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckResult,
     DiscoveryResult,
     HostLabel,
@@ -59,6 +60,16 @@ class AWSMetric:
     levels_upper: tuple[float, float] | None = None
     name: str | None = None
     label: str | None = None
+
+
+class AWSLimitPercentage(TypedDict):
+    warn: float | None
+    crit: float | None
+
+
+class AWSLimits(TypedDict):
+    absolute: tuple[Literal["aws_default_limit", "aws_limit_value"], int | None]
+    percentage: AWSLimitPercentage
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
@@ -123,6 +134,77 @@ def parse_aws_limits_generic(
 
 def is_valid_aws_limits_perf_data(perfvar: str) -> bool:
     return perfvar not in exclude_aws_limits_perf_vars
+
+
+def check_aws_limits(
+    aws_service: str,
+    params: Mapping[
+        str, tuple[Literal["no_levels"], None] | tuple[Literal["set_levels"], AWSLimits]
+    ],
+    parsed_region_data: list[list],
+) -> CheckResult:
+    """
+    Check AWS limits with FormSpecs for setting levels of the underlying check.
+    """
+    for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
+        parameter = params.get(resource_key, None)
+        warn, crit = (None, None)
+        if (
+            isinstance(parameter, tuple)
+            and len(parameter) == 2
+            and parameter[0] == "set_levels"
+            and isinstance(parameter[1], dict)
+        ):
+            _, param_absolute_limit = parameter[1].get("absolute", (None, None))
+            percentage = parameter[1].get("percentage", {"warn": None, "crit": None})
+            assert isinstance(percentage, dict)
+            warn = percentage.get("warn", None)
+            crit = percentage.get("crit", None)
+
+        if is_valid_aws_limits_perf_data(resource_key):
+            yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
+
+        if param_absolute_limit is not None:
+            limit = param_absolute_limit
+
+        if not limit:
+            continue
+
+        upper_levels: (
+            tuple[Literal["fixed"], tuple[float, float]] | tuple[Literal["no_levels"], None]
+        ) = ("no_levels", None)
+        if (
+            warn is not None
+            and crit is not None
+            and isinstance(warn, float)
+            and isinstance(crit, float)
+        ):
+            upper_levels = ("fixed", (warn, crit))
+
+        result: Result | None = None
+        # normal check_levels does not show the absolute limit, therefore we need to rewrite the notice
+        result = next(
+            (
+                res
+                for res in check_levels(
+                    value=100.0 * amount / limit,
+                    levels_upper=upper_levels,
+                    render_func=render.percent,
+                )
+                if isinstance(res, Result)
+            ),
+            None,
+        )
+
+        if isinstance(result, Result):
+            yield Result(
+                state=result.state,
+                notice=f"{resource_title}: {human_readable_func(amount)} (of max. {human_readable_func(limit)}), {result.summary}",
+            )
+        else:
+            raise TypeError(
+                f"Invalid result from cmk.agent_based.v2.check_levels: {result}. Expected Result."
+            )
 
 
 def check_aws_limits_legacy(

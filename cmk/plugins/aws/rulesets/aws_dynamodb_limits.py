@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Literal, TypedDict
+from typing import Literal
 
+from cmk.plugins.aws.lib import AWSLimitPercentage, AWSLimits
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -20,16 +21,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
-
-
-class AWSLimitPercentage(TypedDict):
-    warn: float | None
-    crit: float | None
-
-
-class AWSLimits(TypedDict):
-    absolute: tuple[Literal["aws_default_limit", "aws_limit_value"], int | None]
-    percentage: AWSLimitPercentage
 
 
 def _pre_25_to_formspec_migration(

@@ -6,31 +6,16 @@
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_dynamodb_limits import (
-    _rewrite_params_to_vs_format,
     check_aws_dynamodb_limits,
     discover_aws_dynamodb_limits,
 )
-from cmk.plugins.aws.rulesets.aws_dynamodb_limits import AWSLimits
-
-
-def test_rewrite_params_to_vs_format_no_levels() -> None:
-    result = _rewrite_params_to_vs_format({"number_of_tables": ("no_levels", None)})
-    assert result == {"number_of_tables": (None, None, None)}
-
-
-def test_rewrite_params_to_vs_format_with_levels() -> None:
-    limits: AWSLimits = {
-        "absolute": ("aws_limit_value", 1001),
-        "percentage": {"warn": 80.1, "crit": 90.1},
-    }
-    result = _rewrite_params_to_vs_format({"read_capacity": ("set_levels", limits)})
-    assert result == {"read_capacity": (1001, 80.1, 90.1)}
+from cmk.plugins.aws.lib import AWSLimits
 
 
 def test_check_aws_dynamodb_limits_no_region_data() -> None:
     item = "us-east-1"
     results = list(check_aws_dynamodb_limits(item, params={}, section={}))
-    assert results == []
+    assert len(results) == 0
 
 
 def test_check_aws_dynamodb_limits_with_region_data() -> None:

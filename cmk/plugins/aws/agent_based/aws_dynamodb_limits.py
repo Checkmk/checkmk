@@ -12,39 +12,11 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     Service,
 )
-from cmk.plugins.aws.lib import check_aws_limits_legacy, parse_aws_limits_generic
-from cmk.plugins.aws.rulesets.aws_dynamodb_limits import AWSLimits
-
-
-def _rewrite_params_to_vs_format(
-    params: Mapping[
-        str, tuple[Literal["no_levels"], None] | tuple[Literal["set_levels"], AWSLimits]
-    ],
-) -> Mapping[str, tuple[int | None, float | None, float | None]]:
-    """
-    Rewrites the parameters to a format that is compatible with the check_aws_limits_legacy function.
-    The parameters are expected to be in the format:
-        {
-            resource_key: (absolute_value: int | None, percent_warn: float | None, percent_crit: float | None),
-            [...]
-        }
-    """
-    result: dict[str, tuple[int | None, float | None, float | None]] = {}
-
-    for key in params:
-        if params[key][0] == "no_levels":
-            result[key] = (None, None, None)
-        else:  # set_levels
-            levels: AWSLimits | None = params[key][1]
-            if levels is None:
-                raise ValueError(f"Missing levels for {key}: {params[key]}")
-            result[key] = (
-                levels["absolute"][1],
-                levels["percentage"]["warn"],
-                levels["percentage"]["crit"],
-            )
-
-    return result
+from cmk.plugins.aws.lib import (
+    AWSLimits,
+    check_aws_limits,
+    parse_aws_limits_generic,
+)
 
 
 def check_aws_dynamodb_limits(
@@ -56,8 +28,7 @@ def check_aws_dynamodb_limits(
 ) -> CheckResult:
     if not (region_data := section.get(item)):
         return
-    vs_params = _rewrite_params_to_vs_format(params)
-    yield from check_aws_limits_legacy("dynamodb", vs_params, region_data)
+    yield from check_aws_limits("dynamodb", params, region_data)
 
 
 def discover_aws_dynamodb_limits(section: Mapping[str, list[list]]) -> DiscoveryResult:

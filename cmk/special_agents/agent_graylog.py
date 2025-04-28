@@ -34,7 +34,7 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="alerts", uri="/streams/alerts?limit=300"),
+        GraylogSection(name="alerts", uri="/events/search"),
         GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
@@ -70,6 +70,14 @@ def handle_request(args, sections):
 
         if section.name == "events":
             value = handle_response(url, args, "POST").json()
+
+        elif section.name == "alerts":
+            content = {
+                "filter": {"alerts": "include"},
+                "timerange": {"type": "relative", "range": args.alerts_since},
+            }
+            value = handle_response(url, args, "POST", args.alerts_since, content).json()
+
         else:
             value = handle_response(url, args).json()
 
@@ -156,24 +164,19 @@ def handle_request(args, sections):
             handle_output([events], section.name, args)
 
         if section.name == "alerts":
-            num_of_alerts = value.get("total", 0)
-            num_of_alerts_in_range = 0
-            alerts_since_argument = args.alerts_since
+            num_of_events = value.get("total_events", 0)
 
-            if alerts_since_argument:
-                url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
-                num_of_alerts_in_range = (
-                    handle_response(url_alerts_in_range, args).json().get("total", 0)
-                )
-
-            alerts = {
-                "alerts": {
-                    "num_of_alerts": num_of_alerts,
-                    "has_since_argument": bool(alerts_since_argument),
-                    "alerts_since": alerts_since_argument if alerts_since_argument else None,
-                    "num_of_alerts_in_range": num_of_alerts_in_range,
-                }
+            content = {
+                "filter": {"alerts": "only"},
+                "timerange": {"type": "relative", "range": args.alerts_since},
             }
+            value = handle_response(url, args, "POST", args.alerts_since, content).json()
+
+            num_of_alerts = value.get("total_events", 0)
+            num_of_events -= num_of_alerts
+
+            alerts = {"alerts": {"num_of_events": num_of_events, "num_of_alerts": num_of_alerts}}
+
             handle_output([alerts], section.name, args)
 
         if section.name == "sources":
@@ -218,18 +221,31 @@ def handle_request(args, sections):
             handle_output(value, section.name, args)
 
 
-def handle_response(url, args, method="GET", events_since=86400):
+def handle_response(url, args, method="GET", events_since=86400, content=None):
     if method == "POST":
         try:
-            response = requests.post(  # nosec B113 # BNS:0b0eac
-                url,
-                auth=(args.user, args.password),
-                headers={
-                    "Content-Type": "application/json",
-                    "X-Requested-By": args.user,
-                },
-                json={"timerange": {"type": "relative", "range": events_since}},
-            )
+            if content:
+                response = requests.post(  # nosec B113 # BNS:0b0eac
+                    url,
+                    auth=(args.user, args.password),
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Requested-By": args.user,
+                    },
+                    json=content,
+                )
+
+            else:
+                response = requests.post(  # nosec B113
+                    url,
+                    auth=(args.user, args.password),
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Requested-By": args.user,
+                    },
+                    json={"timerange": {"type": "relative", "range": events_since}},
+                )
+
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

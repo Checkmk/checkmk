@@ -441,8 +441,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "esx_vsphere_hostsystem_maintenance",
         "esx_vsphere_hostsystem_multipath",
         "esx_vsphere_licenses",
-        "esx_vsphere_objects",
-        "esx_vsphere_objects_count",
         "esx_vsphere_sensors",
         "esx_vsphere_vm_mounted_devices",
         "etherbox2_temp",

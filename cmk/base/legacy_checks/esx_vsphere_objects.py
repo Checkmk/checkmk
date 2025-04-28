@@ -18,33 +18,71 @@
 # virtualmachine  LinuxV
 # virtualmachine  OpenSUSE_I
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from itertools import chain
-from typing import NamedTuple
+from typing import Literal, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 vsphere_object_names = {"hostsystem": "HostSystem", "virtualmachine": "VM", "template": "Template"}
 
 
-class Obj(NamedTuple):
+@dataclass
+class VmInfo:
     name: str
+    vmtype: str
     hostsystem: str
     state: str
 
+    @property
+    def service_name(self) -> str:
+        return f"{self.vmtype} {self.name}"
 
-def parse_esx_vsphere_objects(string_table):
+
+class StateParams(TypedDict):
+    standBy: int
+    poweredOn: int
+    poweredOff: int
+    suspended: int
+    unknown: int
+
+
+class ObjectCountParams(TypedDict):
+    vm_names: list[str]
+    hosts_count: int
+    state: int
+
+
+ObjectCountParamsMapping = Mapping[Literal["distribution"], list[ObjectCountParams]]
+ParsedSection = Mapping[str, VmInfo]
+StateParamsMapping = Mapping[Literal["states"], StateParams]
+
+
+def parse_esx_vsphere_objects(string_table: StringTable) -> ParsedSection:
     parsed = {}
     for line in string_table:
         if len(line) < 2:
             continue
         if len(line) < 4:
             line += [""] * (4 - len(line))
-        obj_type = vsphere_object_names.get(line[0], "Unknown Object")
-        name = f"{obj_type} {line[1]}"
-        obj = Obj(name, line[2], line[3])
-        parsed[obj.name] = obj
+        vm_info = VmInfo(
+            name=line[1],
+            vmtype=vsphere_object_names.get(line[0], "Unknown Object"),
+            hostsystem=line[2],
+            state=line[3],
+        )
+        parsed[vm_info.service_name] = vm_info
 
     return parsed
 
@@ -59,111 +97,104 @@ def parse_esx_vsphere_objects(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_objects(parsed):
-    for key in parsed:
-        yield key, {}
+def discovery_esx_vsphere_objects(section: ParsedSection) -> DiscoveryResult:
+    for key in section:
+        yield Service(item=key)
 
 
-def check_esx_vsphere_objects(item, params, parsed):
-    if params is None:
-        params = {}
-
-    obj = parsed.get(item)
+def check_esx_vsphere_objects(
+    item: str, params: StateParamsMapping, section: ParsedSection
+) -> CheckResult:
+    obj = section.get(item)
     if obj is None:
-        yield 3, "Missing item: %s" % item
+        yield Result(state=State.UNKNOWN, summary=f"Missing item: {item}")
         return
-
-    what, name = item.split()
 
     if not obj.state:
-        match what:
-            case "VM":
-                yield 3, "Virtual machine %s is missing" % name
-            case "Template":
-                yield 3, "Template %s is missing" % name
-            case _:
-                yield 3, "No data about host system %s" % name
+        yield Result(state=State.CRIT, summary=f"No data about {obj.service_name}")
         return
 
-    if what == "Template":
+    if obj.vmtype == "Template":
         # Templates cannot be powered on, so the state is always OK.
-        state = 0
+        state = State.OK
     else:
-        state = params.get("states", {}).get(obj.state, 3)
-    yield state, "power state: %s" % obj.state
+        state = State(params["states"].get(obj.state, 3))
+    yield Result(state=state, summary=f"power state: {obj.state}")
 
     if obj.hostsystem:
         if obj.state == "poweredOn":
-            yield 0, "running on [%s]" % obj.hostsystem
+            yield Result(state=State.OK, summary=f"running on [{obj.hostsystem}]")
         else:
-            yield 0, "defined on [%s]" % obj.hostsystem
+            yield Result(state=State.OK, summary=f"defined on [{obj.hostsystem}]")
 
 
-check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
+agent_section_esx_vsphere_objects = AgentSection(
     name="esx_vsphere_objects",
     parse_function=parse_esx_vsphere_objects,
+)
+
+
+check_plugin_esx_vsphere_objects = CheckPlugin(
+    name="esx_vsphere_objects",
     service_name="%s",
-    discovery_function=inventory_esx_vsphere_objects,
+    discovery_function=discovery_esx_vsphere_objects,
     check_function=check_esx_vsphere_objects,
     check_ruleset_name="esx_vsphere_objects",
     check_default_parameters={
-        "states": {
-            "poweredOn": 0,
-            "standBy": 1,
-            "poweredOff": 1,
-            "suspended": 1,
-            "unknown": 3,
-        }
+        "states": StateParams(
+            poweredOn=0,
+            standBy=1,
+            poweredOff=1,
+            suspended=1,
+            unknown=3,
+        )
     },
 )
 
 
-def inventory_esx_vsphere_objects_count(parsed):
-    yield None, {}
+def discovery_esx_vsphere_objects_count(section: ParsedSection) -> DiscoveryResult:
+    yield Service()
 
 
-def check_esx_vsphere_objects_count(_no_item, params, parsed):
-    if params is None:
-        params = {}
+def check_esx_vsphere_objects_count(
+    params: ObjectCountParamsMapping, section: ParsedSection
+) -> CheckResult:
+    templates = [o for o in section.values() if o.vmtype == "Template"]
+    yield Result(state=State.OK, summary=f"Templates: {len(templates)}")
+    yield Metric(name="templates", value=len(templates))
 
-    # TODO: Remove code duplication and do not initialize entire lists.
-    templates = [o for o in parsed.values() if o.name.startswith("Template ")]
-    yield 0, "Templates: %d" % len(templates), [("templates", len(templates))]
+    virtualmachines = [o for o in section.values() if o.vmtype == "VM"]
+    yield Result(state=State.OK, summary=f"Virtualmachines: {len(virtualmachines)}")
+    yield Metric(name="vms", value=len(virtualmachines))
 
-    virtualmachines = [o for o in parsed.values() if o.name.startswith("VM ")]
-    yield 0, "Virtualmachines: %d" % len(virtualmachines), [("vms", len(virtualmachines))]
-
-    hostsystems = [o for o in parsed.values() if o.name.startswith("HostSystem")]
+    hostsystems = [o for o in section.values() if o.vmtype == "HostSystem"]
     if not hostsystems:
         return
 
-    yield 0, "Hostsystems: %d" % len(hostsystems), [("hosts", len(hostsystems))]
+    yield Result(state=State.OK, summary=f"Hostsystems: {len(hostsystems)}")
+    yield Metric(name="hosts", value=len(hostsystems))
 
-    for distribution in params.get("distribution", []):
-        ruled_vms = distribution.get("vm_names", [])
+    for distribution in params["distribution"]:
+        ruled_vms = distribution["vm_names"]
         hosts = sorted(
-            {
-                vm.hostsystem
-                for vm in chain(virtualmachines, templates)
-                if vm.name.split(" ", 1)[-1] in ruled_vms
-            }
+            {vm.hostsystem for vm in chain(virtualmachines, templates) if vm.name in ruled_vms}
         )
         count = len(hosts)
         if count < distribution["hosts_count"]:
-            yield (
-                distribution.get("state", 2),
-                (
-                    "VMs %s are running on %d host%s: %s"
-                    % (", ".join(ruled_vms), count, "" if count == 1 else "s", ", ".join(hosts))
+            yield Result(
+                state=State(distribution["state"]),
+                summary=(
+                    f"VMs {', '.join(ruled_vms)} are running on {count} "
+                    f"host{'' if count == 1 else 's'}: {', '.join(hosts)}"
                 ),
             )
 
 
-check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_objects_count = CheckPlugin(
     name="esx_vsphere_objects_count",
     service_name="Object count",
     sections=["esx_vsphere_objects"],
-    discovery_function=inventory_esx_vsphere_objects_count,
+    discovery_function=discovery_esx_vsphere_objects_count,
     check_function=check_esx_vsphere_objects_count,
     check_ruleset_name="esx_vsphere_objects_count",
     check_default_parameters={

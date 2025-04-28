@@ -16,7 +16,6 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, with_config
-from pydantic.config import ExtraValues
 from pydantic_core import InitErrorDetails
 
 from cmk.gui.openapi.framework._types import (
@@ -166,7 +165,7 @@ def _separate_parameters(signature: inspect.Signature) -> Parameters:
 def _make_parameter_model(
     class_name: str,
     parameters: Mapping[str, Parameter],
-    extra: ExtraValues,
+    bases: tuple[type, ...],
 ) -> type:
     fields = [
         (
@@ -180,15 +179,22 @@ def _make_parameter_model(
         )
         for name, parameter in parameters.items()
     ]
-    cls = dataclasses.make_dataclass(class_name, fields=fields)
-    cls.__pydantic_config__ = ConfigDict(extra=extra)  # type: ignore[attr-defined]
+    cls = dataclasses.make_dataclass(
+        class_name, fields=fields, bases=bases, frozen=True, slots=True
+    )
     return cls
 
 
 @with_config(ConfigDict(extra="forbid"))
 @dataclasses.dataclass(frozen=True, slots=True)
-class _Empty:
-    """Empty dataclass for when there are no defined parameters."""
+class _ForbidExtra:
+    """Empty dataclass that includes `extra="forbid"` in the pydantic config."""
+
+
+@with_config(ConfigDict(extra="ignore"))
+@dataclasses.dataclass(frozen=True, slots=True)
+class _IgnoreExtra:
+    """Empty dataclass that includes `extra="ignore"` in the pydantic config."""
 
 
 def _build_input_model(parameters: Parameters, request_body_type: type | None) -> ApiInputModel:
@@ -210,18 +216,22 @@ def _build_input_model(parameters: Parameters, request_body_type: type | None) -
         body_type = request_body_type
     else:
         body_type = None
+
+    # we're using _ForbidExtra here to make sure that no parameters are passed in the request
+    path_type: type = _ForbidExtra
+    query_type: type = _ForbidExtra
+    # same thing here, just that we don't care about extra headers
+    header_type: type = _IgnoreExtra
     if parameters.path:
-        path_type = _make_parameter_model("_PathParameters", parameters.path, extra="forbid")
-    else:
-        path_type = _Empty
+        path_type = _make_parameter_model("_PathParameters", parameters.path, bases=(_ForbidExtra,))
     if parameters.query:
-        query_type = _make_parameter_model("_QueryParameters", parameters.query, extra="forbid")
-    else:
-        query_type = _Empty
+        query_type = _make_parameter_model(
+            "_QueryParameters", parameters.query, bases=(_ForbidExtra,)
+        )
     if parameters.headers:
-        header_type = _make_parameter_model("_HeaderParameters", parameters.headers, extra="ignore")
-    else:
-        header_type = _Empty
+        header_type = _make_parameter_model(
+            "_HeaderParameters", parameters.headers, bases=(_IgnoreExtra,)
+        )
 
     cls = dataclasses.make_dataclass(
         "_RequestData",
@@ -231,8 +241,10 @@ def _build_input_model(parameters: Parameters, request_body_type: type | None) -
             ("query", query_type),
             ("headers", header_type),
         ],
+        bases=(_IgnoreExtra,),
+        frozen=True,
+        slots=True,
     )
-    cls.__pydantic_config__ = ConfigDict(extra="ignore")  # type: ignore[attr-defined]
     return cast(type[DataclassInstance], cls)
 
 

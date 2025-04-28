@@ -259,6 +259,15 @@ class MetaDataModel:
     )
 
 
+@dataclass(kw_only=True, slots=True)
+class LockedByModel:
+    # TODO: cast_to_dict?
+    # TODO: CheckmkTuple?
+    site_id: str = api_field(description="Site ID")
+    program_id: str = api_field(description="Program ID")
+    instance_id: str = api_field(description="Instance ID")
+
+
 @dataclass(kw_only=True)
 class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     """Class for custom host attributes and tag groups."""

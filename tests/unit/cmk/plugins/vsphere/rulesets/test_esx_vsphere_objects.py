@@ -8,9 +8,9 @@ import pytest
 
 from cmk.ccc.version import Edition
 
-from cmk.gui.plugins.wato.check_parameters.esx_vsphere_objects import rule_spec_esx_vsphere_objects
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
+from cmk.plugins.vsphere.rulesets.esx_vsphere_objects import rule_spec_esx_vsphere_objects
 from cmk.rulesets.v1.form_specs import ServiceState
 
 

@@ -21,6 +21,7 @@ from cmk.gui.openapi.restful_objects.utils import (
 from cmk.gui.openapi.restful_objects.validators import (
     ContentTypeValidator,
     HeaderValidator,
+    PermissionValidator,
     ResponseValidator,
 )
 from cmk.gui.openapi.utils import (
@@ -127,6 +128,7 @@ def _validate_direct_response(response: Response) -> None:
 def handle_endpoint_request(
     endpoint: RequestEndpoint,
     request_data: RawRequestData,
+    permission_validator: PermissionValidator,
     *,
     wato_enabled: bool = True,
     wato_use_git: bool = False,
@@ -156,23 +158,11 @@ def handle_endpoint_request(
     accept_mimetypes = parse_accept_header(request_data["headers"].get("Accept"), MIMEAccept)
     HeaderValidator.validate_accept_header(endpoint.content_type, accept_mimetypes)
 
-    # Create the permission checker
-    used_permissions: set[str] = set()
-    # TODO: permission tracking requires GUI context, which IMO we should avoid as much as possible
-    #       so maybe move this out to the WSGI app (similar to the old endpoint decorator)
-    # permission_checker = PermissionValidator.create_permission_checker(
-    #     permissions_required=endpoint.permissions_required,
-    #     register_permission=used_permissions.add,
-    #     endpoint_repr=endpoint.operation_id,
-    #     is_testing_context=is_testing,
-    # )
-
     # Step 4: Validate the request parameters and call the handler function
     # TODO: this is not explicitly catching marshmallow ValidationErrors anymore - investigate where that would happen
     try:
-        # TODO: this used to be in the wsgi app, any reason not to move it here? -> GUI context
-        # with PermissionValidator.register_permission_tracking(permission_checker):
-        raw_response = model.validate_request_and_call_handler(request_data, content_type)
+        with permission_validator.track_permissions():
+            raw_response = model.validate_request_and_call_handler(request_data, content_type)
     except ProblemException as problem_exception:
         response = problem_exception.to_problem()
     except GeneralRestAPIException as general_api_exception:
@@ -195,7 +185,7 @@ def handle_endpoint_request(
             endpoint=endpoint.operation_id,
             params=request_data,
             permissions_required=endpoint.permissions_required,
-            used_permissions=used_permissions,
+            used_permissions=permission_validator.used_permissions,
             is_testing=is_testing,
         )
 

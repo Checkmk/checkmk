@@ -44,6 +44,7 @@ from cmk.gui.openapi.framework.headers import (
 from cmk.gui.openapi.framework.registry import EndpointDefinition, versioned_endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.utils import format_to_routing_path
+from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
@@ -202,10 +203,15 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         is_testing = str(request.environ.get("paste.testing", "False")).lower() == "true"
 
         # Create the response
-        # TODO: permission tracking?
+        permission_validator = PermissionValidator.create(
+            required_permissions=self.endpoint.permissions.required,
+            endpoint_repr=self.endpoint.ident,
+            is_testing=is_testing,
+        )
         response = handle_endpoint_request(
             endpoint=self.endpoint.request_endpoint(),
             request_data=request_data,
+            permission_validator=permission_validator,
             wato_enabled=active_config.wato_enabled,
             wato_use_git=active_config.wato_use_git,
             is_testing=is_testing,

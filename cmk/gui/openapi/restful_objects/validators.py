@@ -6,11 +6,13 @@
 
 from __future__ import annotations
 
+import contextlib
+import dataclasses
 import http.client
 import json
 import logging
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NoReturn
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from typing import Any, NoReturn, Self
 from urllib import parse
 
 import pydantic
@@ -19,9 +21,14 @@ from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
+from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import HTTPMethod, Request
+from cmk.gui.openapi.permission_tracking import (
+    enable_permission_tracking,
+    is_permission_tracking_enabled,
+)
 from cmk.gui.openapi.restful_objects.content_decoder import decode
 from cmk.gui.openapi.restful_objects.params import path_parameters
 from cmk.gui.openapi.restful_objects.type_defs import StatusCodeInt
@@ -484,6 +491,74 @@ class ResponseValidator:
                     },
                 ),
             )
+
+
+@dataclasses.dataclass(slots=True)
+class PermissionValidator:
+    _on_permission_checked: Callable[[str], None]
+    """Callback function for when a permission is checked"""
+    used_permissions: set[str] = dataclasses.field(default_factory=set)
+    """All used permissions during the endpoint execution"""
+
+    @classmethod
+    def create(
+        cls,
+        required_permissions: permissions.BasePerm | None,
+        endpoint_repr: str,
+        is_testing: bool,
+    ) -> Self:
+        """Create a permission checker
+
+        Args:
+            required_permissions:
+                The endpoint's declared required permissions
+
+            endpoint_repr:
+                A string representation of the endpoint.
+
+            is_testing:
+                Whether the endpoint is executed in a testing context.
+        """
+        used_permissions = set()
+
+        def on_permission_checked(pname: str) -> None:
+            """Collect all checked permissions during execution"""
+            if not is_permission_tracking_enabled():
+                return
+
+            used_permissions.add(pname)
+
+            permission_not_declared = (
+                required_permissions is not None and pname not in required_permissions
+            )
+
+            if permission_not_declared:
+                _logger.error(
+                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
+                    endpoint_repr,
+                    pname,
+                )
+
+                if is_testing:
+                    raise RestAPIPermissionException(
+                        title=f"Required permissions ({pname}) not declared for this endpoint.",
+                        detail=f"Endpoint: {endpoint_repr}\n"
+                        f"Permission: {pname}\n"
+                        f"Used permission: {pname}\n"
+                        f"Declared: {required_permissions}\n",
+                    )
+
+        return cls(_on_permission_checked=on_permission_checked, used_permissions=used_permissions)
+
+    @contextlib.contextmanager
+    def track_permissions(self) -> Iterator[None]:
+        """Track permissions for the duration of the context."""
+        hooks.register_builtin("permission-checked", self._on_permission_checked)
+        try:
+            with enable_permission_tracking():
+                yield
+        finally:
+            hooks.unregister("permission-checked", self._on_permission_checked)
 
 
 def _filter_profile_headers(arg_dict: ArgDict) -> ArgDict:

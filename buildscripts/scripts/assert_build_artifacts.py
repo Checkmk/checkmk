@@ -87,6 +87,14 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             yield hash_file(package_name), internal_only
 
 
+def build_bom_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+    for edition in loaded_yaml["editions"]:
+        file_name = f"check-mk-{edition}-{args.version}-bill-of-materials.json"
+        internal_only = edition in loaded_yaml["internal_editions"]
+        yield file_name, internal_only
+        yield hash_file(file_name), internal_only
+
+
 def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
     url = f"https://download.checkmk.com/checkmk/{version}/{filename}"
     sys.stdout.write(f"Checking for {url}...")
@@ -127,6 +135,9 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
 
+    for artifact_name, internal_only in build_bom_artifacts(args, loaded_yaml):
+        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+
     for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
         assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
 
@@ -140,6 +151,12 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     # TODO
 
 
+def print_bom_artifacts(args: Args, loaded_yaml: dict) -> None:
+    for artifact_name, internal_only in build_bom_artifacts(args, loaded_yaml):
+        if not internal_only:
+            print(artifact_name)
+
+
 def parse_arguments() -> Args:
     parser = ArgumentParser()
 
@@ -151,6 +168,10 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
     sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
+
+    sub_print_bom_artifacts = subparsers.add_parser("print_bom_artifacts")
+    sub_print_bom_artifacts.set_defaults(func=print_bom_artifacts)
+    sub_print_bom_artifacts.add_argument("--version", required=True, default=False)
 
     return parser.parse_args()
 

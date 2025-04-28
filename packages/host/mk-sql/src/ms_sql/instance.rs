@@ -810,35 +810,6 @@ impl SqlInstance {
         })
     }
 
-    pub async fn generate_database_indexed_section_async(
-        &self,
-        databases: &[String],
-        endpoint: &Endpoint,
-        section: &Section,
-        query: &str,
-        sep: char,
-    ) -> String {
-        match section.name() {
-            names::TRANSACTION_LOG => {
-                self.generate_transaction_logs_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::TABLE_SPACES => {
-                self.generate_table_spaces_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::DATAFILES => {
-                self.generate_datafiles_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::CLUSTERS => {
-                self.generate_clusters_section(endpoint, databases, query, sep)
-                    .await
-            }
-            _ => format!("{} not implemented\n", section.name()).to_string(),
-        }
-    }
-
     pub async fn generate_transaction_logs_section(
         &self,
         endpoint: &Endpoint,

@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib import cpu_util
-from cmk.plugins.lib.esx_vsphere import Section
+from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
 class EsxVsphereHostsystemCpuSection(NamedTuple):

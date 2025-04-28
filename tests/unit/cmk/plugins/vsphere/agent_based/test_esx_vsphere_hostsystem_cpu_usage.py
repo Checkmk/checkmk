@@ -9,7 +9,6 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
-from cmk.plugins.lib.esx_vsphere import Section
 from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     check_esx_vsphere_hostsystem_cpu_usage,
     cluster_check_esx_vsphere_hostsystem_cpu_usage,
@@ -17,6 +16,7 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     EsxVsphereHostsystemCpuSection,
     extract_esx_vsphere_hostsystem_cpu_usage,
 )
+from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(

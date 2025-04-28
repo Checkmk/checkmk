@@ -20,7 +20,7 @@ from cmk.plugins.lib.diskstat import (
     discovery_diskstat_generic,
     DISKSTAT_DEFAULT_PARAMS,
 )
-from cmk.plugins.lib.esx_vsphere import average_parsed_data, CounterValues, SectionCounter
+from cmk.plugins.vsphere.lib.esx_vsphere import average_parsed_data, CounterValues, SectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>

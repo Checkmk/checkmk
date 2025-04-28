@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import esx_vsphere
+from cmk.plugins.vsphere.lib import esx_vsphere
 
 
 @dataclass(frozen=True)

@@ -7,8 +7,8 @@
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.lib.esx_vsphere import SectionESXVm
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_running_on
+from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
 
 
 def test_parse_esx_vsphere_running_on_host():

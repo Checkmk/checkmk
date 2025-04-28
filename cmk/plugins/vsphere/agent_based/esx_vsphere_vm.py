@@ -5,7 +5,7 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
-from cmk.plugins.lib.esx_vsphere import (
+from cmk.plugins.vsphere.lib.esx_vsphere import (
     ESXCpu,
     ESXDataStore,
     ESXMemory,

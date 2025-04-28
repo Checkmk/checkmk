@@ -10,9 +10,8 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.lib import esx_vsphere
-from cmk.plugins.lib.esx_vsphere import HeartBeat, HeartBeatStatus
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_heartbeat
+from cmk.plugins.vsphere.lib.esx_vsphere import HeartBeat, HeartBeatStatus, SectionESXVm
 
 
 def test_parse_esx_vsphere_heartbeat():
@@ -23,7 +22,7 @@ def test_parse_esx_vsphere_heartbeat():
 
 
 class HeartBeatFactory(ModelFactory):
-    __model__ = esx_vsphere.HeartBeat
+    __model__ = HeartBeat
 
 
 @pytest.mark.parametrize(
@@ -74,5 +73,5 @@ def testcheck_heartbeat_params(vm_status: HeartBeatStatus, params_key: str) -> N
     assert results[0].state == State.OK
 
 
-def _esx_vm_section(heartbeat: esx_vsphere.HeartBeat) -> esx_vsphere.SectionESXVm:
+def _esx_vm_section(heartbeat: HeartBeat) -> SectionESXVm:
     return esx_vm_section(heartbeat=heartbeat)

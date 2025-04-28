@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib import esx_vsphere
+from cmk.plugins.vsphere.lib import esx_vsphere
 
 
 def discovery_mem_usage(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:

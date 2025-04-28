@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib import esx_vsphere
+from cmk.plugins.vsphere.lib import esx_vsphere
 
 
 def discovery_running_on(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:

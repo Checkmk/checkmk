@@ -18,8 +18,14 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib import diskstat, esx_vsphere, interfaces
-from cmk.plugins.lib.esx_vsphere import Section, SubSectionCounter
+from cmk.plugins.lib import diskstat, interfaces
+from cmk.plugins.vsphere.lib.esx_vsphere import (
+    average_parsed_data,
+    CounterValues,
+    Section,
+    SectionCounter,
+    SubSectionCounter,
+)
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -55,7 +61,7 @@ from cmk.plugins.lib.esx_vsphere import Section, SubSectionCounter
 # sys.uptime||630664|second
 
 
-def parse_esx_vsphere_counters(string_table: StringTable) -> esx_vsphere.SectionCounter:
+def parse_esx_vsphere_counters(string_table: StringTable) -> SectionCounter:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([
@@ -76,7 +82,7 @@ def parse_esx_vsphere_counters(string_table: StringTable) -> esx_vsphere.Section
      'net.errorsRx': {'': [(['0', '0'], 'number')]}}
     """
 
-    parsed: dict[str, dict[str, list[tuple[esx_vsphere.CounterValues, str]]]] = {}
+    parsed: dict[str, dict[str, list[tuple[CounterValues, str]]]] = {}
     # The data reported by the ESX system is split into multiple real time samples with
     # a fixed duration of 20 seconds. A check interval of one minute reports 3 samples
     # The esx_vsphere_counters checks need to figure out by themselves how to handle this data
@@ -142,7 +148,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.I
                 if name == "net.macaddress":
                     mac_addresses[instance] = values[0][0][-1]
                 else:
-                    rates[instance][name[4:]] = int(esx_vsphere.average_parsed_data(values[0][0]))
+                    rates[instance][name[4:]] = int(average_parsed_data(values[0][0]))
 
     # Example of rates:
     # {
@@ -243,7 +249,7 @@ def _sum_instance_counts(counts: SubSectionCounter) -> float:
     summed_avgs = 0.0
     for data in counts.values():
         multivalues, _unit = data[0]
-        summed_avgs += esx_vsphere.average_parsed_data(multivalues)
+        summed_avgs += average_parsed_data(multivalues)
     return summed_avgs
 
 
@@ -267,7 +273,7 @@ def check_esx_vsphere_counters_diskio(
         data = section.get("disk.%s" % op_type, {}).get("")
         multivalues, _unit = data[0] if data else (None, None)
         if multivalues is not None:
-            summary["%s_throughput" % op_type] = esx_vsphere.average_parsed_data(multivalues) * 1024
+            summary["%s_throughput" % op_type] = average_parsed_data(multivalues) * 1024
 
         # sum up all instances
         op_counts_key = "disk.number%sAveraged" % op_type.title()

@@ -14,8 +14,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.esx_vsphere import Section
 from cmk.plugins.lib.memory import check_element
+from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
 class EsxHostsystemMemory(NamedTuple):

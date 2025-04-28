@@ -11,8 +11,8 @@ import pytest
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
-from cmk.plugins.lib import esx_vsphere
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_mem_usage
+from cmk.plugins.vsphere.lib import esx_vsphere
 
 
 @pytest.mark.parametrize(

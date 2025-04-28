@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.esx_vsphere import SectionCounter
+from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
 # -> To get size infos about unknown ramdisks, connect to the ESX host via

@@ -24,7 +24,7 @@ from collections.abc import Callable
 from typing import Final, TypedDict
 
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult
-from cmk.plugins.lib.esx_vsphere import Section
+from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 FIRST_ELEMENT: Final = lambda v: v[0]
 FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])

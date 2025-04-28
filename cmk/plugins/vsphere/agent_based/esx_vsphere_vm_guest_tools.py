@@ -7,8 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib import esx_vsphere
-from cmk.plugins.lib.esx_vsphere import ESXStatus
+from cmk.plugins.vsphere.lib.esx_vsphere import ESXStatus, SectionESXVm
 
 CHECK_DEFAULT_PARAMETERS = {
     ESXStatus.guestToolsCurrent.value: State.OK.value,
@@ -18,7 +17,7 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def discovery_guest_tools(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
+def discovery_guest_tools(section: SectionESXVm) -> DiscoveryResult:
     if section.status is not None:
         yield Service()
 
@@ -31,7 +30,7 @@ _MAP_SUMMARY = {
 }
 
 
-def check_guest_tools(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
+def check_guest_tools(params: Mapping[str, Any], section: SectionESXVm) -> CheckResult:
     yield (
         Result(state=State.UNKNOWN, summary="Unknown status for VMware Tools")
         if (status := section.status) is None

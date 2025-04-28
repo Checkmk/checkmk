@@ -15,8 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib import esx_vsphere
-from cmk.plugins.lib.esx_vsphere import HeartBeatStatus
+from cmk.plugins.vsphere.lib.esx_vsphere import HeartBeat, HeartBeatStatus, SectionESXVm
 
 CHECK_DEFAULT_PARAMETERS = {
     "heartbeat_no_tools": 1,
@@ -26,12 +25,12 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def discovery_heartbeat(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
+def discovery_heartbeat(section: SectionESXVm) -> DiscoveryResult:
     if section.heartbeat is not None:
         yield Service()
 
 
-def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm) -> CheckResult:
+def check_heartbeat(params: Mapping[str, Any], section: SectionESXVm) -> CheckResult:
     """
     Possible values (this list is taken from the official documentation)
        gray - VMware Tools are not installed or not running.
@@ -43,7 +42,7 @@ def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm
     if heartbeat is None:
         raise IgnoreResultsError("No information about VM Heartbeat")
 
-    if heartbeat.status == esx_vsphere.HeartBeatStatus.UNKNOWN:
+    if heartbeat.status == HeartBeatStatus.UNKNOWN:
         yield Result(state=State.UNKNOWN, summary=f"Unknown heartbeat status {heartbeat.value}")
         return
 
@@ -55,7 +54,7 @@ def check_heartbeat(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm
     yield Result(state=_heartbeat_state(params, heartbeat), summary=heartbeat_summary)
 
 
-def _heartbeat_state(params: Mapping[str, Any], heartbeat: esx_vsphere.HeartBeat) -> State:
+def _heartbeat_state(params: Mapping[str, Any], heartbeat: HeartBeat) -> State:
     vm_status_lookup_mapping = {
         HeartBeatStatus.GRAY: "heartbeat_no_tools",
         HeartBeatStatus.GREEN: "heartbeat_ok",

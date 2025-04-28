@@ -6,12 +6,12 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.lib.esx_vsphere import SectionCounter
 from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 from cmk.plugins.vsphere.agent_based.esx_vsphere_datastore_io import (
     _check_esx_vsphere_datastore_io,
     discover_esx_vsphere_datastore_io,
 )
+from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
 
 STRING_TABLE = [  # only a snippet!
     ["datastore.datastoreReadIops", "56490e2e-692ac36c", "0#0", "number"],

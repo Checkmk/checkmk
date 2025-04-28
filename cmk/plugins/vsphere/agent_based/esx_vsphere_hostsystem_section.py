@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
-from cmk.plugins.lib.esx_vsphere import Section
+from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
 def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:

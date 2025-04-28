@@ -5,7 +5,7 @@
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.plugins.lib import esx_vsphere
+from cmk.plugins.vsphere.lib import esx_vsphere
 
 
 class ESXVMFactory(ModelFactory):

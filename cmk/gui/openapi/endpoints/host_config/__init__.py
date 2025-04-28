@@ -2,42 +2,6 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Hosts
-
-A host is an object that is monitored by Checkmk, for example, a server or a network device.
-A host belongs to a certain folder, is usually connected to a data source (agent or SNMP) and
-provides one or more services.
-
-A cluster host is a special host type containing the nodes the cluster consists of and having
-the services assigned that are provided by the cluster.
-
-You can find an introduction to hosts in the
-[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
-
-Please note that every host always resides in a folder. The folder is included twice
-in the host's links: Once based upon the canonical path and once based upon the folder's
-unique id. You can never remove a host from a folder, just move it to a different one.
-
-### Host and Folder attributes
-
-Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
-host inherits all attributes of its folder and the folder's parent folders. So setting an SNMP
-community in a folder is equivalent to setting the same on all hosts in said folder.
-
-Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
-attributes up to the root.
-
-### Relations
-
-A host_config object can have the following relations present in `links`:
-
- * `self` - The host itself.
- * `urn:com.checkmk:rels/folder_config` - The folder object this host resides in.
- * `urn:org.restfulobjects:rels/update` - The endpoint to update this host.
- * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
-
-"""
-
 import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -76,6 +40,7 @@ from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
+from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
@@ -238,6 +203,7 @@ def _fields_filter_from_params(params: Mapping[str, Any], *, is_collection: bool
     response_schema=HostConfigSchema,
     query_params=[BAKE_AGENT_PARAM],
     permissions_required=PERMISSIONS,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def create_host(params: Mapping[str, Any]) -> Response:
     """Create a host"""
@@ -269,6 +235,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
     response_schema=HostConfigSchema,
     permissions_required=with_access_check_permission(PERMISSIONS),
     query_params=[BAKE_AGENT_PARAM],
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def create_cluster_host(params: Mapping[str, Any]) -> Response:
     """Create a cluster host
@@ -335,6 +302,7 @@ class BulkHostActionWithFailedHosts(ApiError):
     },
     permissions_required=BULK_CREATE_PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk create hosts"""
@@ -461,6 +429,7 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
             ),
         },
     ],
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show all hosts"""
@@ -529,6 +498,7 @@ def _host_collection(
     request_schema=UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
     permissions_required=UPDATE_PERMISSIONS,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def update_nodes(params: Mapping[str, Any]) -> Response:
     """Update the nodes of a cluster host"""
@@ -585,6 +555,7 @@ def _validate_host_attributes_for_quick_setup(host: Host, body: dict[str, Any]) 
     request_schema=UpdateHost,
     response_schema=HostConfigSchema,
     permissions_required=UPDATE_PERMISSIONS,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def update_host(params: Mapping[str, Any]) -> Response:
     """Update a host"""
@@ -639,6 +610,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
         400: BulkHostActionWithFailedHosts,
     },
     permissions_required=UPDATE_PERMISSIONS,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     """Bulk update hosts
@@ -734,6 +706,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     ),
     request_schema=RenameHost,
     response_schema=HostConfigSchema,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def rename_host(params: Mapping[str, Any]) -> Response:
     """Rename a host
@@ -801,6 +774,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     },
     additional_status_codes=[302, 404],
     output_empty=True,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
     """Wait for renaming process completion
@@ -840,6 +814,7 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
             *PERMISSIONS.perms,
         ]
     ),
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def move(params: Mapping[str, Any]) -> Response:
     """Move a host to another folder"""
@@ -880,6 +855,7 @@ def move(params: Mapping[str, Any]) -> Response:
     path_params=[HOST_NAME],
     output_empty=True,
     permissions_required=with_access_check_permission(PERMISSIONS),
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
@@ -896,6 +872,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=BulkDeleteHost,
     permissions_required=with_access_check_permission(PERMISSIONS),
     output_empty=True,
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete hosts"""
@@ -939,6 +916,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     etag="output",
     response_schema=HostConfigSchema,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    family_name=HOST_CONFIG_FAMILY.name,
 )
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""

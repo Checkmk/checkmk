@@ -1,0 +1,21 @@
+Title: jar_signature: Fix privilege escalation via insecure JAVA_HOME path handling
+Class: security
+Compatible: compat
+Component: checks
+Date: 1745832863
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+The jar_signature agent plugin (configured by the <em>"Signatures of certificates in JAR files"</em> bakery rule) prepends <code>JAVA_HOME/bin</code> to the <code>PATH</code> environment variable. A user with write permission to that directory could replace legitimate commands with their own malicious scripts and execute them as root.
+
+<strong>Affected Versions</strong>:
+
+LI: 2.4.0 (beta)
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS score of 5.2 (medium) with the following CVSS vector: <code>CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H</code>, and assigned <code>CVE-2025-32917</code>.

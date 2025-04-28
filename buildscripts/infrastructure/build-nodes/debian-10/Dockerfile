@@ -37,6 +37,7 @@ RUN apt-get update \
     gtk-doc-tools \
     iputils-ping \
     joe \
+    jq \
     libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \

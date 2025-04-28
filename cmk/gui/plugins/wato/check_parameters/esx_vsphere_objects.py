@@ -2,29 +2,31 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import re
 from collections.abc import Mapping
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    ServiceState,
+    String,
+    validators,
 )
-from cmk.gui.valuespec import Dictionary, Migrate, MonitoringState, TextInput
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+
+ITEM_PATTERN = re.compile("(^VM|HostSystem) (.*)$")
 
 
-def _item_spec_esx_vsphere_objects():
-    return TextInput(
-        title=_("Name of the VM/HostSystem"),
-        help=_(
-            "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
-            "that we match the <i>beginning</i> of the name."
-        ),
-        regex="(^VM|HostSystem)( .*|$)",
-        regex_error=_("The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."),
-        allow_empty=False,
-    )
+def _validate_item(value: str) -> str:
+    if not ITEM_PATTERN.match(value):
+        raise ValidationError(
+            Message("The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>.")
+        )
+
+    return value
 
 
 def _migrate_add_stand_by(params: object) -> Mapping[str, object]:
@@ -33,79 +35,82 @@ def _migrate_add_stand_by(params: object) -> Mapping[str, object]:
     raise ValueError(params)
 
 
-def _parameter_valuespec_esx_vsphere_objects():
+def _parameter_form_esx_vsphere_objects():
     return Dictionary(
-        help=_(
+        help_text=Help(
             "Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
             "You can change this behaviour on a per-state-basis here."
         ),
-        optional_keys=False,
-        elements=[
-            (
-                "states",
-                Migrate(
+        elements={
+            "states": DictElement(
+                required=True,
+                parameter_form=Dictionary(
+                    title=Title("Target states"),
                     migrate=_migrate_add_stand_by,
-                    valuespec=Dictionary(
-                        title=_("Target states"),
-                        optional_keys=False,
-                        elements=[
-                            (
-                                "standBy",
-                                MonitoringState(
-                                    title=_("Stand by"),
-                                    help=_("Check result if the host or VM is in stand by"),
-                                    default_value=1,
-                                ),
+                    elements={
+                        "standBy": DictElement(
+                            required=True,
+                            parameter_form=ServiceState(
+                                title=Title("Stand by"),
+                                help_text=Help("Check result if the host or VM is in stand by"),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
-                            (
-                                "poweredOn",
-                                MonitoringState(
-                                    title=_("Powered ON"),
-                                    help=_("Check result if the host or VM is powered on"),
-                                    default_value=0,
-                                ),
+                        ),
+                        "poweredOn": DictElement(
+                            required=True,
+                            parameter_form=ServiceState(
+                                title=Title("Powered ON"),
+                                help_text=Help("Check result if the host or VM is powered on"),
+                                prefill=DefaultValue(ServiceState.OK),
                             ),
-                            (
-                                "poweredOff",
-                                MonitoringState(
-                                    title=_("Powered OFF"),
-                                    help=_("Check result if the host or VM is powered off"),
-                                    default_value=1,
-                                ),
+                        ),
+                        "poweredOff": DictElement(
+                            required=True,
+                            parameter_form=ServiceState(
+                                title=Title("Powered OFF"),
+                                help_text=Help("Check result if the host or VM is powered off"),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
-                            (
-                                "suspended",
-                                MonitoringState(
-                                    title=_("Suspended"),
-                                    help=_("Check result if the host or VM is suspended"),
-                                    default_value=1,
-                                ),
+                        ),
+                        "suspended": DictElement(
+                            required=True,
+                            parameter_form=ServiceState(
+                                title=Title("Suspended"),
+                                help_text=Help("Check result if the host or VM is suspended"),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
-                            (
-                                "unknown",
-                                MonitoringState(
-                                    title=_("Unknown"),
-                                    help=_(
-                                        "Check result if the host or VM state is reported as <i>unknown</i>"
-                                    ),
-                                    default_value=3,
+                        ),
+                        "unknown": DictElement(
+                            required=True,
+                            parameter_form=ServiceState(
+                                title=Title("Unknown"),
+                                help_text=Help(
+                                    "Check result if the host or VM state is reported as <i>unknown</i>"
                                 ),
+                                prefill=DefaultValue(ServiceState.UNKNOWN),
                             ),
-                        ],
-                    ),
+                        ),
+                    },
                 ),
             ),
-        ],
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="esx_vsphere_objects",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_esx_vsphere_objects,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_esx_vsphere_objects,
-        title=lambda: _("ESX host and virtual machine states"),
-    )
+rule_spec_esx_vsphere_objects = CheckParameters(
+    name="esx_vsphere_objects",
+    title=Title("ESX host and virtual machine states"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_esx_vsphere_objects,
+    condition=HostAndItemCondition(
+        item_title=Title("Name of the VM/HostSystem"),
+        item_form=String(
+            help_text=Help(
+                "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. "
+                "Example: <tt>VM abcsrv123</tt>. Also note, that we match the <i>beginning</i> of "
+                "the name. This rule cannot be applied to templates as those are always in state OK."
+            ),
+            custom_validate=(validators.LengthInRange(min_value=1), _validate_item),
+        ),
+    ),
 )

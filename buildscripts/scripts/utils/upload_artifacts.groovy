@@ -145,16 +145,6 @@ def execute_cmd_on_archive_server(cmd) {
     }
 }
 
-def execute_cmd_on_tst_server(cmd) {
-    // INTERNAL_DEPLOY_DEST configured as "deploy@tstbuilds-artifacts.lan.tribe29.com:/tstbuilds/"
-    def internal_deploy_server = INTERNAL_DEPLOY_DEST.split(":")[0];
-    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
-        sh("""
-           ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${INTERNAL_DEPLOY_PORT} ${internal_deploy_server} "${cmd}"
-        """);
-    }
-}
-
 def deploy_to_website(CMK_VERS) {
     stage("Deploy to Website") {
         // CMK_VERS can contain a rc information like v2.1.0p6-rc1.

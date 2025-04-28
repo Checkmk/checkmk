@@ -10,6 +10,7 @@ Don't add new stuff here!
 # pylint: disable=too-many-arguments
 
 import logging
+import shutil
 import subprocess
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
@@ -366,22 +367,52 @@ def _install(
     return manifest
 
 
+def _remove_pycache(manifest: Manifest, folder: Path) -> None:
+    pycache_folder = folder / "__pycache__"
+    shutil.rmtree(pycache_folder, ignore_errors=True)
+    _logger.debug("[%s %s]: Removed folder %s", manifest.name, manifest.version, pycache_folder)
+
+
+def _clear_remove_folders(manifest: Manifest, part: Path, folder: Path) -> None:
+    folder_path = part / folder
+    _remove_pycache(manifest, folder_path)
+    try:
+        folder_path.rmdir()
+        _logger.debug(
+            "[%s %s]: Removed empty directory %s",
+            manifest.name,
+            manifest.version,
+            folder,
+        )
+    except OSError:
+        return  # no point in recursing further
+
+    if folder.parent.name:  # at the end, folder.parent is "." and folder.name is empty
+        _clear_remove_folders(manifest, part, folder.parent)
+
+
 def remove_files(
     manifest: Manifest,
     keep_files: Mapping[PackagePart, Iterable[Path]],
     path_config: PathConfig,
 ) -> tuple[str, ...]:
     errors = []
+    paths_to_clean = set()
     for part, files in manifest.files.items():
         _logger.debug("  Part '%s':", part.ident)
         for fn in set(files) - set(keep_files.get(part, [])):
-            path = path_config.get_path(part) / fn
+            paths_to_clean.add((part_path := path_config.get_path(part), fn.parent))
+            path = part_path / fn
             try:
                 path.unlink(missing_ok=True)
             except OSError as e:
                 errors.append(f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}")
             else:
                 _logger.info("[%s %s]: Removed file %s", manifest.name, manifest.version, path)
+
+    for part_path, folder in paths_to_clean:
+        _clear_remove_folders(manifest, part_path, folder)
+
     return tuple(errors)
 
 

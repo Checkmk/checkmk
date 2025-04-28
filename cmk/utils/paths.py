@@ -97,6 +97,8 @@ site_internal_secret_file = omd_root / "etc/site_internal.secret"
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")
+cmk_addons_plugins_dir = _omd_path_str("lib/python3/cmk_addons/plugins")
+cmk_plugins_dir = _omd_path_str("lib/python3/cmk/plugins")
 notifications_dir = _omd_path("share/check_mk/notifications")
 inventory_dir = _omd_path_str("share/check_mk/inventory")
 legacy_check_manpages_dir = _omd_path_str("share/check_mk/checkman")
@@ -122,6 +124,8 @@ gui_plugins_dir = Path(lib_dir, "check_mk", "gui", "plugins")
 local_root = _local_path(omd_root)
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
+local_cmk_addons_plugins_dir = _local_path(cmk_addons_plugins_dir)
+local_cmk_plugins_dir = _local_path(cmk_plugins_dir)
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_notifications_dir = _local_path(notifications_dir)
 local_inventory_dir = _local_path(inventory_dir)
@@ -138,7 +142,6 @@ local_alert_handlers_dir = _local_path(alert_handlers_dir)
 local_optional_packages_dir = _omd_path("var/check_mk/packages_local")
 local_enabled_packages_dir = local_share_dir / "enabled_packages"
 
-local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
 local_dashboards_dir = local_gui_plugins_dir / "dashboard"
 local_views_dir = local_gui_plugins_dir / "views"

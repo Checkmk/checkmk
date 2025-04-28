@@ -56,6 +56,8 @@ _STR_PATHS: Final = {
     "status_data_dir",
     "share_dir",
     "checks_dir",
+    "cmk_addons_plugins_dir",
+    "cmk_plugins_dir",
     "inventory_dir",
     "legacy_check_manpages_dir",
     "agents_dir",

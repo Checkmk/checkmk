@@ -23,7 +23,7 @@ import livestatus
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.structured_data import InventoryPaths, TreeStore
+from cmk.utils.structured_data import InventoryPaths, InventoryStore
 
 from cmk.base import diagnostics
 
@@ -526,7 +526,9 @@ CONFIG_TMPFS='on'"""
 
 
 def test_diagnostics_element_checkmk_overview(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(TreeStore(tmp_path), "")
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
+        InventoryStore(tmp_path), ""
+    )
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
     assert diagnostics_element.description == (
@@ -560,7 +562,9 @@ def test_diagnostics_element_checkmk_overview_error(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree, error
 ):
     inv_paths = InventoryPaths(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(TreeStore(tmp_path), "")
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
+        InventoryStore(tmp_path), ""
+    )
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -629,7 +633,9 @@ def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
     inv_paths = InventoryPaths(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(TreeStore(tmp_path), "")
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
+        InventoryStore(tmp_path), ""
+    )
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 

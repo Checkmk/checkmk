@@ -10,9 +10,9 @@ from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
-    HistoryStore,
     ImmutableDeltaTree,
     ImmutableTree,
+    InventoryStore,
     SDPath,
 )
 
@@ -171,7 +171,7 @@ def _get_inventory_tree(
         return tree_cache[cache_id]
 
     tree: ImmutableTree | ImmutableDeltaTree = (
-        load_latest_delta_tree(HistoryStore(cmk.utils.paths.omd_root), hostname)
+        load_latest_delta_tree(InventoryStore(cmk.utils.paths.omd_root), hostname)
         if is_history
         else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
     )

@@ -12,8 +12,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.utils.structured_data import (
     HistoryEntry,
     HistoryPath,
-    HistoryStore,
     ImmutableDeltaTree,
+    InventoryStore,
     load_history,
 )
 
@@ -22,7 +22,9 @@ from cmk.gui.i18n import _
 from ._tree import get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
 
 
-def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:
+def load_latest_delta_tree(
+    inventory_store: InventoryStore, hostname: HostName
+) -> ImmutableDeltaTree:
     if "/" in hostname:
         return ImmutableDeltaTree()
 
@@ -32,7 +34,7 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
         else None
     )
     history = load_history(
-        history_store,
+        inventory_store,
         hostname,
         filter_history_paths=lambda pairs: [pairs[-1]] if pairs else [],
         filter_tree=filter_tree,
@@ -47,7 +49,7 @@ def _sort_corrupted_history_files(
 
 
 def load_delta_tree(
-    history_store: HistoryStore, hostname: HostName, timestamp: int
+    inventory_store: InventoryStore, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     if "/" in hostname:
@@ -74,19 +76,19 @@ def load_delta_tree(
         else None
     )
     history = load_history(
-        history_store,
+        inventory_store,
         hostname,
         filter_history_paths=lambda pairs: _search_timestamps(pairs, timestamp),
         filter_tree=filter_tree,
     )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
-        _sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
+        _sort_corrupted_history_files(inventory_store.inv_paths.archive_dir, history.corrupted),
     )
 
 
 def get_history(
-    history_store: HistoryStore, hostname: HostName
+    inventory_store: InventoryStore, hostname: HostName
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
@@ -97,11 +99,11 @@ def get_history(
         else None
     )
     history = load_history(
-        history_store,
+        inventory_store,
         hostname,
         filter_history_paths=lambda pairs: pairs,
         filter_tree=filter_tree,
     )
     return history.entries, _sort_corrupted_history_files(
-        history_store.inv_paths.archive_dir, history.corrupted
+        inventory_store.inv_paths.archive_dir, history.corrupted
     )

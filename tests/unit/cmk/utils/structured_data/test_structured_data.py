@@ -28,6 +28,7 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    InventoryStore,
     make_meta,
     MutableTree,
     parse_from_unzipped,
@@ -44,7 +45,6 @@ from cmk.utils.structured_data import (
     SDRetentionFilterChoices,
     serialize_delta_tree,
     serialize_tree,
-    TreeStore,
     UpdateResult,
 )
 
@@ -914,8 +914,8 @@ def test_filter_tree_mixed() -> None:
     )
 
 
-def _get_tree_store() -> TreeStore:
-    return TreeStore(repo_path() / "tests/unit/cmk/utils/structured_data/tree_test_data")
+def _get_inventory_store() -> InventoryStore:
+    return InventoryStore(repo_path() / "tests/unit/cmk/utils/structured_data/tree_test_data")
 
 
 @pytest.mark.parametrize(
@@ -936,7 +936,7 @@ def _get_tree_store() -> TreeStore:
     ],
 )
 def test_load_from(tree_name: HostName) -> None:
-    _get_tree_store().load_inventory_tree(host_name=tree_name)
+    _get_inventory_store().load_inventory_tree(host_name=tree_name)
 
 
 def test_save_tree(tmp_path: Path) -> None:
@@ -945,8 +945,8 @@ def test_save_tree(tmp_path: Path) -> None:
     tree.add(
         path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
     )
-    tree_store = TreeStore(tmp_path)
-    tree_store.save_inventory_tree(
+    inv_store = InventoryStore(tmp_path)
+    inv_store.save_inventory_tree(
         host_name=host_name,
         tree=tree,
         meta=make_meta(do_archive=True),
@@ -1088,7 +1088,7 @@ def test__make_meta_and_raw_tree(
     ],
 )
 def test_load_real_tree(tree_name: HostName) -> None:
-    assert len(_get_tree_store().load_inventory_tree(host_name=tree_name)) > 0
+    assert len(_get_inventory_store().load_inventory_tree(host_name=tree_name)) > 0
 
 
 @pytest.mark.parametrize(
@@ -1126,9 +1126,9 @@ def test_load_real_tree(tree_name: HostName) -> None:
     ],
 )
 def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
-    tree_store = _get_tree_store()
-    tree_x = tree_store.load_inventory_tree(host_name=tree_name_x)
-    tree_y = tree_store.load_inventory_tree(host_name=tree_name_y)
+    inv_store = _get_inventory_store()
+    tree_x = inv_store.load_inventory_tree(host_name=tree_name_x)
+    tree_y = inv_store.load_inventory_tree(host_name=tree_name_y)
 
     if tree_name_x == tree_name_y:
         assert tree_x == tree_y
@@ -1137,9 +1137,9 @@ def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> Non
 
 
 def test_real_tree_order() -> None:
-    tree_store = _get_tree_store()
-    tree_ordered = tree_store.load_inventory_tree(host_name=HostName("tree_addresses_ordered"))
-    tree_unordered = tree_store.load_inventory_tree(host_name=HostName("tree_addresses_unordered"))
+    inv_store = _get_inventory_store()
+    tree_ordered = inv_store.load_inventory_tree(host_name=HostName("tree_addresses_ordered"))
+    tree_unordered = inv_store.load_inventory_tree(host_name=HostName("tree_addresses_unordered"))
     assert tree_ordered == tree_unordered
 
 
@@ -1161,15 +1161,15 @@ def test_real_tree_order() -> None:
     ],
 )
 def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
-    orig_tree = _get_tree_store().load_inventory_tree(host_name=tree_name)
-    tree_store = TreeStore(tmp_path)
+    orig_tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
+    inv_store = InventoryStore(tmp_path)
     try:
-        tree_store.save_inventory_tree(
+        inv_store.save_inventory_tree(
             host_name=HostName("foo"),
             tree=_make_mutable_tree(orig_tree),
             meta=make_meta(do_archive=False),
         )
-        loaded_tree = tree_store.load_inventory_tree(host_name=HostName("foo"))
+        loaded_tree = inv_store.load_inventory_tree(host_name=HostName("foo"))
         assert orig_tree == loaded_tree
     finally:
         shutil.rmtree(str(tmp_path))
@@ -1193,7 +1193,7 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     ],
 )
 def test_count_entries(tree_name: HostName, result: int) -> None:
-    assert len(_get_tree_store().load_inventory_tree(host_name=tree_name)) == result
+    assert len(_get_inventory_store().load_inventory_tree(host_name=tree_name)) == result
 
 
 @pytest.mark.parametrize(
@@ -1214,7 +1214,7 @@ def test_count_entries(tree_name: HostName, result: int) -> None:
     ],
 )
 def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=tree_name)
+    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
     stats = tree.difference(tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
 
@@ -1257,9 +1257,9 @@ def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
 def test_compare_real_trees(
     tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
 ) -> None:
-    tree_store = _get_tree_store()
-    old_tree = tree_store.load_inventory_tree(host_name=tree_name_old)
-    new_tree = tree_store.load_inventory_tree(host_name=tree_name_new)
+    inv_store = _get_inventory_store()
+    old_tree = inv_store.load_inventory_tree(host_name=tree_name_old)
+    new_tree = inv_store.load_inventory_tree(host_name=tree_name_new)
     stats = new_tree.difference(old_tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
@@ -1302,7 +1302,7 @@ def test_compare_real_trees(
 def test_get_node(
     tree_name: HostName, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
 ) -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=tree_name)
+    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
     for edge_t in edges_t:
         assert len(tree.get_tree((edge_t,))) > 0
     for edge_f in edges_f:
@@ -1321,7 +1321,7 @@ def test_get_node(
     ],
 )
 def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=tree_name)
+    tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
     assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
 
 
@@ -1366,9 +1366,9 @@ def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
 def test_merge_trees_1(
     tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
 ) -> None:
-    tree_store = _get_tree_store()
-    tree = tree_store.load_inventory_tree(host_name=HostName("tree_old_addresses")).merge(
-        tree_store.load_inventory_tree(host_name=tree_name)
+    inv_store = _get_inventory_store()
+    tree = inv_store.load_inventory_tree(host_name=HostName("tree_old_addresses")).merge(
+        inv_store.load_inventory_tree(host_name=tree_name)
     )
 
     for edge in edges:
@@ -1383,9 +1383,9 @@ def test_merge_trees_1(
 
 
 def test_merge_trees_2() -> None:
-    tree_store = _get_tree_store()
-    inventory_tree = tree_store.load_inventory_tree(host_name=HostName("tree_inv"))
-    status_data_tree = tree_store.load_inventory_tree(host_name=HostName("tree_status"))
+    inv_store = _get_inventory_store()
+    inventory_tree = inv_store.load_inventory_tree(host_name=HostName("tree_inv"))
+    status_data_tree = inv_store.load_inventory_tree(host_name=HostName("tree_status"))
     tree = inventory_tree.merge(status_data_tree)
     assert "foobar" in serialize_tree(tree)["Nodes"]
     table = tree.get_tree((SDNodeName("foobar"),)).table
@@ -1468,7 +1468,7 @@ def test_filter_real_tree(
     filters: Sequence[SDFilterChoice],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
+    tree = _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(filters)
     assert id(tree) != id(filtered)
     assert tree != filtered
@@ -1574,7 +1574,7 @@ def test_filter_networking_tree(
     filters: Sequence[SDFilterChoice],
     amount_if_entries: int,
 ) -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
+    tree = _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(filters)
     assert len(filtered.get_tree((SDNodeName("networking"),))) > 0
     assert len(filtered.get_tree((SDNodeName("hardware"),))) == 0
@@ -1586,7 +1586,7 @@ def test_filter_networking_tree(
 
 
 def test_filter_networking_tree_empty() -> None:
-    tree = _get_tree_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
+    tree = _get_inventory_store().load_inventory_tree(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(
         [
             SDFilterChoice(

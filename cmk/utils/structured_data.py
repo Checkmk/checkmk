@@ -1770,76 +1770,6 @@ def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTr
     return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
 
 
-class TreeStore:
-    def __init__(self, omd_root: Path) -> None:
-        self.inv_paths = InventoryPaths(omd_root)
-
-    def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return _load_tree(self.inv_paths.inventory_tree(host_name))
-
-    def save_inventory_tree(
-        self, host_name: HostName, *, tree: MutableTree, meta: SDMeta, pretty: bool = False
-    ) -> None:
-        _save_tree(
-            self.inv_paths.inventory_tree(host_name),
-            self.inv_paths.inventory_tree_gz(host_name),
-            tree,
-            meta,
-            pretty,
-        )
-        # Inform Livestatus about the latest inventory update
-        self.inv_paths.marker_file.touch()
-
-    def remove_inventory_tree(self, *, host_name: HostName) -> None:
-        self.inv_paths.inventory_tree(host_name).unlink(missing_ok=True)
-        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
-
-    def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return _load_tree(self.inv_paths.status_data_tree(host_name))
-
-    def save_status_data_tree(
-        self, host_name: HostName, *, tree: MutableTree, meta: SDMeta, pretty: bool = False
-    ) -> None:
-        _save_tree(
-            self.inv_paths.status_data_tree(host_name),
-            self.inv_paths.status_data_tree_gz(host_name),
-            tree,
-            meta,
-            pretty,
-        )
-        # Inform Livestatus about the latest inventory update
-        self.inv_paths.marker_file.touch()
-
-    def remove_status_data_tree(self, *, host_name: HostName) -> None:
-        self.inv_paths.status_data_tree(host_name).unlink(missing_ok=True)
-        self.inv_paths.status_data_tree_gz(host_name).unlink(missing_ok=True)
-
-
-class TreeOrArchiveStore(TreeStore):
-    def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        if (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
-            return _load_tree(tree_file)
-
-        try:
-            latest_archive_tree_file = max(
-                self.inv_paths.archive_host(host_name).iterdir(),
-                key=lambda tp: int(tp.name),
-            )
-        except (FileNotFoundError, ValueError):
-            return ImmutableTree()
-
-        return _load_tree(latest_archive_tree_file)
-
-    def archive_inventory_tree(self, *, host_name: HostName) -> None:
-        if not (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
-            return
-
-        archive_host = self.inv_paths.archive_host(host_name)
-        archive_host.mkdir(parents=True, exist_ok=True)
-        tree_file.rename(archive_host / str(int(tree_file.stat().st_mtime)))
-        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
-
-
 @dataclass(frozen=True)
 class HistoryPath:
     path: Path
@@ -1885,12 +1815,75 @@ class HistoryEntry:
         )
 
 
-class HistoryStore:
+class InventoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
         self._lookup: dict[Path, ImmutableTree] = {}
 
-    def files(self, *, host_name: HostName) -> HistoryPaths:
+    def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
+        return _load_tree(self.inv_paths.inventory_tree(host_name))
+
+    def save_inventory_tree(
+        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    ) -> None:
+        _save_tree(
+            self.inv_paths.inventory_tree(host_name),
+            self.inv_paths.inventory_tree_gz(host_name),
+            tree,
+            meta,
+            pretty,
+        )
+        # Inform Livestatus about the latest inventory update
+        self.inv_paths.marker_file.touch()
+
+    def remove_inventory_tree(self, *, host_name: HostName) -> None:
+        self.inv_paths.inventory_tree(host_name).unlink(missing_ok=True)
+        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
+
+    def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
+        return _load_tree(self.inv_paths.status_data_tree(host_name))
+
+    def save_status_data_tree(
+        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    ) -> None:
+        _save_tree(
+            self.inv_paths.status_data_tree(host_name),
+            self.inv_paths.status_data_tree_gz(host_name),
+            tree,
+            meta,
+            pretty,
+        )
+        # Inform Livestatus about the latest inventory update
+        self.inv_paths.marker_file.touch()
+
+    def remove_status_data_tree(self, *, host_name: HostName) -> None:
+        self.inv_paths.status_data_tree(host_name).unlink(missing_ok=True)
+        self.inv_paths.status_data_tree_gz(host_name).unlink(missing_ok=True)
+
+    def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
+        if (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
+            return _load_tree(tree_file)
+
+        try:
+            latest_archive_tree_file = max(
+                self.inv_paths.archive_host(host_name).iterdir(),
+                key=lambda tp: int(tp.name),
+            )
+        except (FileNotFoundError, ValueError):
+            return ImmutableTree()
+
+        return _load_tree(latest_archive_tree_file)
+
+    def archive_inventory_tree(self, *, host_name: HostName) -> None:
+        if not (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
+            return
+
+        archive_host = self.inv_paths.archive_host(host_name)
+        archive_host.mkdir(parents=True, exist_ok=True)
+        tree_file.rename(archive_host / str(int(tree_file.stat().st_mtime)))
+        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
+
+    def collect_archive_files(self, *, host_name: HostName) -> HistoryPaths:
         try:
             archive_file_paths = sorted(self.inv_paths.archive_host(host_name).iterdir())
         except FileNotFoundError:
@@ -1974,7 +1967,7 @@ class History:
 
 
 def load_history(
-    history_store: HistoryStore,
+    inv_store: InventoryStore,
     host_name: HostName,
     *,
     filter_history_paths: Callable[
@@ -1982,14 +1975,14 @@ def load_history(
     ],
     filter_tree: Sequence[SDFilterChoice] | None,
 ) -> History:
-    files = history_store.files(host_name=host_name)
+    files = inv_store.collect_archive_files(host_name=host_name)
     entries: list[HistoryEntry] = []
     for previous, current in filter_history_paths(_get_pairs(files.paths)):
         if current.timestamp is None:
             continue
 
         if (
-            entry := history_store.load_history_entry(
+            entry := inv_store.load_history_entry(
                 host_name=host_name,
                 previous_timestamp=previous.timestamp,
                 current_timestamp=current.timestamp,
@@ -1999,12 +1992,12 @@ def load_history(
             continue
 
         try:
-            previous_tree = history_store.lookup_tree(previous.path)
+            previous_tree = inv_store.lookup_tree(previous.path)
         except FileNotFoundError:
             continue
 
         try:
-            current_tree = history_store.lookup_tree(current.path)
+            current_tree = inv_store.lookup_tree(current.path)
         except FileNotFoundError:
             continue
 
@@ -2012,7 +2005,7 @@ def load_history(
             current.timestamp, current_tree.difference(previous_tree)
         )
         if entry.new or entry.changed or entry.removed:
-            history_store.save_history_entry(
+            inv_store.save_history_entry(
                 host_name=host_name,
                 previous_timestamp=previous.timestamp,
                 current_timestamp=current.timestamp,

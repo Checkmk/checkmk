@@ -63,10 +63,10 @@ from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import (
+    InventoryStore,
     SDNodeName,
     SDRawTree,
     serialize_tree,
-    TreeStore,
 )
 
 from cmk.base.config import LoadedConfigFragment
@@ -201,7 +201,7 @@ class DiagnosticsDump:
         if OPT_CHECKMK_OVERVIEW in parameters:
             optional_elements.append(
                 CheckmkOverviewDiagnosticsElement(
-                    TreeStore(cmk.utils.paths.omd_root),
+                    InventoryStore(cmk.utils.paths.omd_root),
                     parameters.get(OPT_CHECKMK_OVERVIEW, ""),
                 )
             )
@@ -917,8 +917,8 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    def __init__(self, tree_store: TreeStore, checkmk_server_host: str) -> None:
-        self.tree_store = tree_store
+    def __init__(self, inventory_store: InventoryStore, checkmk_server_host: str) -> None:
+        self.inventory_store = inventory_store
         self.checkmk_server_host = checkmk_server_host
 
     @property
@@ -942,7 +942,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> SDRawTree:
         checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         try:
-            tree = self.tree_store.load_inventory_tree(host_name=checkmk_server_host)
+            tree = self.inventory_store.load_inventory_tree(host_name=checkmk_server_host)
         except FileNotFoundError:
             raise DiagnosticsElementError(
                 "No HW/SW Inventory tree of '%s' found" % checkmk_server_host

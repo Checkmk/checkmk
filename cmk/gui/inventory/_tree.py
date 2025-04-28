@@ -19,12 +19,12 @@ from cmk.utils.structured_data import (
     deserialize_tree,
     ImmutableTree,
     InventoryPaths,
+    InventoryStore,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
     SDNodeName,
     SDPath,
-    TreeStore,
 )
 
 from cmk.gui import userdb
@@ -147,12 +147,12 @@ def _load_tree_from_file(
         # just for security reasons
         return ImmutableTree()
 
-    tree_store = TreeStore(cmk.utils.paths.omd_root)
+    inv_store = InventoryStore(cmk.utils.paths.omd_root)
     match tree_type:
         case "inventory":
-            return tree_store.load_inventory_tree(host_name=host_name)
+            return inv_store.load_inventory_tree(host_name=host_name)
         case "status_data":
-            return tree_store.load_status_data_tree(host_name=host_name)
+            return inv_store.load_status_data_tree(host_name=host_name)
 
 
 @request_memoize()

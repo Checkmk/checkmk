@@ -3,10 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from pathlib import Path
 
 import pytest
 from pytest import MonkeyPatch
+
+from tests.unit.cmk.plugins.collection.agent_based.snmp import (
+    get_parsed_snmp_section,
+    snmp_is_detected,
+)
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import cisco_vpn_tunnel
@@ -16,6 +22,7 @@ from cmk.plugins.collection.agent_based.cisco_vpn_tunnel import (
     discover_cisco_vpn_tunnel,
     parse_cisco_vpn_tunnel,
     Phase,
+    snmp_section_cisco_vpn_tunnel,
     VPNTunnel,
 )
 
@@ -287,3 +294,21 @@ def test_check_cisco_vpn_tunnel_counter_init() -> None:
             _SECTION,
         )
     )
+
+
+def test_parse_cisco_vpn_tunnel_missing_TunOctets(as_path: Callable[[str], Path]) -> None:
+    # SUP-23416
+    # My assumption is that if the handshake does not have values, there won't be any throughput
+    # values either, so we omit this tunnel altogether.
+    walk = """.1.3.6.1.2.1.1.1.0 Cisco Adaptive Security Appliance Version 9.12(4)62
+.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.9.1.2314
+.1.3.6.1.4.1.9.9.171.1.2.3.1.2.652503 9
+.1.3.6.1.4.1.9.9.171.1.2.3.1.3.652503 mockvalue
+.1.3.6.1.4.1.9.9.171.1.2.3.1.4.652503 "8D 0F 7F 19 "
+.1.3.6.1.4.1.9.9.171.1.2.3.1.5.652503 mockvalue
+.1.3.6.1.4.1.9.9.171.1.2.3.1.6.652503 9
+.1.3.6.1.4.1.9.9.171.1.2.3.1.7.652503 differentmockvalue
+"""
+    assert snmp_is_detected(snmp_section_cisco_vpn_tunnel, as_path(walk))
+
+    assert get_parsed_snmp_section(snmp_section_cisco_vpn_tunnel, as_path(walk)) == {}

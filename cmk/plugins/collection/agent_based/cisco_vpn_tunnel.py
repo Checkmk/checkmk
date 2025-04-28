@@ -127,7 +127,7 @@ def parse_cisco_vpn_tunnel(string_table: Sequence[StringTable]) -> Section:
 
     section: dict[str, VPNTunnel] = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in string_table[0]:
-        if not remote_ip:
+        if not (remote_ip and phase_1_in and phase_1_out):
             continue
         tunnel = section.setdefault(
             remote_ip,

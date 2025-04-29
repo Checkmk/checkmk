@@ -198,9 +198,10 @@ class BICompiler:
                 continue
 
             _LOGGER.debug("Loading cached aggregation results %s" % aggr_id)
-            self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(
-                store.load_object_from_pickle_file(path_object, default={})
-            )
+            if not (data := store.load_object_from_pickle_file(path_object, default={})):
+                _LOGGER.warning("Could not load compiled aggregation from %s", path_object)
+                continue
+            self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(data)
 
         self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
 

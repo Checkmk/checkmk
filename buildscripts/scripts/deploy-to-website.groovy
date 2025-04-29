@@ -5,6 +5,8 @@
 def main() {
     check_job_parameters([
         ["VERSION", true],
+        ["UPDATE_LATEST_BOM_SYMLINKS", true],
+        ["UPDATE_BRANCH_LATEST_BOM_SYMLINKS", true],
         ["CIPARAM_REMOVE_RC_CANDIDATES", true],
     ]);
 

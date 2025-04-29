@@ -26,7 +26,7 @@ if "%errorlevel%" == "0" (
 
 set uniqueFileName=%tmp%\bat~%RANDOM%.tmp
 
-set packages=pyinstaller future pipenv pyyaml pypiwin32  requests  pyOpenSSL requests[socks] pathlib pathlib2 typing pytest freezegun bs4 black isort pytest-mock telnetlib3 asyncio marshmallow
+set packages=pyinstaller future pipenv pyyaml pypiwin32  requests  pyOpenSSL requests[socks] pathlib pathlib2 typing pytest freezegun bs4 black isort pytest-mock telnetlib3 asyncio marshmallow==3.19.0
 
 %ppath%\python -m pip install %packages% > %uniqueFileName%
 if "%errorlevel%" == "0" (

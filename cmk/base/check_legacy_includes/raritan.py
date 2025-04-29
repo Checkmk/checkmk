@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from .temperature import check_temperature
 
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
 
@@ -47,7 +46,6 @@ raritan_map_type = {
     "19": ("binary", ""),
     "20": ("binary", "Contact"),
     "21": ("fanspeed", ""),
-    "26": ("residual_current", "Residual Current"),
     "30": ("", "Other"),
     "31": ("", "None"),
 }

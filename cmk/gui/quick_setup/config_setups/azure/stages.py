@@ -140,6 +140,9 @@ def configure_authentication() -> QuickSetupStage:
                 id=ActionId("action"),
                 custom_validators=[
                     qs_validators.validate_unique_id,
+                    qs_validators.validate_non_quick_setup_password(
+                        parameter_form=azure.formspec()
+                    ),
                     qs_validators.validate_test_connection_custom_collect_params(
                         rulespec_name=RuleGroup.SpecialAgents("azure"),
                         parameter_form=azure.formspec(),

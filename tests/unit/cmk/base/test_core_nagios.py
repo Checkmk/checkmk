@@ -754,9 +754,7 @@ def test_create_nagios_servicedefs_with_warnings(
     )
 
     assert outfile.getvalue() == expected_result
-
-    captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert capsys.readouterr().err == expected_warning
 
 
 @pytest.mark.parametrize(
@@ -874,8 +872,7 @@ def test_create_nagios_servicedefs_invalid_args(
         cfg, config_cache, hostname, host_attrs, {}, license_counter
     )
 
-    out, _ = capsys.readouterr()
-    assert out == error_message
+    assert capsys.readouterr().err == error_message
 
 
 @pytest.mark.parametrize(

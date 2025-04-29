@@ -752,9 +752,8 @@ def test_test_get_active_service_data_crash(
 
     list(active_check.get_active_service_data(active_check_rules))
 
-    captured = capsys.readouterr()
     assert (
-        captured.out
+        capsys.readouterr().err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: Can't create argument list\n"
     )
 
@@ -971,10 +970,9 @@ def test_get_active_service_data_warnings(
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
-    assert services == expected_result
 
-    captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert services == expected_result
+    assert capsys.readouterr().err == expected_warning
 
 
 @pytest.mark.parametrize(
@@ -1235,10 +1233,9 @@ def test_get_active_service_descriptions_warnings(
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
-    assert descriptions == expected_result
 
-    captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert descriptions == expected_result
+    assert capsys.readouterr().err == expected_warning
 
 
 @pytest.mark.parametrize(
@@ -1783,9 +1780,8 @@ def test_iter_special_agent_commands_crash(
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
 
-    captured = capsys.readouterr()
     assert (
-        captured.out
+        capsys.readouterr().err
         == "\nWARNING: Config creation for special agent test_agent failed on test_host: Can't create argument list\n"
     )
 
@@ -1966,7 +1962,7 @@ def test_commandline_arguments_nonexisting_password(
         Path("/pw/store"),
     )
     captured = capsys.readouterr()
-    assert expected_warning in captured.out
+    assert expected_warning in captured.err
 
 
 @pytest.mark.parametrize(

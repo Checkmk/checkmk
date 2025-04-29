@@ -62,15 +62,15 @@ def bi_livestatus_query(
 
 @request_memoize(maxsize=10000)
 def load_compiled_branch(aggr_id: str, branch_title: str) -> BICompiledRule:
-    compiled_aggregation = _load_compiled_aggregation(aggr_id)
-    for branch in compiled_aggregation.branches:
-        if branch.properties.title == branch_title:
-            return branch
+    if compiled_aggregation := _load_compiled_aggregation(aggr_id):
+        for branch in compiled_aggregation.branches:
+            if branch.properties.title == branch_title:
+                return branch
     raise MKGeneralException(f"Branch {branch_title} not found in aggregation {aggr_id}")
 
 
 @request_memoize(maxsize=10000)
-def _load_compiled_aggregation(aggr_id: str) -> BICompiledAggregation:
-    return BIAggregation.create_trees_from_schema(
-        store.load_object_from_pickle_file(path_compiled_aggregations.joinpath(aggr_id), default={})
-    )
+def _load_compiled_aggregation(aggr_id: str) -> BICompiledAggregation | None:
+    compiled_aggr_path = path_compiled_aggregations.joinpath(aggr_id)
+    data = store.load_object_from_pickle_file(compiled_aggr_path, default={})
+    return BIAggregation.create_trees_from_schema(data) if data else None

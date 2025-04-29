@@ -572,7 +572,7 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         )
 
         plugins = dict(ldap.all_attribute_plugins())
-        ldap_plugin = plugins["vip"]()
+        ldap_plugin = plugins["vip"]
         assert ldap_plugin.title == "VIP"
         assert ldap_plugin.help == "VIP attribute"
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]

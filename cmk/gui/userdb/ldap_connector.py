@@ -126,13 +126,13 @@ def register(
 ) -> None:
     user_connector_registry.register(LDAPUserConnector)
 
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginMail)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginAlias)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginAuthExpire)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginPager)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToContactgroups)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupAttributes)
-    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToRoles)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginMail())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAlias())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAuthExpire())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginPager())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToContactgroups())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupAttributes())
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToRoles())
 
 
 # LDAP attributes are case insensitive, we only use lower case!
@@ -561,7 +561,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         plugins = dict(all_attribute_plugins())
         for key, params in self._config["active_plugins"].items():
             try:
-                plugin = plugins[key]()
+                plugin = plugins[key]
             except KeyError:
                 continue
             if not params:
@@ -1771,9 +1771,9 @@ class LDAPAttributePlugin(abc.ABC):
         return []
 
 
-class LDAPAttributePluginRegistry(cmk.ccc.plugin_registry.Registry[type[LDAPAttributePlugin]]):
+class LDAPAttributePluginRegistry(cmk.ccc.plugin_registry.Registry[LDAPAttributePlugin]):
     def plugin_name(self, instance):
-        return instance().ident
+        return instance.ident
 
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
@@ -1795,7 +1795,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
 ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
 
 
-def all_attribute_plugins() -> list[tuple[str, type[LDAPAttributePlugin]]]:
+def all_attribute_plugins() -> list[tuple[str, LDAPAttributePlugin]]:
     return [
         *ldap_attribute_plugin_registry.items(),
         *config_based_custom_user_attribute_sync_plugins(),
@@ -1808,7 +1808,7 @@ def ldap_attribute_plugins_elements(
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     elements = []
     items = sorted(
-        [(ident, plugin_class()) for ident, plugin_class in all_attribute_plugins()],
+        [(ident, plugin_class) for ident, plugin_class in all_attribute_plugins()],
         key=lambda x: x[1].title,
     )
     for key, plugin in items:
@@ -1816,9 +1816,7 @@ def ldap_attribute_plugins_elements(
     return elements
 
 
-def config_based_custom_user_attribute_sync_plugins() -> list[
-    tuple[str, type[LDAPUserAttributePlugin]]
-]:
+def config_based_custom_user_attribute_sync_plugins() -> list[tuple[str, LDAPUserAttributePlugin]]:
     """Register sync plug-ins for all custom user attributes (assuming simple data types)"""
     return [
         (
@@ -1866,7 +1864,7 @@ def config_based_custom_user_attribute_sync_plugins() -> list[
                         self.needed_attributes(connection, params)[0],
                     ),
                 },
-            ),
+            )(),
         )
         for name, attr in get_user_attributes()
     ]

@@ -11,7 +11,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable, TableRow
-from cmk.plugins.meraki.agent_based import cisco_meraki_org_device_status
+from cmk.plugins.cisco_meraki.agent_based import cisco_meraki_org_device_status
 
 # Note: the power supply data used here is the example body from https://developer.cisco.com/meraki/api-v1/get-organization-devices-statuses/
 _STRING_TABLE = [

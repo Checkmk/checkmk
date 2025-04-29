@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.cisco.server_side_calls.meraki import special_agent_cisco_meraki
+from cmk.plugins.cisco_meraki.server_side_calls.agent_cisco_meraki import special_agent_cisco_meraki
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,

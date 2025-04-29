@@ -11,7 +11,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.meraki.agent_based import cisco_meraki_org_sensor_readings
+from cmk.plugins.cisco_meraki.agent_based import cisco_meraki_org_sensor_readings
 
 _STRING_TABLE = [
     [

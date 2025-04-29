@@ -7,10 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
-
 from cmk.agent_based.v2 import Attributes, StringTable
-from cmk.plugins.meraki.agent_based import cisco_meraki_org_device_info
+from cmk.plugins.cisco_meraki.agent_based import cisco_meraki_org_device_info
 
 _STRING_TABLE = [
     [
@@ -67,6 +65,4 @@ def test_inventory_device_info(
     string_table: StringTable, expected_result: Sequence[Attributes]
 ) -> None:
     section = cisco_meraki_org_device_info.parse_device_info(string_table)
-    assert sort_inventory_result(
-        cisco_meraki_org_device_info.inventory_device_info(section)
-    ) == sort_inventory_result(expected_result)
+    assert list(cisco_meraki_org_device_info.inventory_device_info(section)) == expected_result

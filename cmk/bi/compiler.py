@@ -197,9 +197,9 @@ class BICompiler:
             if aggr_id.endswith(".new") or aggr_id in self._compiled_aggregations:
                 continue
 
-            _LOGGER.debug("Loading cached aggregation results %s" % aggr_id)
+            _LOGGER.debug("Loading %s aggregation from cache.", aggr_id)
             if not (data := store.load_object_from_pickle_file(path_object, default={})):
-                _LOGGER.warning("Could not load compiled aggregation from %s", path_object)
+                _LOGGER.warning("Unable to load compiled aggregation from: %s", path_object)
                 continue
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(data)
 
@@ -208,7 +208,7 @@ class BICompiler:
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
         if not self._compilation_required(current_configstatus):
-            _LOGGER.debug("No compilation required")
+            _LOGGER.debug("No compilation required.")
             return
 
         with store.locked(self._path_compilation_lock):
@@ -216,7 +216,7 @@ class BICompiler:
             # Another apache might have done the job
             current_configstatus = self.compute_current_configstatus()
             if not self._compilation_required(current_configstatus):
-                _LOGGER.debug("No compilation required. An other process already compiled it")
+                _LOGGER.debug("No compilation required. Another process already compiled it.")
                 return
 
             self.prepare_for_compilation(current_configstatus["online_sites"])
@@ -264,8 +264,8 @@ class BICompiler:
         self._save_data(compiled_aggregation_path, compiled_aggregation.serialize())
         end = time.perf_counter()
         _LOGGER.debug(
-            "Schema dump and storage of %s config took %f (%d branches)"
-            % (compiled_aggregation.id, end - start, len(compiled_aggregation.branches))
+            "Schema dump of %s (%d branches) took: %fs"
+            % (compiled_aggregation.id, len(compiled_aggregation.branches), end - start)
         )
 
     def _cleanup_vanished_aggregations(self) -> None:
@@ -329,7 +329,7 @@ class BICompiler:
             if self._path_compilation_timestamp.exists():
                 compilation_timestamp = float(self._path_compilation_timestamp.read_text())
         except (FileNotFoundError, ValueError) as e:
-            _LOGGER.warning("Can not determine compilation timestamp %s" % str(e))
+            _LOGGER.warning("Unable to determine compilation timestamp. Error: %s", str(e))
         return compilation_timestamp
 
     def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:
@@ -456,5 +456,5 @@ def _process_compilation(aggregation: BIAggregation) -> BICompiledAggregation:
     start = time.perf_counter()
     compiled_aggregation = aggregation.compile(_process_compilation.searcher)  # type: ignore[attr-defined]
     end = time.perf_counter()
-    _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
+    _LOGGER.debug("Compilation of %s took: %fs", aggregation.id, end - start)
     return compiled_aggregation

@@ -8,6 +8,22 @@ def build(Map args) {
 
     print("jenkins_base_folder: ${jenkins_base_folder}");
 
+    dir(artifacts_dir) {
+        stage("Download  artifacts") {
+            if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {
+                copyArtifacts(
+                    projectName: "${jenkins_base_folder}/winagt-build",
+                )
+            }
+
+            if (args.TARGET == "test_integration") {
+                copyArtifacts(
+                    projectName: "${jenkins_base_folder}/winagt-build-modules",
+                )
+            }
+        }
+    }
+
     stage("Windows ${args.TARGET} build") {
         // Windows integration test is the longest running test with just under 3 min
         // No job should exceed 3*5 = 15 minutes

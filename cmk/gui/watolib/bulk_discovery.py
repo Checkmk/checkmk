@@ -207,6 +207,16 @@ def _migrate_automatic_rediscover_parameters(
             },
         )
 
+    if param == "only-host-labels":
+        return (
+            "custom",
+            {
+                "add_new_services": False,
+                "remove_vanished_services": False,
+                "update_host_labels": True,
+            },
+        )
+
     if param == "refresh":
         return (
             "update_everything",

@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.netapp_ontap import special_agent_netapp_ontap
+from cmk.plugins.netapp.server_side_calls.netapp_ontap import special_agent_netapp_ontap
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(

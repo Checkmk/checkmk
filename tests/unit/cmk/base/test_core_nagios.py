@@ -717,9 +717,7 @@ def test_create_nagios_servicedefs_with_warnings(
     )
 
     assert outfile.getvalue() == expected_result
-
-    captured = capsys.readouterr()
-    assert captured.out == expected_warning
+    assert capsys.readouterr().err == expected_warning
 
 
 @pytest.mark.parametrize(

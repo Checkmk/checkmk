@@ -614,6 +614,14 @@ def test_automation_active_check_unknown(  # type:ignore[no-untyped-def]
         site,
         "active-check",
         args=["xxxhost", "xxxplugin", "xxxitem"],
+        expect_stderr_pattern=(
+            r"\nWARNING: Cannot lookup IP address of 'xxxhost' \("
+            r"Failed to lookup IPv4 address of xxxhost "
+            r"via DNS: (\[Errno -2\] Name or service not known"
+            r"|\[Errno -3\] Temporary failure in name resolution"
+            r"|\[Errno -5\] No address associated with hostname)"
+            r"\)\. The host will not be monitored correctly\.\n"
+        ),
     )
     assert isinstance(result, results.ActiveCheckResult)
     assert result.state is None
@@ -641,6 +649,14 @@ def test_automation_active_check_unknown_custom(  # type:ignore[no-untyped-def]
         site,
         "active-check",
         args=["xxxhost", "custom", "xxxitem"],
+        expect_stderr_pattern=(
+            r"\nWARNING: Cannot lookup IP address of 'xxxhost' \("
+            r"Failed to lookup IPv4 address of xxxhost "
+            r"via DNS: (\[Errno -2\] Name or service not known"
+            r"|\[Errno -3\] Temporary failure in name resolution"
+            r"|\[Errno -5\] No address associated with hostname)"
+            r"\)\. The host will not be monitored correctly\.\n"
+        ),
     )
     assert isinstance(result, results.ActiveCheckResult)
     assert result.state is None

@@ -10,10 +10,13 @@ from typing import Final
 
 import pytest
 
+from tests.testlib.common.repo import repo_path
+
 from cmk.ccc import version as checkmk_version
 
 from cmk.utils import password_store
 
+from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
@@ -273,3 +276,15 @@ def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: Mod
     # This also ensures that the parse_arguments function indeed expects
     # sys.argv[1:], and does not strip the first element of the input argument.
     assert module.parse_arguments(["--debug", *minimal_args_list]).debug is True
+
+
+def test_special_agents_location() -> None:
+    """Make sure all executables are where we expec them"""
+    assert not {
+        plugin.name
+        for location, plugin in load_special_agents(raise_errors=True).items()
+        if not (
+            (family_libexec_dir(location.module) / f"agent_{plugin.name}").exists()
+            or (repo_path() / f"agents/special/agent_{plugin.name}").exists()
+        )
+    }

@@ -120,6 +120,6 @@ def _fetch_data_and_write_to_stdout(
     apikey: str,
     section_type: str,
 ) -> None:
-    response = session.get(url, auth=(apikey, "X"))  # nosec B113 # BNS:0b0eac
+    response = session.get(url, auth=(apikey, "X"), timeout=900)
     sys.stdout.write(f"<<<ruckus_spot_{section_type}:sep(0)>>>\n")
     sys.stdout.write(response.text + "\n")

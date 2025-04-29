@@ -252,11 +252,12 @@ class ImplDatadogAPI:
         params: Mapping[str, str | int],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.get(  # nosec B113 # BNS:0b0eac
+        return requests.get(
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
             proxies=self._proxy.to_requests_proxies(),
+            timeout=900,
         )
 
     def post_request(
@@ -265,11 +266,12 @@ class ImplDatadogAPI:
         body: Mapping[str, Any],
         version: str = "v1",
     ) -> requests.Response:
-        return requests.post(  # nosec B113 # BNS:0b0eac
+        return requests.post(
             f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             json=body,
             proxies=self._proxy.to_requests_proxies(),
+            timeout=900,
         )
 
 

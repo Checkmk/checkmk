@@ -150,9 +150,10 @@ def _handle_output(section, section_data):
 
 
 def _handle_request(url, args):
-    response = requests.get(  # nosec B113 # BNS:0b0eac
+    response = requests.get(
         url,
         auth=(args.user, args.password),
+        timeout=900,
     )
 
     response.raise_for_status()

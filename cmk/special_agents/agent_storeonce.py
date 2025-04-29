@@ -4541,8 +4541,8 @@ stores_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http:/
 def query(url, args_dict, opt_cert):
     if not opt_cert:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(  # nosec B113 # BNS:0b0eac
-        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert
+    response = requests.get(
+        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert, timeout=900
     )
     raw_xml = response.text
     # Remove namespace nonsense

@@ -58,7 +58,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 def _health_info() -> str:
-    resp = requests.get("https://status.cloud.google.com/incidents.json")  # nosec B113 # BNS:0b0eac
+    resp = requests.get("https://status.cloud.google.com/incidents.json", timeout=900)
     if resp.status_code == 200:
         return resp.text
     return "{}"

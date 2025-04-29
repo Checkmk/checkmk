@@ -58,8 +58,8 @@ class ZertoRequest:
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
     def get_vms_data(self) -> Sequence[dict[str, str]]:
-        response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085
-            self._endpoint, headers=self._headers, verify=False
+        response = requests.get(  # nosec B501 # BNS:016141
+            self._endpoint, headers=self._headers, verify=False, timeout=900
         )
 
         if response.status_code != 200:
@@ -84,13 +84,13 @@ class ZertoConnection:
     def get_session_id(self, authentication: str) -> str | None:
         url = "%s/session/add" % self.base_url
         if authentication == "windows":
-            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:77308
-                url, auth=self._credentials, verify=False
+            response = requests.post(  # nosec B501 # BNS:016141
+                url, auth=self._credentials, verify=False, timeout=900
             )
         else:
             headers = {"content-type": "application/json"}
-            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:773085
-                url, auth=self._credentials, headers=headers, verify=False
+            response = requests.post(  # nosec B501 # BNS:016141
+                url, auth=self._credentials, headers=headers, verify=False, timeout=900
             )
 
         if response.status_code != 200:

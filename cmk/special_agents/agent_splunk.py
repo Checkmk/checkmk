@@ -84,11 +84,12 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
             try:
                 url = url_base + section.uri
 
-                response = requests.get(  # nosec B113 # BNS:0b0eac
+                response = requests.get(
                     url,
                     auth=(args.user, args.password),
                     data={"output_mode": "json"},
                     headers={"User-Agent": USER_AGENT},
+                    timeout=900,
                 )
 
                 response.raise_for_status()

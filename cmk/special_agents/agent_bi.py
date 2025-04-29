@@ -230,7 +230,7 @@ class AggregationRawdataGenerator:
     def _fetch_aggregation_data(self) -> str:
         filter_query = self._config.filter
 
-        response = requests.get(  # nosec B113 # BNS:0b0eac
+        response = requests.get(
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
@@ -239,6 +239,7 @@ class AggregationRawdataGenerator:
                 "filter_names": filter_query.names,
                 "filter_groups": filter_query.groups,
             },
+            timeout=900,
         )
         response.raise_for_status()
         return response.text

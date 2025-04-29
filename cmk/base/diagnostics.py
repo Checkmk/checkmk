@@ -1175,11 +1175,12 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ]
         )
 
-        return requests.post(  # nosec B113 # BNS:773085
+        return requests.post(
             url,
             headers={
                 "Authorization": internal_secret,
             },
+            timeout=900,
         )
 
 

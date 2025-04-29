@@ -118,7 +118,7 @@ def handle_request(args, sections):
 
         url = url_base + section.uri
         try:
-            response = session.get(url)  # nosec B113 # BNS:0b0eac
+            response = session.get(url, timeout=900)
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

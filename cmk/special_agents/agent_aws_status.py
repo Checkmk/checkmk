@@ -54,7 +54,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 def _get_rss() -> requests.Response:
-    return requests.get("https://status.aws.amazon.com/rss/all.rss")  # nosec B113 # BNS:0b0eac
+    return requests.get("https://status.aws.amazon.com/rss/all.rss", timeout=900)
 
 
 def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:

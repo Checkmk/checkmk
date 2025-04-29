@@ -13,7 +13,6 @@ Note that Bandit is picky about the exact format.
 | `BNS:7e6b08` | `B103` | We set the traverse permission on a folder, since there are files which needs to be world accessible.|
 | `BNS:537c43` | `B104` | Comparison against "0.0.0.0", if true then the address is set to "127.0.0.1". |
 | `BNS:7a2427` | `B108` | False positive, the temp file/directory is located inside a safe directory. |
-| `BNS:773085` | `B113` | Timeout policy to be reviewed. |
 | `BNS:9a7128` | `B301` | `ObjectStore` has a pickle serializer which it uses to store and load files from disk. To mitigate the risks, it makes sure that only non-world-writable files are loaded. |
 | `BNS:c3c5e9` | `B301` | `PackedConfigStore` loads a config from file via `pickle.load`. The path is hard-coded to `cmk.utils.paths.core_helper_config_dir` in `ConfigPath`, which is only writable by the site user. |
 | `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
@@ -34,7 +33,6 @@ Note that Bandit is picky about the exact format.
 | `BNS:248184` | `B602` | The hardcoded find command used here outputs the modification time (as a number), assuming the input is strictly a path. |
 | `BNS:b00359` | `B602` | Intended Shell functionality.|
 | `BNS:ff2c84` | `B411` | The xmlrpc submodule version being used is safe to xml attacks. |
-| `BNS:0b0eac` | `B113` | The timeout will be enforced by the executor process for special agents and active checks (CMK-18517). |
 | `BNS:f159c1` | `B507` | The AutoAdd policy is used, which is the human default. Also the host keys are persisted |
 | `BNS:fa3c6c` | `B608` | The inputs to the SQL expression are controlled by the script, not by the user. |
 | `BNS:6b6392` | `B608` | The inputs have been parameterized and controlled. |

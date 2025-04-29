@@ -55,8 +55,9 @@ def _main(args: argparse.Namespace) -> int:
     )
 
     try:
-        data = session.get(  # nosec B113 # BNS:0b0eac
+        data = session.get(
             f"https://{args.server}/hm/api/v1/devices",
+            timeout=900,
         ).text
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)

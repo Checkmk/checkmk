@@ -71,7 +71,7 @@ def handle_request(args: argparse.Namespace, auth: tuple[str, str] | None) -> tu
     if args.fieldname:
         query["query"]["bool"]["must"][0]["query_string"]["fields"] = args.fieldname.split(" ")
 
-    raw_response = requests.get(url, json=query, auth=auth)  # nosec B113 # BNS:0b0eac
+    raw_response = requests.get(url, json=query, auth=auth, timeout=900)
 
     msg, state, perfdata = handle_query(raw_response, args.warn, args.crit)
 

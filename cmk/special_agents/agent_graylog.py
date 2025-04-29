@@ -221,7 +221,7 @@ def handle_request(args, sections):
 def handle_response(url, args, method="GET", events_since=86400):
     if method == "POST":
         try:
-            response = requests.post(  # nosec B113 # BNS:0b0eac
+            response = requests.post(
                 url,
                 auth=(args.user, args.password),
                 headers={
@@ -229,6 +229,7 @@ def handle_response(url, args, method="GET", events_since=86400):
                     "X-Requested-By": args.user,
                 },
                 json={"timerange": {"type": "relative", "range": events_since}},
+                timeout=900,
             )
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
@@ -237,7 +238,7 @@ def handle_response(url, args, method="GET", events_since=86400):
 
     else:
         try:
-            response = requests.get(url, auth=(args.user, args.password))  # nosec B113 # BNS:0b0eac
+            response = requests.get(url, auth=(args.user, args.password), timeout=900)
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-import re
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
@@ -91,8 +90,8 @@ class MigratableUrl(V1Url):
 def _migrate_expect_response(response: list[str]) -> list[int]:
     result = []
     for item in response:
-        if (status := re.search(r"\d{3}", item)) is not None:
-            result.append(int(status.group()))
+        with suppress(ValueError):
+            result.append(int(item))
     return result
 
 

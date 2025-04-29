@@ -1743,7 +1743,9 @@ def test_migrate_redirect(
 
 
 def test_helper_migrate_expect_response() -> None:
-    assert _migrate_expect_response(["HTTP/1.1 200 OK", "302 REDIRECT", "404"]) == [200, 302, 404]
+    # Based on feedback, this function should only migrate status codes, and everything else needs
+    # to be a conflict.
+    assert _migrate_expect_response(["HTTP/1.1 200 OK", "302 REDIRECT", " 404"]) == [404]
 
 
 @pytest.mark.parametrize(

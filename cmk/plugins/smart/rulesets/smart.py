@@ -205,7 +205,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
 
 rule_spec_smart_ata = CheckParameters(
     name="smart_ata",
-    title=Title("SMART ATA"),
+    title=Title("SMART ATA (incompatible with legacy plug-in)"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_valuespec_smart_ata,
     condition=HostAndItemCondition(item_title=Title("Disk")),
@@ -342,7 +342,7 @@ def _parameter_valuespec_smart_nvme() -> Dictionary:
 
 rule_spec_smart_nvme = CheckParameters(
     name="smart_nvme",
-    title=Title("SMART NVMe"),
+    title=Title("SMART NVMe (incompatible with legacy plug-in)"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_valuespec_smart_nvme,
     condition=HostAndItemCondition(item_title=Title("Disk")),

@@ -229,15 +229,8 @@ class BICompiler:
                 _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
-            for aggr_id, compiled_aggr in self._compiled_aggregations.items():
-                start = time.perf_counter()
-                result = compiled_aggr.serialize()
-                end = time.perf_counter()
-                _LOGGER.debug(
-                    "Schema dump %s took config took %f (%d branches)"
-                    % (aggr_id, end - start, len(compiled_aggr.branches))
-                )
-                self._save_data(path_compiled_aggregations.joinpath(aggr_id), result)
+            for compiled_aggregation in self._compiled_aggregations.values():
+                self._store_compiled_aggregation(compiled_aggregation)
 
             self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
             self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
@@ -247,6 +240,16 @@ class BICompiler:
         self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
         store.save_text_to_file(
             str(self._path_compilation_timestamp), str(current_configstatus["configfile_timestamp"])
+        )
+
+    def _store_compiled_aggregation(self, compiled_aggregation: BICompiledAggregation) -> None:
+        start = time.perf_counter()
+        compiled_aggregation_path = path_compiled_aggregations / compiled_aggregation.id
+        self._save_data(compiled_aggregation_path, compiled_aggregation.serialize())
+        end = time.perf_counter()
+        _LOGGER.debug(
+            "Schema dump and storage of %s config took %f (%d branches)"
+            % (compiled_aggregation.id, end - start, len(compiled_aggregation.branches))
         )
 
     def _cleanup_vanished_aggregations(self) -> None:

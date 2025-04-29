@@ -31,7 +31,7 @@ AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
 
 # Some limit values have dynamic names, eg.
 # 'Rules of VPC security group %s' % SECURITY_GROUP
-# At the moment we exclude them in the performance data.  If it's
+# At the moment we exclude them in the performance data. If it's
 # a limit for a piggyback host, we do NOT exclude, eg. 'load_balancer_listeners'
 # and 'load_balancer_registered_instances' per load balancer piggyback host
 exclude_aws_limits_perf_vars = [

@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -21,7 +23,7 @@ def discover_aws_dynamodb_summary(section: GenericAWSSection) -> DiscoveryResult
         yield Service()
 
 
-def _build_detail_text_from_tables(tables_by_region: dict[str, dict], region: str) -> str:
+def _build_detail_text_from_tables(tables_by_region: Mapping[str, Mapping], region: str) -> str:
     detail_text_lines = [f"{region}:"]
     tables_names_sorted = sorted(tables_by_region[region].keys())
     for table_name in tables_names_sorted:

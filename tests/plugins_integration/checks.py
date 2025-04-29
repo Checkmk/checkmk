@@ -44,7 +44,6 @@ class CheckConfig:
         dump_dir_siteless: Path | None = None,
         response_dir_siteless: str | None = None,
         diff_dir: Path | None = None,
-        host_names: list[str] | None = None,
         check_names: list[str] | None = None,
         api_services_cols: list[str] | None = None,
     ) -> None:
@@ -66,9 +65,6 @@ class CheckConfig:
         self.response_dir_siteless = response_dir_siteless or (self.data_dir_siteless / "responses")
 
         self.diff_dir = diff_dir or Path(os.getenv("DIFF_DIR", "/tmp"))
-        self.host_names = host_names or [
-            _.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()
-        ]
         self.check_names = check_names or [
             _.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()
         ]
@@ -169,13 +165,6 @@ def get_host_names(
         host_names += agent_host_names
     if not config.dump_types or "snmp" in config.dump_types:
         host_names += snmp_host_names
-    host_names = [
-        _
-        for _ in host_names
-        if not config.host_names
-        or _ in config.host_names
-        or any(re.fullmatch(pattern, _) for pattern in config.host_names)
-    ]
     return host_names
 
 

@@ -53,13 +53,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Enable core scheduling (disabled by default)",
     )
     parser.addoption(
-        "--host-names",
-        action="store",
-        nargs="+",
-        help="Host name allow list",
-        default=None,
-    )
-    parser.addoption(
         "--check-names",
         action="store",
         nargs="+",
@@ -128,7 +121,6 @@ def pytest_configure(config: pytest.Config) -> None:
         if isinstance(_response_dir_option := config.getoption(name="--response-dir"), Path)
         else None,
         diff_dir=_ if isinstance(_ := config.getoption(name="--diff-dir"), Path) else None,
-        host_names=_ if isinstance(_ := config.getoption(name="--host-names"), list) else None,
         check_names=_ if isinstance(_ := config.getoption(name="--check-names"), list) else None,
         dump_types=_ if isinstance(_ := config.getoption(name="--dump-types"), list) else None,
     )

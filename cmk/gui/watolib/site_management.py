@@ -583,7 +583,11 @@ class SitesApiMgr:
 
     def delete_a_site(self, site_id: SiteId) -> None:
         if self.all_sites.get(site_id):
-            self.site_mgmt.delete_site(site_id)
+            self.site_mgmt.delete_site(
+                site_id,
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            )
         raise SiteDoesNotExistException
 
     def login_to_site(self, site_id: SiteId, username: str, password: str) -> None:
@@ -593,20 +597,32 @@ class SitesApiMgr:
         except Exception as exc:
             raise LoginException(str(exc))
 
-        self.site_mgmt.save_sites(self.all_sites)
+        self.site_mgmt.save_sites(
+            self.all_sites,
+            activate=True,
+            pprint_value=active_config.wato_pprint_config,
+        )
         trigger_remote_certs_creation(site_id, site)
 
     def logout_of_site(self, site_id: SiteId) -> None:
         site = self.get_a_site(site_id)
         if "secret" in site:
             del site["secret"]
-            self.site_mgmt.save_sites(self.all_sites)
+            self.site_mgmt.save_sites(
+                self.all_sites,
+                activate=True,
+                pprint_value=active_config.wato_pprint_config,
+            )
 
     def validate_and_save_site(self, site_id: SiteId, site_config: SiteConfiguration) -> None:
         self.site_mgmt.validate_configuration(site_id, site_config, self.all_sites)
         sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
         self.all_sites.update(sites)
-        self.site_mgmt.save_sites(self.all_sites)
+        self.site_mgmt.save_sites(
+            self.all_sites,
+            activate=True,
+            pprint_value=active_config.wato_pprint_config,
+        )
 
     def get_connected_sites_to_update(
         self,
@@ -637,8 +653,10 @@ class SitesApiMgr:
             pprint_value=pprint_value,
         )
 
-    def delete_broker_connection(self, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
-        return self.site_mgmt.delete_broker_connection(connection_id)
+    def delete_broker_connection(
+        self, connection_id: ConnectionId, pprint_value: bool
+    ) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.delete_broker_connection(connection_id, pprint_value)
 
 
 def add_changes_after_editing_broker_connection(

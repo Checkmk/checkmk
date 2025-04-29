@@ -400,16 +400,16 @@ class SiteManagement:
         return cls._save_broker_connection_config(connection_id, connection, pprint_value)
 
     @classmethod
-    def delete_broker_connection(cls, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+    def delete_broker_connection(
+        cls, connection_id: ConnectionId, pprint_value: bool
+    ) -> tuple[SiteId, SiteId]:
         broker_connections = cls.get_broker_connections()
         if connection_id not in broker_connections:
             raise MKUserError(None, _("Unable to delete unknown connection ID: %s") % connection_id)
 
         connection = broker_connections[connection_id]
         del broker_connections[connection_id]
-        BrokerConnectionsConfigFile().save(
-            broker_connections, pprint_value=active_config.wato_pprint_config
-        )
+        BrokerConnectionsConfigFile().save(broker_connections, pprint_value)
 
         return connection.connectee.site_id, connection.connecter.site_id
 
@@ -515,11 +515,11 @@ class SiteManagement:
         return SitesConfigFile().load_for_reading()
 
     @classmethod
-    def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
+    def save_sites(cls, sites: SiteConfigurations, *, activate: bool, pprint_value: bool) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        SitesConfigFile().save(sites, pprint_value=active_config.wato_pprint_config)
+        SitesConfigFile().save(sites, pprint_value)
 
         # Do not activate when just the site's global settings have
         # been edited
@@ -536,7 +536,7 @@ class SiteManagement:
             hooks.call("sites-saved", sites)
 
     @classmethod
-    def delete_site(cls, site_id: SiteId) -> None:
+    def delete_site(cls, site_id: SiteId, *, pprint_value: bool, use_git: bool) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -584,7 +584,7 @@ class SiteManagement:
         )
 
         del all_sites[site_id]
-        cls.save_sites(all_sites)
+        cls.save_sites(all_sites, activate=True, pprint_value=pprint_value)
 
         cmk.gui.watolib.changes.add_change(
             action_name="edit-sites",
@@ -595,7 +595,7 @@ class SiteManagement:
             # site anymore, so there is no point in adding a change for this site
             sites=list(connected_sites - {site_id}),
             need_restart=True,
-            use_git=active_config.wato_use_git,
+            use_git=use_git,
         )
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 

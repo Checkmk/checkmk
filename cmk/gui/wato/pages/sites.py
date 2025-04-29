@@ -296,7 +296,11 @@ class ModeEditSite(WatoMode):
         )
 
         self._site = configured_sites[self._site_id] = site_spec
-        self._site_mgmt.save_sites(configured_sites)
+        self._site_mgmt.save_sites(
+            configured_sites,
+            activate=True,
+            pprint_value=active_config.wato_pprint_config,
+        )
 
         msg = add_changes_after_editing_site_connection(
             site_id=self._site_id,
@@ -930,11 +934,17 @@ class ModeDistributedMonitoring(WatoMode):
                 % search_url,
             )
 
-        self._site_mgmt.delete_site(delete_id)
+        self._site_mgmt.delete_site(
+            delete_id,
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
         return redirect(mode_url("sites"))
 
     def _action_delete_broker_connection(self, delete_connection_id: ConnectionId) -> ActionResult:
-        source_site, dest_site = self._site_mgmt.delete_broker_connection(delete_connection_id)
+        source_site, dest_site = self._site_mgmt.delete_broker_connection(
+            delete_connection_id, pprint_value=active_config.wato_pprint_config
+        )
         add_changes_after_editing_broker_connection(
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
@@ -947,7 +957,11 @@ class ModeDistributedMonitoring(WatoMode):
         site = configured_sites[logout_id]
         if "secret" in site:
             del site["secret"]
-        self._site_mgmt.save_sites(configured_sites)
+        self._site_mgmt.save_sites(
+            configured_sites,
+            activate=True,
+            pprint_value=active_config.wato_pprint_config,
+        )
         _changes.add_change(
             action_name="edit-site",
             text=_("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
@@ -986,7 +1000,11 @@ class ModeDistributedMonitoring(WatoMode):
                 secret = do_site_login(site, name, passwd)
 
                 site["secret"] = secret
-                self._site_mgmt.save_sites(configured_sites)
+                self._site_mgmt.save_sites(
+                    configured_sites,
+                    activate=True,
+                    pprint_value=active_config.wato_pprint_config,
+                )
                 message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
@@ -1518,7 +1536,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         )
 
         self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
-        self._site_mgmt.save_sites(self._configured_sites, activate=False)
+        self._site_mgmt.save_sites(
+            self._configured_sites,
+            activate=False,
+            pprint_value=active_config.wato_pprint_config,
+        )
 
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
@@ -1611,7 +1633,9 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _save(self) -> None:
         site_management_registry["site_management"].save_sites(
-            self._configured_sites, activate=False
+            self._configured_sites,
+            activate=False,
+            pprint_value=active_config.wato_pprint_config,
         )
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)

@@ -9,6 +9,7 @@ from typing import override
 
 from cmk.utils.log import VERBOSE
 
+from cmk.gui.config import active_config
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
@@ -84,7 +85,11 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
                     site_spec.setdefault("globals", {}),
                 )
             )
-    site_mgmt.save_sites(configured_sites, activate=False)
+    site_mgmt.save_sites(
+        configured_sites,
+        activate=False,
+        pprint_value=active_config.wato_pprint_config,
+    )
 
 
 def update_global_config(

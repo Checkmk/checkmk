@@ -8,6 +8,7 @@ from logging import Logger
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
 
+from cmk.gui.config import active_config
 from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
@@ -54,7 +55,11 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
             site_cfg["status_host"] = (new_site_id, status_host[1])
 
     if changed:
-        site_mgmt.save_sites(all_sites, activate=True)
+        site_mgmt.save_sites(
+            all_sites,
+            activate=True,
+            pprint_value=active_config.wato_pprint_config,
+        )
 
 
 rename_action_registry.register(

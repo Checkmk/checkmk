@@ -249,7 +249,10 @@ def delete_broker_connection(params: Mapping[str, Any]) -> Response:
 
     connection_id_request = params["connection_id"]
 
-    site_to_update = SitesApiMgr().delete_broker_connection(connection_id_request)
+    site_to_update = SitesApiMgr().delete_broker_connection(
+        connection_id_request,
+        pprint_value=active_config.wato_pprint_config,
+    )
     add_changes_after_editing_broker_connection(
         connection_id=connection_id_request,
         is_new_broker_connection=False,

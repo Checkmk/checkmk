@@ -44,13 +44,6 @@ def hook_before_load_schema(
 
     update_property(
         raw_schema,
-        "HostExtensionsEffectiveAttributes",
-        "snmp_community",
-        {"nullable": True},
-        None,
-    )
-    update_property(
-        raw_schema,
         "HostViewAttribute",
         "snmp_community",
         {"nullable": True},
@@ -61,7 +54,6 @@ def hook_before_load_schema(
         "FolderUpdateAttribute",
         "FolderViewAttribute",
         "FolderCreateAttribute",
-        "HostExtensionsEffectiveAttributes",
         "HostViewAttribute",
         "HostCreateAttribute",
         "HostUpdateAttribute",
@@ -99,7 +91,6 @@ def hook_before_load_schema(
             "CollectionItem",
             "RulesetCollection",
             "Link",
-            "HostExtensionsEffectiveAttributes",
         )
     ]:
         if not set(schemas[schema_name]).intersection(

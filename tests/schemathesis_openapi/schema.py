@@ -259,7 +259,15 @@ def update_property(
     """Update a property in the schema to suppress a specific problem."""
     if ticket_id and ticket_id not in settings.suppressed_issues:
         return
-    schema_data = raw_schema["components"]["schemas"][schema_name]["properties"].get(property_name)
+    schema_data = (
+        raw_schema["components"]["schemas"]
+        .get(schema_name, {})
+        .get("properties", {})
+        .get(property_name)
+    )
+    if schema_data is None:
+        logger.warning("SCHEMA %s: Schema not found!", schema_name)
+        return
     if property_data is None:
         del schema_data
         return

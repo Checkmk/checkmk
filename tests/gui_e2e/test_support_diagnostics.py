@@ -39,22 +39,17 @@ def test_download_diagnostics(dashboard_page: Dashboard, request: pytest.Fixture
     ).to_have_text("finished", timeout=background_job_timeout)
 
     error_pattern = re.compile(r"ERROR.*?[:\n]")
-    ignore_errors = [
+    ignore_errors = {
         # TODO: CMK-23084; update ignore list once ticket is resolved.
         "ERROR - No Checkmk server found",
         # TODO: CMK-20811; update ignore list once ticket is resolved.
         "ERROR - No information",
-    ]
+    }
     # find unique errors; strip to remove whitespaces, like '\n'.
     errors = {error.strip() for error in re.findall(error_pattern, job_details.job_log)}
 
     # remove ignored errors
-    for ignored in ignore_errors:
-        try:
-            errors.remove(ignored)
-        except KeyError:
-            # ignored error not found - do nothing.
-            continue
+    errors.difference_update(ignore_errors)
 
     if errors:
         download_log = artifacts_dir / f"{file_prefix}_diagnostic_dump.log"

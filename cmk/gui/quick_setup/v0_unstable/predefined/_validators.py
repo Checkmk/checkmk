@@ -34,10 +34,11 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
-from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
+from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree, Host
+from cmk.gui.watolib.passwords import load_passwords
 
-from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.rulesets.v1.form_specs import Dictionary, Password
 
 
 def validate_test_connection_custom_collect_params(
@@ -67,6 +68,47 @@ def validate_test_connection(
         _collect_params_with_defaults_from_form_data,
         error_message,
     )
+
+
+def validate_non_quick_setup_password(parameter_form: Dictionary) -> CallableValidator:
+    return partial(_validate_non_quick_setup_password, parameter_form)
+
+
+def _validate_non_quick_setup_password(
+    parameter_form: Dictionary,
+    _quick_setup_id: QuickSetupId,
+    all_stages_form_data: ParsedFormData,
+    _progress_logger: ProgressLogger,
+) -> GeneralStageErrors:
+    general_errors: GeneralStageErrors = []
+    possible_expected_password_keys = [
+        key
+        for key in parameter_form.elements.keys()
+        if isinstance(parameter_form.elements[key].parameter_form, Password)
+    ]
+
+    for form_data in all_stages_form_data.values():
+        if not isinstance(form_data, dict):
+            continue
+
+        for form_spec_id, form_spec_value in form_data.items():
+            if not (
+                form_spec_id in possible_expected_password_keys
+                and form_spec_value[0] == "cmk_postprocessed"
+                and form_spec_value[1] == "stored_password"
+            ):
+                continue
+
+            pw_from_store = load_passwords()[form_spec_value[2][0]]
+            if ("locked_by" in pw_from_store) and (
+                is_locked_by_quick_setup(pw_from_store["locked_by"])
+            ):
+                general_errors.append(
+                    f'Password with title "{pw_from_store["title"]}" is locked by a Quick '
+                    "Setup and cannot be used."
+                )
+
+    return general_errors
 
 
 def _validate_test_connection(

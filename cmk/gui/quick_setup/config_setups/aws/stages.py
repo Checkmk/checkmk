@@ -118,6 +118,9 @@ def prepare_aws() -> QuickSetupStage:
                 id=ActionId("connection_test"),
                 custom_validators=[
                     qs_validators.validate_unique_id,
+                    qs_validators.validate_non_quick_setup_password(
+                        parameter_form=quick_setup_aws_form_spec()
+                    ),
                     qs_validators.validate_test_connection_custom_collect_params(
                         rulespec_name=RuleGroup.SpecialAgents("aws"),
                         parameter_form=quick_setup_aws_form_spec(),

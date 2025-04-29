@@ -16,7 +16,7 @@ class IPAddressFamily(Enum):
     IPV6 = auto()
 
 
-class IPConfig:
+class _IPConfig:
     """
     Defines an IP configuration of the host
     """
@@ -58,7 +58,7 @@ class IPConfig:
         )
 
 
-class IPv4Config(IPConfig):
+class IPv4Config(_IPConfig):
     """
     Defines an IPv4 configuration of the host
     """
@@ -69,7 +69,7 @@ class IPv4Config(IPConfig):
         return IPAddressFamily.IPV4
 
 
-class IPv6Config(IPConfig):
+class IPv6Config(_IPConfig):
     """
     Defines an IPv6 configuration of the host
     """
@@ -147,7 +147,7 @@ class HostConfig:
         self.macros: Final = macros or {}
 
     @property
-    def primary_ip_config(self) -> IPConfig:
+    def primary_ip_config(self) -> IPv4Config | IPv6Config:
         """Points to the primary address config"""
         if self._primary_ip_config is None:
             raise ValueError("Host has no IP stack configured")

@@ -32,7 +32,7 @@ def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:
         # StringAutocompleter
         autocompleter=Autocompleter(
             data=AutocompleterData(
-                ident="config_hostname",
+                ident="monitored_hostname",
                 params=AutocompleterParams(
                     show_independent_of_context=True, strict=True, escape_regex=False
                 ),

@@ -28,7 +28,6 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
-    StringAutocompleter,
     World,
 )
 from cmk.gui.form_specs.private.cascading_single_choice_extended import (
@@ -106,6 +105,7 @@ from cmk.rulesets.v1.form_specs import (
     HostState,
     InputHint,
     Integer,
+    MonitoredHost,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
@@ -665,14 +665,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "match_hosts": DictElement(
                                     parameter_form=ListOfStrings(
                                         title=Title("Hosts"),
-                                        string_spec=StringAutocompleter(
-                                            autocompleter=Autocompleter(
-                                                data=AutocompleterData(
-                                                    ident="config_hostname",
-                                                    params=AutocompleterParams(),
-                                                ),
-                                            ),
-                                        ),
+                                        string_spec=MonitoredHost(),
                                         custom_validate=[
                                             not_empty(
                                                 error_msg=Message("Please add at least one host.")
@@ -683,14 +676,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "exclude_hosts": DictElement(
                                     parameter_form=ListOfStrings(
                                         title=Title("Exclude hosts"),
-                                        string_spec=StringAutocompleter(
-                                            autocompleter=Autocompleter(
-                                                data=AutocompleterData(
-                                                    ident="config_hostname",
-                                                    params=AutocompleterParams(),
-                                                ),
-                                            ),
-                                        ),
+                                        string_spec=MonitoredHost(),
                                         custom_validate=[
                                             not_empty(
                                                 error_msg=Message("Please add at least one host.")

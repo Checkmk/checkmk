@@ -25,11 +25,28 @@ def _skip_dumps():
     #   after update. See CMK-19103.
     # * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
     # * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
+    # * *smart* plugins are affected by an incompatible change. See werk #17733.
+    #   Un-skip *smart* dumps once 2.4.0 official release is used as base version for this test.
+    #   CMK-23221
     config.skipped_dumps = [
         "snmp-sw-arista.demo.checkmk.com_2_2_p12",
         "snmp-f5-bigip-failover-cluster",
         "agent-2.2.0p8-ceph-17.2.6",
         "agent-2.2.0p14-proxmox",
+        "agent-1.4.0p8-smart-megaraid-centos",
+        "agent-2.2.0p20-smart-hdd-temp",
+        "agent-2.3.0p17-smart-ata-ubuntu",
+        "agent-2.3.0p30-smart-macbook-sat",
+        "agent-2.3.0p30-smart-nvme",
+        "agent-2.3.0p30-smart-qemu",
+        "agent-2.3.0p30-smart-qemu-nvme-namespaces",
+        "agent-2.4.0b1-smart_posix-ata-freebsd",
+        "agent-2.4.0b1-smart_posix-ata-ubuntu",
+        "agent-2.5.0b1-smart_posix-macbook-sat",
+        "agent-2.5.0b1-smart_posix-megaraid",
+        "agent-2.5.0b1-smart_posix-nvme",
+        "agent-2.5.0b1-smart_posix-qemu",
+        "agent-2.5.0b1-smart_posix-qemu-nvme-namespaces",
     ]
     try:
         yield

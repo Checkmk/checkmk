@@ -70,6 +70,7 @@ def test_metadata() -> None:
     @dataclasses.dataclass
     class TestModel:
         field: str = api_field(
+            alias="alias",
             title="title",
             description="description",
             example="example",
@@ -77,6 +78,7 @@ def test_metadata() -> None:
         )
 
     field = dataclasses.fields(TestModel)[0]
+    assert field.metadata["alias"] == "alias"
     assert field.metadata["title"] == "title"
     assert field.metadata["description"] == "description"
     # special case: example will be converted to examples

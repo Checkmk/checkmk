@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -35,12 +34,6 @@ def _validate_item(value: str) -> str:
     return value
 
 
-def _migrate_add_stand_by(params: object) -> Mapping[str, object]:
-    if isinstance(params, dict):
-        return {"standBy": 1, **params}
-    raise ValueError(params)
-
-
 def _parameter_form_esx_vsphere_objects():
     return Dictionary(
         help_text=Help(
@@ -52,7 +45,6 @@ def _parameter_form_esx_vsphere_objects():
                 required=True,
                 parameter_form=Dictionary(
                     title=Title("Target states"),
-                    migrate=_migrate_add_stand_by,
                     elements={
                         "standBy": DictElement(
                             required=True,

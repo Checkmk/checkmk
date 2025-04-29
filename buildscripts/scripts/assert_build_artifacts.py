@@ -2,9 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import json
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
@@ -14,7 +14,7 @@ import requests
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.package_manager import ABCPackageManager, code_name
 
-from cmk.ccc.version import Edition
+from cmk.ccc.version import Edition, Version
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 from buildscripts.scripts.lib.registry import (
@@ -87,12 +87,27 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             yield hash_file(package_name), internal_only
 
 
+def bom_file_name(edition: str, version: str) -> str:
+    return f"check-mk-{edition}-{version}-bill-of-materials.json"
+
+
 def build_bom_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = f"check-mk-{edition}-{args.version}-bill-of-materials.json"
-        internal_only = edition in loaded_yaml["internal_editions"]
+        file_name = bom_file_name(edition, args.version)
+        internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
+
+
+def build_bom_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
+    base_version = Version.from_str(args.version).base
+    return {
+        bom_file_name(
+            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest"
+        ): bom_file_name(edition, args.version)
+        for edition in loaded_yaml["editions"]
+        if edition not in loaded_yaml.get("internal_editions", [])
+    }
 
 
 def file_exists_on_download_server(filename: str, version: str, credentials: Credentials) -> bool:
@@ -151,10 +166,8 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     # TODO
 
 
-def print_bom_artifacts(args: Args, loaded_yaml: dict) -> None:
-    for artifact_name, internal_only in build_bom_artifacts(args, loaded_yaml):
-        if not internal_only:
-            print(artifact_name)
+def dump_bom_artifact_mapping(args: Args, loaded_yaml: dict) -> None:
+    print(json.dumps(build_bom_latest_mapping(args, loaded_yaml)))
 
 
 def parse_arguments() -> Args:
@@ -169,9 +182,10 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
     sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
 
-    sub_print_bom_artifacts = subparsers.add_parser("print_bom_artifacts")
-    sub_print_bom_artifacts.set_defaults(func=print_bom_artifacts)
+    sub_print_bom_artifacts = subparsers.add_parser("dump_bom_artifact_mapping")
+    sub_print_bom_artifacts.set_defaults(func=dump_bom_artifact_mapping)
     sub_print_bom_artifacts.add_argument("--version", required=True, default=False)
+    sub_print_bom_artifacts.add_argument("--version_agnostic", action=BooleanOptionalAction)
 
     return parser.parse_args()
 

@@ -670,19 +670,32 @@ section_aix_hacmp() {
         cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
         if ! echo "${cluster_cmd_output}" | grep -q "not installed"; then
             # now the following commands should be available
-            nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
+            if inpath cllsnode; then
+                nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
+            else
+                nodes=$(/usr/es/sbin/cluster/utilities/cllsnode | grep "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
+            fi
+
             list_active_nodes=""
             for node in ${nodes}; do
-                active_nodes=$(clgetactivenodes -n "${node}")
+                if inpath clgetactivenodes; then
+                    active_nodes=$(${ROOT_OR_SUDO} clgetactivenodes -n "${node}")
+                else
+                    active_nodes=$(${ROOT_OR_SUDO} /usr/es/sbin/cluster/utilities/clgetactivenodes -n "${node}")
+                fi
                 if echo "${active_nodes}" | grep -q "${node}"; then
-                    list_active_nodes=${list_active_nodes}"\n${node}"
+                    list_active_nodes="${list_active_nodes}"$'\n'"${node}"
                 fi
             done
 
             if [ "${list_active_nodes}" ]; then
                 echo '<<<aix_hacmp_nodes>>>'
                 printf "%s\n" "${list_active_nodes}"
-                cllsnode
+                if inpath cllsnode; then
+                    cllsnode
+                else
+                    /usr/es/sbin/cluster/utilities/cllsnode
+                fi
             fi
 
             echo '<<<aix_hacmp_services>>>'
@@ -697,10 +710,10 @@ section_aix_hacmp() {
             echo '<<<aix_hacmp_resources:sep(58)>>>'
             if inpath clRGinfo; then
                 # shellcheck disable=SC2086
-                waitmax 5 ${ROOT_OR_SUDO} clRGinfo -s
+                waitmax 5 clRGinfo -s
             else # fallback, hardcoded base installation path
                 # shellcheck disable=SC2086
-                waitmax 5 ${ROOT_OR_SUDO} /usr/es/sbin/cluster/utilities/clRGinfo -s
+                waitmax 5 /usr/es/sbin/cluster/utilities/clRGinfo -s
             fi
         fi
     fi

@@ -12,6 +12,9 @@ This script migrates legacy graphing objects from given file paths like
 The migrated objects will be printed to stdout. It's recommended to use '--debug' in order to see
 whether all objects from a file can be migrated. Header, imports, comments or other objects are not
 taken into account.
+
+Note that this was developed for Checkmk internal migration purposes and is not officially
+supported. You have to check and adjust the result manually.
 """
 
 from __future__ import annotations

@@ -8,6 +8,7 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import override, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
@@ -35,15 +36,10 @@ from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
-from cmk.gui.valuespec import (
-    Dictionary,
-    DictionaryEntry,
-    FixedValue,
-    RuleComment,
-    TextInput,
-)
+from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
 from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
 from cmk.gui.wato.pages.hosts import ModeEditHost
@@ -267,12 +263,26 @@ class ModeEditConfigurationBundles(WatoMode):
             # for consistency reasons we always prevent the user from reverting the changes
             prevent_discard_changes = True
 
+            bundle = read_config_bundle(bundle_id)
+            owned_by = bundle.get("owned_by")
             # If the current user is different from the one who created the bundle, they need
             # permission to edit all passwords in order to (find and) delete the password.
             if not user.may("wato.edit_all_passwords"):
-                bundle = read_config_bundle(bundle_id)
-                if (owned_by := bundle.get("owned_by")) and owned_by != user.id:
+                if owned_by and owned_by != user.id:
                     raise MKAuthException(_("You are not permitted to perform this action."))
+
+            # Only admins may delete bundles which were created by an admin
+            if (
+                owned_by
+                and "admin" in roles_of_user(UserId(owned_by))
+                and "admin" not in user.role_ids
+            ):
+                raise MKAuthException(
+                    _(
+                        "You are not permitted to perform this action. Only an admin is permitted to "
+                        "delete a bundle which was created by an admin."
+                    )
+                )
         else:
             raise MKGeneralException("Not implemented")
 

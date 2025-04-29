@@ -124,10 +124,11 @@ def test_add_new_notification_rule(
 
     service_search_page = None
     try:
+        checkmk_agent = "Check_MK"
         service_search_page = ServiceSearchPage(dashboard_page.page)
-        logger.info("Reschedule the 'Check_MK' service to trigger the notification")
+        logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
         service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-        service_search_page.reschedule_check(host_name, "Check_MK")
+        service_search_page.reschedule_check(host_name, checkmk_agent)
         service_search_page.wait_for_check_status_update(host_name, service_name, "warn/crit at")
 
         logger.info("Waiting for email %s from for user %s", username, email)
@@ -154,3 +155,4 @@ def test_add_new_notification_rule(
             logger.info("Delete the filesystems rule")
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
             filesystems_rules_page.activate_changes(test_site)
+            test_site.schedule_check(host_name, checkmk_agent)

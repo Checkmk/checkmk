@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkDropdownButton from '@/components/CmkDropdownButton.vue'
+import { Response } from '@/components/suggestions'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -15,6 +16,7 @@ const defaultSelected2 = ref<string>('init')
 const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)
 const defaultEmpty3 = ref<string | null>(null)
+const defaultEmpty4 = ref<string | null>(null)
 </script>
 
 <template>
@@ -93,8 +95,37 @@ const defaultEmpty3 = ref<string | null>(null)
       suggestions: [
         ...Array(20)
           .fill(0)
-          .map((_, i) => ({ name: i.toString(), title: i.toString() }))
+          .map((_, i) => `number: ${i}`)
+          .map((s) => ({ name: s, title: s }))
       ]
+    }"
+    input-hint="long dropdown"
+    no-results-hint="no results hint"
+    component-id="some component id"
+    required-text="required"
+    label="some label"
+  />
+  <h2>callback, filtered, empty selection</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty4"
+    :options="{
+      type: 'callback-filtered',
+      querySuggestions: async (query) => {
+        let pool = [
+          { name: 'one', title: 'one' },
+          { name: 'two', title: 'two' },
+          { name: 'three', title: 'three' },
+          { name: 'four', title: 'four' }
+        ]
+        pool = pool.filter((e) => e.name.includes(query))
+
+        const directHit = pool.filter((e) => e.name === query).length === 1
+
+        if (query !== '' && !directHit) {
+          pool.splice(0, 0, { name: query, title: query })
+        }
+        return new Response(pool)
+      }
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"

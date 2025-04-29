@@ -161,6 +161,55 @@ def deploy_to_website(CMK_VERS) {
     }
 }
 
+def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
+
+    def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
+    def SYMLINK_BASE_PATH = "/smb-share-customer/checkmk/"
+
+    inside_container(set_docker_group_id: true,
+        mount_credentials: true,
+        privileged: true,
+    ) {
+        dir("${checkout_dir}") {
+            if (branch_latest) {
+                def bom_mapping_branch_latest = readJSON(
+                    text: sh(script: """
+                        scripts/run-uvenv \
+                            buildscripts/scripts/assert_build_artifacts.py \
+                            --editions_file "${checkout_dir}/editions.yml" \
+                            dump_bom_artifact_mapping \
+                            --version ${TARGET_VERSION} \
+                        """,
+                        returnStdout: true)
+                );
+                println("Updating branch latest BOM symlinks");
+                bom_mapping_branch_latest.each { symlink, target ->
+                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${SYMLINK_BASE_PATH}${symlink};");
+                }
+            }
+
+            if (latest) {
+                def bom_mapping_latest = readJSON(
+                    text: sh(script: """
+                        scripts/run-uvenv \
+                            buildscripts/scripts/assert_build_artifacts.py \
+                            --editions_file "${checkout_dir}/editions.yml" \
+                            dump_bom_artifact_mapping \
+                            --version_agnostic \
+                            --version ${TARGET_VERSION} \
+                        """,
+                        returnStdout: true)
+                );
+                println("Updating latest BOM symlinks");
+                bom_mapping_latest.each { symlink, target ->
+                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${SYMLINK_BASE_PATH}${symlink};");
+                }
+            }
+        }
+    }
+
+}
+
 def cleanup_rc_candidates_of_version(CMK_VERS) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
     execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");

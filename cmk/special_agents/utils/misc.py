@@ -217,6 +217,15 @@ class _NullContext:
         return False
 
 
+def _check_path(filename: str) -> None:
+    """make sure we are only writing/reading traces from tmp/debug"""
+
+    p = Path(filename).resolve()
+    allowed_path = (Path.home() / "tmp" / "debug").resolve()
+    if not p.is_relative_to(allowed_path):
+        raise ValueError(f"Traces can only be stored in {allowed_path}")
+
+
 def vcrtrace(**vcr_init_kwargs):
     """Returns the class of an argparse.Action to enter a vcr context
 
@@ -254,6 +263,14 @@ def vcrtrace(**vcr_init_kwargs):
             if not filename:
                 setattr(namespace, self.dest, _NullContext())
                 return
+
+            if not sys.stdin.isatty():
+                raise argparse.ArgumentError(self, "You need to run this in a tty")
+
+            try:
+                _check_path(filename)
+            except ValueError as exc:
+                raise argparse.ArgumentError(self, str(exc)) from exc
 
             import vcr  # type: ignore[import] # pylint: disable=import-outside-toplevel
 

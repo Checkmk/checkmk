@@ -1,0 +1,25 @@
+Title: Arbitrary file write with vcrtrace
+Class: security
+Compatible: compat
+Component: checks
+Date: 1745999709
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+Previous to this Werk it was possible to inject arguments to the commandline of some checks and special agents.
+If the option <code>--vcrtrace</code> was injected the http traffic was dumped into a file given via this parameter.
+The path was not validated.
+
+This vulnerability was identified in a commissioned penetration test conducted by PS Positive Security GmbH.
+
+<em>Affected Versions</em>:
+
+LI: 2.4.0 (beta)
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 8.7 High (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N</code>) and assigned <code>CVE-2025-1712</code>.

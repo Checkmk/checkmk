@@ -1895,6 +1895,7 @@ def _call_script(
         line = text_io.readline()
         if line:
             sys.stdout.write("\n")
+            sys.stdout.write(f"-| {line}")
             for line in text_io:
                 sys.stdout.write(f"-| {line}")
 

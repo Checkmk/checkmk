@@ -81306,8 +81306,9 @@ msgstr "Activeringsstatus"
 msgid "VMalloc address space"
 msgstr "VMalloc Adresruimte"
 
-msgid "VMs"
-msgstr "VM's"
+#, fuzzy
+msgid "VMs / Templates"
+msgstr "Sjabloon hostnaam"
 
 msgid "VMs in unknown state"
 msgstr "VM's in onbekende staat"
@@ -85423,10 +85424,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"You can specify lists of VM names and a number of hosts, to make sure the "
-"specified VMs are distributed across at least so many hosts. E.g. provide "
-"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
-"not running on the same host."
+"You can specify lists of VM or template names and a number of hosts, to make "
+"sure the specified VMs are distributed across at least so many hosts. E.g. "
+"provide two VM names and set 'Number of hosts' to two, to make sure those "
+"VMs are not running on the same host."
 msgstr ""
 "U kunt lijsten met VM-namen en een aantal hosts opgeven, om ervoor te zorgen "
 "dat de opgegeven VM's over ten minste zoveel hosts worden verdeeld. Geef "
@@ -89011,6 +89012,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "VMs"
+#~ msgstr "VM's"
 
 #, fuzzy
 #~ msgid "Connectee"

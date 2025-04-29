@@ -82043,8 +82043,9 @@ msgstr "Statut d'activation"
 msgid "VMalloc address space"
 msgstr "Espace d'adresse VMalloc"
 
-msgid "VMs"
-msgstr "VMs"
+#, fuzzy
+msgid "VMs / Templates"
+msgstr "Modèle de nom d'hôte"
 
 msgid "VMs in unknown state"
 msgstr "VMs dans un état inconnu"
@@ -86211,10 +86212,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"You can specify lists of VM names and a number of hosts, to make sure the "
-"specified VMs are distributed across at least so many hosts. E.g. provide "
-"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
-"not running on the same host."
+"You can specify lists of VM or template names and a number of hosts, to make "
+"sure the specified VMs are distributed across at least so many hosts. E.g. "
+"provide two VM names and set 'Number of hosts' to two, to make sure those "
+"VMs are not running on the same host."
 msgstr ""
 "Vous pouvez spécifier des listes de noms de machines virtuelles et un nombre "
 "d'hôtes, pour vous assurer que les machines virtuelles spécifiées sont "
@@ -89821,6 +89822,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#~ msgid "VMs"
+#~ msgstr "VMs"
 
 #, fuzzy
 #~ msgid "Connectee"

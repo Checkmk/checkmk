@@ -77301,8 +77301,9 @@ msgstr "VMToolsアクティベーションステータス"
 msgid "VMalloc address space"
 msgstr "VMallocアドレス空間"
 
-msgid "VMs"
-msgstr "VMs"
+#, fuzzy
+msgid "VMs / Templates"
+msgstr "ホスト名のテンプレート"
 
 msgid "VMs in unknown state"
 msgstr "VMはUNKNOWN状態です"
@@ -81204,11 +81205,12 @@ msgid ""
 "e.g.: `pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You can specify lists of VM names and a number of hosts, to make sure the "
-"specified VMs are distributed across at least so many hosts. E.g. provide "
-"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
-"not running on the same host."
+"You can specify lists of VM or template names and a number of hosts, to make "
+"sure the specified VMs are distributed across at least so many hosts. E.g. "
+"provide two VM names and set 'Number of hosts' to two, to make sure those "
+"VMs are not running on the same host."
 msgstr ""
 "VM名のリストとホスト数を指定することで、指定したVMが少なくとも多くのホストに"
 "分散さ れていることを確認することができます。例えば2つのVM名を指定し\"ホスト"
@@ -84719,6 +84721,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "VMs"
+#~ msgstr "VMs"
 
 #, python-brace-format
 #~ msgid "Automatic rediscovery parameter {param} not implemented"

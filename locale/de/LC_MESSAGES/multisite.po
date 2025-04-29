@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-24 13:51+0000\n"
+"PO-Revision-Date: 2025-04-28 18:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5407,9 +5407,8 @@ msgstr "Alert Handler, die verteilt werden sollen"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
 
-#, fuzzy
 msgid "Alert if value has increased since discovery"
-msgstr "Automatische Service-Erkennung durchführen"
+msgstr "Alert, wenn der Wert seit der Erkennung gestiegen ist"
 
 msgid "Alert manager rule state"
 msgstr "Zustand der Alertmanager-Regel"
@@ -10695,9 +10694,8 @@ msgstr "CR"
 msgid "CRC errors"
 msgstr "CRC-Fehler"
 
-#, fuzzy
 msgid "CRC errors (id 199)"
-msgstr "CRC-Fehler"
+msgstr "CRC-Fehler (id 199)"
 
 msgid "CRC errors rate"
 msgstr "CRC Fehlerrate"
@@ -14027,9 +14025,8 @@ msgstr "Host und Einrichtung konfigurieren"
 msgid "Configure host and regions"
 msgstr "Host und Regionen konfigurieren"
 
-#, fuzzy
 msgid "Configure levels"
-msgstr "Untergrenzen konfigurieren"
+msgstr "Levels konfigurieren"
 
 #, no-python-format
 msgid ""
@@ -22203,7 +22200,7 @@ msgid "End-Time"
 msgstr "End-Zeit"
 
 msgid "End-to-End Errors (id 184)"
-msgstr ""
+msgstr "End-to-end Fehler (id 184)"
 
 msgid "End-to-end latency"
 msgstr "End-to-End Latenz"
@@ -42789,6 +42786,8 @@ msgstr ""
 
 msgid "Note that <tt>mtr</tt> must be installed on the monitored system."
 msgstr ""
+"Beachten Sie, dass <tt>mtr</tt> auf dem überwachten System installiert sein "
+"muss."
 
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
@@ -47130,9 +47129,8 @@ msgstr "Ausstehende Pods: Namespace"
 msgid "Pending requests"
 msgstr "Ausstehende Anfragen"
 
-#, fuzzy
 msgid "Pending sectors (id 197)"
-msgstr "Services im Zustand PENDING"
+msgstr "Sektoren im Zustand PENDING (id 197)"
 
 msgid "Pending security updates"
 msgstr "Anstehende Sicherheitsupdates"
@@ -50445,13 +50443,11 @@ msgstr "Reelle Zahl (REAL)"
 msgid "Real-time checks"
 msgstr "Echtzeit-Checks"
 
-#, fuzzy
 msgid "Reallocated events (id 196)"
-msgstr "Festplatten-Reallokierungen"
+msgstr "Umgewidmete Ereignisse (id 196)"
 
-#, fuzzy
 msgid "Reallocated sectors (id 5)"
-msgstr "Reallozierte Sektoren"
+msgstr "Umgewidmete Sektoren (id 5)"
 
 #, python-format
 msgid "Reason: %s"
@@ -53257,10 +53253,10 @@ msgid "SLES License"
 msgstr "SLES-Lizenz"
 
 msgid "SMART ATA"
-msgstr ""
+msgstr "SMART ATA"
 
 msgid "SMART NVMe"
-msgstr ""
+msgstr "SMART NVMe"
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMART Festplatten-Monitoring (Linux)"
@@ -58534,7 +58530,7 @@ msgid "Speed of interface groups (Netapp only)"
 msgstr "Geschwindigkeit der Schnittstellengruppen (nur Netapp)"
 
 msgid "Spin retries (id 10)"
-msgstr ""
+msgstr "Spin-Wiederholungen (id 10)"
 
 msgid "Splunk"
 msgstr "Splunk"
@@ -65736,9 +65732,10 @@ msgstr ""
 "Die Instanzen %s nutzen nicht den Checkmk Micro Core. Sie können keine "
 "Metriken von Hosts, die von diesen Instanzen überwacht werden, benutzen."
 
-#, fuzzy
 msgid "The sites initiating and accepting the connection must be specified."
-msgstr "Wählen Sie die Instanz aus, welche die TCP-Verbindung annehmen soll."
+msgstr ""
+"Die Instanzen, welche die Verbindung initiieren und akzeptieren, müssen "
+"angegeben werden."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -75135,9 +75132,8 @@ msgstr "Unkomprimierte Größe"
 msgid "Uncompressed size in memory"
 msgstr "Unkomprimierte Größe im Speicher"
 
-#, fuzzy
 msgid "Uncorrectable Errors (id 187)"
-msgstr "Nicht korrigierbare Schlüsselwörter"
+msgstr "Nicht korrigierbare Fehler (id 187)"
 
 msgid "Uncorrectable codewords"
 msgstr "Nicht korrigierbare Schlüsselwörter"
@@ -76937,9 +76933,8 @@ msgstr "Den Zustand des Check_MK Service verwenden"
 msgid "Use the status of the service..."
 msgstr "Den Zustand verwenden von Service..."
 
-#, fuzzy
 msgid "Use the threshold reported by the device"
-msgstr "Den Zustand verwenden von Service..."
+msgstr "Den Schwellwert, der vom Gerät gemeldet wird, verwenden"
 
 msgid "Use this condition to select hosts based on the configured host labels."
 msgstr ""
@@ -78201,8 +78196,9 @@ msgstr "VMTools Aktivierungszustand"
 msgid "VMalloc address space"
 msgstr "VMalloc-Adressraum"
 
-msgid "VMs"
-msgstr "VMs"
+#, fuzzy
+msgid "VMs / Templates"
+msgstr "Vorlage für Host-Name"
 
 msgid "VMs in unknown state"
 msgstr "VMs in unbekanntem Zustand"
@@ -81796,7 +81792,6 @@ msgstr ""
 "restlichen Einträge werden mit der 'Show all' Option unter dem letzten "
 "Eintrag des Themas verfügbar."
 
-#, fuzzy
 msgid ""
 "You can define pairs of sites here that will be able to directly "
 "communicate, without routing the messages via the central site. Messages "
@@ -81809,11 +81804,11 @@ msgstr ""
 "Hier können Sie Paare von Instanzen definieren, die direkt miteinander "
 "kommunizieren können, ohne die Nachrichten über die Zentralinstanz zu "
 "leiten. Die Nachrichten selbst werden in beide Richtungen gesendet: vom "
-"Aufbauende der Verbindung zum Annehmenden der Verbindung und umgekehrt. "
-"Beachten Sie, dass die Reihenfolge, in der Sie die Instanzen hier auswählen, "
-"je nach den Einschränkungen Ihres Netzes dennoch von Bedeutung sein kann: "
-"Der Aufbauende muss in der Lage sein, eine TCP-Verbindung zum Annehmenden "
-"herzustellen."
+"initiierenden Peer zum annehmenden Peer und umgekehrt. Beachten Sie, dass "
+"die Reihenfolge, in der Sie die Instanzen hier auswählen, je nach den "
+"Einschränkungen Ihres Netzes dennoch von Bedeutung sein kann: Der "
+"initiierende Peer muss in der Lage sein, eine TCP-Verbindung zum annehmenden "
+"Peer herzustellen."
 
 msgid ""
 "You can define some rules to which each user password ahers. By default all "
@@ -82282,11 +82277,12 @@ msgstr ""
 "kombiniert, um den endgültigen URL-Endpunkt zu bilden, z.B.: `Muster_1,"
 "Muster_2/_stats/store,docs?ignore_unavailable=true`"
 
+#, fuzzy
 msgid ""
-"You can specify lists of VM names and a number of hosts, to make sure the "
-"specified VMs are distributed across at least so many hosts. E.g. provide "
-"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
-"not running on the same host."
+"You can specify lists of VM or template names and a number of hosts, to make "
+"sure the specified VMs are distributed across at least so many hosts. E.g. "
+"provide two VM names and set 'Number of hosts' to two, to make sure those "
+"VMs are not running on the same host."
 msgstr ""
 "Sie können Listen mit VM-Namen und eine Reihe von Hosts angeben, um "
 "sicherzustellen, dass die angegebenen VMs auf mindestens so viele Hosts "
@@ -85874,6 +85870,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "VMs"
+#~ msgstr "VMs"
 
 #, python-brace-format
 #~ msgid "Automatic rediscovery parameter {param} not implemented"

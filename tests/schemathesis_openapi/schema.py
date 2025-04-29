@@ -207,6 +207,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
     allow_nulls = os.getenv("SCHEMATHESIS_ALLOW_NULLS", "0") == "1"
     codec = os.getenv("SCHEMATHESIS_CODEC", "utf-8")
     generation_config = GenerationConfig(allow_x00=allow_nulls, codec=codec)
+    schemathesis.experimental.OPEN_API_3_1.enable()
     if os.path.exists(schema_filepath):
         logger.info('Loading OpenAPI schema from file "%s"...', schema_filepath)
         schema = schemathesis.from_path(

@@ -24,7 +24,7 @@ def main() {
     def env_var_list = [];
     def sec_var_list = [];
     def credentials = [];
-    def bazel_locks_amount = params.BAZEL_LOCKS_AMOUNT ? params.BAZEL_LOCKS_AMOUNT.toInteger() : -1;
+    def bazel_locks_amount = params.CIPARAM_BAZEL_LOCKS_AMOUNT ? params.CIPARAM_BAZEL_LOCKS_AMOUNT.toInteger() : -1;
 
     if (params.CIPARAM_ENV_VAR_LIST_STR) {
         env_var_list = params.CIPARAM_ENV_VAR_LIST_STR.split("#").collect { "${it}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}") };

@@ -9,9 +9,11 @@ import ast
 import os
 import pickle
 import time
+from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import TypedDict
 
+import psutil
 from redis import Redis
 
 from cmk.ccc import store
@@ -31,6 +33,8 @@ from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
 from cmk.bi.type_defs import frozen_aggregations_dir
 
 _LOGGER = logger.getChild("web.bi.compilation")
+_MAX_MULTIPROCESSING_POOL_SIZE = 8
+_AVAILABLE_MEMORY_RATIO = 0.75
 
 
 class ConfigStatus(TypedDict):
@@ -222,11 +226,12 @@ class BICompiler:
 
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
-            for aggregation in self._bi_packs.get_all_aggregations():
-                start = time.perf_counter()
-                self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
-                end = time.perf_counter()
-                _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
+            if aggregations := self._bi_packs.get_all_aggregations():
+                with self._get_multiprocessing_pool(len(aggregations)) as pool:
+                    compiled_aggregations = pool.imap_unordered(_process_compilation, aggregations)
+                    for compiled_aggregation in compiled_aggregations:
+                        self._compiled_aggregations[compiled_aggregation.id] = compiled_aggregation
+
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
             for compiled_aggregation in self._compiled_aggregations.values():
@@ -240,6 +245,22 @@ class BICompiler:
         self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
         store.save_text_to_file(
             str(self._path_compilation_timestamp), str(current_configstatus["configfile_timestamp"])
+        )
+
+    def _get_multiprocessing_pool(self, aggregation_count: int) -> Pool:
+        # HACK: due to known constraints with multiprocessing in Python, this is a simple way to
+        # "inject" the BI searcher dependency to our separate processes. An alternative approach
+        # would be to move this object to a global variable. However, we prefer the attribute based
+        # approach on the process function as it better encapsulates the logic. The underlying issue
+        # has to do with the implicit pickling of all objects in process function which is slow and
+        # sometimes fails when the object isn't "pickleable".
+        def initializer(function) -> None:  # type: ignore[no-untyped-def]
+            function.searcher = self.bi_searcher
+
+        return Pool(
+            processes=_get_multiprocessing_pool_size(aggregation_count),
+            initializer=initializer,
+            initargs=(_process_compilation,),
         )
 
     def _store_compiled_aggregation(self, compiled_aggregation: BICompiledAggregation) -> None:
@@ -424,3 +445,21 @@ class BICompiler:
             pipeline.delete(*obsolete_keys)
 
         pipeline.execute()
+
+
+def _get_multiprocessing_pool_size(aggregation_count: int) -> int:
+    current_process = psutil.Process(os.getpid())
+
+    available_memory = _AVAILABLE_MEMORY_RATIO * psutil.virtual_memory().available
+    current_process_memory = current_process.memory_info().rss
+    potential_pool_size = int(available_memory // current_process_memory)
+
+    return min(potential_pool_size, _MAX_MULTIPROCESSING_POOL_SIZE, aggregation_count)
+
+
+def _process_compilation(aggregation: BIAggregation) -> BICompiledAggregation:
+    start = time.perf_counter()
+    compiled_aggregation = aggregation.compile(_process_compilation.searcher)  # type: ignore[attr-defined]
+    end = time.perf_counter()
+    _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
+    return compiled_aggregation

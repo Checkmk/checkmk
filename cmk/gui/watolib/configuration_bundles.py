@@ -17,8 +17,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.user import UserId
 
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -274,15 +278,55 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
+    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
+    # First check permissions for all the needed deletions
+    user_may_delete_config_bundle_objects(bundle_id, references)
+
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
     store.save(all_bundles)
-    delete_config_bundle_objects(bundle_id, bundle["group"])
+    delete_config_bundle_objects(references)
 
 
-def delete_config_bundle_objects(bundle_id: BundleId, bundle_group: str | None) -> None:
-    references = identify_bundle_references(bundle_group, {bundle_id})[bundle_id]
+def user_may_delete_config_bundle_objects(
+    bundle_id: BundleId,
+    references: BundleReferences,
+) -> None:
+    bundle = read_config_bundle(bundle_id)
+    owned_by = bundle.get("owned_by")
 
+    # Only admins may delete bundles which were created by an admin
+    if owned_by and "admin" in roles_of_user(UserId(owned_by)) and "admin" not in user.role_ids:
+        raise MKAuthException(
+            _(
+                "You are not permitted to perform this action. Only an admin is permitted to "
+                "delete a bundle which was created by an admin."
+            )
+        )
+
+    # Adhere to the structure used in delete_config_bundle_objects()
+    if references.rules:
+        pass
+    if references.hosts:
+        _user_may_delete_hosts(references.hosts)
+    if references.passwords:
+        _user_may_delete_passwords(owned_by)
+    if references.dcd_connections:
+        _user_may_delete_hosts(
+            (
+                host
+                for _dcd_id, host in _collect_hosts(
+                    _prepare_id_finder(
+                        PROGRAM_ID_DCD,
+                        {dcd_id for dcd_id, _spec in references.dcd_connections},
+                    ),
+                    Host.all().values(),
+                )
+            )
+        )
+
+
+def delete_config_bundle_objects(references: BundleReferences) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
         _delete_rules(references.rules)
@@ -351,6 +395,20 @@ def _prepare_create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]
     return create
 
 
+def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
+    folder_getter = itemgetter(0)
+    folders_and_hosts = sorted(
+        ((host.folder(), host) for host in hosts),
+        key=folder_getter,
+    )
+    for folder, host_iter in groupby(folders_and_hosts, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Host]]
+        host_names = [host.name() for _folder, host in host_iter]
+        folder.user_may_delete_hosts(
+            host_names,
+            allow_locked_deletion=True,
+        )
+
+
 def _delete_hosts(hosts: Iterable[Host]) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
@@ -360,7 +418,9 @@ def _delete_hosts(hosts: Iterable[Host]) -> None:
     for folder, host_iter in groupby(folders_and_hosts, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Host]]
         host_names = [host.name() for _folder, host in host_iter]
         folder.delete_hosts(
-            host_names, automation=check_mk_automations.delete_hosts, allow_locked_deletion=True
+            host_names,
+            automation=check_mk_automations.delete_hosts,
+            allow_locked_deletion=True,
         )
 
 
@@ -389,6 +449,16 @@ def _prepare_create_passwords(
             save_password(pw["id"], spec, new_password=True)
 
     return create
+
+
+def _user_may_delete_passwords(
+    owned_by: str | None,
+) -> None:
+    # If the current user is different from the one who created the bundle, they need
+    # permission to edit all passwords in order to (find and) delete the password.
+    if not user.may("wato.edit_all_passwords"):
+        if owned_by and owned_by != user.id:
+            raise MKAuthException(_("You are not permitted to perform this action."))
 
 
 def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
@@ -494,7 +564,9 @@ def _prepare_create_dcd_connections(
     return create
 
 
-def _delete_dcd_connections(dcd_connections: Sequence[tuple[str, DCDConnectionSpec]]) -> None:
+def _delete_dcd_connections(
+    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]],
+) -> None:
     for dcd_connection_id, _spec in dcd_connections:
         DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
 

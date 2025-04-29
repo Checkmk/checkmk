@@ -104,6 +104,7 @@ annotated-types==0.7.0 \
     --hash=sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89
     # via
     #   -c requirements.txt
+    #   -r cmk/requirements.in
     #   pydantic
 anyio==4.9.0 \
     --hash=sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028 \

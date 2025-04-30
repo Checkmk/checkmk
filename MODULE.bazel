@@ -132,7 +132,7 @@ http_archive(
     sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
     strip_prefix = "patch-" + PATCH_VERSION,
     urls = [
-        "https://ftp.gnu.org/gnu/patch/patch-" + PATCH_FILENAME,
+        "https://ftp.gnu.org/gnu/patch/" + PATCH_FILENAME,
         UPSTREAM_MIRROR_URL + PATCH_FILENAME,
     ],
 )

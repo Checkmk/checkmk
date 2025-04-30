@@ -2,49 +2,159 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+from enum import StrEnum
+from typing import assert_never, NamedTuple
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.hp_proliant import DETECT
 
-check_info = {}
+type ConditionNumber = str
+type ControllerID = str
+type StateNumber = str
+type RoleNumber = str
 
-hp_proliant_da_cntlr_cond_map = {
-    "1": (1, "other"),
-    "2": (0, "ok"),
-    "3": (1, "degraded"),
-    "4": (2, "failed"),
+
+class SNMPCondition(StrEnum):
+    OTHER = "other"
+    OK = "ok"
+    DEGRADED = "degraded"
+    FAILED = "failed"
+
+    def to_state(self) -> State:
+        match self:
+            case SNMPCondition.OK:
+                return State.OK
+            case SNMPCondition.OTHER | SNMPCondition.DEGRADED:
+                return State.WARN
+            case SNMPCondition.FAILED:
+                return State.CRIT
+            case _:
+                assert_never("Unsupported Enum value")
+
+
+class SNMPState(StrEnum):
+    OTHER = "other"
+    OK = "ok"
+    GENERAL_FAILURE = "general failure"
+    CABLE_PROBLEM = "cable problem"
+    POWERED_OFF = "powered off"
+    CACHE_MODULE_MISSING = "cache module missing"
+    DEGRADED = "degraded"
+    ENABLED = "enabled"
+    DISABLED = "disabled"
+    STANDBY_OFFLINE = "standby (offline)"
+    STANDBY_SPARE = "standby (spare)"
+    IN_TEST = "in test"
+    STARTING = "starting"
+    ABSENT = "absent"
+    UNAVAILABLE = "unavailable (offline)"
+    DEFERRING = "deferring"
+    QUISCED = "quisced"
+    UPDATING = "updating"
+    QUALIFIED = "qualified"
+
+    def to_state(self) -> State:
+        match self:
+            case (
+                SNMPState.OK
+                | SNMPState.ENABLED
+                | SNMPState.DISABLED
+                | SNMPState.STANDBY_SPARE
+                | SNMPState.STARTING
+                | SNMPState.DEFERRING
+                | SNMPState.QUISCED
+                | SNMPState.QUALIFIED
+            ):
+                return State.OK
+            case (
+                SNMPState.OTHER
+                | SNMPState.CACHE_MODULE_MISSING
+                | SNMPState.STANDBY_OFFLINE
+                | SNMPState.IN_TEST
+                | SNMPState.UPDATING
+            ):
+                return State.WARN
+            case (
+                SNMPState.GENERAL_FAILURE
+                | SNMPState.CABLE_PROBLEM
+                | SNMPState.POWERED_OFF
+                | SNMPState.DEGRADED
+                | SNMPState.ABSENT
+                | SNMPState.UNAVAILABLE
+            ):
+                return State.CRIT
+            case _:
+                assert_never("Unsupported Enum value")
+
+
+class Role(StrEnum):
+    OTHER = "other"
+    NOT_DUPLEXED = "notDuplexed"
+    ACTIVE = "active"
+    BACKUP = "backup"
+
+
+class ControllerData(NamedTuple):
+    id: ControllerID
+    model: str
+    slot: str
+    cond: SNMPCondition
+    role: Role
+    b_status: SNMPState
+    b_cond: SNMPCondition
+    serial: str
+
+
+ParsedSection = Mapping[ControllerID, ControllerData]
+
+
+PARSER_COND_MAP: Mapping[ConditionNumber, SNMPCondition] = {
+    "1": SNMPCondition.OTHER,
+    "2": SNMPCondition.OK,
+    "3": SNMPCondition.DEGRADED,
+    "4": SNMPCondition.FAILED,
 }
 
-hp_proliant_da_cntlr_role_map = {
-    "1": "other",
-    "2": "notDuplexed",
-    "3": "active",
-    "4": "backup",
+
+PARSER_ROLE_MAP: Mapping[RoleNumber, Role] = {
+    "1": Role.OTHER,
+    "2": Role.NOT_DUPLEXED,
+    "3": Role.ACTIVE,
+    "4": Role.BACKUP,
 }
 
 
-hp_proliant_da_cntlr_state_map = {
-    "1": (1, "other"),
-    "2": (0, "ok"),
-    "3": (2, "general failure"),
-    "4": (2, "cable problem"),
-    "5": (2, "powered off"),
-    "6": (1, "cache module missing"),
-    "7": (2, "degraded"),
-    "8": (0, "enabled"),
-    "9": (0, "disabled"),
-    "10": (1, "standby (offline)"),
-    "11": (0, "standby (spare)"),
-    "12": (1, "in test"),
-    "13": (0, "starting"),
-    "14": (2, "absent"),
-    "16": (2, "unavailable (offline)"),
-    "17": (0, "deferring"),
-    "18": (0, "quiesced"),
-    "19": (1, "updating"),
-    "20": (0, "qualified"),
+PARSER_STATE_MAP: Mapping[StateNumber, SNMPState] = {
+    "1": SNMPState.OTHER,
+    "2": SNMPState.OK,
+    "3": SNMPState.GENERAL_FAILURE,
+    "4": SNMPState.CABLE_PROBLEM,
+    "5": SNMPState.POWERED_OFF,
+    "6": SNMPState.CACHE_MODULE_MISSING,
+    "7": SNMPState.DEGRADED,
+    "8": SNMPState.ENABLED,
+    "9": SNMPState.DISABLED,
+    "10": SNMPState.STANDBY_OFFLINE,
+    "11": SNMPState.STANDBY_SPARE,
+    "12": SNMPState.IN_TEST,
+    "13": SNMPState.STARTING,
+    "14": SNMPState.ABSENT,
+    "16": SNMPState.UNAVAILABLE,
+    "17": SNMPState.DEFERRING,
+    "18": SNMPState.QUISCED,
+    "19": SNMPState.UPDATING,
+    "20": SNMPState.QUALIFIED,
 }
 
 
@@ -54,58 +164,65 @@ OTHER_STATE_DESCRIPTION = (
 )
 
 
-def parse_hp_proliant_da_cntlr(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_hp_proliant_da_cntlr(string_table: StringTable) -> ParsedSection:
+    return {
+        line[0]: ControllerData(
+            id=line[0],
+            model=line[1],
+            slot=line[2],
+            cond=PARSER_COND_MAP[line[3]],
+            role=PARSER_ROLE_MAP[line[4]],
+            b_status=PARSER_STATE_MAP[line[5]],
+            b_cond=PARSER_COND_MAP[line[6]],
+            serial=line[7],
+        )
+        for line in string_table
+    }
 
 
-def inventory_hp_proliant_da_cntlr(info):
-    if info:
-        return [(line[0], None) for line in info]
-    return []
+def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:
+    if section:
+        yield from (Service(item=item) for item in section)
 
 
-def check_hp_proliant_da_cntlr(item, params, info):
-    for line in info:
-        index, model, slot, cond, role, b_status, b_cond, serial = line
-        if index == item:
-            sum_state = 0
-            output = []
+def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> CheckResult:
+    if not (subsection := section.get(item)):
+        yield Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")
+        return
 
-            for val, label, map_ in [
-                (cond, "Condition", hp_proliant_da_cntlr_cond_map),
-                (b_cond, "Board-Condition", hp_proliant_da_cntlr_cond_map),
-                (b_status, "Board-Status", hp_proliant_da_cntlr_state_map),
-            ]:
-                this_state = map_[val][0]
-                state_txt = ""
-                if this_state == 1:
-                    state_txt = " (!)"
-                elif this_state == 2:
-                    state_txt = " (!!)"
-                sum_state = max(sum_state, this_state)
-                if val == "1":
-                    state_txt = f" ({OTHER_STATE_DESCRIPTION}){state_txt}"
-                output.append(f"{label}: {map_[val][1]}{state_txt}")
+    states: Mapping[str, SNMPCondition | SNMPState] = {
+        "Condition": subsection.cond,
+        "Board-Condition": subsection.b_cond,
+        "Board-Status": subsection.b_status,
+    }
 
-            output.append(
-                "(Role: {}, Model: {}, Slot: {}, Serial: {})".format(
-                    hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial
-                )
-            )
-
-            return (sum_state, ", ".join(output))
-    return (3, "Controller not found in snmp data")
+    yield Result(
+        state=State.worst(*(state.to_state() for state in states.values())),
+        summary=(
+            f"{', '.join(f'{label}: {state}' for label, state in states.items())} "
+            f"(Role: {subsection.role}, Model: {subsection.model}, Slot: {subsection.slot}, "
+            f"Serial: {subsection.serial})"
+        ),
+        details=OTHER_STATE_DESCRIPTION
+        if SNMPCondition.OTHER in states.values() or SNMPState.OTHER in states.values()
+        else None,
+    )
 
 
-check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(
+snmp_section_hp_proliant_da_cntlr = SimpleSNMPSection(
     name="hp_proliant_da_cntlr",
-    parse_function=parse_hp_proliant_da_cntlr,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.2.1.1",
         oids=["1", "2", "5", "6", "9", "10", "12", "15"],
     ),
+    parse_function=parse_hp_proliant_da_cntlr,
+)
+
+
+check_plugin_hp_proliant_da_cntlr = CheckPlugin(
+    name="hp_proliant_da_cntlr",
     service_name="HW Controller %s",
-    discovery_function=inventory_hp_proliant_da_cntlr,
+    discovery_function=discovery_hp_proliant_da_cntlr,
     check_function=check_hp_proliant_da_cntlr,
 )

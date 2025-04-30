@@ -570,7 +570,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hp_procurve_temp",
         "hp_proliant",
         "hp_proliant_cpu",
-        "hp_proliant_da_cntlr",
         "hp_proliant_raid",
         "hp_proliant_temp",
         "hp_psu_temp",

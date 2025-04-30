@@ -48,30 +48,10 @@ def pytest_addoption(parser):
         help="Skip regexp masking during check validation",
     )
     parser.addoption(
-        "--bulk-mode",
-        action="store_true",
-        default=False,
-        help="Enable bulk mode execution",
-    )
-    parser.addoption(
         "--enable-core-scheduling",
         action="store_true",
         default=False,
         help="Enable core scheduling (disabled by default)",
-    )
-    parser.addoption(
-        "--chunk-index",
-        action="store",
-        type=int,
-        default=0,
-        help="Chunk index for bulk mode",
-    )
-    parser.addoption(
-        "--chunk-size",
-        action="store",
-        type=int,
-        default=100,
-        help="Chunk size for bulk mode",
     )
     parser.addoption(
         "--host-names",
@@ -136,17 +116,6 @@ def pytest_configure(config):
     checks.config.dump_types = config.getoption(name="--dump-types")
 
     checks.config.load()
-
-
-def pytest_collection_modifyitems(config, items):
-    """Enable or disable tests based on their bulk mode"""
-    if config.getoption(name="--bulk-mode"):
-        chunk_index = config.getoption(name="--chunk-index")
-        chunk_size = config.getoption(name="--chunk-size")
-        items[:] = items[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
-        for item in items:
-            item.fixturenames.append("bulk_setup")
-    print(f"selected {len(items)} items")
 
 
 @pytest.fixture(name="test_site", scope="session")
@@ -227,19 +196,6 @@ def _get_site_update(
                 # cleanup existing agent-output folder in the test site
                 logger.info('Removing folder "%s"...', dump_path)
                 assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
-
-
-@pytest.fixture(name="bulk_setup", scope="session")
-def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
-    """Setup multiple test hosts."""
-    logger.info("Running bulk setup...")
-    chunk_index = pytestconfig.getoption(name="--chunk-index")
-    chunk_size = pytestconfig.getoption(name="--chunk-size")
-    host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
-    checks.setup_hosts(test_site, host_names)
-    yield
-    if os.getenv("CLEANUP", "1") == "1" and not checks.config.skip_cleanup:
-        checks.cleanup_hosts(test_site, host_names)
 
 
 @pytest.fixture(name="plugin_validation_site", scope="session")

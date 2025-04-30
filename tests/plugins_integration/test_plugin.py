@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import textwrap
-from contextlib import nullcontext
 
 import pytest
 
@@ -28,11 +27,7 @@ def test_plugin(
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:
-    with (
-        setup_host(test_site, host_name)
-        if not pytestconfig.getoption(name="--bulk-mode")
-        else nullcontext()
-    ):
+    with setup_host(test_site, host_name):
         disk_dump = read_disk_dump(host_name)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"
         if dump_type == "agent":

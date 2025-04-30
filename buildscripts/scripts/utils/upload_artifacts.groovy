@@ -8,7 +8,6 @@ package lib
 hashfile_extension = ".hash";
 downloads_path = "/var/downloads/checkmk/";
 smb_base_path = "/smb-share-customer/checkmk/"
-tstbuilds_path = "/tstbuilds/";
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */

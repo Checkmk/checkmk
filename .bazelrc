@@ -6,6 +6,10 @@ try-import %workspace%/user.bazelrc
 # common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
 try-import %workspace%/remote.bazelrc
 
+# Use local registry to add local download mirrors
+common --registry="file://%workspace%/bazel/registry"
+common --registry=https://bcr.bazel.build
+
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
 common --experimental_remote_cache_async

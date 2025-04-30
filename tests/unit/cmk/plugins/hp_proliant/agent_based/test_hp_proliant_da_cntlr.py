@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.legacy_checks.hp_proliant_da_cntlr import (
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_da_cntlr import (
     check_hp_proliant_da_cntlr,
     ControllerID,
     discovery_hp_proliant_da_cntlr,
     parse_hp_proliant_da_cntlr,
 )
-
-from cmk.agent_based.v2 import Result, Service, State
 
 STRING_TABLE = [
     ["0", "54", "0", "2", "1", "2", "2", "N/A"],

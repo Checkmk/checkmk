@@ -162,7 +162,6 @@ class RulesetMatcher:
             clusters_of,
             nodes_of,
         )
-        self.clear_caches = self.ruleset_optimizer.clear_caches
 
         self._service_match_cache: dict[
             tuple[
@@ -170,6 +169,11 @@ class RulesetMatcher:
             ],
             object,
         ] = {}
+
+    def clear_caches(self) -> None:
+        # clear caches that don't work properly (the ruleset optimizer ignores host labels).
+        # self._service_match_cache works also in the case of changed labels, so we DON'T need to clear it.
+        self.ruleset_optimizer.clear_caches()
 
     def get_host_bool_value(
         self,

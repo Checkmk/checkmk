@@ -51,7 +51,6 @@ class CheckConfig:
     dump_dir: str | None = None
     response_dir: str | None = None
     diff_dir: str | None = None
-    host_names: list[str] | None = None
     check_names: list[str] | None = None
     api_services_cols: list[str] | None = None
 
@@ -66,11 +65,6 @@ class CheckConfig:
             self.response_dir or os.getenv("RESPONSE_DIR", response_dir_default)
         )
         self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
-        self.host_names = (
-            [_.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()]
-            if not self.host_names
-            else self.host_names
-        )
         self.check_names = (
             [_.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()]
             if not self.check_names
@@ -132,7 +126,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
 
 def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
-    host_names = []
+    host_names: list[str] = []
     dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
@@ -173,13 +167,6 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
         host_names += agent_host_names
     if not config.dump_types or "snmp" in config.dump_types:
         host_names += snmp_host_names
-    host_names = [
-        _
-        for _ in host_names
-        if not config.host_names
-        or _ in config.host_names
-        or any(re.fullmatch(pattern, _) for pattern in config.host_names)
-    ]
     return host_names
 
 

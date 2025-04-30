@@ -5527,7 +5527,7 @@ def _valuespec_snmp_bulk_size():
         maxvalue=100,
         default_value=10,
         help=_(
-            "This variable allows you to configure the numbr of OIDs Checkmk should request "
+            "This variable allows you to configure the number of OIDs Checkmk should request "
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
             "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "

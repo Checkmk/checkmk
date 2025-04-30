@@ -737,4 +737,4 @@ def test_check_mssql_counters_transactions(
 
 
 if __name__ == "__main__":
-    pytest.main(["-svv", "-T=unit", __file__])
+    pytest.main(["-svv", __file__])

@@ -808,4 +808,4 @@ def test__check_common_juniper_trpz_aps_sessions_cluster(
     assert results == expected_results
 
 
-_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])
+_ = __name__ == "__main__" and pytest.main(["-svv", __file__])

@@ -144,4 +144,4 @@ def test_ac_check_mail_prepare_messages_for_ec(
 
 
 if __name__ == "__main__":
-    pytest.main(["-svv", "-T=unit", __file__])
+    pytest.main(["-svv", __file__])

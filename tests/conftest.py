@@ -193,13 +193,6 @@ collect_ignore: list[str] = []
 # See also https://github.com/joke2k/faker/issues/753
 logging.getLogger("faker").setLevel(logging.ERROR)
 
-#
-# Each test is of one of the following types.
-#
-# The tests are marked using the marker pytest.marker.type("TYPE")
-# which is added to the test automatically according to their location.
-#
-
 
 def pytest_addoption(parser):
     """Register options to pytest"""

@@ -172,4 +172,4 @@ if __name__ == "__main__":
             os.path.join(repo_path(), "cmk/plugins.collection.agent_based/hr_mem.py"),
         ]
     )
-    pytest.main(["-T=unit", "-vvsx", __file__])
+    pytest.main(["-vvsx", __file__])

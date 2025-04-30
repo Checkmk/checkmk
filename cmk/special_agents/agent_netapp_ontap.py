@@ -5,7 +5,7 @@
 
 import logging
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Collection, Iterable, Sequence
 
 import requests
 from netapp_ontap import resources as NetAppResource
@@ -277,18 +277,33 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         )
 
 
-def fetch_aggr(connection: HostConnection) -> Iterable[models.AggregateModel]:
+def _aggregates_ids(connection: HostConnection, args: Args) -> Collection:
+    # wee need to retrieve the uuid of the aggregates via the CLI passthrough
+    # because the REST API does not return, per design, the uuid of the root aggregates
+    response = requests.get(
+        url=f"{connection.origin}/api/private/cli/aggr?fields=uuid",
+        headers=connection.headers,
+        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        auth=(connection.username, connection.password),
+        timeout=args.timeout,
+    )
+
+    records = response.json().get("records", [])
+    return {record["uuid"] for record in records}
+
+
+def fetch_aggr(connection: HostConnection, args: Args) -> Iterable[models.AggregateModel]:
     field_query = (
         "name",
         "space.block_storage.available",
         "space.block_storage.size",
     )
-    yield from (
-        models.AggregateModel.model_validate(element.to_dict())
-        for element in NetAppResource.Aggregate.get_collection(
-            connection=connection, fields=",".join(field_query)
-        )
-    )
+
+    aggregates = _aggregates_ids(connection, args)
+    for aggr_uuid in aggregates:
+        resource = NetAppResource.Aggregate(uuid=aggr_uuid)
+        resource.get(fields=",".join(field_query))
+        yield models.AggregateModel.model_validate(resource.to_dict())
 
 
 def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
@@ -812,7 +827,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
 
     write_section("disk", fetch_disks(connection), logger)
     write_section("luns", fetch_luns(connection), logger)
-    write_section("aggr", fetch_aggr(connection), logger)
+    write_section("aggr", fetch_aggr(connection, args), logger)
     write_section("vs_status", fetch_vs_status(connection), logger)
     write_section("ports", fetch_ports(connection), logger)
     interfaces = list(fetch_interfaces(connection))

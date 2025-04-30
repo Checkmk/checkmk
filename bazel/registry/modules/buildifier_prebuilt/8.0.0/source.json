@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "url": "https://github.com/keith/buildifier-prebuilt/archive/refs/tags/8.0.0.tar.gz",
+    "integrity": "sha256-4x/mNqUATrULe0fsMcPOoK/Vl9FLsZkYMqohMDiDfs8=",
+    "strip_prefix": "buildifier-prebuilt-8.0.0",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-vbIn8eYHIdh8lsKcbu77N130+kmqMD5jpToSVzkiXTE="
+    },
+    "patch_strip": 1
+}

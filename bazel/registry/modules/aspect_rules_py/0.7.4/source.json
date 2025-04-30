@@ -1,0 +1,11 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-BCeM4jzFyRokti6gCsBMVT/kDKOQlDrPZoTTZ6aBqHE=",
+    "strip_prefix": "rules_py-0.7.4",
+    "url": "https://github.com/aspect-build/rules_py/releases/download/v0.7.4/rules_py-v0.7.4.tar.gz",
+    "patches": {
+        "rust_dev_dep.patch": "sha256-zpZuz+YgZOu1rLFYqWs58Qh8b01eswYO1vaNjpJUYpY=",
+        "module_dot_bazel_version.patch": "sha256-buik/OB+6Ox8THX5xUMj6RggJkXXDRFphcpt0r7ZQ/8="
+    },
+    "patch_strip": 1
+}

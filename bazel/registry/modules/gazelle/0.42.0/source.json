@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-XYDmKnAxTznMdkwcPqqADFk2yfHqkWJQBiJ85NIM0IY=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazel-contrib/bazel-gazelle/releases/download/v0.42.0/bazel-gazelle-v0.42.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-4Vf7O4As+U6R0TMI2oHM2X+NrZ/ZBOlvHB8UYRBONEs="
+    },
+    "patch_strip": 1
+}

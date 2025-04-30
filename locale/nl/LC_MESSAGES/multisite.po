@@ -55499,10 +55499,10 @@ msgstr "SLA: begin bij periode %s, kijk terug %s perioden"
 msgid "SLES License"
 msgstr "SLES Licentie"
 
-msgid "SMART ATA"
+msgid "SMART ATA (incompatible with legacy plug-in)"
 msgstr ""
 
-msgid "SMART NVMe"
+msgid "SMART NVMe (incompatible with legacy plug-in)"
 msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"

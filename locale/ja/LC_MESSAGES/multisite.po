@@ -53097,10 +53097,10 @@ msgstr "SLA: 期間 %s で開始し、%s 期間を振り返る"
 msgid "SLES License"
 msgstr "SLESライセンス"
 
-msgid "SMART ATA"
+msgid "SMART ATA (incompatible with legacy plug-in)"
 msgstr ""
 
-msgid "SMART NVMe"
+msgid "SMART NVMe (incompatible with legacy plug-in)"
 msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"

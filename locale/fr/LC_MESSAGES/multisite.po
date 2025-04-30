@@ -55962,10 +55962,10 @@ msgstr "SLA : début à la période %s, retour en arrière %s périodes"
 msgid "SLES License"
 msgstr "Licence SLES"
 
-msgid "SMART ATA"
+msgid "SMART ATA (incompatible with legacy plug-in)"
 msgstr ""
 
-msgid "SMART NVMe"
+msgid "SMART NVMe (incompatible with legacy plug-in)"
 msgstr ""
 
 msgid "SMART harddisk monitoring (Linux)"

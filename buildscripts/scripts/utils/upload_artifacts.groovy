@@ -7,6 +7,7 @@ package lib
 
 hashfile_extension = ".hash";
 downloads_path = "/var/downloads/checkmk/";
+smb_base_path = "/smb-share-customer/checkmk/"
 tstbuilds_path = "/tstbuilds/";
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
@@ -150,7 +151,7 @@ def deploy_to_website(CMK_VERS) {
         // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
         // On the website, we only want to have official releases.
         def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
-        def SYMLINK_PATH = "/smb-share-customer/checkmk/" + TARGET_VERSION;
+        def SYMLINK_PATH = smb_base_path + TARGET_VERSION;
 
         // We also do not want to keep rc versions on the archive.
         // So rename the folder in case we have a rc
@@ -164,7 +165,6 @@ def deploy_to_website(CMK_VERS) {
 def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
 
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
-    def SYMLINK_BASE_PATH = "/smb-share-customer/checkmk/"
 
     inside_container(set_docker_group_id: true,
         mount_credentials: true,
@@ -184,7 +184,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                 );
                 println("Updating branch latest BOM symlinks");
                 bom_mapping_branch_latest.each { symlink, target ->
-                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${SYMLINK_BASE_PATH}${symlink};");
+                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};");
                 }
             }
 
@@ -202,7 +202,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                 );
                 println("Updating latest BOM symlinks");
                 bom_mapping_latest.each { symlink, target ->
-                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${SYMLINK_BASE_PATH}${symlink};");
+                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};");
                 }
             }
         }

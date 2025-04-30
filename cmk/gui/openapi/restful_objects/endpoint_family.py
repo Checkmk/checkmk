@@ -46,6 +46,11 @@ class EndpointFamilyRegistry:
             raise ValueError(f"Endpoint family {family.name} already registered")
         self._families[family.name] = family
 
+    def unregister(self, name: str) -> None:
+        if name not in self._families:
+            raise ValueError(f"Endpoint family {name} not registered")
+        self._families.pop(name)
+
     def get(self, name: str) -> EndpointFamily | None:
         return self._families.get(name)
 

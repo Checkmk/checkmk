@@ -87,13 +87,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Diff dir path",
         default=None,
     )
-    parser.addoption(
-        "--dump-types",
-        action="store",
-        nargs="+",
-        help='Selected dump types to process (default: "agent,snmp")',
-        default=None,
-    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -122,7 +115,6 @@ def pytest_configure(config: pytest.Config) -> None:
         else None,
         diff_dir=_ if isinstance(_ := config.getoption(name="--diff-dir"), Path) else None,
         check_names=_ if isinstance(_ := config.getoption(name="--check-names"), list) else None,
-        dump_types=_ if isinstance(_ := config.getoption(name="--dump-types"), list) else None,
     )
 
 

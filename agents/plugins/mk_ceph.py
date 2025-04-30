@@ -10,7 +10,7 @@ import os.path
 import socket
 import sys
 
-__version__ = "2.4.0b7"
+__version__ = "2.4.0"
 
 
 try:

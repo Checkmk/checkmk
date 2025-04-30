@@ -190,7 +190,13 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
 
     def _create_folder(self, parent: str, name: str) -> None:
         main_area = self.main_area.locator()
-        main_area.get_by_role("button", name="Create new").click()
+        # `force=True` - prevents UI from sliding out of view during test runs
+        create_new_button = main_area.get_by_role("button", name="Create new")
+        expect(
+            create_new_button,
+            message="Expected 'button' to create new folders (within quick setup) to be visible!",
+        ).to_be_visible()
+        create_new_button.click(force=True)
         self.page.wait_for_timeout(ANIMATION_TIMEOUT)
         dialog = main_area.get_by_role("dialog", name="New folder")
         dialog.get_by_role("textbox", name="Title").fill(name)

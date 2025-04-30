@@ -150,7 +150,12 @@ class BaseNotificationPage(QuickSetupPage):
 
     def create_html_parameter_using_slide_in(self) -> None:
         """Open the slide-in window to initialize a new notifications parameter."""
-        self._stage_three.get_by_role("button", name="Create").click()
+        create_button = self._stage_three.get_by_role("button", name="Create")
+        expect(
+            create_button, message="Expected 'button', which creates a new parameter is visible!"
+        ).to_be_visible()
+        # `force=True` - prevents UI from sliding out of view during test runs
+        create_button.click(force=True)
         self.page.wait_for_timeout(ANIMATION_TIMEOUT)
 
     # stage 4

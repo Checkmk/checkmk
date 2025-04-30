@@ -41,12 +41,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Skip cleanup process after test execution",
     )
     parser.addoption(
-        "--skip-masking",
-        action="store_true",
-        default=False,
-        help="Skip regexp masking during check validation",
-    )
-    parser.addoption(
         "--enable-core-scheduling",
         action="store_true",
         default=False,

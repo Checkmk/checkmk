@@ -1806,14 +1806,10 @@ def ldap_attribute_plugins_elements(
     connection: LDAPUserConnector | None,
 ) -> list[tuple[str, FixedValue | Dictionary]]:
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
-    elements = []
-    items = sorted(
-        [(ident, plugin_class) for ident, plugin_class in all_attribute_plugins()],
-        key=lambda x: x[1].title,
-    )
-    for key, plugin in items:
-        elements.append((key, plugin.parameters(connection)))
-    return elements
+    return [
+        (key, plugin.parameters(connection))
+        for key, plugin in sorted(all_attribute_plugins(), key=lambda x: x[1].title)
+    ]
 
 
 def config_based_custom_user_attribute_sync_plugins() -> list[tuple[str, LDAPUserAttributePlugin]]:

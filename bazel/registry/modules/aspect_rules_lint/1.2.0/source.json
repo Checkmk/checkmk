@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-5t1WvrqvGHaPHN9fnLQiUhxh89wCfb/B+/MBVZ0ccag=",
+    "strip_prefix": "rules_lint-1.2.0",
+    "url": "https://github.com/aspect-build/rules_lint/releases/download/v1.2.0/rules_lint-v1.2.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-lhP9x/8DGXvzCbVFyqPMwihW40hNviVaTfXhxwN/ZOc="
+    },
+    "patch_strip": 1
+}

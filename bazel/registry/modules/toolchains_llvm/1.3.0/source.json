@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-08JVss7snq67a1pEyQSkhCm43LceYw3i8QPntKq58HM=",
+    "strip_prefix": "toolchains_llvm-v1.3.0",
+    "url": "https://github.com/bazel-contrib/toolchains_llvm/releases/download/v1.3.0/toolchains_llvm-v1.3.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-hCTueS1t+v2rORbTWdmgRF2tWAmshyfBSjY/z0t+av4="
+    },
+    "patch_strip": 1
+}

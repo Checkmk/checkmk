@@ -1,0 +1,6 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-olq2bZJTFrXZmkEMTmd8bwVcloCFkG2wIOgKnbF7Z1s=",
+    "strip_prefix": "rules_mypy-0.29.0",
+    "url": "https://github.com/theoremlp/rules_mypy/releases/download/v0.29.0/rules_mypy-0.29.0.tar.gz"
+}

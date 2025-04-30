@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-nG4mkRp5+/UQqPBtju20D0EgI89/ptFGHe8nEWv/Aiw=",
+    "strip_prefix": "rules_python-1.1.0",
+    "url": "https://github.com/bazelbuild/rules_python/releases/download/1.1.0/rules_python-1.1.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-uX/gXMf7NT+8kfV5Mu9ZROkg9z9GWHPe5JzeX+3B8fI="
+    },
+    "patch_strip": 1
+}

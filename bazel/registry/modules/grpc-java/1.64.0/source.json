@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-hiaqXiASPlVBCDb6k5u3k4RZTv3UW5eeiDZC2szK36E=",
+    "strip_prefix": "grpc-java-1.64.0",
+    "url": "https://github.com/grpc/grpc-java/archive/refs/tags/v1.64.0.tar.gz",
+    "patch_strip": 0,
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-DwMImFR9xKzB52qlWeQ3+2zrh6aOkM6l8HFyZGTQbIA="
+    }
+}

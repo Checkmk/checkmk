@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-4PDrsaIiPJmpBKVl5iqihb8dGortoi0Q6iEnWRYkhmw=",
+    "strip_prefix": "rules_foreign_cc-0.14.0",
+    "url": "https://github.com/bazel-contrib/rules_foreign_cc/releases/download/0.14.0/rules_foreign_cc-0.14.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-zZVG1Cva2Cg9FQJJg9h43JB/Q1fEQMBeZeGWN7CUtGs="
+    },
+    "patch_strip": 1
+}

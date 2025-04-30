@@ -1,0 +1,10 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-umyKRV4SEX3K+zIbBjokhadqaVzH0QjouG2vLiTZkSc=",
+    "strip_prefix": "toolchains_protoc-0.3.7",
+    "url": "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.3.7/toolchains_protoc-v0.3.7.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-IQc1AVR06dcV0gH7c/9+i12EndGUlUpBPkonNgFBFa0="
+    },
+    "patch_strip": 1
+}

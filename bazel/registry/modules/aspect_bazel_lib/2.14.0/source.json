@@ -1,0 +1,11 @@
+{
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"],
+    "integrity": "sha256-QLqdD2LerIcZVyPw+JGpgDp7cg17iSBpgcpVcO+d8Vs=",
+    "strip_prefix": "bazel-lib-2.14.0",
+    "url": "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.14.0/bazel-lib-v2.14.0.tar.gz",
+    "patches": {
+        "go_dev_dep.patch": "sha256-DTc/hk+etl4D50M0BLRik2vHbrgDb6rds+Dj4xphWb4=",
+        "module_dot_bazel_version.patch": "sha256-70yFVbhTA9dbd7O4faWJ/vEQXoc2KBZXxGEp2eipyK0="
+    },
+    "patch_strip": 1
+}

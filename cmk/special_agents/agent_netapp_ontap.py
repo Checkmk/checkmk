@@ -703,13 +703,13 @@ def fetch_environment(connection):
             name=element_data["name"],
             node_name=element_data["node"]["name"],
             sensor_type=element_data["type"],
-            value=element_data["value"],
+            value=element_data.get("value"),
             warning_high_threshold=element_data.get("warning_high_threshold"),
             warning_low_threshold=element_data.get("warning_low_threshold"),
             critical_high_threshold=element_data.get("critical_high_threshold"),
             critical_low_threshold=element_data.get("critical_low_threshold"),
             threshold_state=element_data["threshold_state"],
-            value_units=element_data["value_units"],
+            value_units=element_data.get("value_units"),
         )
 
     for element in NetAppResource.Sensors.get_collection(
@@ -720,7 +720,7 @@ def fetch_environment(connection):
             name=element_data["name"],
             node_name=element_data["node"]["name"],
             sensor_type=element_data["type"],
-            discrete_value=element_data["discrete_value"],
+            discrete_value=element_data.get("discrete_value"),
             discrete_state=element_data["discrete_state"],
         )
 

@@ -14,7 +14,6 @@ import pytest
 
 from tests.testlib.common.repo import repo_path
 
-from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import (
@@ -915,27 +914,8 @@ def test_filter_tree_mixed() -> None:
     )
 
 
-class _TreeStore:
-    def __init__(self, tree_dir: Path) -> None:
-        self._tree_dir = tree_dir
-
-    def load(self, *, host_name: HostName) -> ImmutableTree:
-        return (
-            deserialize_tree(raw_tree)
-            if (
-                raw_tree := store.load_object_from_file(
-                    self._tree_dir / str(host_name),
-                    default=None,
-                )
-            )
-            else ImmutableTree()
-        )
-
-
-def _get_tree_store() -> _TreeStore:
-    return _TreeStore(
-        repo_path() / "tests" / "unit" / "cmk" / "utils" / "structured_data" / "tree_test_data"
-    )
+def _get_tree_store() -> TreeStore:
+    return TreeStore(repo_path() / "tests/unit/cmk/utils/structured_data/tree_test_data")
 
 
 @pytest.mark.parametrize(
@@ -961,20 +941,14 @@ def test_load_from(tree_name: HostName) -> None:
 
 def test_save_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
-    target = tmp_path / "inventory" / str(host_name)
     tree = MutableTree()
     tree.add(
         path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
     )
-    tree_store = TreeStore(tmp_path / "inventory")
+    tree_store = TreeStore(tmp_path)
     tree_store.save(host_name=host_name, tree=tree, meta=make_meta(do_archive=True))
 
-    assert target.exists()
-
-    gzip_filepath = target.with_suffix(".gz")
-    assert gzip_filepath.exists()
-
-    with gzip.open(str(gzip_filepath), "rb") as f:
+    with gzip.open(str(tmp_path / "heute.gz"), "rb") as f:
         content = f.read()
 
     # Similiar to InventoryUpdater:
@@ -1184,7 +1158,7 @@ def test_real_tree_order() -> None:
 )
 def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = _get_tree_store().load(host_name=tree_name)
-    tree_store = TreeStore(tmp_path / "inventory")
+    tree_store = TreeStore(tmp_path)
     try:
         tree_store.save(
             host_name=HostName("foo"),

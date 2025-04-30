@@ -6,6 +6,7 @@
 
 import abc
 from collections.abc import Callable, Sequence
+from typing import override
 
 import cmk.ccc.plugin_registry
 
@@ -40,10 +41,11 @@ class PermissionSection(abc.ABC):
 
 
 class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[type[PermissionSection]]):
-    def plugin_name(self, instance):
+    @override
+    def plugin_name(self, instance: type[PermissionSection]) -> str:
         return instance().name
 
-    def get_sorted_sections(self):
+    def get_sorted_sections(self) -> list[PermissionSection]:
         return sorted([s() for s in self.values()], key=lambda s: (s.sort_index, s.title))
 
 
@@ -116,14 +118,16 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
         # the order they have been added.
         self._index_counter = 0
 
-    def plugin_name(self, instance):
+    @override
+    def plugin_name(self, instance: Permission) -> str:
         return instance.name
 
-    def registration_hook(self, instance):
+    @override
+    def registration_hook(self, instance: Permission) -> None:
         instance._sort_index = self._index_counter
         self._index_counter += 1
 
-    def get_sorted_permissions(self, section):
+    def get_sorted_permissions(self, section: PermissionSection) -> list[Permission]:
         """Returns the sorted permissions of a section respecting the sorting config of the section"""
         permissions = [p for p in self.values() if p.section == section.__class__]
 
@@ -135,7 +139,9 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
 permission_registry = PermissionRegistry()
 
 
-def declare_permission_section(name, title, prio=50, do_sort=False):
+def declare_permission_section(
+    name: str, title: str, prio: int = 50, do_sort: bool = False
+) -> None:
     cls = type(
         "LegacyPermissionSection%s" % name.title(),
         (PermissionSection,),

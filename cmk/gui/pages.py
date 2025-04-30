@@ -164,8 +164,8 @@ def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHand
         # usually only defined on the superclass, which doesn't really help in debugging. The
         # instance is not shown, and it is not 100% correct, but it's better than nothing at all.
         @functools.wraps(hc.page)
-        def wrapper():
-            return hc().handle_page()
+        def wrapper() -> None:
+            hc().handle_page()
 
         return wrapper
 

@@ -293,7 +293,7 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
     }
 
 
-def quick_setup_aws_form_spec():
+def quick_setup_aws_form_spec() -> Dictionary:
     return Dictionary(
         title=Title("Amazon Web Services (AWS)"),
         elements={

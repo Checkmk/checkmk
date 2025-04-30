@@ -9,7 +9,7 @@ from __future__ import annotations
 import contextlib
 import json
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, Final, Literal, NamedTuple
@@ -155,7 +155,7 @@ class Table:
         isopen: bool = True,
     ):
         super().__init__()
-        self.next_func = lambda: None
+        self.next_func: Callable[[], None] = lambda: None
         self.next_header: str | None = None
 
         # Use our pagename as table id if none is specified

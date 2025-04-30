@@ -157,7 +157,7 @@ def _help_menu_topics(
     developer_items: Callable[[], list[TopicMenuItem]],
     about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> Callable[[], list[TopicMenuTopic]]:
-    def _fun():
+    def _fun() -> list[TopicMenuTopic]:
         return [
             TopicMenuTopic(
                 name="learning_checkmk",

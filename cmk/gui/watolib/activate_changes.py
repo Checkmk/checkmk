@@ -442,7 +442,7 @@ class ActivationStatus:
     status_details: str | None
 
 
-def get_activation_times(site_id):
+def get_activation_times(site_id: SiteId) -> dict[str, float]:
     repl_status = _load_site_replication_status(site_id)
     return repl_status.get("times", {})
 
@@ -1026,7 +1026,7 @@ class ActivateChanges:
         self._pending_changes: list[tuple[str, ChangeSpec]] = []
         super().__init__()
 
-    def load(self):
+    def load(self) -> None:
         self._repstatus = _load_replication_status()
         self._load_changes()
 
@@ -1217,8 +1217,8 @@ class ActivateChanges:
             and affects_all_sites(change)
         )
 
-    def get_activation_time(self, site_id, ty, deflt=None):
-        return get_activation_times(site_id).get(ty, deflt)
+    def get_activation_time(self, site_id: SiteId, ty: str) -> float | None:
+        return get_activation_times(site_id).get(ty)
 
     def get_changes_to_activate(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site_until[site_id]

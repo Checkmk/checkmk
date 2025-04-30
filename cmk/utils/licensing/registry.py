@@ -96,7 +96,7 @@ def get_licensing_notification_handler() -> NotificationHandler:
     return _make_licensing_handler().notification_handler
 
 
-def register_cre_licensing_handler():
+def register_cre_licensing_handler() -> None:
     # There is no license management planned for the CRE -> Always licensed
     licensing_handler_registry.register(
         cmk_edition=Edition.CRE,

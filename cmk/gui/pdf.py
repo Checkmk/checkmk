@@ -583,7 +583,7 @@ class Document:
     def add_text_line(self, l: str, bold: bool = False) -> None:
         self.check_pagebreak()
 
-        def aligned_string(x, y, t, alignment):
+        def aligned_string(x: float, y: float, t: str, alignment: str) -> None:
             if alignment == "l":
                 self._canvas.drawString(x, y, t)
             elif alignment == "r":

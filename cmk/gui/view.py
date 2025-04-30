@@ -182,7 +182,7 @@ class View:
         return sorters
 
     @property
-    def row_limit(self):
+    def row_limit(self) -> int | None:
         return self._row_limit
 
     @row_limit.setter

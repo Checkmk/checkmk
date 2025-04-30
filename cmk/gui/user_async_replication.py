@@ -57,8 +57,10 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
             changes_manager = ActivateChanges()
             changes_manager.load()
             estimated_duration = changes_manager.get_activation_time(
-                site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0
+                site_id, ACTIVATION_TIME_PROFILE_SYNC
             )
+            if estimated_duration is None:
+                estimated_duration = 2.0
             html.javascript(
                 "cmk.profile_replication.start(%s, %d, %s);"
                 % (

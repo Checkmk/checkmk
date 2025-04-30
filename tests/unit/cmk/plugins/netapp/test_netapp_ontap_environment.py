@@ -51,6 +51,12 @@ def test_parse_netapp_ontap_environment() -> None:
             "node_name": "mcc_darz_a-02",
             "sensor_type": "discrete",
         },
+        {
+            "discrete_state": "not_available",
+            "name": "NAND Not Available",
+            "node_name": "mcc_darz_a-02",
+            "sensor_type": "discrete",
+        },
     ]
 
     string_table = [[json.dumps(row)] for row in string_table_dict]
@@ -61,6 +67,7 @@ def test_parse_netapp_ontap_environment() -> None:
         EnvironmentDiscreteSensorModel,
     ]
 
+    assert len(result) == 3
     assert all(
         isinstance(el, sensor_type) for el, sensor_type in zip(result.values(), expected_types)
     )
@@ -68,7 +75,14 @@ def test_parse_netapp_ontap_environment() -> None:
 
 _SENSORS_MODELS = [
     EnvironmentDiscreteSensorModelFactory.build(
-        name="discrete_sensor", discrete_state="normal", discrete_value="OK"
+        name="discrete_sensor",
+        discrete_state="normal",
+        discrete_value="OK",
+    ),
+    EnvironmentDiscreteSensorModelFactory.build(
+        name="discrete_sensor_2",
+        discrete_state="not_available",
+        discrete_value=None,
     ),
     EnvironmentThresholdSensorModelFactory.build(
         name="voltage_sensor",
@@ -108,6 +122,7 @@ def test_discover_netapp_ontap_environment_without_predicate() -> None:
 
     assert list(result) == [
         Service(item="discrete_sensor"),
+        Service(item="discrete_sensor_2"),
         Service(item="voltage_sensor"),
         Service(item="thermal_sensor"),
     ]
@@ -126,7 +141,7 @@ def test_discover_netapp_ontap_environment_without_predicate() -> None:
             [
                 Result(
                     state=State.CRIT,
-                    summary="Sensor state: not_normal, Sensor value: NOT OK",
+                    summary="Sensor state: failed",
                 )
             ],
             id="sensor status crit",
@@ -140,8 +155,8 @@ def test_check_netapp_ontap_environment_discrete(item: str, expected_result: Che
         ),
         EnvironmentDiscreteSensorModelFactory.build(
             name="discrete_sensor2",
-            discrete_state="not_normal",
-            discrete_value="NOT OK",
+            discrete_state="failed",
+            discrete_value=None,
         ),
     ]
 
@@ -190,6 +205,13 @@ _THRESHOLD_MODELS = [
         warning_low_threshold=0,
         critical_low_threshold=0,
     ),
+    EnvironmentThresholdSensorModelFactory.build(
+        name="fan_sensor_2",
+        sensor_type="fan",
+        value=None,
+        value_units=None,
+        threshold_state="not_available",
+    ),
 ]
 
 
@@ -224,6 +246,7 @@ def test_check_environment_threshold_thermal() -> None:
 def test_check_environment_threshold_fan() -> None:
     section = {model.name: model for model in _THRESHOLD_MODELS}
 
+    # test ok sensor
     result = list(
         check_environment_threshold(item="fan_sensor", params={}, section=section, value_store={})
     )
@@ -231,6 +254,17 @@ def test_check_environment_threshold_fan() -> None:
     assert result[0] == Result(state=State.OK, summary="3000 rpm")
     assert isinstance(result[1], Metric)
     assert result[1].name == "fan" and result[1].value == 3000.0
+
+
+def test_check_environment_threshold_fan_non_normal() -> None:
+    section = {model.name: model for model in _THRESHOLD_MODELS}
+
+    # test sensor with not-normal state
+    result = list(
+        check_environment_threshold(item="fan_sensor_2", params={}, section=section, value_store={})
+    )
+
+    assert result == [Result(state=State.CRIT, summary="Sensor state: not_available")]
 
 
 @pytest.mark.parametrize(

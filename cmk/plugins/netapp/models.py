@@ -557,6 +557,27 @@ class SvmTrafficCountersModel(BaseModel):
     counters: Sequence[dict]
 
 
+SensorState = Literal[
+    "bad",
+    "crit_high",
+    "crit_low",
+    "disabled",
+    "failed",
+    "fault",
+    "ignored",
+    "init_failed",
+    "invalid",
+    "normal",
+    "not_available",
+    "not_present",
+    "retry",
+    "uninitialized",
+    "unknown",
+    "warn_high",
+    "warn_low",
+]
+
+
 class EnvironmentSensorModel(BaseModel):
     """
     GET /api/cluster/sensors
@@ -571,19 +592,19 @@ class EnvironmentSensorModel(BaseModel):
 
 class EnvironmentThresholdSensorModel(EnvironmentSensorModel):
     sensor_type: Literal["thermal", "fan", "voltage", "current"]
-    value: int
+    value: int | None = None
     warning_high_threshold: int | None = None
     warning_low_threshold: int | None = None
     critical_high_threshold: int | None = None
     critical_low_threshold: int | None = None
-    threshold_state: str
-    value_units: str
+    threshold_state: SensorState
+    value_units: str | None = None
 
 
 class EnvironmentDiscreteSensorModel(EnvironmentSensorModel):
     sensor_type: Literal["discrete"]
-    discrete_value: str
-    discrete_state: str
+    discrete_value: str | None = None
+    discrete_state: SensorState
 
 
 class DiscrimnatorEnvSensorModel(BaseModel):

@@ -27,6 +27,24 @@ __version__ = "2.3.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
+VOLUME_FIELD_QUERY = (
+    "uuid",
+    "state",
+    "name",
+    "msid",
+    "space.available",
+    "space.afs_total",
+    "space.logical_space.enforcement",
+    "space.logical_space.used",
+    "svm.name",
+    "svm.uuid",
+    "files.maximum",
+    "files.used",
+    "space.snapshot.reserve_size",
+    "space.snapshot.used",
+    "space.snapshot.reserve_percent",
+)
+
 
 class HostNameValidationAdapter(HTTPAdapter):
     def __init__(self, host_name: str) -> None:
@@ -53,28 +71,40 @@ def write_section(section_name: str, generator: Iterable, logger: logging.Logger
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
-    field_query = (
-        "uuid",
-        "state",
-        "name",
-        "msid",
-        "space.available",
-        "space.afs_total",
-        "space.logical_space.enforcement",
-        "space.logical_space.used",
-        "svm.name",
-        "svm.uuid",
-        "files.maximum",
-        "files.used",
-        "space.snapshot.reserve_size",
-        "space.snapshot.used",
-        "space.snapshot.reserve_percent",
-    )
-
     yield from NetAppResource.Volume.get_collection(
         connection=connection,
         is_constituent=is_constituent,
-        fields=",".join(field_query),
+        fields=",".join(VOLUME_FIELD_QUERY),
+    )
+
+
+def _root_volumes_ids(connection: HostConnection, args: Args) -> Collection:
+    # wee need to retrieve the uuid of the volumes via the CLI passthrough
+    # because the REST API does not return, per design, the uuid of the root volumes
+    response = requests.get(
+        url=f"{connection.origin}/api/private/cli/volume?is-mroot=true&fields=uuid",
+        headers=connection.headers,
+        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        auth=(connection.username, connection.password),
+        timeout=args.timeout,
+    )
+
+    records = response.json().get("records", [])
+    return {record["uuid"] for record in records}
+
+
+def _collect_root_volume_models(
+    connection: HostConnection, args: Args
+) -> Iterable[models.VolumeModel]:
+    volumes = _root_volumes_ids(connection, args)
+
+    yield from (
+        models.VolumeModel.model_validate(
+            resource.to_dict(),
+        )
+        for vol_uuid in volumes
+        if (resource := NetAppResource.Volume(uuid=vol_uuid))
+        and resource.get(fields=",".join(VOLUME_FIELD_QUERY))
     )
 
 
@@ -107,13 +137,16 @@ def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeMo
         )
 
 
-def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
+def fetch_volumes(connection: HostConnection, args: Args) -> Iterable[models.VolumeModel]:
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=True)
     )
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=False)
     )
+
+    # root volumes - CLI passthrough needed
+    yield from _collect_root_volume_models(connection, args)
 
 
 def fetch_volumes_counters(
@@ -847,7 +880,7 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
 
 
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
-    volumes = list(fetch_volumes(connection))
+    volumes = list(fetch_volumes(connection, args))
     write_section("volumes", volumes, logger)
 
     if "volumes" not in args.no_counters:

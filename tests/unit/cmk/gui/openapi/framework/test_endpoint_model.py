@@ -16,10 +16,10 @@ from werkzeug.datastructures import Headers
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam, RawRequestData
 from cmk.gui.openapi.framework.endpoint_model import (
     _QueryParameter,
-    _separate_parameters,
     EndpointModel,
     Parameter,
     Parameters,
+    SignatureParametersProcessor,
 )
 
 
@@ -270,7 +270,8 @@ def _params(
 )
 def test_parameters(func: Callable, expected: Parameters) -> None:
     signature = inspect.signature(func)
-    parameters = _separate_parameters(signature)
+    annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
+    parameters = SignatureParametersProcessor.parse_parameters(annotated_params)
     assert parameters == expected
 
 
@@ -288,7 +289,8 @@ def test_parameters(func: Callable, expected: Parameters) -> None:
 def test_invalid_parameters(func: Callable, match: str) -> None:
     signature = inspect.signature(func)
     with pytest.raises(ValueError, match=match):
-        _separate_parameters(signature)
+        annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
+        SignatureParametersProcessor.validate_parameters(annotated_params)
 
 
 def _request_data(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import inspect
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import (
     Annotated,
     cast,
@@ -81,85 +81,150 @@ def _parameter_default(parameter: inspect.Parameter) -> object:
     return parameter.default
 
 
-def _separate_parameters(signature: inspect.Signature) -> Parameters:
-    # TODO: separate validation and parsing logic
-    path = {}
-    query = {}
-    headers = {}
-    query_aliases = {}
-    header_aliases = {}
-    for name, parameter in signature.parameters.items():
-        parameter_type = parameter.annotation
-        if parameter_type is inspect.Parameter.empty:
-            raise ValueError(f"Missing parameter annotation for parameter '{name}'")
-        if parameter.kind not in (
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            inspect.Parameter.KEYWORD_ONLY,
-        ):
-            raise ValueError(f"Invalid parameter kind for parameter '{name}'")
-        if name == "body":  # we are intentionally skipping _after_ the general validation
-            continue
+SourceAnnotation = PathParam | HeaderParam | QueryParam
 
-        default = _parameter_default(parameter)
-        has_source = False
-        if get_origin(parameter_type) is Annotated:
-            for annotation in get_args(parameter_type):
-                match annotation:
-                    case PathParam() | HeaderParam() | QueryParam() if has_source:
-                        raise ValueError(f"Multiple sources for parameter '{name}'")
-                    case PathParam(description=description, example=example):
-                        has_source = True
-                        path[name] = Parameter(
-                            annotation=parameter_type,
-                            default=default,
-                            description=description,
-                            example=example,
-                        )
-                    case HeaderParam(alias=alias, description=description, example=example):
-                        has_source = True
-                        # headers are case-insensitive, so we need to normalize the name and alias
-                        name = name.casefold()
-                        if name in headers:
-                            raise ValueError(
-                                f"Duplicate header parameter (case-insensitive): {name}"
-                            )
-                        headers[name] = Parameter(
-                            annotation=parameter_type,
-                            default=default,
-                            description=description,
-                            example=example,
-                        )
-                        if alias:
-                            header_aliases[name] = alias.casefold()
-                    case QueryParam(
-                        alias=alias, description=description, example=example, is_list=is_list
-                    ):
-                        has_source = True
-                        query[name] = _QueryParameter(
-                            annotation=parameter_type,
-                            default=default,
-                            description=description,
-                            example=example,
-                            is_list=is_list,
-                        )
-                        if alias:
-                            query_aliases[name] = alias
-        if not has_source:
-            raise ValueError(f"Parameter '{name}' is missing a source annotation")
 
-    if duplicate := set(query) & set(query_aliases.values()):
-        raise ValueError(f"Alias conflict in query parameters: {', '.join(duplicate)}")
+@dataclasses.dataclass(frozen=True, slots=True)
+class ParameterInfo:
+    annotation: type
+    default: object
+    kind: inspect._ParameterKind
+    sources: Sequence[SourceAnnotation]
 
-    if duplicate := set(headers) & set(header_aliases.values()):
-        raise ValueError(f"Alias conflict in header parameters: {', '.join(duplicate)}")
 
-    return Parameters(
-        path=path,
-        query=query,
-        headers=headers,
-        query_aliases=query_aliases,
-        header_aliases=header_aliases,
-    )
+def _collect_sources(type_: type) -> Sequence[SourceAnnotation]:
+    if get_origin(type_) is Annotated:
+        return [
+            annotation
+            for annotation in get_args(type_)
+            if isinstance(annotation, (PathParam | HeaderParam | QueryParam))
+        ]
+    return []
+
+
+class SignatureParametersProcessor:
+    @staticmethod
+    def extract_annotated_parameters(signature: inspect.Signature) -> Mapping[str, ParameterInfo]:
+        parsed_params: dict[str, ParameterInfo] = {}
+
+        for name, parameter in signature.parameters.items():
+            if name == "body":
+                continue
+
+            param_info = ParameterInfo(
+                kind=parameter.kind,
+                annotation=parameter.annotation,
+                default=_parameter_default(parameter),
+                sources=_collect_sources(parameter.annotation),
+            )
+            parsed_params[name] = param_info
+        return parsed_params
+
+    @staticmethod
+    def validate_parameters(parsed_params: Mapping[str, ParameterInfo]) -> None:
+        header_names = set()
+        query_names = set()
+        header_aliases = set()
+        query_aliases = set()
+
+        for name, param_info in parsed_params.items():
+            if param_info.annotation is inspect.Parameter.empty:
+                raise ValueError(f"Missing parameter annotation for parameter '{name}'")
+
+            if param_info.kind not in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            ):
+                raise ValueError(f"Invalid parameter kind for parameter '{name}'")
+
+            if not param_info.sources:
+                raise ValueError(f"Parameter '{name}' is missing a source annotation")
+
+            if len(param_info.sources) > 1:
+                raise ValueError(f"Multiple sources for parameter '{name}'")
+
+            source = param_info.sources[0]
+
+            if isinstance(source, HeaderParam):
+                # headers are case-insensitive, so we need to normalize the name and alias
+                header_name = name.casefold()
+                if header_name in header_names:
+                    raise ValueError(
+                        f"Duplicate header parameter (case-insensitive): {header_name}"
+                    )
+                header_names.add(header_name)
+
+                if source.alias:
+                    header_aliases.add(source.alias.casefold())
+
+            elif isinstance(source, QueryParam):
+                query_names.add(name)
+
+                if source.alias:
+                    query_aliases.add(source.alias)
+
+        if duplicate := query_names & query_aliases:
+            raise ValueError(f"Alias conflict in query parameters: {', '.join(duplicate)}")
+
+        if duplicate := header_names & header_aliases:
+            raise ValueError(f"Alias conflict in header parameters: {', '.join(duplicate)}")
+
+    @staticmethod
+    def parse_parameters(parsed_params: Mapping[str, ParameterInfo]) -> Parameters:
+        path = {}
+        query = {}
+        headers = {}
+        query_aliases = {}
+        header_aliases = {}
+
+        for name, param_info in parsed_params.items():
+            source = param_info.sources[0]
+            default = param_info.default
+            match source:
+                case PathParam(description=description, example=example):
+                    path[name] = Parameter(
+                        annotation=param_info.annotation,
+                        default=default,
+                        description=description,
+                        example=example,
+                    )
+                case HeaderParam(alias=alias, description=description, example=example):
+                    # headers are case-insensitive, so we need to normalize the name and alias
+                    header_name = name.casefold()
+                    headers[header_name] = Parameter(
+                        annotation=param_info.annotation,
+                        default=default,
+                        description=description,
+                        example=example,
+                    )
+
+                    if alias:
+                        header_aliases[header_name] = alias.casefold()
+                case QueryParam(
+                    alias=alias, description=description, example=example, is_list=is_list
+                ):
+                    query[name] = _QueryParameter(
+                        annotation=param_info.annotation,
+                        default=default,
+                        description=description,
+                        example=example,
+                        is_list=is_list,
+                    )
+
+                    if alias:
+                        query_aliases[name] = alias
+                case _:
+                    raise ValueError(
+                        f"Invalid parameter source type ({type(source)}) for parameter '{name}'"
+                    )
+
+        return Parameters(
+            path=path,
+            query=query,
+            headers=headers,
+            query_aliases=query_aliases,
+            header_aliases=header_aliases,
+        )
 
 
 def _make_parameter_model(
@@ -287,7 +352,9 @@ class EndpointModel[**P, T]:
     def build(cls, handler: Callable[P, T]) -> Self:
         # TODO: "validate_implementation=False" run more complex validations that only verify the implementation (in unit tests)
         signature = inspect.signature(handler, eval_str=True)
-        parameters = _separate_parameters(signature)
+        annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
+        SignatureParametersProcessor.validate_parameters(annotated_parameters)
+        parameters = SignatureParametersProcessor.parse_parameters(annotated_parameters)
         response_body_type = _return_type(signature)
         request_body_type = _request_body_type(signature)
         input_model = _build_input_model(parameters, request_body_type)

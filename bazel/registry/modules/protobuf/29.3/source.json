@@ -1,0 +1,6 @@
+{
+    "integrity": "sha256-6bmsGRCxBBBlg5hQYDyvNuKdPT0jDd9SvRN3jdMbkEY=",
+    "strip_prefix": "protobuf-29.3",
+    "url": "https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protobuf-29.3.zip",
+    "mirrors": ["https://artifacts.lan.tribe29.com/repository/upstream-archives/"]
+}

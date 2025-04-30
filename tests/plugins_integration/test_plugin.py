@@ -20,7 +20,7 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.parametrize("host_name", [host for host in get_host_names()])
+@pytest.mark.parametrize("host_name", get_host_names())
 def test_plugin(
     test_site: Site,
     host_name: str,

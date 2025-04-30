@@ -509,7 +509,7 @@ export_utility_functions() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0"
+    echo "Version: 2.4.0p1"
     echo "AgentOS: linux"
     echo "Hostname: $(uname -n)"
 

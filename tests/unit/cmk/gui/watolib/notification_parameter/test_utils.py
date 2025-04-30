@@ -69,7 +69,7 @@ class DummyNotificationParams(NotificationParameter):
 @pytest.fixture(name="registry")
 def _registry() -> NotificationParameterRegistry:
     registry = NotificationParameterRegistry()
-    registry.register(DummyNotificationParams)
+    registry.register(DummyNotificationParams())
     return registry
 
 

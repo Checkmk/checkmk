@@ -2257,7 +2257,7 @@ class CustomPlugin(BaseSchema):
             raise ValidationError(f"{plugin_name} does not exist")
 
         if plugin_name in notification_parameter_registry:
-            vs = notification_parameter_registry[data["plugin_name"]]().spec
+            vs = notification_parameter_registry[data["plugin_name"]].spec
             try:
                 vs.validate_datatype(dif, "plugin_params")
             except MKUserError as exc:

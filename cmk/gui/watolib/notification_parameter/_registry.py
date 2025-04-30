@@ -40,14 +40,14 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, Strin
 from ._base import NotificationParameter
 
 
-class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
+class NotificationParameterRegistry(Registry[NotificationParameter]):
     def plugin_name(self, instance):
-        return instance().ident
+        return instance.ident
 
     # TODO: Make this registration_hook actually take an instance. Atm it takes a class and
     #       instantiates it
     def registration_hook(self, instance):
-        plugin = instance()
+        plugin = instance
 
         method_source = inspect.getsource(plugin._form_spec)
         if "raise NotImplementedError" in method_source:
@@ -91,7 +91,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
 
     def form_spec(self, method: str) -> TransformDataForLegacyFormatOrRecomposeFunction:
         try:
-            param_form_spec = self._entries[method]()._form_spec()
+            param_form_spec = self._entries[method]._form_spec()
         except KeyError:
             if any(method == script_name for script_name, _title in notification_script_choices()):
                 param_form_spec = self.parameter_called()
@@ -189,7 +189,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
         least one built-in parameter that uses a Migrate, handle also this case.
         """
         migrate: Callable | None = None
-        if isinstance((valuespec := self._entries[method]().spec), ValueSpecMigrate):
+        if isinstance((valuespec := self._entries[method].spec), ValueSpecMigrate):
             if isinstance(valuespec._valuespec, ValueSpecDictionary):
                 valuespec_elements = valuespec._valuespec._elements()
                 required_keys = valuespec._valuespec._required_keys
@@ -230,4 +230,4 @@ def register_notification_parameters(scriptname, valuespec):
             "spec": valuespec,
         },
     )
-    notification_parameter_registry.register(parameter_class)
+    notification_parameter_registry.register(parameter_class())

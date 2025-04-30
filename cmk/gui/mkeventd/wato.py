@@ -286,10 +286,7 @@ def register(
     match_item_generator_registry.register(MatchItemEventConsole)
     match_item_generator_registry.register(MatchItemEventConsoleSettings)
 
-    # TODO: Make the decorator notification_parameter_registry.register take an instance instead of
-    #       a class. Then register an instance of the class NotificationParameterMKEventDaemon here
-    #       (as is done for the other registrations above).
-    notification_parameter_registry.register(NotificationParameterMKEventDaemon)
+    notification_parameter_registry.register(NotificationParameterMKEventDaemon())
 
     hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 

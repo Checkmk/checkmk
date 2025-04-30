@@ -254,7 +254,7 @@ def register(edition: Edition) -> None:
     broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())
 
     site_management_registry.register(SiteManagement())
-    notification_parameter_registry.register(NotificationParameterMail)
+    notification_parameter_registry.register(NotificationParameterMail())
     register_pages()
     register_painters()
     backup_register(

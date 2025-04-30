@@ -53,7 +53,7 @@ class DummyNotificationParams(NotificationParameter):
 @pytest.fixture(name="registry", autouse=True)
 def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterRegistry:
     notification_parameter_registry = NotificationParameterRegistry()
-    notification_parameter_registry.register(DummyNotificationParams)
+    notification_parameter_registry.register(DummyNotificationParams())
     monkeypatch.setattr(
         cmk.gui.watolib.configuration_entity.configuration_entity,
         "notification_parameter_registry",

@@ -11,7 +11,7 @@ import pytest
 from tests.code_quality.utils import ChangedFiles
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--python-files", nargs="*", default=[], help="python files to check")
     parser.addoption("--changed-files", nargs="*", default=[], help="files to check")
     parser.addoption("--test-all-files", action="store_true", help="test all files")

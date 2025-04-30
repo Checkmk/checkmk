@@ -12,7 +12,7 @@ from subprocess import PIPE, Popen
 import pytest
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--expected_version", action="store", default="3.10.4")
 
 

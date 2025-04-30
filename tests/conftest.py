@@ -220,7 +220,7 @@ test_types = [
 ]
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Register the -T option to pytest"""
     parser.addoption(
         "-T",
@@ -258,7 +258,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Add important environment variables to the report and register custom pytest markers"""
     env_vars = {
         "BRANCH": current_base_branch_name(),

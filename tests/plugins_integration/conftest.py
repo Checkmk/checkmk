@@ -20,7 +20,7 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--update-checks",
         action="store_true",
@@ -97,7 +97,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     # parse options that control the test execution
     checks.config.mode = (
         checks.CheckModes.UPDATE

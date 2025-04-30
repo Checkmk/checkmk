@@ -29,7 +29,7 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--disable-interactive-mode",
         action="store_true",
@@ -62,7 +62,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "cre: marks tests using a raw-edition site")
     config.addinivalue_line("markers", "cee: marks tests using an enterprise-edition site")
     config.addinivalue_line("markers", "cce: marks tests using a cloud-edition site")

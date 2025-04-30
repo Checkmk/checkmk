@@ -5,7 +5,7 @@
 import pytest
 
 
-def pytest_collection_modifyitems(items):
+def pytest_collection_modifyitems(items: list[pytest.Function]) -> None:
     """Mark collected tests as type "schemathesis_openapi".
 
     NOTE: The global collection logic does not work for these dynamically generated tests!

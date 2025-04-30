@@ -17,7 +17,7 @@ from tests.testlib.site import get_site_factory, Site
 logger = logging.getLogger()
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--max-urls",
         action="store",

@@ -362,7 +362,16 @@ module = [
   "tests.unit.cmk.ec.*",
   "tests.unit.cmk.update_config.*",
 ]
-enable_error_code = ["explicit-override"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true

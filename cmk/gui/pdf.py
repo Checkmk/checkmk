@@ -453,10 +453,15 @@ class Document:
 
     # Functions for adding floating text
 
-    def add_paragraph(self, txt: str) -> None:
+    def add_paragraph(
+        self,
+        txt: str,
+        bold: bool = False,
+        color: tuple[float, float, float] = black,
+    ) -> None:
         lines = self.wrap_text(txt, width=self._right - self._left)
         for line in lines:
-            self.add_text_line(line)
+            self.add_text_line(l=line, bold=bold, color=color)
 
     def debug(self, *args: object) -> None:
         for arg in args:
@@ -581,7 +586,12 @@ class Document:
 
     # Add one line of text. This line may include horizontal tabulators ('\t').
     # You can set the width of the tabulators with set_tabstops()
-    def add_text_line(self, l: str, bold: bool = False) -> None:
+    def add_text_line(
+        self,
+        l: str,
+        bold: bool = False,
+        color: tuple[float, float, float] = black,
+    ) -> None:
         self.check_pagebreak()
 
         def aligned_string(x, y, t, alignment):
@@ -598,6 +608,8 @@ class Document:
 
         for part in l.split("\t"):
             self.save_state()
+            self.set_font_color(color)
+            self.set_font_bold(bold)
 
             if tab >= 0:
                 format_chars, x_position = self._tabstops[tab]  # added extra tab stop every 20 mm

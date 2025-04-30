@@ -11,7 +11,7 @@ from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp_proliant import DETECT
 
 hp_proliant_da_cntlr_cond_map = {
-    "1": (3, "other"),
+    "1": (1, "other"),
     "2": (0, "ok"),
     "3": (1, "degraded"),
     "4": (2, "failed"),
@@ -26,7 +26,7 @@ hp_proliant_da_cntlr_role_map = {
 
 
 hp_proliant_da_cntlr_state_map = {
-    "1": (3, "other"),
+    "1": (1, "other"),
     "2": (0, "ok"),
     "3": (2, "general failure"),
     "4": (2, "cable problem"),
@@ -46,6 +46,12 @@ hp_proliant_da_cntlr_state_map = {
     "19": (1, "updating"),
     "20": (0, "qualified"),
 }
+
+
+OTHER_STATE_DESCRIPTION = (
+    "The instrument agent does not recognize the status of the controller. "
+    "You may need to upgrade the instrument agent."
+)
 
 
 def parse_hp_proliant_da_cntlr(string_table: StringTable) -> StringTable:
@@ -77,6 +83,8 @@ def check_hp_proliant_da_cntlr(item, params, info):
                 elif this_state == 2:
                     state_txt = " (!!)"
                 sum_state = max(sum_state, this_state)
+                if val == "1":
+                    state_txt = f" ({OTHER_STATE_DESCRIPTION}){state_txt}"
                 output.append(f"{label}: {map_[val][1]}{state_txt}")
 
             output.append(

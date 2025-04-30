@@ -339,10 +339,10 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             "css_spec": ["ajax-vals"],
             "hint_label": _("metric"),
             "title": _("Metric"),
-            "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
+            "regex": re.compile("^[a-zA-Z0-9][a-zA-Z0-9_]*$"),
             "regex_error": _(
                 "Metric names must only consist of letters, digits and "
-                "underscores and they must start with a letter."
+                "underscores and they must start with a letter or digit."
             ),
             "autocompleter": ContextAutocompleterConfig(
                 ident=self.ident,

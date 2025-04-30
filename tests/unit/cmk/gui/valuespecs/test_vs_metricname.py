@@ -13,10 +13,10 @@ class TestValueSpecMetricName:
     def test_validate(self) -> None:
         expect_validate_failure(
             MetricName(),
-            "99",
+            "_99",
             match=(
                 "Metric names must only consist of letters, digits "
-                "and underscores and they must start with a letter."
+                "and underscores and they must start with a letter or digit."
             ),
         )
         expect_validate_failure(
@@ -24,7 +24,7 @@ class TestValueSpecMetricName:
             "",
             match=(
                 "Metric names must only consist of letters, digits "
-                "and underscores and they must start with a letter."
+                "and underscores and they must start with a letter or digit."
             ),
         )
         expect_validate_failure(
@@ -32,3 +32,4 @@ class TestValueSpecMetricName:
             None,
         )
         expect_validate_success(MetricName(), "asd")
+        expect_validate_success(MetricName(), "99asd")

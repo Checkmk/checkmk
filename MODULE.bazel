@@ -177,7 +177,7 @@ http_file(
 
 http_archive(
     name = "gcc-linux-x86_64",
-    build_file = "//bazel/toolchains/cc:BUILD.gcc.bazel",
+    build_file = "//bazel/toolchains/cc:private/bootlin/BUILD.bootlin.bazel",
     integrity = "sha256-kygjypo+Bn5+KimBCmZtIMnMW7VQ3pR/aHnjis4aqVU=",
     patch_cmds = [
         # The tools used by foreign_cc search the tools under their standard,

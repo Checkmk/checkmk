@@ -100,13 +100,12 @@ def execute_tests_in_container(
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
+            logger.info("| pytest tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| pytest -T integration "
-                "tests/integration/livestatus/test_livestatus.py "
+                "| pytest tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
             logger.info("| ")
@@ -465,9 +464,9 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
     )
     r.raise_for_status()
     hash_name = r.text.split()
-    assert len(hash_name) == 2, (
-        f"Received multiple entries in hash file for {package_name}: \n" f"{r.text}"
-    )
+    assert (
+        len(hash_name) == 2
+    ), f"Received multiple entries in hash file for {package_name}: \n{r.text}"
     _hash, package_name_from_hash_file = hash_name
     assert (
         package_name_from_hash_file == package_name

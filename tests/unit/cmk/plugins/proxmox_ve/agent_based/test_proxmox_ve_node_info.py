@@ -92,4 +92,4 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     assert not pytest.main(["--doctest-modules", pvni.__file__])
-    pytest.main(["-T=unit", "-vvsx", __file__])
+    pytest.main(["-vvsx", __file__])

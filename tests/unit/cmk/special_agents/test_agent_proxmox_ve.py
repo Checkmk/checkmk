@@ -527,4 +527,4 @@ if __name__ == "__main__":
             os.path.join(repo_path(), "cmk/special_agents/agent_proxmox_ve.py"),
         ]
     )
-    pytest.main(["-T=unit", "-vvsx", __file__])
+    pytest.main(["-vvsx", __file__])

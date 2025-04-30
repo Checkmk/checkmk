@@ -201,4 +201,4 @@ def test_regex_pattern(subject: str) -> None:
 
 
 if __name__ == "__main__":
-    pytest.main(["-svv", "-T=unit", __file__])
+    pytest.main(["-svv", __file__])

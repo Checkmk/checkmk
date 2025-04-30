@@ -381,4 +381,4 @@ if __name__ == "__main__":
     import doctest
 
     assert not doctest.testmod().failed
-    pytest.main(["-T=docker", "-vvsx", __file__])
+    pytest.main(["-vvsx", __file__])

@@ -100,4 +100,4 @@ def test_check_printer_pages_types(section: Section, expected_results: CheckResu
     assert list(check_printer_pages_types(section)) == expected_results
 
 
-_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])
+_ = __name__ == "__main__" and pytest.main(["-svv", __file__])

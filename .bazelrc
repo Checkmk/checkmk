@@ -14,6 +14,9 @@ common --registry=https://bcr.bazel.build
 common --experimental_ui_max_stdouterr_bytes=10000000
 common --experimental_remote_cache_async
 common --remote_cache_compression
+# send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
+# only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s
+common --grpc_keepalive_time=10s
 # minimum blob size required to compress/decompress with zstd (1MB)
 common --experimental_remote_cache_compression_threshold=1048576
 common --remote_local_fallback

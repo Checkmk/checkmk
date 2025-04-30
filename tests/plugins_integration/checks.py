@@ -46,7 +46,6 @@ class CheckModes(IntEnum):
 class CheckConfig:
     mode: CheckModes = CheckModes.DEFAULT
     skip_cleanup: bool = False
-    dump_types: list[str] | None = None
     data_dir: str | None = None
     dump_dir: str | None = None
     response_dir: str | None = None
@@ -69,11 +68,6 @@ class CheckConfig:
             [_.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()]
             if not self.check_names
             else self.check_names
-        )
-        self.dump_types = (
-            [_.strip() for _ in str(os.getenv("DUMP_TYPES", "agent,snmp")).split(",") if _.strip()]
-            if not self.dump_types
-            else self.dump_types
         )
 
         # these SERVICES table columns will be returned via the get_host_services() openapi call
@@ -126,7 +120,6 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
 
 def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
-    host_names: list[str] = []
     dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
@@ -163,11 +156,7 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
                 logger.error('Could not access dump file "%s"!', dump_file_name)
             except UnicodeDecodeError:
                 logger.error('Could not decode dump file "%s"!', dump_file_name)
-    if not config.dump_types or "agent" in config.dump_types:
-        host_names += agent_host_names
-    if not config.dump_types or "snmp" in config.dump_types:
-        host_names += snmp_host_names
-    return host_names
+    return agent_host_names + snmp_host_names
 
 
 def read_disk_dump(host_name: str, piggyback: bool = False) -> str:
@@ -362,7 +351,7 @@ def setup_site(site: Site, dump_path: str) -> None:
             == 0
         )
 
-    for dump_type in config.dump_types:  # type: ignore[union-attr]
+    for dump_type in ["agent", "snmp"]:
         host_folder = f"/{dump_type}"
         if site.openapi.folders.get(host_folder):
             logger.info('Host folder "%s" already exists!', host_folder)

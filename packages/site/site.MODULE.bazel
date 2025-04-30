@@ -1,8 +1,9 @@
-site_crates = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+site_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 site_crates.from_cargo(
     name = "cargo_deps_site",
     cargo_lockfile = "//packages/site:Cargo.lock",
+    lockfile = "//packages/site:Cargo.lock.bazel",
     manifests = [
         "//packages/site:Cargo.toml",
         "//packages/site/check-cert:Cargo.toml",
@@ -25,4 +26,9 @@ site_crates.annotation(
         "@@openssl//:openssl_shared",
     ],
     repositories = ["cargo_deps_site"],
+)
+
+site_crates.splicing_config(
+    repositories = ["cargo_deps_site"],
+    resolver_version = "2",
 )

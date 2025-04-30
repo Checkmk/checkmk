@@ -27,7 +27,7 @@ bazel_dep(name = "rules_mypy", version = "0.29.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 bazel_dep(name = "rules_python", version = "1.1.0")
-bazel_dep(name = "rules_rust", version = "0.54.1")
+bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(
     # LLVM for clang-tidy, clang-format, and IWYU.
     name = "toolchains_llvm",
@@ -120,6 +120,15 @@ single_version_override(
     patches = [
         "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+    ],
+)
+
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = [
+        # Possibly related: https://github.com/bazelbuild/rules_rust/issues/2677
+        "//bazel/patches:rules_rust-ignore_incomplete_workspace_env.patch",
     ],
 )
 

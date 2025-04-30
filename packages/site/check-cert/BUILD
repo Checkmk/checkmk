@@ -33,8 +33,8 @@ rust_library(
 
 rust_test(
     name = "check-cert-lib-test-internal",
+    compile_data = ["assets/certificate.der"],
     crate = ":check-cert-lib",
-    data = ["assets/certificate.der"],
 )
 
 rust_test_suite(
@@ -45,7 +45,7 @@ rust_test_suite(
         "tests/truststore.rs",
         "tests/verify.rs",
     ],
-    data = [
+    compile_data = [
         "assets/IGC_A.der",
         "assets/cert.der",
         "assets/ee-pss-sha1-cert.pem",

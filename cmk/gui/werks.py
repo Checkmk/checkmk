@@ -10,7 +10,7 @@ import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
-from typing import Any, cast, Literal, TypedDict
+from typing import Any, cast, Literal, override, TypedDict
 
 from cmk.ccc.version import __version__, Edition, Version
 
@@ -124,6 +124,7 @@ class ChangeLogPage(Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
+    @override
     def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 

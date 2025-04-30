@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.gui import config
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
@@ -46,14 +48,17 @@ def register(
 
 
 class PermissionSectionGeneral(PermissionSection):
+    @override
     @property
     def name(self) -> str:
         return "general"
 
+    @override
     @property
     def title(self) -> str:
         return _("General Permissions")
 
+    @override
     @property
     def sort_index(self) -> int:
         return 10

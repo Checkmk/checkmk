@@ -7,7 +7,7 @@ import json
 import time
 from collections.abc import Callable, Sequence
 from html import unescape
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -24,7 +24,8 @@ class Exporter(NamedTuple):
 
 
 class ViewExporterRegistry(Registry[Exporter]):
-    def plugin_name(self, instance):
+    @override
+    def plugin_name(self, instance: Exporter) -> str:
         return instance.name
 
 

@@ -8,6 +8,8 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+from typing import override
+
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic
@@ -42,6 +44,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
 
     """
 
+    @override
     def plugin_name(self, instance: MegaMenu) -> str:
         return instance.name
 

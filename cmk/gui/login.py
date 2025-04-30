@@ -8,6 +8,7 @@ import contextlib
 import http.client
 from collections.abc import Iterator
 from datetime import datetime
+from typing import override
 from urllib.parse import unquote
 
 import cmk.ccc.version as cmk_version
@@ -117,11 +118,13 @@ def del_auth_cookie() -> None:
 
 
 class SaasLoginPage(Page):
+    @override
     def page(self) -> None:
         raise HTTPRedirect("cognito_sso.py")
 
 
 class SaasLogoutPage(Page):
+    @override
     def page(self) -> None:
         raise HTTPRedirect("cognito_logout.py")
 
@@ -146,6 +149,7 @@ class LoginPage(Page):
     def set_no_html_output(self, no_html_output: bool) -> None:
         self._no_html_output = no_html_output
 
+    @override
     def page(self) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
@@ -444,6 +448,7 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
 
 
 class LogoutPage(Page):
+    @override
     def page(self) -> None:
         assert user.id is not None
 

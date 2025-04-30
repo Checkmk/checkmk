@@ -9,7 +9,7 @@
 import re
 import time
 from collections.abc import Callable
-from typing import Literal
+from typing import Literal, override
 
 import livestatus
 
@@ -82,6 +82,7 @@ class MultipleOptionsQuery(Query):
         )
         self.options = options
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if self.ident == "hostgroupvisibility":
             # jump directly because selection is empty filter
@@ -135,12 +136,14 @@ class SingleOptionQuery(Query):
             return selection
         return self.ignore
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         selection = self.selection_value(value)
         if selection == self.ignore:
             return ""
         return self.filter_code(selection)
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         selection = self.selection_value(value)
@@ -304,6 +307,7 @@ class NumberRangeQuery(Query):
         except ValueError:
             return None
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if not self.filter_livestatus:
             return ""
@@ -314,6 +318,7 @@ class NumberRangeQuery(Query):
                 filtertext += "Filter: %s %s %d\n" % (self.column, op, bound)
         return filtertext
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
         from_value, to_value = self.extractor(values)
@@ -372,6 +377,7 @@ class TimeQuery(NumberRangeQuery):
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
+    @override
     def get_bound(self, var: str, value: FilterHTTPVariables) -> int | None:
         rangename = value.get(var + "_range")
         if rangename == "ts":
@@ -418,6 +424,7 @@ class KubernetesQuery(Query):
         self.negateable = False
         self._kubernetes_object_type = kubernetes_object_type
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if filter_value := value.get(self.request_vars[0]):
             return encode_labels_for_livestatus(
@@ -453,6 +460,7 @@ class TextQuery(Query):
         self.negateable = negateable
         self.link_columns = [self.column]
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if value.get(self.request_vars[0]):
             return self._filter(value)
@@ -473,9 +481,11 @@ class TableTextQuery(TextQuery):
         self.link_columns = []
         self.row_filter = row_filter
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
+    @override
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         column = self.column
@@ -507,6 +517,7 @@ def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], 
 
 
 class CheckCommandQuery(TextQuery):
+    @override
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return f"Filter: {self.column} {self.op} ^{livestatus.lqencode(value[self.request_vars[0]])}(!.*)?\n"
 
@@ -516,6 +527,7 @@ class HostnameOrAliasQuery(TextQuery):
         super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)
         self.link_columns = ["host_alias", "host_name"]
 
+    @override
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         host = livestatus.lqencode(value[self.request_vars[0]])
 
@@ -538,6 +550,7 @@ class OptEventEffectiveContactgroupQuery(TextQuery):
             "host_contact_groups",
         ]
 
+    @override
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         negate = self._negate_symbol(value)
         selected_value = livestatus.lqencode(value[self.request_vars[0]])
@@ -559,6 +572,7 @@ class IPAddressQuery(Query):
         super().__init__(ident=ident, request_vars=request_vars)
         self._what = what
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         address_val = value.get(self.request_vars[0])
         if not address_val:
@@ -622,6 +636,7 @@ class MultipleQuery(TextQuery):
             return folders.split("|")
         return []
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         negate = self._negate_symbol(value)
         # not (A or B) => (not A) and (not B)
@@ -638,6 +653,7 @@ class AllLabelGroupsQuery(Query):
         # LabelGroupFilter class, value() method
         super().__init__(ident=f"{object_type}_labels", request_vars=[])
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return encode_label_groups_for_livestatus(self.column, self.parse_value(value))
 
@@ -692,6 +708,7 @@ class ABCTagsQuery(Query):
     column: str
     object_type: Literal["host", "service"]
 
+    @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return encode_labels_for_livestatus(self.column, self.parse_value(value))
 
@@ -720,6 +737,7 @@ class TagsQuery(ABCTagsQuery):
             ]
         super().__init__(ident=f"{object_type}_tags", request_vars=request_vars)
 
+    @override
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
         # via an URL, e.g. from the virtual host tree snap-in
@@ -749,6 +767,7 @@ class AuxTagsQuery(ABCTagsQuery):
 
         super().__init__(ident=f"{object_type}_auxtags", request_vars=request_vars)
 
+    @override
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
         # via an URL, e.g. from the virtual host tree snap-in

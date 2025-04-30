@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -18,7 +19,8 @@ class UserAttributeRegistry(Registry[type[UserAttribute]]):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
 
-    def plugin_name(self, instance):
+    @override
+    def plugin_name(self, instance: type[UserAttribute]) -> str:
         return instance.name()
 
 
@@ -29,11 +31,13 @@ class _HashableCustomUserAttrs:
     def __init__(self, user_attrs: Sequence[CustomUserAttrSpec]) -> None:
         self.user_attrs = user_attrs
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _HashableCustomUserAttrs):
             return False
         return hash(self) == hash(other)
 
+    @override
     def __hash__(self) -> int:
         return hash(tuple(tuple(x.items()) for x in self.user_attrs))
 

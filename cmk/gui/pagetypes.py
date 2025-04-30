@@ -29,7 +29,7 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, replace
-from typing import Generic, Literal, Self, TypeVar
+from typing import Generic, Literal, override, Self, TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -475,6 +475,7 @@ class Overridable(Base[_T_OverridableConfig]):
             (instance.name() for instance in instances.instances()),
         )
 
+    @override
     @classmethod
     def parameters(cls, mode: PageMode) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         parameters = super().parameters(mode)
@@ -508,6 +509,7 @@ class Overridable(Base[_T_OverridableConfig]):
             ),
         ]
 
+    @override
     @classmethod
     def page_handlers(cls) -> dict[str, cmk.gui.pages.PageHandlerFunc]:
         handlers = super().page_handlers()
@@ -556,6 +558,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         return False
 
+    @override
     def is_hidden(self) -> bool:
         return self.config.hidden
 
@@ -953,6 +956,7 @@ class ListPage(Page, Generic[_T]):
     def __init__(self, pagetype: type[_T]) -> None:
         self._type = pagetype
 
+    @override
     def page(self) -> None:
         instances = self._type.load()
         self._type.need_overriding_permission("edit")
@@ -1171,6 +1175,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
     def __init__(self, pagetype: type[_T]) -> None:
         self._type = pagetype
 
+    @override
     def page(self) -> None:
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
@@ -1657,6 +1662,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
                 ),
             )
 
+    @override
     @classmethod
     def page_handlers(cls) -> dict[str, cmk.gui.pages.PageHandlerFunc]:
         handlers = super().page_handlers()
@@ -1733,6 +1739,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         del self.config.elements[nr]
         self.config.elements[whither:whither] = [el]
 
+    @override
     def is_empty(self) -> bool:
         return not self.elements()
 
@@ -1769,6 +1776,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
 
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
+    @override
     @classmethod
     def parameters(cls, mode: PageMode) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         parameters = super().parameters(mode)
@@ -1833,6 +1841,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
 
         return parameters
 
+    @override
     @classmethod
     def page_handlers(cls) -> dict[str, cmk.gui.pages.PageHandlerFunc]:
         handlers = super().page_handlers()
@@ -1878,6 +1887,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
         return self.config.is_show_more
 
     # Helper functions for page handlers and render function
+    @override
     def page_header(self) -> str:
         return self.phrase("title") + " - " + self.title()
 
@@ -1894,6 +1904,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
             http_vars.append(("owner", self.owner()))
         return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())
 
+    @override
     def render_title(self, instances: OverridableInstances[Self]) -> str | HTML:
         if self._can_be_linked(instances):
             return HTMLWriter.render_a(self.title(), href=self.page_url())
@@ -1982,6 +1993,7 @@ def page_menu_add_to_topics(added_type: str) -> list[PageMenuTopic]:
 
 
 class PagetypeTopics(Overridable[PagetypeTopicConfig]):
+    @override
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
         deserialized = PagetypeTopicModel.model_validate(page_dict)
@@ -2000,6 +2012,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             )
         )
 
+    @override
     def serialize(self) -> dict[str, object]:
         return PagetypeTopicModel(
             name=self.config.name,
@@ -2014,14 +2027,17 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             hide=self.config.hide,
         ).model_dump()
 
+    @override
     @classmethod
     def type_name(cls) -> str:
         return "pagetype_topic"
 
+    @override
     @classmethod
     def type_icon(cls) -> Icon:
         return "pagetype_topic"
 
+    @override
     @classmethod
     def phrase(cls, phrase: PagetypePhrase) -> str:
         return {
@@ -2033,6 +2049,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "new": _("Add topic"),
         }.get(phrase, Base.phrase(phrase))
 
+    @override
     @classmethod
     def parameters(cls, mode: PageMode) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         parameters = super().parameters(mode)
@@ -2083,12 +2100,14 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
 
         return parameters
 
+    @override
     def render_extra_columns(self, table: Table) -> None:
         """Show some specific useful columns in the list view"""
         table.cell(_("Icon"), html.render_icon(self.config.icon_name))
         table.cell(_("Nr. of items"), str(self.max_entries()))
         table.cell(_("Sort index"), str(self.config.sort_index))
 
+    @override
     @classmethod
     def builtin_pages(cls) -> Mapping[str, PagetypeTopicConfig]:
         topics: dict[str, PagetypeTopicConfig] = {

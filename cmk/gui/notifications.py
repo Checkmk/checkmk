@@ -2,9 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import time
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 
@@ -67,14 +66,17 @@ g_columns: list[str] = [
 
 
 class PermissionSectionNotificationPlugins(PermissionSection):
+    @override
     @property
     def name(self) -> str:
         return "notification_plugin"
 
+    @override
     @property
     def title(self) -> str:
         return _("Notification plug-ins")
 
+    @override
     @property
     def do_sort(self) -> bool:
         return True
@@ -203,6 +205,7 @@ class ClearFailedNotificationPage(Page):
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
+    @override
     def page(self) -> None:
         acktime = request.get_float_input_mandatory("acktime", time.time())
         if request.var("_confirm"):

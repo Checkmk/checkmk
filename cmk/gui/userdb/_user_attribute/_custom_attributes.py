@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import override
 
 from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.valuespec import TextInput, ValueSpec
@@ -29,24 +30,31 @@ class GenericUserAttribute(UserAttribute):
         self._permission = permission
         self._from_config = from_config
 
+    @override
     def from_config(self) -> bool:
         return self._from_config
 
+    @override
     def user_editable(self) -> bool:
         return self._user_editable
 
+    @override
     def permission(self) -> None | str:
         return self._permission
 
+    @override
     def show_in_table(self) -> bool:
         return self._show_in_table
 
+    @override
     def add_custom_macro(self) -> bool:
         return self._add_custom_macro
 
+    @override
     def domain(self) -> str:
         return self._domain
 
+    @override
     @classmethod
     def is_custom(cls) -> bool:
         return False
@@ -70,13 +78,16 @@ def config_based_custom_user_attributes(
             _show_in_table = attr.get("show_in_table") or False
             _add_custom_macro = attr.get("add_custom_macro") or False
 
+            @override
             @classmethod
             def name(cls) -> str:
                 return cls._name
 
+            @override
             def valuespec(self) -> ValueSpec:
                 return self._valuespec
 
+            @override
             def topic(self) -> str:
                 return self._topic
 
@@ -90,6 +101,7 @@ def config_based_custom_user_attributes(
                     from_config=True,
                 )
 
+            @override
             @classmethod
             def is_custom(cls) -> bool:
                 return True

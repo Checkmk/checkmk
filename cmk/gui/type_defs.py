@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
+from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
 
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
@@ -477,6 +477,7 @@ class ColumnSpec:
             "column_type": self.column_type,
         }
 
+    @override
     def __repr__(self) -> str:
         """
         Used to serialize user-defined visuals
@@ -500,6 +501,7 @@ class SorterSpec:
             self.join_key,
         )
 
+    @override
     def __repr__(self) -> str:
         """
         Used to serialize user-defined visuals
@@ -561,11 +563,13 @@ class SetOnceDict(dict):
 
     """
 
+    @override
     def __setitem__(self, key, value):
         if key in self:
             raise ValueError(f"key {key!r} already set")
         dict.__setitem__(self, key, value)
 
+    @override
     def __delitem__(self, key):
         raise NotImplementedError("Deleting items are not supported.")
 

@@ -7,6 +7,7 @@ import abc
 import collections
 import json
 from collections.abc import Callable, Iterator
+from typing import override
 
 import cmk.ccc.version as cmk_version
 
@@ -109,6 +110,7 @@ class GUIViewRenderer(ABCViewRenderer):
         self._show_buttons = show_buttons
         self._page_menu_dropdowns_callback = page_menu_dropdowns_callback
 
+    @override
     def render(
         self,
         rows: Rows,

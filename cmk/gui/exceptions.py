@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import http.client
+from typing import override
 
 from werkzeug.http import HTTP_STATUS_CODES
 
@@ -61,6 +62,7 @@ class MKUserError(MKHTTPException):
         self.status: int = status
         super().__init__(varname, message)
 
+    @override
     def __str__(self) -> str:
         return self.message
 

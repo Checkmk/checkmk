@@ -25,7 +25,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
-from typing import Literal, NewType, overload, Protocol, TypedDict
+from typing import Literal, NewType, overload, override, Protocol, TypedDict
 
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
@@ -1454,18 +1454,22 @@ class TextCell(CellRenderer):
 
         self._narrow = "narrow" in csses or state_in_css
 
+    @override
     def get_render_steps(
         self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
     ) -> Sequence[TextCell]:
         return []
 
+    @override
     def minimal_width(self, pdfdoc: Document) -> SizeMM:  # without padding
         # TODO: consider bold here!
         return max([pdfdoc.text_width(word) for word in self._text.split()] + [0])
 
+    @override
     def maximal_width(self, pdfdoc: Document) -> SizeMM:  # without padding
         return pdfdoc.text_width(self._text)
 
+    @override
     def can_add_dynamic_width(self) -> bool:
         return not self._narrow
 
@@ -1474,14 +1478,17 @@ class TextCell(CellRenderer):
 
     # Do wrapping of text to actual width. width() and height()
     # can be called only after this has run.
+    @override
     def set_width(self, pdfdoc: Document, width: SizeMM) -> None:
         self._width = width
         self._lines = pdfdoc.wrap_text(self._text, width, wrap_long_words=not self._narrow)
 
+    @override
     def height(self, pdfdoc: Document) -> SizeMM:
         return max(1, len(self._lines)) * pdfdoc.get_line_skip()
 
     # Render itself at left/top into direction right/down by width/height
+    @override
     def render(
         self,
         pdfdoc: Document,
@@ -1526,29 +1533,36 @@ class IconCell(CellRenderer):
         self.supports_stepwise_rendering = False
         self._image_path = path
 
+    @override
     def get_render_steps(
         self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
     ) -> Sequence[TextCell]:
         return []
 
+    @override
     def minimal_width(self, pdfdoc: Document) -> SizeMM:
         return self.height(pdfdoc)
 
+    @override
     def maximal_width(self, pdfdoc: Document) -> SizeMM:
         return self.height(pdfdoc)
 
+    @override
     def can_add_dynamic_width(self) -> bool:
         return False
 
+    @override
     def set_width(self, pdfdoc: Document, width: SizeMM) -> None:
         pass
 
     def width(self, pdfdoc: Document) -> SizeMM:
         return self.height(pdfdoc)
 
+    @override
     def height(self, pdfdoc: Document) -> SizeMM:
         return pdfdoc.get_line_skip()
 
+    @override
     def render(
         self,
         pdfdoc: Document,

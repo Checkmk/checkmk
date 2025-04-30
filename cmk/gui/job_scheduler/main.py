@@ -11,6 +11,7 @@ import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import override
 
 from setproctitle import setproctitle
 
@@ -43,6 +44,7 @@ def _pid_file(omd_root: Path) -> Path:
 
 
 class JobSchedulerCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
+    @override
     @classmethod
     def type(cls) -> str:
         return "ui-job-scheduler"

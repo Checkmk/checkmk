@@ -5,7 +5,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -20,6 +20,7 @@ class CertificateInfo(NamedTuple):
 
 
 class CertInfoRegistry(Registry[CertificateInfo]):
+    @override
     def plugin_name(self, instance: CertificateInfo) -> str:
         return instance.topic
 

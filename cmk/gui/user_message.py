@@ -5,6 +5,7 @@
 
 import time
 from collections.abc import Iterator
+from typing import override
 
 from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -68,6 +69,7 @@ class PageUserMessage(Page):
             breadcrumb=breadcrumb,
         )
 
+    @override
     def page(self) -> None:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), _("Messages"))
         make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))

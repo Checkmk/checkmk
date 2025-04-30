@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 
 from livestatus import SiteConfigurations
 
@@ -85,54 +85,66 @@ class ABCCustomerAPI(ABC):
 
 
 class CustomerAPIStub(ABCCustomerAPI):
+    @override
     @classmethod
     def get_sites_of_customer(cls, customer_id: CustomerId) -> SiteConfigurations:
         return SiteConfigurations({})
 
+    @override
     @classmethod
     def get_customer_id(cls, the_object: Mapping[str, Any]) -> CustomerIdOrGlobal:
         return SCOPE_GLOBAL
 
+    @override
     @classmethod
     def is_global(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return True
 
+    @override
     @classmethod
     def customer_group_sites(cls, group: GroupSpec) -> Sequence[SiteId] | None:
         return None
 
+    @override
     @classmethod
     def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str:
         return str(customer_id)
 
+    @override
     @classmethod
     def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
         return ""
 
+    @override
     @classmethod
     def vs_customer(
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> DropdownChoice:
         return DropdownChoice(choices=[])
 
+    @override
     @classmethod
     def default_customer_id(cls) -> CustomerId:
         return ""
 
+    @override
     @classmethod
     def customer_choice_element(
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> list[tuple[str, ValueSpec]]:
         return []
 
+    @override
     @classmethod
     def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
 
+    @override
     @classmethod
     def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
 
+    @override
     @classmethod
     def customer_collection(cls) -> list[CustomerIdOrGlobal]:
         return []
@@ -144,6 +156,7 @@ def customer_api() -> ABCCustomerAPI:
 
 
 class CustomerAPIRegistry(Registry[ABCCustomerAPI]):
+    @override
     def plugin_name(self, instance: ABCCustomerAPI) -> str:
         return instance.ident
 

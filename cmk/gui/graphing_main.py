@@ -14,6 +14,7 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
+from typing import override
 
 import cmk.ccc.debug
 import cmk.ccc.plugin_registry
@@ -188,10 +189,12 @@ def load_plugins() -> None:
 
 # This page is called for the popup of the graph icon of hosts/services.
 class PageHostServiceGraphPopup(cmk.gui.pages.Page):
+    @override
     @classmethod
     def ident(cls) -> str:
         return "host_service_graph_popup"
 
+    @override
     def page(self) -> PageResult:
         host_service_graph_popup_cmk(
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
@@ -217,10 +220,12 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
 
 
 class PageGraphDashlet(cmk.gui.pages.Page):
+    @override
     @classmethod
     def ident(cls) -> str:
         return "graph_dashlet"
 
+    @override
     def page(self) -> cmk.gui.pages.PageResult:
         return host_service_graph_dashlet_cmk(
             parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -46,10 +46,12 @@ def register(
 
 
 class PermissionSectionBackgroundJobs(PermissionSection):
+    @override
     @property
     def name(self) -> str:
         return "background_jobs"
 
+    @override
     @property
     def title(self) -> str:
         return _("Background jobs")
@@ -119,12 +121,14 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self) -> None:
         super().__init__(logger=log.logger.getChild("background-job.manager"))
 
+    @override
     def get_running_job_ids(
         self, job_class: type[background_job.BackgroundJob]
     ) -> list[background_job.JobId]:
         job_ids = super().get_running_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
+    @override
     def get_all_job_ids(
         self, job_class: type[background_job.BackgroundJob] | None = None
     ) -> list[background_job.JobId]:

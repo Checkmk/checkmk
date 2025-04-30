@@ -9,7 +9,7 @@ import functools
 import http.client as http_client
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException
@@ -72,11 +72,6 @@ class AjaxPage(Page, abc.ABC):
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()
 
-    @abc.abstractmethod
-    def page(self) -> PageResult:
-        """Override this to implement the page functionality"""
-        raise NotImplementedError()
-
     def _handle_exc(self, method: Callable[[], PageResult]) -> None:
         try:
             method()
@@ -94,6 +89,7 @@ class AjaxPage(Page, abc.ABC):
             )
             html.write_text_permissive(str(e))
 
+    @override
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
         response.set_content_type("application/json")
@@ -119,6 +115,7 @@ class AjaxPage(Page, abc.ABC):
 
 
 class PageRegistry(cmk.ccc.plugin_registry.Registry[type[Page]]):
+    @override
     def plugin_name(self, instance: type[Page]) -> str:
         return instance.ident()
 

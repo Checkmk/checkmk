@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
@@ -18,6 +19,7 @@ class Features:
 
 
 class FeaturesRegistry(Registry[Features]):
+    @override
     def plugin_name(self, instance: Features) -> str:
         return str(instance.edition)
 

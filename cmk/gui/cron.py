@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
 
@@ -22,6 +22,7 @@ class CronJob:
 
 
 class CronJobRegistry(Registry[CronJob]):
+    @override
     def plugin_name(self, instance: CronJob) -> str:
         return instance.name
 

@@ -9,7 +9,7 @@ import contextlib
 from collections.abc import Container, Iterator
 from contextlib import AbstractContextManager as ContextManager
 from datetime import datetime
-from typing import cast
+from typing import cast, override
 
 import flask
 from flask import Flask
@@ -296,12 +296,14 @@ class FileBasedSession(SessionInterface):
 
     session_class = CheckmkFileBasedSession
 
+    @override
     def get_cookie_name(self, app: Flask) -> str:
         # NOTE: get_cookie_name and get_cookie_path are implemented at runtime (not with
         # app.settings[...]) to allow the Flask-App to be reused for different sites in
         # the tests.
         return f"auth_{omd_site()}"
 
+    @override
     def get_cookie_path(self, app: Flask) -> str:
         # NOTE: get_cookie_name and get_cookie_path are implemented at runtime (not with
         # app.settings[...]) to allow the Flask-App to be reused for different sites in
@@ -369,6 +371,7 @@ class FileBasedSession(SessionInterface):
         }
         userdb.save_custom_attr(userid, "last_login", last_login_info)
 
+    @override
     @tracer.instrument("FileBasedSession.open_session")
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
@@ -382,6 +385,7 @@ class FileBasedSession(SessionInterface):
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
+    @override
     @tracer.instrument("FileBasedSession.save_session")
     def save_session(  # type: ignore[override]
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response

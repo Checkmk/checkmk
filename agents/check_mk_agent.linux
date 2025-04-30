@@ -889,7 +889,7 @@ section_diskstat() {
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
-            ${ROOT_OR_SUDO} dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+            ${ROOT_OR_SUDO} dmsetup info -c --noheadings --separator \ -o name,devno,vg_name,lv_name
         fi
         if [ -d /dev/vx/dsk ]; then
             echo '[vx_dsk]'

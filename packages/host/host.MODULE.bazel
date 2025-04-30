@@ -1,0 +1,30 @@
+host_crates = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+
+host_crates.from_cargo(
+    name = "cargo_deps_host",
+    cargo_lockfile = "//packages/host:Cargo.lock",
+    manifests = [
+        "//packages/host:Cargo.toml",
+        "//packages/host/cmk-agent-ctl:Cargo.toml",
+        "//packages/host/mk-sql:Cargo.toml",
+    ],
+)
+
+use_repo(host_crates, "cargo_deps_host")
+
+host_crates.annotation(
+    crate = "openssl-sys",
+    build_script_data = [
+        "@@openssl//:gen_dir",
+    ],
+    build_script_env = {
+        "OPENSSL_DIR": "$(execpath @@openssl//:gen_dir)",
+        "OPENSSL_NO_VENDOR": "1",
+        "OPENSSL_STATIC": "1",
+    },
+    data = ["@@openssl//:gen_dir"],
+    deps = [
+        "@@openssl",
+    ],
+    repositories = ["cargo_deps_host"],
+)

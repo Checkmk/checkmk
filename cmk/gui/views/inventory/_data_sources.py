@@ -5,12 +5,14 @@
 
 import abc
 from collections.abc import Iterable, Sequence
+from pathlib import Path
 
 from livestatus import LivestatusResponse, OnlySites
 
 from cmk.ccc.hostaddress import HostName
 
-from cmk.utils.structured_data import RetentionInterval, SDValue
+import cmk.utils.paths
+from cmk.utils.structured_data import HistoryStore, RetentionInterval, SDValue
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -152,7 +154,14 @@ class RowTableInventoryHistory(ABCRowTable):
 
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
-        history, corrupted_history_files = get_history(hostname)
+        history, corrupted_history_files = get_history(
+            HistoryStore(
+                inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
+                archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
+                delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
+            ),
+            hostname,
+        )
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(

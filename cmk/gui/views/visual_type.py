@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDPath
+import cmk.utils.paths
+from cmk.utils.structured_data import HistoryStore, ImmutableDeltaTree, ImmutableTree, SDPath
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -165,7 +167,14 @@ def _get_inventory_tree(
         return tree_cache[cache_id]
 
     tree: ImmutableTree | ImmutableDeltaTree = (
-        load_latest_delta_tree(hostname)
+        load_latest_delta_tree(
+            HistoryStore(
+                inventory_dir=Path(cmk.utils.paths.inventory_output_dir),
+                archive_dir=Path(cmk.utils.paths.inventory_archive_dir),
+                delta_cache_dir=Path(cmk.utils.paths.inventory_delta_cache_dir),
+            ),
+            hostname,
+        )
         if is_history
         else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
     )

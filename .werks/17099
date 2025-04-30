@@ -1,0 +1,29 @@
+Title: Agent updater exposes sensitive data
+Class: security
+Compatible: compat
+Component: agents
+Date: 1745999974
+Edition: cee
+Level: 1
+Version: 2.2.0p42
+
+Prior to this Werk, installation candidates for <em>"Automatic Agent Updates"</em> on Linux and Solaris hosts were downloaded and stored with too broad permissions, potentially exposing secrets in the configuration to other users on the host. Permissions for the installation candidate package are now set more strictly.
+
+This issue affects users who have configured <em>"Automatic Agent Updates"</em> for Linux and Solaris hosts.
+
+The issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.4.0
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<em>Mitigations</em>:
+
+If updating is not possible, consider disabling <em>"Automatic Agent Updates"</em>.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 4.3 Medium (<code>CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N</code>) and assigned <code>CVE-2025-32915</code>.

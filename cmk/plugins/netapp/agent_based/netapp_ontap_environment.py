@@ -69,7 +69,8 @@ def check_netapp_ontap_environment_discrete(
 
     yield Result(
         state=State.OK if data.discrete_state == "normal" else State.CRIT,
-        summary=f"Sensor state: {data.discrete_state}, Sensor value: {data.discrete_value}",
+        summary=f"Sensor state: {data.discrete_state}"
+        + (f", Sensor value: {data.discrete_value}" if data.discrete_value is not None else ""),
     )
 
 
@@ -79,6 +80,13 @@ def check_environment_threshold(
     section: ThresholdSection,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
+
+    if data.threshold_state != "normal":
+        yield Result(state=State.CRIT, summary=f"Sensor state: {data.threshold_state}")
+        return
+
     def _perf_key(_key):
         return _key.replace("/", "").replace(" ", "_").replace("__", "_").lower()
 
@@ -90,9 +98,6 @@ def check_environment_threshold(
 
     def _scale_unit(_unit):
         return {"mv": "v", "ma": "a"}.get(_unit.lower(), _unit.lower())
-
-    if (data := section.get(item)) is None:
-        return
 
     levels = (
         _scale(data.warning_high_threshold, data.value_units),

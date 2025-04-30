@@ -120,7 +120,6 @@ def _create_rules(pw: Dashboard) -> dict[str, list[str]]:
     return created_rules
 
 
-@pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
 def test_create_rules(
     test_site: Site, dashboard_page: Dashboard, pytestconfig: pytest.Config
 ) -> None:

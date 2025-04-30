@@ -21,7 +21,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties, Set
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-pytestmark = pytest.mark.xfail(reason="CMK-22540; Flake while activating changes ...")
 
 
 @pytest.fixture(name="host")

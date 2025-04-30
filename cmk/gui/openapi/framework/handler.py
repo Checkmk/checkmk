@@ -26,8 +26,6 @@ from cmk.gui.openapi.restful_objects.validators import (
 )
 from cmk.gui.openapi.utils import (
     EXT,
-    GeneralRestAPIException,
-    ProblemException,
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
@@ -81,21 +79,24 @@ def _create_response(
 ) -> Response:
     """Create a Flask response from the endpoint response."""
     if isinstance(endpoint_response, ApiResponse):
-        response_json = _dump_response(endpoint_response.body, response_body_type)
+        response_dict = _dump_response(endpoint_response.body, response_body_type)
         status_code = endpoint_response.status_code
         headers = endpoint_response.headers
     else:
-        response_json = _dump_response(endpoint_response, response_body_type)
-        status_code = 204 if response_json is None else 200
+        response_dict = _dump_response(endpoint_response, response_body_type)
+        status_code = 204 if response_dict is None else 200
         headers = {}
 
-    if add_etag and response_json is not None:
-        headers["ETag"] = etag_of_dict(response_json).to_header()
+    if add_etag and response_dict is not None:
+        headers["ETag"] = etag_of_dict(response_dict).to_header()
 
     # TODO: improve the flow
-    response_bytes = json.dumps(response_json)
+    if response_dict is None:
+        response_text = None
+    else:
+        response_text = json.dumps(response_dict)
     return Response(
-        response=response_bytes,
+        response=response_text,
         status=status_code,
         headers=headers,
         content_type=content_type,
@@ -159,25 +160,20 @@ def handle_endpoint_request(
     HeaderValidator.validate_accept_header(endpoint.content_type, accept_mimetypes)
 
     # Step 4: Validate the request parameters and call the handler function
-    # TODO: this is not explicitly catching marshmallow ValidationErrors anymore - investigate where that would happen
-    try:
-        with permission_validator.track_permissions():
-            raw_response = model.validate_request_and_call_handler(request_data, content_type)
-    except ProblemException as problem_exception:
-        response = problem_exception.to_problem()
-    except GeneralRestAPIException as general_api_exception:
-        response = general_api_exception.to_problem()
+    # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
+    with permission_validator.track_permissions():
+        raw_response = model.validate_request_and_call_handler(request_data, content_type)
+
+    if isinstance(raw_response, Response):
+        _validate_direct_response(raw_response)
+        response = raw_response
     else:
-        if isinstance(raw_response, Response):
-            _validate_direct_response(raw_response)
-            response = raw_response
-        else:
-            response = _create_response(
-                raw_response,
-                model.response_body_type,
-                endpoint.content_type,
-                add_etag=endpoint.etag in ("output", "both"),
-            )
+        response = _create_response(
+            raw_response,
+            model.response_body_type,
+            endpoint.content_type,
+            add_etag=endpoint.etag in ("output", "both"),
+        )
 
     # Step 5: Check permissions
     if response.status_code < 400:

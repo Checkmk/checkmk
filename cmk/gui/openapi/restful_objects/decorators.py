@@ -603,7 +603,7 @@ class Endpoint:
                 with tracer.span("json-to-response"):
                     response.set_data(json.dumps(outbound))
 
-        elif response.headers["Content-Type"] == "application/problem+json" and response.data:
+        elif response.headers.get("Content-Type") == "application/problem+json" and response.data:
             ResponseValidator.validate_problem_json(response)
 
         response.freeze()

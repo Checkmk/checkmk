@@ -7,6 +7,7 @@ import dataclasses
 from typing import NotRequired, TypedDict
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.openapi.framework.model import api_field
 
@@ -85,3 +86,48 @@ def test_metadata() -> None:
     assert "example" not in field.metadata
     assert field.metadata["examples"] == ["example"]
     assert field.metadata["extra"] == "metadata"
+
+
+def test_json_schema_metadata() -> None:
+    @dataclasses.dataclass
+    class TestModel:
+        field: str = api_field(
+            alias="alias",
+            title="title",
+            description="description",
+            example="example",
+            additional_metadata={"extra": "metadata"},
+        )
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    schema = adapter.json_schema()
+    properties = schema["properties"]
+    assert "field" not in properties
+    assert "alias" in properties
+    assert properties["alias"] == {
+        "type": "string",
+        "title": "title",
+        "description": "description",
+        "examples": ["example"],
+    }
+
+
+def test_alias_serialization() -> None:
+    @dataclasses.dataclass
+    class TestModel:
+        field: str = api_field(description="test", alias="alias")
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    assert adapter.dump_python(TestModel(field="foo"), by_alias=True) == {"alias": "foo"}
+
+
+def test_alias_deserialization() -> None:
+    @dataclasses.dataclass
+    class TestModel:
+        field: str = api_field(description="test", alias="alias")
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    assert adapter.validate_python({"alias": "foo"}) == TestModel(field="foo")
+
+    with pytest.raises(ValidationError, match="type=missing"):
+        adapter.validate_python({"field": "foo"})

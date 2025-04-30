@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping
+from mimetypes import types_map
 
-from polyfactory.factories import DataclassFactory
+from polyfactory import Use
+from polyfactory.factories import DataclassFactory, TypedDictFactory
+from werkzeug.datastructures import Headers
 
-from cmk.gui.openapi.framework import versioned_endpoint
+from cmk.gui.openapi.framework import RawRequestData, registry, versioned_endpoint
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily
 
@@ -48,3 +51,22 @@ class VersionedEndpointFactory(DataclassFactory[versioned_endpoint.VersionedEndp
 
 class EndpointFamilyFactory(DataclassFactory[EndpointFamily]):
     pass
+
+
+class RequestEndpointFactory(DataclassFactory[registry.RequestEndpoint]):
+    permissions_required = None
+
+    @classmethod
+    def handler(cls) -> versioned_endpoint.HandlerFunction:
+        return lambda: None
+
+    @classmethod
+    def content_type(cls) -> str:
+        return cls.__random__.choice(list(types_map.values()))
+
+
+class RawRequestDataFactory(TypedDictFactory[RawRequestData]):
+    body = None
+    path: Use[[], dict[str, str]] = Use(lambda: {})
+    query: Use[[], dict[str, list[str]]] = Use(dict)
+    headers = Use(Headers)

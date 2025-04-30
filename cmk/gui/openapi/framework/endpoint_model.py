@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import inspect
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import (
     Annotated,
     cast,
@@ -16,7 +16,6 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, with_config
-from pydantic_core import InitErrorDetails
 
 from cmk.gui.openapi.framework._types import (
     DataclassInstance,
@@ -322,6 +321,13 @@ class _PreparedRequestData(TypedDict):
     headers: dict[str, str]
 
 
+def _iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:
+    """Iterate over the fields of a dataclass."""
+    for field in dataclasses.fields(dataclass):
+        value = getattr(dataclass, field.name)
+        yield field.name, value
+
+
 class EndpointModel[**P, T]:
     __slots__ = (
         "_handler",
@@ -401,31 +407,12 @@ class EndpointModel[**P, T]:
 
         for query_key, query_parameter in self._parameters.query.items():
             if query_value := query_args.pop(query_key, None):
-                if query_parameter.is_list:
+                # We shouldn't raise exceptions if the parameter is missing or has too many values
+                # let pydantic handle those cases, so that we can return all issues at the same time
+                if query_parameter.is_list or len(query_value) > 1:
                     out[query_key] = query_value
                 else:
-                    if len(query_value) > 1:
-                        raise ValidationError.from_exception_data(
-                            "_RequestData",
-                            [
-                                InitErrorDetails(
-                                    type="value_error",
-                                    loc=("query", query_key),
-                                    input=query_value,
-                                    ctx={
-                                        "error": f"`{query_key}` must be specified only once",
-                                    },
-                                ),
-                            ],
-                        )
                     out[query_key] = query_value[0]
-            else:
-                raise ValidationError.from_exception_data(
-                    "_RequestData",
-                    [
-                        InitErrorDetails(type="missing", loc=("query", query_key), input=None),
-                    ],
-                )
 
         out.update(query_args)  # add any extra query args, to trigger pydantic validation errors
         return out
@@ -467,13 +454,18 @@ class EndpointModel[**P, T]:
         input_data = input_type_adapter.validate_python(prepared_data, strict=False)
 
         # unwrap the parameters
-        out = dataclasses.asdict(input_data)
-        if not self.has_request_schema:
-            out.pop("body", None)  # validation will leave us with {"body": None}
+        # we CANNOT use dataclasses.asdict or similar here, as we might accidentally change the
+        # actual parameters/body
+        out = {}
+        if self.has_request_schema:
+            out["body"] = input_data.body
 
-        out.update(out.pop("path", {}))
-        out.update(out.pop("query", {}))
-        out.update(out.pop("headers", {}))
+        if self.has_path_parameters:
+            out.update(_iter_dataclass_fields(input_data.path))
+        if self.has_query_parameters:
+            out.update(_iter_dataclass_fields(input_data.query))
+        if self._parameters.headers:
+            out.update(_iter_dataclass_fields(input_data.headers))
 
         # this also guarantees that all required parameters to call the handler are present
         return self._signature.bind(**out)

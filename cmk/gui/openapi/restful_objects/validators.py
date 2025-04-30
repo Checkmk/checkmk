@@ -425,7 +425,7 @@ class ResponseValidator:
             )
 
         if response.status_code == 204:
-            response.content_type = ""
+            del response.content_type
 
         if response.status_code not in expected_status_codes:
             raise RestAPIResponseException(

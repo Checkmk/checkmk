@@ -446,5 +446,6 @@ def test_query_parameter_single() -> None:
             "query_param": ["test1", "test2"],
         }
     )
-    with pytest.raises(ValidationError, match="must be specified only once.*type=value_error"):
+    # TODO: check if we can improve the error message here without exiting validation early
+    with pytest.raises(ValidationError, match="type=string_type"):
         model._validate_request_parameters(request_data, None)

@@ -24,6 +24,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     EndpointKey,
     ErrorStatusCodeInt,
     ETagBehaviour,
+    LinkRelation,
     StatusCodeInt,
     TagGroup,
 )
@@ -130,6 +131,24 @@ class VersionedEndpointRegistry:
     def __init__(self):
         self._versions: dict[APIVersion, dict[EndpointKey, EndpointDefinition]] = dict()
 
+    @staticmethod
+    def create_endpoint_definition(
+        endpoint: VersionedEndpoint, endpoint_family: EndpointFamily, handler: EndpointHandler
+    ) -> EndpointDefinition:
+        return EndpointDefinition(
+            metadata=endpoint.metadata,
+            permissions=endpoint.permissions,
+            doc=endpoint.doc,
+            family=endpoint_family,
+            handler=handler,
+            behavior=endpoint.behavior,
+            removed_in_version=endpoint.removed_in_version,
+        )
+
+    @staticmethod
+    def endpoint_key(family_name: str, link_relation: LinkRelation) -> tuple[str, LinkRelation]:
+        return family_name, link_relation
+
     # TODO: potentially have to introduce a lookup function
     def register(self, endpoint: VersionedEndpoint) -> None:
         """Register a versioned endpoint
@@ -139,24 +158,20 @@ class VersionedEndpointRegistry:
 
         endpoint_family = endpoint_family_registry.get(endpoint.doc.family)
         assert endpoint_family is not None
-        endpoint_key = (endpoint_family.name, endpoint.metadata.link_relation)
+        endpoint_key_ = self.endpoint_key(endpoint_family.name, endpoint.metadata.link_relation)
 
         for version, handler in endpoint.versions.items():
             version_endpoints = self._versions.setdefault(version, dict())
 
-            if endpoint_key in version_endpoints:
+            if endpoint_key_ in version_endpoints:
                 raise RuntimeError(
-                    f"Endpoint with key {endpoint_key}, already has handlers for version {version}"
+                    f"Endpoint with key {endpoint_key_}, already has handlers for version {version}"
                 )
 
-            version_endpoints[endpoint_key] = EndpointDefinition(
-                metadata=endpoint.metadata,
-                permissions=endpoint.permissions,
-                doc=endpoint.doc,
-                family=endpoint_family,
+            version_endpoints[endpoint_key_] = self.create_endpoint_definition(
+                endpoint=endpoint,
+                endpoint_family=endpoint_family,
                 handler=handler,
-                behavior=endpoint.behavior,
-                removed_in_version=endpoint.removed_in_version,
             )
 
     def specified_endpoints(self, version: APIVersion) -> Iterator[EndpointDefinition]:

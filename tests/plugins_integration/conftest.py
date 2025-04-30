@@ -41,12 +41,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Skip cleanup process after test execution",
     )
     parser.addoption(
-        "--enable-core-scheduling",
-        action="store_true",
-        default=False,
-        help="Enable core scheduling (disabled by default)",
-    )
-    parser.addoption(
         "--check-names",
         action="store",
         nargs="+",
@@ -125,10 +119,6 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
             checks.setup_site(site, dump_path)
 
             yield site
-
-            if not request.config.getoption("--enable-core-scheduling"):
-                site.stop_host_checks()
-                site.stop_active_services()
 
             if not checks.config.skip_cleanup:
                 # cleanup existing agent-output folder in the test site

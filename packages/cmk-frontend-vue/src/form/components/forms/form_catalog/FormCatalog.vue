@@ -73,7 +73,7 @@ function isGroupedTopic(topic: Topic): boolean {
             </td>
           </tr>
         </thead>
-        <CmkSpace size="small" />
+        <CmkSpace v-if="!hiddenTopics[topic.name]" size="small" direction="vertical" />
         <tbody :class="getClass(topic.name)">
           <template v-if="isGroupedTopic(topic)">
             <TopicGrouped
@@ -92,8 +92,8 @@ function isGroupedTopic(topic: Topic): boolean {
             />
           </template>
         </tbody>
+        <CmkSpace v-if="!hiddenTopics[topic.name]" size="small" direction="vertical" />
       </table>
-      <CmkSpace size="medium" direction="vertical" />
     </template>
   </span>
 </template>

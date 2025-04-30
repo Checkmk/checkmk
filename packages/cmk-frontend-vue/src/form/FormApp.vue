@@ -97,3 +97,14 @@ const { ErrorBoundary } = useErrorBoundary()
     </ErrorBoundary>
   </div>
 </template>
+
+<style scoped>
+.nform {
+  margin: 0;
+  background: transparent;
+
+  > tbody > tr:first-child > td {
+    padding: 0;
+  }
+}
+</style>

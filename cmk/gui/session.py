@@ -60,7 +60,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         user = self.get("_user")
         if user is None:
             return LoggedInNobody()
-        return user
+        return user  # type: ignore[no-any-return]
 
     @user.setter
     def user(self, user: LoggedInUser) -> None:
@@ -69,7 +69,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self["_user"] = user
 
     @property
-    def user_id(self):
+    def user_id(self):  # type: ignore[no-untyped-def]
         raise AttributeError("Don't set user_id please.")
 
     @property

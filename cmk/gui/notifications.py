@@ -113,7 +113,7 @@ def acknowledged_time() -> float:
                 user.acknowledged_notifications, now
             )
 
-    return g.failed_notification_times.acknowledged_unitl
+    return g.failed_notification_times.acknowledged_unitl  # type: ignore[no-any-return]
 
 
 def number_of_failed_notifications(after: float | None) -> int:

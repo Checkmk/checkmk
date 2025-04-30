@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
 from contextlib import suppress
 from typing import cast
 
@@ -84,7 +85,7 @@ def _get_visual_by_link_spec(link_spec: VisualLinkSpec | None) -> Visual | None:
     available_visuals = visual_type.permitted_visuals
 
     with suppress(KeyError):
-        return available_visuals[link_spec.name]
+        return available_visuals[link_spec.name]  # type: ignore[no-any-return]
 
     return None
 
@@ -196,9 +197,9 @@ def _replace_group_vars(vars_: HTTPVariables) -> HTTPVariables:
     return filtered_vars
 
 
-def _translate_filters(visual):
+def _translate_filters(visual: Visual) -> Callable[[str], str]:
     if datasource_name := visual.get("datasource"):
-        datasource = data_source_registry[datasource_name]()
+        datasource = data_source_registry[datasource_name]()  # type: ignore[index]
         link_filters = datasource.link_filters
         return lambda x: link_filters.get(x, x)
     return lambda x: x

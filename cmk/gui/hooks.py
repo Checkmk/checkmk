@@ -14,6 +14,8 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk import trace
 
+# mypy: disable-error-code="no-any-return"
+
 tracer = trace.get_tracer()
 
 

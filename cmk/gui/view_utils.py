@@ -95,7 +95,7 @@ def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
     if row:
         custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
         if "ESCAPE_PLUGIN_OUTPUT" in custom_vars:
-            return custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
+            return custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"  # type: ignore[no-any-return]
     return shall_escape
 
 

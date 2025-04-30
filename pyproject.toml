@@ -342,19 +342,7 @@ module = [
   "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
   "cmk.cee.liveproxy.*",
-  "cmk.gui.background_job.*",
-  "cmk.gui.mobile.views",
-  "cmk.gui.views.layout.*",
-  "cmk.gui.wato.pages.bulk_discovery",
-  "cmk.gui.wato.pages.bulk_edit",
-  "cmk.gui.wato.pages.folders",
-  "cmk.gui.wato.pages.parentscan",
-  "cmk.gui.watolib.auth_php",
-  "cmk.gui.watolib.bulk_discovery",
-  "cmk.gui.watolib.config_sync",
-  "cmk.gui.watolib.main_menu",
-  "cmk.gui.watolib.network_scan",
-  "cmk.gui.watolib.registration",
+  "cmk.gui.*",
   "cmk.notification_plugins.*",
   "cmk.update_config.*",
   "cmk.utils.livestatus_helpers.*",
@@ -376,6 +364,64 @@ disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+  "cmk.gui.backup.*",
+  "cmk.gui.bi.*",
+  "cmk.gui.cce.*",
+  "cmk.gui.cee.*",
+  "cmk.gui.cme.*",
+  "cmk.gui.cse.*",
+  "cmk.gui.crash_reporting.*",
+  "cmk.gui.custom_icons.*",
+  "cmk.gui.dashboard.*",
+  "cmk.gui.data_source.*",
+  "cmk.gui.fields.*",
+  "cmk.gui.form_specs.*",
+  "cmk.gui.graphing.*",
+  "cmk.gui.htmllib.*",
+  "cmk.gui.inventory.*",
+  "cmk.gui.livestatus_utils.commands.*",
+  "cmk.gui.mkeventd.*",
+  "cmk.gui.nagvis.*",
+  "cmk.gui.nodevis.*",
+  "cmk.gui.openapi.*",
+  "cmk.gui.painter.*",
+  "cmk.gui.plugins.wato.*",
+  "cmk.gui.rest_api_types.*",
+  "cmk.gui.sidebar.*",
+  "cmk.gui.userdb.*",
+  "cmk.gui.utils.*",
+  "cmk.gui.valuespec.*",
+  "cmk.gui.mobile.*",
+  "cmk.gui.openapi.spec.spec_generator.*",
+  "cmk.gui.quick_setup.config_setups.aws.*",
+  "cmk.gui.quick_setup.handlers.*",
+  "cmk.gui.quick_setup.v0_unstable.*",
+  "cmk.gui.quick_setup.v0_unstable.predefined.*",
+  "cmk.gui.views.*",
+  "cmk.gui.views.command.*",
+  "cmk.gui.views.icon.*",
+  "cmk.gui.views.inventory.*",
+  "cmk.gui.views.perfometer.*",
+  "cmk.gui.views.sorter.*",
+  "cmk.gui.wato.*",
+  "cmk.gui.watolib.*",
+  "cmk.gui.watolib.configuration_entity.*",
+  "cmk.gui.watolib.mode.*",
+  "cmk.gui.watolib.notification_parameter.*",
+  "cmk.gui.watolib.sample_config.*",
+  "cmk.gui.wato.pages.*",
+  "cmk.gui.wato._notification_parameter.*",
+  "cmk.gui.visuals.*",
+  "cmk.gui.wsgi.*",
+]
+disable_error_code = ["explicit-override"]
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+warn_return_any = false
+warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = [

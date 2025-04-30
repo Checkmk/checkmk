@@ -564,13 +564,13 @@ class SetOnceDict(dict):
     """
 
     @override
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value):  # type: ignore[no-untyped-def]
         if key in self:
             raise ValueError(f"key {key!r} already set")
         dict.__setitem__(self, key, value)
 
     @override
-    def __delitem__(self, key):
+    def __delitem__(self, key):  # type: ignore[no-untyped-def]
         raise NotImplementedError("Deleting items are not supported.")
 
 

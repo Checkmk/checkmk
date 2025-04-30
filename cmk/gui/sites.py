@@ -66,7 +66,7 @@ def live(
     """Get Livestatus connection object matching the current site configuration
     and user settings. On the first call the actual connection is being made."""
     _ensure_connected(user, force_authuser)
-    return g.live
+    return g.live  # type: ignore[no-any-return]
 
 
 class SiteStatus(TypedDict, total=False):
@@ -90,7 +90,7 @@ SiteStates = NewType("SiteStates", dict[SiteId, SiteStatus])
 def states(user: LoggedInUser | None = None, force_authuser: UserId | None = None) -> SiteStates:
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
-    return g.site_status
+    return g.site_status  # type: ignore[no-any-return]
 
 
 @contextmanager
@@ -141,7 +141,7 @@ def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
 
     with only_sites(site_id):
         try:
-            return live().query_value(query)
+            return live().query_value(query)  # type: ignore[no-any-return]
         except Exception as e:
             logger.warning(
                 "Could not determine alias of host %s on site %s: %s",
@@ -253,7 +253,7 @@ def _get_distributed_monitoring_compatibility(
 def _get_distributed_monitoring_connection_from_site_id(site_id: str) -> ConnectedSite | None:
     for connected_site in g.live.connections:
         if connected_site.id == site_id:
-            return connected_site
+            return connected_site  # type: ignore[no-any-return]
     return None
 
 

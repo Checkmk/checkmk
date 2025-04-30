@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Basic functions for cmk_figures"""
 
+# mypy: disable-error-code="no-untyped-call, no-untyped-def"
+
 from typing import Any
 
 FigureResponse = dict[str, Any]

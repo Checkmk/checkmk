@@ -286,17 +286,19 @@ function getSoftwareFromRegistry {
                 $booleanContent = $false
 
                 foreach ($var in $regVars) {
+                    $escpspath = $subkey.PSPath
+                    $escpspath = $escpspath -replace '([][[])', '`$1' # escape square brackets
                     if ($var -eq "PSChildName") {
                         $value = $subkey.PSChildName
                     }
                     elseif ($var -eq "Language") {
-                        $value = (Get-ItemProperty -Path $subkey.PSPath -Name $var -ErrorAction SilentlyContinue).$var
+                        $value = (Get-ItemProperty -Path $escpspath -Name $var -ErrorAction SilentlyContinue).$var
                         if ($null -ne $value) {
                             $value = $value.ToString()
                         }
                     }
                     else {
-                        $value = (Get-ItemProperty -Path $subkey.PSPath -Name $var -ErrorAction SilentlyContinue).$var
+                        $value = (Get-ItemProperty -Path $escpspath -Name $var -ErrorAction SilentlyContinue).$var
                     }
 
                     if ($null -ne $value -and $value -is [string]) {

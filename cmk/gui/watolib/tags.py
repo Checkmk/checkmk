@@ -25,9 +25,10 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.php_formatter import format_php
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
-from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):

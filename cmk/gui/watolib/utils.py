@@ -5,7 +5,6 @@
 
 import ast
 import base64
-import re
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +16,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.mode import mode_registry
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -75,34 +73,3 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname == RuleGroup.AgentConfig("custom_files"):
         return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
     return user.may("wato.rulesets")
-
-
-def format_php(data: object, lvl: int = 1) -> str:
-    """Format a python object for php"""
-    s = ""
-    if isinstance(data, list | tuple):
-        s += "array(\n"
-        for item in data:
-            s += "    " * lvl + format_php(item, lvl + 1) + ",\n"
-        s += "    " * (lvl - 1) + ")"
-    elif isinstance(data, dict):
-        s += "array(\n"
-        for key, val in data.items():
-            s += "    " * lvl + format_php(key, lvl + 1) + " => " + format_php(val, lvl + 1) + ",\n"
-        s += "    " * (lvl - 1) + ")"
-    elif isinstance(data, str):
-        s += "'%s'" % re.sub(r"('|\\)", r"\\\1", data)
-    elif isinstance(data, bool):
-        s += data and "true" or "false"
-    elif isinstance(data, int | float):
-        s += str(data)
-    elif data is None:
-        s += "null"
-    else:
-        s += format_php(str(data))
-
-    return s
-
-
-def ldap_connections_are_configurable() -> bool:
-    return mode_registry.get("ldap_config") is not None

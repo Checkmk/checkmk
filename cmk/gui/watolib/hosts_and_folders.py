@@ -94,6 +94,7 @@ from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,
     get_host_attribute_default_value,
+    host_attribute_matches,
     HostAttributes,
     HostContactGroupSpec,
     mask_attributes,
@@ -108,8 +109,6 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import (
-    host_attribute_matches,
-    rename_host_in_list,
     wato_root_dir,
 )
 
@@ -785,6 +784,21 @@ class FolderProtocol(Protocol):
     def load_host(self, host_name: HostName) -> Host: ...
 
     def host_validation_errors(self) -> dict[HostName, list[str]]: ...
+
+
+def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
+    """Replace occurrences of *oldname* with *newname* (also for negated entries).
+
+    Returns True if at least one replacement was made."""
+    did_rename = False
+    for nr, element in enumerate(thelist):
+        if element == oldname:
+            thelist[nr] = newname
+            did_rename = True
+        elif element == f"!{oldname}":
+            thelist[nr] = f"!{newname}"
+            did_rename = True
+    return did_rename
 
 
 def find_available_folder_name(candidate: str, parent: Folder) -> str:

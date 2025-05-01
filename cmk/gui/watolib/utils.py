@@ -38,29 +38,6 @@ def liveproxyd_config_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
 
 
-# TODO: Find a better place later
-def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
-    did_rename = False
-    for nr, element in enumerate(thelist):
-        if element == oldname:
-            thelist[nr] = newname
-            did_rename = True
-        elif element == "!" + oldname:
-            thelist[nr] = "!" + newname
-            did_rename = True
-    return did_rename
-
-
-# TODO: Find a better place later
-def host_attribute_matches(crit: str, value: str) -> bool:
-    if crit and crit[0] == "~":
-        # insensitive infix regex match
-        return re.search(crit[1:], value, re.IGNORECASE) is not None
-
-    # insensitive infix search
-    return crit.lower() in value.lower()
-
-
 def mk_repr(x: Any) -> bytes:
     return base64.b64encode(repr(x).encode())
 

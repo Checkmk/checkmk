@@ -39,7 +39,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
-from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
 from cmk.rulesets.v1 import Label, Title
@@ -750,6 +749,17 @@ def config_based_tag_group_attributes(
 
             attributes[attribute.name()] = attribute
     return attributes
+
+
+def host_attribute_matches(crit: str, value: str) -> bool:
+    """Match *value* against *crit* for host searches.
+
+    When *crit* starts with '~' treat the rest as a case-insensitive
+    regular expression, otherwise apply a case-insensitive substring check."""
+    if crit and crit[0] == "~":
+        return re.search(crit[1:], value, re.IGNORECASE) is not None
+
+    return crit.lower() in value.lower()
 
 
 def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:

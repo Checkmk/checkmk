@@ -645,11 +645,11 @@ section_kernel() {
 
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
-    if inpath ipmitool; then
-        _run_cached_internal "ipmi" 300 300 900 600 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
-        # readable discrete sensor states
-        _run_cached_internal "ipmi_discrete" 300 300 900 600 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
-    fi
+    inpath ipmitool && ls /dev/ipmi* 2>/dev/null 1>&2 || return
+
+    _run_cached_internal "ipmi" 300 300 900 600 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
+    # readable discrete sensor states
+    _run_cached_internal "ipmi_discrete" 300 300 900 600 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
 }
 
 section_ipmisensors() { # keep in sync with linux agent

@@ -81,8 +81,8 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
-from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
@@ -897,3 +897,7 @@ class ReplicationStatusFetcher:
             result_queue.close()
             result_queue.join_thread()
             result_queue.join()
+
+
+def ldap_connections_are_configurable() -> bool:
+    return mode_registry.get("ldap_config") is not None

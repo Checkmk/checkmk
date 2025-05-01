@@ -134,13 +134,13 @@ from cmk.gui.watolib.site_management import (
 )
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
+    ldap_connections_are_configurable,
     PingResult,
     ReplicationStatus,
     ReplicationStatusFetcher,
     site_globals_editable,
     site_management_registry,
 )
-from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
 

@@ -12,10 +12,8 @@ from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
-from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -49,22 +47,3 @@ def site_neutral_path(path: str | Path) -> str:
         parts[3] = "[SITE_ID]"
         return "/".join(parts)
     return path
-
-
-def may_edit_ruleset(varname: str) -> bool:
-    if varname == "ignored_services":
-        return user.may("wato.services") or user.may("wato.rulesets")
-    if varname in [
-        "custom_checks",
-        "datasource_programs",
-        RuleGroup.AgentConfig("mrpe"),
-        RuleGroup.AgentConfig("agent_paths"),
-        RuleGroup.AgentConfig("runas"),
-        RuleGroup.AgentConfig("only_from"),
-        RuleGroup.AgentConfig("python_plugins"),
-        RuleGroup.AgentConfig("lnx_remote_alert_handlers"),
-    ]:
-        return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
-    if varname == RuleGroup.AgentConfig("custom_files"):
-        return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
-    return user.may("wato.rulesets")

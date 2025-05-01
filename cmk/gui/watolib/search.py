@@ -52,7 +52,7 @@ from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
-from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.watolib.rulesets import may_edit_ruleset
 
 
 class IndexNotFoundException(MKGeneralException):

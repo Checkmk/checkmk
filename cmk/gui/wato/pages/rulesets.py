@@ -147,6 +147,7 @@ from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderPath,
     FolderRulesets,
+    may_edit_ruleset,
     Rule,
     RuleConditions,
     RuleOptions,
@@ -176,7 +177,7 @@ from cmk.gui.watolib.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
 )
-from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
+from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec

@@ -82,6 +82,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
@@ -101,7 +102,7 @@ from cmk.gui.watolib.services import (
     ServiceDiscoveryBackgroundJob,
     UpdateType,
 )
-from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
+from cmk.gui.watolib.utils import mk_repr
 
 from cmk.shared_typing.setup import AgentDownload, AgentDownloadI18n
 

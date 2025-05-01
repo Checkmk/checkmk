@@ -70,8 +70,7 @@ from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor
-from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor, may_edit_ruleset
 
 
 # Would rather use an Enum for this, but this information is exported to javascript

@@ -31,7 +31,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.session import SuperUserContext, UserContext
-from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.watolib.rulesets import may_edit_ruleset
 
 
 def test_user_context(with_user: tuple[UserId, str]) -> None:

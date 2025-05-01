@@ -1159,7 +1159,7 @@ class ModeEditRuleset(WatoMode):
                     msg_type="warning",
                 )
 
-        rulesets.save_folder()
+        rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
         return redirect(back_url)
 
     def page(self) -> None:
@@ -2152,7 +2152,7 @@ class ABCEditRuleMode(WatoMode):
             self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save_folder()
+            self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
@@ -2244,7 +2244,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _remove_from_orig_folder(self) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False)
-        self._rulesets.save_folder()
+        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
     def _success_message(self) -> str:
         return _('Edited rule in ruleset "%s" in folder "%s"') % (
@@ -3149,7 +3149,7 @@ class ModeEditRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder()
+        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
 
 class ModeCloneRule(ABCEditRuleMode):
@@ -3166,7 +3166,7 @@ class ModeCloneRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder()
+        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
     def _remove_from_orig_folder(self) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
@@ -3252,7 +3252,7 @@ class ModeNewRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
-        self._rulesets.save_folder()
+        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
         self._ruleset.add_new_rule_change(index, self._folder, self._rule)
 
     def _success_message(self) -> str:
@@ -3596,7 +3596,7 @@ class ModeUnknownRulesets(WatoMode):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
 
         ruleset.delete_rule(rule)
-        rulesets.save_folder(rule.folder)
+        rulesets.save_folder(rule.folder, pprint_value=active_config.wato_pprint_config)
 
     def _bulk_delete_selected_rules(
         self, selected_cp_rule_ids: Sequence[str], selected_rule_ids: Sequence[str]
@@ -3620,7 +3620,7 @@ class ModeUnknownRulesets(WatoMode):
                         do_reset = True
 
         if do_save:
-            rulesets.save()
+            rulesets.save(pprint_value=active_config.wato_pprint_config)
         if do_reset:
             deprecations.reset_scheduling()
         return redirect(self.mode_url())
@@ -3650,7 +3650,7 @@ class ModeUnknownRulesets(WatoMode):
                 for rulespec in rulespecs:
                     if rulespec["id"] == selected_rule_id:
                         rulesets.delete_unknown_rule(folder_path, ruleset_name, rulespec["id"])
-                        rulesets.save()
+                        rulesets.save(pprint_value=active_config.wato_pprint_config)
                         deprecations.reset_scheduling()
                         return redirect(self.mode_url())
 

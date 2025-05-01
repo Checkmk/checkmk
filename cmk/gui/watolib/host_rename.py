@@ -105,7 +105,11 @@ def perform_rename_hosts(
             update_interface(_("Renaming host(s) in parents..."))
             this_host_actions.extend(_rename_parents(oldname, newname))
             update_interface(_("Renaming host(s) in rule sets..."))
-            this_host_actions.extend(_rename_host_in_rulesets(oldname, newname, use_git=use_git))
+            this_host_actions.extend(
+                _rename_host_in_rulesets(
+                    oldname, newname, use_git=use_git, pprint_value=pprint_value
+                )
+            )
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
                 update_interface(_("Renaming host(s) in %s...") % hook.title)
@@ -193,7 +197,9 @@ def _rename_host_in_parents(
     return ["parents"] * len(parents), folder_parent_renamed
 
 
-def _rename_host_in_rulesets(oldname: HostName, newname: HostName, *, use_git: bool) -> list[str]:
+def _rename_host_in_rulesets(
+    oldname: HostName, newname: HostName, *, use_git: bool, pprint_value: bool
+) -> list[str]:
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
 
@@ -226,7 +232,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName, *, use_git: b
                 sites=folder.all_site_ids(),
                 use_git=use_git,
             )
-            rulesets.save_folder()
+            rulesets.save_folder(pprint_value=pprint_value)
 
         changed_rulesets.extend(changed_folder_rulesets)
 

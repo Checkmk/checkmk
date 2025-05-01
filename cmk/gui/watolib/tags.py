@@ -182,16 +182,14 @@ def edit_tag_group(
     tag_config.update_tag_group(edited_group)
     tag_config.validate_config()
     operation = OperationReplaceGroupedTags(ident, tag_ids_to_remove, tag_ids_to_replace)
-    affected = change_host_tags(
-        operation,
-        TagCleanupMode.CHECK,
-    )
+    affected = change_host_tags(operation, TagCleanupMode.CHECK, pprint_value=pprint_value)
     if any(affected):
         if not allow_repair:
             raise RepairError("Permission missing")
         _ = change_host_tags(
             operation,
             TagCleanupMode("repair"),
+            pprint_value=pprint_value,
         )
     update_tag_config(tag_config, pprint_value)
 
@@ -297,7 +295,10 @@ class OperationReplaceGroupedTags(ABCOperation):
 
 
 def change_host_tags(
-    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    *,
+    pprint_value: bool,
 ) -> tuple[list[Folder], list[Host], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
@@ -305,7 +306,7 @@ def change_host_tags(
         folder_tree().root_folder(),
     )
 
-    affected_rulesets = change_host_tags_in_rulesets(operation, mode)
+    affected_rulesets = _change_host_tags_in_rulesets(operation, mode, pprint_value=pprint_value)
     return affected_folder, affected_hosts, affected_rulesets
 
 
@@ -314,8 +315,11 @@ def _get_all_rulesets() -> AllRulesets:
     return cmk.gui.watolib.rulesets.AllRulesets.load_all_rulesets()
 
 
-def change_host_tags_in_rulesets(
-    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode
+def _change_host_tags_in_rulesets(
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    *,
+    pprint_value: bool,
 ) -> list[Ruleset]:
     affected_rulesets = set()
     all_rulesets = _get_all_rulesets()
@@ -324,7 +328,7 @@ def change_host_tags_in_rulesets(
             affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
 
     if mode != TagCleanupMode.CHECK:
-        all_rulesets.save()
+        all_rulesets.save(pprint_value=pprint_value)
 
     return sorted(affected_rulesets, key=lambda x: x.title() or "")
 

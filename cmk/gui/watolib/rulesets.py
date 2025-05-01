@@ -438,9 +438,11 @@ class RulesetCollection:
         folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+        *,
+        pprint_value: bool,
     ) -> bool:
         RuleConfigFile(Path(folder.rules_file_path())).save_rulesets_and_unknown_rulesets(
-            rulesets, unknown_rulesets, pprint_value=active_config.wato_pprint_config
+            rulesets, unknown_rulesets, pprint_value=pprint_value
         )
 
         # check if this contains a password. If so, the password file must be updated
@@ -520,22 +522,26 @@ class AllRulesets(RulesetCollection):
         self._load_rulesets_recursively(folder_tree().root_folder())
         return self
 
-    def save(self) -> None:
+    def save(self, *, pprint_value: bool) -> None:
         """Save all rulesets of all folders recursively"""
-        if self._save_rulesets_recursively(folder_tree().root_folder()):
+        if self._save_rulesets_recursively(folder_tree().root_folder(), pprint_value=pprint_value):
             update_merged_password_file()
 
-    def save_folder(self, folder: Folder) -> None:
-        if self._save_folder(folder, self._rulesets, self._unknown_rulesets):
+    def save_folder(self, folder: Folder, *, pprint_value: bool) -> None:
+        if self._save_folder(
+            folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
+        ):
             update_merged_password_file()
 
-    def _save_rulesets_recursively(self, folder: Folder) -> bool:
+    def _save_rulesets_recursively(self, folder: Folder, *, pprint_value: bool) -> bool:
         needs_password_file_updating = False
         for subfolder in folder.subfolders():
-            needs_password_file_updating |= self._save_rulesets_recursively(subfolder)
+            needs_password_file_updating |= self._save_rulesets_recursively(
+                subfolder, pprint_value=pprint_value
+            )
 
         needs_password_file_updating |= self._save_folder(
-            folder, self._rulesets, self._unknown_rulesets
+            folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         )
         return needs_password_file_updating
 
@@ -620,8 +626,10 @@ class FolderRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
         return self
 
-    def save_folder(self) -> None:
-        if RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets):
+    def save_folder(self, *, pprint_value: bool) -> None:
+        if RulesetCollection._save_folder(
+            self._folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
+        ):
             update_merged_password_file()
 
 
@@ -1529,11 +1537,15 @@ class EnabledDisabledServicesEditor:
     def __init__(self, host: Host) -> None:
         self._host = host
 
-    def save_host_service_enable_disable_rules(self, to_enable, to_disable):
-        self._save_service_enable_disable_rules(to_enable, value=False)
-        self._save_service_enable_disable_rules(to_disable, value=True)
+    def save_host_service_enable_disable_rules(
+        self, to_enable: set[str], to_disable: set[str], *, pprint_value: bool
+    ) -> None:
+        self._save_service_enable_disable_rules(to_enable, value=False, pprint_value=pprint_value)
+        self._save_service_enable_disable_rules(to_disable, value=True, pprint_value=pprint_value)
 
-    def _save_service_enable_disable_rules(self, services, value):
+    def _save_service_enable_disable_rules(
+        self, services: set[str], *, value: bool, pprint_value: bool
+    ) -> None:
         """
         Load all disabled services rules from the folder, then check whether or not there is a
         rule for that host and check whether or not it currently disabled the services in question.
@@ -1586,7 +1598,7 @@ class EnabledDisabledServicesEditor:
         modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
 
         for folder in modified_folders:
-            rulesets.save_folder(folder)
+            rulesets.save_folder(folder, pprint_value=pprint_value)
 
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)

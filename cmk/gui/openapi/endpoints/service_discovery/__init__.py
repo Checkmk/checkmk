@@ -271,6 +271,7 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
         host,
         check_type,
         service_item,
+        pprint_value=active_config.wato_pprint_config,
     )
     return Response(status=204)
 
@@ -280,6 +281,8 @@ def _update_single_service_phase(
     host: Host,
     check_type: str,
     service_item: str | None,
+    *,
+    pprint_value: bool,
 ) -> None:
     action = DiscoveryAction.SINGLE_UPDATE
     Discovery(
@@ -288,7 +291,9 @@ def _update_single_service_phase(
         update_target=target_phase,
         selected_services=((check_type, service_item),),
         user_need_permission=user.need_permission,
-    ).do_discovery(get_check_table(host, action, raise_errors=False), host.name())
+    ).do_discovery(
+        get_check_table(host, action, raise_errors=False), host.name(), pprint_value=pprint_value
+    )
 
 
 @Endpoint(
@@ -390,10 +395,14 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     host = Host.load_host(body["host_name"])
     discovery_action = APIDiscoveryAction(body["mode"])
-    return _execute_service_discovery(discovery_action, host)
+    return _execute_service_discovery(
+        discovery_action, host, pprint_value=active_config.wato_pprint_config
+    )
 
 
-def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
+def _execute_service_discovery(
+    api_discovery_action: APIDiscoveryAction, host: Host, *, pprint_value: bool
+) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
         return problem(
@@ -420,6 +429,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                pprint_value=pprint_value,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
@@ -430,12 +440,14 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                pprint_value=pprint_value,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
                 discovery_result=discovery_result,
                 host=host,
                 raise_errors=False,
+                pprint_value=pprint_value,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -458,6 +470,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                pprint_value=pprint_value,
             )
 
         case _:

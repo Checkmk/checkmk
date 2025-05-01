@@ -10,6 +10,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import NamedTuple
 
+from cmk.gui.config import active_config
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.rulesets import Rule, Ruleset
@@ -112,7 +113,7 @@ def migrate_main(search: SearchArgs, config: Config, write: bool) -> None:
         count = _new_migrated_rules(search, config, ruleset_v1, ruleset_v2)
         if write:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save()
+            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
             print_summary_write(count.conflicts, count.rules, count.skipped)
         else:
             print_summary_dryrun(count.conflicts, count.rules, count.skipped)
@@ -156,7 +157,7 @@ def finalize_main(search: SearchArgs) -> None:
         print_summary_finalize(rulecount_v1, rulecount_v2)
         if rulecount_v1 or rulecount_v2:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save()
+            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def delete_main(search: SearchArgs) -> None:
@@ -173,7 +174,7 @@ def delete_main(search: SearchArgs) -> None:
         print_summary_delete(count)
         if count:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save()
+            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def activate_main(search: SearchArgs) -> None:
@@ -197,7 +198,7 @@ def activate_main(search: SearchArgs) -> None:
         print_summary_activated(count)
         if count:
             sys.stdout.write("Saving rulesets...\n")
-            all_rulesets.save()
+            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def deactivate_main(search: SearchArgs) -> None:
@@ -221,7 +222,7 @@ def deactivate_main(search: SearchArgs) -> None:
         print_summary_deactivated(count)
         if count:
             sys.stdout.write("Saving rulesets...\n")
-            all_rulesets.save()
+            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 @contextmanager

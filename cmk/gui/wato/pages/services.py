@@ -330,6 +330,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
             raise_errors=not api_request.discovery_options.ignore_errors,
+            pprint_value=active_config.wato_pprint_config,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -402,6 +403,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         selected_services: Container[tuple[str, Item]],
         *,
         raise_errors: bool,
+        pprint_value: bool,
     ) -> DiscoveryResult:
         if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
@@ -428,6 +430,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     discovery_result=discovery_result,
                     host=host,
                     raise_errors=raise_errors,
+                    pprint_value=pprint_value,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -452,6 +455,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     selected_services=selected_services,
                     raise_errors=raise_errors,
+                    pprint_value=pprint_value,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
@@ -462,6 +466,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     selected_services=selected_services,
                     raise_errors=raise_errors,
+                    pprint_value=pprint_value,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")

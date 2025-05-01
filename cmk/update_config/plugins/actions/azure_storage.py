@@ -5,6 +5,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.watolib.rulesets import AllRulesets
 
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration
@@ -19,7 +20,7 @@ class MigrateAzureStorage(UpdateAction):
         )
         for error in migration:
             pass
-        migration.all_rulesets.save()
+        migration.all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 update_action_registry.register(

@@ -27,6 +27,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
+from cmk.gui.config import active_config
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
 from cmk.gui.userdb import create_cmk_automation_user
@@ -178,7 +179,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         root_folder = folder_tree().root_folder()
         rulesets = FolderRulesets.load_folder_rulesets(root_folder)
         rulesets.replace_folder_config(root_folder, SHIPPED_RULES)
-        rulesets.save_folder()
+        rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
         _create_default_notify_plugin()
         notification_rules = [get_default_notification_rule()]

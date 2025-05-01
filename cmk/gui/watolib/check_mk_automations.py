@@ -271,7 +271,7 @@ def rename_hosts(
 def get_services_labels(
     site_id: SiteId,
     host_name: HostName,
-    service_names: Sequence[ServiceName],
+    service_names: Iterable[ServiceName],
 ) -> results.GetServicesLabelsResult:
     return _deserialize(
         _automation_serialized(

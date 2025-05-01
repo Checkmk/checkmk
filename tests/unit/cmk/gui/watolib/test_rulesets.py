@@ -60,7 +60,7 @@ def test_analyse_host_ruleset() -> None:
     ruleset = _test_host_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
     (Path(default_config_dir) / "main.mk").touch()
-    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder()
+    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
     result = ruleset.analyse_ruleset(HostName("ding"), None, None, {})
     assert isinstance(result, tuple)
@@ -178,7 +178,7 @@ def test_analyse_service_ruleset() -> None:
     ruleset = _test_service_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
     (Path(default_config_dir) / "main.mk").touch()
-    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder()
+    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
     result = ruleset.analyse_ruleset(HostName("ding"), "Ding", "Ding", {})
     assert isinstance(result, tuple)

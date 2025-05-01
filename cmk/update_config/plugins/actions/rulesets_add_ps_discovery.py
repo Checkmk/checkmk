@@ -6,6 +6,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import PS_DISCOVERY_RULES
@@ -20,7 +21,7 @@ class UpdatePSDiscovery(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         add_ps_discovery_rules(logger, all_rulesets)
-        all_rulesets.save()
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def add_ps_discovery_rules(

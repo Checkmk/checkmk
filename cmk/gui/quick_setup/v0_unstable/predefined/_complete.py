@@ -341,7 +341,12 @@ def _create_and_save_special_agent_bundle(
     else:
         progress_logger.log_new_progress_step("service_discovery", "Run service discovery")
         try:
-            _run_service_discovery(host_name, site_id, is_local)
+            _run_service_discovery(
+                host_name,
+                site_id,
+                is_local=is_local,
+                pprint_value=active_config.wato_pprint_config,
+            )
         except Exception as e:
             progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
 
@@ -396,7 +401,9 @@ def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
     return True
 
 
-def _run_service_discovery(host_name: str, site_id: SiteId, is_local: bool) -> None:
+def _run_service_discovery(
+    host_name: str, site_id: SiteId, *, is_local: bool, pprint_value: bool
+) -> None:
     host: Host = Host.load_host(HostName(host_name))
     if not is_local:
         # this also implicitly syncs the pending changes to the remote site to run the discovery
@@ -415,4 +422,5 @@ def _run_service_discovery(host_name: str, site_id: SiteId, is_local: bool) -> N
         discovery_result=check_table,
         host=host,
         raise_errors=False,
+        pprint_value=pprint_value,
     )

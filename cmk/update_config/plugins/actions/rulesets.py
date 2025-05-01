@@ -6,6 +6,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -21,7 +22,7 @@ class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         all_rulesets = load_and_transform(logger)
         validate_rule_values(logger, all_rulesets)
-        all_rulesets.save()
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def validate_rule_values(

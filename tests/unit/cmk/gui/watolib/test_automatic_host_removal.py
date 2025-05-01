@@ -125,7 +125,9 @@ def fixture_setup_rules() -> None:
         ),
     )
     (Path(default_config_dir) / "main.mk").touch()
-    FolderRulesets({"automatic_host_removal": ruleset}, folder=root_folder).save_folder()
+    FolderRulesets({"automatic_host_removal": ruleset}, folder=root_folder).save_folder(
+        pprint_value=False
+    )
 
 
 @pytest.fixture(name="setup_livestatus_mock")

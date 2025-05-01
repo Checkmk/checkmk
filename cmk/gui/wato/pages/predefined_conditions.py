@@ -7,6 +7,7 @@
 from collections.abc import Collection
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -313,8 +314,8 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)
 
-        new_rulesets.save_folder()
-        old_rulesets.save_folder()
+        new_rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        old_rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
     def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
@@ -332,7 +333,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
                 if rule.predefined_condition_id() == self._ident:
                     rule.update_conditions(conditions)
 
-        rulesets.save_folder()
+        rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
 
     def _contact_group_choices(self, only_own: bool = False) -> list[tuple[str, str]]:
         contact_groups = load_contact_group_information()

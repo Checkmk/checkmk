@@ -14,6 +14,7 @@ from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.rulespec import register_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-layer-violation
     load_discovered_rule_specs,
@@ -190,7 +191,7 @@ def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
         for transformed_rulename, transformed_rule in rulesets.get_rulesets().items():
             all_rulesets.set(transformed_rulename, transformed_rule)
 
-        all_rulesets.save()
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
 
 
 def migrate_extension_rulesets(args: argparse.Namespace) -> int:

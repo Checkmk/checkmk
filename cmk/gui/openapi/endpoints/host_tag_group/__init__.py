@@ -230,7 +230,11 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
 
-    affected = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK)
+    affected = change_host_tags(
+        OperationRemoveTagGroup(ident),
+        TagCleanupMode.CHECK,
+        pprint_value=active_config.wato_pprint_config,
+    )
     if any(affected):
         mode = TagCleanupMode(params["mode"] or ("delete" if params["repair"] else "abort"))
         if mode == TagCleanupMode.ABORT:
@@ -258,7 +262,9 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
                     "authorize Checkmk to update the relevant instances using the repair or mode parameters"
                 ),
             )
-        _ = change_host_tags(OperationRemoveTagGroup(ident), mode)
+        _ = change_host_tags(
+            OperationRemoveTagGroup(ident), mode, pprint_value=active_config.wato_pprint_config
+        )
 
     tag_config = load_tag_config()
     tag_config.remove_tag_group(ident)

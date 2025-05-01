@@ -576,7 +576,7 @@ class ModeTagUsage(ABCTagMode):
             tag_group.id, remove_tag_ids=[tag.id], replace_tag_ids={}
         )
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
-            operation, TagCleanupMode.CHECK
+            operation, TagCleanupMode.CHECK, pprint_value=active_config.wato_pprint_config
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -625,7 +625,7 @@ class ModeTagUsage(ABCTagMode):
             raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(TagGroupID(aux_tag.id))
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
-            operation, TagCleanupMode.CHECK
+            operation, TagCleanupMode.CHECK, pprint_value=active_config.wato_pprint_config
         )
 
         table.cell(_("Explicitly set on folders"))
@@ -948,7 +948,9 @@ def _rename_tags_after_confirmation(
         if mode == TagCleanupMode.ABORT:
             raise MKUserError("id_0", _("Aborting change."))
 
-        affected_folders, affected_hosts, affected_rulesets = change_host_tags(operation, mode)
+        affected_folders, affected_hosts, affected_rulesets = change_host_tags(
+            operation, mode, pprint_value=active_config.wato_pprint_config
+        )
 
         return _("Modified folders: %d, modified hosts: %d, modified rule sets: %d") % (
             len(affected_folders),
@@ -958,7 +960,7 @@ def _rename_tags_after_confirmation(
 
     message = HTML.empty()
     affected_folders, affected_hosts, affected_rulesets = change_host_tags(
-        operation, TagCleanupMode.CHECK
+        operation, TagCleanupMode.CHECK, pprint_value=active_config.wato_pprint_config
     )
 
     if affected_folders:

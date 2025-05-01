@@ -246,7 +246,9 @@ def _validate_and_prepare_create_calls(
     if entities.hosts:
         create_functions.append(_prepare_create_hosts(bundle_ident, entities.hosts))
     if entities.rules:
-        create_functions.append(_prepare_create_rules(bundle_ident, entities.rules))
+        create_functions.append(
+            _prepare_create_rules(bundle_ident, entities.rules, pprint_value=pprint_value)
+        )
     if entities.dcd_connections:
         create_functions.append(
             _prepare_create_dcd_connections(
@@ -337,7 +339,7 @@ def delete_config_bundle_objects(
 
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
-        _delete_rules(references.rules)
+        _delete_rules(references.rules, pprint_value=pprint_value)
     if references.hosts:
         _delete_hosts(references.hosts)
     if references.passwords:
@@ -497,7 +499,9 @@ def _collect_rules(
             yield bundle_id, rule
 
 
-def _prepare_create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> CreateFunction:
+def _prepare_create_rules(
+    bundle_ident: GlobalIdent, rules: Iterable[CreateRule], *, pprint_value: bool
+) -> CreateFunction:
     validated_data = []
     # sort by folder, then ruleset
     sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
@@ -527,12 +531,12 @@ def _prepare_create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]
                 index = rule.ruleset.append_rule(f, rule)
                 rule.ruleset.add_new_rule_change(index, f, rule)
 
-            rulesets.save_folder()
+            rulesets.save_folder(pprint_value=pprint_value)
 
     return create
 
 
-def _delete_rules(rules: Iterable[Rule]) -> None:
+def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
     for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
@@ -543,7 +547,7 @@ def _delete_rules(rules: Iterable[Rule]) -> None:
             actual_rule = ruleset.get_rule_by_id(rule.id)
             rulesets.get(rule.ruleset.name).delete_rule(actual_rule)
 
-        rulesets.save_folder()
+        rulesets.save_folder(pprint_value=pprint_value)
 
 
 def _collect_dcd_connections(

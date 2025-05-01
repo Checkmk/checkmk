@@ -328,6 +328,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         ),
         host=sample_host,
         raise_errors=True,
+        pprint_value=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
@@ -582,6 +583,7 @@ def test_perform_discovery_single_update(
         update_target="unchanged",
         host=sample_host,
         raise_errors=True,
+        pprint_value=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Check_MK Agent": AutocheckEntry(CheckPluginName("checkmk_agent"), None, {}, {}),
@@ -789,6 +791,7 @@ def test_perform_discovery_action_update_services(
         update_target=None,
         host=sample_host,
         raise_errors=True,
+        pprint_value=False,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Filesystem /opt/omd/sites/heute/tmp": AutocheckEntry(

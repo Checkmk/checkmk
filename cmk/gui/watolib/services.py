@@ -270,7 +270,9 @@ class Discovery:
         self._selected_services = selected_services
         self.user_need_permission: Final = user_need_permission
 
-    def do_discovery(self, discovery_result: DiscoveryResult, target_host_name: HostName) -> None:
+    def do_discovery(
+        self, discovery_result: DiscoveryResult, target_host_name: HostName, *, pprint_value: bool
+    ) -> None:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
         ) is None:
@@ -278,7 +280,9 @@ class Discovery:
 
         if transition.need_sync:
             self._save_host_service_enable_disable_rules(
-                transition.remove_disabled_rule, transition.add_disabled_rule
+                transition.remove_disabled_rule,
+                transition.add_disabled_rule,
+                pprint_value=pprint_value,
             )
 
         self._save_services(
@@ -366,10 +370,10 @@ class Discovery:
         )
 
     def _save_host_service_enable_disable_rules(
-        self, remove_disabled_rule: set[str], add_disabled_rule: set[str]
+        self, remove_disabled_rule: set[str], add_disabled_rule: set[str], *, pprint_value: bool
     ) -> None:
         EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
-            remove_disabled_rule, add_disabled_rule
+            remove_disabled_rule, add_disabled_rule, pprint_value=pprint_value
         )
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
@@ -574,6 +578,7 @@ def perform_fix_all(
     *,
     host: Host,
     raise_errors: bool,
+    pprint_value: bool,
 ) -> DiscoveryResult:
     """
     Handle fix all ('Accept All' on UI) discovery action
@@ -587,7 +592,7 @@ def perform_fix_all(
             update_source=None,
             selected_services=(),  # does not matter in case of "FIX_ALL"
             user_need_permission=user.need_permission,
-        ).do_discovery(discovery_result, host.name())
+        ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
         discovery_result = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=raise_errors)
     return discovery_result
 
@@ -615,6 +620,7 @@ def perform_service_discovery(
     host: Host,
     selected_services: Container[tuple[str, Item]],
     raise_errors: bool,
+    pprint_value: bool,
 ) -> DiscoveryResult:
     """
     Handle discovery action for Update Services, Single Update & Bulk Update
@@ -627,7 +633,7 @@ def perform_service_discovery(
             update_source=update_source,
             selected_services=selected_services,
             user_need_permission=user.need_permission,
-        ).do_discovery(discovery_result, host.name())
+        ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
         discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result
 

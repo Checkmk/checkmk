@@ -10,6 +10,7 @@ import json
 import operator
 import os
 import pickle
+import pprint
 import shutil
 import subprocess
 import time
@@ -107,7 +108,6 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import (
-    get_value_formatter,
     host_attribute_matches,
     rename_host_in_list,
     wato_root_dir,
@@ -1455,11 +1455,12 @@ class Folder(FolderProtocol):
         ):
             storage_list.append(experimental_storage)
 
+        formatter = pprint.pformat if active_config.wato_pprint_config else repr
         for storage_module in storage_list:
             storage_module.write(
                 Path(self.hosts_file_path_without_extension()),
                 data,
-                get_value_formatter(),
+                formatter,
             )
 
     def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:

@@ -5,9 +5,7 @@
 
 import ast
 import base64
-import pprint
 import re
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +15,6 @@ import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.mode import mode_registry
@@ -62,12 +59,6 @@ def host_attribute_matches(crit: str, value: str) -> bool:
 
     # insensitive infix search
     return crit.lower() in value.lower()
-
-
-def get_value_formatter() -> Callable[[Any], str]:
-    if active_config.wato_pprint_config:
-        return pprint.pformat
-    return repr
 
 
 def mk_repr(x: Any) -> bytes:

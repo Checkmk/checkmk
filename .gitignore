@@ -108,3 +108,4 @@ remote.bazelrc
 # gui-e2e tests: playwright specific ignores
 test-results/
 /*.png
+.aider*

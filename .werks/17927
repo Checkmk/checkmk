@@ -1,0 +1,13 @@
+Title: Fix filter delete button floating in Safari
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1746178702
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+In the Safari browser, the filter delete button floated to the top of the filter list rather than the top of the filter item.
+This resulted in overlapping delete buttons when more than one filter was set.
+
+The floating behaviour has now been fixed and filter items can now be deleted using their respective delete buttons.

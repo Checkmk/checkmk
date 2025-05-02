@@ -492,10 +492,11 @@ div.flex_break {
 div.side_popup_content table.valuespec_listof.filter {
   td.vlof_buttons {
     width: 0;
+    vertical-align: top;
 
     a.delete_button img {
       position: absolute;
-      top: 4px;
+      margin-top: 4px;
       right: $simplebar-track-width;
       z-index: 5;
       width: 12px;

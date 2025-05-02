@@ -1419,8 +1419,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
 
         ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
-
-        users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
+        users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         def load_existing_user(uid: UserId) -> tuple[UserId, UserSpec] | None:
             if uid in users and users[uid].get("connector") == self.id:
@@ -1607,7 +1606,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         for _key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, params, user_id, ldap_user, user))  # type: ignore[arg-type, typeddict-item]
+            user.update(plugin.sync_func(self, params, user_id, ldap_user, user))  # type: ignore[typeddict-item]
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1749,7 +1748,7 @@ class LDAPAttributePlugin:
         _params: dict[str, Any],
         _user_id: UserId,
         _ldap_user: LDAPUserSpec,
-        _user: dict,
+        _user: UserSpec,
     ) -> dict:
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
@@ -1811,7 +1810,7 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
         params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        user: UserSpec,
     ) -> dict:
         attr = self.needed_attributes(connection, params)[0]
         if attr in ldap_user:
@@ -2014,7 +2013,7 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
         params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        _user: dict,
+        _user: UserSpec,
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         mail = ""
@@ -2082,7 +2081,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        _user: dict,
+        _user: UserSpec,
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()
@@ -2164,7 +2163,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        user: UserSpec,
     ) -> dict:
         sync_attribute = cast(SyncAttribute, params)
         # Special handling for active directory: Is the user enabled / disabled?
@@ -2267,7 +2266,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        _user: UserSpec,
     ) -> dict[str, str]:
         sync_attribute = cast(SyncAttribute, params)
         attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()
@@ -2330,7 +2329,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
         params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
-        _user: dict,
+        _user: UserSpec,
     ) -> dict[str, list[str]]:
         groups_to_contactgroups = cast(GroupsToContactGroups, params)
         cg_names = list(load_contact_group_information().keys())
@@ -2400,7 +2399,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
         params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        user: UserSpec,
     ) -> dict:
         groups_to_attributes = cast(GroupsToAttributes, params)
         # Which groups need to be checked whether or not the user is a member?
@@ -2532,7 +2531,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
         params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        _user: UserSpec,
     ) -> dict[Literal["roles"], list[str]]:
         groups_to_roles = cast(GroupsToRoles, params)
         ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, groups_to_roles)

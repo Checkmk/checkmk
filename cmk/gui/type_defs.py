@@ -248,6 +248,7 @@ class UserSpec(TypedDict, total=False):
     icons_per_item: NotRequired[Literal["entry"] | None]
     temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
     contextual_help_icon: NotRequired[Literal["hide_icon"] | None]
+    ldap_pw_last_changed: NotRequired[str]  # On attribute sync, this is added, then removed.
 
 
 class UserObjectValue(TypedDict):

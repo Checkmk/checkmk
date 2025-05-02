@@ -31,11 +31,6 @@ def multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
-# TODO: Move this to CEE specific code again
-def liveproxyd_config_dir() -> str:
-    return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
-
-
 def mk_repr(x: Any) -> bytes:
     return base64.b64encode(repr(x).encode())
 

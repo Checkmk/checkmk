@@ -57,7 +57,7 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
-from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.hash import HashAlgorithm
@@ -237,8 +237,8 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             and active_config.liveproxyd_enabled
         )
 
-    def config_dir(self):
-        return liveproxyd_config_dir()
+    def config_dir(self) -> str:
+        return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
 
     def save(self, settings, site_specific=False, custom_site_path=None):
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)

@@ -222,7 +222,7 @@ STAGES:
       COMMAND: "make --quiet test-mypy-agent-cisco-meraki &> ${RESULTS}/mypy_agent_cisco_meraki.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_TYPE: "MYPY"
       RESULT_CHECK_FILE_PATTERN: "results/mypy_agent_cisco_meraki.xml"
 
     - NAME: "Python Typing not cmk"
@@ -233,7 +233,7 @@ STAGES:
       COMMAND: "make --quiet test-mypy-not-cmk &> ${RESULTS}/mypy_not_cmk.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_TYPE: "MYPY"
       RESULT_CHECK_FILE_PATTERN: "results/mypy_not_cmk.xml"
 
     - NAME: "Python Format"

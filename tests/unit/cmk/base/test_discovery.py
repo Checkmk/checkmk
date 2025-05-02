@@ -1519,7 +1519,7 @@ def test_commandline_discovery(
 
     commandline_discovery(
         host_name=testhost,
-        ruleset_matcher=config_cache.ruleset_matcher,
+        clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(

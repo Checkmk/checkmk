@@ -167,7 +167,7 @@ def discover_services(
 
     commandline_discovery(
         hostname,
-        ruleset_matcher=config_cache.ruleset_matcher,
+        clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser(config_cache.parser_factory()),
         fetcher=_fetcher(),
         section_plugins=SectionPluginMapper(

@@ -2229,7 +2229,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
 
         commandline_discovery(
             hostname,
-            ruleset_matcher=config_cache.ruleset_matcher,
+            clear_ruleset_matcher_caches=(config_cache.ruleset_matcher.clear_caches),
             parser=parser,
             fetcher=fetcher,
             section_plugins=SectionPluginMapper(

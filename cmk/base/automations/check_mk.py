@@ -295,7 +295,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             loading_result.loaded_config.discovery_rules,
         )
         config_cache = loading_result.config_cache
-        ruleset_matcher = config_cache.ruleset_matcher
         hosts_config = config_cache.hosts_config
         service_name_config = config_cache.make_passive_service_name_config()
         autochecks_config = config.AutochecksConfigurer(
@@ -354,7 +353,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
                     if config_cache.is_active(hn) and config_cache.is_online(hn)
                 },
-                ruleset_matcher=ruleset_matcher,
+                clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
                 parser=parser,
                 fetcher=fetcher,
                 summarizer=CMKSummarizer(
@@ -846,7 +845,6 @@ def _execute_autodiscovery(
         # allows to access the lookup faiures.
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
@@ -953,7 +951,7 @@ def _execute_autodiscovery(
                             for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
                             if config_cache.is_active(hn) and config_cache.is_online(hn)
                         },
-                        ruleset_matcher=ruleset_matcher,
+                        clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
                         parser=parser,
                         fetcher=fetcher,
                         summarizer=CMKSummarizer(

@@ -19,7 +19,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
@@ -134,7 +133,7 @@ def automation_discovery(
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
     active_hosts: Container[HostName],
-    ruleset_matcher: RulesetMatcher,
+    clear_ruleset_matcher_caches: Callable[[], object],
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
@@ -213,7 +212,7 @@ def automation_discovery(
 
         if host_labels.new or host_labels.vanished or host_labels.changed:
             # Rulesets for service discovery can match based on the hosts labels.
-            ruleset_matcher.clear_caches()
+            clear_ruleset_matcher_caches()
 
         # Compute current state of new and existing checks
         services_by_host_name = get_host_services_by_host_name(
@@ -450,7 +449,7 @@ def autodiscovery(
     *,
     cluster_nodes: Sequence[HostName],
     active_hosts: Container[HostName],
-    ruleset_matcher: RulesetMatcher,
+    clear_ruleset_matcher_caches: Callable[[], object],
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -481,7 +480,7 @@ def autodiscovery(
         is_cluster=False,
         cluster_nodes=cluster_nodes,
         active_hosts=active_hosts,
-        ruleset_matcher=ruleset_matcher,
+        clear_ruleset_matcher_caches=clear_ruleset_matcher_caches,
         parser=parser,
         fetcher=fetcher,
         summarizer=summarizer,

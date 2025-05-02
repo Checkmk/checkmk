@@ -17,7 +17,7 @@ MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
     "params,section,expected_results",
     [
         (
-            {"levels": (40.0, 90.0)},
+            {"levels": ("fixed", (40.0, 90.0))},
             MEM_DATA,
             (
                 Result(
@@ -34,6 +34,26 @@ MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
                     "mem_used_percent",
                     50.0,
                     levels=(40.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
+            ),
+        ),
+        (
+            {"levels": ("no_levels", None)},
+            MEM_DATA,
+            (
+                Result(
+                    state=State.OK,
+                    summary="Usage: 50.00% - 1.00 GiB of 2.00 GiB",
+                ),
+                Metric(
+                    "mem_used",
+                    1073741824.0,
+                    boundaries=(0.0, 2147483648.0),
+                ),
+                Metric(
+                    "mem_used_percent",
+                    50.0,
                     boundaries=(0.0, None),
                 ),
             ),

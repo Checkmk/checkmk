@@ -698,7 +698,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Host check command"),
+        title=_l("Host check command (regex)"),
         sort_index=110,
         info="host",
         autocompleter=AutocompleterConfig(ident="check_cmd"),
@@ -711,7 +711,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Service check command"),
+        title=_l("Service check command (regex)"),
         sort_index=210,
         info="service",
         autocompleter=AutocompleterConfig(ident="check_cmd"),

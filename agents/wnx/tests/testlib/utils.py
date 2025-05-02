@@ -6,6 +6,9 @@
 
 import os
 from pathlib import Path
+from typing import Final
+
+_CHECKMK_GIT_ENV_VAR: Final = "CHECKMK_GIT_DIR"
 
 
 def get_path_from_env(env: str) -> Path:
@@ -15,4 +18,4 @@ def get_path_from_env(env: str) -> Path:
 
 
 def get_git_root_path() -> Path:
-    return get_path_from_env("repo_root")
+    return get_path_from_env(_CHECKMK_GIT_ENV_VAR)

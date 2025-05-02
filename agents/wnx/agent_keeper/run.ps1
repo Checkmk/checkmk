@@ -176,11 +176,11 @@ function Update-Dirs() {
     $arte_dir = "$root_dir/artefacts"
     If (!(Test-Path -PathType container $arte_dir)) {
         Remove-Item $arte_dir -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
-        Write-Host "Creating output dir: '$arte_dir'" -ForegroundColor White
+        Write-Host "Creating arte dir: '$arte_dir'" -ForegroundColor White
         New-Item -ItemType Directory -Path $arte_dir -ErrorAction Stop > nul
     }
     $global:arte_dir = "$arte_dir"
-    Write-Host "Using output dir: '$global:arte_dir'" -ForegroundColor White
+    Write-Host "Using arte dir: '$global:arte_dir'" -ForegroundColor White
 }
 
 $result = 1

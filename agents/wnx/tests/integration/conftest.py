@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import shutil
 from collections.abc import Generator
 from pathlib import Path
 from typing import Final, TypeVar
@@ -19,7 +17,6 @@ from .utils import (
     create_protocol_file,
     get_path_from_env,
     INTEGRATION_PORT,
-    PYTHON_CAB_NAME,
     YamlDict,
 )
 
@@ -40,27 +37,11 @@ global:
 """
 
 _TEST_ENV_VAR: Final = "WNX_INTEGRATION_BASE_DIR"  # supplied by script
-_CHECKMK_GIT_ENV_VAR: Final = "CHECKMK_GIT_DIR"  # supplied by script
-_ARTIFACTS_ENV_VAR: Final = "arte"  # supplied by script
-_FACTORY_YAML_CONFIG: Final = "check_mk.yml"
-_CTL_EXE_NAME: Final = "cmk-agent-ctl.exe"
-
-
-@pytest.fixture(name="artifacts_dir", scope="session")
-def artifacts_dir_fixture() -> Path:
-    p = get_path_from_env(_ARTIFACTS_ENV_VAR)
-    assert p.exists()
-    return p
 
 
 @pytest.fixture(name="main_dir", scope="session")
 def main_dir_fixture() -> Path:
     return get_path_from_env(_TEST_ENV_VAR)
-
-
-@pytest.fixture(name="git_dir", scope="session")
-def git_dir_fixture(main_dir: Path) -> Path:
-    return get_path_from_env(_CHECKMK_GIT_ENV_VAR)
 
 
 @pytest.fixture(name="data_dir", scope="session")
@@ -89,23 +70,7 @@ def default_yaml_config_fixture() -> YamlDict:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def setup_all(
-    main_dir: Path,
-    data_dir: Path,
-    artifacts_dir: Path,
-    root_dir: Path,
-) -> YieldFixture[None]:
-    shutil.rmtree(main_dir, ignore_errors=True)
-    os.makedirs(root_dir, exist_ok=True)
-    os.makedirs(data_dir, exist_ok=True)
-    os.makedirs(data_dir / "bin", exist_ok=True)
-    os.makedirs(data_dir / "log", exist_ok=True)
-    os.makedirs(data_dir / "modules" / "python-3", exist_ok=True)
-    os.makedirs(data_dir / "plugins", exist_ok=True)
-    os.makedirs(data_dir / "install" / "modules", exist_ok=True)
-    for f in [_FACTORY_YAML_CONFIG, AGENT_EXE_NAME, _CTL_EXE_NAME, PYTHON_CAB_NAME]:
-        shutil.copy(artifacts_dir / f, root_dir)
-    shutil.copy(root_dir / PYTHON_CAB_NAME, data_dir / "install" / "modules")
+def setup_all(data_dir: Path) -> YieldFixture[None]:
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)
     yield

@@ -68,17 +68,18 @@ def _get_path_from_env(env: str) -> Path:
 port = 29998
 host = "localhost"
 EXE_ENV_VAR = "WNX_REGRESSION_BASE_DIR"
-ARTE_ENV_VAR = "arte"
+REPO_ROOT_ENV_VAR = "repo_root"
+ARTIFACTS_DIR = "artefacts"
 
-artifacts_dir = _get_path_from_env(ARTE_ENV_VAR)
+repo_root = _get_path_from_env(REPO_ROOT_ENV_VAR)
 test_dir = _get_path_from_env(EXE_ENV_VAR)
-if not artifacts_dir.exists():
-    print(f"Artifacts Directory {artifacts_dir} doesnt exist")
+if not (repo_root / ARTIFACTS_DIR).exists():
+    print(f"Artifacts Directory {repo_root / ARTIFACTS_DIR} doesn't exist")
     sys.exit(11)
 
 if not test_dir.exists():
     print(f"Test Directory {test_dir} doesnt exist")
-    sys.exit(12)
+    sys.exit(1)
 
 # root dir
 root_dir = test_dir / "test" / "root"
@@ -88,7 +89,11 @@ create_protocol_file(on_dir=user_dir)
 
 # names
 user_yaml_config = user_dir / "check_mk.user.yml"
-main_exe = test_dir / "check_mk_agent.exe"
+main_exe = root_dir / "check_mk_agent.exe"
+
+if not main_exe.exists():
+    print(f"exe file {main_exe} doesn't exist")
+    sys.exit(1)
 
 
 # environment variable set

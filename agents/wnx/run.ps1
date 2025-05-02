@@ -25,16 +25,22 @@ $argOhm = $false
 $argExt = $false
 $argSql = $false
 $argDetach = $false
+$argSkipSqlTest = $false
 
-$msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
+$msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+    -latest `
+    -requires Microsoft.Component.MSBuild `
+    -find MSBuild\**\Bin\MSBuild.exe
+
 $repo_root = (get-item $pwd).parent.parent.FullName
-$arte = "$repo_root\artefacts"
+$results_dir = "$repo_root\artefacts"
 $build_dir = "$pwd\build"
 $ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
-$hash_file = "$arte\windows_files_hashes.txt"
+$hash_file = "$results_dir\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
+$signing_folder = "signed-files"
 
 
 if ("$env:arg_var_value" -ne "") {
@@ -54,19 +60,20 @@ function Write-Help() {
     Write-Host "$name [arguments]"
     Write-Host ""
     Write-Host "Available arguments:"
-    Write-Host "  -?, -h, --help       display help and exit"
-    Write-Host "  -A, --all            shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
-    Write-Host "  --clean-all          clean literally all, use with care"
-    Write-Host "  --clean-artifacts    clean artifacts"
-    Write-Host "  -C, --ctl            build controller"
-    Write-Host "  -Q, --mk-sql         build mk-sql"
-    Write-Host "  -B, --build          build agent"
-    Write-Host "  -M, --msi            build msi"
-    Write-Host "  -O, --ohm            build ohm"
-    Write-Host "  -E, --extensions     build extensions"
-    Write-Host "  -T, --test           run agent component tests using binary in repo_root/artefacts"
-    Write-Host "  --detach             detach USB before running"
-    Write-Host "  --sign               sign controller using Yubikey based Code Certificate"
+    Write-Host "  -?, -h, --help          display help and exit"
+    Write-Host "  -A, --all               shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
+    Write-Host "  --clean-all             clean literally all, use with care"
+    Write-Host "  --clean-artifacts       clean artifacts"
+    Write-Host "  -C, --ctl               build controller"
+    Write-Host "  -Q, --mk-sql            build mk-sql"
+    Write-Host "  -B, --build             build agent"
+    Write-Host "  -M, --msi               build msi"
+    Write-Host "  -O, --ohm               build ohm"
+    Write-Host "  -E, --extensions        build extensions"
+    Write-Host "  -T, --test              run agent component tests using binary in repo_root/artefacts"
+    Write-Host "  -S, --skip-mk-sql-test  skip sql test to be able to build msi in case sql is not configured"
+    Write-Host "  --detach                detach USB before running"
+    Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
@@ -94,6 +101,7 @@ else {
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
+            { $("-S", "--skip-mk-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }
@@ -180,10 +188,6 @@ function Build-Agent {
         Write-Error "Failed to build Agent, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 
-    # upload test artifacts for separate testing
-    Copy-Item $build_dir/watest/Win32/Release/watest32.exe $arte -Force -ErrorAction Stop
-    Copy-Item $build_dir/watest/x64/Release/watest64.exe $arte -Force -ErrorAction Stop
-    
     Write-Host "Success building agent" -ForegroundColor Green
 }
 
@@ -233,8 +237,8 @@ function Build-OHM() {
     }
 
     Write-Host "Uploading OHM" -foreground Green
-    Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $arte -Force -ErrorAction Stop
-    Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $arte -Force -ErrorAction Stop
+    Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $results_dir -Force -ErrorAction Stop
+    Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $results_dir -Force -ErrorAction Stop
     Write-Host "Success building OHM" -foreground Green
 }
 
@@ -307,13 +311,51 @@ function Start-UnitTests {
     Write-Host "Success unit tests" -foreground Green
 }
 
+function Test-SigningQuickly {
+    if ($argSign -ne $true) {
+        return
+    }
+
+    try {
+        Write-Host "Validate signing..." -ForegroundColor White
+        $TempFile = New-TemporaryFile
+        $ps_name = $TempFile.BaseName + ".ps1"
+        Rename-Item -NewName $ps_name -Path $TempFile
+        $newfile = $TempFile.DirectoryName + $TempFile.BaseName + ".ps1"
+        "Get-Date" | Out-File $newfile
+        for ($i = 1; $i -le 15; $i++) {
+            & ./scripts/sign_code_fast.cmd $newfile
+            if ($LASTEXITCODE -eq 0) {
+                break
+            }
+            Write-Host "Waiting 1 seconds before retry" -ForegroundColor White
+            Start-Sleep -Seconds 1
+        }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to sign test file" $LASTEXITCODE -foreground Red
+        }
+        else {
+            Write-Host "Success signing test file" -ForegroundColor Green
+        }
+        Remove-Item -Path $newfile -Force -ErrorAction SilentlyContinue
+
+    }
+    catch {
+        Write-Host "Failed to create temporary file" -ForegroundColor Red
+    }
+
+
+}
+
+
+
 function Invoke-Attach($usbip, $addr, $port) {
     if ($argSign -ne $true) {
         Write-Host "Skipping attach" -ForegroundColor Yellow
         return
     }
     &$usbip attach -r $addr -b $port
-    for ($i = 1; $i -le 15; $i++) {
+    for ($i = 1; $i -le 20; $i++) {
         if ($LASTEXITCODE -eq 0) {
             break
         }
@@ -326,7 +368,7 @@ function Invoke-Attach($usbip, $addr, $port) {
         throw "Attach to the signing key is not possible. Signing can't be done"
     }
     Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 5 
     return
 }
 
@@ -398,8 +440,8 @@ function Start-BinarySigning {
     $files_to_sign = @(
         "$build_dir\check_mk_service\x64\Release\check_mk_service64.exe",
         "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
-        "$arte\cmk-agent-ctl.exe",
-        "$arte\mk-sql.exe",
+        "$results_dir\cmk-agent-ctl.exe",
+        "$results_dir\mk-sql.exe",
         "$ohm_dir\OpenHardwareMonitorLib.dll",
         "$ohm_dir\OpenHardwareMonitorCLI.exe"
     )
@@ -417,6 +459,75 @@ function Start-BinarySigning {
     Write-Host "Success binary signing" -foreground Green
 }
 
+# TODO(sk): remove the function as deprecated after switch to bazel signing
+function Start-Ps1Signing {
+    Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
+    return
+
+    # code below is a reference for bazel signing
+
+    Write-Host "Ps1 signing..." -ForegroundColor White
+
+    $source_folder = "$repo_root\agents\windows\plugins"
+    $target_folder = "$results_dir\$signing_folder"
+
+    $fileList = @("windows_tasks.ps1", "mk_msoffice.ps1")  # Modify as needed
+
+    if (Test-Path $target_folder) {
+        Remove-Item -Path $target_folder -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Path $target_folder | Out-Null
+
+    foreach ($file in $fileList) {
+        $sourcePath = Join-Path -Path $source_folder -ChildPath $file
+        $targetPath = Join-Path -Path $target_folder -ChildPath $file
+
+        if (Test-Path $sourcePath) {
+            Copy-Item -Path $sourcePath -Destination $targetPath -Force
+        }
+        else {
+            Write-Warning "File not found: $sourcePath"
+        }
+    }
+
+    Get-ChildItem -Path $target_folder | ForEach-Object {
+        $file = $($_.FullName)
+        Write-Host "Signing $file" -ForegroundColor White
+        & ./scripts/sign_code.cmd $file
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
+            throw
+        }
+    }
+
+    Write-Host "Success PS1 signing" -foreground Green
+}
+
+function Start-BazelSigning {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Bazel signing..." -ForegroundColor White
+
+    try {
+        &bazel build //agents/windows/plugins:all
+        if ($LASTEXITCODE -eq 0) {
+            $signed_dir = (&bazel info bazel-bin )
+            Write-Host "Signed files are located in $signed_dir"
+        }
+        else {
+            Write-Host "Error during signing $LASTEXITCODE"
+        }
+        Write-Host "Success Bazel signing" -foreground Green
+    }
+    catch {
+        Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
+    }
+}
+
 
 function Start-ArtifactUploading {
     if ($argMsi -ne $true) {
@@ -426,13 +537,13 @@ function Start-ArtifactUploading {
 
     Write-Host "Artifact upload..." -ForegroundColor White
     $artifacts = @(
-        @("$build_dir/install/Release/check_mk_service.msi", "$arte/check_mk_agent.msi"),
-        @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$arte/check_mk_agent-64.exe"),
-        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$arte/check_mk_agent.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$arte/OpenHardwareMonitorCLI.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$arte/OpenHardwareMonitorLib.dll"),
-        @("./install/resources/check_mk.user.yml", "$arte/check_mk.user.yml"),
-        @("./install/resources/check_mk.yml", "$arte/check_mk.yml")
+        @("$build_dir/install/Release/check_mk_service.msi", "$results_dir/check_mk_agent.msi"),
+        @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$results_dir/check_mk_agent-64.exe"),
+        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$results_dir/check_mk_agent.exe"),
+        @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$results_dir/OpenHardwareMonitorCLI.exe"),
+        @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$results_dir/OpenHardwareMonitorLib.dll"),
+        @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
+        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
     )
     foreach ($artifact in $artifacts) {
         Copy-Item $artifact[0] $artifact[1] -Force -ErrorAction Stop
@@ -452,7 +563,7 @@ function Start-MsiPatching {
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to patch MSI " $LASTEXITCODE -ErrorAction Stop
     }
-    Copy-Item $arte/check_mk_agent.msi $arte/check_mk_agent_unsigned.msi -Force
+    Copy-Item $results_dir/check_mk_agent.msi $results_dir/check_mk_agent_unsigned.msi -Force
     Write-Host "Success artifact uploading" -foreground Green
 }
 
@@ -471,7 +582,6 @@ function Invoke-Detach($argFlag) {
 }
 
 
-
 function Start-MsiSigning {
     if ($argSign -ne $true) {
         Write-Host "Skipping MSI signing..." -ForegroundColor Yellow
@@ -479,12 +589,12 @@ function Start-MsiSigning {
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $arte\check_mk_agent.msi
+    & ./scripts/sign_code.cmd $results_dir\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         throw
     }
-    Add-HashLine $arte/check_mk_agent.msi $hash_file
+    Add-HashLine $results_dir/check_mk_agent.msi $hash_file
     Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
@@ -506,7 +616,7 @@ function Clear-Artifacts() {
     Write-Host "Cleaning artifacts..."
     $masks = "*.msi", "*.exe", "*.log", "*.yml"
     foreach ($mask in $masks) {
-        Remove-Item -Path "$arte\$mask" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$results_dir\$mask" -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -526,13 +636,13 @@ function Clear-All() {
 }
 
 function Update-ArtefactDirs() {
-    If (Test-Path -PathType container $arte) {
-        Write-Host "Using arte dir: '$arte'" -ForegroundColor White
+    If (Test-Path -PathType container $results_dir) {
+        Write-Host "Using results dir: '$results_dir'" -ForegroundColor White
     }
     else {
-        Remove-Item $arte -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
-        Write-Host "Creating arte dir: '$arte'" -ForegroundColor White
-        New-Item -ItemType Directory -Path $arte -ErrorAction Stop > nul
+        Remove-Item $results_dir -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
+        Write-Host "Creating results dir: '$results_dir'" -ForegroundColor White
+        New-Item -ItemType Directory -Path $results_dir -ErrorAction Stop > nul
     }
 }
 
@@ -556,7 +666,12 @@ try {
     # BUILDING
     Build-Agent
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
-    Build-Package $argSql "host/mk-sql" "MK-SQL"
+    if ($argSkipSqlTest -ne $true) {
+        Build-Package $argSql "host/mk-sql" "MK-SQL"
+    }
+    else {
+        Build-Package $argSql "host/mk-sql" "MK-SQL" --build
+    }
     Build-Ohm
     Build-Ext
     Build-MSI
@@ -569,6 +684,7 @@ try {
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
     if ($argSign -eq $true) {
         $argAttached = $true
+        $env:pin_cert_windows_usb | Out-File -Path .\check-signing-param.txt  -Append
     }
     Start-BinarySigning
     Start-ArtifactUploading

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import json
 from collections.abc import Mapping
 from typing import Any
@@ -30,22 +31,6 @@ def discover_single(section: Section) -> DiscoveryResult:
 
 
 def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: Section) -> CheckResult:
-    """
-    >>> for result in check_proxmox_ve_vm_info(
-    ...     {},
-    ...     parse_proxmox_ve_vm_info([[
-    ...         '{"name": "backup.lan.tribe29.com",'
-    ...         ' "node": "pve-muc",'
-    ...         ' "status": "running",'
-    ...         ' "type": "qemu",'
-    ...         ' "vmid": "109"}'
-    ...     ]])):
-    ...   print(result)
-    Result(state=<State.OK: 0>, summary='VM ID: 109')
-    Result(state=<State.OK: 0>, summary='Status: running')
-    Result(state=<State.OK: 0>, summary='Type: qemu')
-    Result(state=<State.OK: 0>, summary='Host: pve-muc')
-    """
     vm_status = section.get("status", "n/a").lower()
     req_vm_status = (params.get("required_vm_status") or "").lower()
     yield Result(state=State.OK, summary=f"VM ID: {section.get('vmid')}")
@@ -55,6 +40,15 @@ def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: Section) -> Che
     )
     yield Result(state=State.OK, summary=f"Type: {section.get('type')}")
     yield Result(state=State.OK, summary=f"Host: {section.get('node')}")
+    td = datetime.timedelta(seconds=section.get("uptime", 0))
+    startup_date = datetime.datetime.today() - td
+    startup_string = startup_date.strftime("%Y-%m-%d %H:%M:%S")
+    if td.days > 365:
+        uptime_string = f"Uptime: {td.days % 365} years {td.days // 365} days"
+    else:
+        uptime_string = f"Uptime: {td.days} days {td.seconds // 3600} hours"
+    yield Result(state=State.OK, summary=f"Up since {startup_string}")
+    yield Result(state=State.OK, summary=f"{uptime_string}")
 
 
 agent_section_proxmox_ve_vm_info = AgentSection(
@@ -69,6 +63,6 @@ check_plugin_proxmox_ve_vm_info = CheckPlugin(
     check_function=check_proxmox_ve_vm_info,
     check_ruleset_name="proxmox_ve_vm_info",
     check_default_parameters={
-        "required_vm_status": None,
+        "required_vm_status": "",
     },
 )

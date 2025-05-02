@@ -598,6 +598,14 @@ def agent_proxmox_ve_main(args: Args) -> int:
                             "max_disk": vm["maxdisk"],
                         }
                     )
+            with SectionWriter("proxmox_ve_disk_throughput") as writer:
+                writer.append_json(
+                    {
+                        "disk_read": vm["diskread"],
+                        "disk_write": vm["diskwrite"],
+                        "uptime": vm["uptime"],
+                    }
+                )
             with SectionWriter("proxmox_ve_mem_usage") as writer:
                 writer.append_json(
                     {

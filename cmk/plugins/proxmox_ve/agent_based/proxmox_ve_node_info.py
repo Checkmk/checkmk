@@ -89,7 +89,7 @@ check_plugin_proxmox_ve_node_info = CheckPlugin(
     check_function=check_proxmox_ve_node_info,
     check_ruleset_name="proxmox_ve_node_info",
     check_default_parameters={
-        "required_node_status": None,
-        "required_subscription_status": None,
+        "required_node_status": "online",
+        "required_subscription_status": "Active",
     },
 )

@@ -34,7 +34,7 @@ def test_parse_proxmox_ve_snapshot_age(data: str, expected: Section) -> None:
     [
         (
             1,
-            {"oldest_levels": (604800, 2592000)},
+            {"oldest_levels": ("fixed", (604800, 2592000))},
             {"snaptimes": []},
             [Result(state=State.OK, summary="No snapshot found")],
         ),
@@ -55,7 +55,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
     [
         (
             {
-                "oldest_levels": (5000, 10000),
+                "oldest_levels": ("fixed", (5000, 10000)),
             },
             {
                 "snaptimes": [96_000],
@@ -65,7 +65,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
         ),
         (
             {
-                "oldest_levels": (5000, 10000),
+                "oldest_levels": ("fixed", (5000, 10000)),
             },
             {
                 "snaptimes": [96_000, 94_000],
@@ -75,7 +75,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
         ),
         (
             {
-                "oldest_levels": (5000, 10000),
+                "oldest_levels": ("fixed", (5000, 10000)),
             },
             {
                 "snaptimes": [96_000, 94_000, 89_000],

@@ -40,13 +40,14 @@ def check_proxmox_ve_snapshot_age(params: Mapping[str, Any], section: Section) -
 
     # timestamps and timezones...
     age = max(time.time() - min(section["snaptimes"]), 0)
+    oldest_levels = (int(params["oldest_levels"][0]), int(params["oldest_levels"][1]))
     yield from check_levels_v1(
         age,
-        levels_upper=params["oldest_levels"],
+        levels_upper=oldest_levels,
         metric_name="age",
         render_func=render.timespan,
         label="Age",
-        boundaries=params["oldest_levels"],
+        boundaries=oldest_levels,
     )
 
 
@@ -63,8 +64,8 @@ check_plugin_proxmox_ve_vm_snapshot_age = CheckPlugin(
     check_ruleset_name="proxmox_ve_vm_snapshot_age",
     check_default_parameters={
         "oldest_levels": (
-            60 * 60 * 24 * 1,
-            60 * 60 * 24 * 2,
+            60.0 * 60.0 * 24.0 * 1.0,
+            60.0 * 60.0 * 24.0 * 2.0,
         )
     },
 )

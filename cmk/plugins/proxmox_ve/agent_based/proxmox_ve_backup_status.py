@@ -100,7 +100,7 @@ def check_proxmox_ve_vm_backup_status(
     levels and define result status accordingly
     >>> for result in check_proxmox_ve_vm_backup_status(
     ...     datetime.strptime("2020-12-07 21:28:02+01:00", '%Y-%m-%d %H:%M:%S%z'),
-    ...     {'age_levels_upper': (93600, 180000)},
+    ...     {'age_levels_upper': (93600.0, 180000.0)},
     ...     parse_proxmox_ve_vm_backup_status([[
     ...     '  {"last_backup": {'
     ...     '     "started_time": "2020-12-06 21:28:02+0000",'
@@ -121,15 +121,17 @@ def check_proxmox_ve_vm_backup_status(
     Result(state=<State.OK: 0>, summary='Bandwidth: 91.6 MB/s')
     Metric('backup_avgspeed', 91625968.975, boundaries=(0.0, None))
     """
-    age_levels_upper = params.get("age_levels_upper")
-    duration_levels_upper = params.get("duration_levels_upper")
-    bandwidth_levels_lower_bytes = params.get("bandwidth_levels_lower")
-    bandwidth_levels_lower = (
+
+    age_levels_upper = (
+        int(params["age_levels_upper"][0]),
+        int(params["age_levels_upper"][1]),
+    )
+    duration_levels_upper = (
         (
-            bandwidth_levels_lower_bytes[0] * 1000 * 1000,
-            bandwidth_levels_lower_bytes[1] * 1000 * 1000,
+            int(params["duration_levels_upper"][0]),
+            int(params["duration_levels_upper"][1]),
         )
-        if bandwidth_levels_lower_bytes
+        if params.get("duration_levels_upper")
         else None
     )
     last_backup = section.get("last_backup")
@@ -203,7 +205,7 @@ def check_proxmox_ve_vm_backup_status(
 
     yield from check_levels_v1(
         value=bandwidth,
-        levels_lower=bandwidth_levels_lower,
+        levels_lower=params["bandwidth_levels_lower"],
         metric_name="backup_avgspeed",
         render_func=render.iobandwidth,
         label="Bandwidth",

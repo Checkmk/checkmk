@@ -88,7 +88,16 @@ class GroupsToAttributes(TypedDict, total=True):
     groups: list[GroupsToSync]
 
 
-type GroupsToRoles = dict[str, list[tuple[str, str | None]] | Literal[True]]
+RoleSpec = tuple[str, str | None]
+
+
+class GroupsToRoles(TypedDict, total=False):
+    nested: NotRequired[Literal[True]]
+    admin: NotRequired[list[RoleSpec]]
+    agent_registration: NotRequired[list[RoleSpec]]
+    guest: NotRequired[list[RoleSpec]]
+    user: NotRequired[list[RoleSpec]]
+    no_permissions: NotRequired[list[RoleSpec]]
 
 
 class ActivePlugins(TypedDict, total=True):

@@ -107,7 +107,11 @@ from ._connections import (
     ActivePlugins,
     get_connection,
     get_ldap_connections,
+    GroupsToAttributes,
+    GroupsToContactGroups,
+    GroupsToRoles,
     LDAPUserConnectionConfig,
+    SyncAttribute,
 )
 from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
 from ._roles import load_roles
@@ -1414,7 +1418,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._logger.info("SYNC STARTED")
         self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
 
-        ldap_users = self.get_users()
+        ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
 
         users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
@@ -1725,28 +1729,32 @@ class LDAPAttributePlugin:
     def help(self) -> str | HTML | None:
         return self._help_text
 
-    def lock_attributes(self, params: dict) -> list[str]:
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         """List of user attributes to lock
 
         Normally the attributes that are modified by the sync_func()"""
         raise NotImplementedError()
 
-    def needed_attributes(self, connection: LDAPUserConnector, params: dict) -> list[str]:
+    def needed_attributes(
+        self,
+        _connection: LDAPUserConnector,
+        _params: dict[str, Any],
+    ) -> list[str]:
         """Gathers the LDAP user attributes that are needed by this plug-in"""
         raise NotImplementedError()
 
     def sync_func(
         self,
-        connection: LDAPUserConnector,
-        params: dict,
-        user_id: UserId,
-        ldap_user: LDAPUserSpec,
-        user: dict,
+        _connection: LDAPUserConnector,
+        _params: dict[str, Any],
+        _user_id: UserId,
+        _ldap_user: LDAPUserSpec,
+        _user: dict,
     ) -> dict:
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
 
-    def parameters(self, connection: LDAPUserConnector | None) -> FixedValue | Dictionary:
+    def parameters(self, _connection: LDAPUserConnector | None) -> FixedValue | Dictionary:
         return FixedValue(
             title=self.title,
             help=self.help,
@@ -1787,17 +1795,21 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
             help_text=help_text,
         )
 
-    def lock_attributes(self, params: dict) -> list[str]:
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return [self.ident]
 
-    def needed_attributes(self, connection: LDAPUserConnector, params: dict) -> list[str]:
+    def needed_attributes(
+        self,
+        connection: LDAPUserConnector,
+        params: dict[str, Any],
+    ) -> list[str]:
         return [params.get("attr", connection._ldap_attr(self.ident)).lower()]
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
-        user_id: UserId,
+        params: dict[str, Any],
+        _user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict:
@@ -1986,22 +1998,27 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
             help_text=_("Synchronizes the email of the LDAP user account into Checkmk."),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["email"]
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        connection: LDAPUserConnector,
+        params: dict[str, Any],
+    ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("mail")).lower()]
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
+        params: dict[str, Any],
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
         _user: dict,
-    ) -> dict:
+    ) -> dict[str, str]:
+        sync_attribute = cast(SyncAttribute, params)
         mail = ""
-        mail_attr = params.get("attr", connection._ldap_attr("mail")).lower()
+        mail_attr = sync_attribute.get("attr", connection._ldap_attr("mail")).lower()
         if ldap_user.get(mail_attr):
             mail = ldap_user[mail_attr][0].lower()
 
@@ -2049,21 +2066,26 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["alias"]
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        connection: LDAPUserConnector,
+        params: dict[str, Any],
+    ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("cn")).lower()]
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
-        user_id: UserId,
+        params: dict[str, Any],
+        _user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
+        _user: dict,
     ) -> dict[str, str]:
-        attr = params.get("attr", connection._ldap_attr("cn")).lower()
+        sync_attribute = cast(SyncAttribute, params)
+        attr = sync_attribute.get("attr", connection._ldap_attr("cn")).lower()
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
@@ -2113,7 +2135,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return []
 
     @property
@@ -2124,7 +2146,11 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
     def non_contact_attributes(self) -> list[str]:
         return ["ldap_pw_last_changed"]
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        connection: LDAPUserConnector,
+        params: dict[str, Any],
+    ) -> list[str]:
         attrs = [params.get("attr", connection._ldap_attr("pw_changed")).lower()]
 
         # Fetch user account flags to check locking
@@ -2135,11 +2161,12 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
-        user_id: UserId,
+        params: dict[str, Any],
+        _user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict:
+        sync_attribute = cast(SyncAttribute, params)
         # Special handling for active directory: Is the user enabled / disabled?
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
@@ -2152,7 +2179,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
                     "serial": user.get("serial", 0) + 1,
                 }
 
-        changed_attr = params.get("attr", connection._ldap_attr("pw_changed")).lower()
+        changed_attr = sync_attribute.get("attr", connection._ldap_attr("pw_changed")).lower()
         if changed_attr not in ldap_user:
             raise MKLDAPException(
                 _(
@@ -2224,21 +2251,26 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["pager"]
 
-    def needed_attributes(self, connection: LDAPUserConnector, params: dict) -> list[str]:
+    def needed_attributes(
+        self,
+        connection: LDAPUserConnector,
+        params: dict[str, Any],
+    ) -> list[str]:
         return [params.get("attr", connection._ldap_attr("mobile")).lower()]
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
-        user_id: UserId,
+        params: dict[str, Any],
+        _user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict[str, str]:
-        attr = params.get("attr", connection._ldap_attr("mobile")).lower()
+        sync_attribute = cast(SyncAttribute, params)
+        attr = sync_attribute.get("attr", connection._ldap_attr("mobile")).lower()
         return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
@@ -2282,34 +2314,38 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["contactgroups"]
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        _connection: LDAPUserConnector,
+        _params: dict[str, Any],
+    ) -> list[str]:
         return []
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
+        params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
-        user: dict,
-    ) -> dict:
+        _user: dict,
+    ) -> dict[str, list[str]]:
+        groups_to_contactgroups = cast(GroupsToContactGroups, params)
         cg_names = list(load_contact_group_information().keys())
-
         return {
             "contactgroups": _get_groups_of_user(
                 connection,
                 user_id,
                 ldap_user,
                 cg_names,
-                params.get("nested", False),
-                params.get("other_connections", []),
+                groups_to_contactgroups.get("nested", False),
+                groups_to_contactgroups.get("other_connections", []),
             )
         }
 
-    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
+    def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2344,24 +2380,29 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, params: dict[str, Any]) -> list[str]:
         attrs = []
         for group_spec in params["groups"]:
             attr_name, _value = group_spec["attribute"]
             attrs.append(attr_name)
         return attrs
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        _connection: LDAPUserConnector,
+        _params: dict[str, Any],
+    ) -> list[str]:
         return []
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
+        params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict:
+        groups_to_attributes = cast(GroupsToAttributes, params)
         # Which groups need to be checked whether or not the user is a member?
         cg_names = list({g["cn"] for g in params["groups"]})
 
@@ -2371,8 +2412,8 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
             user_id,
             ldap_user,
             cg_names,
-            params.get("nested", False),
-            params.get("other_connections", []),
+            groups_to_attributes.get("nested", False),
+            groups_to_attributes.get("other_connections", []),
         )
 
         # Now construct the user update dictionary
@@ -2381,7 +2422,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
         # First clean all previously set values from attributes to be synced where
         # user is not a member of
         user_attrs = dict(get_user_attributes())
-        for group_spec in params["groups"]:
+        for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] not in groups and attr_name in user and attr_name in user_attrs:
                 # not member, but set -> set to default. Maybe it would be cleaner
@@ -2390,7 +2431,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
                 update[attr_name] = user_attrs[attr_name].valuespec().default_value()
 
         # Set the values of the groups the user is a member of
-        for group_spec in params["groups"]:
+        for group_spec in groups_to_attributes["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] in groups:
                 # is member, set the configured value
@@ -2398,7 +2439,7 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
 
         return update
 
-    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
+    def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2475,21 +2516,26 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
             ),
         )
 
-    def lock_attributes(self, params):
+    def lock_attributes(self, _params: dict[str, Any]) -> list[str]:
         return ["roles"]
 
-    def needed_attributes(self, connection, params):
+    def needed_attributes(
+        self,
+        _connection: LDAPUserConnector,
+        _params: dict[str, Any],
+    ) -> list[str]:
         return []
 
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        params: dict,
+        params: dict[str, Any],
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
     ) -> dict[Literal["roles"], list[str]]:
-        ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, params)
+        groups_to_roles = cast(GroupsToRoles, params)
+        ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, groups_to_roles)
 
         # posixGroup objects use the memberUid attribute to specify the group
         # memberships. This is the username instead of the users DN. So the
@@ -2498,8 +2544,8 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
 
         roles = []
 
-        # Loop all roles mentioned in params (configured to be synchronized)
-        for role_id, group_specs in params.items():
+        # Loop all roles mentioned in groups_to_roles (configured to be synchronized)
+        for role_id, group_specs in groups_to_roles.items():
             if not isinstance(group_specs, list):
                 group_specs = [group_specs]  # be compatible to old single group configs
 
@@ -2523,9 +2569,13 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
 
         return {"roles": roles}
 
-    def fetch_needed_groups_for_groups_to_roles(self, connection, params):
+    def fetch_needed_groups_for_groups_to_roles(
+        self,
+        connection: LDAPUserConnector,
+        params: GroupsToRoles,
+    ) -> GroupMemberships:
         # Load the needed LDAP groups, which match the DNs mentioned in the role sync plug-in config
-        ldap_groups = {}
+        ldap_groups: GroupMemberships = {}
         for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
             conn = get_connection(connection_id)
             if conn is None:
@@ -2535,14 +2585,20 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
             ldap_groups.update(
                 dict(
                     conn._get_group_memberships(
-                        group_dns, filt_attr="distinguishedname", nested=params.get("nested", False)
+                        group_dns,
+                        filt_attr="distinguishedname",
+                        nested=params.get("nested", False),
                     )
                 )
             )
 
         return ldap_groups
 
-    def _get_groups_to_fetch(self, connection, params):
+    def _get_groups_to_fetch(
+        self,
+        connection: LDAPUserConnector,
+        params: GroupsToRoles,
+    ) -> dict[str, list[str]]:
         groups_to_fetch: dict[str, list[str]] = {}
         for group_specs in params.values():
             if isinstance(group_specs, list):
@@ -2567,14 +2623,14 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
 
         return groups_to_fetch
 
-    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
+    def parameters(self, _connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
             elements=self._list_roles_with_group_dn,
         )
 
-    def _list_roles_with_group_dn(self):
+    def _list_roles_with_group_dn(self) -> list[DictionaryEntry]:
         elements: list[DictionaryEntry] = []
         for role_id, role in load_roles().items():
             elements.append(

@@ -31,6 +31,7 @@ from cmk.gui.userdb import (
     LDAPUserConnectionConfig,
     NAV_HIDE_ICONS_TITLE,
     OPEN_LDAP,
+    RoleSpec,
     SHOW_MODE,
     START_URL,
     SyncAttribute,
@@ -990,7 +991,7 @@ def groups_to_roles_req_to_int(
     groups_to_roles: GroupsToRoles = {}
 
     for role, groups in {k: v for k, v in data.items() if isinstance(v, list)}.items():
-        groups_to_roles[role] = [
+        groups_to_roles[role] = [  # type: ignore[literal-required]
             (
                 group["group_dn"],
                 None if group["search_in"] == "this_connection" else group["search_in"],
@@ -1106,16 +1107,18 @@ class SyncPlugins:
         if internal_groups_to_roles := self.active_plugins.get("groups_to_roles"):
             groups_to_roles: APIGroupsToRoles = {"state": "enabled"}
             for k, v in internal_groups_to_roles.items():
-                if v is True:
-                    groups_to_roles["handle_nested"] = True
+                if k == "nested":
+                    if v is True:
+                        groups_to_roles["handle_nested"] = True
                     continue
 
+                rolespec_collection = cast(list[RoleSpec], v)
                 groups_to_roles[k] = [  # type: ignore[literal-required]
                     {
                         "group_dn": groupdn,
                         "search_in": search_in if search_in is not None else "this_connection",
                     }
-                    for groupdn, search_in in v
+                    for groupdn, search_in in rolespec_collection
                 ]
 
             r["groups_to_roles"] = groups_to_roles

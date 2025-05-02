@@ -1039,9 +1039,14 @@ class ModeEditLDAPConnection(WatoMode):
         ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
-        for role_id, group_specs in active_plugins["groups_to_roles"].items():
-            if group_specs is True:
+
+        for role_id, value in active_plugins["groups_to_roles"].items():
+            if value is True:
                 continue
+
+            # We have typing for active_plugins["groups_to_roles"], however it doesn't
+            # take into account the old config mentioned below.
+            group_specs = cast(list, value)
 
             for group_spec in group_specs:
                 if isinstance(group_spec, str):

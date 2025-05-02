@@ -57,12 +57,12 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
     """Simulate deprecated extensions, plug-ins, PNP templates, etc. by creating
     fake files in the specified locations."""
     paths = [
-        "local/lib/check_mk/gui/plugins",
+        "local/lib/python3/cmk/gui/plugins",
         "local/share/check_mk/inventory",
         "local/share/check_mk/pnp-templates",
         "local/share/check_mk/checkman",
         "local/share/check_mk/checks",
-        "local/lib/check_mk/base/plugins/agent_based",
+        "local/lib/python3/cmk/base/plugins/agent_based",
         "local/share/check_mk/web",
     ]
     for path in paths:

@@ -13,7 +13,7 @@ from tests.testlib.site import Site
 
 
 def test_inventory_as_check_unknown_host(site: Site) -> None:
-    p = site.run(["lib/check_mk/plugins/checkmk/libexec/check_cmk_inv", "xyz."], check=False)
+    p = site.run(["lib/python3/cmk/plugins/checkmk/libexec/check_cmk_inv", "xyz."], check=False)
     assert p.returncode == 2, f"Command failed ({p.stdout!r}, {p.stderr!r})"
     assert p.stdout.startswith("Failed to lookup IPv4 address of")
     assert p.stderr == ""
@@ -24,6 +24,6 @@ def test_inventory_as_check(site: Site, request: pytest.FixtureRequest) -> None:
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("inv-test-host")
     site.activate_changes_and_wait_for_core_reload()
 
-    p = site.run(["lib/check_mk/plugins/checkmk/libexec/check_cmk_inv", "inv-test-host"])
+    p = site.run(["lib/python3/cmk/plugins/checkmk/libexec/check_cmk_inv", "inv-test-host"])
     assert re.match(r"Found \d+ inventory entries", p.stdout)
     assert p.stderr == ""

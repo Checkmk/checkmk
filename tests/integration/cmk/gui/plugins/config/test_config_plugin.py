@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 @pytest.fixture()
 def plugin_path(site: Site) -> Iterator[str]:
-    base_dir = "local/lib/check_mk/gui/plugins/config"
+    base_dir = "local/lib/python3/cmk/gui/plugins/config"
     site.makedirs(base_dir)
     path = f"{base_dir}/test_plugin.py"
     site.write_text_file(path, 'x = "yo"\n')

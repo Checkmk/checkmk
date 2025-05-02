@@ -112,15 +112,15 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     CheckmkActiveCheck("check_sftp"),
     CheckmkActiveCheck(
         "check_mail",
-        path="lib/check_mk/plugins/emailchecks/libexec",
+        path="lib/python3/cmk/plugins/emailchecks/libexec",
     ),
     CheckmkActiveCheck(
         "check_mailboxes",
-        path="lib/check_mk/plugins/emailchecks/libexec",
+        path="lib/python3/cmk/plugins/emailchecks/libexec",
     ),
     CheckmkActiveCheck(
         "check_mail_loop",
-        path="lib/check_mk/plugins/emailchecks/libexec",
+        path="lib/python3/cmk/plugins/emailchecks/libexec",
     ),
     CheckmkActiveCheck("check_form_submit"),
     MonitoringPlugin(
@@ -138,7 +138,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     CheckmkActiveCheck("check_traceroute"),
     CheckmkActiveCheck(
         "check_disk_smb",
-        path="lib/check_mk/plugins/smb/libexec",
+        path="lib/python3/cmk/plugins/smb/libexec",
     ),
     CheckmkActiveCheck("check_uniserv"),
     CheckmkActiveCheck("check_bi_aggr"),

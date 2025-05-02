@@ -21,7 +21,7 @@ def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) ->
     create_linux_test_host(request, site, host_name)
     site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
-    test_check_dir = "local/lib/check_mk/plugins/collection/agent_based"
+    test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_1.py"
 
     def cleanup():
@@ -106,7 +106,7 @@ def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> No
         "var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n"
     )
 
-    test_check_dir = "local/lib/check_mk/plugins/collection/agent_based"
+    test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_2.py"
 
     def cleanup():

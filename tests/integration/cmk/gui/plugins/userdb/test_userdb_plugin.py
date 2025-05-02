@@ -7,7 +7,9 @@ from tests.testlib.site import Site
 
 
 def test_load_userdb_plugin(site: Site) -> None:
-    with site.copy_file("userdb_plugin.py", "local/lib/check_mk/gui/plugins/userdb/test_plugin.py"):
+    with site.copy_file(
+        "userdb_plugin.py", "local/lib/python3/cmk/gui/plugins/userdb/test_plugin.py"
+    ):
         assert (
             site.python_helper("helper_test_load_userdb_plugin.py").check_output().rstrip()
             == "True"

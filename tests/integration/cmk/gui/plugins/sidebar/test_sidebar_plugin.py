@@ -8,7 +8,7 @@ from tests.testlib.site import Site
 
 def test_load_sidebar_plugin(site: Site) -> None:
     with site.copy_file(
-        "sidebar_plugin.py", "local/lib/check_mk/gui/plugins/sidebar/test_plugin.py"
+        "sidebar_plugin.py", "local/lib/python3/cmk/gui/plugins/sidebar/test_plugin.py"
     ):
         assert (
             site.python_helper("helper_test_load_sidebar_plugin.py").check_output().rstrip()

@@ -14,7 +14,7 @@ from tests.testlib.site import Site
 
 @pytest.fixture(name="plugin_path")
 def fixture_plugin_path(site: Site) -> Iterator[str]:
-    base_dir = "local/lib/check_mk/gui/plugins/dashboard"
+    base_dir = "local/lib/python3/cmk/gui/plugins/dashboard"
     site.makedirs(base_dir)
     plugin_path = f"{base_dir}/test_plugin.py"
 

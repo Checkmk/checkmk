@@ -7,5 +7,5 @@ from tests.testlib.site import Site
 
 
 def test_load_bi_plugin(site: Site) -> None:
-    with site.copy_file("bi_plugin.py", "local/lib/check_mk/gui/plugins/bi/test_plugin.py"):
+    with site.copy_file("bi_plugin.py", "local/lib/python3/cmk/gui/plugins/bi/test_plugin.py"):
         assert site.python_helper("helper_test_load_bi_plugin.py").check_output().rstrip() == "True"

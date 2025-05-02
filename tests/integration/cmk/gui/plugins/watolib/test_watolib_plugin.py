@@ -8,7 +8,7 @@ from tests.testlib.site import Site
 
 def test_load_watolib_plugin(site: Site) -> None:
     with site.copy_file(
-        "watolib_plugin.py", "local/lib/check_mk/gui/plugins/watolib/test_plugin.py"
+        "watolib_plugin.py", "local/lib/python3/cmk/gui/plugins/watolib/test_plugin.py"
     ):
         assert (
             site.python_helper("helper_test_load_watolib_plugin.py").check_output().rstrip()

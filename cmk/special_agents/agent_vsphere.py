@@ -79,6 +79,13 @@ REQUESTED_COUNTERS_KEYS = (
     "datastore.sizeNormalizedDatastoreLatency",
     "datastore.datastoreReadIops",
     "datastore.datastoreWriteIops",
+    "gpu.mem.usage",
+    "gpu.mem.reserved",
+    "gpu.power.used",
+    "gpu.mem.total",
+    "gpu.utilization",
+    "gpu.mem.used",
+    "gpu.temperature",
 )
 
 COOKIE_MAX_AGE_HOURS = 4

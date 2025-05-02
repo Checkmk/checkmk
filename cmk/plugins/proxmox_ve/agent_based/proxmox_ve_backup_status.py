@@ -8,9 +8,9 @@ from collections.abc import Mapping
 from datetime import datetime, UTC
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -96,47 +96,11 @@ def check_proxmox_ve_vm_backup_status(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    """If conditions provided calculate and compare age of last backup agains provided
-    levels and define result status accordingly
-    >>> for result in check_proxmox_ve_vm_backup_status(
-    ...     datetime.strptime("2020-12-07 21:28:02+01:00", '%Y-%m-%d %H:%M:%S%z'),
-    ...     {'age_levels_upper': (93600, 180000)},
-    ...     parse_proxmox_ve_vm_backup_status([[
-    ...     '  {"last_backup": {'
-    ...     '     "started_time": "2020-12-06 21:28:02+0000",'
-    ...     '     "total_duration": 140,'
-    ...     '     "archive_name": "/tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst",'
-    ...     '     "upload_amount": 10995116277,'
-    ...     '     "upload_total": 1099511627776,'
-    ...     '     "upload_time": 120}}'
-    ...     ]])):
-    ...   print(result)
-    Result(state=<State.OK: 0>, summary='Age: 23 hours 0 minutes')
-    Metric('age', 82800.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='Server local start time: 2020-12-06 21:28:02+00:00')
-    Result(state=<State.OK: 0>, summary='Duration: 2 minutes 20 seconds')
-    Metric('backup_duration', 140.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='Name: /tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst')
-    Result(state=<State.OK: 0>, summary='Dedup rate: 100.00')
-    Result(state=<State.OK: 0>, summary='Bandwidth: 91.6 MB/s')
-    Metric('backup_avgspeed', 91625968.975, boundaries=(0.0, None))
-    """
-    age_levels_upper = params.get("age_levels_upper")
-    duration_levels_upper = params.get("duration_levels_upper")
-    bandwidth_levels_lower_bytes = params.get("bandwidth_levels_lower")
-    bandwidth_levels_lower = (
-        (
-            bandwidth_levels_lower_bytes[0] * 1000 * 1000,
-            bandwidth_levels_lower_bytes[1] * 1000 * 1000,
-        )
-        if bandwidth_levels_lower_bytes
-        else None
-    )
     last_backup = section.get("last_backup")
     if not last_backup:
         yield (
             Result(state=State.CRIT, summary="No backup found")
-            if age_levels_upper
+            if params["age_levels_upper"][0] == "fixed"
             else Result(state=State.OK, summary="No backup found and none needed")  #
         )
         return
@@ -151,9 +115,9 @@ def check_proxmox_ve_vm_backup_status(
     # explicitly converted them to utc
     started_time = last_backup.get("started_time")
     if started_time:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=(now - started_time.astimezone(UTC)).total_seconds(),
-            levels_upper=age_levels_upper,
+            levels_upper=params["age_levels_upper"],
             metric_name="age",
             render_func=render.timespan,
             label="Age",
@@ -164,9 +128,9 @@ def check_proxmox_ve_vm_backup_status(
         summary=f"Server local start time: {started_time}",
     )
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=last_backup["total_duration"],
-        levels_upper=duration_levels_upper,
+        levels_upper=params["duration_levels_upper"],
         metric_name="backup_duration",
         render_func=render.timespan,
         label="Duration",
@@ -201,9 +165,9 @@ def check_proxmox_ve_vm_backup_status(
     else:
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=bandwidth,
-        levels_lower=bandwidth_levels_lower,
+        levels_lower=params["bandwidth_levels_lower"],
         metric_name="backup_avgspeed",
         render_func=render.iobandwidth,
         label="Bandwidth",
@@ -234,10 +198,13 @@ check_plugin_proxmox_ve_vm_backup_status = CheckPlugin(
     check_ruleset_name="proxmox_ve_vm_backup_status",
     check_default_parameters={
         "age_levels_upper": (
-            60 * 60 * 26,
-            60 * 60 * 50,
+            "fixed",
+            (
+                60 * 60 * 26,
+                60 * 60 * 50,
+            ),
         ),
-        "duration_levels_upper": None,
-        "bandwidth_levels_lower": None,
+        "duration_levels_upper": ("no_levels", None),
+        "bandwidth_levels_lower": ("no_levels", None),
     },
 )

@@ -12,6 +12,12 @@ import pytest
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_backup_status as pvbs
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
+DEFAULT_PARAMS_NO_LEVELS = {
+    "age_levels_upper": ("no_levels", None),
+    "duration_levels_upper": ("no_levels", None),
+    "bandwidth_levels_lower": ("no_levels", None),
+}
+
 FROZEN_TIME = datetime.strptime("2020-04-17 17:00:00+0000", "%Y-%m-%d %H:%M:%S%z")
 
 NO_BACKUP_DATA = [['{"last_backup": null}']]
@@ -99,17 +105,17 @@ def set_null_values(backup_data):
     "params,section,expected_results",
     (
         (
-            {},
+            {"age_levels_upper": ("no_levels", None)},
             pvbs.parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
             (Result(state=State.OK, summary="No backup found and none needed"),),
         ),
         (
-            {"age_levels_upper": (43200, 86400)},
+            {"age_levels_upper": ("fixed", (43200, 86400))},
             pvbs.parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
             (Result(state=State.CRIT, summary="No backup found"),),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -126,7 +132,11 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {"age_levels_upper": (43200, 86400)},
+            {
+                "age_levels_upper": ("fixed", (43200, 86400)),
+                "duration_levels_upper": ("no_levels", None),
+                "bandwidth_levels_lower": ("no_levels", None),
+            },
             pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
             (
                 Result(
@@ -146,7 +156,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA2),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -163,7 +173,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA3),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -179,7 +189,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA4),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -196,7 +206,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -211,7 +221,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA2)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
@@ -225,7 +235,7 @@ def set_null_values(backup_data):
             ),
         ),
         (
-            {},
+            DEFAULT_PARAMS_NO_LEVELS,
             set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA3)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),

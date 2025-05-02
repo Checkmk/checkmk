@@ -613,6 +613,14 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "max_mem": vm["maxmem"],
                     }
                 )
+            with SectionWriter("proxmox_ve_cpu_util") as writer:
+                writer.append_json(
+                    {
+                        "cpu": vm["cpu"],
+                        "max_cpu": vm["maxcpu"],
+                        "uptime": vm["uptime"],
+                    }
+                )
             with SectionWriter("proxmox_ve_network_throughput") as writer:
                 writer.append_json(
                     {

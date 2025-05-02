@@ -1753,13 +1753,6 @@ class LDAPAttributePlugin:
             totext=_("This synchronization plug-in has no parameters."),
         )
 
-    # Dictionary(
-    #    title=plugin['title'],
-    #    help=plugin['help'],
-    #    elements=plugin['parameters'],
-    #    required_keys=plugin.get('required_parameters', []),
-    # )))
-
     @property
     def multisite_attributes(self) -> list[str]:
         """When a plug-in introduces new user attributes, it should declare the output target for

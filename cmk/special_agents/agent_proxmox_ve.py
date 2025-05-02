@@ -587,6 +587,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "type": vm["type"],
                         "status": vm["status"],
                         "name": vm["name"],
+                        "uptime": vm["uptime"],
                     }
                 )
             if vm["type"] != "qemu":

@@ -1890,18 +1890,6 @@ def ldap_filter_of_connection(
     return connection._ldap_filter(key, handle_config)
 
 
-def _ldap_sync_simple(
-    user_id: UserId, ldap_user: LDAPUserSpec, user: dict, user_attr: str, attr: str
-) -> dict:
-    if attr in ldap_user:
-        attr_value = ldap_user[attr][0]
-        # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
-        if user_attr == "disable_notifications":
-            return {user_attr: {"disable": True} if attr_value == "TRUE" else {}}
-        return {user_attr: attr_value}
-    return {}
-
-
 def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
     choices: list[tuple[str | None, str]] = []
 
@@ -2083,14 +2071,9 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
-    ) -> dict:
-        return _ldap_sync_simple(
-            user_id,
-            ldap_user,
-            user,
-            "alias",
-            params.get("attr", connection._ldap_attr("cn")).lower(),
-        )
+    ) -> dict[str, str]:
+        attr = params.get("attr", connection._ldap_attr("cn")).lower()
+        return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
@@ -2265,14 +2248,9 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
         user_id: UserId,
         ldap_user: LDAPUserSpec,
         user: dict,
-    ) -> dict:
-        return _ldap_sync_simple(
-            user_id,
-            ldap_user,
-            user,
-            "pager",
-            params.get("attr", connection._ldap_attr("mobile")).lower(),
-        )
+    ) -> dict[str, str]:
+        attr = params.get("attr", connection._ldap_attr("mobile")).lower()
+        return {self.ident: ldap_user[attr][0]} if attr in ldap_user else {}
 
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(

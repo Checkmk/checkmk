@@ -138,7 +138,6 @@ from cmk.checkengine.discovery import (
     automation_discovery,
     CheckPreview,
     CheckPreviewEntry,
-    DiscoveryMode,
     DiscoveryReport,
     DiscoverySettings,
     get_check_preview,
@@ -279,15 +278,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         if len(args) < 2:
             raise MKAutomationError("Need two arguments: DiscoverySettings HOSTNAME")
 
-        # TODO 2.3 introduced a new format but has to be compatible for 2.2.
-        # Can be removed one day -- but tests still make use of it
-        if (discovery_settings := args[0]) in ["new", "remove", "fixall", "refresh"]:
-            settings = DiscoverySettings.from_discovery_mode(
-                DiscoveryMode.from_str(discovery_settings)
-            )
-        else:
-            settings = DiscoverySettings.from_automation_arg(args[0])
-
+        settings = DiscoverySettings.from_automation_arg(args[0])
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         if plugins is None:

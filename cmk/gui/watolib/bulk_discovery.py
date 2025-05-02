@@ -353,7 +353,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             try:
                 result = discovery(
                     task.site_id,
-                    mode.to_json(),
+                    mode,
                     task.host_names,
                     scan=do_scan,
                     raise_errors=not ignore_errors,

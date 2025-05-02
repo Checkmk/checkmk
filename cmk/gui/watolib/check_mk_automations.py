@@ -20,6 +20,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 
+from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.gui.config import active_config
@@ -136,7 +137,7 @@ def _deserialize(
 
 
 def local_discovery(
-    mode: str,
+    mode: DiscoverySettings,
     host_names: Iterable[HostName],
     *,
     scan: bool,
@@ -157,7 +158,7 @@ def local_discovery(
 
 def discovery(
     site_id: SiteId | None,
-    mode: str,
+    mode: DiscoverySettings,
     host_names: Iterable[HostName],
     *,
     scan: bool,
@@ -172,7 +173,7 @@ def discovery(
             args=[
                 *(("@scan",) if scan else ()),
                 *(("@raiseerrors",) if raise_errors else ()),
-                mode,
+                mode.to_automation_arg(),
                 *host_names,
             ],
             timeout=timeout,

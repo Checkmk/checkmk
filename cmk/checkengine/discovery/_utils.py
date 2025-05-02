@@ -65,7 +65,7 @@ class DiscoverySettings:
             update_changed_service_parameters=flags["update_changed_service_parameters"],
         )
 
-    def to_json(self) -> str:
+    def to_automation_arg(self) -> str:
         return json.dumps(asdict(self))
 
     @classmethod

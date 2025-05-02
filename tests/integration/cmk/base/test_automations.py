@@ -21,7 +21,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 
-from cmk.checkengine.discovery import DiscoveryReport
+from cmk.checkengine.discovery import DiscoveryReport, DiscoverySettings
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
@@ -156,11 +156,20 @@ def _execute_automation(
     return None
 
 
+_DISCO_SETTINGS = DiscoverySettings(
+    update_host_labels=True,
+    add_new_services=True,
+    remove_vanished_services=False,
+    update_changed_service_labels=False,
+    update_changed_service_parameters=False,
+).to_automation_arg()
+
+
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
     p = site.run(
-        ["cmk", "--automation", "service-discovery", "@scan", "new"],
+        ["cmk", "--automation", "service-discovery", "@scan", _DISCO_SETTINGS],
         check=False,
     )
 
@@ -174,7 +183,7 @@ def test_automation_discovery_single_host(site: Site) -> None:
     result = _execute_automation(
         site,
         "service-discovery",
-        args=["@raiseerrors", "new", "modes-test-host"],
+        args=["@raiseerrors", _DISCO_SETTINGS, "modes-test-host"],
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
@@ -187,7 +196,7 @@ def test_automation_discovery_multiple_hosts(site: Site) -> None:
     result = _execute_automation(
         site,
         "service-discovery",
-        args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"],
+        args=["@raiseerrors", _DISCO_SETTINGS, "modes-test-host", "modes-test-host2"],
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
@@ -202,7 +211,7 @@ def test_automation_discovery_not_existing_host(site: Site) -> None:
     result = _execute_automation(
         site,
         "service-discovery",
-        args=["@raiseerrors", "new", "xxxhost"],
+        args=["@raiseerrors", _DISCO_SETTINGS, "xxxhost"],
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
@@ -214,7 +223,7 @@ def test_automation_discovery_with_cache_option(site: Site) -> None:
     result = _execute_automation(
         site,
         "service-discovery",
-        args=["new", "modes-test-host"],
+        args=[_DISCO_SETTINGS, "modes-test-host"],
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)

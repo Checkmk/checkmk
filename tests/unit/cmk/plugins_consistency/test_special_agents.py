@@ -22,6 +22,7 @@ from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
+from cmk.plugins.graylog.special_agents import agent_graylog
 from cmk.plugins.innovaphone.special_agent import agent_innovaphone
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.kube.special_agents import agent_kube
@@ -42,7 +43,6 @@ from cmk.special_agents import (
     agent_couchbase,
     agent_datadog,
     agent_elasticsearch,
-    agent_graylog,
     agent_hivemanager_ng,
     agent_jira,
     agent_mobileiron,

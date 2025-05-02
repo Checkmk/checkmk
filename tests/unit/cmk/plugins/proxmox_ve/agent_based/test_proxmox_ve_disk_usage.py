@@ -17,13 +17,12 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
     "params,section,expected_results",
     (
         (
-            {"levels": (0.0, 0.0)},
+            {"levels": ("no_levels", None)},
             DISK_DATA,
             (
                 Metric(
                     "fs_used",
                     1099511627776.0,
-                    levels=(0.0, 0.0),
                     boundaries=(0.0, 2199023255552.0),
                 ),
                 Metric(
@@ -32,13 +31,12 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     boundaries=(0.0, None),
                 ),
                 Result(
-                    state=State.CRIT,
-                    summary="Used: 50.00% (warn/crit at 0%/0%)",
+                    state=State.OK,
+                    summary="Used: 50.00%",
                 ),
                 Metric(
                     "fs_used_percent",
                     50.0,
-                    levels=(0.0, 0.0),
                     boundaries=(0.0, 100.0),
                 ),
                 Result(
@@ -53,7 +51,7 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
             ),
         ),
         (
-            {"levels": (40.0, 90.0)},
+            {"levels": ("fixed", (40.0, 90.0))},
             DISK_DATA,
             (
                 Metric(

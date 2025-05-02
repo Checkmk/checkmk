@@ -12,6 +12,7 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from cmk.special_agents.v0_unstable.agent_common import (
+    CannotRecover,
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
@@ -72,6 +73,9 @@ class SessionManager:
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
         try:
             resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
+        except requests.exceptions.ReadTimeout as e:
+            LOGGING.error("Timeout: %s", e)
+            raise CannotRecover(f"Connection timed out after {self._timeout} seconds.")
         except requests.exceptions.ConnectionError as e:
             LOGGING.error("Connection failed: %s", e)
             raise e

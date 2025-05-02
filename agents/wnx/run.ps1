@@ -33,11 +33,11 @@ $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vsw
     -find MSBuild\**\Bin\MSBuild.exe
 
 $repo_root = (get-item $pwd).parent.parent.FullName
-$arte = "$repo_root\artefacts"
+$results_dir = "$repo_root\artefacts"
 $build_dir = "$pwd\build"
 $ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
-$hash_file = "$arte\windows_files_hashes.txt"
+$hash_file = "$results_dir\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
 $signing_folder = "signed-files"
@@ -188,10 +188,6 @@ function Build-Agent {
         Write-Error "Failed to build Agent, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 
-    # upload test artifacts for separate testing
-    Copy-Item $build_dir/watest/Win32/Release/watest32.exe $arte -Force -ErrorAction Stop
-    Copy-Item $build_dir/watest/x64/Release/watest64.exe $arte -Force -ErrorAction Stop
-    
     Write-Host "Success building agent" -ForegroundColor Green
 }
 
@@ -241,8 +237,8 @@ function Build-OHM() {
     }
 
     Write-Host "Uploading OHM" -foreground Green
-    Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $arte -Force -ErrorAction Stop
-    Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $arte -Force -ErrorAction Stop
+    Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $results_dir -Force -ErrorAction Stop
+    Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $results_dir -Force -ErrorAction Stop
     Write-Host "Success building OHM" -foreground Green
 }
 
@@ -445,8 +441,8 @@ function Start-BinarySigning {
     $files_to_sign = @(
         "$build_dir\check_mk_service\x64\Release\check_mk_service64.exe",
         "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
-        "$arte\cmk-agent-ctl.exe",
-        "$arte\mk-sql.exe",
+        "$results_dir\cmk-agent-ctl.exe",
+        "$results_dir\mk-sql.exe",
         "$ohm_dir\OpenHardwareMonitorLib.dll",
         "$ohm_dir\OpenHardwareMonitorCLI.exe"
     )
@@ -474,7 +470,7 @@ function Start-Ps1Signing {
     Write-Host "Ps1 signing..." -ForegroundColor White
 
     $source_folder = "$repo_root\agents\windows\plugins"
-    $target_folder = "$arte\$signing_folder"
+    $target_folder = "$results_dir\$signing_folder"
 
     $fileList = @("windows_tasks.ps1", "mk_msoffice.ps1")  # Modify as needed
 
@@ -542,13 +538,13 @@ function Start-ArtifactUploading {
 
     Write-Host "Artifact upload..." -ForegroundColor White
     $artifacts = @(
-        @("$build_dir/install/Release/check_mk_service.msi", "$arte/check_mk_agent.msi"),
-        @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$arte/check_mk_agent-64.exe"),
-        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$arte/check_mk_agent.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$arte/OpenHardwareMonitorCLI.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$arte/OpenHardwareMonitorLib.dll"),
-        @("./install/resources/check_mk.user.yml", "$arte/check_mk.user.yml"),
-        @("./install/resources/check_mk.yml", "$arte/check_mk.yml")
+        @("$build_dir/install/Release/check_mk_service.msi", "$results_dir/check_mk_agent.msi"),
+        @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$results_dir/check_mk_agent-64.exe"),
+        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$results_dir/check_mk_agent.exe"),
+        @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$results_dir/OpenHardwareMonitorCLI.exe"),
+        @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$results_dir/OpenHardwareMonitorLib.dll"),
+        @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
+        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
     )
     foreach ($artifact in $artifacts) {
         Copy-Item $artifact[0] $artifact[1] -Force -ErrorAction Stop
@@ -568,7 +564,7 @@ function Start-MsiPatching {
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to patch MSI " $LASTEXITCODE -ErrorAction Stop
     }
-    Copy-Item $arte/check_mk_agent.msi $arte/check_mk_agent_unsigned.msi -Force
+    Copy-Item $results_dir/check_mk_agent.msi $results_dir/check_mk_agent_unsigned.msi -Force
     Write-Host "Success artifact uploading" -foreground Green
 }
 
@@ -594,12 +590,12 @@ function Start-MsiSigning {
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $arte\check_mk_agent.msi
+    & ./scripts/sign_code.cmd $results_dir\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         throw
     }
-    Add-HashLine $arte/check_mk_agent.msi $hash_file
+    Add-HashLine $results_dir/check_mk_agent.msi $hash_file
     Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
@@ -621,7 +617,7 @@ function Clear-Artifacts() {
     Write-Host "Cleaning artifacts..."
     $masks = "*.msi", "*.exe", "*.log", "*.yml"
     foreach ($mask in $masks) {
-        Remove-Item -Path "$arte\$mask" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$results_dir\$mask" -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -641,13 +637,13 @@ function Clear-All() {
 }
 
 function Update-ArtefactDirs() {
-    If (Test-Path -PathType container $arte) {
-        Write-Host "Using arte dir: '$arte'" -ForegroundColor White
+    If (Test-Path -PathType container $results_dir) {
+        Write-Host "Using results dir: '$results_dir'" -ForegroundColor White
     }
     else {
-        Remove-Item $arte -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
-        Write-Host "Creating arte dir: '$arte'" -ForegroundColor White
-        New-Item -ItemType Directory -Path $arte -ErrorAction Stop > nul
+        Remove-Item $results_dir -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
+        Write-Host "Creating results dir: '$results_dir'" -ForegroundColor White
+        New-Item -ItemType Directory -Path $results_dir -ErrorAction Stop > nul
     }
 }
 

@@ -65,7 +65,9 @@ def test_get_packable_files_by_part(path_config: PathConfig) -> None:
 _PATH_CONFIG = PathConfig(
     cmk_plugins_dir=Path("/omd/sites/mySite/local/lib/python3/cmk/plugins/"),
     cmk_addons_plugins_dir=Path("/omd/sites/mySite/local/lib/python3/cmk_addons/plugins/"),
-    agent_based_plugins_dir=Path("/omd/sites/mySite/local/lib/check_mk/base/plugins/agent_based/"),
+    agent_based_plugins_dir=Path(
+        "/omd/sites/mySite/local/lib/python3/cmk/base/plugins/agent_based/"
+    ),
     agents_dir=Path("/omd/sites/mySite/share/check_mk/agents/"),
     alert_handlers_dir=Path("/omd/sites/mySite/NEVERMIND"),
     bin_dir=Path("/omd/sites/mySite/NEVERMIND"),
@@ -93,7 +95,7 @@ def _fake_resolve(self: Path) -> Path:
     str_self = str(self)
     if str_self.startswith("/omd/"):
         str_self = "/opt" + str_self
-    return Path(str_self.replace("lib/check_mk", "lib/python3/cmk"))
+    return Path(str_self)
 
 
 def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
@@ -102,7 +104,7 @@ def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
     resolved_to_abstracted = {
         Path(
             "/opt/omd/sites/mySite/local/lib/python3/cmk/plugins/family/agent_based/check.py"
-        ): Path("/omd/sites/mySite/local/lib/check_mk/plugins/family/agent_based/check.py"),
+        ): Path("/omd/sites/mySite/local/lib/python3/cmk/plugins/family/agent_based/check.py"),
         Path(
             "/opt/omd/sites/mySite/local/lib/python3/cmk_addons/plugins/family/agent_based/check.py"
         ): Path(
@@ -110,7 +112,7 @@ def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
         ),
         Path(
             "/opt/omd/sites/mySite/local/lib/python3/cmk/base/cee/plugins/bakery/bakelet.py"
-        ): Path("/omd/sites/mySite/local/lib/check_mk/base/cee/plugins/bakery/bakelet.py"),
+        ): Path("/omd/sites/mySite/local/lib/python3/cmk/base/cee/plugins/bakery/bakelet.py"),
     }
     assert categorize_files(resolved_to_abstracted, _PATH_CONFIG) == {
         PackagePart.CMK_PLUGINS: {
@@ -120,6 +122,6 @@ def test_categorize_files(monkeypatch: MonkeyPatch) -> None:
             Path("family/agent_based/check.py"),
         },
         PackagePart.LIB: {
-            Path("check_mk/base/cee/plugins/bakery/bakelet.py"),
+            Path("python3/cmk/base/cee/plugins/bakery/bakelet.py"),
         },
     }

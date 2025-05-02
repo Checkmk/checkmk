@@ -108,10 +108,10 @@ installed_packages_dir = _omd_path("var/check_mk/packages")
 protocols_dir = _omd_path("share/protocols")
 alert_handlers_dir = _omd_path("share/check_mk/alert_handlers")
 
-_base_plugins_dir = lib_dir / "check_mk/base/plugins"
+_base_plugins_dir = lib_dir / "python3/cmk/base/plugins"
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
-gui_plugins_dir = lib_dir / "check_mk/gui/plugins"
+gui_plugins_dir = lib_dir / "python3/cmk/gui/plugins"
 nagios_plugins_dir = lib_dir / "nagios/plugins"
 
 local_root = _local_path(omd_root)

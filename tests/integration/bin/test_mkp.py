@@ -52,11 +52,11 @@ def test_mkp_install_with_legacy_lib_file(site: Site) -> None:
         assert _local_stored_mkps(site) == [manifest.name]
         assert not _installed_mkps(site)
 
-        # We're set up. Currently we don't have a problem, because
-        assert site.file_exists(Path("local/lib/check_mk"))
-        # but this will change.
+        # We're set up.
 
-        # A file refering to the old structure should be there:
+        # We don't have the legacy structure:
+        assert not site.file_exists(Path("local/lib/check_mk"))
+        # But file refering to the old structure should be there:
         assert "check_mk/myfile.py" in _lib_files_of_mkp(site, manifest.name)
         # And we can still install the package:
         with _enabled_mkp(site, manifest.name):
@@ -64,8 +64,9 @@ def test_mkp_install_with_legacy_lib_file(site: Site) -> None:
 
             # We also should correctly recognise all files as part of the mkp,
             # so we only see the mkp file itself as unpackaged:
-            (mkp_file,) = _unpackaged_files(site)
-            assert mkp_file.endswith(f"{manifest.name}-{manifest.version}.mkp")
+            unpackaged = _unpackaged_files(site)
+            assert len(unpackaged) == 1
+            assert unpackaged[0].endswith(f"{manifest.name}-{manifest.version}.mkp")
 
     # make sure we've cleared everything:
     assert not _local_stored_mkps(site)

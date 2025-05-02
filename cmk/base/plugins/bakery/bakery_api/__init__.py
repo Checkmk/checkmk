@@ -124,7 +124,7 @@ The following files have to be deployed to the Checkmk site in order to realize 
 * ``~/local/share/check_mk/agents/windows/plugins/my_example_plugin.vbs``: Windows agent plugin
 * ``~/local/share/check_mk/agents/my_example``: Linux program/shell script
 * ``~/local/share/check_mk/web/plugins/wato/my_example.py``: agent ruleset
-* ``~/local/lib/check_mk/base/cee/plugins/bakery/my_example_plugin.py``: bakery plugin
+* ``~/local/lib/python3/cmk/base/cee/plugins/bakery/my_example_plugin.py``: bakery plugin
 
 **The bakery plugin**
 

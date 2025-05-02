@@ -18,7 +18,11 @@ from typing import Final, Protocol, Self
 
 from pydantic import BaseModel
 
-from ._installed import Installer
+from ._installed import (
+    cleanup_legacy_linked_lib_check_mk_path,
+    Installer,
+    replace_legacy_linked_lib_check_mk_path,
+)
 from ._mkp import (
     create_mkp,
     extract_manifest,
@@ -327,7 +331,8 @@ def _install(
     parse_version: Callable[[str], ComparableVersion],
     version_check: bool,
 ) -> Manifest:
-    manifest = extract_manifest(mkp)
+    original_manifest = extract_manifest(mkp)
+    manifest = replace_legacy_linked_lib_check_mk_path(original_manifest)
 
     if old_manifest := installer.get_installed_manifest(manifest.name):
         _logger.info(
@@ -349,7 +354,10 @@ def _install(
         parse_version,
     )
 
-    extract_mkp(manifest, mkp, path_config.get_path)
+    extract_mkp(original_manifest, mkp, path_config.get_path)
+    cleanup_legacy_linked_lib_check_mk_path(
+        path_config.get_path(PackagePart.LIB), original_manifest
+    )
 
     _fix_files_permissions(manifest, path_config)
 

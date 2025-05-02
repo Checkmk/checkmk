@@ -10,6 +10,9 @@ from typing import Final
 from ._mkp import Manifest, PackagePart, read_manifest_optionally
 from ._type_defs import PackageID, PackageName
 
+_REPLACED_LIB_CHECK_MK_LINK_NAME = "check_mk"
+_REPLACED_LIB_CHECK_MK_LINK_DESTINATION = "python3/cmk"
+
 
 class Installer:
     def __init__(self, manifests_dir: Path) -> None:
@@ -51,7 +54,70 @@ class Installer:
         return self._path_for(name).exists()
 
     def add_installed_manifest(self, manifest: Manifest) -> None:
-        self._path_for(manifest.name).write_text(manifest.file_content())
+        self._path_for(manifest.name).write_text(
+            replace_legacy_linked_lib_check_mk_path(manifest).file_content()
+        )
 
     def remove_installed_manifest(self, name: PackageName) -> None:
         self._path_for(name).unlink(missing_ok=True)
+
+
+def replace_legacy_linked_lib_check_mk_path(manifest: Manifest) -> Manifest:
+    """Replace the legacy linked lib check_mk path with the new one.
+
+    We used to have a link lib/check_mk, pointing to lib/python3/cmk.
+    We since removed that link, but old manifests may still reference it.
+    This function replaces the legacy path with the new one, so that we
+    correctly identify the affected files as belonging to this package.
+    """
+    if not (legacy_refs := _extract_legacy_files(manifest)):
+        return manifest
+    return Manifest(
+        title=manifest.title,
+        name=manifest.name,
+        description=manifest.description,
+        version=manifest.version,
+        version_packaged=manifest.version_packaged,
+        version_min_required=manifest.version_min_required,
+        version_usable_until=manifest.version_usable_until,
+        author=manifest.author,
+        download_url=manifest.download_url,
+        files={
+            **manifest.files,
+            PackagePart.LIB: [
+                _make_new_path(p) if p in legacy_refs else p
+                for p in manifest.files[PackagePart.LIB]
+            ],
+        },
+    )
+
+
+def cleanup_legacy_linked_lib_check_mk_path(lib_path: Path, legacy_manifest: Manifest) -> None:
+    """Move unpacked legacy files to new location.
+
+    We used to have a link lib/check_mk, pointing to lib/python3/cmk.
+    We since removed that link, but old manifests may still reference it.
+    """
+    for file in _extract_legacy_files(legacy_manifest):
+        src = lib_path / file
+        dst = lib_path / _make_new_path(file)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        src.rename(dst)
+        for _length in range(len(file.parts) - 1):
+            src = src.parent
+            try:
+                src.rmdir()
+            except OSError:
+                break
+
+
+def _extract_legacy_files(manifest: Manifest) -> Sequence[Path]:
+    return [
+        p
+        for p in manifest.files.get(PackagePart.LIB, ())
+        if p.parts[0] == _REPLACED_LIB_CHECK_MK_LINK_NAME
+    ]
+
+
+def _make_new_path(old_path: Path) -> Path:
+    return Path(_REPLACED_LIB_CHECK_MK_LINK_DESTINATION, *old_path.parts[1:])

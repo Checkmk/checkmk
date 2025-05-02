@@ -201,12 +201,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk" \
 	&& deactivate
 
-	# Provide the externally documented paths for Checkmk plugins
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib
-	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/lib/check_mk
-	# ... and ensure the same for the local hierarchy
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
-	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins

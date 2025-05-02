@@ -18,6 +18,7 @@ from ._type_defs import PackageID
 def _all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[Path]]:
     """Return a map of categorized local files
 
+    TODO: this is outdated, fix it.
     Remove duplicates caused by symlinks, but keep the symlinks.
     The result of this function may be presented to the user,
     and they are not supposed to see the resolved paths, but the linked ones.
@@ -61,8 +62,6 @@ def _relative_path(
     package_part: PackagePart, resolved_full_path: Path, path_config: PathConfig
 ) -> Path:
     rpath = resolved_full_path.relative_to(path_config.resolved_paths[package_part])
-    if package_part is PackagePart.LIB and (rpath_str := str(rpath)).startswith("python3/cmk/"):
-        return Path(f"check_mk/{rpath_str[11:]}")
     return rpath
 
 

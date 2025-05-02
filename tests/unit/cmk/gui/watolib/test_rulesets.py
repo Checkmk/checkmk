@@ -19,63 +19,18 @@ from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.automations.results import (
-    AnalyzeHostRuleEffectivenessResult,
     AnalyzeHostRuleMatchesResult,
     AnalyzeServiceRuleMatchesResult,
 )
 
 from cmk.base.automations.check_mk import (
-    AutomationAnalyzeHostRuleEffectiveness,
     AutomationAnalyzeHostRuleMatches,
     AutomationAnalyzeServiceRuleMatches,
 )
-from cmk.base.config import LoadingResult
 
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
-
-
-@pytest.fixture(name="mock_analyze_host_rule_effectiveness_automation")
-def fixture_mock_analyze_host_rule_effectiveness_automation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Replace rule matching via automation call, which does not work in unit test context,
-    with a direct call to the automation"""
-
-    def analyze_host_rule_effectiveness(
-        r: Sequence[Sequence[RuleSpec]],
-    ) -> AnalyzeHostRuleEffectivenessResult:
-        ts = Scenario()
-        ts.add_host(HostName("ding"))
-        config_cache = ts.apply(monkeypatch)
-        loading_result = LoadingResult(
-            loaded_config=config_cache._loaded_config,
-            config_cache=config_cache,
-        )
-
-        with monkeypatch.context() as m:
-            m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleEffectiveness().execute([], None, loading_result)
-
-    monkeypatch.setattr(
-        rulesets, "analyze_host_rule_effectiveness", analyze_host_rule_effectiveness
-    )
-
-
-@pytest.mark.usefixtures(
-    "request_context", "with_admin_login", "mock_analyze_host_rule_effectiveness_automation"
-)
-def test_analyze_host_rule_effectiveness() -> None:
-    ruleset = _test_host_ruleset(folder := FolderTree().root_folder())
-    folder.create_hosts([(HostName("ding"), {}, None)])
-    (Path(default_config_dir) / "main.mk").touch()
-    FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder()
-
-    rule = ruleset.get_rule_by_id("1")
-    assert rule.is_ineffective()
-    rule = ruleset.get_rule_by_id("2")
-    assert not rule.is_ineffective()
 
 
 @pytest.fixture(name="mock_analyze_host_rule_matches_automation")

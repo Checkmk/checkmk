@@ -9,7 +9,10 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Integer,
+    LevelDirection,
+    Percentage,
     ServiceState,
+    SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
@@ -165,6 +168,15 @@ def _parameter_valuespec_graylog_nodes():
                             ),
                         ),
                     },
+                ),
+            ),
+            "journal_usage_limits": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper levels for disk journal usage"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Percentage(),
+                    migrate=None,
+                    prefill_fixed_levels=DefaultValue(value=(80.0, 90.0)),
                 ),
             ),
         }

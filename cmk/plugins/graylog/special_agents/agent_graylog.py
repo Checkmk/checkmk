@@ -68,6 +68,9 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 
         url = url_base + section.uri
 
+        # Fill the variable `value` with the response from the API.
+        # If sections require special or additional handling, this will
+        # be done afterwards.
         if section.name == "events":
             value = handle_response(url, args, "POST").json()
         else:
@@ -83,18 +86,34 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
             value.update({"ds_param_since": args.since})
 
         if section.name == "nodes":
+            # Add journal data for each node
+            for node_id in value:
+                node_journal_data_response = handle_response(
+                    url_base + f"/cluster/{node_id}/journal", args
+                )
+                node_journal_data = node_journal_data_response.json()
+                value[node_id].update({"journal": node_journal_data})
+
+            # Add inputstate data
             url_nodes = url_base + "/cluster/inputstates"
             node_inputstates = handle_response(url_nodes, args).json()
 
             node_list = []
-            for node in node_inputstates:
-                if node in value:
-                    value[node].update({"inputstates": node_inputstates[node]})
-                    new_value = {node: value[node]}
-                    if args.display_node_details == "node":
-                        handle_piggyback(new_value, args, new_value[node]["hostname"], section.name)
-                        continue
-                    node_list.append(new_value)
+            for node, inputstates in node_inputstates.items():
+                # Assign inputstates to individual nodes present in cluster
+                if node not in value:
+                    continue
+
+                value[node].update({"inputstates": inputstates})
+                current_node_data = {node: value[node]}
+
+                if args.display_node_details == "node":
+                    # Hand over node data to piggyback (and only that)
+                    node_hostname = current_node_data["hostname"]
+                    handle_piggyback(current_node_data, args, node_hostname, section.name)
+                    continue
+
+                node_list.append(current_node_data)
 
             if node_list:
                 handle_output(node_list, section.name, args)

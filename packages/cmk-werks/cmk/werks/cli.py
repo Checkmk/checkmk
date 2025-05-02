@@ -775,9 +775,9 @@ WERK_NOTES = """
     |                                                                             |
     |             The werk is intended for the user/admin!!                       |
     |                                                                             |
-    |    From the titel it should be obvious if the user/admin is affected.       |
+    |    It should be obvious from the title if a user/admin is affected.         |
     |    Describe what needs to be done in the details. You can also note if no   |
-    |    user interaction is required. If necessary add technical details.        |
+    |    user interaction is required. If necessary, add technical details.       |
     |                                                                             |
     '-----------------------------------------------------------------------------'
 

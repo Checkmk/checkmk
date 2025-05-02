@@ -24,7 +24,7 @@ where cargo > nul
 if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install it and/or add to PATH" -Foreground Red && exit /b 7
 
 set cur_dir=%cd%
-set arte=%cur_dir%\..\..\..\..\artefacts
+set output_dir=%cur_dir%\..\..\..\..\artefacts
 set target=i686-pc-windows-msvc
 set exe_name=robotmk_ext.exe
 set exe=target\%target%\release\%exe_name%
@@ -43,5 +43,5 @@ if ERRORLEVEL 1 (
 powershell Write-Host "Building Rust SUCCESS" -Foreground Green
 :: Storing artifacts
 powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
-copy %exe% %arte%\%exe_name%
+copy %exe% %output_dir%\%exe_name%
 powershell Write-Host "Done." -Foreground Green

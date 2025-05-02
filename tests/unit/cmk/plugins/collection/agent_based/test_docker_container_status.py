@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib import uptime
-from cmk.plugins.lib.docker import AgentOutputMalformatted
+from cmk.plugins.lib.docker import AgentOutputMalformatted, MultipleNodesMarker
 
 STRING_TABLE_WITH_VERSION = [
     [
@@ -88,7 +88,7 @@ PARSED = {
     "Status": "running",
 }
 PARSED_NOT_RUNNING = {"Status": "stopped"}
-SECTION_MULTIPLE_NODES = docker._MultipleNodesMarker()
+SECTION_MULTIPLE_NODES = MultipleNodesMarker()
 
 
 def test_parse_docker_container_status() -> None:
@@ -120,7 +120,7 @@ def test_parse_docker_container_status_multiple_nodes() -> None:
                 *STRING_TABLE_WITH_VERSION,
             ]
         ),
-        docker._MultipleNodesMarker,
+        MultipleNodesMarker,
     )
 
 

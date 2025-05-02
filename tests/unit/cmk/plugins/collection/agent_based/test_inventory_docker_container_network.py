@@ -35,6 +35,28 @@ AGENT_OUTPUT_WITH_OCI_ERROR = AGENT_OUTPUT + [
     ]
 ]
 
+AGENT_OUTPUT_MULTIPLE_NODES = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1","DockerPyVersion": "5.0.3","ApiVersion": "1.47"}',
+    ],
+    [
+        'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
+        '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
+        '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
+        '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+    ],
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1","DockerPyVersion": "5.0.3","ApiVersion": "1.47"}',
+    ],
+    [
+        'Networks": {"bridge": {"IPAMConfig": null,"Links": null,"Aliases": null,"MacAddress": '
+        '"02:42:ac:11:00:02","DriverOpts": null,"NetworkID": "60b6b83f447ed3567bd7711bb9d337c2c69648dfc9bab88b441594e8fbdbc25a",'
+        '"EndpointID": "9c942bb42d3e408c65f132870b689e26efac93f4ec3c8bbac74deb732d90f8f7","Gateway": "172.17.0.1","IPAddress": "172.17.0.2",'
+        '"IPPrefixLen": 16,"IPv6Gateway": "","GlobalIPv6Address": "","GlobalIPv6PrefixLen": 0,"DNSNames": null}}'
+    ],
+]
 
 EXPECTED_RESULT = [
     TableRow(
@@ -68,6 +90,7 @@ def test_inventory_docker_container_network_empty() -> None:
     [
         (AGENT_OUTPUT, EXPECTED_RESULT),
         (AGENT_OUTPUT_WITH_OCI_ERROR, EXPECTED_RESULT),
+        # (AGENT_OUTPUT_MULTIPLE_NODES, []),
     ],
 )
 def test_inventory_docker_container_network(

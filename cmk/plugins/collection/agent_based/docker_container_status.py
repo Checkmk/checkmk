@@ -36,10 +36,7 @@ HEALTH_STATUS_MAP = {
 SectionStandard = Mapping[str, Any]
 
 
-class _MultipleNodesMarker: ...
-
-
-Section = SectionStandard | _MultipleNodesMarker
+Section = SectionStandard | docker.MultipleNodesMarker
 
 
 def _is_active_container(section: SectionStandard) -> bool:
@@ -60,7 +57,7 @@ def parse_docker_container_status(string_table: StringTable) -> Section:
     about this issue.
     """
     return (
-        _MultipleNodesMarker()
+        docker.MultipleNodesMarker()
         if len(docker.cleanup_oci_error_message(string_table)) > 2
         else docker.parse(string_table, strict=False).data
     )
@@ -115,7 +112,7 @@ def host_labels_docker_container_status(section: Section) -> HostLabelGenerator:
     """
     yield HostLabel("cmk/docker_object", "container")
 
-    if isinstance(section, _MultipleNodesMarker):
+    if isinstance(section, docker.MultipleNodesMarker):
         return
 
     image_tags = section.get("ImageTags")
@@ -155,7 +152,7 @@ agent_section_docker_container_status = AgentSection[Section](
 
 
 def discover_docker_container_status_health(section: Section) -> DiscoveryResult:
-    if isinstance(section, _MultipleNodesMarker) or not _is_active_container(section):
+    if isinstance(section, docker.MultipleNodesMarker) or not _is_active_container(section):
         return
     # Only discover if a healthcheck and health is configured.
     # Stopped containers may have the 'Health' key anyway, so that's no criteria.
@@ -165,7 +162,7 @@ def discover_docker_container_status_health(section: Section) -> DiscoveryResult
 
 
 def check_docker_container_status_health(section: Section) -> CheckResult:
-    if isinstance(section, _MultipleNodesMarker):
+    if isinstance(section, docker.MultipleNodesMarker):
         return
 
     if section.get("Status") != "running":
@@ -236,12 +233,12 @@ check_plugin_docker_container_status_health = CheckPlugin(
 
 
 def discover_docker_container_status(section: Section) -> DiscoveryResult:
-    if isinstance(section, _MultipleNodesMarker) or _is_active_container(section):
+    if isinstance(section, docker.MultipleNodesMarker) or _is_active_container(section):
         yield Service()
 
 
 def check_docker_container_status(section: Section) -> CheckResult:
-    if isinstance(section, _MultipleNodesMarker):
+    if isinstance(section, docker.MultipleNodesMarker):
         yield Result(
             state=State.CRIT,
             summary="Found data from multiple Docker nodes - see service details for more information",
@@ -301,7 +298,7 @@ def discover_docker_container_status_uptime(
             return
     if not section_docker_container_status or isinstance(
         section_docker_container_status,
-        _MultipleNodesMarker,
+        docker.MultipleNodesMarker,
     ):
         return
     if (
@@ -320,7 +317,7 @@ def check_docker_container_status_uptime(
         return
     if isinstance(
         section_docker_container_status,
-        _MultipleNodesMarker,
+        docker.MultipleNodesMarker,
     ):
         return
 

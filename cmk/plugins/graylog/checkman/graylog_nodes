@@ -7,6 +7,8 @@ description:
  With this check you can monitor Graylog nodes. It outputs the load balancer,
  lifecycle and processing state. Also the number of inputs is shown. The
  long_output gives detailed information about the inputs of the node.
+ In case a disk journal is configured it will output metrics about size,
+ amount of unprocessed messages and age of oldest entry.
  You can choose if the service is shown on the queried Graylog host or the
  Graylog node.
 

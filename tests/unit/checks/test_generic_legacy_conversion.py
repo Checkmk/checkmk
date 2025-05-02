@@ -522,7 +522,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "graylog_jvm",
         "graylog_license",
         "graylog_messages",
-        "graylog_nodes",
         "graylog_sidecars",
         "graylog_sources",
         "gude_humidity",

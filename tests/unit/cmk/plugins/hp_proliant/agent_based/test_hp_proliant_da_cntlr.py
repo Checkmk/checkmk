@@ -16,6 +16,7 @@ STRING_TABLE = [
     ["0", "54", "0", "2", "1", "2", "2", "N/A"],
     ["3", "52", "3", "3", "1", "2", "2", "PXXXX0BRH6X59X"],
     ["6", "1", "6", "2", "1", "8", "1", "PEYHN0ARCC307J"],
+    ["9", "0", "0", "0", "0", "0", "0", ""],
 ]
 
 
@@ -26,6 +27,7 @@ def test_discovery() -> None:
         Service(item="0"),
         Service(item="3"),
         Service(item="6"),
+        Service(item="9"),
     ]
 
 
@@ -59,6 +61,9 @@ def test_discovery() -> None:
                     details="The instrument agent does not recognize the status of the controller. You may need to upgrade the instrument agent.",
                 )
             ],
+        ),
+        pytest.param(
+            "9", [Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")]
         ),
         pytest.param(
             "foo", [Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")]

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import assert_never, NamedTuple
+from typing import assert_never, NamedTuple, Self
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -115,8 +115,26 @@ class ControllerData(NamedTuple):
     b_cond: SNMPCondition
     serial: str
 
+    @classmethod
+    def from_line(cls, line: list[str]) -> Self | None:
+        index, model, slot, cond, role, b_status, b_cond, serial = line
 
-ParsedSection = Mapping[ControllerID, ControllerData]
+        if "0" in (cond, role, b_status, b_cond):
+            return None
+
+        return cls(
+            id=index,
+            model=model,
+            slot=slot,
+            cond=PARSER_COND_MAP[cond],
+            role=PARSER_ROLE_MAP[role],
+            b_status=PARSER_STATE_MAP[b_status],
+            b_cond=PARSER_COND_MAP[b_cond],
+            serial=serial,
+        )
+
+
+ParsedSection = Mapping[ControllerID, ControllerData | None]
 
 
 PARSER_COND_MAP: Mapping[ConditionNumber, SNMPCondition] = {
@@ -165,19 +183,7 @@ OTHER_STATE_DESCRIPTION = (
 
 
 def parse_hp_proliant_da_cntlr(string_table: StringTable) -> ParsedSection:
-    return {
-        line[0]: ControllerData(
-            id=line[0],
-            model=line[1],
-            slot=line[2],
-            cond=PARSER_COND_MAP[line[3]],
-            role=PARSER_ROLE_MAP[line[4]],
-            b_status=PARSER_STATE_MAP[line[5]],
-            b_cond=PARSER_COND_MAP[line[6]],
-            serial=line[7],
-        )
-        for line in string_table
-    }
+    return {line[0]: ControllerData.from_line(line) for line in string_table}
 
 
 def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:

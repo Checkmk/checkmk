@@ -621,6 +621,14 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "uptime": vm["uptime"],
                     }
                 )
+            with SectionWriter("proxmox_ve_cpu_util") as writer:
+                writer.append_json(
+                    {
+                        "cpu": vm["cpu"],
+                        "max_cpu": vm["maxcpu"],
+                        "uptime": vm["uptime"],
+                    }
+                )
             with SectionWriter("proxmox_ve_vm_backup_status") as writer:
                 writer.append_json(
                     {

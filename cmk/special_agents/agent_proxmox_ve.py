@@ -605,6 +605,14 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "max_mem": vm["maxmem"],
                     }
                 )
+            with SectionWriter("proxmox_ve_network_throughput") as writer:
+                writer.append_json(
+                    {
+                        "net_in": vm["netin"],
+                        "net_out": vm["netout"],
+                        "uptime": vm["uptime"],
+                    }
+                )
             with SectionWriter("proxmox_ve_vm_backup_status") as writer:
                 writer.append_json(
                     {

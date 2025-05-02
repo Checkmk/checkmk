@@ -1600,10 +1600,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _execute_active_sync_plugins(
         self, user_id: UserId, ldap_user: LDAPUserSpec, user: UserSpec
     ) -> None:
-        for key, params, plugin in self._active_sync_plugins():
+        for _key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore[arg-type, typeddict-item]
+            user.update(plugin.sync_func(self, params, user_id, ldap_user, user))  # type: ignore[arg-type, typeddict-item]
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1738,7 +1738,6 @@ class LDAPAttributePlugin:
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -1797,7 +1796,6 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -1807,9 +1805,9 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
         if attr in ldap_user:
             attr_value = ldap_user[attr][0]
             # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
-            if plugin == "disable_notifications":
-                return {plugin: {"disable": True} if attr_value == "TRUE" else {}}
-            return {plugin: attr_value}
+            if self.ident == "disable_notifications":
+                return {self.ident: {"disable": True} if attr_value == "TRUE" else {}}
+            return {self.ident: attr_value}
         return {}
 
     def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
@@ -1997,7 +1995,6 @@ class LDAPAttributePluginMail(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        _plugin: str,
         params: dict,
         _user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2061,7 +2058,6 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2139,7 +2135,6 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2238,7 +2233,6 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2297,7 +2291,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2364,7 +2357,6 @@ class LDAPAttributePluginGroupAttributes(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,
@@ -2492,7 +2484,6 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
     def sync_func(
         self,
         connection: LDAPUserConnector,
-        plugin: str,
         params: dict,
         user_id: UserId,
         ldap_user: LDAPUserSpec,

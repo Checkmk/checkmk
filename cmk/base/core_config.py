@@ -321,6 +321,10 @@ def _bake_on_restart(
         from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             agent_bakery,
         )
+        from cmk.base.cee.bakery.load_plugins import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            load_core_plugins,
+            load_v1_plugins,
+        )
 
         from cmk.cee.bakery.type_defs import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             BakeRevisionMode,
@@ -338,6 +342,8 @@ def _bake_on_restart(
 
     agent_bakery.bake_agents(
         target_configs,
+        v1_bakery_plugins=load_v1_plugins(),
+        core_bakelets=load_core_plugins(),
         bake_revision_mode=(
             BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
         ),

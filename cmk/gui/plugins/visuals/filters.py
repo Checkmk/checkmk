@@ -711,6 +711,19 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
+        title=_l("Host check command (exact match)"),
+        sort_index=110,
+        info="host",
+        autocompleter=AutocompleterConfig(ident="check_cmd"),
+        query_filter=query_filters.CheckCommandQuery(
+            ident="host_check_command",
+            op="=",
+        ),
+    )
+)
+
+filter_registry.register(
+    AjaxDropdownFilter(
         title=_l("Service check command (regex)"),
         sort_index=210,
         info="service",
@@ -718,6 +731,20 @@ filter_registry.register(
         query_filter=query_filters.CheckCommandQuery(
             ident="check_command",
             op="~",
+            column="service_check_command",
+        ),
+    )
+)
+
+filter_registry.register(
+    AjaxDropdownFilter(
+        title=_l("Service check command (exact match)"),
+        sort_index=210,
+        info="service",
+        autocompleter=AutocompleterConfig(ident="check_cmd"),
+        query_filter=query_filters.CheckCommandQuery(
+            ident="check_command",
+            op="=",
             column="service_check_command",
         ),
     )

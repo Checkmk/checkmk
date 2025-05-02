@@ -11,9 +11,10 @@ info = [
     ["0", "54", "0", "2", "1", "2", "2", "N/A"],
     ["3", "52", "3", "3", "1", "2", "2", "PXXXX0BRH6X59X"],
     ['6', '1', '6', '2', '1', '8', '1', 'PEYHN0ARCC307J'],
+    ['9', '0', '0', '0', '0', '0', '0', ''],
 ]
 
-discovery = {"": [("0", None), ("3", None), ("6", None)]}
+discovery = {"": [("0", None), ("3", None), ("6", None), ("9", None)]}
 
 checks = {
     "": [
@@ -46,6 +47,17 @@ checks = {
                 (
                     1,
                     "Condition: ok, Board-Condition: other (The instrument agent does not recognize the status of the controller. You may need to upgrade the instrument agent.) (!), Board-Status: enabled, (Role: other, Model: 1, Slot: 6, Serial: PEYHN0ARCC307J)",
+                    []
+                )
+            ]
+        ),
+        (
+            "9",
+            {},
+            [
+                (
+                    3,
+                    "Controller not found in SNMP data",
                     []
                 )
             ]

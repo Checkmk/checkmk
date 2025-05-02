@@ -65,11 +65,15 @@ def inventory_hp_proliant_da_cntlr(info):
 
 
 def check_hp_proliant_da_cntlr(item, params, info):
+    unknown_state_txt = "Controller not found in SNMP data"
     for line in info:
         index, model, slot, cond, role, b_status, b_cond, serial = line
         if index == item:
             sum_state = 0
             output = []
+
+            if "0" in (cond, b_cond, b_status):
+                return (3, unknown_state_txt)
 
             for val, label, map_ in [
                 (cond, "Condition", hp_proliant_da_cntlr_cond_map),
@@ -94,7 +98,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
             )
 
             return (sum_state, ", ".join(output))
-    return (3, "Controller not found in snmp data")
+    return (3, unknown_state_txt)
 
 
 check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(

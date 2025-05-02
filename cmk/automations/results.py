@@ -139,16 +139,6 @@ class ServiceDiscoveryResult(ABCAutomationResult):
 result_type_registry.register(ServiceDiscoveryResult)
 
 
-# Should be droped in 2.3
-class DiscoveryPre22NameResult(ServiceDiscoveryResult):
-    @staticmethod
-    def automation_call() -> str:
-        return "inventory"
-
-
-result_type_registry.register(DiscoveryPre22NameResult)
-
-
 @dataclass
 class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     output: str

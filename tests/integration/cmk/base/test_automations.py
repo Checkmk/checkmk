@@ -156,17 +156,6 @@ def _execute_automation(
     return None
 
 
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_inventory_no_host(site: Site) -> None:
-    # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.run(["cmk", "--automation", "inventory", "@scan", "new"], check=False)
-
-    assert "Need two arguments:" in p.stderr
-    assert p.stdout == ""
-    assert p.returncode == 1
-
-
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
@@ -180,20 +169,6 @@ def test_automation_discovery_no_host(site: Site) -> None:
     assert p.returncode == 1
 
 
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_inventory_single_host(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "inventory",
-        args=["@raiseerrors", "new", "modes-test-host"],
-    )
-
-    assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
-    assert result.hosts[HostName("modes-test-host")].error_text is None
-
-
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_single_host(site: Site) -> None:
     result = _execute_automation(
@@ -205,22 +180,6 @@ def test_automation_discovery_single_host(site: Site) -> None:
     assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
     assert result.hosts[HostName("modes-test-host")].error_text is None
-
-
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_inventory_multiple_hosts(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "inventory",
-        args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"],
-    )
-
-    assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
-    assert result.hosts[HostName("modes-test-host")].error_text is None
-    assert result.hosts[HostName("modes-test-host2")].diff_text == "Nothing was changed."
-    assert result.hosts[HostName("modes-test-host2")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -238,19 +197,6 @@ def test_automation_discovery_multiple_hosts(site: Site) -> None:
     assert result.hosts[HostName("modes-test-host2")].error_text is None
 
 
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_inventory_not_existing_host(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "inventory",
-        args=["@raiseerrors", "new", "xxxhost"],
-    )
-
-    assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts == {"xxxhost": DiscoveryReport(error_text="")}
-
-
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_not_existing_host(site: Site) -> None:
     result = _execute_automation(
@@ -261,20 +207,6 @@ def test_automation_discovery_not_existing_host(site: Site) -> None:
 
     assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts == {"xxxhost": DiscoveryReport(error_text="")}
-
-
-# old alias, drop after 2.2 release
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_inventory_with_cache_option(site: Site) -> None:
-    result = _execute_automation(
-        site,
-        "inventory",
-        args=["new", "modes-test-host"],
-    )
-
-    assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
-    assert result.hosts[HostName("modes-test-host")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")

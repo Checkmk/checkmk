@@ -404,13 +404,6 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
-class AutomationDiscoveryPre22Name(AutomationDiscovery):
-    cmd = "inventory"
-
-
-automations.register(AutomationDiscoveryPre22Name())
-
-
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
 

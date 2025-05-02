@@ -50,7 +50,6 @@ def test_registered_automations() -> None:
         "get-configuration",
         "get-section-information",
         "get-service-name",
-        "inventory",
         "notification-analyse",
         "notification-get-bulks",
         "notification-replay",

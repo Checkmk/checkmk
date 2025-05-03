@@ -693,6 +693,7 @@ _COMPONENTS = (
             "cmk.cee.robotmk.bakery",
             "cmk.ccc",
             "cmk.cee.bakery",
+            "cmk.discover_plugins",
             "cmk.utils",
         ),
     ),

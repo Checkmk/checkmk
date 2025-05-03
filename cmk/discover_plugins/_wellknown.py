@@ -16,6 +16,7 @@ class PluginGroup(enum.Enum):
     """Definitive list of discoverable plug-in groups"""
 
     AGENT_BASED = "agent_based"
+    BAKERY = "bakery"
     CHECKMAN = "checkman"
     GRAPHING = "graphing"
     RULESETS = "rulesets"

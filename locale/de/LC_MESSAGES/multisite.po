@@ -28966,6 +28966,14 @@ msgstr "Zu setzende Host-Attribute"
 msgid "Host check command"
 msgstr "Host-Checkbefehl"
 
+#, fuzzy
+msgid "Host check command (exact match)"
+msgstr "Host-Checkbefehl erweitert"
+
+#, fuzzy
+msgid "Host check command (regex)"
+msgstr "Host-Checkbefehl"
+
 msgid "Host check command expanded"
 msgstr "Host-Checkbefehl erweitert"
 
@@ -39655,9 +39663,10 @@ msgstr "Metrik-Bezeichnung"
 msgid "Metric levels"
 msgstr "Metrik-Level"
 
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
-"must start with a letter."
+"must start with a letter or digit."
 msgstr ""
 "Metriknamen dürfen nur Buchstaben, Zahlen und Unterstriche enthalten und "
 "müssen mit einem Buchstaben beginnen."
@@ -54872,6 +54881,14 @@ msgid "Service availability"
 msgstr "Service-Verfügbarkeit"
 
 msgid "Service check command"
+msgstr "Service-Check Befehl"
+
+#, fuzzy
+msgid "Service check command (exact match)"
+msgstr "Service-Check Befehl erweitert"
+
+#, fuzzy
+msgid "Service check command (regex)"
 msgstr "Service-Check Befehl"
 
 msgid "Service check command expanded"

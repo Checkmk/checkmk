@@ -30390,6 +30390,14 @@ msgstr "Attributs de l'hôte à définir"
 msgid "Host check command"
 msgstr "Commande de contrôle de l'hôte"
 
+#, fuzzy
+msgid "Host check command (exact match)"
+msgstr "Commande de contrôle de l'hôte étendue"
+
+#, fuzzy
+msgid "Host check command (regex)"
+msgstr "Commande de contrôle de l'hôte"
+
 msgid "Host check command expanded"
 msgstr "Commande de contrôle de l'hôte étendue"
 
@@ -41465,9 +41473,10 @@ msgstr "Étiquette métrique"
 msgid "Metric levels"
 msgstr "Niveaux métriques"
 
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
-"must start with a letter."
+"must start with a letter or digit."
 msgstr ""
 "Les noms métriques ne doivent être composés que de lettres, de chiffres et "
 "de caractères de soulignement et ils doivent commencer par une lettre."
@@ -57628,6 +57637,14 @@ msgid "Service availability"
 msgstr "Disponibilité du service"
 
 msgid "Service check command"
+msgstr "Commande de contrôle de service"
+
+#, fuzzy
+msgid "Service check command (exact match)"
+msgstr "Commande de contrôle de service étendue"
+
+#, fuzzy
+msgid "Service check command (regex)"
 msgstr "Commande de contrôle de service"
 
 msgid "Service check command expanded"

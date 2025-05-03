@@ -26632,6 +26632,14 @@ msgstr "Atributele gazdei de setat"
 msgid "Host check command"
 msgstr "Comanda de verificare a gazdei"
 
+#, fuzzy
+msgid "Host check command (exact match)"
+msgstr "Comandă de verificare a gazdei extinsă"
+
+#, fuzzy
+msgid "Host check command (regex)"
+msgstr "Comanda de verificare a gazdei"
+
 msgid "Host check command expanded"
 msgstr "Comandă de verificare a gazdei extinsă"
 
@@ -36967,9 +36975,10 @@ msgstr "Etichetă metrică"
 msgid "Metric levels"
 msgstr "Niveluri metrice"
 
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
-"must start with a letter."
+"must start with a letter or digit."
 msgstr ""
 "Denumirile metrice trebuie să fie formate numai din litere, cifre și "
 "caractere de subliniere și trebuie să înceapă cu o literă."
@@ -50466,6 +50475,14 @@ msgid "Service availability"
 msgstr "Disponibilitatea serviciului"
 
 msgid "Service check command"
+msgstr "Comandă de verificare a serviciului"
+
+#, fuzzy
+msgid "Service check command (exact match)"
+msgstr "Comandă de verificare a serviciului extinsă"
+
+#, fuzzy
+msgid "Service check command (regex)"
 msgstr "Comandă de verificare a serviciului"
 
 msgid "Service check command expanded"

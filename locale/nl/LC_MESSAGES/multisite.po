@@ -26617,6 +26617,14 @@ msgstr "Host attributen om in te stellen"
 msgid "Host check command"
 msgstr "Commando gastheercontrole"
 
+#, fuzzy
+msgid "Host check command (exact match)"
+msgstr "Commando gastheercontrole uitgebreid"
+
+#, fuzzy
+msgid "Host check command (regex)"
+msgstr "Commando gastheercontrole"
+
 msgid "Host check command expanded"
 msgstr "Commando gastheercontrole uitgebreid"
 
@@ -36939,9 +36947,10 @@ msgstr "Metrisch etiket"
 msgid "Metric levels"
 msgstr "Metrische niveaus"
 
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
-"must start with a letter."
+"must start with a letter or digit."
 msgstr ""
 "Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
 "moeten met een letter beginnen."
@@ -50409,6 +50418,14 @@ msgid "Service availability"
 msgstr "Beschikbaarheid van de dienst"
 
 msgid "Service check command"
+msgstr "Commando dienstcontrole"
+
+#, fuzzy
+msgid "Service check command (exact match)"
+msgstr "Service check commando uitgebreid"
+
+#, fuzzy
+msgid "Service check command (regex)"
 msgstr "Commando dienstcontrole"
 
 msgid "Service check command expanded"

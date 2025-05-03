@@ -25366,6 +25366,14 @@ msgstr "設定するホスト属性"
 msgid "Host check command"
 msgstr "ホストチェックコマンド"
 
+#, fuzzy
+msgid "Host check command (exact match)"
+msgstr "ホストチェックコマンドが拡張されました"
+
+#, fuzzy
+msgid "Host check command (regex)"
+msgstr "ホストチェックコマンド"
+
 msgid "Host check command expanded"
 msgstr "ホストチェックコマンドが拡張されました"
 
@@ -35193,9 +35201,10 @@ msgstr "メトリックのラベル"
 msgid "Metric levels"
 msgstr "メートリックレベル"
 
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
-"must start with a letter."
+"must start with a letter or digit."
 msgstr ""
 "メトリック名は、文字、数字、およびアンダースコアのみで構成され、文字で始まる"
 "必要があります。"
@@ -48066,6 +48075,14 @@ msgid "Service availability"
 msgstr "サービスの可用性"
 
 msgid "Service check command"
+msgstr "サービスチェックコマンド"
+
+#, fuzzy
+msgid "Service check command (exact match)"
+msgstr "サービスチェックコマンドが拡張されました"
+
+#, fuzzy
+msgid "Service check command (regex)"
 msgstr "サービスチェックコマンド"
 
 msgid "Service check command expanded"

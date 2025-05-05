@@ -646,6 +646,7 @@ def create_nagios_servicedefs(
         active_service_labels = _get_service_labels(
             config_cache, hostname, service_data.description
         )
+
         if _skip_service(config_cache, hostname, service_data.description, active_service_labels):
             continue
 
@@ -664,13 +665,6 @@ def create_nagios_servicedefs(
             service_data.description,
         )
 
-        service_spec = {
-            "use": "check_mk_perf,check_mk_default",
-            "host_name": hostname,
-            "service_description": service_data.description,
-            "check_command": transform_active_service_command(cfg, service_data),
-            "active_checks_enabled": str(1),
-        }
         service_attributes = _to_nagios_core_attributes(
             core_config.get_service_attributes(
                 config_cache,
@@ -685,10 +679,16 @@ def create_nagios_servicedefs(
             get_labels_from_attributes(list(service_attributes.items()))
         )
 
-        service_spec.update(service_attributes)
-
-        service_spec.update(
-            _extra_service_conf_of(
+        service_spec = (
+            {
+                "use": "check_mk_perf,check_mk_default",
+                "host_name": hostname,
+                "service_description": service_data.description,
+                "check_command": transform_active_service_command(cfg, service_data),
+                "active_checks_enabled": str(1),
+            }
+            | service_attributes
+            | _extra_service_conf_of(
                 cfg, config_cache, hostname, service_data.description, active_service_labels
             )
         )
@@ -731,26 +731,19 @@ def create_nagios_servicedefs(
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
         labels = _get_service_labels(config_cache, hostname, service_discovery_name)
-        service_spec = {
-            "use": config.inventory_check_template,
-            "host_name": hostname,
-            "service_description": service_discovery_name,
-        }
-
-        service_spec.update(
-            _to_nagios_core_attributes(
-                core_config.get_service_attributes(
+        service_spec = (
+            {
+                "use": config.inventory_check_template,
+                "host_name": hostname,
+                "service_description": service_discovery_name,
+            }
+            | _to_nagios_core_attributes(
+                get_service_attributes(
                     config_cache, hostname, service_discovery_name, labels, extra_icon=None
                 )
             )
-        )
-
-        service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name, labels)
-        )
-
-        service_spec.update(
-            {
+            | _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name, labels)
+            | {
                 "check_interval": str(disco_params.check_interval),
                 "retry_interval": str(disco_params.check_interval),
             }

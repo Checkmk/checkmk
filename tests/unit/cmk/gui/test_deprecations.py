@@ -738,6 +738,63 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                     content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
                 ),
             ],
+            id="unsorted",
+        ),
+        pytest.param(
+            [
+                _ACTestResultProblemUnsorted(
+                    ident="A text",
+                    notification_category=_NotificationCategory.rule_sets,
+                    _ac_test_results={
+                        SiteId("site_id"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "A text",
+                                "ACTestUnknownCheckParameterRuleSets",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id"),
+                                None,
+                            ),
+                        ],
+                    },
+                ),
+            ],
+            [
+                _NotifiableUser(
+                    UserId("user-id-1"),
+                    [_NotificationCategory.manage_mkps],
+                    [],
+                ),
+                _NotifiableUser(
+                    UserId("user-id-2"),
+                    [_NotificationCategory.rule_sets],
+                    [],
+                ),
+            ],
+            [
+                _ProblemToSend(
+                    users=[
+                        _NotifiableUser(
+                            user_id=UserId("user-id-2"),
+                            notification_categories=[_NotificationCategory.rule_sets],
+                            sent_messages=[],
+                        ),
+                    ],
+                    content="<h2>A text</h2><p>This configuration has no effect in the "
+                    "current installation. It may be associated with an older "
+                    "version of Checkmk or an unused extension package, in which "
+                    "case it can be safely removed. Alternatively, it might belong "
+                    "to a temporarily disabled extension package, so you may want "
+                    "to retain it for now. You can use the <a "
+                    'href="wato.py?mode=unknown_rulesets">unknown rulesets</a> '
+                    "page in case you want to remove the rule.</p><p>Affected "
+                    'sites: site_id</p><p>Details:</p><table class="data '
+                    'table"><tr class="even0"><td>A text</td><td class="state '
+                    'svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                ),
+            ],
             id="rule-sets",
         ),
         pytest.param(

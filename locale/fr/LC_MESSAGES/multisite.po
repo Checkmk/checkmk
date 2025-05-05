@@ -65964,7 +65964,7 @@ msgstr ""
 "La liste des balises d'hôtes ne doit contenir que des chaînes de caractères "
 "mais contient également %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+msgid "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "La connexion de livestatus à ce site est configurée pour ne pas être cryptée."
 

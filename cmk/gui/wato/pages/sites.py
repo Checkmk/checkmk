@@ -1749,7 +1749,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def page(self) -> None:
         if not is_livestatus_encrypted(self._site):
             html.show_message(
-                _("The livestatus connection to this site configured not to be encrypted.")
+                _("The livestatus connection to this site is configured not to be encrypted.")
             )
             return
 

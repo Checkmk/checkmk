@@ -64841,7 +64841,7 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "L'elenco dei tag host deve contenere solo stringhe, ma contiene anche %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+msgid "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "La connessione livestatus a questo sito configurata per non essere criptata."
 

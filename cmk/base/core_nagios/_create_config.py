@@ -443,7 +443,7 @@ def _process_services_data(
         config_cache.make_service_configurer(plugins, service_name_config),
         service_name_config,
     )
-    used_descriptions: dict[ServiceName, AbstractServiceID] = {}
+    services_ids: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
         if not service.description:
@@ -459,16 +459,16 @@ def _process_services_data(
             )
             continue
 
-        if service.description in used_descriptions:
+        if service.description in services_ids:
             core_config.duplicate_service_warning(
                 checktype="auto",
                 description=service.description,
                 host_name=hostname,
-                first_occurrence=used_descriptions[service.description],
+                first_occurrence=services_ids[service.description],
                 second_occurrence=service.id(),
             )
             continue
-        used_descriptions[service.description] = service.id()
+        services_ids[service.description] = service.id()
 
         # Services Dependencies for autochecks
         cfg.write(_get_dependencies(config_cache, hostname, service.description))
@@ -506,7 +506,7 @@ def _process_services_data(
         license_counter["services"] += 1
 
         cfg.checknames_to_define.add(service.check_plugin_name)
-    return used_descriptions, service_labels
+    return services_ids, service_labels
 
 
 def _create_custom_check(
@@ -516,7 +516,7 @@ def _create_custom_check(
     service_name_config: PassiveServiceNameConfig,
     hostname: HostName,
     license_counter: Counter,
-    used_descriptions: dict[ServiceName, AbstractServiceID],
+    services_ids: dict[ServiceName, AbstractServiceID],
 ) -> None:
     # entries are dicts with the following keys:
     # "service_description"        Service name to use
@@ -555,8 +555,8 @@ def _create_custom_check(
 
     cfg.custom_commands_to_define.add(command_name)
 
-    if description in used_descriptions:
-        cn, _ = used_descriptions[description]
+    if description in services_ids:
+        cn, _ = services_ids[description]
         # If we have the same active check again with the same description,
         # then we do not regard this as an error, but simply ignore the
         # second one.
@@ -567,12 +567,12 @@ def _create_custom_check(
             checktype="custom",
             description=description,
             host_name=hostname,
-            first_occurrence=used_descriptions[description],
+            first_occurrence=services_ids[description],
             second_occurrence=("custom(%s)" % command_name, description),
         )
         return
 
-    used_descriptions[description] = ("custom(%s)" % command_name, description)
+    services_ids[description] = ("custom(%s)" % command_name, description)
 
     command = f"{command_name}!{command_line}"
 
@@ -615,7 +615,7 @@ def create_nagios_servicedefs(
         get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None)
     )
 
-    used_descriptions, service_labels = _process_services_data(
+    services_ids, service_labels = _process_services_data(
         cfg, config_cache, service_name_config, plugins, hostname, license_counter, check_mk_attrs
     )
 
@@ -650,7 +650,7 @@ def create_nagios_servicedefs(
         if _skip_service(config_cache, hostname, service_data.description, active_service_labels):
             continue
 
-        if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
+        if (existing_plugin := services_ids.get(service_data.description)) is not None:
             core_config.duplicate_service_warning(
                 checktype="active",
                 description=service_data.description,
@@ -660,7 +660,7 @@ def create_nagios_servicedefs(
             )
             continue
 
-        used_descriptions[service_data.description] = (
+        services_ids[service_data.description] = (
             f"active({service_data.plugin_name})",
             service_data.description,
         )
@@ -722,7 +722,7 @@ def create_nagios_servicedefs(
                 service_name_config,
                 hostname,
                 license_counter,
-                used_descriptions,
+                services_ids,
             )
     service_discovery_name = ConfigCache.service_discovery_name()
 
@@ -750,7 +750,7 @@ def create_nagios_servicedefs(
         cfg.write(format_nagios_object("service", service_spec))
         license_counter["services"] += 1
 
-        if used_descriptions:
+        if services_ids:
             cfg.write(
                 format_nagios_object(
                     "servicedependency",
@@ -765,7 +765,7 @@ def create_nagios_servicedefs(
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not used_descriptions and not active_checks_rules_exist and not custom_checks:
+    if not services_ids and not active_checks_rules_exist and not custom_checks:
         _add_ping_service(
             cfg,
             config_cache,
@@ -780,7 +780,7 @@ def create_nagios_servicedefs(
 
     if ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
         if config_cache.default_address_family(hostname) is socket.AF_INET6:
-            if "PING IPv4" not in used_descriptions:
+            if "PING IPv4" not in services_ids:
                 _add_ping_service(
                     cfg,
                     config_cache,
@@ -792,7 +792,7 @@ def create_nagios_servicedefs(
                     host_attrs.get("_NODEIPS_4"),
                     license_counter,
                 )
-        elif "PING IPv6" not in used_descriptions:
+        elif "PING IPv6" not in services_ids:
             _add_ping_service(
                 cfg,
                 config_cache,
@@ -901,7 +901,7 @@ def _make_ping_only_spec(
 
 
 def format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
-    cfg = ["define %s {" % object_type]
+    lines = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
         # sources to work around the syntactic restrictions in Nagios' object
@@ -911,10 +911,10 @@ def format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
                 if key.startswith(prefix):
                     key = prefix + _b16encode(key[len(prefix) :])
                     val = _b16encode(val)
-        cfg.append("  %-29s %s" % (key, val))
-    cfg.append("}")
+        lines.append("  %-29s %s" % (key, val))
+    lines.append("}")
 
-    return "\n".join(cfg) + "\n\n"
+    return "\n".join(lines) + "\n\n"
 
 
 def _b16encode(b: str) -> str:

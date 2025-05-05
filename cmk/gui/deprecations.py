@@ -11,6 +11,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path
+from typing import override
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -39,6 +40,7 @@ from cmk.gui.userdb import load_users
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
 
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
@@ -175,9 +177,6 @@ class _ACTestResultProblem:
     @abc.abstractmethod
     def _create_title(self) -> str: ...
 
-    def _compute_overall_state(self) -> ACResultState:
-        return ACResultState.worst(r.state for rs in self._ac_test_results.values() for r in rs)
-
     def _create_error_box_message(self, version: str, state: ACResultState) -> str:
         match state:
             case ACResultState.CRIT:
@@ -197,21 +196,32 @@ class _ACTestResultProblem:
     def _create_info(self, version: str) -> str: ...
 
     @abc.abstractmethod
-    def _create_recommendation(self) -> str: ...
+    def _create_recommendation(self) -> HTML | str: ...
 
     def html(self, version: str) -> HTML:
         if (
             not self._ac_test_results
-            or (overall_state := self._compute_overall_state()) is ACResultState.OK
+            or (
+                overall_state := ACResultState.worst(
+                    r.state for rs in self._ac_test_results.values() for r in rs
+                )
+            )
+            is ACResultState.OK
         ):
             return HTML("", escape=False)
 
         html_code = HTMLWriter.render_h2(self._create_title())
         if error_box_message := self._create_error_box_message(version, overall_state):
             html_code += HTMLWriter.render_div(error_box_message, class_="error")
+
         if info := self._create_info(version):
             html_code += HTMLWriter.render_p(info)
-        html_code += HTMLWriter.render_p(self._create_recommendation())
+
+        if isinstance(recommendation := self._create_recommendation(), HTML):
+            html_code += recommendation
+        else:
+            html_code += HTMLWriter.render_p(recommendation)
+
         html_code += HTMLWriter.render_p(
             _("Affected sites: %s") % ", ".join(sorted(self._ac_test_results))
         )
@@ -258,7 +268,7 @@ class _ACTestResultProblemMKP(_ACTestResultProblem):
             % version
         )
 
-    def _create_recommendation(self) -> str:
+    def _create_recommendation(self) -> HTML | str:
         return _(
             "We highly recommend solving this issue already in your installation by"
             " updating the extension package. Otherwise the extension package will be"
@@ -280,7 +290,7 @@ class _ACTestResultProblemFile(_ACTestResultProblem):
             % version
         )
 
-    def _create_recommendation(self) -> str:
+    def _create_recommendation(self) -> HTML | str:
         return _(
             "We highly recommend solving this issue already in your installation either"
             " by migrating or removing this plug-in."
@@ -291,10 +301,44 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
     def _create_title(self) -> str:
         return self.ident
 
+    @property
+    def _is_unknown_check_params_rule_set_problem(self) -> bool:
+        return all(
+            r.test_id == "ACTestUnknownCheckParameterRuleSets"
+            for rs in self._ac_test_results.values()
+            for r in rs
+        )
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        return (
+            ""
+            if self._is_unknown_check_params_rule_set_problem
+            else super()._create_error_box_message(version, state)
+        )
+
     def _create_info(self, version: str) -> str:
         return ""
 
-    def _create_recommendation(self) -> str:
+    def _create_recommendation(self) -> HTML | str:
+        if self._is_unknown_check_params_rule_set_problem:
+            return HTMLWriter.render_p(
+                _(
+                    "This configuration has no effect in the current installation. It may be"
+                    " associated with an older version of Checkmk or an unused extension package,"
+                    " in which case it can be safely removed. Alternatively, it might belong to a"
+                    " temporarily disabled extension package, so you may want to retain it for now."
+                    " You can use the %s page in case you want to remove the rule."
+                )
+                % HTMLWriter.render_a(
+                    _("unknown rulesets"),
+                    href=makeuri_contextless(
+                        request,
+                        [("mode", "unknown_rulesets")],
+                        filename="wato.py",
+                    ),
+                ),
+            )
         return _("We highly recommend solving this issue already in your installation.")
 
 

@@ -278,6 +278,27 @@ class SyncUsersResult:
     profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
 
 
+def _load_copy_of_existing_user(
+    user_id: UserId,
+    users: Users,
+    ldap_user_connector: LDAPUserConnector,
+) -> tuple[UserId, UserSpec] | None:
+    """Will return the matching user_id and a copy of the user if it exists for the connector,
+    else it will return None."""
+
+    if users.get(user_id, {}).get("connector") == ldap_user_connector.id:
+        return user_id, copy.deepcopy(users[user_id])
+
+    if ldap_user_connector.has_suffix():
+        userid_with_suffix = ldap_user_connector.add_suffix(user_id)
+        if (
+            userid_with_suffix in users
+            and users[userid_with_suffix].get("connector") == ldap_user_connector.id
+        ):
+            return userid_with_suffix, copy.deepcopy(users[userid_with_suffix])
+    return None
+
+
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -623,7 +644,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _get_suffix(self) -> str | None:
         return self._config.get("suffix")
 
-    def _has_suffix(self) -> bool:
+    def has_suffix(self) -> bool:
         return self._config.get("suffix") is not None
 
     def _save_suffix(self) -> None:
@@ -1254,7 +1275,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return user_id_to_check if user_from_config.get("connector") == self.id else None
 
         matched_user_id = get_user_id_create_user_if_neccessary(user_id)
-        if matched_user_id is None and self._has_suffix():
+        if matched_user_id is None and self.has_suffix():
             return get_user_id_create_user_if_neccessary(UserId(f"{user_id}@{self._get_suffix()}"))
 
         return matched_user_id
@@ -1355,7 +1376,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return username[: -(len(suffix) + 1)]
         return username
 
-    def _add_suffix(self, username: LdapUsername) -> UserId:
+    def add_suffix(self, username: LdapUsername) -> UserId:
         suffix = self._get_suffix()
         if username.endswith(f"@{suffix}"):
             return UserId(username)
@@ -1429,25 +1450,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
-        def load_existing_user(uid: UserId) -> tuple[UserId, UserSpec] | None:
-            if uid in users and users[uid].get("connector") == self.id:
-                return uid, copy.deepcopy(users[uid])
-
-            if self._has_suffix():
-                userid_with_suffix = self._add_suffix(uid)
-                if (
-                    userid_with_suffix in users
-                    and users[userid_with_suffix].get("connector") == self.id
-                ):
-                    return userid_with_suffix, copy.deepcopy(users[userid_with_suffix])
-            return None
-
         def create_temp_user(uid: UserId) -> tuple[UserId, UserSpec] | None:
             if uid not in users:
                 return uid, self._create_checkmk_user_for_this_ldap_connection(uid, users)
 
-            user_id_with_suffix = self._add_suffix(uid)
-            if self._has_suffix() and user_id_with_suffix not in users:
+            user_id_with_suffix = self.add_suffix(uid)
+            if self.has_suffix() and user_id_with_suffix not in users:
                 return user_id_with_suffix, self._create_checkmk_user_for_this_ldap_connection(
                     user_id_with_suffix, users
                 )
@@ -1455,7 +1463,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return None
 
         def get_checkmk_user_for_this_ldap_user_id(uid: UserId) -> tuple[bool, UserId, UserSpec]:
-            if (userid_and_user := load_existing_user(uid)) is not None:
+            if (
+                userid_and_user := _load_copy_of_existing_user(
+                    user_id=uid,
+                    users=users,
+                    ldap_user_connector=self,
+                )
+            ) is not None:
                 user_id, user = userid_and_user
                 return False, user_id, user
 
@@ -1485,7 +1499,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             except CantSyncLDAPUserException:
                 cant_sync_msg = f'  SKIP SYNC "{ldap_user_id}" name conflict with user from "{self.id}" connector.'
-                if not self._has_suffix():
+                if not self.has_suffix():
                     cant_sync_msg += " A suffix should be added to this connector."
                 self._logger.info(cant_sync_msg)
                 continue

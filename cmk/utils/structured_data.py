@@ -9,6 +9,7 @@ structured monitoring data of Check_MK.
 
 from __future__ import annotations
 
+import ast
 import gzip
 import io
 import pprint
@@ -1745,10 +1746,7 @@ def _parse_raw_tree(raw_tree: object) -> SDRawTree:
     )
 
 
-def parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
-    # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
-    # deserialization. This means that "meta_*" are not taken into account and we stay
-    # compatible.
+def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     if not isinstance(raw, dict):
         raise TypeError(raw)
     if set(raw) == {"meta", "raw_tree"}:
@@ -1767,6 +1765,15 @@ def parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
             Table=raw.get("Table", {}),
             Nodes=raw.get("Nodes", {}),
         ),
+    )
+
+
+def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
+    # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
+    # deserialization. This means that "meta_*" are not taken into account and we stay
+    # compatible.
+    return _parse_from_unzipped(
+        ast.literal_eval(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read().decode("utf-8"))
     )
 
 

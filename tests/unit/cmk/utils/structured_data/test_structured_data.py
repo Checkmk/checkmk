@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
-import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -21,6 +19,7 @@ from cmk.utils.structured_data import (
     _make_meta_and_raw_tree,
     _MutableAttributes,
     _MutableTable,
+    _parse_from_unzipped,
     _serialize_retention_interval,
     deserialize_delta_tree,
     deserialize_tree,
@@ -31,7 +30,7 @@ from cmk.utils.structured_data import (
     InventoryStore,
     make_meta,
     MutableTree,
-    parse_from_unzipped,
+    parse_from_gzipped,
     parse_visible_raw_path,
     RetentionInterval,
     SDDeltaValue,
@@ -952,11 +951,11 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
         meta=make_meta(do_archive=True),
     )
 
-    with gzip.open(str(tmp_path / "var/check_mk/inventory/heute.gz"), "rb") as f:
+    with (tmp_path / "var/check_mk/inventory/heute.gz").open("rb") as f:
         content = f.read()
 
     # Similiar to InventoryUpdater:
-    meta_and_raw_tree = parse_from_unzipped(ast.literal_eval(content.decode("utf-8")))
+    meta_and_raw_tree = parse_from_gzipped(content)
     assert meta_and_raw_tree["meta"]["version"] == "1"
     assert meta_and_raw_tree["meta"]["do_archive"]
 
@@ -979,11 +978,11 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
         meta=make_meta(do_archive=True),
     )
 
-    with gzip.open(str(tmp_path / "tmp/check_mk/status_data/heute.gz"), "rb") as f:
+    with (tmp_path / "tmp/check_mk/status_data/heute.gz").open("rb") as f:
         content = f.read()
 
     # Similiar to InventoryUpdater:
-    meta_and_raw_tree = parse_from_unzipped(ast.literal_eval(content.decode("utf-8")))
+    meta_and_raw_tree = parse_from_gzipped(content)
     assert meta_and_raw_tree["meta"]["version"] == "1"
     assert meta_and_raw_tree["meta"]["do_archive"]
 
@@ -1057,7 +1056,7 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
     ],
 )
 def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
-    assert parse_from_unzipped(raw) == expected
+    assert _parse_from_unzipped(raw) == expected
 
 
 @pytest.mark.parametrize(

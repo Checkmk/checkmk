@@ -200,6 +200,7 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Header parameter",
                         example="example",
+                        alias="header_param",
                     )
                 }
             ),
@@ -251,6 +252,7 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Header parameter",
                         example="example",
+                        alias="header_param",
                     ),
                     "aliased_header_param": Parameter(
                         annotation=Annotated[str, _HEADER_PARAM_ALIASED],  # type: ignore[arg-type]
@@ -445,3 +447,15 @@ def test_query_parameter_single() -> None:
     # TODO: check if we can improve the error message here without exiting validation early
     with pytest.raises(ValidationError, match="type=string_type"):
         model._validate_request_parameters(request_data, None)
+
+
+def test_header_parameter_case() -> None:
+    def _header_case_test(
+        Header: Annotated[str, HeaderParam(description="", example="")],
+    ) -> None:
+        raise NotImplementedError
+
+    model = EndpointModel.build(_header_case_test)
+    request_data = _request_data(headers={"header": "test"})
+    bound = model._validate_request_parameters(request_data, None)
+    assert bound.arguments["Header"] == "test"

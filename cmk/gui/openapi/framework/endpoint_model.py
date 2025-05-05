@@ -185,14 +185,14 @@ class SignatureParametersProcessor:
                         example=example,
                     )
                 case HeaderParam(alias=alias, description=description, example=example):
-                    # headers are case-insensitive, so we need to normalize the name and alias
-                    header_name = name.casefold()
-                    headers[header_name] = Parameter(
+                    # we always set a case-insensitive alias for headers
+                    alias = (alias or name).casefold()
+                    headers[name] = Parameter(
                         annotation=param_info.annotation,
                         default=default,
                         description=description,
                         example=example,
-                        alias=alias.casefold() if alias else None,
+                        alias=alias,
                     )
                 case QueryParam(
                     alias=alias, description=description, example=example, is_list=is_list

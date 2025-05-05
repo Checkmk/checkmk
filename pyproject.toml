@@ -193,6 +193,7 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [
   # 3rd party that "does not explictly export attribute ... [attr-defined]"
+  "apispec_oneofschema",
   "icalendar",
   "feedparser",
   "marshmallow_oneofschema",

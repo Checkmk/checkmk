@@ -393,10 +393,10 @@ documented we may change it without incrementing the API version.
 
 from typing import Any, get_args, TypedDict
 
-import apispec
 import apispec_oneofschema
 import openapi_spec_validator
 from apispec import APISpec
+from apispec import utils as apispec_utils
 from apispec.ext.marshmallow import MarshmallowPlugin
 
 from cmk.ccc import store
@@ -406,19 +406,18 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.utils.paths import omd_root
 
 from cmk.gui import main_modules
-from cmk.gui.openapi import endpoint_registry
-from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
+from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.registry import (
     EndpointDefinition,
-    versioned_endpoint_registry,
-    VersionedEndpointRegistry,
 )
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
-from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
+from cmk.gui.openapi.restful_objects.versioned_endpoint_map import (
+    discover_endpoints,
+)
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 from cmk.gui.openapi.spec.plugin_pydantic import CheckmkPydanticPlugin
 from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc_endpoints
@@ -483,11 +482,7 @@ def populate_spec(
     ident: Ident
     doc_endpoints = []
 
-    marshmallow_endpoints, versioned_endpoints = get_endpoints_for_version(
-        api_version=api_version,
-        legacy_registry=endpoint_registry,
-        versioned_registry=versioned_endpoint_registry,
-    )
+    marshmallow_endpoints, versioned_endpoints = get_endpoints_for_version(api_version)
 
     marshmallow_endpoint: Endpoint
     for marshmallow_endpoint in marshmallow_endpoints:
@@ -533,41 +528,17 @@ def populate_spec(
 
 def get_endpoints_for_version(
     api_version: APIVersion,
-    legacy_registry: EndpointRegistry,
-    versioned_registry: VersionedEndpointRegistry,
 ) -> tuple[list[Endpoint], list[EndpointDefinition]]:
-    # TODO: consolidate version lookup with routing
-    all_versions = APIConfig.get_released_versions()
-    applicable_versions = [v for v in all_versions if v <= api_version]
+    legacy_endpoints: list[Endpoint] = []
+    versioned_endpoints: list[EndpointDefinition] = []
 
-    version_legacy_endpoints = {}
-    version_endpoints = {}
+    all_endpoints = discover_endpoints(api_version)
 
-    for legacy_endpoint in legacy_registry:
-        ident = legacy_endpoint.ident
-
-        if (
-            not legacy_endpoint.removed_in_version
-            or legacy_endpoint.removed_in_version > api_version
-        ):
-            version_legacy_endpoints[ident] = legacy_endpoint
-
-    for version in applicable_versions:
-        for versioned_endpoint in versioned_registry.specified_endpoints(version):
-            ident = versioned_endpoint.ident
-
-            if (
-                versioned_endpoint.removed_in_version is None
-                or versioned_endpoint.removed_in_version > api_version
-            ):
-                # If this endpoint identifier exists in legacy endpoints, it overrides it
-                if ident in version_legacy_endpoints:
-                    del version_legacy_endpoints[ident]
-
-                version_endpoints[ident] = versioned_endpoint
-
-    legacy_endpoints = list(version_legacy_endpoints.values())
-    versioned_endpoints = list(version_endpoints.values())
+    for endpoint in all_endpoints.values():
+        if isinstance(endpoint, Endpoint):
+            legacy_endpoints.append(endpoint)
+        else:
+            versioned_endpoints.append(endpoint)
 
     return legacy_endpoints, versioned_endpoints
 
@@ -591,15 +562,15 @@ _SECURITY_SCHEMES = {
 }
 
 
-def _make_spec() -> apispec.APISpec:
-    spec = apispec.APISpec(
+def _make_spec() -> APISpec:
+    spec = APISpec(
         "Checkmk REST-API",
         __version__,
         "3.1.1",
         plugins=[
             CheckmkPydanticPlugin(),
             MarshmallowPlugin(),
-            apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]
+            apispec_oneofschema.MarshmallowPlugin(),
             CheckmkMarshmallowPlugin(),
         ],
         **_redoc_spec(),
@@ -655,7 +626,7 @@ ReDocSpec = TypedDict(
 def _redoc_spec() -> ReDocSpec:
     return {
         "info": {
-            "description": apispec.utils.dedent(__doc__)
+            "description": apispec_utils.dedent(__doc__)
             .strip()
             .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
             "license": {

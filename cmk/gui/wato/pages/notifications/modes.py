@@ -1776,8 +1776,8 @@ class ModeTestNotifications(ModeNotifications):
                     notification_sent_count,
                     self._vs_notification_scripts().value_to_html(dispatch_method),
                     ungettext(
-                        "notification has been sent out",
-                        "notifications have been sent out",
+                        "notification has been triggered",
+                        "notifications have been triggered",
                         notification_sent_count,
                     ),
                 )
@@ -2227,7 +2227,7 @@ class ModeTestNotifications(ModeNotifications):
                     "notify_plugin",
                     CascadingDropdown(
                         label=_("Notification method and parameter"),
-                        title=_("Send out notification for specific method"),
+                        title=_("Trigger notification for a specific method"),
                         choices=self._notification_script_choices_with_parameters,
                         default_value=("mail", None),
                         orientation="horizontal",

@@ -37,7 +37,7 @@
                 <table style="border-collapse: collapse;" align="center">
                     <tr>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="iphone_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
+                            <div class="mobile_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
                                         {% if service_notification %} {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }} {% endif %};
                                         display: inline-block;
                                         /* Inline block to respect width */">
@@ -65,7 +65,7 @@
                             <![endif]-->
                         </td>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="iphone_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
+                            <div class="mobile_event_marker_bulk" style="{{ macros.event_marker_bulk_style() }};
                                         {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %};
                                         display: inline-block;
                                         /* Inline block to respect width */">

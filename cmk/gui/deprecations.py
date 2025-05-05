@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import datetime
 import json
 import time
@@ -10,7 +11,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path
-from typing import Literal
+from typing import override
 
 from livestatus import SiteConfigurations
 
@@ -148,7 +149,6 @@ class _NotificationCategory(Enum):
 @dataclass(frozen=True)
 class _ACTestResultProblem:
     ident: str
-    type: Literal["mkp", "file", "unsorted"]
     notification_category: _NotificationCategory
     _ac_test_results: dict[SiteId, list[ACTestResult]] = field(default_factory=dict)
 
@@ -173,15 +173,18 @@ class _ACTestResultProblem:
 
         return ", ".join(words)
 
-    def html(self, version: str) -> HTML:
-        if not self._ac_test_results:
-            return HTML("", escape=False)
+    @abc.abstractmethod
+    def _create_title(self) -> str: ...
 
-        match ACResultState.worst(r.state for rs in self._ac_test_results.values() for r in rs):
+    def _compute_overall_state(self) -> ACResultState:
+        return ACResultState.worst(r.state for rs in self._ac_test_results.values() for r in rs)
+
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        match state:
             case ACResultState.CRIT:
-                error = _("This does not work in Checkmk %s.") % version
+                return _("This does not work in Checkmk %s.") % version
             case ACResultState.WARN:
-                error = (
+                return (
                     _(
                         "This may partially work in Checkmk %s but will stop working from the"
                         " next major version onwards."
@@ -189,50 +192,27 @@ class _ACTestResultProblem:
                     % version
                 )
             case _:
-                return HTML("", escape=False)
+                return ""
 
-        match self.type:
-            case "mkp":
-                title = _("Deprecated extension package: %s") % self.ident
-                info = (
-                    _(
-                        "The extension package uses APIs which are deprecated or removed in"
-                        " Checkmk %s so that this extension will not work anymore once you upgrade"
-                        " your site to next major version."
-                    )
-                    % version
-                )
-                recommendation = _(
-                    "We highly recommend solving this issue already in your installation by"
-                    " updating the extension package. Otherwise the extension package will be"
-                    " deactivated after an upgrade."
-                )
-            case "file":
-                title = _("Deprecated plug-in: %s") % self.ident
-                info = (
-                    _(
-                        "The plug-in uses APIs which are deprecated or removed in"
-                        " Checkmk %s, so that this extension will not work anymore once you upgrade"
-                        " your site to next major version."
-                    )
-                    % version
-                )
-                recommendation = _(
-                    "We highly recommend solving this issue already in your installation either"
-                    " by migrating or removing this plug-in."
-                )
-            case "unsorted":
-                title = self.ident
-                info = ""
-                recommendation = _(
-                    "We highly recommend solving this issue already in your installation."
-                )
+    @abc.abstractmethod
+    def _create_info(self, version: str) -> str: ...
 
-        html_code = HTMLWriter.render_h2(title)
-        html_code += HTMLWriter.render_div(error, class_="error")
-        if info:
+    @abc.abstractmethod
+    def _create_recommendation(self) -> str: ...
+
+    def html(self, version: str) -> HTML:
+        if (
+            not self._ac_test_results
+            or (overall_state := self._compute_overall_state()) is ACResultState.OK
+        ):
+            return HTML("", escape=False)
+
+        html_code = HTMLWriter.render_h2(self._create_title())
+        if error_box_message := self._create_error_box_message(version, overall_state):
+            html_code += HTMLWriter.render_div(error_box_message, class_="error")
+        if info := self._create_info(version):
             html_code += HTMLWriter.render_p(info)
-        html_code += HTMLWriter.render_p(recommendation)
+        html_code += HTMLWriter.render_p(self._create_recommendation())
         html_code += HTMLWriter.render_p(
             _("Affected sites: %s") % ", ".join(sorted(self._ac_test_results))
         )
@@ -265,6 +245,69 @@ class _ACTestResultProblem:
         return html_code
 
 
+class _ACTestResultProblemMKP(_ACTestResultProblem):
+    @override
+    def _create_title(self) -> str:
+        return _("Deprecated extension package: %s") % self.ident
+
+    @override
+    def _create_info(self, version: str) -> str:
+        return (
+            _(
+                "The extension package uses APIs which are deprecated or removed in"
+                " Checkmk %s so that this extension will not work anymore once you upgrade"
+                " your site to next major version."
+            )
+            % version
+        )
+
+    @override
+    def _create_recommendation(self) -> str:
+        return _(
+            "We highly recommend solving this issue already in your installation by"
+            " updating the extension package. Otherwise the extension package will be"
+            " deactivated after an upgrade."
+        )
+
+
+class _ACTestResultProblemFile(_ACTestResultProblem):
+    @override
+    def _create_title(self) -> str:
+        return _("Deprecated plug-in: %s") % self.ident
+
+    @override
+    def _create_info(self, version: str) -> str:
+        return (
+            _(
+                "The plug-in uses APIs which are deprecated or removed in"
+                " Checkmk %s, so that this extension will not work anymore once you upgrade"
+                " your site to next major version."
+            )
+            % version
+        )
+
+    @override
+    def _create_recommendation(self) -> str:
+        return _(
+            "We highly recommend solving this issue already in your installation either"
+            " by migrating or removing this plug-in."
+        )
+
+
+class _ACTestResultProblemUnsorted(_ACTestResultProblem):
+    @override
+    def _create_title(self) -> str:
+        return self.ident
+
+    @override
+    def _create_info(self, version: str) -> str:
+        return ""
+
+    @override
+    def _create_recommendation(self) -> str:
+        return _("We highly recommend solving this issue already in your installation.")
+
+
 def _find_ac_test_result_problems(
     not_ok_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
@@ -278,20 +321,12 @@ def _find_ac_test_result_problems(
                 if manifest := manifests_by_path.get(path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
-                        _ACTestResultProblem(
-                            manifest.name,
-                            "mkp",
-                            _NotificationCategory.manage_mkps,
-                        ),
+                        _ACTestResultProblemMKP(manifest.name, _NotificationCategory.manage_mkps),
                     )
                 else:
                     problem = problem_by_ident.setdefault(
                         str(path),
-                        _ACTestResultProblem(
-                            str(path),
-                            "file",
-                            _NotificationCategory.manage_mkps,
-                        ),
+                        _ACTestResultProblemFile(str(path), _NotificationCategory.manage_mkps),
                     )
 
             else:
@@ -314,11 +349,7 @@ def _find_ac_test_result_problems(
 
                 problem = problem_by_ident.setdefault(
                     ac_test_result.text,
-                    _ACTestResultProblem(
-                        ac_test_result.text,
-                        "unsorted",
-                        notification_category,
-                    ),
+                    _ACTestResultProblemUnsorted(ac_test_result.text, notification_category),
                 )
 
             problem.add_ac_test_result(site_id, ac_test_result)

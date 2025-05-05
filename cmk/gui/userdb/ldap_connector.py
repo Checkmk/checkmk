@@ -326,6 +326,39 @@ def _create_new_user_spec(
     return None
 
 
+def _get_checkmk_user_for_this_ldap_user_id(
+    ldap_user_id: UserId,
+    users: Users,
+    ldap_user_connector: LDAPUserConnector,
+) -> tuple[bool, UserId, UserSpec]:
+    """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it will
+    attempt to create a new one. If it can't find or create a user spec, it will raise"""
+    if (
+        userid_and_user := _load_copy_of_existing_user(
+            user_id=ldap_user_id,
+            users=users,
+            ldap_user_connector=ldap_user_connector,
+        )
+    ) is not None:
+        existing_user_id, user = userid_and_user
+        return False, existing_user_id, user
+
+    if (
+        userid_and_new_user := _create_new_user_spec(
+            user_id=ldap_user_id,
+            users=users,
+            ldap_user_connector=ldap_user_connector,
+        )
+    ) is not None:
+        new_user_id, user = userid_and_new_user
+        return True, new_user_id, user
+
+    raise CantSyncLDAPUserException(
+        f"Could not find an existing user or create a new user for the ldap user: '{ldap_user_id}'"
+        f" with the user_connection_id: '{ldap_user_connector.id}'",
+    )
+
+
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -1477,31 +1510,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
-        def get_checkmk_user_for_this_ldap_user_id(uid: UserId) -> tuple[bool, UserId, UserSpec]:
-            if (
-                userid_and_user := _load_copy_of_existing_user(
-                    user_id=uid,
-                    users=users,
-                    ldap_user_connector=self,
-                )
-            ) is not None:
-                user_id, user = userid_and_user
-                return False, user_id, user
-
-            if (
-                userid_and_new_user := _create_new_user_spec(
-                    user_id=uid,
-                    users=users,
-                    ldap_user_connector=self,
-                )
-            ) is not None:
-                user_id, user = userid_and_new_user
-                return True, user_id, user
-
-            raise CantSyncLDAPUserException(
-                f"Could not find an existing user or create a new user for the ldap user: '{uid}' with the user_connection_id: '{self.id}'",
-            )
-
         sync_users_result = SyncUsersResult(
             changes=self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
                 users=users,
@@ -1515,8 +1523,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         for ldap_user_id, ldap_user in ldap_users.items():
             try:
-                mode_create, checkmk_user_id, checkmk_user = get_checkmk_user_for_this_ldap_user_id(
-                    ldap_user_id
+                mode_create, checkmk_user_id, checkmk_user = (
+                    _get_checkmk_user_for_this_ldap_user_id(
+                        ldap_user_id=ldap_user_id,
+                        users=users,
+                        ldap_user_connector=self,
+                    )
                 )
             except CantSyncLDAPUserException:
                 cant_sync_msg = f'  SKIP SYNC "{ldap_user_id}" name conflict with user from "{self.id}" connector.'

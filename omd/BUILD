@@ -42,6 +42,7 @@ create_venv(
         "//omd/packages/mod_wsgi",
         "//omd/packages/navicli",
         "//omd/packages/net-snmp:net-snmp_tar",
+        "//omd/packages/nrpe",
         "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/patch",
         "//omd/packages/perl-modules",

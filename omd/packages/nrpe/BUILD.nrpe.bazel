@@ -43,3 +43,10 @@ configure_make(
     visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )
+
+filegroup(
+    name = "check_nrpe",
+    srcs = [":nrpe"],
+    output_group = "check_nrpe",
+    visibility = ["//visibility:public"],
+)

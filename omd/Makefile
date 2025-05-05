@@ -35,7 +35,6 @@ PACKAGES := \
     nagios \
     monitoring-plugins \
     check-cert \
-    nrpe \
     omd \
     pnp4nagios \
     heirloom-mailx \

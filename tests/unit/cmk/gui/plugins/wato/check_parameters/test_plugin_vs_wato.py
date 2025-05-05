@@ -419,11 +419,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortimail_cpu_load",
-            RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),

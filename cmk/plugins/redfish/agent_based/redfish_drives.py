@@ -46,7 +46,7 @@ def check_redfish_drives(item: str, section: RedfishAPIData) -> CheckResult:
         return
 
     disc_msg = (
-        f"Size: {data.get('CapacityBytes', 0) / 1024 / 1024 / 1024:0.0f}GB, "
+        f"Size: {(data.get('CapacityBytes', 0) or 0) / 1024 / 1024 / 1024:0.0f}GB, "
         f"Speed {data.get('CapableSpeedGbs', 0)} Gbs"
     )
 

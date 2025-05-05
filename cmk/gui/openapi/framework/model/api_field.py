@@ -25,6 +25,7 @@ def api_field[T](
     alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
+    pattern: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -42,6 +43,7 @@ def api_field[T](
     alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
+    pattern: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -59,6 +61,7 @@ def api_field(
     alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
+    pattern: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -76,6 +79,7 @@ def api_field(
     alias: str | None = None,
     title: str | None = None,
     example: object | None = None,
+    pattern: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -96,6 +100,8 @@ def api_field(
         alias: Alias for the field, will be used instead of the field name for (de-)serialization.
         title: Title of the field, used for OpenAPI schema generation.
         example: Serialized example value of the field, used for OpenAPI schema generation.
+        pattern: Regular expression pattern for the field, used for OpenAPI schema generation
+                 and validation.
         init: Include the field in the generated __init__ method.
         repr: Include the field in the generated __repr__ method.
         hash: Include the field in the generated __hash__ method. If None, use the compare behavior.
@@ -114,6 +120,8 @@ def api_field(
         metadata["title"] = title
     if example:
         metadata["examples"] = [example]
+    if pattern:
+        metadata["pattern"] = pattern
     if additional_metadata:
         metadata.update(additional_metadata)
     return Field(

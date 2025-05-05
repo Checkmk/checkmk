@@ -8,16 +8,19 @@ from datetime import datetime
 from typing import Annotated, Literal
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
+from pydantic import AfterValidator
 
 from cmk.gui.fields.attributes import AuthProtocolType, PrivacyProtocolType
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
+from cmk.gui.openapi.framework.model_validators import GroupValidator
 
 
 @dataclass(kw_only=True, slots=True)
 class HostContactGroupModel:
-    # TODO: group field validate for input
-    groups: list[str] = api_field(description="A list of contact groups.", example="all")
+    groups: list[Annotated[str, AfterValidator(GroupValidator(group_type="host").exists)]] = (
+        api_field(description="A list of contact groups.", example="all")
+    )
     use: bool = api_field(description="Add these contact groups to the host.", default=False)
     use_for_services: bool = api_field(
         description="<p>Always add host contact groups also to its services.</p>With this option contact groups that are added to hosts are always being added to services, as well. This only makes a difference if you have assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. As long as you do not have any such rule a service always inherits all contact groups from its host.",

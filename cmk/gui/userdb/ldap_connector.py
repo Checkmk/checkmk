@@ -299,6 +299,33 @@ def _load_copy_of_existing_user(
     return None
 
 
+def _create_new_user_spec(
+    user_id: UserId,
+    users: Users,
+    ldap_user_connector: LDAPUserConnector,
+) -> tuple[UserId, UserSpec] | None:
+    """Will first attempt to create a new user spec using the user_id passed in. If this
+    user_id is already taken and if a suffix is configured, we then attempt to create a
+    new user spec using the user_id + the suffix. If this is also already taken, None
+    will be returned."""
+
+    if user_id not in users:
+        return user_id, ldap_user_connector.create_checkmk_user_for_this_ldap_connection(
+            user_id, users
+        )
+
+    user_id_with_suffix = ldap_user_connector.add_suffix(user_id)
+    if ldap_user_connector.has_suffix() and user_id_with_suffix not in users:
+        return (
+            user_id_with_suffix,
+            ldap_user_connector.create_checkmk_user_for_this_ldap_connection(
+                user_id_with_suffix, users
+            ),
+        )
+
+    return None
+
+
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -1228,7 +1255,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return ldap.dn.dn2str(base_dn)
 
     def create_ldap_user_on_login(self, userid: UserId, existing_users: Users) -> None:
-        new_user = self._create_checkmk_user_for_this_ldap_connection(userid, existing_users)
+        new_user = self.create_checkmk_user_for_this_ldap_connection(userid, existing_users)
         existing_users[userid] = new_user
         save_users(existing_users, datetime.now())
 
@@ -1386,7 +1413,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
             user["customer"] = self._config.get("customer", customer_api().default_customer_id())
 
-    def _create_checkmk_user_for_this_ldap_connection(
+    def create_checkmk_user_for_this_ldap_connection(
         self,
         new_user_id: UserId,
         existing_users: Users,
@@ -1450,18 +1477,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
-        def create_temp_user(uid: UserId) -> tuple[UserId, UserSpec] | None:
-            if uid not in users:
-                return uid, self._create_checkmk_user_for_this_ldap_connection(uid, users)
-
-            user_id_with_suffix = self.add_suffix(uid)
-            if self.has_suffix() and user_id_with_suffix not in users:
-                return user_id_with_suffix, self._create_checkmk_user_for_this_ldap_connection(
-                    user_id_with_suffix, users
-                )
-
-            return None
-
         def get_checkmk_user_for_this_ldap_user_id(uid: UserId) -> tuple[bool, UserId, UserSpec]:
             if (
                 userid_and_user := _load_copy_of_existing_user(
@@ -1473,7 +1488,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 user_id, user = userid_and_user
                 return False, user_id, user
 
-            if (userid_and_new_user := create_temp_user(uid)) is not None:
+            if (
+                userid_and_new_user := _create_new_user_spec(
+                    user_id=uid,
+                    users=users,
+                    ldap_user_connector=self,
+                )
+            ) is not None:
                 user_id, user = userid_and_new_user
                 return True, user_id, user
 

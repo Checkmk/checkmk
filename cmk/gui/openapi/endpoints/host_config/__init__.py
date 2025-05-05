@@ -13,6 +13,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import InitialStatusArgs, JobTarget
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.fields_filter import FieldsFilter, make_filter
 from cmk.gui.fields.utils import BaseSchema
@@ -737,7 +738,11 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     result = background_job.start(
         JobTarget(
             callable=rename_hosts_job_entry_point,
-            args=RenameHostsJobArgs(renamings=[(host.folder().path(), host_name, new_name)]),
+            args=RenameHostsJobArgs(
+                renamings=[(host.folder().path(), host_name, new_name)],
+                pprint_value=active_config.wato_pprint_config,
+                use_git=active_config.wato_use_git,
+            ),
         ),
         InitialStatusArgs(
             title=f"Renaming of {host_name} -> {new_name}",

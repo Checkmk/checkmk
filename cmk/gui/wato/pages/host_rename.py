@@ -21,6 +21,7 @@ from cmk.utils.regex import regex
 from cmk.gui import forms
 from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -175,7 +176,11 @@ class ModeBulkRenameHost(WatoMode):
                 result := host_renaming_job.start(
                     JobTarget(
                         callable=rename_hosts_job_entry_point,
-                        args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                        args=RenameHostsJobArgs(
+                            renamings=_renamings_to_job_args(renamings),
+                            pprint_value=active_config.wato_pprint_config,
+                            use_git=active_config.wato_use_git,
+                        ),
                     ),
                     InitialStatusArgs(
                         title=title,
@@ -434,6 +439,8 @@ def _confirm(html_title, message):
 
 class RenameHostsJobArgs(BaseModel, frozen=True):
     renamings: Sequence[tuple[str, AnnotatedHostName, AnnotatedHostName]]
+    pprint_value: bool
+    use_git: bool
 
 
 def rename_hosts_job_entry_point(
@@ -442,8 +449,12 @@ def rename_hosts_job_entry_point(
 ) -> None:
     with job_interface.gui_context():
         renamings = _renamings_from_job_args(args.renamings)
+
         actions, auth_problems = _rename_hosts(
-            renamings, job_interface
+            renamings,
+            job_interface,
+            pprint_value=args.pprint_value,
+            use_git=args.use_git,
         )  # Already activates the changes!
 
         for site_id in group_renamings_by_site(renamings):
@@ -564,7 +575,11 @@ class ModeRenameHost(WatoMode):
             result := host_renaming_job.start(
                 JobTarget(
                     callable=rename_hosts_job_entry_point,
-                    args=RenameHostsJobArgs(renamings=_renamings_to_job_args(renamings)),
+                    args=RenameHostsJobArgs(
+                        renamings=_renamings_to_job_args(renamings),
+                        pprint_value=active_config.wato_pprint_config,
+                        use_git=active_config.wato_use_git,
+                    ),
                 ),
                 InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
@@ -639,8 +654,16 @@ def _renamings_from_job_args(
 def _rename_hosts(
     renamings: Sequence[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
+    *,
+    pprint_value: bool,
+    use_git: bool,
 ) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
-    action_counts, auth_problems = perform_rename_hosts(renamings, job_interface)
+    action_counts, auth_problems = perform_rename_hosts(
+        renamings,
+        job_interface,
+        pprint_value=pprint_value,
+        use_git=use_git,
+    )
     action_texts = render_renaming_actions(action_counts)
     return action_texts, auth_problems
 

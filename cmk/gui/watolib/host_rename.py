@@ -74,12 +74,12 @@ rename_host_hook_registry = RenameHostHookRegistry()
 def perform_rename_hosts(
     renamings: Iterable[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
+    *,
+    pprint_value: bool,
+    use_git: bool,
 ) -> tuple[dict[str, int], list[tuple[HostName, MKAuthException]]]:
     def update_interface(message: str) -> None:
         job_interface.send_progress_update(message)
-
-    pprint_value = active_config.wato_pprint_config
-    use_git = active_config.wato_use_git
 
     actions: list[str] = []
 

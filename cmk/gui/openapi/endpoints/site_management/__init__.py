@@ -26,6 +26,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -164,7 +165,11 @@ def delete_site(params: Mapping[str, Any]) -> Response:
     """Delete a site connection"""
     user.need_permission("wato.sites")
     try:
-        SitesApiMgr().delete_a_site(SiteId(params["site_id"]))
+        SitesApiMgr().delete_a_site(
+            SiteId(params["site_id"]),
+            pprint_value=active_config.wato_pprint_config,
+            use_git=active_config.wato_use_git,
+        )
     except MKUserError as exc:
         return _problem_from_user_error(exc)
     except SiteDoesNotExistException:
@@ -192,6 +197,7 @@ def site_login(params: Mapping[str, Any]) -> Response:
             site_id=SiteId(params["site_id"]),
             username=body["username"],
             password=body["password"],
+            pprint_value=active_config.wato_pprint_config,
         )
     except LoginException as exc:
         return problem(
@@ -214,7 +220,10 @@ def site_login(params: Mapping[str, Any]) -> Response:
 def site_logout(params: Mapping[str, Any]) -> Response:
     """Logout from a remote site"""
     user.need_permission("wato.sites")
-    SitesApiMgr().logout_of_site(params["site_id"])
+    SitesApiMgr().logout_of_site(
+        params["site_id"],
+        pprint_value=active_config.wato_pprint_config,
+    )
     return Response(status=204)
 
 
@@ -256,7 +265,11 @@ def _convert_validate_and_save_site_data(
             current_site_config=internal_config,
             old_site_config=old_site_config,
         )
-        SitesApiMgr().validate_and_save_site(site_id, internal_config)
+        SitesApiMgr().validate_and_save_site(
+            site_id,
+            internal_config,
+            pprint_value=active_config.wato_pprint_config,
+        )
     except MKUserError as exc:
         return _problem_from_user_error(exc)
 

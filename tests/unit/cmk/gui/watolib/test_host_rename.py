@@ -120,7 +120,10 @@ def test_rename_host(
 
     # WHEN
     perform_rename_hosts(
-        renamings=[(folder, old, new) for old, new in renamings], job_interface=job_interface
+        renamings=[(folder, old, new) for old, new in renamings],
+        job_interface=job_interface,
+        pprint_value=False,
+        use_git=False,
     )
 
     # THEN

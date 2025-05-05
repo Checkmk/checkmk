@@ -581,48 +581,36 @@ class SitesApiMgr:
             raise SiteDoesNotExistException
         return existing_site
 
-    def delete_a_site(self, site_id: SiteId) -> None:
+    def delete_a_site(self, site_id: SiteId, *, pprint_value: bool, use_git: bool) -> None:
         if self.all_sites.get(site_id):
-            self.site_mgmt.delete_site(
-                site_id,
-                pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
-            )
+            self.site_mgmt.delete_site(site_id, pprint_value=pprint_value, use_git=use_git)
         raise SiteDoesNotExistException
 
-    def login_to_site(self, site_id: SiteId, username: str, password: str) -> None:
+    def login_to_site(
+        self, site_id: SiteId, username: str, password: str, *, pprint_value: bool
+    ) -> None:
         site = self.get_a_site(site_id)
         try:
             site["secret"] = do_site_login(site, UserId(username), password)
         except Exception as exc:
             raise LoginException(str(exc))
 
-        self.site_mgmt.save_sites(
-            self.all_sites,
-            activate=True,
-            pprint_value=active_config.wato_pprint_config,
-        )
+        self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
         trigger_remote_certs_creation(site_id, site)
 
-    def logout_of_site(self, site_id: SiteId) -> None:
+    def logout_of_site(self, site_id: SiteId, *, pprint_value: bool) -> None:
         site = self.get_a_site(site_id)
         if "secret" in site:
             del site["secret"]
-            self.site_mgmt.save_sites(
-                self.all_sites,
-                activate=True,
-                pprint_value=active_config.wato_pprint_config,
-            )
+            self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
 
-    def validate_and_save_site(self, site_id: SiteId, site_config: SiteConfiguration) -> None:
+    def validate_and_save_site(
+        self, site_id: SiteId, site_config: SiteConfiguration, *, pprint_value: bool
+    ) -> None:
         self.site_mgmt.validate_configuration(site_id, site_config, self.all_sites)
         sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
         self.all_sites.update(sites)
-        self.site_mgmt.save_sites(
-            self.all_sites,
-            activate=True,
-            pprint_value=active_config.wato_pprint_config,
-        )
+        self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
 
     def get_connected_sites_to_update(
         self,

@@ -14,19 +14,39 @@
 New Checkmk {{release_type}} release {{version}}
 Dear friends of Checkmk,
 
-we are proud to bring you the new Checkmk 2.4.0 release - the monitoring solution for hybrid IT infrastructures.
+the new {{release_type}} release {{version}} of Checkmk is ready for download.
 
-Highlights of the release include a complete overhaul of notifications and the dynamic configuration. Fundamental actions have gotten a speed booster.
-Piggyback works smoothly in distributed environments. Quick setup, a new concept for configuring complex integrations has arrived.
-And many more things!
+This {{release_type}} release ships with {{werks.cre.len}} changes affecting all editions of Checkmk,
+{{ werks.cee.len }} changes for the Enterprise editions, {{ werks.cce.len }} Cloud Edition specific and
+{{ werks.cme.len }} Managed Services Edition specific changes.
 
-Check out our newly introduced release notes (https://checkmk.com/learn/release-notes-240) for a summary of the key new features and a curated list of relevant werks.
+Support periods can be found here: https://docs.checkmk.com/latest/en/cmk_versions.html
 
-Want the juicy details? Join us at the 11th Checkmk Conference (May 20th-22nd, 2025) to dive into Checkmk 2.4.0 and discover what’s next for Checkmk.
 
-Before updating, we recommend reading the 2.4.0 update guide (https://docs.checkmk.com/2.4.0/en/update_major.html).
+Changes in all Checkmk Editions:
+{{ changes(werks.cre.werks) }}
 
-All changes can be found here: https://checkmk.com/werks?search=&product=cmk&cmk_version[]=2.4 (1300+ werks).
+
+Changes in the Checkmk Enterprise Edition:
+{{ changes(werks.cee.werks) }}
+
+
+Changes in the Checkmk Cloud Edition:
+{{ changes(werks.cce.werks) }}
+
+
+Changes in the Checkmk Cloud (SaaS):
+{{ changes(werks.cse.werks) }}
+
+
+Changes in the Checkmk Managed Services Edition:
+{{ changes(werks.cme.werks) }}
+
+You can download Checkmk from our download page:
+ * https://checkmk.com/download
+
+The list of all changes can be found here:
+ * https://checkmk.com/werks?product=cmk&version={{ version }}
 
 We greatly thank you for using Checkmk and wish you a successful monitoring,
 

@@ -316,7 +316,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             return None
         return self._config["customer"]
 
-    def connect_server(self, server: str) -> tuple[ldap.ldapobject.ReconnectLDAPObject, str | None]:
+    def connect_server(
+        self, server: str
+    ) -> tuple[ldap.ldapobject.ReconnectLDAPObject, None] | tuple[None, str]:
         """Connects to an LDAP server using the provided server uri"""
         try:
             # We don't want this debugging possibly enabled
@@ -368,11 +370,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             else:
                 msg = "%s" % e
 
-            return None, f"{uri}: {msg}"  # type: ignore[return-value]
+            return None, f"{uri}: {msg}"
 
         except MKLDAPException as e:
             self._clear_nearest_dc_cache()
-            return None, "%s" % e  # type: ignore[return-value]
+            return None, "%s" % e
 
     def _format_ldap_uri(self, server: str) -> str:
         uri = "ldaps://" if self.use_ssl() else "ldap://"
@@ -409,7 +411,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             for server in servers:
                 ldap_obj, error_msg = self.connect_server(server)
 
-                if ldap_obj:  # type: ignore[truthy-bool]
+                if ldap_obj:
                     self._ldap_obj = ldap_obj
                 else:
                     if error_msg is not None:  # it should be, though

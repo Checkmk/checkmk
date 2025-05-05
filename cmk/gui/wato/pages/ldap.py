@@ -933,7 +933,7 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
         conn, msg = connection.connect_server(address)
-        if conn:  # type: ignore[truthy-bool]
+        if conn:
             return (True, _("Connection established. The connection settings seem to be ok."))
         return (False, msg)
 

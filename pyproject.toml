@@ -417,6 +417,15 @@ module = [
   "cmk.gui.visuals.*",
   "cmk.gui.wsgi.*",
 ]
+enable_error_code = [
+  "ignore-without-code",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 disable_error_code = ["explicit-override"]
 disallow_untyped_calls = false
 disallow_untyped_defs = false

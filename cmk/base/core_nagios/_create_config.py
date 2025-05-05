@@ -618,7 +618,6 @@ def create_nagios_servicedefs(
     used_descriptions, service_labels = _process_services_data(
         cfg, config_cache, service_name_config, plugins, hostname, license_counter, check_mk_attrs
     )
-    have_at_least_one_service = len(used_descriptions) != 0
 
     # Active check for Check_MK
     if config_cache.checkmk_check_parameters(hostname).enabled:
@@ -760,7 +759,7 @@ def create_nagios_servicedefs(
         cfg.write(format_nagios_object("service", service_spec))
         license_counter["services"] += 1
 
-        if have_at_least_one_service:
+        if used_descriptions:
             cfg.write(
                 format_nagios_object(
                     "servicedependency",
@@ -775,7 +774,7 @@ def create_nagios_servicedefs(
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not active_checks_rules_exist and not custom_checks:
+    if not used_descriptions and not active_checks_rules_exist and not custom_checks:
         _add_ping_service(
             cfg,
             config_cache,

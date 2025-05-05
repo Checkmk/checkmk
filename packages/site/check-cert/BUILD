@@ -1,5 +1,5 @@
-load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 file_from_flag(
@@ -54,9 +54,9 @@ rust_test_suite(
     ],
     deps = [
         ":check-cert-lib",
-        "@cargo_deps_site//:assertor",
-        "@cargo_deps_site//:openssl",
-        "@cargo_deps_site//:tempfile",
+        "@site_crates//:assertor",
+        "@site_crates//:openssl",
+        "@site_crates//:tempfile",
     ],
 )
 

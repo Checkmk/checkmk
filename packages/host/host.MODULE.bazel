@@ -1,7 +1,7 @@
 host_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 host_crates.from_cargo(
-    name = "cargo_deps_host",
+    name = "host_crates",
     cargo_config = "//packages/host:.cargo/config.toml",
     cargo_lockfile = "//packages/host:Cargo.lock",
     lockfile = "//packages/host:Cargo.lock.bazel",
@@ -12,7 +12,7 @@ host_crates.from_cargo(
     ],
 )
 
-use_repo(host_crates, "cargo_deps_host")
+use_repo(host_crates, "host_crates")
 
 host_crates.annotation(
     crate = "openssl-sys",
@@ -28,10 +28,10 @@ host_crates.annotation(
     deps = [
         "@@openssl",
     ],
-    repositories = ["cargo_deps_host"],
+    repositories = ["host_crates"],
 )
 
 host_crates.splicing_config(
-    repositories = ["cargo_deps_host"],
+    repositories = ["host_crates"],
     resolver_version = "2",
 )

@@ -1,4 +1,4 @@
-load("@cargo_deps_host//:defs.bzl", "aliases", "all_crate_deps")
+load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 
 rust_library(
@@ -72,8 +72,8 @@ rust_library(
     crate_root = "tests/common/mod.rs",
     deps = all_crate_deps() + [
         ":mk-sql-lib",
-        "@cargo_deps_host//:assert_cmd",
-        "@cargo_deps_host//:tempfile",
+        "@host_crates//:assert_cmd",
+        "@host_crates//:tempfile",
     ],
 )
 
@@ -97,7 +97,7 @@ rust_test_suite(
         ":mk-sql",
         ":mk-sql-lib",
         ":mk-sql-tests-common",
-        "@cargo_deps_host//:assert_cmd",
-        "@cargo_deps_host//:tempfile",
+        "@host_crates//:assert_cmd",
+        "@host_crates//:tempfile",
     ],
 )

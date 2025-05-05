@@ -25,8 +25,8 @@ def heirloom_pkgtools_workspace():
         patch_args = ["-p1"],
         patch_tool = "patch",
         urls = [
-            "https://sourceforge.net/projects/heirloom/files/heirloom-pkgtools/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
+            "https://sourceforge.net/projects/heirloom/files/heirloom-pkgtools/" + version_str + "/" + filename,
         ],
         sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
     )

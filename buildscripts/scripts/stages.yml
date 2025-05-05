@@ -277,6 +277,7 @@ STAGES:
     - NAME: 'Python Werks Commands'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_WERK_CODE_FILES
       DIR: ''
+      GIT_FETCH_NOTES: true
       COMMAND: |
         scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
         scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt

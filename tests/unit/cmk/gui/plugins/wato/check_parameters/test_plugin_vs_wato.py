@@ -424,11 +424,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortimail_disk_usage",
-            RuleGroup.CheckgroupParameters("fortimail_disk_usage"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),

@@ -56280,7 +56280,7 @@ msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+msgid "The livestatus connection to this site is configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
 #, python-format

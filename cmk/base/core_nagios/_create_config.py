@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from io import StringIO
 from pathlib import Path
-from typing import Any, Final, IO, Literal
+from typing import Any, IO, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -54,9 +54,6 @@ from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
 _ContactgroupName = str
 ObjectSpec = dict[str, Any]
-
-
-_NO_DISCOVERED_LABELS: Final[Labels] = {}  # just for better readablity
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -438,9 +435,7 @@ def create_nagios_servicedefs(
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_labels = config_cache.label_manager.labels_of_service(
-        hostname, "Check_MK", _NO_DISCOVERED_LABELS
-    )
+    check_mk_labels = _get_service_labels(config_cache, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
         core_config.get_service_attributes(
             config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None
@@ -542,8 +537,8 @@ def create_nagios_servicedefs(
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
     ):
-        active_service_labels = config_cache.label_manager.labels_of_service(
-            hostname, service_data.description, _NO_DISCOVERED_LABELS
+        active_service_labels = _get_service_labels(
+            config_cache, hostname, service_data.description
         )
         if _skip_service(config_cache, hostname, service_data.description, active_service_labels):
             continue
@@ -676,9 +671,7 @@ def create_nagios_servicedefs(
 
             command = f"{command_name}!{command_line}"
 
-            labels = config_cache.label_manager.labels_of_service(
-                hostname, description, _NO_DISCOVERED_LABELS
-            )
+            labels = _get_service_labels(config_cache, hostname, description)
 
             service_spec = {
                 "use": "check_mk_perf,check_mk_default",
@@ -708,9 +701,7 @@ def create_nagios_servicedefs(
 
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
-        labels = config_cache.label_manager.labels_of_service(
-            hostname, service_discovery_name, _NO_DISCOVERED_LABELS
-        )
+        labels = _get_service_labels(config_cache, hostname, service_discovery_name)
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
@@ -760,7 +751,7 @@ def create_nagios_servicedefs(
             config_cache,
             hostname,
             "PING",
-            config_cache.label_manager.labels_of_service(hostname, "PING", _NO_DISCOVERED_LABELS),
+            _get_service_labels(config_cache, hostname, "PING"),
             host_attrs["address"],
             config_cache.default_address_family(hostname),
             host_attrs.get("_NODEIPS"),
@@ -775,9 +766,7 @@ def create_nagios_servicedefs(
                     config_cache,
                     hostname,
                     "PING IPv4",
-                    config_cache.label_manager.labels_of_service(
-                        hostname, "PING IPv4", _NO_DISCOVERED_LABELS
-                    ),
+                    _get_service_labels(config_cache, hostname, "PING IPv4"),
                     host_attrs["address"],
                     socket.AF_INET,
                     host_attrs.get("_NODEIPS_4"),
@@ -789,9 +778,7 @@ def create_nagios_servicedefs(
                 config_cache,
                 hostname,
                 "PING IPv6",
-                config_cache.label_manager.labels_of_service(
-                    hostname, "PING IPv6", _NO_DISCOVERED_LABELS
-                ),
+                _get_service_labels(config_cache, hostname, "PING IPv6"),
                 host_attrs["address"],
                 socket.AF_INET6,
                 host_attrs.get("_NODEIPS_6"),
@@ -799,6 +786,12 @@ def create_nagios_servicedefs(
             )
 
     return service_labels
+
+
+def _get_service_labels(
+    config_cache: ConfigCache, hostname: HostName, service_name: ServiceName
+) -> Labels:
+    return config_cache.label_manager.labels_of_service(hostname, service_name, {})
 
 
 def _skip_service(

@@ -116,12 +116,6 @@ def main() {
                                 EDITION: "enterprise",
                             ];
                             break;
-                        case "Python Werks Commands":
-                            relative_job_name = "${branch_base_folder}/cv/test-werks-commands";
-                            build_params << [
-                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
-                            ];
-                            break;
                         default:
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             build_params << [
@@ -132,6 +126,7 @@ def main() {
                                 CIPARAM_ENV_VAR_LIST_STR: env_var_list_str,
                                 CIPARAM_SEC_VAR_LIST_STR: sec_var_list_str,
                                 CIPARAM_GIT_FETCH_TAGS: item.GIT_FETCH_TAGS,
+                                CIPARAM_GIT_FETCH_NOTES: item.GIT_FETCH_NOTES,
                                 CIPARAM_COMMAND: independent_command,
                                 CIPARAM_RESULT_CHECK_FILE_PATTERN: item.RESULT_CHECK_FILE_PATTERN,
                                 CIPARAM_BAZEL_LOCKS_AMOUNT: item.BAZEL_LOCKS_AMOUNT,

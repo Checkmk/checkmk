@@ -545,9 +545,7 @@ def create_nagios_servicedefs(
         active_service_labels = config_cache.label_manager.labels_of_service(
             hostname, service_data.description, _NO_DISCOVERED_LABELS
         )
-        if _do_omit_service(
-            config_cache, hostname, service_data.description, active_service_labels
-        ):
+        if _skip_service(config_cache, hostname, service_data.description, active_service_labels):
             continue
 
         if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
@@ -803,7 +801,7 @@ def create_nagios_servicedefs(
     return service_labels
 
 
-def _do_omit_service(
+def _skip_service(
     config_cache: ConfigCache,
     host_name: HostName,
     service_name: ServiceName,

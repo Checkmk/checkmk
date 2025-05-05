@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointBehavior,
@@ -28,7 +29,8 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
     TagGroup,
 )
-from cmk.gui.openapi.restful_objects.utils import endpoint_ident
+from cmk.gui.openapi.restful_objects.utils import endpoint_ident, identify_expected_status_codes
+from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 from cmk.gui.utils.permission_verification import BasePerm
 
 
@@ -178,6 +180,69 @@ class VersionedEndpointRegistry:
         """Iterate over all endpoints specified for a given API version"""
         for _endpoint_key, endpoint in self._versions.get(version, dict()).items():
             yield endpoint
+
+    def __iter__(self) -> Iterator[EndpointDefinition]:
+        """Iterate over all endpoints registered in the registry"""
+        for version_endpoints in self._versions.values():
+            yield from version_endpoints.values()
+
+
+def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
+    """Validate a versioned endpoint configuration"""
+    # TODO: this function should be invoked for custom endpoints
+    endpoint = endpoint_definition.request_endpoint()
+    model = EndpointModel.build(endpoint.handler)
+
+    if endpoint.content_type == "application/json" and not model.has_response_schema:
+        raise ValueError(
+            f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
+            f"requires a response schema."
+        )
+    elif endpoint.content_type != "application/json" and model.has_response_schema:
+        raise ValueError(
+            f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
+            f"should not have a response schema."
+        )
+
+    if endpoint.method in ("delete", "get") and model.has_request_schema:
+        # add an exception list if necessary but this should serve as double check that this is
+        # intended
+        raise ValueError(
+            f"Endpoint {endpoint.operation_id} with method {endpoint.method} "
+            f"should not have a request schema according to RFC"
+        )
+
+    if error_schemas := endpoint_definition.handler.error_schemas:
+        for error_status_code in error_schemas:
+            if error_status_code < 400:
+                raise ValueError(
+                    f"Endpoint {endpoint.operation_id} has error schema for status code "
+                    f"{error_status_code} but this is not allowed."
+                )
+
+    allowed_status_codes = identify_expected_status_codes(
+        endpoint.method,
+        endpoint.doc_group,
+        endpoint.content_type,
+        endpoint.etag,
+        has_response=model.has_response_schema,
+        has_path_params=model.has_path_parameters,
+        has_query_params=model.has_query_parameters,
+        has_request_schema=model.has_request_schema,
+        additional_status_codes=endpoint.additional_status_codes,
+    )
+
+    if status_descriptions := endpoint_definition.handler.status_descriptions:
+        for status_code in status_descriptions:
+            if status_code not in allowed_status_codes:
+                raise ValueError(
+                    "Unexpected custom status description. "
+                    f"Status code {status_code} not expected for endpoint: {endpoint.method.upper()} {endpoint_definition.metadata.path}"
+                )
+
+    PathParamsValidator.verify_path_params_presence(
+        endpoint_definition.metadata.path, set(model.path_parameters)
+    )
 
 
 versioned_endpoint_registry = VersionedEndpointRegistry()

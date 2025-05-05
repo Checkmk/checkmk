@@ -368,8 +368,12 @@ class EndpointModel[**P, T]:
         )
 
     @property
+    def path_parameters(self) -> Mapping[str, Parameter]:
+        return self._parameters.path
+
+    @property
     def has_path_parameters(self) -> bool:
-        return bool(self._parameters.path)
+        return bool(self.path_parameters)
 
     @property
     def has_query_parameters(self) -> bool:

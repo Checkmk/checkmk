@@ -837,22 +837,21 @@ def _skip_service(
 
 
 def _get_dependencies(
-    config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
+    config_cache: ConfigCache, hostname: HostName, service_name: ServiceName
 ) -> str:
-    result = ""
-    for dep in config.service_depends_on(config_cache, hostname, servicedesc):
-        result += format_nagios_object(
+    return "".join(
+        format_nagios_object(
             "servicedependency",
             {
                 "use": config.service_dependency_template,
                 "host_name": hostname,
                 "service_description": dep,
                 "dependent_host_name": hostname,
-                "dependent_service_description": servicedesc,
+                "dependent_service_description": service_name,
             },
         )
-
-    return result
+        for dep in config.service_depends_on(config_cache, hostname, service_name)
+    )
 
 
 def _add_ping_service(

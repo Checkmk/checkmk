@@ -15,6 +15,9 @@ INVENTORY_BASE_PATH = ["software", "applications", "docker"]
 NodeInfoSection = dict
 
 
+class MultipleNodesMarker: ...
+
+
 class AgentOutputMalformatted(Exception):
     DEFAULT_MESSAGE = (
         "Did not find expected '@docker_version_info' at "

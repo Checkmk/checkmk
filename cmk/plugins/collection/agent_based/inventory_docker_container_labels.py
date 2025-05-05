@@ -13,11 +13,17 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import docker
 
-Section = dict[str, str]
+SectionStandard = dict[str, str]
+
+Section = SectionStandard | docker.MultipleNodesMarker
 
 
 def parse_docker_container_labels(string_table: StringTable) -> Section:
-    return docker.parse(string_table).data
+    return (
+        docker.MultipleNodesMarker()
+        if len(docker.cleanup_oci_error_message(string_table)) > 2
+        else docker.parse(string_table, strict=False).data
+    )
 
 
 agent_section_docker_container_labels = AgentSection(
@@ -27,6 +33,9 @@ agent_section_docker_container_labels = AgentSection(
 
 
 def inventory_docker_container_labels(section: Section) -> InventoryResult:
+    if isinstance(section, docker.MultipleNodesMarker):
+        return
+
     yield Attributes(
         path=docker.INVENTORY_BASE_PATH + ["container"],
         inventory_attributes={"labels": docker.format_labels(section)},

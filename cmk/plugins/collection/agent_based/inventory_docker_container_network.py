@@ -7,11 +7,17 @@
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 from cmk.plugins.lib import docker
 
-Section = dict[str, dict]
+SectionStandard = dict[str, dict]
+
+Section = SectionStandard | docker.MultipleNodesMarker
 
 
 def parse_docker_container_network(string_table: StringTable) -> Section:
-    return docker.parse(string_table).data
+    return (
+        docker.MultipleNodesMarker()
+        if len(docker.cleanup_oci_error_message(string_table)) > 2
+        else docker.parse(string_table, strict=False).data
+    )
 
 
 agent_section_docker_container_network = AgentSection(
@@ -21,6 +27,9 @@ agent_section_docker_container_network = AgentSection(
 
 
 def inventory_docker_container_network_networks(section: Section) -> InventoryResult:
+    if isinstance(section, docker.MultipleNodesMarker):
+        return
+
     network_data = section.get("Networks") or {}
     for network_name, network in network_data.items():
         yield TableRow(
@@ -39,6 +48,9 @@ def inventory_docker_container_network_networks(section: Section) -> InventoryRe
 
 
 def inventory_docker_container_network_ports(section: Section) -> InventoryResult:
+    if isinstance(section, docker.MultipleNodesMarker):
+        return
+
     port_data = section.get("Ports") or {}
     for container_port_spec, host_ports in port_data.items():
         port, proto = container_port_spec.split("/", 1)

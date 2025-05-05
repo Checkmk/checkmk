@@ -9,8 +9,8 @@ def pnp4nagios_workspace():
         build_file = "@omd_packages//omd/packages/pnp4nagios:BUILD.pnp4nagios.bazel",
         strip_prefix = "pnp4nagios-" + version_str,
         urls = [
-            "https://sourceforge.net/projects/pnp4nagios/files/PNP-0.6/" + filename,
             UPSTREAM_MIRROR_URL + filename,
+            "https://sourceforge.net/projects/pnp4nagios/files/PNP-0.6/" + filename,
         ],
         sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
     )

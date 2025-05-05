@@ -9,8 +9,8 @@ def netsnmp_workspace():
         build_file = "@omd_packages//omd/packages/net-snmp:BUILD.net-snmp.bazel",
         strip_prefix = "net-snmp-" + version_str,
         urls = [
-            "https://deac-riga.dl.sourceforge.net/project/net-snmp/net-snmp/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
+            "https://deac-riga.dl.sourceforge.net/project/net-snmp/net-snmp/" + version_str + "/" + filename,
         ],
         patches = [
             "//omd/packages/net-snmp/patches:0001-remove-distutils.dif",

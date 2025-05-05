@@ -144,8 +144,8 @@ class DirectMappingModel:
 
 @dataclass(kw_only=True, slots=True)
 class TranslateNamesModel:
-    # TODO: data_key="convert_case" handling required
     case: Literal["nop", "lower", "upper"] = api_field(
+        alias="convert_case",
         description="Convert all detected host names to upper- or lower-case.\n\n * `nop` - Do not convert anything\n * `lower` - Convert all host names to lowercase.\n * `upper` - Convert all host names to uppercase.",
         default="nop",
     )
@@ -163,8 +163,8 @@ class TranslateNamesModel:
         ),
         default_factory=ApiOmitted,
     )
-    # TODO: data_key="regexp_rewrites" handling required
     regex: list[RegexpRewritesModel] | ApiOmitted = api_field(
+        alias="regexp_rewrites",
         description=(
             "Rewrite discovered host names with multiple regular expressions. The "
             "replacements will be done one after another in the order they appear "
@@ -176,8 +176,8 @@ class TranslateNamesModel:
         ),
         default_factory=ApiOmitted,
     )
-    # TODO: data_key="hostname_replacement" handling required
     mapping: list[DirectMappingModel] | ApiOmitted = api_field(
+        alias="hostname_replacement",
         description=(
             "Replace one value with another.\n\n"
             "These will be executed **after**:\n\n"
@@ -191,11 +191,13 @@ class TranslateNamesModel:
 
 @dataclass(kw_only=True, slots=True)
 class NetworkScanModel:
-    # TODO: data_key="addresses" alias handling required
-    ip_ranges: list[IPRangeWithRegexpModel] = api_field(description="IPv4 addresses to include.")
-    # TODO: data_key="exclude_addresses" alias handling required
+    ip_ranges: list[IPRangeWithRegexpModel] = api_field(
+        alias="addresses", description="IPv4 addresses to include."
+    )
     exclude_ranges: list[IPRangeWithRegexpModel] | ApiOmitted = api_field(
-        description="IPv4 addresses to exclude.", default_factory=ApiOmitted
+        alias="exclude_addresses",
+        description="IPv4 addresses to exclude.",
+        default_factory=ApiOmitted,
     )
     scan_interval: Annotated[int, Ge(3600)] | ApiOmitted = api_field(
         description="Scan interval in seconds. Default is 1 day, minimum is 1 hour.",

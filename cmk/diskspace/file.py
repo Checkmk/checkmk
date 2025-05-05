@@ -22,33 +22,54 @@ class _Info:
     path_to_mod_time: Mapping[str, float]
 
 
-def _load_plugin(omd_root: Path, plugin_name: str, plugin_path: Path) -> _Info | None:
-    verbose(f"Loading plugin: {plugin_path}")
+@dataclass(frozen=True)
+class _PluginData:
+    base_path: Path
+    plugin_name: str
+    cleanup_paths: Sequence[str]
+    file_infos: dict[str, float]
+
+
+def _resolve_plugin_cleanup_paths(omd_root: Path, plugin: _PluginData) -> list[str]:
+    # Transform all path patterns to absolute paths for really existing files
+    resolved: list[str] = []
+    for path in plugin.cleanup_paths:
+        # Make relative paths absolute ones
+        if path[0] != "/":
+            path = str(omd_root / path)
+        # Resolve given path pattern to really existing files.
+        # Also ensure that the files in the resolved list do really exist.
+        resolved += glob.glob(path)
+    return resolved
+
+
+def _load_plugin(plugin_base_dir: Path, plugin_file_name: str) -> _PluginData | None:
+    plugin_file = plugin_base_dir / plugin_file_name
+    verbose(f"Loading plugin: {plugin_file}")
     plugin: dict[str, Any] = {}
     try:
         exec(  # nosec B102 # BNS:aee528
-            plugin_path.read_text(),
+            plugin_file.read_text(),
             plugin,
             plugin,
         )
     except Exception as e:
-        error(f'Exception while loading plugin "{plugin_path}": {e}')
+        error(f'Exception while loading plugin "{plugin_file}": {e}')
         return None
-    # Now transform all path patterns to absolute paths for really existing files
-    resolved: list[str] = []
-    for path in plugin.get("cleanup_paths", []):
-        # Make relative paths absolute ones
-        if path[0] != "/":
-            path = str(omd_root / path)
 
-        # Resolve given path pattern to really existing files.
-        # Also ensure that the files in the resolved list do really exist.
-        resolved += glob.glob(path)
+    return _PluginData(
+        base_path=plugin_base_dir,
+        plugin_name=plugin_file_name,
+        cleanup_paths=plugin.get("cleanup_paths", []),
+        file_infos=plugin.get("file_infos", {}),
+    )
 
-    path_to_mod_time = plugin.get("file_infos", {})
-    for path in resolved:
-        path_to_mod_time[path] = os.stat(path).st_mtime
-    return _Info(plugin_name=plugin_name, path_to_mod_time=path_to_mod_time)
+
+def _read_plugin_info(omd_root: Path, plugin: _PluginData) -> _Info:
+    resolved_paths = _resolve_plugin_cleanup_paths(omd_root, plugin)
+    for path in resolved_paths:
+        plugin.file_infos[path] = os.stat(path).st_mtime
+    return _Info(plugin_name=plugin.plugin_name, path_to_mod_time=plugin.file_infos)
 
 
 def load_plugins(omd_root: Path, plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
@@ -64,9 +85,8 @@ def load_plugins(omd_root: Path, plugin_dir: Path, plugin_dir_local: Path) -> Se
         for file_name in file_list:
             if file_name[0] == ".":
                 continue
-            if (info := _load_plugin(omd_root, file_name, base_dir / file_name)) is not None:
-                infos.append(info)
-
+            if (plugin := _load_plugin(base_dir, file_name)) is not None:
+                infos.append(_read_plugin_info(omd_root, plugin))
     return infos
 
 

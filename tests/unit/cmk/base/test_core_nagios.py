@@ -30,7 +30,19 @@ from cmk.utils.config_path import VersionedConfigPath
 
 from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
 
-from cmk.base import config, core_nagios
+from cmk.base import config
+from cmk.base.core_nagios._create_config import (
+    create_nagios_config_commands,
+    create_nagios_host_spec,
+    create_nagios_servicedefs,
+    format_nagios_object,
+    NagiosConfig,
+)
+from cmk.base.core_nagios._precompile_host_checks import (
+    dump_precompiled_hostcheck,
+    HostCheckStore,
+    PrecompileMode,
+)
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
@@ -69,7 +81,7 @@ def test_format_nagios_object() -> None:
         "check_interval": "hüch",
         "_HÄÄÄÄ": "XXXXXX_YYYY",
     }
-    cfg = core_nagios.format_nagios_object("service", spec)
+    cfg = format_nagios_object("service", spec)
     assert isinstance(cfg, str)
     assert (
         cfg
@@ -306,7 +318,7 @@ def test_create_nagios_host_spec(
 
     hostname = HostName(hostname_str)
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = config.ConfiguredIPLookup(
@@ -315,9 +327,7 @@ def test_create_nagios_host_spec(
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
 
-    host_spec = core_nagios.create_nagios_host_spec(
-        cfg, config_cache, hostname, host_attrs, ip_address_of
-    )
+    host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
     assert host_spec == result
 
 
@@ -345,10 +355,8 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
 
-    cfg = core_nagios.NagiosConfig(io.StringIO(), [hostname])
-    host_spec = core_nagios.create_nagios_host_spec(
-        cfg, config_cache, hostname, host_attrs, ip_address_of
-    )
+    cfg = NagiosConfig(io.StringIO(), [hostname])
+    host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
     assert host_spec["_SERVICE_PERIOD"] == "24X7"
     assert "service_period" not in host_spec
 
@@ -360,9 +368,7 @@ def fixture_config_path() -> VersionedConfigPath:
 
 class TestHostCheckStore:
     def test_host_check_file_path(self, config_path: VersionedConfigPath) -> None:
-        assert core_nagios.HostCheckStore.host_check_file_path(
-            config_path, HostName("abc")
-        ) == Path(
+        assert HostCheckStore.host_check_file_path(config_path, HostName("abc")) == Path(
             Path(config_path),
             "host_checks",
             "abc",
@@ -370,7 +376,7 @@ class TestHostCheckStore:
 
     def test_host_check_source_file_path(self, config_path: VersionedConfigPath) -> None:
         assert (
-            core_nagios.HostCheckStore.host_check_source_file_path(
+            HostCheckStore.host_check_source_file_path(
                 config_path,
                 HostName("abc"),
             )
@@ -379,16 +385,14 @@ class TestHostCheckStore:
 
     def test_write(self, config_path: VersionedConfigPath) -> None:
         hostname = HostName("aaa")
-        store = core_nagios.HostCheckStore()
+        store = HostCheckStore()
 
         assert config.delay_precompile is False
 
         assert not store.host_check_source_file_path(config_path, hostname).exists()
         assert not store.host_check_file_path(config_path, hostname).exists()
 
-        store.write(
-            config_path, hostname, "xyz", precompile_mode=core_nagios.PrecompileMode.INSTANT
-        )
+        store.write(config_path, hostname, "xyz", precompile_mode=PrecompileMode.INSTANT)
 
         assert store.host_check_source_file_path(config_path, hostname).exists()
         assert store.host_check_file_path(config_path, hostname).exists()
@@ -441,13 +445,13 @@ def test_dump_precompiled_hostcheck(
     )
     config_cache = ts.apply(monkeypatch)
 
-    host_check = core_nagios.dump_precompiled_hostcheck(
+    host_check = dump_precompiled_hostcheck(
         config_cache,
         config_cache.make_passive_service_name_config(),
         config_path,
         hostname,
         plugins=_make_plugins_for_test(),
-        precompile_mode=core_nagios.PrecompileMode.INSTANT,
+        precompile_mode=PrecompileMode.INSTANT,
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
@@ -565,9 +569,9 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -604,9 +608,9 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of_return_local)
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -726,9 +730,9 @@ def test_create_nagios_servicedefs_with_warnings(
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -793,9 +797,9 @@ def test_create_nagios_servicedefs_omit_service(
 
     outfile = io.StringIO()
     hostname = HostName("my_host")
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -861,10 +865,10 @@ def test_create_nagios_servicedefs_invalid_args(
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
 
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -951,9 +955,9 @@ def test_create_nagios_config_commands(
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios.create_nagios_servicedefs(
+    create_nagios_servicedefs(
         cfg,
         config_cache,
         config_cache.make_passive_service_name_config(),
@@ -964,7 +968,7 @@ def test_create_nagios_config_commands(
         license_counter,
         ip_address_of,
     )
-    core_nagios.create_nagios_config_commands(cfg)
+    create_nagios_config_commands(cfg)
 
     assert license_counter["services"] == 1
     assert outfile.getvalue() == expected_result

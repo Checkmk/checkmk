@@ -21,10 +21,11 @@ from cmk.checkengine.plugin_backend import (
 
 import cmk.base.utils
 from cmk.base import config
-from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 
 from cmk.discover_plugins import PluginLocation
+
+from ._host_check_config import HostCheckConfig
 
 # This will be replaced by the config generation, when the template is instanciated.
 CONFIG = HostCheckConfig(

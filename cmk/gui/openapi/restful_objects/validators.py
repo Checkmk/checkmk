@@ -170,13 +170,17 @@ class PathParamsValidator:
             schema = path_schema()
             schema_params = set(schema.declared_fields.keys())
 
+        PathParamsValidator.verify_path_params_presence(path, schema_params)
+
+    @staticmethod
+    def verify_path_params_presence(path: str, specified_path_params: set[str]) -> None:
         path_params = set(path_parameters(path))
-        missing_in_schema = path_params - schema_params
-        missing_in_path = schema_params - path_params
+        missing_in_schema = path_params - specified_path_params
+        missing_in_path = specified_path_params - path_params
 
         if missing_in_schema:
             raise PathParamsValidator._missing_schema_parameters_exception(
-                missing_in_schema, path, schema_params
+                missing_in_schema, path, specified_path_params
             )
 
         if missing_in_path:

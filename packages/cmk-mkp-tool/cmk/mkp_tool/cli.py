@@ -496,36 +496,41 @@ def _command_update_active(
         parse_version=site_context.parse_version,
     )
     site_context.post_package_change_actions([*uninstalled, *installed])
-    _writeout_uninstalled_packages(uninstalled, site_context.version, args.json)
+    _writeout_changed_packages(installed=installed, uninstalled=uninstalled, use_json=args.json)
     return 0
 
 
-def _writeout_uninstalled_packages(
+def _writeout_changed_packages(
+    *,
+    installed: Sequence[Manifest],
     uninstalled: Sequence[Manifest],
-    site_version: str,
     use_json: bool,
 ) -> None:
-    """Print information about uninstalled packages in either JSON or text format."""
+    """Print information about changed packages in either JSON or text format.
+
+    Note that there are various reasons why a package might be uninstalled or installed:
+    - The sites version is higher than the supported versions of the package
+    - The sites version is lower than the supported versions of the package
+    - The package is not compatible with other installed packages
+
+    Let's not try to be too smart about it and just print the package name and version.
+    """
     if use_json:
-        for manifest in uninstalled:
-            sys.stdout.write(
-                json.dumps(
-                    {
-                        "name": manifest.name,
-                        "version": manifest.version,
-                        "version_usable_until": manifest.version_usable_until,
-                        "message": f"Disabled due to incompatible version requirements ({manifest.version_usable_until} < {site_version})",
-                    },
-                    indent=2,
-                )
-                + "\n"
+        sys.stdout.write(
+            json.dumps(
+                {
+                    "installed": [{"name": m.name, "version": m.version} for m in installed],
+                    "uninstalled": [{"name": m.name, "version": m.version} for m in uninstalled],
+                },
+                indent=2,
             )
+            + "\n"
+        )
     else:
-        for manifest in uninstalled:
-            sys.stdout.write(
-                f"Disabled {manifest.name} ({manifest.version}) due to incompatible "
-                f"version requirements ({manifest.version_usable_until} < {site_version})\n"
-            )
+        for m in installed:
+            sys.stdout.write(f"[{m.name} {m.version}]: enabled\n")
+        for m in uninstalled:
+            sys.stdout.write(f"[{m.name} {m.version}]: disabled\n")
 
 
 def _args_package_id(

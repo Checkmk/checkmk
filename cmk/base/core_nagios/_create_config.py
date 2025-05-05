@@ -666,7 +666,7 @@ def create_nagios_servicedefs(
         )
 
         service_attributes = _to_nagios_core_attributes(
-            core_config.get_service_attributes(
+            get_service_attributes(
                 config_cache,
                 hostname,
                 service_data.description,
@@ -696,18 +696,16 @@ def create_nagios_servicedefs(
         cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
-    active_checks_rules_exist = any(params for name, params in config_cache.active_checks(hostname))
+    active_checks_rules_exist = any(params for _, params in config_cache.active_checks(hostname))
     # Note: ^- This is not the same as `active_checks_present = bool(active_services)`
     # Services can be omitted, or rules can result in zero services (theoretically).
     # I am not sure if this is intentional.
     if active_checks_rules_exist:
         cfg.write("\n\n# Active checks\n")
 
+        license_counter["services"] += len(active_services)
         for service_spec in active_services:
             cfg.write(format_nagios_object("service", service_spec))
-            license_counter["services"] += 1
-
-            # write service dependencies for active checks
             cfg.write(
                 _get_dependencies(config_cache, hostname, service_spec["service_description"])
             )

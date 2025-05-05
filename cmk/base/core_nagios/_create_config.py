@@ -614,10 +614,10 @@ def create_nagios_servicedefs(
             )
 
     # Legacy checks via custom_checks
-    custchecks = config_cache.custom_checks(hostname)
-    if custchecks:
+    custom_checks = config_cache.custom_checks(hostname)
+    if custom_checks:
         cfg.write("\n\n# Custom checks\n")
-        for entry in custchecks:
+        for entry in custom_checks:
             # entries are dicts with the following keys:
             # "service_description"        Service name to use
             # "command_line"  (optional)   Unix command line for executing the check
@@ -756,7 +756,7 @@ def create_nagios_servicedefs(
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not active_checks_rules_exist and not custchecks:
+    if not have_at_least_one_service and not active_checks_rules_exist and not custom_checks:
         _add_ping_service(
             cfg,
             config_cache,

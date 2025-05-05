@@ -446,38 +446,6 @@ def create_nagios_servicedefs(
             config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None
         )
     )
-
-    #   _____
-    #  |___ /
-    #    |_ \
-    #   ___) |
-    #  |____/   3. Services
-
-    def do_omit_service(
-        host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> bool:
-        if config_cache.service_ignored(host_name, service_name, service_labels):
-            return True
-        if hostname != config_cache.effective_host(host_name, service_name, service_labels):
-            return True
-        return False
-
-    def get_dependencies(hostname: HostName, servicedesc: ServiceName) -> str:
-        result = ""
-        for dep in config.service_depends_on(config_cache, hostname, servicedesc):
-            result += format_nagios_object(
-                "servicedependency",
-                {
-                    "use": config.service_dependency_template,
-                    "host_name": hostname,
-                    "service_description": dep,
-                    "dependent_host_name": hostname,
-                    "dependent_service_description": servicedesc,
-                },
-            )
-
-        return result
-
     host_check_table = config_cache.check_table(
         hostname,
         plugins,
@@ -513,7 +481,7 @@ def create_nagios_servicedefs(
         used_descriptions[service.description] = service.id()
 
         # Services Dependencies for autochecks
-        cfg.write(get_dependencies(hostname, service.description))
+        cfg.write(_get_dependencies(config_cache, hostname, service.description))
 
         service_spec = {
             "use": config.passive_service_template_perf,
@@ -577,7 +545,9 @@ def create_nagios_servicedefs(
         active_service_labels = config_cache.label_manager.labels_of_service(
             hostname, service_data.description, _NO_DISCOVERED_LABELS
         )
-        if do_omit_service(hostname, service_data.description, active_service_labels):
+        if _do_omit_service(
+            config_cache, hostname, service_data.description, active_service_labels
+        ):
             continue
 
         if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
@@ -639,7 +609,9 @@ def create_nagios_servicedefs(
             license_counter["services"] += 1
 
             # write service dependencies for active checks
-            cfg.write(get_dependencies(hostname, service_spec["service_description"]))
+            cfg.write(
+                _get_dependencies(config_cache, hostname, service_spec["service_description"])
+            )
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)
@@ -732,7 +704,7 @@ def create_nagios_servicedefs(
             license_counter["services"] += 1
 
             # write service dependencies for custom checks
-            cfg.write(get_dependencies(hostname, description))
+            cfg.write(_get_dependencies(config_cache, hostname, description))
 
     service_discovery_name = ConfigCache.service_discovery_name()
 
@@ -829,6 +801,38 @@ def create_nagios_servicedefs(
             )
 
     return service_labels
+
+
+def _do_omit_service(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    service_name: ServiceName,
+    service_labels: Labels,
+) -> bool:
+    if config_cache.service_ignored(host_name, service_name, service_labels):
+        return True
+    if host_name != config_cache.effective_host(host_name, service_name, service_labels):
+        return True
+    return False
+
+
+def _get_dependencies(
+    config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
+) -> str:
+    result = ""
+    for dep in config.service_depends_on(config_cache, hostname, servicedesc):
+        result += format_nagios_object(
+            "servicedependency",
+            {
+                "use": config.service_dependency_template,
+                "host_name": hostname,
+                "service_description": dep,
+                "dependent_host_name": hostname,
+                "dependent_service_description": servicedesc,
+            },
+        )
+
+    return result
 
 
 def _add_ping_service(

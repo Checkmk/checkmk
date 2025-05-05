@@ -84,7 +84,7 @@ def main() {
             stage_info.STAGES.each { item ->
                 (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
                 allStagesPassed = thisStagePassed && allStagesPassed;
-                if (thisIssues && !thisStagePassed) {
+                if (thisIssues) {
                     stage("Analyse Issues") {
                         thisIssues.each { issue ->
                             publishIssues(

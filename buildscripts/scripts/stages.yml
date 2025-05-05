@@ -391,11 +391,11 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_GROOVY_FILE
       DIR: 'tests'
       ENV_VARS:
-        GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.xml"
+        GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.txt"
       COMMAND: "make --quiet test-lint-groovy-docker"
       TEXT_ON_SKIP: 'No Groovy files changed'
       RESULT_CHECK_TYPE: "GROOVY"
-      RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.txt"
 
     - NAME: 'Agent Plugin Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE

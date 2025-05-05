@@ -40,6 +40,7 @@ class Parameter:
     default: object  # dataclasses.MISSING if there is no default
     description: str
     example: str
+    alias: str | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -52,8 +53,6 @@ class Parameters:
     path: dict[str, Parameter] = dataclasses.field(default_factory=dict)
     query: dict[str, _QueryParameter] = dataclasses.field(default_factory=dict)
     headers: dict[str, Parameter] = dataclasses.field(default_factory=dict)
-    query_aliases: dict[str, str] = dataclasses.field(default_factory=dict)
-    header_aliases: dict[str, str] = dataclasses.field(default_factory=dict)
 
 
 def _request_body_type(signature: inspect.Signature) -> type | None:
@@ -173,8 +172,6 @@ class SignatureParametersProcessor:
         path = {}
         query = {}
         headers = {}
-        query_aliases = {}
-        header_aliases = {}
 
         for name, param_info in parsed_params.items():
             source = param_info.sources[0]
@@ -195,10 +192,8 @@ class SignatureParametersProcessor:
                         default=default,
                         description=description,
                         example=example,
+                        alias=alias.casefold() if alias else None,
                     )
-
-                    if alias:
-                        header_aliases[header_name] = alias.casefold()
                 case QueryParam(
                     alias=alias, description=description, example=example, is_list=is_list
                 ):
@@ -207,11 +202,9 @@ class SignatureParametersProcessor:
                         default=default,
                         description=description,
                         example=example,
+                        alias=alias,
                         is_list=is_list,
                     )
-
-                    if alias:
-                        query_aliases[name] = alias
                 case _:
                     raise ValueError(
                         f"Invalid parameter source type ({type(source)}) for parameter '{name}'"
@@ -221,8 +214,6 @@ class SignatureParametersProcessor:
             path=path,
             query=query,
             headers=headers,
-            query_aliases=query_aliases,
-            header_aliases=header_aliases,
         )
 
 
@@ -239,6 +230,7 @@ def _make_parameter_model(
                 default=parameter.default,
                 description=parameter.description,
                 example=parameter.example,
+                alias=parameter.alias,
             ),
         )
         for name, parameter in parameters.items()
@@ -399,13 +391,9 @@ class EndpointModel[**P, T]:
         """Convert lists of query args to single values."""
         query_args = query_args.copy()  # prevent modification of the original request data
         out: dict[str, str | list[str]] = {}
-        # handle the aliasing
-        if self._parameters.query_aliases:
-            for name, alias in self._parameters.query_aliases.items():
-                if alias in query_args:
-                    query_args[name] = query_args.pop(alias)
-
         for query_key, query_parameter in self._parameters.query.items():
+            if query_parameter.alias:
+                query_key = query_parameter.alias
             if query_value := query_args.pop(query_key, None):
                 # We shouldn't raise exceptions if the parameter is missing or has too many values
                 # let pydantic handle those cases, so that we can return all issues at the same time
@@ -440,13 +428,6 @@ class EndpointModel[**P, T]:
             # convert `Headers` to a dict, case fold the keys for case-insensitive access
             "headers": {k.casefold(): v for k, v in request_data["headers"].items()},
         }
-
-        # handle the aliasing, make sure to not modify the original request data
-        if self._parameters.header_aliases:
-            prepared_data["headers"] = prepared_data["headers"].copy()
-            for name, alias in self._parameters.header_aliases.items():
-                if alias in prepared_data["headers"]:
-                    prepared_data["headers"][name] = prepared_data["headers"].pop(alias)
 
         # validate the input model
         # TypeAdapter performance: once per request

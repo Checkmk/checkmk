@@ -246,9 +246,8 @@ def test_handle_endpoint_request_missing_parameters_header(
     response_json = response.get_json()
     assert "headers.header_param" in response_json["detail"]
     assert response_json["fields"]["headers.header_param"]["type"] == "missing"
-    # TODO: rework aliasing, so that we get the aliased name in the error
-    # assert "headers.aliased-header" in response_json["detail"]
-    # assert response_json["fields"]["headers.aliased-header"]["type"] == "missing"
+    assert "headers.aliased-header" in response_json["detail"]
+    assert response_json["fields"]["headers.aliased-header"]["type"] == "missing"
 
 
 def test_handle_endpoint_request_missing_parameters_query(
@@ -275,9 +274,8 @@ def test_handle_endpoint_request_missing_parameters_query(
     response_json = response.get_json()
     assert "query.query_param" in response_json["detail"]
     assert response_json["fields"]["query.query_param"]["type"] == "missing"
-    # TODO: rework aliasing, so that we get the aliased name in the error
-    # assert "query.aliased" in response_json["detail"]
-    # assert response_json["fields"]["query.aliased"]["type"] == "missing"
+    assert "query.aliased" in response_json["detail"]
+    assert response_json["fields"]["query.aliased"]["type"] == "missing"
 
 
 def test_handle_endpoint_request_missing_parameters_path(

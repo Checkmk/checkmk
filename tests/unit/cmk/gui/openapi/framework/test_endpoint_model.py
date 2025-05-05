@@ -137,16 +137,12 @@ def _params(
     *,
     path: dict[str, Parameter] | None = None,
     query: dict[str, _QueryParameter] | None = None,
-    query_aliases: dict[str, str] | None = None,
     headers: dict[str, Parameter] | None = None,
-    header_aliases: dict[str, str] | None = None,
 ) -> Parameters:
     return Parameters(
         path=path or {},
         query=query or {},
-        query_aliases=query_aliases or {},
         headers=headers or {},
-        header_aliases=header_aliases or {},
     )
 
 
@@ -190,9 +186,9 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Query parameter",
                         example="example",
+                        alias="alias",
                     )
                 },
-                query_aliases={"aliased_query_param": "alias"},
             ),
         ),
         (
@@ -217,9 +213,9 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Header parameter",
                         example="example",
+                        alias="alias",
                     )
                 },
-                header_aliases={"aliased_header_param": "alias"},
             ),
         ),
         (_return_endpoint_handler, Parameters()),
@@ -246,9 +242,9 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Query parameter",
                         example="example",
+                        alias="alias",
                     ),
                 },
-                query_aliases={"aliased_query_param": "alias"},
                 headers={
                     "header_param": Parameter(
                         annotation=Annotated[str, _HEADER_PARAM],  # type: ignore[arg-type]
@@ -261,9 +257,9 @@ def _params(
                         default=dataclasses.MISSING,
                         description="Header parameter",
                         example="example",
+                        alias="alias",
                     ),
                 },
-                header_aliases={"aliased_header_param": "alias"},
             ),
         ),
     ],

@@ -36,6 +36,7 @@ import traceback
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from logging import Logger
 from pathlib import Path
 from typing import Any, cast, Literal
 
@@ -120,10 +121,6 @@ from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
 from ._user_sync_config import user_sync_config
 from .store import load_cached_profile, load_users, release_users_lock, save_users
-
-
-class CantSyncLDAPUserException(MKGeneralException):
-    pass
 
 
 def register(
@@ -357,13 +354,144 @@ def _create_new_user_spec(
     return None
 
 
-def _get_checkmk_user_for_this_ldap_user_id(
+def _find_changed_user_keys(keys: set[str], user: Mapping, new_user: Mapping) -> dict:
+    changed = {}
+    for key in keys:
+        # Skip user notification rules, not relevant here
+        if key == "notification_rules":
+            continue
+        value = user[key]
+        new_value = new_user[key]
+        if isinstance(value, list) and isinstance(new_value, list):
+            is_changed = sorted(value) != sorted(new_value)
+        else:
+            is_changed = value != new_value
+        if is_changed:
+            changed[key] = (value, new_value)
+    return changed
+
+
+def _sync_existing_user(
+    checkmk_user_id: UserId,
+    only_username: UserId | None,
+    ldap_user: LDAPUserSpec,
+    checkmk_user_copy: UserSpec,
+    users: Users,
+    sync_user_result: SyncUsersResult,
+    ldap_user_connector: LDAPUserConnector,
+) -> None:
+    if only_username and checkmk_user_id != only_username:
+        return
+
+    ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, checkmk_user_copy)
+
+    if checkmk_user_copy == users[checkmk_user_id]:
+        return
+
+    set_new, set_old = set(checkmk_user_copy.keys()), set(users[checkmk_user_id].keys())
+    intersect = set_new.intersection(set_old)
+    added = set_new - intersect
+    removed = set_old - intersect
+
+    user_keys_changed = _find_changed_user_keys(
+        intersect,
+        users[checkmk_user_id],
+        checkmk_user_copy,
+    )
+
+    users[checkmk_user_id] = checkmk_user_copy
+
+    details = []
+    if added:
+        details.append(_("Added: %s") % ", ".join(added))
+    if removed:
+        details.append(_("Removed: %s") % ", ".join(removed))
+    if added or removed or user_keys_changed:
+        log_security_event(
+            UserManagementEvent(
+                event="user modified",
+                affected_user=checkmk_user_id,
+                acting_user=logged_in_user_id(),
+                connector=ConnectorType.LDAP,
+                connection_id=ldap_user_connector.id,
+            )
+        )
+    # Password changes found in LDAP should not be logged as "pending change".
+    # These changes take effect imediately (pw already changed in AD, auth serial
+    # is increaed by sync plugin) on the local site, so no one needs to active this.
+    pw_changed = False
+    if "ldap_pw_last_changed" in user_keys_changed:
+        del user_keys_changed["ldap_pw_last_changed"]
+        sync_user_result.has_changed_passwords = True
+    if "serial" in user_keys_changed:
+        del user_keys_changed["serial"]
+        sync_user_result.has_changed_passwords = True
+
+    if pw_changed and not user_keys_changed and has_wato_slave_sites():
+        sync_user_result.profiles_to_synchronize[checkmk_user_id] = checkmk_user_copy
+
+    if user_keys_changed:
+        for key, (old_value, new_value) in sorted(user_keys_changed.items()):
+            details.append(_("Changed %s from %s to %s") % (key, old_value, new_value))
+
+    if details:
+        sync_user_result.changes.append(
+            _("LDAP [%s]: Modified user %s (%s)")
+            % (ldap_user_connector.id, checkmk_user_id, ", ".join(details))
+        )
+
+
+def _sync_new_user(
+    checkmk_user_id: UserId,
+    only_username: UserId | None,
+    ldap_user: LDAPUserSpec,
+    new_checkmk_user: UserSpec,
+    users: Users,
+    sync_user_result: SyncUsersResult,
+    ldap_user_connector: LDAPUserConnector,
+    ldap_user_connector_logger: Logger,
+) -> None:
+    if ldap_user_connector.create_users_only_on_login():
+        ldap_user_connector_logger.info(
+            f'  SKIP SYNC "{checkmk_user_id}" '
+            f'(Only create user of "{ldap_user_connector.id}" connector on login)'
+        )
+        return
+
+    # Only one user should be synced, skip others.
+    if only_username and checkmk_user_id != only_username:
+        return
+
+    ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, new_checkmk_user)
+
+    users[checkmk_user_id] = new_checkmk_user
+
+    sync_user_result.changes.append(
+        _("LDAP [%s]: Created user %s") % (ldap_user_connector.id, checkmk_user_id)
+    )
+    log_security_event(
+        UserManagementEvent(
+            event="user created",
+            affected_user=checkmk_user_id,
+            acting_user=logged_in_user.id,
+            connector=ConnectorType.LDAP,
+            connection_id=ldap_user_connector.id,
+        )
+    )
+
+
+def _sync_ldap_user(
     ldap_user_id: UserId,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
-) -> tuple[bool, UserId, UserSpec]:
-    """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it will
-    attempt to create a new one. If it can't find or create a user spec, it will raise"""
+    ldap_user_connector_logger: Logger,
+    only_username: UserId | None,
+    ldap_user: LDAPUserSpec,
+    sync_users_result: SyncUsersResult,
+) -> None:
+    """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it
+    will attempt to create a new one. If it can't find or create a user spec, we just log a
+    'skip sync' message"""
     if (
         userid_and_user := _load_copy_of_existing_user(
             user_id=ldap_user_id,
@@ -371,8 +499,17 @@ def _get_checkmk_user_for_this_ldap_user_id(
             ldap_user_connector=ldap_user_connector,
         )
     ) is not None:
-        existing_user_id, user = userid_and_user
-        return False, existing_user_id, user
+        existing_user_id, copied_user_spec = userid_and_user
+        _sync_existing_user(
+            checkmk_user_id=existing_user_id,
+            only_username=only_username,
+            ldap_user=ldap_user,
+            checkmk_user_copy=copied_user_spec,
+            users=users,
+            sync_user_result=sync_users_result,
+            ldap_user_connector=ldap_user_connector,
+        )
+        return
 
     if (
         userid_and_new_user := _create_new_user_spec(
@@ -381,13 +518,26 @@ def _get_checkmk_user_for_this_ldap_user_id(
             ldap_user_connector=ldap_user_connector,
         )
     ) is not None:
-        new_user_id, user = userid_and_new_user
-        return True, new_user_id, user
+        new_user_id, new_user_spec = userid_and_new_user
+        _sync_new_user(
+            checkmk_user_id=new_user_id,
+            only_username=only_username,
+            ldap_user=ldap_user,
+            new_checkmk_user=new_user_spec,
+            users=users,
+            sync_user_result=sync_users_result,
+            ldap_user_connector=ldap_user_connector,
+            ldap_user_connector_logger=ldap_user_connector_logger,
+        )
+        return
 
-    raise CantSyncLDAPUserException(
-        f"Could not find an existing user or create a new user for the ldap user: '{ldap_user_id}'"
-        f" with the user_connection_id: '{ldap_user_connector.id}'",
+    cant_sync_msg = (
+        f'  SKIP SYNC "{ldap_user_id}" name conflict with user from '
+        f'"{ldap_user_connector.id}" connector.'
     )
+    if not ldap_user_connector.has_suffix():
+        cant_sync_msg += " A suffix should be added to this connector."
+    ldap_user_connector_logger.info(cant_sync_msg)
 
 
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
@@ -711,7 +861,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def has_user_base_dn_configured(self) -> bool:
         return self._config["user_dn"] != ""
 
-    def _create_users_only_on_login(self):
+    def create_users_only_on_login(self):
         return self._config.get("create_only_on_login", False)
 
     def _user_id_attr(self) -> str:
@@ -1514,14 +1664,19 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._logger.info('Not trying sync (no "user base DN" configured)')
             return  # silently skip sync without configuration
 
+        self._logger.info("SYNC STARTED")
+
+        if self.id not in [connection[0] for connection in active_connections()]:
+            self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
+            return
+
+        self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
+
         # Flush ldap related before each sync to have a caching only for the
         # current sync process
         self._flush_caches()
 
         start_time = time.time()
-
-        self._logger.info("SYNC STARTED")
-        self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
 
         ldap_users: dict[UserId, LDAPUserSpec] = self.get_users()
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
@@ -1533,110 +1688,16 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             ),
         )
 
-        if self.id not in [connection[0] for connection in active_connections()]:
-            self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
-            return
-
         for ldap_user_id, ldap_user in ldap_users.items():
-            try:
-                mode_create, checkmk_user_id, checkmk_user = (
-                    _get_checkmk_user_for_this_ldap_user_id(
-                        ldap_user_id=ldap_user_id,
-                        users=users,
-                        ldap_user_connector=self,
-                    )
-                )
-            except CantSyncLDAPUserException:
-                cant_sync_msg = f'  SKIP SYNC "{ldap_user_id}" name conflict with user from "{self.id}" connector.'
-                if not self.has_suffix():
-                    cant_sync_msg += " A suffix should be added to this connector."
-                self._logger.info(cant_sync_msg)
-                continue
-
-            if self._create_users_only_on_login() and mode_create:
-                self._logger.info(
-                    f'  SKIP SYNC "{checkmk_user_id}" (Only create user of "{self.id}" connector on login)'
-                )
-                continue
-
-            if only_username and checkmk_user_id != only_username:
-                continue  # Only one user should be synced, skip others.
-
-            self._execute_active_sync_plugins(checkmk_user_id, ldap_user, checkmk_user)
-
-            if not mode_create and checkmk_user == users[checkmk_user_id]:
-                continue  # no modification. Skip this user.
-
-            # Gather changed attributes for easier debugging
-            if not mode_create:
-                set_new, set_old = set(checkmk_user.keys()), set(users[checkmk_user_id].keys())
-                intersect = set_new.intersection(set_old)
-                added = set_new - intersect
-                removed = set_old - intersect
-
-                changed = self._find_changed_user_keys(
-                    intersect, users[checkmk_user_id], checkmk_user
-                )
-
-            users[checkmk_user_id] = checkmk_user
-            if mode_create:
-                sync_users_result.changes.append(
-                    _("LDAP [%s]: Created user %s") % (self.id, checkmk_user_id)
-                )
-                log_security_event(
-                    UserManagementEvent(
-                        event="user created",
-                        affected_user=checkmk_user_id,
-                        acting_user=logged_in_user.id,
-                        connector=self.type(),
-                        connection_id=self.id,
-                    )
-                )
-            else:
-                details = []
-                if added:
-                    details.append(_("Added: %s") % ", ".join(added))
-                if removed:
-                    details.append(_("Removed: %s") % ", ".join(removed))
-                if added or removed or changed:
-                    # When a user is created on login via the REST-API, and then we do the
-                    # user sync, logged_in_user_id() can return None.
-                    log_security_event(
-                        UserManagementEvent(
-                            event="user modified",
-                            affected_user=checkmk_user_id,
-                            acting_user=logged_in_user_id(),
-                            connector=self.type(),
-                            connection_id=self.id,
-                        )
-                    )
-                # Password changes found in LDAP should not be logged as "pending change".
-                # These changes take effect imediately (pw already changed in AD, auth serial
-                # is increaed by sync plugin) on the local site, so no one needs to active this.
-                pw_changed = False
-                if "ldap_pw_last_changed" in changed:
-                    del changed["ldap_pw_last_changed"]
-                    pw_changed = True
-                if "serial" in changed:
-                    del changed["serial"]
-                    pw_changed = True
-
-                if pw_changed:
-                    sync_users_result.has_changed_passwords = True
-
-                # Synchronize new user profile to remote sites if needed
-                if pw_changed and not changed and has_wato_slave_sites():
-                    sync_users_result.profiles_to_synchronize[checkmk_user_id] = checkmk_user
-
-                if changed:
-                    for key, (old_value, new_value) in sorted(changed.items()):
-                        details.append(_("Changed %s from %s to %s") % (key, old_value, new_value))
-
-                if details:
-                    sync_users_result.changes.append(
-                        _("LDAP [%s]: Modified user %s (%s)")
-                        % (self.id, checkmk_user_id, ", ".join(details))
-                    )
+            _sync_ldap_user(
+                ldap_user_id=ldap_user_id,
+                users=users,
+                ldap_user_connector=self,
+                ldap_user_connector_logger=self._logger,
+                only_username=only_username,
+                ldap_user=ldap_user,
+                sync_users_result=sync_users_result,
+            )
 
         try:
             hooks.call(
@@ -1662,23 +1723,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._set_last_sync_time()
 
-    def _find_changed_user_keys(self, keys: set[str], user: Mapping, new_user: Mapping) -> dict:
-        changed = {}
-        for key in keys:
-            # Skip user notification rules, not relevant here
-            if key == "notification_rules":
-                continue
-            value = user[key]
-            new_value = new_user[key]
-            if isinstance(value, list) and isinstance(new_value, list):
-                is_changed = sorted(value) != sorted(new_value)
-            else:
-                is_changed = value != new_value
-            if is_changed:
-                changed[key] = (value, new_value)
-        return changed
-
-    def _execute_active_sync_plugins(
+    def execute_active_sync_plugins(
         self, user_id: UserId, ldap_user: LDAPUserSpec, user: UserSpec
     ) -> None:
         for _key, params, plugin in self._active_sync_plugins():

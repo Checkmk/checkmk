@@ -299,8 +299,33 @@ def _load_copy_of_existing_user(
     return None
 
 
+def _set_customer_for_user(user: UserSpec, customer_id: str | None) -> None:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+        user["customer"] = (
+            customer_api().default_customer_id() if customer_id is None else customer_id
+        )
+
+
+def _create_checkmk_user_for_this_ldap_connection(
+    new_user_id: UserId,
+    existing_users: Users,
+    ldap_connector_id: str,
+    ldap_connector_customer_id: str | None,
+) -> UserSpec:
+    if new_user_id in existing_users:
+        raise MKUserError(
+            None,
+            _("The user id '%s' already exists") % new_user_id,
+        )
+    new_user_spec = new_user_template(ldap_connector_id)
+    _set_customer_for_user(user=new_user_spec, customer_id=ldap_connector_customer_id)
+    new_user_spec.setdefault("alias", new_user_id)
+    add_internal_attributes(new_user_spec)
+    return new_user_spec
+
+
 def _create_new_user_spec(
-    user_id: UserId,
+    ldap_user_id: UserId,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
 ) -> tuple[UserId, UserSpec] | None:
@@ -309,17 +334,23 @@ def _create_new_user_spec(
     new user spec using the user_id + the suffix. If this is also already taken, None
     will be returned."""
 
-    if user_id not in users:
-        return user_id, ldap_user_connector.create_checkmk_user_for_this_ldap_connection(
-            user_id, users
+    if ldap_user_id not in users:
+        return ldap_user_id, _create_checkmk_user_for_this_ldap_connection(
+            new_user_id=ldap_user_id,
+            existing_users=users,
+            ldap_connector_id=ldap_user_connector.id,
+            ldap_connector_customer_id=ldap_user_connector.customer_id,
         )
 
-    user_id_with_suffix = ldap_user_connector.add_suffix(user_id)
+    user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_id)
     if ldap_user_connector.has_suffix() and user_id_with_suffix not in users:
         return (
             user_id_with_suffix,
-            ldap_user_connector.create_checkmk_user_for_this_ldap_connection(
-                user_id_with_suffix, users
+            _create_checkmk_user_for_this_ldap_connection(
+                new_user_id=user_id_with_suffix,
+                existing_users=users,
+                ldap_connector_id=ldap_user_connector.id,
+                ldap_connector_customer_id=ldap_user_connector.customer_id,
             ),
         )
 
@@ -345,7 +376,7 @@ def _get_checkmk_user_for_this_ldap_user_id(
 
     if (
         userid_and_new_user := _create_new_user_spec(
-            user_id=ldap_user_id,
+            ldap_user_id=ldap_user_id,
             users=users,
             ldap_user_connector=ldap_user_connector,
         )
@@ -1288,7 +1319,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return ldap.dn.dn2str(base_dn)
 
     def create_ldap_user_on_login(self, userid: UserId, existing_users: Users) -> None:
-        new_user = self.create_checkmk_user_for_this_ldap_connection(userid, existing_users)
+        new_user = _create_checkmk_user_for_this_ldap_connection(
+            new_user_id=userid,
+            existing_users=existing_users,
+            ldap_connector_id=self.id,
+            ldap_connector_customer_id=self.customer_id,
+        )
         existing_users[userid] = new_user
         save_users(existing_users, datetime.now())
 
@@ -1441,26 +1477,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if username.endswith(f"@{suffix}"):
             return UserId(username)
         return UserId(f"{username}@{suffix}")
-
-    def _set_customer_for_user(self, user: UserSpec) -> None:
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-            user["customer"] = self._config.get("customer", customer_api().default_customer_id())
-
-    def create_checkmk_user_for_this_ldap_connection(
-        self,
-        new_user_id: UserId,
-        existing_users: Users,
-    ) -> UserSpec:
-        if new_user_id in existing_users:
-            raise MKUserError(
-                None,
-                _("The user id '%s' already exists") % new_user_id,
-            )
-        new_user = new_user_template(self.id)
-        self._set_customer_for_user(new_user)
-        new_user.setdefault("alias", new_user_id)
-        add_internal_attributes(new_user)
-        return new_user
 
     def _remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
         self,

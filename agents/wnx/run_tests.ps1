@@ -378,6 +378,9 @@ try {
     $mainStartTime = Get-Date
     if ($testBuild) {
         & pwsh ./run.ps1 --build
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "[-] Unable to rebuild" -ErrorAction Stop
+        }
     }
 
     Invoke-UnitTest -run $testComponent -name "component" -cmdline "*Component"

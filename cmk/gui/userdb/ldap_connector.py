@@ -34,6 +34,7 @@ import shutil
 import time
 import traceback
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal
@@ -268,6 +269,13 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
         )
     except AttributeError:
         pass
+
+
+@dataclass
+class SyncUsersResult:
+    changes: list[str] = field(default_factory=list)
+    has_changed_passwords: bool = False
+    profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
 
 
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
@@ -1459,13 +1467,13 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 f"Could not find an existing user or create a new user for the ldap user: '{uid}' with the user_connection_id: '{self.id}'",
             )
 
-        changes = self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
-            users=users,
-            ldap_users=ldap_users,
+        sync_users_result = SyncUsersResult(
+            changes=self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
+                users=users,
+                ldap_users=ldap_users,
+            ),
         )
 
-        has_changed_passwords = False
-        profiles_to_synchronize = {}
         if self.id not in [connection[0] for connection in active_connections()]:
             self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
             return
@@ -1509,7 +1517,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
             users[checkmk_user_id] = checkmk_user
             if mode_create:
-                changes.append(_("LDAP [%s]: Created user %s") % (self.id, checkmk_user_id))
+                sync_users_result.changes.append(
+                    _("LDAP [%s]: Created user %s") % (self.id, checkmk_user_id)
+                )
                 log_security_event(
                     UserManagementEvent(
                         event="user created",
@@ -1549,24 +1559,29 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                     pw_changed = True
 
                 if pw_changed:
-                    has_changed_passwords = True
+                    sync_users_result.has_changed_passwords = True
 
                 # Synchronize new user profile to remote sites if needed
                 if pw_changed and not changed and has_wato_slave_sites():
-                    profiles_to_synchronize[checkmk_user_id] = checkmk_user
+                    sync_users_result.profiles_to_synchronize[checkmk_user_id] = checkmk_user
 
                 if changed:
                     for key, (old_value, new_value) in sorted(changed.items()):
                         details.append(_("Changed %s from %s to %s") % (key, old_value, new_value))
 
                 if details:
-                    changes.append(
+                    sync_users_result.changes.append(
                         _("LDAP [%s]: Modified user %s (%s)")
                         % (self.id, checkmk_user_id, ", ".join(details))
                     )
 
         try:
-            hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
+            hooks.call(
+                "ldap-sync-finished",
+                self._logger,
+                sync_users_result.profiles_to_synchronize,
+                sync_users_result.changes,
+            )
         except AttributeError:
             # The hooks can fail if a user is created on login via the REST-API and is then
             # modified by the ldap sync process but the user has been updated correctly.
@@ -1577,7 +1592,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             "SYNC FINISHED - Duration: %0.3f sec, Queries: %d" % (duration, self._num_queries)
         )
 
-        if changes or has_changed_passwords:
+        if sync_users_result.changes or sync_users_result.has_changed_passwords:
             save_users_func(users, datetime.now())
         else:
             release_users_lock()

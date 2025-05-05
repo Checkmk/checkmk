@@ -868,13 +868,29 @@ def _add_ping_service(
 ) -> None:
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
-    ping_command = "check-mk-ping"
     if host_name in config_cache.hosts_config.clusters:
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:
         arguments += " " + ipaddress
 
+    service_spec = _make_ping_only_spec(
+        cfg, config_cache, host_name, service_name, arguments, service_labels
+    )
+
+    cfg.write(format_nagios_object("service", service_spec))
+    licensing_counter["services"] += 1
+
+
+def _make_ping_only_spec(
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    host_name: HostName,
+    service_name: ServiceName,
+    arguments: str,
+    service_labels: Labels,
+) -> dict[str, str | HostAddress]:
+    ping_command = "check-mk-ping"
     service_spec = {
         "use": config.pingonly_template,
         "host_name": host_name,
@@ -891,8 +907,7 @@ def _add_ping_service(
     service_spec.update(
         _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
     )
-    cfg.write(format_nagios_object("service", service_spec))
-    licensing_counter["services"] += 1
+    return service_spec
 
 
 def format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:

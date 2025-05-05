@@ -1423,7 +1423,7 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         if rule_sets := find_unknown_check_parameter_rule_sets().result:
             for rule_set in rule_sets:
                 yield ACSingleResult(
-                    state=ACResultState.CRIT,
+                    state=ACResultState.WARN,
                     text=(
                         _("Found configured rules of unknown check parameter rule set %r.")
                         % rule_set

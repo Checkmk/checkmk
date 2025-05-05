@@ -11,7 +11,7 @@ support dynamic fields. An example would be user defined host attributes.
 import dataclasses
 from collections.abc import Mapping
 
-from pydantic import GetJsonSchemaHandler
+from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import ArgsKwargs, core_schema
 from pydantic_core.core_schema import CoreSchema, SerializerFunctionWrapHandler
@@ -58,7 +58,7 @@ class WithDynamicFields:
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: CoreSchema, handler: GetJsonSchemaHandler
+        cls, source_type: CoreSchema, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         return core_schema.no_info_before_validator_function(
             cls._populate_dynamic_fields,

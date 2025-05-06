@@ -37,7 +37,7 @@ ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
 
 OMD_HEADER = re.compile(rf"#!/omd/versions/###OMD_VERSION###/bin/python3\n{GPL}")
 
-GPL_HEADER = re.compile(rf"#!/usr/bin/env python3\n{GPL}")
+GPL_HEADER = re.compile(rf"#!/usr/bin/env (python3|-S python3 -P)\n{GPL}")
 
 GPL_HEADER_CODING = re.compile(
     rf"""#\!/usr/bin/env python3

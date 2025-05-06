@@ -85,7 +85,7 @@ filter_for_python_files() {
     grep --null --null-data -v -e "^$repo_path/packages/" -e "^$repo_path/non-free/packages/" |
         sort --zero-terminated |
         xargs -r -0 \
-            grep --binary-files=without-match --files-with-matches '^#!.*python3$'
+            grep --binary-files=without-match --files-with-matches '^#!.*python3\( -P\)\?'
 }
 
 main() {

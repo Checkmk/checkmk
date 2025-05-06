@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator, model_validator
+
+from cmk.ccc.site import SiteId
 
 from cmk.gui.fields.attributes import (
     AuthProtocolConverter,
@@ -416,10 +419,23 @@ class MetaDataModel:
 
 @dataclass(kw_only=True, slots=True)
 class LockedByModel:
-    # TODO: CheckmkTuple?
     site_id: str = api_field(description="Site ID")
     program_id: str = api_field(description="Program ID")
     instance_id: str = api_field(description="Instance ID")
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[SiteId, str, str] | Sequence[str]) -> Self:
+        # see `to_checkmk_tuple` - we allow tuples and lists...
+        assert len(value) == 3, f"Expected 3 values, got {len(value)}"
+        return cls(
+            site_id=value[0],
+            program_id=value[1],
+            instance_id=value[2],
+        )
+
+    def to_checkmk_tuple(self) -> Sequence[str]:
+        # for some godforsaken reason, the locked_by attribute is a list and not a tuple
+        return [self.site_id, self.program_id, self.instance_id]
 
 
 @dataclass(kw_only=True)

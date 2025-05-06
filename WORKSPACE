@@ -1,6 +1,5 @@
 workspace(name = "omd_packages")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "RUFF_VERSION")
 load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
@@ -124,13 +123,6 @@ rrdtool_native_workspace()
 load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
 
 httplib_workspace()
-
-http_archive(
-    name = "gtest",
-    sha256 = "75bfc7c1fd2eecf8dafeaee71836348941b422e9eee0a10493c68514cad81c8f",
-    strip_prefix = "googletest-e90fe2485641bab0d6af4500192dc503384950d1",
-    url = "https://github.com/google/googletest/archive/e90fe2485641bab0d6af4500192dc503384950d1.tar.gz",
-)
 
 load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 

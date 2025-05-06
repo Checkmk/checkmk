@@ -100,7 +100,7 @@ def pending_password_store_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "passwords_merged")
 
 
-# This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
+# This function and its questionable behavior of operating in-place on sys.argv is quasi-public.
 # Many third party plugins rely on it, so we must not change it.
 # One day, when we have a more official versioned API we can hopefully remove it.
 def replace_passwords() -> None:
@@ -188,6 +188,10 @@ def lookup(pw_file: Path, pw_id: str) -> str:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
         raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
+
+
+def lookup_for_bakery(pw_id: str) -> str:
+    return lookup(core_password_store_path(LATEST_CONFIG), pw_id)
 
 
 class PasswordStore:

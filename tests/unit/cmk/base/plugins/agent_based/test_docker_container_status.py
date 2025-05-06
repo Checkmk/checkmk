@@ -342,6 +342,17 @@ def test_discover_docker_container_status_health_multiple_nodes() -> None:
                 ),
             ],
         ),
+        # the health logs are an empty list here:
+        (
+            {
+                "Health": {"Status": "healthy", "Log": []},
+                "Status": "running",
+            },
+            [
+                Result(state=State.OK, summary="Health status: Healthy"),
+                Result(state=State.WARN, summary="Last health report: no output"),
+            ],
+        ),
         pytest.param(
             SECTION_MULTIPLE_NODES,
             [],

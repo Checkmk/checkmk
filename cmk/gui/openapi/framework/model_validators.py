@@ -6,10 +6,13 @@ from dataclasses import dataclass
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.watolib.groups_io import load_group_information
+from cmk.gui.watolib.tags import load_tag_group
 
 
 @dataclass(slots=True)
@@ -79,3 +82,22 @@ class UserValidator:
         if user not in users:
             raise ValueError(f"User {user!r} does not exist.")
         return user
+
+
+class TagValidator:
+    @staticmethod
+    def tag_criticality_presence(value: TagID | ApiOmitted) -> str | ApiOmitted:
+        tag_criticality = load_tag_group(TagGroupID("criticality"))
+        if tag_criticality is None:
+            if not isinstance(value, ApiOmitted):
+                raise ValueError(
+                    "Tag group criticality does not exist. tag_criticality must be omitted."
+                )
+        else:
+            if isinstance(value, ApiOmitted):
+                raise ValueError("tag_criticality must be specified")
+            if value not in (t.id for t in tag_criticality.tags):
+                raise ValueError(
+                    f"tag_criticality value '{value!r}' is not defined for criticality group"
+                )
+        return value

@@ -13,7 +13,7 @@ from pydantic import AfterValidator
 from cmk.gui.fields.attributes import AuthProtocolType, PrivacyProtocolType
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
-from cmk.gui.openapi.framework.model_validators import GroupValidator, UserValidator
+from cmk.gui.openapi.framework.model_validators import GroupValidator, TagValidator, UserValidator
 
 
 @dataclass(kw_only=True, slots=True)
@@ -217,8 +217,9 @@ class NetworkScanModel:
     run_as: Annotated[str, AfterValidator(UserValidator.active)] | ApiOmitted = api_field(
         description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
     )
-    # TODO: validates_schema tag_criticality functionality on model level
-    tag_criticality: str | ApiOmitted = api_field(
+    tag_criticality: Annotated[
+        str | ApiOmitted, AfterValidator(TagValidator.tag_criticality_presence)
+    ] = api_field(
         description="Specify which criticality tag to set on the host created by the network scan. This field is required if the criticality tag group exists, otherwise it as to be omitted.",
         default_factory=ApiOmitted,
     )

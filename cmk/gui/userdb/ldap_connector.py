@@ -829,7 +829,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     def _active_sync_plugins(self) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
         plugins = dict(all_attribute_plugins())
-        for key, params in self._config["active_plugins"].items():
+        for key, params in self.active_plugins().items():
             try:
                 plugin = plugins[key]
             except KeyError:
@@ -1664,7 +1664,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
             return
 
-        self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
+        self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self.active_plugins().keys()))
 
         # Flush ldap related before each sync to have a caching only for the
         # current sync process

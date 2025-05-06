@@ -16,6 +16,7 @@ from cmk.gui.fields.attributes import (
     PrivacyProtocolType,
 )
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model.common_fields import IPv4NetworkString, IPv4String, RegexString
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 from cmk.gui.openapi.framework.model_validators import GroupValidator, TagValidator, UserValidator
 
@@ -136,30 +137,71 @@ SNMPCredentialsModel = (
 @dataclass(kw_only=True, slots=True)
 class IPAddressRangeModel:
     type: Literal["ip_range"] = "ip_range"
-    from_address: str = api_field(description="The first IPv4 address of this range.")
-    to_address: str = api_field(description="The last IPv4 address of this range.")
+    from_address: IPv4String = api_field(description="The first IPv4 address of this range.")
+    to_address: IPv4String = api_field(description="The last IPv4 address of this range.")
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["ip_range"], tuple[str, str]]) -> Self:
+        return cls(
+            type=value[0],
+            from_address=IPv4String(value[1][0]),
+            to_address=IPv4String(value[1][1]),
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["ip_range"], tuple[str, str]]:
+        return self.type, (str(self.from_address), str(self.to_address))
 
 
 @dataclass(kw_only=True, slots=True)
 class IPNetworkModel:
     type: Literal["ip_network"] = "ip_network"
-    network: str = api_field(
+    network: IPv4NetworkString = api_field(
         description="A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, maximum prefix length is 30 bit.\n\nValid examples:\n\n * `192.168.0.0/24`\n * `192.168.0.0/255.255.255.0`"
     )
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["ip_network"], str]) -> Self:
+        return cls(
+            type=value[0],
+            network=value[1],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["ip_network"], str]:
+        return self.type, self.network
 
 
 @dataclass(kw_only=True, slots=True)
 class IPAddressesModel:
     type: Literal["ip_list"] = "ip_list"
-    addresses: list[str] = api_field(description="List of IPv4 addresses")
+    addresses: list[IPv4String] = api_field(description="List of IPv4 addresses")
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["ip_list"], list[str]]) -> Self:
+        return cls(
+            type=value[0],
+            addresses=[IPv4String(x) for x in value[1]],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["ip_list"], list[str]]:
+        return self.type, [str(x) for x in self.addresses]
 
 
 @dataclass(kw_only=True, slots=True)
 class IPRegexpModel:
     type: Literal["ip_regex_list"] = "ip_regex_list"
-    regexp_list: list[str] = api_field(
+    regexp_list: list[RegexString] = api_field(
         description="A list of regular expressions which are matched against the found IP addresses. The matches will be excluded from the result."
     )
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["ip_regex_list"], list[str]]) -> Self:
+        return cls(
+            type=value[0],
+            regexp_list=[RegexString(x) for x in value[1]],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["ip_regex_list"], list[str]]:
+        return self.type, [str(x) for x in self.regexp_list]
 
 
 IPRangeWithRegexpModel = IPAddressRangeModel | IPNetworkModel | IPAddressesModel | IPRegexpModel

@@ -2620,11 +2620,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         logger=logging.getLogger("cmk.base.inventory"),
     )
 
-    inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-    # TODO move mkdirs to related TreeStore
-    store.makedirs(inv_paths.inventory_dir)
-    store.makedirs(inv_paths.archive_dir)
-
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = plugins.inventory_plugins
 

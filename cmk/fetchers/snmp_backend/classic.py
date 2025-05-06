@@ -22,6 +22,21 @@ __all__ = ["ClassicSNMPBackend"]
 CommandType: TypeAlias = Literal["snmpget", "snmpgetnext", "snmpwalk"]
 
 
+def _sanitize_tuple(tuple_: object) -> str:
+    """For the snmp credentials, we don't want to print secrets...
+
+    >>> _sanitize_tuple((1, 2, 3))
+    "('***', '***', '***')"
+    >>> _sanitize_tuple("foo")
+    "<class 'str'>"
+    >>> _sanitize_tuple(object())
+    "<class 'object'>"
+    """
+    return (
+        str(type(tuple_)) if not isinstance(tuple_, tuple) else repr(tuple("***" for _ in tuple_))
+    )
+
+
 class ClassicSNMPBackend(SNMPBackend):
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
@@ -233,7 +248,7 @@ class ClassicSNMPBackend(SNMPBackend):
                 and len(self.config.credentials) in (2, 4, 6)
             ):
                 raise MKGeneralException(
-                    f"Invalid SNMP credentials '{self.config.credentials!r}' for host {self.config.hostname}: "
+                    f"Invalid SNMP credentials '{_sanitize_tuple(self.config.credentials)}' for host {self.config.hostname}: "
                     "must be string, 2-tuple, 4-tuple or 6-tuple"
                 )
 

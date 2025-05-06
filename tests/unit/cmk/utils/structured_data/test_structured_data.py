@@ -16,7 +16,6 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import (
     _deserialize_retention_interval,
-    _make_meta_and_raw_tree,
     _MutableAttributes,
     _MutableTable,
     _parse_from_unzipped,
@@ -938,7 +937,14 @@ def test_load_from(tree_name: HostName) -> None:
     _get_inventory_store().load_inventory_tree(host_name=tree_name)
 
 
-def test_save_inventory_tree(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "do_archive",
+    [
+        pytest.param(True, id="do-archive"),
+        pytest.param(False, id="do-not-archive"),
+    ],
+)
+def test_save_inventory_tree(tmp_path: Path, do_archive: bool) -> None:
     host_name = HostName("heute")
     tree = MutableTree()
     tree.add(
@@ -948,7 +954,7 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
     inv_store.save_inventory_tree(
         host_name=host_name,
         tree=tree,
-        meta=make_meta(do_archive=True),
+        meta=make_meta(do_archive=do_archive),
     )
 
     with (tmp_path / "var/check_mk/inventory/heute.gz").open("rb") as f:
@@ -957,7 +963,7 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
     # Similiar to InventoryUpdater:
     meta_and_raw_tree = parse_from_gzipped(content)
     assert meta_and_raw_tree["meta"]["version"] == "1"
-    assert meta_and_raw_tree["meta"]["do_archive"]
+    assert meta_and_raw_tree["meta"]["do_archive"] is do_archive
 
     expected_raw_tree = serialize_tree(tree)
     assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
@@ -965,7 +971,14 @@ def test_save_inventory_tree(tmp_path: Path) -> None:
     assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
 
 
-def test_save_status_data_tree(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "do_archive",
+    [
+        pytest.param(True, id="do-archive"),
+        pytest.param(False, id="do-not-archive"),
+    ],
+)
+def test_save_status_data_tree(tmp_path: Path, do_archive: bool) -> None:
     host_name = HostName("heute")
     tree = MutableTree()
     tree.add(
@@ -975,7 +988,7 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
     inv_store.save_status_data_tree(
         host_name=host_name,
         tree=tree,
-        meta=make_meta(do_archive=True),
+        meta=make_meta(do_archive=do_archive),
     )
 
     with (tmp_path / "tmp/check_mk/status_data/heute.gz").open("rb") as f:
@@ -984,7 +997,7 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
     # Similiar to InventoryUpdater:
     meta_and_raw_tree = parse_from_gzipped(content)
     assert meta_and_raw_tree["meta"]["version"] == "1"
-    assert meta_and_raw_tree["meta"]["do_archive"]
+    assert meta_and_raw_tree["meta"]["do_archive"] is do_archive
 
     expected_raw_tree = serialize_tree(tree)
     assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
@@ -1057,43 +1070,6 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
 )
 def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
     assert _parse_from_unzipped(raw) == expected
-
-
-@pytest.mark.parametrize(
-    "meta, raw_tree, expected",
-    [
-        pytest.param(
-            SDMeta(version="1", do_archive=True),
-            SDRawTree(Attributes={}, Table={}, Nodes={}),
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(
-                    Attributes={},
-                    Table={},
-                    Nodes={},
-                ),
-            ),
-            id="version=0:do-archive",
-        ),
-        pytest.param(
-            SDMeta(version="1", do_archive=False),
-            SDRawTree(Attributes={}, Table={}, Nodes={}),
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=False),
-                raw_tree=SDRawTree(
-                    Attributes={},
-                    Table={},
-                    Nodes={},
-                ),
-            ),
-            id="version=0:do-not-archive",
-        ),
-    ],
-)
-def test__make_meta_and_raw_tree(
-    meta: SDMeta, raw_tree: SDRawTree, expected: SDMetaAndRawTree
-) -> None:
-    assert _make_meta_and_raw_tree(meta, raw_tree) == expected
 
 
 @pytest.mark.parametrize(

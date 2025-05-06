@@ -1699,10 +1699,6 @@ class SDMeta(TypedDict):
     do_archive: bool
 
 
-def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTree:
-    return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
-
-
 def _save_tree(
     file_path: Path, file_path_gz: Path, tree: MutableTree, meta: SDMeta, pretty: bool
 ) -> None:
@@ -1713,7 +1709,7 @@ def _save_tree(
 
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
+        f.write((repr(SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)) + "\n").encode("utf-8"))
     store.save_bytes_to_file(file_path_gz, buf.getvalue())
 
 

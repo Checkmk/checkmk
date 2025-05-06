@@ -11,6 +11,7 @@ def main() {
         "DISTRO",
         "VERSION",
         "FAKE_WINDOWS_ARTIFACTS",
+        "TRIGGER_POST_SUBMIT_HEAVY_CHAIN",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
@@ -20,6 +21,7 @@ def main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -119,6 +121,22 @@ def main() {
             INTERNAL_DEPLOY_PORT,
             "",
             "--mkpath",
+        );
+    }
+
+    smart_stage(
+        name: "Trigger trigger-post-submit-test-cascade-heavy",
+        condition: trigger_post_submit_heavy_chain,
+    ) {
+        build(
+            job: "${branch_base_folder}/trigger-post-submit-test-cascade-heavy",
+            parameters: [
+                stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
+            ],
+            wait: false,
         );
     }
 }

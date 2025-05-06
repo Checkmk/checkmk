@@ -362,6 +362,8 @@ class ABCEditGlobalSettingMode(WatoMode):
     def action(self) -> ActionResult:
         check_csrf_token()
 
+        current = self._current_settings.get(self._varname)
+        new_value = None
         if request.var("_reset"):
             if not transactions.check_transaction():
                 return None
@@ -389,7 +391,6 @@ class ABCEditGlobalSettingMode(WatoMode):
                     new_value, ABCConfigDomain.get_all_default_globals()
                 )
 
-            current = self._current_settings.get(self._varname)
             self._current_settings[self._varname] = new_value
             msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")
@@ -400,8 +401,9 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
 
         self._save()
-        if self._varname == "trusted_certificate_authorities":
+        if new_value and self._varname == "trusted_certificate_authorities":
             ConfigDomainCACertificates.log_changes(current, new_value)
+
         _changes.add_change(
             "edit-configvar",
             msg,

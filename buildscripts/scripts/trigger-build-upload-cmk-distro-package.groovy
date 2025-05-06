@@ -11,21 +11,27 @@ def main() {
         "DISTRO",
         "VERSION",
         "FAKE_WINDOWS_ARTIFACTS",
+        "TRIGGER_POST_SUBMIT_HEAVY_CHAIN",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
+    def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_name = safe_branch_name;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -119,6 +125,22 @@ def main() {
             INTERNAL_DEPLOY_PORT,
             "",
             "--mkpath",
+        );
+    }
+
+    smart_stage(
+        name: "Trigger trigger-post-submit-test-cascade-heavy",
+        condition: trigger_post_submit_heavy_chain,
+    ) {
+        build(
+            job: "${branch_base_folder}/trigger-post-submit-test-cascade-heavy",
+            parameters: [
+                stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
+            ],
+            wait: false,
         );
     }
 }

@@ -11,7 +11,6 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def job_names = [
-        "trigger-build-upload-cmk-distro-package",
         "test-gui-crawl-f12less",
         "trigger-test-gui-e2e",
         "test-integration-single-f12less",

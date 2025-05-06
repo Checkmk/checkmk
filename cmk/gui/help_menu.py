@@ -77,6 +77,14 @@ def default_learning_items() -> list[TopicMenuItem]:
             sort_index=50,
             icon="learning_forum",
         ),
+        TopicMenuItem(
+            name="ask_checkmk_ai",
+            title=_("Ask Checkmk AI"),
+            url="https://chat.checkmk.com",
+            target="_blank",
+            sort_index=60,
+            icon="sparkle",
+        ),
     ]
 
 

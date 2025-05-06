@@ -17,6 +17,7 @@ def main() {
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
@@ -28,6 +29,9 @@ def main() {
     def branch_name = safe_branch_name;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.

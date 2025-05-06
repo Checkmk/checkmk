@@ -2,13 +2,18 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import json
 from typing import Annotated, get_args, get_origin
 
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 
-from cmk.gui.http import Response
+from cmk.ccc import store
+
+from cmk.utils.paths import configuration_lockfile
+
+from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.framework._types import DataclassInstance, RawRequestData
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
@@ -125,6 +130,16 @@ def _validate_direct_response(response: Response) -> None:
         )
 
 
+def _optional_config_lock(
+    skip_locking: bool, method: HTTPMethod
+) -> contextlib.AbstractContextManager[None]:
+    """Return a context manager which may lock the configuration."""
+    if skip_locking or method == "get":
+        return contextlib.nullcontext()
+
+    return store.lock_checkmk_configuration(configuration_lockfile)
+
+
 @tracer.instrument("handle_endpoint_request")
 def handle_endpoint_request(
     endpoint: RequestEndpoint,
@@ -161,7 +176,10 @@ def handle_endpoint_request(
 
     # Step 4: Validate the request parameters and call the handler function
     # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
-    with permission_validator.track_permissions():
+    with (
+        permission_validator.track_permissions(),
+        _optional_config_lock(endpoint.skip_locking, endpoint.method),
+    ):
         raw_response = model.validate_request_and_call_handler(request_data, content_type)
 
     if isinstance(raw_response, Response):

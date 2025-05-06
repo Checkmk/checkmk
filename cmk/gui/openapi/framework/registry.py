@@ -45,6 +45,7 @@ class RequestEndpoint:
     doc_group: TagGroup
     additional_status_codes: Sequence[StatusCodeInt]
     update_config_generation: bool
+    skip_locking: bool
     permissions_required: BasePerm | None
 
 
@@ -102,6 +103,7 @@ class EndpointDefinition:
             doc_group=self.doc_group,
             additional_status_codes=self.handler.additional_status_codes or [],
             update_config_generation=self.behavior.update_config_generation,
+            skip_locking=self.behavior.skip_locking,
             permissions_required=self.permissions.required,
         )
 

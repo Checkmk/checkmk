@@ -55,6 +55,7 @@ class EndpointFamilyFactory(DataclassFactory[EndpointFamily]):
 
 class RequestEndpointFactory(DataclassFactory[registry.RequestEndpoint]):
     permissions_required = None
+    skip_locking = True
 
     @classmethod
     def handler(cls) -> versioned_endpoint.HandlerFunction:

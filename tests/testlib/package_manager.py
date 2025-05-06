@@ -89,9 +89,10 @@ class ABCPackageManager(abc.ABC):
         target_path = (
             target_folder / package_name if target_folder else self._temp_package_path(package_name)
         )
-        if target_path.exists():
-            return target_path
-        return self._download_package(package_name, package_url, target_path)
+        if not target_path.exists():
+            self._download_package(package_url, target_path)
+
+        return target_path
 
     def install(self, version: str, edition: Edition) -> None:
         package_name = self.package_name(edition, version)
@@ -108,18 +109,17 @@ class ABCPackageManager(abc.ABC):
             self._install_package(build_system_path)
 
         else:
+            package_path = self._temp_package_path(package_name)
             try:
                 # Prefer downloading from tstbuild: This is the place where also sandbox builds
                 # should be found.
                 logger.info("Try install from tstbuild")
-                package_path = self._download_package(
-                    package_name, self.package_url_internal(version, package_name)
+                self._download_package(
+                    self.package_url_internal(version, package_name), package_path
                 )
             except requests.exceptions.HTTPError:
                 logger.info("Could not Install from tstbuild, trying download portal...")
-                package_path = self._download_package(
-                    package_name, self.package_url_public(version, package_name)
-                )
+                self._download_package(self.package_url_public(version, package_name), package_path)
 
             logger.info("Install from tstbuild or portal (%s)", package_path)
             self._write_package_hash(version, edition, package_path)
@@ -149,10 +149,7 @@ class ABCPackageManager(abc.ABC):
     def _temp_package_path(self, package_name: str) -> Path:
         return Path("/tmp", package_name)
 
-    def _download_package(
-        self, package_name: str, package_url: PackageUrl, package_path: Path | None = None
-    ) -> Path:
-        package_path = package_path or self._temp_package_path(package_name)
+    def _download_package(self, package_url: PackageUrl, package_path: Path) -> None:
         hash_url = PackageUrl(f"{package_url}.hash")
         hash_path = package_path.parent / f"{package_path.name}.hash"
         for url, path in [(package_url, package_path), (hash_url, hash_path)]:
@@ -165,8 +162,6 @@ class ABCPackageManager(abc.ABC):
                 f.write(response.content)
 
         self._cmp_file_hash(package_path, hash_path)
-
-        return package_path
 
     @staticmethod
     def _cmp_file_hash(package_path: Path, hash_path: Path) -> None:

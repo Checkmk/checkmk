@@ -251,7 +251,7 @@ exports_files([
 
 repo_license(name = "repo_license")
 
-register_toolchains("//bazel/toolchains/cc:linux_gcc13")
+register_toolchains("//bazel/toolchains/cc/gcc/local:linux_gcc13")
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 llvm.toolchain(

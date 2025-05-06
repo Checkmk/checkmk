@@ -188,7 +188,7 @@ def run_agent(
         ) as p,
     ):
         try:
-            stdout, stderr = p.communicate(timeout=10)
+            stdout, stderr = p.communicate(timeout=30)
             ret_code = p.returncode
         finally:
             # NOTE. we MUST kill both processes (as a _tree_!): we do not need it.

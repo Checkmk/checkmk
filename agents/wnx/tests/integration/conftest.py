@@ -36,6 +36,15 @@ global:
   port: {}
 """
 
+
+_REPO_ROOT_ENV_VAR: Final = "repo_root"  # supplied by script
+
+
+@pytest.fixture(name="repo_root", scope="session")
+def repo_root_fixture() -> Path:
+    return get_path_from_env(_REPO_ROOT_ENV_VAR)
+
+
 _TEST_ENV_VAR: Final = "WNX_INTEGRATION_BASE_DIR"  # supplied by script
 
 

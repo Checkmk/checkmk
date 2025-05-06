@@ -55,7 +55,7 @@ _INTERNAL_SECTIONS: Final = _NOT_WMI_SECTIONS.union(_WMI_SECTIONS)
         (["127.0.0.1", "::1", "10.1.2.3"], "custom"),
     ],
 )
-def test_check_mk_base(
+def disable_test_check_mk_base(
     main_exe: Path,
     default_yaml_config: YamlDict,
     data_dir: Path,

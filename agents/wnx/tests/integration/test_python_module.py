@@ -39,29 +39,29 @@ def test_python_module(
     unpack: object,
     module_dir: Path,
     data_dir: Path,
-    git_dir: Path,
+    repo_root: Path,
 ) -> None:
     assert postinstall_module(module_dir) == 0
     assert (module_dir / "DLLs").exists()
     patch_venv_config(module_dir)
-    output = run_agent(
+    exe_output = run_agent(
         default_yaml_config,
         param="updater",
         main_exe=main_exe,
         data_dir=data_dir,
     )
-    assert output.ret_code == 1
-    assert output.stdout.startswith("\r\n\tYou must install Agent Updater Python plugin")
+    assert exe_output.ret_code == 1
+    assert exe_output.stdout.startswith("\r\n\tYou must install Agent Updater Python plugin")
     copy_cmk_updater(
-        git_dir / "non-free" / "cmk-update-agent",
+        repo_root / "non-free" / "cmk-update-agent",
         data_dir / "plugins",
     )
-    output = run_agent(
+    exe_output = run_agent(
         default_yaml_config,
         param="updater",
         main_exe=main_exe,
         data_dir=data_dir,
     )
-    assert output.ret_code == 0
-    assert output.stderr.startswith("Missing config file")
-    assert output.stdout.startswith("<<<cmk_update_agent_status:sep(0)>>>")
+    assert exe_output.ret_code == 0
+    assert exe_output.stderr.startswith("Missing config file")
+    assert exe_output.stdout.startswith("<<<cmk_update_agent_status:sep(0)>>>")

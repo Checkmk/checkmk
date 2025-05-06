@@ -143,16 +143,29 @@ class ABCPackageManager(abc.ABC):
         self, package_name: str, package_url: PackageUrl, package_path: Path | None = None
     ) -> Path:
         package_path = package_path or self._temp_package_path(package_name)
-        logger.info("Downloading from: %s to %s", package_url, package_path)
-        response = requests.get(  # nosec
-            package_url, auth=get_cmk_download_credentials(), verify=True
-        )
-        response.raise_for_status()
+        hash_url = PackageUrl(f"{package_url}.hash")
+        hash_path = package_path.parent / f"{package_path.name}.hash"
+        for url, path in [(package_url, package_path), (hash_url, hash_path)]:
+            logger.info("Downloading from: %s to %s", url, path)
+            response = requests.get(  # nosec
+                url, auth=get_cmk_download_credentials(), verify=True
+            )
+            response.raise_for_status()
+            with open(path, "wb") as f:
+                f.write(response.content)
 
-        with open(package_path, "wb") as f:
-            f.write(response.content)
+        self._cmp_file_hash(package_path, hash_path)
 
         return package_path
+
+    @staticmethod
+    def _cmp_file_hash(package_path: Path, hash_path: Path) -> None:
+        """Compare the SHA256 hash calculated for a package to the one from a hash file."""
+        with open(hash_path) as f:
+            expected_hash, expected_file = f.readline().split()
+        assert expected_file == package_path.name
+
+        assert _sha256_file(package_path) == expected_hash
 
     def package_url_public(self, version: str, package_name: str) -> PackageUrl:
         return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")

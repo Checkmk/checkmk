@@ -2,7 +2,7 @@ $CMK_VERSION = "2.4.0p8"
 ## filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 
-## Source the configuration file for this agent plugin
+# Configuration file for this agent plugin
 $CONFIG_FILE="${MK_CONFDIR}\msoffice.cfg.ps1"
 if (test-path -path "${CONFIG_FILE}" ) {
      . "${CONFIG_FILE}"
@@ -10,22 +10,38 @@ if (test-path -path "${CONFIG_FILE}" ) {
     exit
 }
 
-$secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
-$o365credentials = New-Object System.Management.Automation.PSCredential($username, $secpasswd)
-
-Import-Module MSOnline
-Connect-MsolService -Credential $o365credentials
-
-write-host "<<<msoffice_licenses>>>"
-foreach ($license in Get-MsolAccountSku) {
-    $line = "{0} {1} {2} {3}" -f $license.AccountSkuId, $license.ActiveUnits, $license.WarningUnits, $license.ConsumedUnits
-    write-host $line
+if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
+    Install-Module -Name Microsoft.Graph -Scope CurrentUser -Force -ErrorAction SilentlyContinue
 }
 
-write-host "<<<msoffice_serviceplans>>>"
-foreach ($license in Get-MsolAccountSku) {
-    foreach ($serviceplan in $license.servicestatus) {
-        $line = "{0} {1} {2}" -f $license.AccountSkuId, $serviceplan.serviceplan.servicename, $serviceplan.provisioningstatus
-        write-host $line
+try {
+    $SecureClientSecret = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
+    $ClientSecretCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ClientId, $SecureClientSecret
+    Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $ClientSecretCredential -NoWelcome
+} catch {
+    Write-Host "Failed to connect to Microsoft Graph: $_"
+    exit
+}
+
+try {
+    $licenses = Get-MgSubscribedSku
+} catch {
+    Write-Host "Failed to fetch licenses: $_"
+    exit
+}
+
+Write-Host "<<<msoffice_licenses>>>"
+foreach ($license in $licenses) {
+    $line = "mggraph:{0} {1} {2} {3}" -f $license.SkuPartNumber, $license.PrepaidUnits.Enabled, $license.PrepaidUnits.Warning, $license.ConsumedUnits
+    Write-Host $line
+}
+
+Write-Host "<<<msoffice_serviceplans>>>"
+foreach ($license in $licenses) {
+    foreach ($serviceplan in $license.ServicePlans) {
+        $line = "mggraph:{0} {1} {2}" -f $license.SkuPartNumber, $serviceplan.ServicePlanName, $serviceplan.ProvisioningStatus
+        Write-Host $line
     }
 }
+
+Disconnect-MgGraph | Out-Null

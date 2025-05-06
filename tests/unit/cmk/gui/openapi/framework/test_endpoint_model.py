@@ -125,7 +125,7 @@ def _error_alias_conflict_header_endpoint_handler(
     raise NotImplementedError
 
 
-def _error_parameter_type_endpoint_handler(positional: Annotated[str, _PATH_PARAM], /) -> None:
+def _error_parameter_kind_endpoint_handler(positional: Annotated[str, _PATH_PARAM], /) -> None:
     raise NotImplementedError
 
 
@@ -269,6 +269,7 @@ def _params(
 def test_parameters(func: Callable, expected: Parameters) -> None:
     signature = inspect.signature(func)
     annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
+    SignatureParametersProcessor.validate_parameters(annotated_params)
     parameters = SignatureParametersProcessor.parse_parameters(annotated_params)
     assert parameters == expected
 
@@ -280,14 +281,14 @@ def test_parameters(func: Callable, expected: Parameters) -> None:
         (_error_alias_conflict_query_endpoint_handler, "Alias conflict"),
         (_error_duplicate_header_endpoint_handler, "Alias conflict"),  # covered by alias check
         (_error_alias_conflict_header_endpoint_handler, "Alias conflict"),
-        (_error_parameter_type_endpoint_handler, "Invalid parameter kind"),
+        (_error_parameter_kind_endpoint_handler, "Invalid parameter kind"),
         (_error_no_annotation_endpoint_handler, "Missing parameter annotation"),
     ],
 )
 def test_invalid_parameters(func: Callable, match: str) -> None:
     signature = inspect.signature(func)
+    annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
     with pytest.raises(ValueError, match=match):
-        annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
         SignatureParametersProcessor.validate_parameters(annotated_params)
 
 

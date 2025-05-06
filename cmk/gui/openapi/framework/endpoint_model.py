@@ -58,15 +58,12 @@ class Parameters:
 def _request_body_type(signature: inspect.Signature) -> type | None:
     if "body" not in signature.parameters:
         return None
-    parameter = signature.parameters["body"]
-    if parameter.annotation is inspect.Parameter.empty:
-        return None
-    return parameter.annotation
+    return signature.parameters["body"].annotation
 
 
 def _return_type(signature: inspect.Signature) -> type | None:
     if signature.return_annotation is inspect.Signature.empty:
-        return None
+        raise ValueError("Missing return type annotation")
     annotation = signature.return_annotation
     if get_origin(annotation) in (TypedResponse, ApiResponse):
         return get_args(annotation)[0]
@@ -348,10 +345,9 @@ class EndpointModel[**P, T]:
 
     @classmethod
     def build(cls, handler: Callable[P, T]) -> Self:
-        # TODO: "validate_implementation=False" run more complex validations that only verify the implementation (in unit tests)
+        """Build the endpoint model from the handler function."""
         signature = inspect.signature(handler, eval_str=True)
         annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
-        SignatureParametersProcessor.validate_parameters(annotated_parameters)
         parameters = SignatureParametersProcessor.parse_parameters(annotated_parameters)
         response_body_type = _return_type(signature)
         request_body_type = _request_body_type(signature)

@@ -204,7 +204,10 @@ def test_handle_endpoint_request_accept_required(permission_validator: Permissio
 
 
 def test_handle_endpoint_request_empty_handler(permission_validator: PermissionValidator) -> None:
-    request_endpoint = RequestEndpointFactory.build(handler=lambda: None)
+    def _empty_handler() -> None:
+        return None
+
+    request_endpoint = RequestEndpointFactory.build(handler=_empty_handler)
     request_data = RawRequestDataFactory.build(
         headers=Headers({"Accept": request_endpoint.content_type}),
     )

@@ -9621,6 +9621,12 @@ msgstr "グラフレシピを計算できません"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "グラフレシピを計算できません: %s"
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "%s 経由でイベントデーモンに接続できません: %s"
@@ -56280,7 +56286,7 @@ msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
 #, python-format

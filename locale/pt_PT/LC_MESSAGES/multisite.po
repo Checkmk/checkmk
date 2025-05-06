@@ -10075,6 +10075,12 @@ msgstr "Não é possível calcular receitas gráficas"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Não é possível calcular receitas gráficas: %s"
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Não pode se conectar ao evento daemon via %s: %s"
@@ -59058,7 +59064,7 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "A lista de tags do host deve conter apenas strings, mas também contém %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "A conexão do livestatus a este site configurada para não ser criptografada."
 

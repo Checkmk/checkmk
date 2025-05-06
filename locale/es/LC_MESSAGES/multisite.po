@@ -10145,6 +10145,12 @@ msgstr "No se pueden calcular las recetas de los gráficos"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "No se pueden calcular las recetas de los gráficos: %s"
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "No se puede conectar al demonio de eventos a través de %s: %s"
@@ -59650,7 +59656,7 @@ msgstr ""
 "La lista de etiquetas de host sólo debe contener cadenas pero también "
 "contiene %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "La conexión de livestatus a este sitio configurado para no ser encriptado."
 

@@ -10103,6 +10103,12 @@ msgstr "Nu se pot calcula rețete grafice"
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Nu se pot calcula rețete grafice: %s."
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Nu se poate conecta la daemonul de evenimente prin %s: %s."
@@ -59214,7 +59220,7 @@ msgstr ""
 "Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
 "conține și %r."
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "Conexiunea livestatus la acest site este configurată să nu fie criptată."
 

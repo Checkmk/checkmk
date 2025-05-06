@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-04-30 10:00+0000\n"
+"PO-Revision-Date: 2025-05-05 19:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9901,6 +9901,12 @@ msgstr "Kann Graphdefinitionen nicht berechnen"
 #, python-format
 msgid "Cannot calculate graph recipes: %s"
 msgstr "Kann Graphdefinitionen nicht berechnen: %s"
+
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
 
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
@@ -26063,13 +26069,11 @@ msgstr "Zu setzende Host-Attribute"
 msgid "Host check command"
 msgstr "Host-Checkbefehl"
 
-#, fuzzy
 msgid "Host check command (exact match)"
-msgstr "Host-Checkbefehl erweitert"
+msgstr "Host-Checkbefehl (exakter Match)"
 
-#, fuzzy
 msgid "Host check command (regex)"
-msgstr "Host-Checkbefehl"
+msgstr "Host-Checkbefehl (Regex)"
 
 msgid "Host check command expanded"
 msgstr "Host-Checkbefehl erweitert"
@@ -36155,13 +36159,12 @@ msgstr "Metrik-Bezeichnung"
 msgid "Metric levels"
 msgstr "Metrik-Level"
 
-#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
 msgstr ""
 "Metriknamen dürfen nur Buchstaben, Zahlen und Unterstriche enthalten und "
-"müssen mit einem Buchstaben beginnen."
+"müssen mit einem Buchstaben ode einer Zahl beginnen."
 
 msgid "Metric not found"
 msgstr "Metrik nicht gefunden"
@@ -49281,13 +49284,11 @@ msgstr "Service-Verfügbarkeit"
 msgid "Service check command"
 msgstr "Service-Check Befehl"
 
-#, fuzzy
 msgid "Service check command (exact match)"
-msgstr "Service-Check Befehl erweitert"
+msgstr "Service-Check Befehl (exakter Match)"
 
-#, fuzzy
 msgid "Service check command (regex)"
-msgstr "Service-Check Befehl"
+msgstr "Service-Check Befehl (Regex)"
 
 msgid "Service check command expanded"
 msgstr "Service-Check Befehl erweitert"
@@ -57826,7 +57827,7 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "Die Liste der Host-Merkmale darf nur Texte enthalten, aber enthält auch %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "Die Livestatusverbindung zu dieser Instanz ist so konfiguriert, dass sie "
 "nicht verschlüsselt wird."

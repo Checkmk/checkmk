@@ -92,6 +92,15 @@ def parse_args() -> argparse.Namespace:
         "local-check",
         help="Output results as Checkmk local check output",
     )
+
+    parser_local_check.add_argument(
+        "-x",
+        "--exclude",
+        default="tests",
+        help="Comma separated list of paths to exclude, relative to 'src_root' (default: 'tests')",
+        type=str,
+        action="store",
+    )
     parser_local_check.add_argument(
         "src_root", help="Path to the Check_MK repository root directory", type=Path
     )
@@ -308,7 +317,10 @@ def cmd_check(args: argparse.Namespace) -> None:
 
 
 def cmd_local_check(args: argparse.Namespace) -> None:
-    markers = find_nosecs(args.src_root, [])
+    excluded_paths = (
+        [] if args.exclude == "" else [args.src_root.resolve() / e for e in args.exclude.split(",")]
+    )
+    markers = find_nosecs(args.src_root, excluded_paths)
     annotated, not_annotated = _partition(lambda marker: marker.bns_id is not None, markers)
     bns_ids = existing_ids(args.doc)
     invalid = [m for m in annotated if m.bns_id not in bns_ids]

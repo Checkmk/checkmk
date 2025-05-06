@@ -24,29 +24,37 @@ from cmk.mkp_tool import (
     reload_services_affected_by_mkp_changes,
 )
 
-_PATH_CONFIG = PathConfig(
-    cmk_plugins_dir=plugins_local_path(),
-    cmk_addons_plugins_dir=addons_plugins_local_path(),
-    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
-    agents_dir=cmk.utils.paths.local_agents_dir,
-    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
-    bin_dir=cmk.utils.paths.local_bin_dir,
-    check_manpages_dir=cmk.utils.paths.local_legacy_check_manpages_dir,
-    checks_dir=cmk.utils.paths.local_checks_dir,
-    doc_dir=cmk.utils.paths.local_doc_dir,
-    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
-    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
-    inventory_dir=cmk.utils.paths.local_inventory_dir,
-    lib_dir=cmk.utils.paths.local_lib_dir,
-    locale_dir=cmk.utils.paths.local_locale_dir,
-    local_root=cmk.utils.paths.local_root,
-    mib_dir=cmk.utils.paths.local_mib_dir,
-    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-    notifications_dir=cmk.utils.paths.local_notifications_dir,
-    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-    manifests_dir=cmk.utils.paths.tmp_dir,
-    web_dir=cmk.utils.paths.local_web_dir,
-)
+
+def _make_path_config() -> PathConfig:
+    if (pl_path := plugins_local_path()) is None:
+        raise SystemExit("No writable local path available")
+
+    if (apl_path := addons_plugins_local_path()) is None:
+        raise SystemExit("No writable local path available")
+
+    return PathConfig(
+        cmk_plugins_dir=pl_path,
+        cmk_addons_plugins_dir=apl_path,
+        agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
+        agents_dir=cmk.utils.paths.local_agents_dir,
+        alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+        bin_dir=cmk.utils.paths.local_bin_dir,
+        check_manpages_dir=cmk.utils.paths.local_legacy_check_manpages_dir,
+        checks_dir=cmk.utils.paths.local_checks_dir,
+        doc_dir=cmk.utils.paths.local_doc_dir,
+        gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+        installed_packages_dir=cmk.utils.paths.installed_packages_dir,
+        inventory_dir=cmk.utils.paths.local_inventory_dir,
+        lib_dir=cmk.utils.paths.local_lib_dir,
+        locale_dir=cmk.utils.paths.local_locale_dir,
+        local_root=cmk.utils.paths.local_root,
+        mib_dir=cmk.utils.paths.local_mib_dir,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        notifications_dir=cmk.utils.paths.local_notifications_dir,
+        pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+        manifests_dir=cmk.utils.paths.tmp_dir,
+        web_dir=cmk.utils.paths.local_web_dir,
+    )
 
 
 _SITE_CONTEXT: Final = cli.SiteContext(
@@ -72,7 +80,7 @@ if __name__ == "__main__":
     sys.exit(
         cli.main(
             sys.argv[1:] or ["--help"],
-            _PATH_CONFIG,
+            _make_path_config(),
             _SITE_CONTEXT,
             cmk.ccc.store.save_bytes_to_file,
         )

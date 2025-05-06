@@ -65,10 +65,10 @@ def test_check_aws_dynamodb_summary():
     assert table_count_result.summary.endswith(f" {len(test_section)}")
 
     count_overall_checks = 2
-    table_regions = set(entry["Region"] for entry in test_section)
+    table_regions = {entry["Region"] for entry in test_section}
     assert len(check_results) == len(table_regions) + count_overall_checks
 
-    summaries = set(result.summary for result in check_results if isinstance(result, Result))
+    summaries = {result.summary for result in check_results if isinstance(result, Result)}
     assert f"{aws_regions['eu-central-1']}: 3" in summaries
     assert f"{aws_regions['us-east-1']}: 2" in summaries
 

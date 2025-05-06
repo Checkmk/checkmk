@@ -138,6 +138,7 @@ class RegexpRewritesModel:
 
 @dataclass(kw_only=True, slots=True)
 class DirectMappingModel:
+    # TODO: CheckmkTuple
     hostname: str = api_field(description="The host name to be replaced.")
     replace_with: str = api_field(description="The replacement string.")
 

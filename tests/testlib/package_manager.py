@@ -94,7 +94,10 @@ class ABCPackageManager(abc.ABC):
 
         return target_path
 
-    def install(self, version: str, edition: Edition) -> None:
+    def install(self, package_info: CMKPackageInfo) -> None:
+        edition = package_info.edition.edition
+        version = package_info.version.version_rc_aware
+
         package_name = self.package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
         packages_dir = Path(__file__).parent.parent.parent / "package_download"
@@ -126,8 +129,10 @@ class ABCPackageManager(abc.ABC):
             self._install_package(package_path)
             os.unlink(package_path)
 
-    def uninstall(self, version: str, edition: Edition) -> None:
-        package_name = self.installed_package_name(edition, version)
+    def uninstall(self, package_info: CMKPackageInfo) -> None:
+        package_name = self.installed_package_name(
+            package_info.edition.edition, package_info.version.version_rc_aware
+        )
         self._uninstall_package(package_name)
 
     def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:

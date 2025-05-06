@@ -74,9 +74,9 @@ def main():
     manager = ABCPackageManager.factory()
     try:
         if args.uninstall:
-            manager.uninstall(pkg.version.version_rc_aware, pkg.edition.edition)
+            manager.uninstall(pkg)
         else:
-            manager.install(pkg.version.version_rc_aware, pkg.edition.edition)
+            manager.install(pkg)
     except subprocess.CalledProcessError as excp:
         excp.add_note(f"Failed to {operation} package: '{pkg}'!")
         logger.exception(excp)

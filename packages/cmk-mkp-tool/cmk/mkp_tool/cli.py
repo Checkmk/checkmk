@@ -22,7 +22,7 @@ from ._mkp import (
     PackagePart,
     read_manifest_optionally,
 )
-from ._parts import PackageOperationCallbacks, PathConfig, ui_title
+from ._parts import make_path_config_template, PackageOperationCallbacks, PathConfig, ui_title
 from ._reporter import files_inventory
 from ._standalone import read_path_config, simple_file_write
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
@@ -157,6 +157,16 @@ def _to_text(manifest: Manifest) -> str:
         f"Files:                         {files}\n"
         f"Description:\n  {manifest.description}\n"
     )
+
+
+def _command_path_config_template(
+    _args: argparse.Namespace,
+    _path_config: PathConfig | None,
+    _persisting_function: Callable[[str, bytes], None],
+) -> int:
+    """Write a template for the path config to stdout"""
+    sys.stdout.write(f"{make_path_config_template().to_toml()}\n")
+    return 0
 
 
 def _args_find(
@@ -768,6 +778,12 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     parser.add_argument("--verbose", "-v", action="count", default=0, help="Be more verbose")
     subparsers = parser.add_subparsers(required=True, title="available commands")
 
+    _add_command(
+        subparsers,
+        "path-config-template",
+        _no_args,
+        _command_path_config_template,
+    )
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(

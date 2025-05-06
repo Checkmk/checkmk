@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.mkp_tool import PackagePart, PathConfig
-from cmk.mkp_tool._parts import permissions
+from cmk.mkp_tool._parts import make_path_config_template, permissions
 
 
 def test_config_from_toml() -> None:
@@ -38,6 +38,11 @@ manifests_dir = "tmp_dir"
 web_dir = "local_web_dir"
 """
     ).web_dir == Path("local_web_dir")
+
+
+def test_toml_roundtrip() -> None:
+    template = make_path_config_template()
+    assert template == PathConfig.from_toml(template.to_toml())
 
 
 def test_permissions() -> None:

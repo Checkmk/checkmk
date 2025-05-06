@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
+import re
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
-from pydantic import AfterValidator
+from pydantic import AfterValidator, model_validator
 
 from cmk.gui.fields.attributes import (
     AuthProtocolConverter,
@@ -238,12 +239,41 @@ class TimeAllowedRangeModel:
 
 @dataclass(kw_only=True, slots=True)
 class RegexpRewritesModel:
-    search: Annotated[str, MaxLen(30)] = api_field(
+    search: Annotated[RegexString, MaxLen(30)] = api_field(
         description="The search regexp. May contain match-groups, conditional matches, etc. This follows the Python regular expression syntax.\n\nFor details see:\n\n * https://docs.python.org/3/library/re.html"
     )
     replace_with: Annotated[str, MaxLen(30)] = api_field(
         description="The replacement string. Match-groups can only be identified by `\\1`, `\\2`, etc. Highest supported match group is `\\99`. Named lookups are not supported."
     )
+
+    @model_validator(mode="after")
+    def _validate(self) -> Self:
+        search = re.compile(self.search)
+        replace_groups = list(set(re.findall(r"\\([1-9]\d+|\d(?!\d))", self.replace_with)))
+        replace_groups.sort()
+
+        # NOTE
+        # We don't need to check for exhaustive use of the replacement groups. We only need
+        # to check the highest match-group used in the replacement, as this is the only case
+        # where a mismatch may occur.
+        if replace_groups:
+            highest_replacement_group = int(replace_groups[-1])
+            if highest_replacement_group > search.groups:
+                raise ValueError(
+                    "The replacement string contains a match group that is not defined in the regexp."
+                )
+
+        return self
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[str, str]) -> Self:
+        return cls(
+            search=RegexString(value[0]),
+            replace_with=value[1],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[str, str]:
+        return str(self.search), self.replace_with
 
 
 @dataclass(kw_only=True, slots=True)
@@ -251,6 +281,16 @@ class DirectMappingModel:
     # TODO: CheckmkTuple
     hostname: str = api_field(description="The host name to be replaced.")
     replace_with: str = api_field(description="The replacement string.")
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[str, str]) -> Self:
+        return cls(
+            hostname=value[0],
+            replace_with=value[1],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[str, str]:
+        return self.hostname, self.replace_with
 
 
 @dataclass(kw_only=True, slots=True)

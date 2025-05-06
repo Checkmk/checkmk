@@ -33,6 +33,7 @@ bazel_dep(
     name = "toolchains_llvm",
     version = "1.4.0",
 )
+bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(name = "rules_uv", version = "0.44.0")
 bazel_dep(
     # Transitive dep required because a dependency in the protobuf-python chain

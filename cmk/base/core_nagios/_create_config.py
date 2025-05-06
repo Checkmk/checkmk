@@ -6,14 +6,14 @@
 
 import base64
 import itertools
-import socket
 import sys
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from io import StringIO
 from pathlib import Path
-from typing import Any, IO, Literal
+from socket import AddressFamily
+from typing import Any, assert_never, IO, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -509,6 +509,9 @@ def _process_services_data(
     return services_ids, service_labels
 
 
+_PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
+
+
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
@@ -674,46 +677,21 @@ def create_nagios_servicedefs(
                 )
             )
 
+    ping_services: list[_PingServiceNames] = []
+
     # No check_mk service, no legacy service -> create PING service
     if not services_ids and not active_checks_rules_exist and not custom_checks:
-        _add_ping_service(
-            cfg,
-            config_cache,
-            hostname,
-            "PING",
-            _get_service_labels(config_cache, hostname, "PING"),
-            host_attrs["address"],
-            config_cache.default_address_family(hostname),
-            host_attrs.get("_NODEIPS"),
-            license_counter,
-        )
+        ping_services.append("PING")
 
     if ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
-        if config_cache.default_address_family(hostname) is socket.AF_INET6:
+        if config_cache.default_address_family(hostname) is AddressFamily.AF_INET6:
             if "PING IPv4" not in services_ids:
-                _add_ping_service(
-                    cfg,
-                    config_cache,
-                    hostname,
-                    "PING IPv4",
-                    _get_service_labels(config_cache, hostname, "PING IPv4"),
-                    host_attrs["address"],
-                    socket.AF_INET,
-                    host_attrs.get("_NODEIPS_4"),
-                    license_counter,
-                )
+                ping_services.append("PING IPv4")
         elif "PING IPv6" not in services_ids:
-            _add_ping_service(
-                cfg,
-                config_cache,
-                hostname,
-                "PING IPv6",
-                _get_service_labels(config_cache, hostname, "PING IPv6"),
-                host_attrs["address"],
-                socket.AF_INET6,
-                host_attrs.get("_NODEIPS_6"),
-                license_counter,
-            )
+            ping_services.append("PING IPv6")
+
+    for ping_service in ping_services:
+        _add_ping_service(cfg, config_cache, hostname, host_attrs, ping_service, license_counter)
 
     return service_labels
 
@@ -849,23 +827,34 @@ def _add_ping_service(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     host_name: HostName,
-    service_name: ServiceName,
-    service_labels: Labels,
-    ipaddress: HostAddress,
-    family: socket.AddressFamily,
-    node_ips: str | None,
+    host_attrs: Mapping[str, Any],
+    ping_service: _PingServiceNames,
     licensing_counter: Counter,
 ) -> None:
+    ipaddress = host_attrs["address"]
+    service_labels = _get_service_labels(config_cache, host_name, ping_service)
+    match ping_service:
+        case "PING IPv4":
+            family = AddressFamily.AF_INET
+            node_ips_name = "_NODEIPS_4"
+        case "PING IPv6":
+            family = AddressFamily.AF_INET6
+            node_ips_name = "_NODEIPS_6"
+        case "PING":
+            family = config_cache.default_address_family(host_name)
+            node_ips_name = "_NODEIPS"
+        case _:
+            assert_never(f"Unexpected ping service name: {ping_service}")
+
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
     if host_name in config_cache.hosts_config.clusters:
-        assert node_ips is not None
-        arguments += " -m 1 " + node_ips
+        arguments += " -m 1 " + host_attrs[node_ips_name]  # may raise exception - it's intentional
     else:
         arguments += " " + ipaddress
 
     service_spec = _make_ping_only_spec(
-        cfg, config_cache, host_name, service_name, arguments, service_labels
+        cfg, config_cache, host_name, ping_service, arguments, service_labels
     )
 
     cfg.write(format_nagios_object("service", service_spec))

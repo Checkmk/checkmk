@@ -67,6 +67,19 @@ def test_mutually_exclusive_default() -> None:
         api_field(description="test", default="foo", default_factory=lambda: "bar")  # type: ignore[call-overload]
 
 
+def test_pattern() -> None:
+    @dataclasses.dataclass
+    class TestModel:
+        field: str = api_field(description="test", pattern="foo")
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    schema = adapter.json_schema()
+    assert "pattern" in schema["properties"]["field"]
+
+    with pytest.raises(ValidationError, match="String should match pattern"):
+        adapter.validate_python({"field": "invalid"})
+
+
 def test_metadata() -> None:
     @dataclasses.dataclass
     class TestModel:

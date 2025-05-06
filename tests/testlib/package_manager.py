@@ -80,21 +80,31 @@ class ABCPackageManager(abc.ABC):
     def download(
         self, package_info: CMKPackageInfo | None = None, target_folder: Path | None = None
     ) -> Path:
+        """Download a Checkmk package."""
         package_info = (
             package_info if package_info else CMKPackageInfo(version_from_env(), edition_from_env())
         )
+        version = package_info.version.version_rc_aware
         package_name = self.package_name(package_info.edition.edition, package_info.version.version)
-        package_url = self.package_url_internal(package_info.version.version, package_name)
-
         target_path = (
             target_folder / package_name if target_folder else self._temp_package_path(package_name)
         )
         if not target_path.exists():
-            self._download_package(package_url, target_path)
+            try:
+                # Prefer downloading from tstbuild: This is the place where also sandbox builds
+                # should be found.
+                logger.info("Try install from tstbuild")
+                self._download_package(
+                    self.package_url_internal(version, package_name), target_path
+                )
+            except requests.exceptions.HTTPError:
+                logger.info("Could not Install from tstbuild, trying download portal...")
+                self._download_package(self.package_url_public(version, package_name), target_path)
 
         return target_path
 
     def install(self, package_info: CMKPackageInfo) -> None:
+        """Install a Checkmk package."""
         edition = package_info.edition.edition
         version = package_info.version.version_rc_aware
 
@@ -112,19 +122,8 @@ class ABCPackageManager(abc.ABC):
             self._install_package(build_system_path)
 
         else:
-            package_path = self._temp_package_path(package_name)
-            try:
-                # Prefer downloading from tstbuild: This is the place where also sandbox builds
-                # should be found.
-                logger.info("Try install from tstbuild")
-                self._download_package(
-                    self.package_url_internal(version, package_name), package_path
-                )
-            except requests.exceptions.HTTPError:
-                logger.info("Could not Install from tstbuild, trying download portal...")
-                self._download_package(self.package_url_public(version, package_name), package_path)
-
-            logger.info("Install from tstbuild or portal (%s)", package_path)
+            # Install from tstbuild or portal
+            package_path = self.download(package_info)
             self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)

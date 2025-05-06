@@ -49,6 +49,7 @@ _VERSION_STR = f"cmk-mkp-tool {__version__}"
 @dataclass(frozen=True)
 class SiteContext:
     package_store: PackageStore
+    installed_packages_dir: Path
     callbacks: Mapping[PackagePart, PackageOperationCallbacks]
     post_package_change_actions: Callable[[Sequence[Manifest]], None]
     version: str
@@ -186,6 +187,7 @@ def _args_find(
 
 
 def _command_find(
+    site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -194,9 +196,13 @@ def _command_find(
     if path_config is None:
         path_config = read_path_config()
 
-    installer = Installer(path_config.installed_packages_dir)
+    packaged_files = (
+        {}
+        if site_context is None
+        else Installer(site_context.installed_packages_dir).get_packaged_files()
+    )
 
-    files = files_inventory(installer, path_config)
+    files = files_inventory(packaged_files, path_config)
 
     if not args.all:
         files = [f for f in files if not f["package"]]
@@ -335,7 +341,7 @@ def _command_list(
     if path_config is None:
         path_config = read_path_config()
 
-    installer = Installer(path_config.installed_packages_dir)
+    installer = Installer(site_context.installed_packages_dir)
     classified_manifests = get_classified_manifests(
         site_context.package_store,
         installer,
@@ -428,7 +434,7 @@ def _command_release(
     if path_config is None:
         path_config = read_path_config()
 
-    release(Installer(path_config.installed_packages_dir), args.name, site_context.callbacks)
+    release(Installer(site_context.installed_packages_dir), args.name, site_context.callbacks)
     return 0
 
 
@@ -469,7 +475,7 @@ def _command_disable_outdated(
         path_config = read_path_config()
 
     disabled = disable_outdated(
-        Installer(path_config.installed_packages_dir),
+        Installer(site_context.installed_packages_dir),
         site_context.package_store,
         path_config,
         site_context.callbacks,
@@ -498,7 +504,7 @@ def _command_update_active(
         path_config = read_path_config()
 
     uninstalled, installed = update_active_packages(
-        Installer(path_config.installed_packages_dir),
+        Installer(site_context.installed_packages_dir),
         path_config,
         site_context.package_store,
         site_context.callbacks,
@@ -582,7 +588,7 @@ def _command_enable(
     if path_config is None:
         path_config = read_path_config()
 
-    installer = Installer(path_config.installed_packages_dir)
+    installer = Installer(site_context.installed_packages_dir)
     installed = install(
         installer,
         site_context.package_store,
@@ -610,7 +616,7 @@ def _command_disable(
 
     if (
         disabled := disable(
-            Installer(path_config.installed_packages_dir),
+            Installer(site_context.installed_packages_dir),
             site_context.package_store,
             path_config,
             site_context.callbacks,
@@ -645,15 +651,19 @@ def _command_template(
     if path_config is None:
         path_config = read_path_config()
 
-    installer = Installer(path_config.installed_packages_dir)
-
-    unpackaged = get_unpackaged_files(installer, path_config)
+    if site_context:
+        installer = Installer(site_context.installed_packages_dir)
+        unpackaged = get_unpackaged_files(installer, path_config)
+        files = {part: files_ for part in PackagePart if (files_ := unpackaged.get(part))}
+    else:
+        # for now: lets not look for files without a site context
+        files = {part: [] for part in PackagePart}
 
     package = manifest_template(
         name=args.name,
         version_packaged=_VERSION_STR,
         version_required=site_context.version if site_context else "",
-        files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
+        files=files,
     )
 
     sys.stdout.write(f"{package.file_content()}\n")
@@ -724,7 +734,7 @@ def _command_package(
     for err in remove_files(package, {}, path_config):
         _logger.info(err)
 
-    installer = Installer(path_config.installed_packages_dir)
+    installer = Installer(site_context.installed_packages_dir)
     try:
         installed = install(
             installer,
@@ -784,7 +794,7 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
         _no_args,
         _command_path_config_template,
     )
-    _add_command(subparsers, "find", _args_find, _command_find)
+    _add_command(subparsers, "find", _args_find, partial_opt(_command_find, site_context))
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(
         subparsers,

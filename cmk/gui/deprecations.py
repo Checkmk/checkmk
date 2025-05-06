@@ -106,7 +106,6 @@ def _make_path_config() -> PathConfig | None:
         checks_dir=paths.local_checks_dir,
         doc_dir=paths.local_doc_dir,
         gui_plugins_dir=paths.local_gui_plugins_dir,
-        installed_packages_dir=paths.installed_packages_dir,
         inventory_dir=paths.local_inventory_dir,
         lib_dir=paths.local_lib_dir,
         locale_dir=paths.local_locale_dir,

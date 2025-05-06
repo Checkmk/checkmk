@@ -45,7 +45,6 @@ class PathConfig:
     web_dir: Path
 
     # other paths
-    installed_packages_dir: Path
     local_root: Path
 
     @classmethod
@@ -70,7 +69,6 @@ class PathConfig:
             notifications_dir=Path(raw["notifications_dir"]),
             pnp_templates_dir=Path(raw["pnp_templates_dir"]),
             web_dir=Path(raw["web_dir"]),
-            installed_packages_dir=Path(raw["installed_packages_dir"]),
             local_root=Path(raw["local_root"]),
         )
 
@@ -261,6 +259,5 @@ def make_path_config_template() -> PathConfig:
         notifications_dir=Path(),
         pnp_templates_dir=Path(),
         web_dir=Path(),
-        installed_packages_dir=Path(),
         local_root=Path(),
     )

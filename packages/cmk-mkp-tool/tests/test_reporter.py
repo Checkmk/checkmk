@@ -81,7 +81,6 @@ _PATH_CONFIG = PathConfig(
     notifications_dir=Path("/omd/sites/mySite/NEVERMIND"),
     pnp_templates_dir=Path("/omd/sites/mySite/NEVERMIND"),
     web_dir=Path("/omd/sites/mySite/NEVERMIND"),
-    installed_packages_dir=Path("/omd/sites/mySite/NEVERMIND"),
     local_root=Path("/omd/sites/mySite/NEVERMIND"),
 )
 

@@ -26,7 +26,6 @@ def fixture_path_config(tmp_path: Path) -> Iterable[PathConfig]:
         checks_dir=local_root / "checks_dir",
         doc_dir=local_root / "doc_dir",
         gui_plugins_dir=local_root / "gui_plugins_dir",
-        installed_packages_dir=tmp_path / "installed_packages_dir",
         inventory_dir=local_root / "inventory_dir",
         lib_dir=local_root / "lib_dir",
         locale_dir=local_root / "locale_dir",
@@ -55,5 +54,6 @@ def fixture_package_store(tmp_path: Path) -> PackageStore:
 
 
 @pytest.fixture(scope="function", name="installer")
-def fixture_installer(path_config: PathConfig) -> Installer:
-    return Installer(path_config.installed_packages_dir)
+def fixture_installer(tmp_path: Path) -> Installer:
+    (install_dir := tmp_path / "installed_packages_dir").mkdir(parents=True, exist_ok=True)
+    return Installer(install_dir)

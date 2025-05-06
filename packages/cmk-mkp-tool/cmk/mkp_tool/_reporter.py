@@ -10,9 +10,9 @@ from pathlib import Path
 from stat import filemode
 from typing import TypedDict
 
-from ._installed import Installer
 from ._mkp import PackagePart
 from ._parts import PathConfig, ui_title
+from ._type_defs import PackageID
 
 
 def _all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[Path]]:
@@ -95,10 +95,10 @@ class FileMetaInfo(TypedDict):
     mode: str
 
 
-def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[FileMetaInfo]:
+def files_inventory(
+    package_map: Mapping[PackagePart, Mapping[Path, PackageID]], path_config: PathConfig
+) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
-    package_map = installer.get_packaged_files()
-
     files_and_packages = sorted(
         (
             (part, file, package_map[part].get(file) if part else None)

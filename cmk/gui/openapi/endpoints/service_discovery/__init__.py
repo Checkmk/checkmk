@@ -692,6 +692,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
             body["do_full_scan"],
             body["ignore_errors"],
             body["bulk_size"],
+            pprint_value=active_config.wato_pprint_config,
         )
     ).is_error():
         raise result.error

@@ -258,11 +258,15 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
+        *,
+        pprint_value: bool,
     ) -> None:
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with job_interface.gui_context(), store.locked(self.lock_file):
             job_interface.send_progress_update(_("Acquired lock"))
-            self._do_execute(mode, do_scan, ignore_errors, tasks, job_interface)
+            self._do_execute(
+                mode, do_scan, ignore_errors, tasks, job_interface, pprint_value=pprint_value
+            )
 
     def _do_execute(
         self,
@@ -271,6 +275,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
+        *,
+        pprint_value: bool,
     ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
@@ -284,7 +290,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         result_queue: mp.Queue[_DiscoveryTaskResult | None] = mp.Queue()
         result_processing_thread = threading.Thread(
             target=copy_request_context(self._process_discovery_results),
-            args=(result_queue, len(tasks_by_site), job_interface),
+            args=(result_queue, len(tasks_by_site), job_interface, pprint_value),
         )
 
         with mp.pool.ThreadPool(processes=len(tasks_by_site)) as task_pool:
@@ -399,6 +405,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         results: "mp.Queue[_DiscoveryTaskResult | None]",
         n_task_threads: int,
         job_interface: BackgroundProcessInterface,
+        pprint_value: bool,
     ) -> None:
         remaining_threads = n_task_threads
         while True:
@@ -418,7 +425,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                         result.task,
                         result.result,
                         job_interface,
-                        pprint_value=active_config.wato_pprint_config,
+                        pprint_value=pprint_value,
                     )
                 except Exception as exc:
                     self._process_discovery_error(result.task, exc)
@@ -520,6 +527,8 @@ def start_bulk_discovery(
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
     bulk_size: BulkSize,
+    *,
+    pprint_value: bool,
 ) -> result.Result[None, AlreadyRunningError | StartupError]:
     """Start a bulk discovery job with the given options
 
@@ -556,6 +565,7 @@ def start_bulk_discovery(
                 do_full_scan=do_full_scan,
                 ignore_errors=ignore_errors,
                 tasks=tasks,
+                pprint_value=pprint_value,
             ),
         ),
         InitialStatusArgs(
@@ -572,13 +582,19 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     do_full_scan: DoFullScan
     ignore_errors: IgnoreErrors
     tasks: Sequence[DiscoveryTask]
+    pprint_value: bool
 
 
 def bulk_discovery_job_entry_point(
     job_interface: BackgroundProcessInterface, args: BulkDiscoveryJobArgs
 ) -> None:
     BulkDiscoveryBackgroundJob().do_execute(
-        args.discovery_mode, args.do_full_scan, args.ignore_errors, args.tasks, job_interface
+        args.discovery_mode,
+        args.do_full_scan,
+        args.ignore_errors,
+        args.tasks,
+        job_interface,
+        pprint_value=args.pprint_value,
     )
 
 

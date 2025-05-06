@@ -140,6 +140,7 @@ class ModeBulkDiscovery(WatoMode):
                     self._do_full_scan,
                     self._ignore_errors,
                     self._bulk_size,
+                    pprint_value=active_config.wato_pprint_config,
                 )
             ).is_error():
                 raise result.error

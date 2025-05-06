@@ -16,6 +16,7 @@ from collections.abc import Mapping
 from typing import Any, assert_never
 
 from cmk.gui.background_job import BackgroundJob
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
 from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
@@ -76,6 +77,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
                 ping_probes=body["performance"]["ping_probes"],
                 gateway_folder_path=gateway_folder_path,
             ),
+            pprint_value=active_config.wato_pprint_config,
         )
     ).is_error():
         raise result.error

@@ -424,11 +424,11 @@ def with_host(
 ):
     hostnames = [HostName("heute"), HostName("example.com")]
     root_folder = folder_tree().root_folder()
-    root_folder.create_hosts(
-        [(hostname, {}, None) for hostname in hostnames],
-    )
+    root_folder.create_hosts([(hostname, {}, None) for hostname in hostnames], pprint_value=False)
     yield hostnames
-    root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
+    root_folder.delete_hosts(
+        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult(), pprint_value=False
+    )
 
 
 @pytest.fixture

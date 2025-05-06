@@ -33,7 +33,7 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
 
     hostname = HostName("host1")
     root = folder_tree().root_folder()
-    root.create_hosts([(hostname, {"site": SiteId(hostname)}, None)])
+    root.create_hosts([(hostname, {"site": SiteId(hostname)}, None)], pprint_value=False)
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"
 
@@ -67,7 +67,9 @@ def test_scan_parents_job(
     )
 
     # WHEN
-    start_parent_scan(hosts=[host], job=ParentScanBackgroundJob(), settings=settings)
+    start_parent_scan(
+        hosts=[host], job=ParentScanBackgroundJob(), settings=settings, pprint_value=False
+    )
 
     # THEN
     with application_and_request_context():

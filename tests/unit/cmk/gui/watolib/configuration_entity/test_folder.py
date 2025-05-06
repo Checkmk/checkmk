@@ -26,7 +26,9 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
     tree = folder_tree()
     tree.invalidate_caches()
 
-    tree.root_folder().create_subfolder(name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={})
+    tree.root_folder().create_subfolder(
+        name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={}, pprint_value=False
+    )
 
     yield
 
@@ -40,7 +42,7 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
     _, data = visitor.to_vue({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
 
     # WHEN
-    description = save_folder_from_slidein_schema(data)
+    description = save_folder_from_slidein_schema(data, pprint_value=False)
 
     # THEN
     assert description.title == f"{SUB_FOLDER_TITLE}/foo"
@@ -56,7 +58,7 @@ def test_folder_save_roundtrip(create_folder_test_environment: None, parent_fold
     _, data = visitor.to_vue({"general": {"title": "foo", "parent_folder": parent_folder}})
 
     # WHEN
-    save_folder_from_slidein_schema(data)
+    save_folder_from_slidein_schema(data, pprint_value=False)
 
     # THEN
     parent = folder_tree().all_folders()[parent_folder]

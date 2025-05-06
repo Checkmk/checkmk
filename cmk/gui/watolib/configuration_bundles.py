@@ -244,7 +244,9 @@ def _validate_and_prepare_create_calls(
             )
         )
     if entities.hosts:
-        create_functions.append(_prepare_create_hosts(bundle_ident, entities.hosts))
+        create_functions.append(
+            _prepare_create_hosts(bundle_ident, entities.hosts, pprint_value=pprint_value)
+        )
     if entities.rules:
         create_functions.append(
             _prepare_create_rules(bundle_ident, entities.rules, pprint_value=pprint_value)
@@ -341,7 +343,7 @@ def delete_config_bundle_objects(
     if references.rules:
         _delete_rules(references.rules, pprint_value=pprint_value)
     if references.hosts:
-        _delete_hosts(references.hosts)
+        _delete_hosts(references.hosts, pprint_value=pprint_value)
     if references.passwords:
         _delete_passwords(
             references.passwords,
@@ -350,7 +352,7 @@ def delete_config_bundle_objects(
             use_git=use_git,
         )
     if references.dcd_connections:
-        _delete_dcd_connections(references.dcd_connections)
+        _delete_dcd_connections(references.dcd_connections, pprint_value=pprint_value)
 
 
 def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:
@@ -381,7 +383,9 @@ def _get_host_attributes(bundle_ident: GlobalIdent, params: CreateHost) -> HostA
     return attributes
 
 
-def _prepare_create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> CreateFunction:
+def _prepare_create_hosts(
+    bundle_ident: GlobalIdent, hosts: Iterable[CreateHost], *, pprint_value: bool
+) -> CreateFunction:
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
     folder_and_valid_hosts = []
@@ -405,12 +409,12 @@ def _prepare_create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]
 
     def create() -> None:
         for f, validated_hosts in folder_and_valid_hosts:
-            f.create_validated_hosts(validated_hosts)
+            f.create_validated_hosts(validated_hosts, pprint_value=pprint_value)
 
     return create
 
 
-def _delete_hosts(hosts: Iterable[Host]) -> None:
+def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
         ((host.folder(), host) for host in hosts),
@@ -419,7 +423,10 @@ def _delete_hosts(hosts: Iterable[Host]) -> None:
     for folder, host_iter in groupby(folders_and_hosts, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Host]]
         host_names = [host.name() for _folder, host in host_iter]
         folder.delete_hosts(
-            host_names, automation=check_mk_automations.delete_hosts, allow_locked_deletion=True
+            host_names,
+            automation=check_mk_automations.delete_hosts,
+            allow_locked_deletion=True,
+            pprint_value=pprint_value,
         )
 
 
@@ -577,16 +584,21 @@ def _prepare_create_dcd_connections(
     return create
 
 
-def _delete_dcd_connections(dcd_connections: Sequence[tuple[str, DCDConnectionSpec]]) -> None:
+def _delete_dcd_connections(
+    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]], *, pprint_value: bool
+) -> None:
     for dcd_connection_id, _spec in dcd_connections:
         DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
 
     _delete_hosts(
-        host
-        for _dcd_id, host in _collect_hosts(
-            _prepare_id_finder(PROGRAM_ID_DCD, {dcd_id for dcd_id, _spec in dcd_connections}),
-            Host.all().values(),
-        )
+        (
+            host
+            for _dcd_id, host in _collect_hosts(
+                _prepare_id_finder(PROGRAM_ID_DCD, {dcd_id for dcd_id, _spec in dcd_connections}),
+                Host.all().values(),
+            )
+        ),
+        pprint_value=pprint_value,
     )
 
 

@@ -7,6 +7,8 @@ from typing import override
 
 from cmk.utils.log import VERBOSE
 
+from cmk.gui.config import active_config
+
 from cmk.update_config.plugins.lib.remove_invalid_host_labels import (
     _find_invalid_labels,
     _remove_labels,
@@ -20,7 +22,7 @@ class RemoveInvalidHostLabels(UpdateAction):
         hosts_to_fix = _find_invalid_labels()
 
         for host, invalid_labels in hosts_to_fix.items():
-            _remove_labels(host, invalid_labels)
+            _remove_labels(host, invalid_labels, pprint_value=active_config.wato_pprint_config)
             logger.log(
                 VERBOSE,
                 f"{host.folder().path()}/{host.name()} - labels removed: {', '.join(invalid_labels)}",

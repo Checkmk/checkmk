@@ -75,7 +75,7 @@ class DCDHook:
     ] = lambda *_args: []
 
 
-def sanitize_folder_path(folder_path: str) -> Folder:
+def sanitize_folder_path(folder_path: str, *, pprint_value: bool) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
     sanitized_folder_path = normalize_folder_path_str(folder_path)
@@ -92,6 +92,7 @@ def sanitize_folder_path(folder_path: str) -> Folder:
                 name=name,
                 title=title,
                 attributes={},
+                pprint_value=pprint_value,
             )
         )
     return folder
@@ -291,7 +292,7 @@ def _create_and_save_special_agent_bundle(
         password_entities = None
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
-    folder = sanitize_folder_path(host_path)
+    folder = sanitize_folder_path(host_path, pprint_value=active_config.wato_pprint_config)
     validated_host_name = HostName(host_name)
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"

@@ -31,7 +31,7 @@ from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 _LOGGER = cmk.gui.log.logger.getChild("automatic_host_removal")
@@ -50,6 +50,9 @@ def execute_host_removal_job() -> None:
 
     _LOGGER_BACKGROUND_JOB.debug("Starting host removal background job")
 
+    def _folder_of_host(h: Host) -> Folder:
+        return h.folder()
+
     try:
         _LOGGER.info("Starting host removal background job")
 
@@ -61,10 +64,8 @@ def execute_host_removal_job() -> None:
             _LOGGER_BACKGROUND_JOB.debug("Found no hosts to be removed, exiting")
             _LOGGER.info("Found no hosts to be removed, exiting")
             return
-
         for folder, hosts_in_folder in itertools.groupby(
-            itertools.chain.from_iterable(hosts_to_be_removed.values()),
-            lambda h: h.folder(),
+            itertools.chain.from_iterable(hosts_to_be_removed.values()), _folder_of_host
         ):
             hostnames = list(host.name() for host in hosts_in_folder)
             _LOGGER_BACKGROUND_JOB.debug(
@@ -74,7 +75,11 @@ def execute_host_removal_job() -> None:
             )
             _LOGGER.info(f"Removing {len(hostnames)} hosts from folder {folder.title()}")
             with SuperUserContext():
-                folder.delete_hosts(hostnames, automation=delete_hosts)
+                folder.delete_hosts(
+                    hostnames,
+                    automation=delete_hosts,
+                    pprint_value=active_config.wato_pprint_config,
+                )
 
         _LOGGER.info("Hosts removed, starting activation of changes")
         _activate_changes(hosts_to_be_removed)

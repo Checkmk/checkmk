@@ -215,7 +215,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
 
     # is_cluster is defined as "cluster_hosts is not None"
     folder.create_hosts(
-        [(host_name, body["attributes"], None)],
+        [(host_name, body["attributes"], None)], pprint_value=active_config.wato_pprint_config
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name])
@@ -250,6 +250,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
 
     folder.create_hosts(
         [(host_name, body["attributes"], body["nodes"])],
+        pprint_value=active_config.wato_pprint_config,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name])
@@ -330,7 +331,9 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
             except (MKUserError, MKAuthException) as e:
                 failed_hosts[host_name] = f"Validation failed: {e}"
 
-        folder.create_validated_hosts(validated_entries)
+        folder.create_validated_hosts(
+            validated_entries, pprint_value=active_config.wato_pprint_config
+        )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:
@@ -510,7 +513,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     nodes = body["nodes"]
     host: Host = Host.load_host(host_name)
     _require_host_etag(host)
-    host.edit(host.attributes, nodes)
+    host.edit(host.attributes, nodes, pprint_value=active_config.wato_pprint_config)
 
     return serve_json(
         constructors.object_sub_property(
@@ -575,10 +578,12 @@ def update_host(params: Mapping[str, Any]) -> Response:
 
     if new_attributes := body.get("attributes"):
         new_attributes["meta_data"] = host.attributes.get("meta_data", {})
-        host.edit(new_attributes, host.cluster_nodes())
+        host.edit(
+            new_attributes, host.cluster_nodes(), pprint_value=active_config.wato_pprint_config
+        )
 
     if update_attributes := body.get("update_attributes"):
-        host.update_attributes(update_attributes)
+        host.update_attributes(update_attributes, pprint_value=active_config.wato_pprint_config)
 
     if remove_attributes := body.get("remove_attributes"):
         faulty_attributes = []
@@ -586,7 +591,9 @@ def update_host(params: Mapping[str, Any]) -> Response:
             if attribute not in host.attributes:
                 faulty_attributes.append(attribute)
 
-        host.clean_attributes(remove_attributes)  # silently ignores missing attributes
+        host.clean_attributes(
+            remove_attributes, pprint_value=active_config.wato_pprint_config
+        )  # silently ignores missing attributes
 
         if faulty_attributes:
             return problem(
@@ -670,7 +677,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
 
         # skip save if no changes were made, presumably due to quick setup lock
         if pending_changes:
-            folder.save_hosts()
+            folder.save_hosts(pprint_value=active_config.wato_pprint_config)
             for host, diff, affected_sites in pending_changes:
                 host.add_edit_host_change(diff, affected_sites)
 
@@ -840,7 +847,9 @@ def move(params: Mapping[str, Any]) -> Response:
     try:
         if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host():
             raise MKAuthException
-        current_folder.move_hosts([host_name], target_folder)
+        current_folder.move_hosts(
+            [host_name], target_folder, pprint_value=active_config.wato_pprint_config
+        )
     except MKAuthException:
         return problem(
             status=403,
@@ -866,7 +875,9 @@ def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
     user.need_permission("wato.edit")
     host: Host = Host.load_host(params["host_name"])
-    host.folder().delete_hosts([host.name()], automation=delete_hosts)
+    host.folder().delete_hosts(
+        [host.name()], automation=delete_hosts, pprint_value=active_config.wato_pprint_config
+    )
     return Response(status=204)
 
 
@@ -899,7 +910,11 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     ):
         folder = folder_by_id[id_]
         # Calling Folder.delete_hosts is very expensive. Thus, we only call it once per folder.
-        folder.delete_hosts(list(hostnames_per_folder), automation=delete_hosts)
+        folder.delete_hosts(
+            list(hostnames_per_folder),
+            automation=delete_hosts,
+            pprint_value=active_config.wato_pprint_config,
+        )
 
     return Response(status=204)
 

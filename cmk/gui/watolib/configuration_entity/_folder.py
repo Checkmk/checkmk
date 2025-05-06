@@ -88,7 +88,7 @@ def _append_full_parent_title(title: str, parent_folder: Folder | None) -> str:
     return f"{_append_full_parent_title(parent_folder.title(), parent_folder.parent())}/{title}"
 
 
-def save_folder_from_slidein_schema(data: object) -> FolderDescription:
+def save_folder_from_slidein_schema(data: object, *, pprint_value: bool) -> FolderDescription:
     """Save a folder from data returned from folder slide in.
 
     Raises:
@@ -105,7 +105,9 @@ def save_folder_from_slidein_schema(data: object) -> FolderDescription:
 
     parent_folder = folder_tree().all_folders()[parsed_data.parent_folder]
     name = find_available_folder_name(parsed_data.title, parent_folder)
-    folder = parent_folder.create_subfolder(name=name, title=parsed_data.title, attributes={})
+    folder = parent_folder.create_subfolder(
+        name=name, title=parsed_data.title, attributes={}, pprint_value=pprint_value
+    )
     full_title = _append_full_parent_title(folder.title(), parent_folder)
 
     return FolderDescription(title=full_title, path=folder.path())

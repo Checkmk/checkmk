@@ -438,6 +438,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     discovery_result=discovery_result,
                     host=host,
                     raise_errors=raise_errors,
+                    pprint_value=pprint_value,
                 )
             case (
                 DiscoveryAction.SINGLE_UPDATE

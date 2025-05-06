@@ -460,6 +460,7 @@ def _execute_service_discovery(
                 discovery_result=discovery_result,
                 host=host,
                 raise_errors=False,
+                pprint_value=pprint_value,
             )
         case APIDiscoveryAction.only_service_labels:
             discovery_result = perform_service_discovery(

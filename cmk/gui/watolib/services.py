@@ -563,14 +563,14 @@ class Discovery:
 
 
 @contextmanager
-def _service_discovery_context(host: Host) -> Iterator[None]:
+def _service_discovery_context(host: Host, *, pprint_value: bool) -> Iterator[None]:
     user.need_permission("wato.services")
 
     # no try/finally here.
     yield
 
     if not host.locked():
-        host.clear_discovery_failed()
+        host.clear_discovery_failed(pprint_value=pprint_value)
 
 
 def perform_fix_all(
@@ -583,7 +583,7 @@ def perform_fix_all(
     """
     Handle fix all ('Accept All' on UI) discovery action
     """
-    with _service_discovery_context(host):
+    with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(discovery_result.labels_by_host)
         Discovery(
             host,
@@ -603,9 +603,10 @@ def perform_host_label_discovery(
     *,
     host: Host,
     raise_errors: bool,
+    pprint_value: bool,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
-    with _service_discovery_context(host):
+    with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(discovery_result.labels_by_host)
         discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result
@@ -625,7 +626,7 @@ def perform_service_discovery(
     """
     Handle discovery action for Update Services, Single Update & Bulk Update
     """
-    with _service_discovery_context(host):
+    with _service_discovery_context(host, pprint_value=pprint_value):
         Discovery(
             host,
             action,

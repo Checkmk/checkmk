@@ -140,11 +140,13 @@ def fixture_sample_host(
 ) -> Generator[Host, None, None]:
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
-    root_folder.create_hosts([(hostname, {}, None)])
+    root_folder.create_hosts([(hostname, {}, None)], pprint_value=False)
     host = root_folder.host(hostname)
     assert host is not None
     yield host
-    root_folder.delete_hosts([hostname], automation=lambda *args, **kwargs: DeleteHostsResult())
+    root_folder.delete_hosts(
+        [hostname], automation=lambda *args, **kwargs: DeleteHostsResult(), pprint_value=False
+    )
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -900,6 +902,7 @@ def test_perform_discovery_action_update_host_labels(
         ),
         host=sample_host,
         raise_errors=True,
+        pprint_value=False,
     )
 
     mock_update_host_labels.assert_called_once_with(

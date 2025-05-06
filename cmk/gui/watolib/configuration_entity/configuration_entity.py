@@ -66,7 +66,7 @@ def save_configuration_entity(
                 ident=EntityId(param.ident), description=param.description
             )
         case ConfigEntityType.folder:
-            folder = save_folder_from_slidein_schema(data)
+            folder = save_folder_from_slidein_schema(data, pprint_value=pprint_value)
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title
             )

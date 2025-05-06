@@ -23,7 +23,12 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
     tree = folder_tree()
     tree.invalidate_caches()
 
-    tree.root_folder().create_subfolder(name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={})
+    tree.root_folder().create_subfolder(
+        name=SUB_FOLDER,
+        title=SUB_FOLDER_TITLE,
+        attributes={},
+        pprint_value=False,
+    )
 
     yield
 

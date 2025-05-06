@@ -44,7 +44,7 @@ def fixture_host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
 
     hostname = HostName("host1")
     root = folder_tree().root_folder()
-    root.create_hosts([(hostname, {"site": SiteId("site1")}, None)])
+    root.create_hosts([(hostname, {"site": SiteId("site1")}, None)], pprint_value=False)
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"
     yield host

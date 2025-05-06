@@ -100,7 +100,7 @@ def update_tag_config(tag_config: TagConfig, pprint_value: bool) -> None:
     """
     user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format(), pprint_value)
-    _update_tag_dependencies()
+    _update_tag_dependencies(pprint_value=pprint_value)
     hooks.call("tags-changed")
 
 
@@ -145,11 +145,11 @@ def tag_group_exists(ident: TagGroupID, builtin_included: bool = False) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def _update_tag_dependencies() -> None:
+def _update_tag_dependencies(*, pprint_value: bool) -> None:
     load_config()
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts()
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)
 
 
 class RepairError(MKGeneralException):
@@ -302,9 +302,7 @@ def change_host_tags(
     pprint_value: bool,
 ) -> tuple[list[Folder], list[Host], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
-        operation,
-        mode,
-        folder_tree().root_folder(),
+        operation, mode, folder_tree().root_folder(), pprint_value=pprint_value
     )
 
     affected_rulesets = _change_host_tags_in_rulesets(operation, mode, pprint_value=pprint_value)
@@ -335,7 +333,11 @@ def _change_host_tags_in_rulesets(
 
 
 def _change_host_tags_in_folders(
-    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode, folder: Any
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    folder: Any,
+    *,
+    pprint_value: bool,
 ) -> tuple[list[Folder], list[Host]]:
     """Update host tag assignments in hosts/folders
 
@@ -356,11 +358,15 @@ def _change_host_tags_in_folders(
                 pass
 
         for subfolder in folder.subfolders():
-            aff_folders, aff_hosts = _change_host_tags_in_folders(operation, mode, subfolder)
+            aff_folders, aff_hosts = _change_host_tags_in_folders(
+                operation, mode, subfolder, pprint_value=pprint_value
+            )
             affected_folders += aff_folders
             affected_hosts += aff_hosts
 
-        affected_hosts += _change_host_tags_in_hosts(operation, mode, folder)
+        affected_hosts += _change_host_tags_in_hosts(
+            operation, mode, folder, pprint_value=pprint_value
+        )
 
     return affected_folders, affected_hosts
 
@@ -369,6 +375,8 @@ def _change_host_tags_in_hosts(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
     mode: TagCleanupMode,
     folder: Folder,
+    *,
+    pprint_value: bool,
 ) -> list[Host]:
     affected_hosts = []
     for host in folder.hosts().values():
@@ -377,7 +385,7 @@ def _change_host_tags_in_hosts(
 
     if affected_hosts and mode != TagCleanupMode.CHECK:
         try:
-            folder.save_hosts()
+            folder.save_hosts(pprint_value=pprint_value)
         except MKAuthException:
             # Ignore MKAuthExceptions of locked host.mk files
             pass

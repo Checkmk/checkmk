@@ -65,7 +65,9 @@ TEST_HOSTS = [
 
 @pytest.fixture(name="setup_hosts")
 def fixture_setup_hosts() -> None:
-    folder_tree().root_folder().create_hosts([(hostname, {}, None) for hostname in TEST_HOSTS])
+    folder_tree().root_folder().create_hosts(
+        [(hostname, {}, None) for hostname in TEST_HOSTS], pprint_value=False
+    )
 
 
 @pytest.fixture(name="setup_rules")

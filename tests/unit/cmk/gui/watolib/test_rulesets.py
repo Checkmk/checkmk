@@ -92,7 +92,8 @@ def _test_hosts(folder: Folder) -> None:
         [
             (HostName("ding"), {}, None),
             (HostName("dong"), {}, None),
-        ]
+        ],
+        pprint_value=False,
     )
 
 

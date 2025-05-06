@@ -26,11 +26,11 @@ def update_user_custom_attrs(now: datetime) -> None:
     userdb.rewrite_users(now)
 
 
-def update_host_custom_attrs():
+def update_host_custom_attrs(*, pprint_value: bool) -> None:
     load_config()
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts()
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)
 
 
 def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:

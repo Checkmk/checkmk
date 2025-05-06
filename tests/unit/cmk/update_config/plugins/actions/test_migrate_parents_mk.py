@@ -94,8 +94,10 @@ def test_parents_created(conf_root: Folder) -> None:
 
     hostname = HostName("checkmk.com")
     local_site_id = omd_site()
-    conf_subfolder = conf_root.create_subfolder("some_subfolder", "Some Subfolder", {})
-    conf_subfolder.create_hosts([(hostname, {"site": local_site_id}, None)])
+    conf_subfolder = conf_root.create_subfolder(
+        "some_subfolder", "Some Subfolder", {}, pprint_value=False
+    )
+    conf_subfolder.create_hosts([(hostname, {"site": local_site_id}, None)], pprint_value=False)
     assert conf_subfolder.host(hostname) is not None, "Test setup failed, host not created"
 
     run_migrate()

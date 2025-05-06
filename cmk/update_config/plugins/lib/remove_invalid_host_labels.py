@@ -8,12 +8,12 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 
 
-def _remove_labels(host: Host, invalid_labels: set[str]) -> None:
+def _remove_labels(host: Host, invalid_labels: set[str], *, pprint_value: bool) -> None:
     updated_labels = {
         k: v for k, v in host.attributes.get("labels", {}).items() if k not in invalid_labels
     }
     with SuperUserContext():
-        host.update_attributes({"labels": updated_labels})
+        host.update_attributes({"labels": updated_labels}, pprint_value=pprint_value)
 
 
 def _find_invalid_labels() -> dict[Host, set[str]]:

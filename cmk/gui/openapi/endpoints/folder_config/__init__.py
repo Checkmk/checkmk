@@ -39,6 +39,7 @@ from typing import Any
 from werkzeug.datastructures import ETags
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -119,7 +120,7 @@ def create(params: Mapping[str, Any]) -> Response:
     put_body = params["body"]
     name = put_body.get("name")
     title = put_body["title"]
-    parent_folder = put_body["parent"]
+    parent_folder: Folder = put_body["parent"]
     attributes = put_body.get("attributes", {})
 
     if parent_folder.has_subfolder(name):
@@ -130,7 +131,9 @@ def create(params: Mapping[str, Any]) -> Response:
     if name is None:
         name = find_available_folder_name(title, parent_folder)
 
-    folder = parent_folder.create_subfolder(name, title, attributes)
+    folder = parent_folder.create_subfolder(
+        name, title, attributes, pprint_value=active_config.wato_pprint_config
+    )
 
     return _serve_folder(folder)
 
@@ -202,7 +205,11 @@ def update(params: Mapping[str, Any]) -> Response:
                 f"not be removed: {', '.join(faulty_attributes)}",
             )
 
-    folder.edit(folder.title() if "title" not in post_body else post_body["title"], attributes)
+    folder.edit(
+        folder.title() if "title" not in post_body else post_body["title"],
+        attributes,
+        pprint_value=active_config.wato_pprint_config,
+    )
 
     return _serve_folder(folder)
 
@@ -254,7 +261,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
                 faulty_folders.append(title)
                 continue
 
-        folder.edit(title, attributes)
+        folder.edit(title, attributes, pprint_value=active_config.wato_pprint_config)
         folders.append(folder)
 
     if faulty_folders:
@@ -331,7 +338,7 @@ def move(params: Mapping[str, Any]) -> Response:
     try:
         parent = folder.parent()
         assert parent is not None
-        parent.move_subfolder_to(folder, dest_folder)
+        parent.move_subfolder_to(folder, dest_folder, pprint_value=active_config.wato_pprint_config)
     except MKUserError as exc:
         raise ProblemException(
             title="Problem moving folder.",

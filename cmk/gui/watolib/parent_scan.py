@@ -90,13 +90,15 @@ class ParentScanBackgroundJob(BackgroundJob):
         settings: ParentScanSettings,
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
+        *,
+        pprint_value: bool,
     ) -> None:
         with job_interface.gui_context():
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
             for task in tasks:
-                self._process_task(task, settings)
+                self._process_task(task, settings, pprint_value=pprint_value)
 
             self._logger.info("Summary:")
             for title, value in [
@@ -123,12 +125,17 @@ class ParentScanBackgroundJob(BackgroundJob):
         self._num_gateway_hosts_created = 0
         self._num_errors = 0
 
-    def _process_task(self, task: ParentScanTask, settings: ParentScanSettings) -> None:
+    def _process_task(
+        self, task: ParentScanTask, settings: ParentScanSettings, *, pprint_value: bool
+    ) -> None:
         self._num_hosts_total += 1
 
         try:
             self._process_parent_scan_results(
-                task, settings, self._execute_parent_scan(task, settings)
+                task,
+                settings,
+                self._execute_parent_scan(task, settings),
+                pprint_value=pprint_value,
             )
         except Exception as e:
             self._num_errors += 1
@@ -160,14 +167,21 @@ class ParentScanBackgroundJob(BackgroundJob):
         ).results
 
     def _process_parent_scan_results(
-        self, task: ParentScanTask, settings: ParentScanSettings, results: Sequence[GatewayResult]
+        self,
+        task: ParentScanTask,
+        settings: ParentScanSettings,
+        results: Sequence[GatewayResult],
+        *,
+        pprint_value: bool,
     ) -> None:
         for result in results:
             if result.state in ["direct", "root", "gateway"]:
                 # The following code updates the host config. The progress from loading the Setup folder
                 # until it has been saved needs to be locked.
                 with store.lock_checkmk_configuration(configuration_lockfile):
-                    self._configure_host_and_gateway(task, settings, result.gateway)
+                    self._configure_host_and_gateway(
+                        task, settings, result.gateway, pprint_value=pprint_value
+                    )
             else:
                 self._logger.error(result.message)
 
@@ -190,6 +204,8 @@ class ParentScanBackgroundJob(BackgroundJob):
         task: ParentScanTask,
         settings: ParentScanSettings,
         gateway: Gateway | None,
+        *,
+        pprint_value: bool,
     ) -> None:
         tree = folder_tree()
         tree.invalidate_caches()
@@ -198,7 +214,9 @@ class ParentScanBackgroundJob(BackgroundJob):
             tree.folder(settings.gateway_folder_path) if settings.gateway_folder_path else None
         )
 
-        parents = self._configure_gateway(task, settings, gateway, host_folder, gateway_folder)
+        parents = self._configure_gateway(
+            task, settings, gateway, host_folder, gateway_folder, pprint_value=pprint_value
+        )
 
         if (host := host_folder.host(task.host_name)) is None:
             # This seems to never happen.
@@ -215,10 +233,10 @@ class ParentScanBackgroundJob(BackgroundJob):
             settings.force_explicit
             or host.folder().effective_attributes().get("parents") != parents
         ):
-            host.update_attributes({"parents": parents})
+            host.update_attributes({"parents": parents}, pprint_value=pprint_value)
         elif "parents" in host.attributes:
             # Check which parents the host would have inherited
-            host.clean_attributes(["parents"])
+            host.clean_attributes(["parents"], pprint_value=pprint_value)
 
         if parents:
             self._logger.info("Set parents to %s", ",".join(parents))
@@ -234,6 +252,8 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway: Gateway | None,
         host_folder: Folder,
         gateway_folder: Folder | None,
+        *,
+        pprint_value: bool,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -249,11 +269,13 @@ class ParentScanBackgroundJob(BackgroundJob):
         if settings.where == "nowhere":
             raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
 
-        gw_folder = self._determine_gateway_folder(settings.where, host_folder, gateway_folder)
+        gw_folder = self._determine_gateway_folder(
+            settings.where, host_folder, gateway_folder, pprint_value=pprint_value
+        )
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
         gw_folder.create_hosts(
-            [(gw_host_name, gw_host_attributes, None)],
+            [(gw_host_name, gw_host_attributes, None)], pprint_value=pprint_value
         )
         bakery.try_bake_agents_for_hosts([gw_host_name])
         self._num_gateway_hosts_created += 1
@@ -261,7 +283,12 @@ class ParentScanBackgroundJob(BackgroundJob):
         return [gw_host_name]
 
     def _determine_gateway_folder(
-        self, where: str, host_folder: Folder, gateway_folder: Folder | None
+        self,
+        where: str,
+        host_folder: Folder,
+        gateway_folder: Folder | None,
+        *,
+        pprint_value: bool,
     ) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request(
@@ -280,7 +307,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 assert parents_folder is not None
                 return parents_folder
             # Create new gateway folder
-            return current.create_subfolder("parents", _("Parents"), {})
+            return current.create_subfolder("parents", _("Parents"), {}, pprint_value=pprint_value)
 
         if where == "there":  # In same folder as host
             return host_folder
@@ -327,6 +354,8 @@ def start_parent_scan(
     hosts: Sequence[Host],
     job: ParentScanBackgroundJob,
     settings: ParentScanSettings,
+    *,
+    pprint_value: bool,
 ) -> Result[None, AlreadyRunningError | StartupError]:
     return job.start(
         JobTarget(
@@ -337,6 +366,7 @@ def start_parent_scan(
                     for host in hosts
                 ],
                 settings=settings,
+                pprint_value=pprint_value,
             ),
         ),
         InitialStatusArgs(
@@ -351,9 +381,12 @@ def start_parent_scan(
 class ParentScanJobArgs(BaseModel, frozen=True):
     tasks: Sequence[ParentScanTask]
     settings: ParentScanSettings
+    pprint_value: bool
 
 
 def parent_scan_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ParentScanJobArgs
 ) -> None:
-    ParentScanBackgroundJob().do_execute(args.settings, args.tasks, job_interface)
+    ParentScanBackgroundJob().do_execute(
+        args.settings, args.tasks, job_interface, pprint_value=args.pprint_value
+    )

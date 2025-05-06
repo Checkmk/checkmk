@@ -5,6 +5,7 @@
 from logging import Logger
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -24,7 +25,7 @@ class CreatePrecompiledFiles(UpdateAction):
         folder_tree().invalidate_caches()
         for folder in folder_tree().root_folder().subfolders_recursively():
             folder.save_folder_attributes()
-            folder.save_hosts()
+            folder.save_hosts(pprint_value=active_config.wato_pprint_config)
 
 
 update_action_registry.register(

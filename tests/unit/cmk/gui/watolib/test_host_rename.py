@@ -112,11 +112,13 @@ def test_rename_host(
     )
     if use_subfolder:
         folder = (
-            folder_tree().root_folder().create_subfolder("some_subfolder", "Some Subfolder", {})
+            folder_tree()
+            .root_folder()
+            .create_subfolder("some_subfolder", "Some Subfolder", {}, pprint_value=False)
         )
     else:
         folder = folder_tree().root_folder()
-    folder.create_hosts(hosts_to_create)
+    folder.create_hosts(hosts_to_create, pprint_value=False)
 
     # WHEN
     perform_rename_hosts(

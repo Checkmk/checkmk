@@ -415,7 +415,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
         )
 
     def _update_config(self) -> None:
-        update_host_custom_attrs()
+        update_host_custom_attrs(pprint_value=active_config.wato_pprint_config)
 
     def _show_in_table_option(self) -> None:
         self._render_table_option(
@@ -611,7 +611,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
         return self._all_attrs["host"]
 
     def _update_config(self) -> None:
-        update_host_custom_attrs()
+        update_host_custom_attrs(pprint_value=active_config.wato_pprint_config)
 
     def title(self) -> str:
         return _("Custom host attributes")

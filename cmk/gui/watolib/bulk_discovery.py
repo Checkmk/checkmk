@@ -414,7 +414,12 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 self._process_discovery_error(result.task, result.error)
             elif result.result:
                 try:
-                    self._process_discovery_result(result.task, result.result, job_interface)
+                    self._process_discovery_result(
+                        result.task,
+                        result.result,
+                        job_interface,
+                        pprint_value=active_config.wato_pprint_config,
+                    )
                 except Exception as exc:
                     self._process_discovery_error(result.task, exc)
 
@@ -425,6 +430,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         task: DiscoveryTask,
         response: AutomationDiscoveryResult,
         job_interface: BackgroundProcessInterface,
+        *,
+        pprint_value: bool,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
@@ -436,7 +443,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(
-                    hosts[hostname], response.hosts[hostname]
+                    hosts[hostname], response.hosts[hostname], pprint_value=pprint_value
                 )
                 job_interface.send_progress_update(
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
@@ -446,7 +453,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_services += result.services
         self._num_host_labels += result.host_labels
 
-    def _process_discovery_result_for_host(self, host: Host, result: DiscoveryReport) -> str:
+    def _process_discovery_result_for_host(
+        self, host: Host, result: DiscoveryReport, *, pprint_value: bool
+    ) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")
@@ -454,7 +463,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         if result.error_text is not None:
             self._num_hosts_failed += 1
             if not host.locked():
-                host.set_discovery_failed()
+                host.set_discovery_failed(pprint_value=pprint_value)
             return _("discovery failed: %s") % result.error_text
 
         self._num_hosts_succeeded += 1
@@ -488,7 +497,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         )
 
         if not host.locked():
-            host.clear_discovery_failed()
+            host.clear_discovery_failed(pprint_value=pprint_value)
 
         return _("discovery successful")
 

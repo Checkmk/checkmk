@@ -17,6 +17,7 @@ import cmk.utils.tags
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -409,7 +410,11 @@ class ModeEditHost(ABCHostMode):
             return None
 
         if request.var("delete"):  # Delete this host
-            folder.delete_hosts([self._host.name()], automation=delete_hosts)
+            folder.delete_hosts(
+                [self._host.name()],
+                automation=delete_hosts,
+                pprint_value=active_config.wato_pprint_config,
+            )
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_remove_tls_registration"):
@@ -422,7 +427,9 @@ class ModeEditHost(ABCHostMode):
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
-        host.edit(attributes, self._get_cluster_nodes())
+        host.edit(
+            attributes, self._get_cluster_nodes(), pprint_value=active_config.wato_pprint_config
+        )
         self._host = folder.load_host(self._host.name())
 
         if request.var("_save"):
@@ -681,7 +688,10 @@ class CreateHostMode(ABCHostMode):
 
         folder = folder_from_request(request.var("folder"), hostname)
         if transactions.check_transaction():
-            folder.create_hosts([(hostname, attributes, cluster_nodes)])
+            folder.create_hosts(
+                [(hostname, attributes, cluster_nodes)],
+                pprint_value=active_config.wato_pprint_config,
+            )
 
         self._host = folder.load_host(hostname)
         bakery.try_bake_agents_for_hosts([hostname])

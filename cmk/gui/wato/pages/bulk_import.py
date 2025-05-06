@@ -403,7 +403,7 @@ class ModeBulkImport(WatoMode):
                 # NOTE
                 # Folder.create_hosts will either import all of them, or no host at all. The
                 # caught exceptions below will only trigger during the verification phase.
-                folder.create_hosts(batch)
+                folder.create_hosts(batch, pprint_value=active_config.wato_pprint_config)
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
@@ -411,7 +411,7 @@ class ModeBulkImport(WatoMode):
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:
-                        folder.create_hosts([entry])
+                        folder.create_hosts([entry], pprint_value=active_config.wato_pprint_config)
                         index += 1
                         imported_hosts.append(entry[0])
                     except (MKAuthException, MKUserError, MKGeneralException) as exc:

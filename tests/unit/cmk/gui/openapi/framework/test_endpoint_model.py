@@ -32,6 +32,7 @@ class _TestBody:
 _PATH_PARAM = PathParam(description="Path parameter", example="example")
 _QUERY_PARAM = QueryParam(description="Query parameter", example="example")
 _QUERY_PARAM_ALIASED = QueryParam(description="Query parameter", example="example", alias="alias")
+_QUERY_PARAM_LIST = QueryParam(description="Query parameter", example='["example"]', is_list=True)
 _HEADER_PARAM = HeaderParam(description="Header parameter", example="example")
 _HEADER_PARAM_ALIASED = HeaderParam(
     description="Header parameter", example="example", alias="alias"
@@ -57,6 +58,10 @@ def _query_endpoint_handler(query_param: Annotated[str, _QUERY_PARAM]) -> None:
 def _aliased_query_endpoint_handler(
     aliased_query_param: Annotated[str, _QUERY_PARAM_ALIASED],
 ) -> None:
+    raise NotImplementedError
+
+
+def _query_list_endpoint_handler(query_param: Annotated[list[str], _QUERY_PARAM_LIST]) -> None:
     raise NotImplementedError
 
 
@@ -133,19 +138,6 @@ def _error_no_annotation_endpoint_handler(who_knows) -> None:  # type: ignore[no
     raise NotImplementedError
 
 
-def _params(
-    *,
-    path: dict[str, Parameter] | None = None,
-    query: dict[str, _QueryParameter] | None = None,
-    headers: dict[str, Parameter] | None = None,
-) -> Parameters:
-    return Parameters(
-        path=path or {},
-        query=query or {},
-        headers=headers or {},
-    )
-
-
 @pytest.mark.parametrize(
     "func, expected",
     [
@@ -153,7 +145,7 @@ def _params(
         (_body_endpoint_handler, Parameters()),
         (
             _path_endpoint_handler,
-            _params(
+            Parameters(
                 path={
                     "path_param": Parameter(
                         annotation=Annotated[str, _PATH_PARAM],  # type: ignore[arg-type]
@@ -166,7 +158,7 @@ def _params(
         ),
         (
             _query_endpoint_handler,
-            _params(
+            Parameters(
                 query={
                     "query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM],  # type: ignore[arg-type]
@@ -179,7 +171,7 @@ def _params(
         ),
         (
             _aliased_query_endpoint_handler,
-            _params(
+            Parameters(
                 query={
                     "aliased_query_param": _QueryParameter(
                         annotation=Annotated[str, _QUERY_PARAM_ALIASED],  # type: ignore[arg-type]
@@ -192,8 +184,22 @@ def _params(
             ),
         ),
         (
+            _query_list_endpoint_handler,
+            Parameters(
+                query={
+                    "query_param": _QueryParameter(
+                        annotation=Annotated[list[str], _QUERY_PARAM_LIST],  # type: ignore[arg-type]
+                        default=dataclasses.MISSING,
+                        description="Query parameter",
+                        example='["example"]',
+                        is_list=True,
+                    )
+                }
+            ),
+        ),
+        (
             _header_endpoint_handler,
-            _params(
+            Parameters(
                 headers={
                     "header_param": Parameter(
                         annotation=Annotated[str, _HEADER_PARAM],  # type: ignore[arg-type]
@@ -207,7 +213,7 @@ def _params(
         ),
         (
             _aliased_header_endpoint_handler,
-            _params(
+            Parameters(
                 headers={
                     "aliased_header_param": Parameter(
                         annotation=Annotated[str, _HEADER_PARAM_ALIASED],  # type: ignore[arg-type]
@@ -222,7 +228,7 @@ def _params(
         (_return_endpoint_handler, Parameters()),
         (
             _all_endpoint_handler,
-            _params(
+            Parameters(
                 path={
                     "path_param": Parameter(
                         annotation=Annotated[str, _PATH_PARAM],  # type: ignore[arg-type]
@@ -423,12 +429,7 @@ def test_input_model_missing_fields(request_data: RawRequestData) -> None:
 
 
 def test_query_parameter_list() -> None:
-    def _query_list_test(
-        query_param: Annotated[list[str], QueryParam(description="", example="", is_list=True)],
-    ) -> None:
-        raise NotImplementedError
-
-    model = EndpointModel.build(_query_list_test)
+    model = EndpointModel.build(_query_list_endpoint_handler)
     request_data = _request_data(
         query={
             "query_param": ["test1", "test2"],

@@ -2,10 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import datetime as dt
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator
@@ -111,19 +110,35 @@ class IPRegexpModel:
 
 
 IPRangeWithRegexpModel = IPAddressRangeModel | IPNetworkModel | IPAddressesModel | IPRegexpModel
+_CheckmkTime = tuple[int, int]
 
 
 @dataclass(kw_only=True, slots=True)
 class TimeAllowedRangeModel:
-    # TODO: introduce PlainSerializer
-    start: str = api_field(
+    start: dt.time = api_field(
         description="The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped."
-        # TODO: pattern="^\d\d:\d\d(:\d\d)?$"
     )
-    end: str = api_field(
+    end: dt.time = api_field(
         description="The end time of day. Inclusive. Use ISO8601 format. Seconds are stripped."
-        # TODO: pattern="^\d\d:\d\d(:\d\d)?$"
     )
+
+    @staticmethod
+    def _from_checkmk_time(value: _CheckmkTime) -> dt.time:
+        if value[0] == 24 and value[1] == 0:
+            # special case for 24:00
+            return dt.time(23, 59, 59)
+
+        return dt.time(value[0], value[1])
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[_CheckmkTime, _CheckmkTime]) -> Self:
+        return cls(
+            start=cls._from_checkmk_time(value[0]),
+            end=cls._from_checkmk_time(value[1]),
+        )
+
+    def to_checkmk_tuple(self) -> tuple[_CheckmkTime, _CheckmkTime]:
+        return (self.start.hour, self.start.minute), (self.end.hour, self.end.minute)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -237,10 +252,10 @@ class IPMIParametersModel:
 
 @dataclass(kw_only=True, slots=True)
 class NetworkScanResultModel:
-    start: datetime | ApiOmitted = api_field(
+    start: dt.datetime | ApiOmitted = api_field(
         description="When the scan started", default_factory=ApiOmitted
     )
-    end: datetime | ApiOmitted = api_field(
+    end: dt.datetime | ApiOmitted = api_field(
         description="When the scan finished. Will be Null if not yet run.",
         default_factory=ApiOmitted,
     )
@@ -250,11 +265,11 @@ class NetworkScanResultModel:
 
 @dataclass(kw_only=True, slots=True)
 class MetaDataModel:
-    created_at: datetime | None | ApiOmitted = api_field(
+    created_at: dt.datetime | None | ApiOmitted = api_field(
         description="When has this object been created.",
         default_factory=ApiOmitted,
     )
-    updated_at: datetime | None | ApiOmitted = api_field(
+    updated_at: dt.datetime | None | ApiOmitted = api_field(
         description="When this object was last changed.",
         default_factory=ApiOmitted,
     )

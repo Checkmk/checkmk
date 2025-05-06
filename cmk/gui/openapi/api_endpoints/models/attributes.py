@@ -9,7 +9,12 @@ from typing import Annotated, Literal, Self
 from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator
 
-from cmk.gui.fields.attributes import AuthProtocolType, PrivacyProtocolType
+from cmk.gui.fields.attributes import (
+    AuthProtocolConverter,
+    AuthProtocolType,
+    PrivacyProtocolConverter,
+    PrivacyProtocolType,
+)
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 from cmk.gui.openapi.framework.model_validators import GroupValidator, TagValidator, UserValidator
@@ -45,6 +50,16 @@ class SNMPv3NoAuthNoPrivacyModel:
     type: Literal["noAuthNoPriv"] = "noAuthNoPriv"
     security_name: str = api_field(description="Security name")
 
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["noAuthNoPriv"], str]) -> Self:
+        return cls(
+            type=value[0],
+            security_name=value[1],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["noAuthNoPriv"], str]:
+        return self.type, self.security_name
+
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3AuthNoPrivacyModel:
@@ -54,6 +69,23 @@ class SNMPv3AuthNoPrivacyModel:
     auth_password: Annotated[str, MinLen(8)] = api_field(
         description="Authentication pass phrase.",
     )
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["authNoPriv"], str, str, str]) -> Self:
+        return cls(
+            type=value[0],
+            auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
+            security_name=value[2],
+            auth_password=value[3],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["authNoPriv"], str, str, str]:
+        return (
+            self.type,
+            AuthProtocolConverter.to_checkmk(self.auth_protocol),
+            self.security_name,
+            self.auth_password,
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -70,6 +102,27 @@ class SNMPv3AuthPrivacyModel:
     privacy_password: Annotated[str, MinLen(8)] = api_field(
         description="Privacy pass phrase. If filled, privacy_protocol needs to be selected as well.",
     )
+
+    @classmethod
+    def from_checkmk_tuple(cls, value: tuple[Literal["authPriv"], str, str, str, str, str]) -> Self:
+        return cls(
+            type=value[0],
+            auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
+            security_name=value[2],
+            auth_password=value[3],
+            privacy_protocol=PrivacyProtocolConverter.from_checkmk(value[4]),
+            privacy_password=value[5],
+        )
+
+    def to_checkmk_tuple(self) -> tuple[Literal["authPriv"], str, str, str, str, str]:
+        return (
+            self.type,
+            AuthProtocolConverter.to_checkmk(self.auth_protocol),
+            self.security_name,
+            self.auth_password,
+            PrivacyProtocolConverter.to_checkmk(self.privacy_protocol),
+            self.privacy_password,
+        )
 
 
 SNMPCredentialsModel = (

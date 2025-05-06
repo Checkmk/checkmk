@@ -229,7 +229,6 @@ class NetworkScanModel:
 
 @dataclass(kw_only=True, slots=True)
 class IPMIParametersModel:
-    # TODO: cast_to_dict?
     username: str = api_field(description="IPMI username")
     password: str = api_field(description="IPMI password")
 
@@ -265,7 +264,6 @@ class MetaDataModel:
 
 @dataclass(kw_only=True, slots=True)
 class LockedByModel:
-    # TODO: cast_to_dict?
     # TODO: CheckmkTuple?
     site_id: str = api_field(description="Site ID")
     program_id: str = api_field(description="Program ID")

@@ -13,7 +13,7 @@ from pydantic import AfterValidator
 from cmk.gui.fields.attributes import AuthProtocolType, PrivacyProtocolType
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
-from cmk.gui.openapi.framework.model_validators import GroupValidator
+from cmk.gui.openapi.framework.model_validators import GroupValidator, UserValidator
 
 
 @dataclass(kw_only=True, slots=True)
@@ -213,8 +213,7 @@ class NetworkScanModel:
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
         default=100,
     )
-    # TODO: validate _active_users
-    run_as: str | ApiOmitted = api_field(
+    run_as: Annotated[str, AfterValidator(UserValidator.active)] | ApiOmitted = api_field(
         description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
     )
     # TODO: validates_schema tag_criticality functionality on model level

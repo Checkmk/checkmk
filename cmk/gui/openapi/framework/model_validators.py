@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
 
-from cmk.gui import sites
+from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.watolib.groups_io import load_group_information
 
@@ -70,3 +70,12 @@ class GroupValidator:
         else:
             raise ValueError("Unknown group type.")
         return rv
+
+
+class UserValidator:
+    @staticmethod
+    def active(user: str) -> str:
+        users = userdb.load_users(lock=False)
+        if user not in users:
+            raise ValueError(f"User {user!r} does not exist.")
+        return user

@@ -532,11 +532,7 @@ class PermissionValidator:
 
             used_permissions.add(pname)
 
-            permission_not_declared = (
-                required_permissions is not None and pname not in required_permissions
-            )
-
-            if permission_not_declared:
+            if required_permissions is None or pname not in required_permissions:
                 _logger.error(
                     "Permission mismatch: Endpoint %r Use of undeclared permission %s",
                     endpoint_repr,

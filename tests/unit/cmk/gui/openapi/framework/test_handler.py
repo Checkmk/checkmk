@@ -407,7 +407,7 @@ def test_handle_endpoint_request_permissions() -> None:
 def test_handle_endpoint_request_permissions_not_declared() -> None:
     request_endpoint = RequestEndpointFactory.build(
         handler=_handler_permission_check,
-        permissions_required=AllPerm([]),  # TODO: should work with None
+        permissions_required=None,
     )
     # this is only checked in testing mode
     permission_validator = PermissionValidator.create(

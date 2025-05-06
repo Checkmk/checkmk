@@ -2501,7 +2501,7 @@ class AutomationNotificationTest(Automation):
     def execute(self, args: list[str]) -> NotificationTestResult:
         context = json.loads(args[0])
         dispatch = args[1]
-        return NotificationTestResult(notify.notification_test(context, dispatch == "True"))
+        return NotificationTestResult(notify.notification_test(context, dispatch == "on"))
 
 
 automations.register(AutomationNotificationTest())

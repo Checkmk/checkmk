@@ -5,17 +5,17 @@
 
 from __future__ import annotations
 
-import contextlib
 import dataclasses
 import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple, Self
+from typing import Self
 
 import pytest
 import requests
 from pydantic import BaseModel
 
+from tests.testlib.extensions import download_extension, install_extension
 from tests.testlib.site import Site
 
 from cmk.ccc.version import __version__, parse_check_mk_version
@@ -183,11 +183,6 @@ UNTESTABLE = {
     # This one can't be installed anymore. It tries to deploy a part called 'pnp-rraconf'
     "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
 }
-
-
-class _DownloadedExtension(NamedTuple):
-    name: str
-    version: str
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -470,62 +465,14 @@ def test_extension_compatibility(
 ) -> None:
     site.write_binary_file(
         extension_filename := "tmp.mkp",
-        _download_extension(extension_download_url),
+        download_extension(extension_download_url),
     )
-    with _install_extension(site, site.resolve_path(Path(extension_filename))):
+    with install_extension(site, site.resolve_path(Path(extension_filename))):
         encountered_errors = ImportErrors.collect_from_site(site)
         expected_errors = _EXPECTED_IMPORT_ERRORS.get(name, ImportErrors())
 
     assert encountered_errors.base_errors == expected_errors.base_errors
     assert encountered_errors.gui_errors == expected_errors.gui_errors
-
-
-def _download_extension(url: str) -> bytes:
-    try:
-        response = requests.get(url, timeout=REQUESTS_TIMEOUT)
-    except requests.ConnectionError as e:
-        raise pytest.skip(f"Encountered connection issues when attempting to download {url}") from e
-    if not response.ok:
-        raise pytest.skip(
-            f"Got non-200 response when downloading {url}: {response.status_code}. Raw response: {response.text}"
-        )
-    try:
-        # if the response is valid json, something went wrong (we still get HTTP 200 though ...)
-        raise pytest.skip(f"Downloading {url} failed: {response.json()}")
-    except ValueError:
-        return response.content
-    return response.content
-
-
-@contextlib.contextmanager
-def _install_extension(site: Site, path: Path) -> Iterator[_DownloadedExtension]:
-    extension = None
-    try:
-        extension = _add_extension(site, path)
-        _enable_extension(site, extension.name, extension.version)
-        yield extension
-    finally:
-        if extension:
-            _disable_extension(site, extension.name, extension.version)
-            _remove_extension(site, extension.name, extension.version)
-
-
-def _add_extension(site: Site, path: Path) -> _DownloadedExtension:
-    command_output = site.check_output(["mkp", "add", str(path)])
-    name, version = command_output.splitlines()[0].split(maxsplit=1)
-    return _DownloadedExtension(name, version)
-
-
-def _enable_extension(site: Site, name: str, version: str) -> None:
-    site.check_output(["mkp", "enable", name, version])
-
-
-def _disable_extension(site: Site, name: str, version: str) -> None:
-    site.check_output(["mkp", "disable", name, version])
-
-
-def _remove_extension(site: Site, name: str, version: str) -> None:
-    site.check_output(["mkp", "remove", name, version])
 
 
 def test_package_list_up_to_date() -> None:

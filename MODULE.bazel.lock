@@ -233,8 +233,8 @@
     "https://bcr.bazel.build/modules/stardoc/0.7.0/MODULE.bazel": "05e3d6d30c099b6770e97da986c53bd31844d7f13d41412480ea265ac9e8079c",
     "https://bcr.bazel.build/modules/stardoc/0.7.2/MODULE.bazel": "fc152419aa2ea0f51c29583fab1e8c99ddefd5b3778421845606ee628629e0e5",
     "https://bcr.bazel.build/modules/stardoc/0.7.2/source.json": "58b029e5e901d6802967754adf0a9056747e8176f017cfe3607c0851f4d42216",
-    "https://bcr.bazel.build/modules/toolchains_llvm/1.3.0/MODULE.bazel": "6e02731e51f7eb2ec4b01c5e79e722bf738a631f6e03d9b4917cbf2cb027bee1",
-    "https://bcr.bazel.build/modules/toolchains_llvm/1.3.0/source.json": "4ce0373a89c6df34dd37cd67285bb871d8e225d30dcb67dd093e077a04bbbb71",
+    "https://bcr.bazel.build/modules/toolchains_llvm/1.4.0/MODULE.bazel": "05239402b7374293359c2f22806f420b75aa5d6f4b15a2eaa809a2c214d58b31",
+    "https://bcr.bazel.build/modules/toolchains_llvm/1.4.0/source.json": "229a516d282b17a82be54c6e3ae220a1b750fb55a8495567e5c7a9d09423f3e2",
     "https://bcr.bazel.build/modules/toolchains_protoc/0.2.1/MODULE.bazel": "2f08433ff5e659069b3a1abfee2377d68f510f2de1da50678ed992c455b4ff91",
     "https://bcr.bazel.build/modules/toolchains_protoc/0.3.1/MODULE.bazel": "b6574a2a314cbd40cafb5ed87b03d1996e015315f80a7e33116c8b2e209cb5cf",
     "https://bcr.bazel.build/modules/toolchains_protoc/0.3.7/MODULE.bazel": "d2758e5af5838970175274c4fcb67edc8d2f4f8f348885da90c42fafc221236d",
@@ -13950,7 +13950,7 @@
           "@@aspect_rules_py~//Cargo.lock": "a7b4f36f8f57a4b49abc5c5d368101966e975d195c4efecef86da65f56a94958",
           "@@aspect_rules_py~//py/tools/py/Cargo.toml": "0a02fc06c3f8cc48bb5bb31f6476341e4759107aa7584c68fbadb22da33d2984",
           "@@aspect_rules_py~//Cargo.toml": "e2dca3c293e2bfe1a61913a917d750b96d9e8e73b0ebd17b309cacf7588b4deb",
-          "@@//MODULE.bazel": "988dafa65fcf4010cbfd79c36c2b77ba6c3ff9a83a19f0eba2369bd29cbb1d13",
+          "@@//MODULE.bazel": "184c3ee5fcdbf18da159d898b6e7d8575e1fc7029858742b1a1a9725b616c1e5",
           "@@rules_rust~~rust_host_tools~rust_host_tools//rust_host_tools": "ENOENT"
         },
         "recordedDirentsInputs": {},
@@ -19911,8 +19911,8 @@
     },
     "@@toolchains_llvm~//toolchain/extensions:llvm.bzl%llvm": {
       "general": {
-        "bzlTransitiveDigest": "DbHjmsbc+5UNcxe3NTxwxbUMxZqW/A99vu2JcopPuJk=",
-        "usagesDigest": "1euBN+1cmIZ4F4kIzVwqAID6oMq+9rYHlafy4B68iaA=",
+        "bzlTransitiveDigest": "afRF0aFOIUrkYl3o040WQ606ep1qciEXzjnAxT3Kek8=",
+        "usagesDigest": "DMzQ65iH+FRYZWLEU17qkjrkAvYnHUgd2trJeVFP+wc=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -19931,18 +19931,9 @@
               "llvm_version": "19.1.7",
               "llvm_versions": {},
               "netrc": "",
-              "sha256": {
-                "linux-x86_64": "4a5ec53951a584ed36f80240f6fbf8fdd46b4cf6c7ee87cc2d5018dc37caf679"
-              },
-              "strip_prefix": {
-                "linux-x86_64": "LLVM-19.1.7-Linux-X64"
-              },
-              "urls": {
-                "linux-x86_64": [
-                  "https://artifacts.lan.tribe29.com/repository/upstream-archives/LLVM-19.1.7-Linux-X64.tar.xz",
-                  "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz"
-                ]
-              }
+              "sha256": {},
+              "strip_prefix": {},
+              "urls": {}
             }
           },
           "llvm_toolchain": {

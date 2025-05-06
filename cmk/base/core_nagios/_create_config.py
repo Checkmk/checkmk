@@ -509,96 +509,6 @@ def _process_services_data(
     return services_ids, service_labels
 
 
-def _create_custom_check(
-    entry: dict[str, Any],
-    cfg: NagiosConfig,
-    config_cache: ConfigCache,
-    service_name_config: PassiveServiceNameConfig,
-    hostname: HostName,
-    license_counter: Counter,
-    services_ids: dict[ServiceName, AbstractServiceID],
-) -> None:
-    # entries are dicts with the following keys:
-    # "service_description"        Service name to use
-    # "command_line"  (optional)   Unix command line for executing the check
-    #                              If this is missing, we create a passive check
-    # "command_name"  (optional)   Name of Monitoring command to define. If missing,
-    #                              we use "check-mk-custom"
-    description = service_name_config.final_service_name_config.finalize(
-        entry["service_description"], hostname, config_cache.label_manager.labels_of_host
-    )
-    command_name = entry.get("command_name", "check-mk-custom")
-    command_line = entry.get("command_line", "")
-
-    if not description:
-        config_warnings.warn(
-            "Skipping invalid service with empty description on host %s" % hostname
-        )
-        return
-
-    if command_line:
-        command_line = (
-            core_config.autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
-        )
-
-    if "freshness" in entry:
-        freshness = {
-            "check_freshness": 1,
-            "freshness_threshold": 60 * entry["freshness"]["interval"],
-        }
-        command_line = "echo %s && exit %d" % (
-            _quote_nagios_string(entry["freshness"]["output"]),
-            entry["freshness"]["state"],
-        )
-    else:
-        freshness = {}
-
-    cfg.custom_commands_to_define.add(command_name)
-
-    if description in services_ids:
-        cn, _ = services_ids[description]
-        # If we have the same active check again with the same description,
-        # then we do not regard this as an error, but simply ignore the
-        # second one.
-        if cn == "custom(%s)" % command_name:
-            return
-
-        core_config.duplicate_service_warning(
-            checktype="custom",
-            description=description,
-            host_name=hostname,
-            first_occurrence=services_ids[description],
-            second_occurrence=("custom(%s)" % command_name, description),
-        )
-        return
-
-    services_ids[description] = ("custom(%s)" % command_name, description)
-
-    command = f"{command_name}!{command_line}"
-
-    labels = _get_service_labels(config_cache, hostname, description)
-
-    service_spec = (
-        {
-            "use": "check_mk_perf,check_mk_default",
-            "host_name": hostname,
-            "service_description": description,
-            "check_command": _simulate_command(cfg, command),
-            "active_checks_enabled": str(1 if (command_line and not freshness) else 0),
-        }
-        | freshness
-        | _to_nagios_core_attributes(
-            get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
-        )
-        | _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
-    )
-    cfg.write(format_nagios_object("service", service_spec))
-    license_counter["services"] += 1
-
-    # write service dependencies for custom checks
-    cfg.write(_get_dependencies(config_cache, hostname, description))
-
-
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
@@ -806,6 +716,96 @@ def create_nagios_servicedefs(
             )
 
     return service_labels
+
+
+def _create_custom_check(
+    entry: dict[str, Any],
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
+    hostname: HostName,
+    license_counter: Counter,
+    services_ids: dict[ServiceName, AbstractServiceID],
+) -> None:
+    # entries are dicts with the following keys:
+    # "service_description"        Service name to use
+    # "command_line"  (optional)   Unix command line for executing the check
+    #                              If this is missing, we create a passive check
+    # "command_name"  (optional)   Name of Monitoring command to define. If missing,
+    #                              we use "check-mk-custom"
+    description = service_name_config.final_service_name_config.finalize(
+        entry["service_description"], hostname, config_cache.label_manager.labels_of_host
+    )
+    command_name = entry.get("command_name", "check-mk-custom")
+    command_line = entry.get("command_line", "")
+
+    if not description:
+        config_warnings.warn(
+            "Skipping invalid service with empty description on host %s" % hostname
+        )
+        return
+
+    if command_line:
+        command_line = (
+            core_config.autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
+        )
+
+    if "freshness" in entry:
+        freshness = {
+            "check_freshness": 1,
+            "freshness_threshold": 60 * entry["freshness"]["interval"],
+        }
+        command_line = "echo %s && exit %d" % (
+            _quote_nagios_string(entry["freshness"]["output"]),
+            entry["freshness"]["state"],
+        )
+    else:
+        freshness = {}
+
+    cfg.custom_commands_to_define.add(command_name)
+
+    if description in services_ids:
+        cn, _ = services_ids[description]
+        # If we have the same active check again with the same description,
+        # then we do not regard this as an error, but simply ignore the
+        # second one.
+        if cn == "custom(%s)" % command_name:
+            return
+
+        core_config.duplicate_service_warning(
+            checktype="custom",
+            description=description,
+            host_name=hostname,
+            first_occurrence=services_ids[description],
+            second_occurrence=("custom(%s)" % command_name, description),
+        )
+        return
+
+    services_ids[description] = ("custom(%s)" % command_name, description)
+
+    command = f"{command_name}!{command_line}"
+
+    labels = _get_service_labels(config_cache, hostname, description)
+
+    service_spec = (
+        {
+            "use": "check_mk_perf,check_mk_default",
+            "host_name": hostname,
+            "service_description": description,
+            "check_command": _simulate_command(cfg, command),
+            "active_checks_enabled": str(1 if (command_line and not freshness) else 0),
+        }
+        | freshness
+        | _to_nagios_core_attributes(
+            get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
+        )
+        | _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
+    )
+    cfg.write(format_nagios_object("service", service_spec))
+    license_counter["services"] += 1
+
+    # write service dependencies for custom checks
+    cfg.write(_get_dependencies(config_cache, hostname, description))
 
 
 def _get_service_labels(

@@ -282,6 +282,12 @@ pip.parse(
 )
 use_repo(pip, "cmk_requirements")
 
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2021",
+    versions = ["1.79.0"],
+)
+
 types = use_extension("@rules_mypy//mypy:types.bzl", "types")
 types.requirements(
     name = "cmk_types",

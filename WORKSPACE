@@ -2,10 +2,6 @@ workspace(name = "omd_packages")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "RUFF_VERSION")
-load("//bazel/rules:rust_workspace.bzl", "rust_workspace")
-
-rust_workspace()
-
 load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
 redis_workspace()

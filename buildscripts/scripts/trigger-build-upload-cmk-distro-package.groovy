@@ -24,6 +24,7 @@ def main() {
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
     def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
+    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -37,9 +38,9 @@ def main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
-    def custom_git_ref = "";
     def incremented_counter = "";
     def setup_values = single_tests.common_prepare(version: "daily");
+    def build_instance = null;
 
     currentBuild.description += (
         """
@@ -62,59 +63,67 @@ def main() {
         |edition:.................. │${edition}│
         |distro:................... │${distro}│
         |checkout_dir:............. │${checkout_dir}│
+        |branch_base_folder:....... │${branch_base_folder}│
         |===================================================
         """.stripMargin());
 
     stage("Prepare workspace") {
-        inside_container(
-            args: [
-                "--env HOME=/home/jenkins",
-            ],
-            set_docker_group_id: true,
-            ulimit_nofile: 1024,
-            mount_credentials: true,
-            priviliged: true,
-        ) {
-            single_tests.prepare_workspace(
-                cleanup: [
-                    "${checkout_dir}/${download_dir}"
-                ],
-                make_venv: true
-            );
-            dir("${checkout_dir}") {
-                custom_git_ref = effective_git_ref;
-                incremented_counter = cmd_output("git rev-list HEAD --count");
-            }
+        sh("rm -rf ${checkout_dir}/${download_dir}");
+
+        dir("${checkout_dir}") {
+            incremented_counter = cmd_output("git rev-list HEAD --count");
+        }
+        if (build_node == "fips") {
+            // Do not start builds on FIPS node
+            println("Detected build node 'fips', switching this to 'fra'.");
+            build_node = "fra"
         }
     }
 
-    stage("Trigger package build") {
-        inside_container(
-            args: [
-                "--env HOME=/home/jenkins",
-            ],
-            set_docker_group_id: true,
-            ulimit_nofile: 1024,
-            mount_credentials: true,
-            priviliged: true,
-        ) {
-            dir("${checkout_dir}") {
-                stage("Fetch Checkmk package") {
-                    single_tests.fetch_package(
-                        edition: edition,
-                        distro: distro,
-                        download_dir: download_dir,
-                        bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                        fake_windows_artifacts: fake_windows_artifacts,
-                    );
-                }
-            }
+    smart_stage(
+        name: "Trigger package build",
+        raiseOnError: true,
+    ) {
+        inside_container_minimal(safe_branch_name: safe_branch_name) {
+            build_instance = smart_build(
+                // see global-defaults.yml, needs to run in minimal container
+                use_upstream_build: true,
+                relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                build_params: [
+                    CUSTOM_GIT_REF: effective_git_ref,
+                    DISTRO: distro,
+                    EDITION: edition,
+                    // DISABLE_CACHE: params.DISABLE_CACHE,
+                    FAKE_WINDOWS_ARTIFACTS: fake_windows_artifacts,
+                ],
+                build_params_no_check: [
+                    CIPARAM_OVERRIDE_BUILD_NODE: build_node,
+                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
+                ],
+                no_remove_others: true, // do not delete other files in the dest dir
+                download: false,    // use copyArtifacts to avoid nested directories
+            );
         }
+    }
+
+    smart_stage(
+        name: "Copy artifacts",
+        condition: build_instance,
+        raiseOnError: true,
+    ) {
+        copyArtifacts(
+            projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
+            selector: specific(build_instance.getId()),
+            target: "${checkout_dir}/${download_dir}/",
+            fingerprintArtifacts: true,
+        )
     }
 
     stage("Upload artifacts") {
         def package_name = versioning.get_package_name("${checkout_dir}/${download_dir}", distro_package_type(distro), edition, cmk_version);
-        def upload_path = "${INTERNAL_DEPLOY_DEST}/testbuild/${cmk_version_rc_aware}/${edition}/${incremented_counter}-${custom_git_ref}/";
+        def upload_path = "${INTERNAL_DEPLOY_DEST}/testbuild/${cmk_version_rc_aware}/${edition}/${incremented_counter}-${effective_git_ref}/";
 
         println("package name is: ${package_name}");
         println("upload_path: ${upload_path}");

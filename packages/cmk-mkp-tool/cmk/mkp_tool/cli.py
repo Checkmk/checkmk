@@ -627,7 +627,11 @@ def _command_template(
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
 ) -> int:
-    """Create a template of a package manifest"""
+    """Create a template of a package manifest
+
+    You can pipe the output of this command into a file, and edit it.
+    When you're happy with the manifest, you can use the `mkp package <path-to-file>` command to create the package.
+    """
     if path_config is None:
         path_config = read_path_config()
 
@@ -642,13 +646,7 @@ def _command_template(
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
-    temp_file = path_config.manifests_dir / f"{args.name}.manifest.temp"
-    temp_file.write_text(package.file_content())
-    sys.stdout.write(
-        f"Created '{temp_file}'.\n"
-        "You may now edit it.\n"
-        f"Create the package using `mkp package {temp_file}`.\n"
-    )
+    sys.stdout.write(f"{package.file_content()}\n")
     return 0
 
 

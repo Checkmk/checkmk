@@ -2669,7 +2669,6 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                         mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
                         notifications_dir=paths.local_notifications_dir,
                         pnp_templates_dir=paths.local_pnp_templates_dir,
-                        manifests_dir=paths.tmp_dir,
                         web_dir=paths.local_web_dir,
                     ),
                     mkp_tool.PackageStore(

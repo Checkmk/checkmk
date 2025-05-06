@@ -35,7 +35,6 @@ def fixture_path_config(tmp_path: Path) -> Iterable[PathConfig]:
         mkp_rule_pack_dir=tmp_path / "mkp_rule_pack_dir",
         notifications_dir=local_root / "notifications_dir",
         pnp_templates_dir=local_root / "pnp_templates_dir",
-        manifests_dir=tmp_path / "tmp_dir",
         web_dir=local_root / "web_dir",
     )
 

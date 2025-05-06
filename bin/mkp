@@ -52,7 +52,6 @@ def _make_path_config() -> PathConfig:
         mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
         notifications_dir=cmk.utils.paths.local_notifications_dir,
         pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-        manifests_dir=cmk.utils.paths.tmp_dir,
         web_dir=cmk.utils.paths.local_web_dir,
     )
 

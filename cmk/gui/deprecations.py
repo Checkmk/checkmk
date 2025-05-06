@@ -115,7 +115,6 @@ def _make_path_config() -> PathConfig | None:
         mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
         notifications_dir=paths.local_notifications_dir,
         pnp_templates_dir=paths.local_pnp_templates_dir,
-        manifests_dir=paths.tmp_dir,
         web_dir=paths.local_web_dir,
     )
 

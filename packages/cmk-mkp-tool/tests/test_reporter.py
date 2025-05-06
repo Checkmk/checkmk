@@ -83,7 +83,6 @@ _PATH_CONFIG = PathConfig(
     web_dir=Path("/omd/sites/mySite/NEVERMIND"),
     installed_packages_dir=Path("/omd/sites/mySite/NEVERMIND"),
     local_root=Path("/omd/sites/mySite/NEVERMIND"),
-    manifests_dir=Path("/omd/sites/mySite/NEVERMIND"),
 )
 
 

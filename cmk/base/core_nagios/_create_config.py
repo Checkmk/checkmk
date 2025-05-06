@@ -45,6 +45,7 @@ from cmk.base.core_config import (
     CoreCommand,
     CoreCommandName,
     get_labels_from_attributes,
+    get_service_attributes,
     get_tags_with_groups_from_attributes,
 )
 
@@ -424,30 +425,24 @@ def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServ
     return f"{service_data.command_name}!{escaped_args}"
 
 
-def create_nagios_servicedefs(
+_ServiceLabels = dict[ServiceName, Labels]
+
+
+def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
-    host_attrs: ObjectAttributes,
-    stored_passwords: Mapping[str, str],
     license_counter: Counter,
-    ip_address_of: config.IPLookup,
-) -> dict[ServiceName, Labels]:
-    check_mk_labels = _get_service_labels(config_cache, hostname, "Check_MK")
-    check_mk_attrs = _to_nagios_core_attributes(
-        core_config.get_service_attributes(
-            config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None
-        )
-    )
+    check_mk_attrs: dict[str, Any],
+) -> tuple[dict[ServiceName, AbstractServiceID], _ServiceLabels]:
     host_check_table = config_cache.check_table(
         hostname,
         plugins,
         config_cache.make_service_configurer(plugins, service_name_config),
         service_name_config,
     )
-    have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
@@ -511,7 +506,29 @@ def create_nagios_servicedefs(
         license_counter["services"] += 1
 
         cfg.checknames_to_define.add(service.check_plugin_name)
-        have_at_least_one_service = True
+    return used_descriptions, service_labels
+
+
+def create_nagios_servicedefs(
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    service_name_config: PassiveServiceNameConfig,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+    hostname: HostName,
+    host_attrs: ObjectAttributes,
+    stored_passwords: Mapping[str, str],
+    license_counter: Counter,
+    ip_address_of: config.IPLookup,
+) -> dict[ServiceName, Labels]:
+    check_mk_labels = _get_service_labels(config_cache, hostname, "Check_MK")
+    check_mk_attrs = _to_nagios_core_attributes(
+        get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None)
+    )
+
+    used_descriptions, service_labels = _process_services_data(
+        cfg, config_cache, service_name_config, plugins, hostname, license_counter, check_mk_attrs
+    )
+    have_at_least_one_service = len(used_descriptions) != 0
 
     # Active check for Check_MK
     if config_cache.checkmk_check_parameters(hostname).enabled:

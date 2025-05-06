@@ -1925,6 +1925,8 @@ class SiteFactory:
         logfile_path: str = "/tmp/sep.out",
         timeout: int = 60,
         abort: bool = False,
+        disable_extensions: bool = False,
+        n_extensions: int = 0,
     ) -> Site:
         """Update the test-site with the given target-package, if supported.
 
@@ -1990,6 +1992,18 @@ class SiteFactory:
 
         if abort:
             pexpect_dialogs.extend([PExpectDialog(expect="Abort the update process?", send="A\r")])
+
+        if disable_extensions:
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        expect="disable the extension package",
+                        send="d\r",
+                        count=n_extensions,
+                        optional=True,
+                    )
+                ]
+            )
 
         rc = spawn_expect_process(
             [

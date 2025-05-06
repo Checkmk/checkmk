@@ -18,6 +18,7 @@ $testIntegration = $false
 $testRegression = $false
 $testPlugins = $false
 $testBuild = $false
+$testBuildCtl = $false
 $testAll = $false
 $repo_root = (get-item $pwd).parent.parent.FullName
 $cur_dir = $pwd
@@ -76,6 +77,10 @@ if ($testExt -or $testIntegration -or $testComponent) {
     $testBuild = $true
 }
 
+if ($testIntegration) {
+    $testBuildCtl = $true
+}
+
 if ($testAll) {
     $testComponent = $true
     $testExt = $true
@@ -84,6 +89,7 @@ if ($testAll) {
     $testRegression = $true
     $testPlugins = $true
     $testBuild = $true
+    $testBuildCtl = $true
     $testAll = $true
 }
 
@@ -198,8 +204,8 @@ function Create_RegressionTestDir([String]$dir_prefix) {
     $root_dir = "$regression_dir\test\root"
     $plugins_dir = "$regression_dir\test\root\plugins"
     $data_dir = "$regression_dir\test\data"
-    New-Item -ItemType Directory -Path $plugins_dir -ErrorAction Stop > nul
-    New-Item -ItemType Directory -Path $data_dir -ErrorAction Stop > nul
+    New-Item -ItemType Directory -Path "$plugins_dir" -ErrorAction Stop > nul
+    New-Item -ItemType Directory -Path "$data_dir" -ErrorAction Stop > nul
     Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe $root_dir\check_mk_agent.exe -ErrorAction Stop > nul
     Copy-Item .\install\resources\check_mk.yml $root_dir\check_mk.yml  -ErrorAction Stop > nul
     &  xcopy "..\windows\plugins\*.*" "$plugins_dir" "/D" "/Y" > nul
@@ -261,23 +267,26 @@ function Create_IntegrationTestDir([String]$dir_prefix) {
     }
     Write-Host "Using temporary directory $integration_dir..." -Foreground White
     $root_dir = "$integration_dir\test\root"
-    $plugins_dir = "$integration_dir/test/root/plugins"
+    $plugins_dir = "$integration_dir\test\root\plugins"
     $data_dir = "$integration_dir\test\data"
 
     Write-Host "Prepare dirs..." -Foreground White
-    New-Item -ItemType Directory -Path $root_dir -ErrorAction Stop > nul
+    New-Item -ItemType Directory -Path "$root_dir" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$data_dir\plugins" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$data_dir\bin" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$data_dir\modules" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$data_dir\modules\python-3" -ErrorAction Stop > nul
+    New-Item -ItemType Directory -Path "$data_dir\install\modules" -ErrorAction Stop > nul  # need for cab to understand that python is installed
     New-Item -ItemType Directory -Path "$root_dir\plugins" -ErrorAction Stop > nul
     Write-Host "Copy exe..." -Foreground White
     Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe  $root_dir\check_mk_agent.exe > nul
+    Copy-Item $repo_root\packages\host\target\i686-pc-windows-msvc\release\cmk-agent-ctl.exe   $data_dir\bin\cmk-agent-ctl.exe > nul
 
     Write-Host "Copy cab..." -Foreground White
-    Copy-Item $results_dir\python-3.cab  $data_dir\modules\python-3\python-3.cab
+    Copy-Item "$results_dir\python-3.cab"  "$root_dir" -Force -ErrorAction Stop > nul        		# unpack
+    Copy-Item "$results_dir\python-3.cab"  "$data_dir\install\modules" -Force -ErrorAction Stop > nul   # check
     Write-Host "Copy yml..." -Foreground White
-    Copy-Item ".\install\resources\check_mk.yml" "$root_dir\check_mk.yml" > nul
+    Copy-Item ".\install\resources\check_mk.yml" "$root_dir\check_mk.yml" -Force -ErrorAction Stop > nul
     Write-Host "Copy plugins..." -Foreground White
     &  xcopy "..\windows\plugins\*.*" "$plugins_dir\" "/D" "/Y" > nul
     return $integration_dir, "$root_dir\check_mk_agent.exe", "$data_dir\bin\cmk-agent-ctl.exe"
@@ -303,11 +312,11 @@ function Invoke-IntegrationTest() {
         $integration_dir, $agent_exe, $ctl_exe = Create_IntegrationTestDir -prefix "$prefix"
         Write-Host "Prepare firewall..." -Foreground White
         Create_FirewallRule $firewall_rule_name_agent $agent_exe
-        Create_FirewallRule $firewall_rule_name_ctl $agent_exe
+        Create_FirewallRule $firewall_rule_name_ctl $ctl_exe
 
         $env:WNX_REGRESSION_BASE_DIR = ""
         $env:WNX_INTEGRATION_BASE_DIR = "$integration_dir"
-        Write-Host "RUN INTEGRATION!" -Foreground White
+        Write-Host "RUN INTEGRATION in $env:WNX_INTEGRATION_BASE_DIR" -Foreground White
         py -3 -m pytest tests\integration\
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Integration test :$_" -ErrorAction Stop
@@ -326,7 +335,7 @@ function Invoke-IntegrationTest() {
         Remove-NetFirewallRule -DisplayName $firewall_rule_name_ctl  -ErrorAction Continue
         if ($integration_dir -like "*temp*$prefix*") {
             Write-Host "Removing temporary directory $integration_dir..." -Foreground White
-            #Remove-Item $wnx_test_dir -Force -Recurse -ErrorAction SilentlyContinue
+            Remove-Item $integration_dir -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
 
@@ -380,6 +389,19 @@ try {
         & pwsh ./run.ps1 --build
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Unable to rebuild" -ErrorAction Stop
+        }
+    }
+
+    if ($testBuildCtl) {
+        cd $repo_root/packages/host/cmk-agent-ctl
+        try {
+            & pwsh ./run.ps1 --build
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "[-] Unable to rebuild" -ErrorAction Stop
+            }
+        }
+        finally {
+            cd $cur_dir
         }
     }
 

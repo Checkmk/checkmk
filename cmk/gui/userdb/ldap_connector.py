@@ -33,7 +33,8 @@ import copy
 import shutil
 import time
 import traceback
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections import Counter
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import Logger
@@ -354,21 +355,44 @@ def _create_new_user_spec(
     return None
 
 
-def _find_changed_user_keys(keys: set[str], user: Mapping, new_user: Mapping) -> dict:
-    changed = {}
-    for key in keys:
-        # Skip user notification rules, not relevant here
-        if key == "notification_rules":
-            continue
-        value = user[key]
-        new_value = new_user[key]
+def _identify_user_modifications(
+    checkmk_user_id: UserId,
+    existing_user: UserSpec,
+    modified_user: UserSpec,
+    sync_user_result: SyncUsersResult,
+) -> list[str]:
+    modified_user_keys = set(modified_user.keys())
+    existing_user_keys = set(existing_user.keys())
+    common_keys = modified_user_keys.intersection(existing_user_keys)
+
+    modifications: list[str] = []
+    pw_changed, edited = False, False
+    for key in {k for k in common_keys if k != "notification_rules"}:
+        value = existing_user.get(key)
+        new_value = modified_user.get(key)
         if isinstance(value, list) and isinstance(new_value, list):
-            is_changed = sorted(value) != sorted(new_value)
+            is_changed = Counter(value) != Counter(new_value)
         else:
             is_changed = value != new_value
+
         if is_changed:
-            changed[key] = (value, new_value)
-    return changed
+            if key in {"ldap_pw_last_changed", "serial"}:
+                pw_changed = True
+            else:
+                modifications.append(_("Changed %s from %s to %s") % (key, value, new_value))
+                edited = True
+
+    if pw_changed:
+        sync_user_result.has_changed_passwords = True
+        if not edited and has_wato_slave_sites():
+            sync_user_result.profiles_to_synchronize[checkmk_user_id] = modified_user
+
+    if added := modified_user_keys - common_keys:
+        modifications.append(_("Added: %s") % ", ".join(added))
+    if removed := existing_user_keys - common_keys:
+        modifications.append(_("Removed: %s") % ", ".join(removed))
+
+    return modifications
 
 
 def _sync_existing_user(
@@ -388,25 +412,16 @@ def _sync_existing_user(
     if checkmk_user_copy == users[checkmk_user_id]:
         return
 
-    set_new, set_old = set(checkmk_user_copy.keys()), set(users[checkmk_user_id].keys())
-    intersect = set_new.intersection(set_old)
-    added = set_new - intersect
-    removed = set_old - intersect
-
-    user_keys_changed = _find_changed_user_keys(
-        intersect,
-        users[checkmk_user_id],
-        checkmk_user_copy,
-    )
-
-    users[checkmk_user_id] = checkmk_user_copy
-
-    details = []
-    if added:
-        details.append(_("Added: %s") % ", ".join(added))
-    if removed:
-        details.append(_("Removed: %s") % ", ".join(removed))
-    if added or removed or user_keys_changed:
+    if modifications := _identify_user_modifications(
+        checkmk_user_id=checkmk_user_id,
+        existing_user=users[checkmk_user_id],
+        modified_user=checkmk_user_copy,
+        sync_user_result=sync_user_result,
+    ):
+        sync_user_result.changes.append(
+            _("LDAP [%s]: Modified user %s (%s)")
+            % (ldap_user_connector.id, checkmk_user_id, ", ".join(modifications))
+        )
         log_security_event(
             UserManagementEvent(
                 event="user modified",
@@ -416,29 +431,8 @@ def _sync_existing_user(
                 connection_id=ldap_user_connector.id,
             )
         )
-    # Password changes found in LDAP should not be logged as "pending change".
-    # These changes take effect imediately (pw already changed in AD, auth serial
-    # is increaed by sync plugin) on the local site, so no one needs to active this.
-    pw_changed = False
-    if "ldap_pw_last_changed" in user_keys_changed:
-        del user_keys_changed["ldap_pw_last_changed"]
-        sync_user_result.has_changed_passwords = True
-    if "serial" in user_keys_changed:
-        del user_keys_changed["serial"]
-        sync_user_result.has_changed_passwords = True
 
-    if pw_changed and not user_keys_changed and has_wato_slave_sites():
-        sync_user_result.profiles_to_synchronize[checkmk_user_id] = checkmk_user_copy
-
-    if user_keys_changed:
-        for key, (old_value, new_value) in sorted(user_keys_changed.items()):
-            details.append(_("Changed %s from %s to %s") % (key, old_value, new_value))
-
-    if details:
-        sync_user_result.changes.append(
-            _("LDAP [%s]: Modified user %s (%s)")
-            % (ldap_user_connector.id, checkmk_user_id, ", ".join(details))
-        )
+        users[checkmk_user_id] = checkmk_user_copy
 
 
 def _sync_new_user(

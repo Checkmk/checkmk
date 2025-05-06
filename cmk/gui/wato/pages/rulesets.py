@@ -3594,21 +3594,26 @@ class ModeUnknownRulesets(WatoMode):
     def _delete_cp_rule(self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule) -> None:
         if is_locked_by_quick_setup(rule.locked_by):
             raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
-
         ruleset.delete_rule(rule)
-        rulesets.save_folder(rule.folder, pprint_value=active_config.wato_pprint_config)
 
     def _bulk_delete_selected_rules(
         self, selected_cp_rule_ids: Sequence[str], selected_rule_ids: Sequence[str]
     ) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
         do_reset = False
+
+        by_folder: dict[Folder, list[tuple[Ruleset, Rule]]] = {}
         for ruleset in rulesets.get_rulesets().values():
             for rules in ruleset.rules.values():
                 for rule in rules:
                     if rule.id in selected_cp_rule_ids:
-                        self._delete_cp_rule(rulesets, ruleset, rule)
+                        by_folder.setdefault(rule.folder, []).append((ruleset, rule))
                         do_reset = True
+
+        for folder, rulesets_and_rules in by_folder.items():
+            for ruleset, rule in rulesets_and_rules:
+                self._delete_cp_rule(rulesets, ruleset, rule)
+            rulesets.save_folder(folder, pprint_value=active_config.wato_pprint_config)
 
         do_save = False
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
@@ -3636,6 +3641,7 @@ class ModeUnknownRulesets(WatoMode):
             for rule in rules:
                 if rule.id == selected_rule_id:
                     self._delete_cp_rule(rulesets, ruleset, rule)
+                    rulesets.save_folder(rule.folder, pprint_value=active_config.wato_pprint_config)
                     deprecations.reset_scheduling()
                     return redirect(self.mode_url())
 

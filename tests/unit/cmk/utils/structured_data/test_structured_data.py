@@ -939,7 +939,7 @@ def test_load_from(tree_name: HostName) -> None:
     _get_inventory_store().load_inventory_tree(host_name=tree_name)
 
 
-def test_save_tree(tmp_path: Path) -> None:
+def test_save_inventory_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
     tree = MutableTree()
     tree.add(
@@ -953,6 +953,33 @@ def test_save_tree(tmp_path: Path) -> None:
     )
 
     with gzip.open(str(tmp_path / "var/check_mk/inventory/heute.gz"), "rb") as f:
+        content = f.read()
+
+    # Similiar to InventoryUpdater:
+    meta_and_raw_tree = parse_from_unzipped(ast.literal_eval(content.decode("utf-8")))
+    assert meta_and_raw_tree["meta"]["version"] == "1"
+    assert meta_and_raw_tree["meta"]["do_archive"]
+
+    expected_raw_tree = serialize_tree(tree)
+    assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
+    assert meta_and_raw_tree["raw_tree"]["Table"] == expected_raw_tree["Table"]
+    assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
+
+
+def test_save_status_data_tree(tmp_path: Path) -> None:
+    host_name = HostName("heute")
+    tree = MutableTree()
+    tree.add(
+        path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
+    )
+    inv_store = InventoryStore(tmp_path)
+    inv_store.save_status_data_tree(
+        host_name=host_name,
+        tree=tree,
+        meta=make_meta(do_archive=True),
+    )
+
+    with gzip.open(str(tmp_path / "tmp/check_mk/status_data/heute.gz"), "rb") as f:
         content = f.read()
 
     # Similiar to InventoryUpdater:

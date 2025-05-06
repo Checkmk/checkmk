@@ -1655,7 +1655,7 @@ class InventoryPaths:
         self.auto_dir = omd_root / "var/check_mk/autoinventory"
 
     @property
-    def marker_file(self) -> Path:
+    def inventory_marker_file(self) -> Path:
         return self.inventory_dir / ".last"
 
     def inventory_tree(self, host_name: HostName) -> Path:
@@ -1663,6 +1663,10 @@ class InventoryPaths:
 
     def inventory_tree_gz(self, host_name: HostName) -> Path:
         return self.inventory_tree(host_name).with_suffix(".gz")
+
+    @property
+    def status_data_marker_file(self) -> Path:
+        return self.status_data_dir / ".last"
 
     def status_data_tree(self, host_name: HostName) -> Path:
         return self.status_data_dir / str(host_name)
@@ -1834,7 +1838,7 @@ class InventoryStore:
             pretty,
         )
         # Inform Livestatus about the latest inventory update
-        self.inv_paths.marker_file.touch()
+        self.inv_paths.inventory_marker_file.touch()
 
     def remove_inventory_tree(self, *, host_name: HostName) -> None:
         self.inv_paths.inventory_tree(host_name).unlink(missing_ok=True)
@@ -1854,7 +1858,7 @@ class InventoryStore:
             pretty,
         )
         # Inform Livestatus about the latest inventory update
-        self.inv_paths.marker_file.touch()
+        self.inv_paths.status_data_marker_file.touch()
 
     def remove_status_data_tree(self, *, host_name: HostName) -> None:
         self.inv_paths.status_data_tree(host_name).unlink(missing_ok=True)

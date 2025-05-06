@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
     from omdlib.version_info import VersionInfo
 
+from omdlib.site_paths import SitePaths
+
 from cmk.ccc.exceptions import MKTerminate
 
 from cmk.utils import tty
@@ -75,13 +77,14 @@ def useradd(
     uid: str | None = None,
     gid: str | None = None,
 ) -> None:
+    site_home = SitePaths.from_site_name(site.name).home
     # Create user for running site 'name'
     _groupadd(site.name, gid)
     useradd_options = version_info.USERADD_OPTIONS
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
 
-    cmd = f"useradd {useradd_options} -r -d '{site.dir}' -c 'OMD site {site.name}' -g {site.name} -G omd {site.name} -s /bin/bash"
+    cmd = f"useradd {useradd_options} -r -d '{site_home}' -c 'OMD site {site.name}' -g {site.name} -G omd {site.name} -s /bin/bash"
     if subprocess.call(shlex.split(cmd)) != 0:
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")
@@ -173,28 +176,31 @@ def user_verify(
     version_info: "VersionInfo", site: "SiteContext", allow_populated: bool = False
 ) -> bool:
     name = site.name
+    site_home = SitePaths.from_site_name(site.name).home
 
     if not user_exists(name):
         raise MKTerminate(tty.error + ": user %s does not exist" % name)
 
     user = _user_by_id(user_id(name))
-    if user.pw_dir != site.dir:
-        raise MKTerminate(tty.error + f": Wrong home directory for user {name}, must be {site.dir}")
-
-    if not os.path.exists(site.dir):
+    if user.pw_dir != site_home:
         raise MKTerminate(
-            tty.error + f": home directory for user {name} ({site.dir}) does not exist"
+            tty.error + f": Wrong home directory for user {name}, must be {site_home}"
         )
 
-    if not allow_populated and os.path.exists(site.dir + "/version"):
+    if not os.path.exists(site_home):
         raise MKTerminate(
-            tty.error + f": home directory for user {name} ({site.dir}) must be empty"
+            tty.error + f": home directory for user {name} ({site_home}) does not exist"
         )
 
-    if not _file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
+    if not allow_populated and os.path.exists(site_home + "/version"):
+        raise MKTerminate(
+            tty.error + f": home directory for user {name} ({site_home}) must be empty"
+        )
+
+    if not _file_owner_verify(site_home, user.pw_uid, user.pw_gid):
         raise MKTerminate(
             tty.error
-            + f": home directory ({site.dir}) is not owned by user {name} and group {name}"
+            + f": home directory ({site_home}) is not owned by user {name} and group {name}"
         )
 
     group = _group_by_id(user.pw_gid)

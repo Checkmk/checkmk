@@ -8,6 +8,7 @@ from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 
 import omdlib
+from omdlib.site_paths import SitePaths
 from omdlib.utils import site_exists
 
 
@@ -21,10 +22,10 @@ def main_version(
 ) -> None:
     if len(args) > 0:
         site_name = args[0]
-        site_dir = omd_path / f"sites/{site_name}"
-        if not site_exists(site_dir):
+        site_home = SitePaths.from_site_name(site_name, omd_path).home
+        if not site_exists(Path(site_home)):
             sys.exit("No such site: %s" % site_name)
-        version = version_from_site_dir(site_dir)
+        version = version_from_site_dir(Path(site_home))
     else:
         version = omdlib.__version__
 

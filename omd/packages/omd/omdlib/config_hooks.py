@@ -39,6 +39,7 @@ from cmk.utils.log import VERBOSE
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
+from omdlib.site_paths import SitePaths
 
 logger = logging.getLogger("cmk.omd")
 
@@ -136,7 +137,7 @@ def create_config_environment(site: "SiteContext") -> None:
 
 # TODO: RENAME
 def save_site_conf(site: "SiteContext") -> None:
-    confdir = Path(site.dir, "etc/omd")
+    confdir = Path(SitePaths.from_site_name(site.name).home, "etc/omd")
     confdir.mkdir(exist_ok=True)
     with (confdir / "site.conf").open(mode="w") as f:
         for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
@@ -255,7 +256,8 @@ def load_config(site: "SiteContext") -> Config:
 
     Puts these variables into the config dict without the CONFIG_. Also
     puts the variables into the process environment."""
-    config = read_site_config(site)
+    site_home = SitePaths.from_site_name(site.name).home
+    config = read_site_config(site_home)
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
@@ -265,10 +267,10 @@ def load_config(site: "SiteContext") -> Config:
     return config
 
 
-def read_site_config(site: "SiteContext") -> Config:
+def read_site_config(site_home: str) -> Config:
     """Read and parse the file site.conf of a site into a dictionary and returns it"""
     config: Config = {}
-    if not (confpath := Path(site.dir, "etc/omd/site.conf")).exists():
+    if not (confpath := Path(site_home, "etc/omd/site.conf")).exists():
         return {}
 
     with confpath.open() as conf_file:
@@ -307,7 +309,7 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
     hook_env = os.environ.copy()
     hook_env.update(
         {
-            "OMD_ROOT": site.dir,
+            "OMD_ROOT": SitePaths.from_site_name(site.name).home,
             "OMD_SITE": site.name,
         }
     )

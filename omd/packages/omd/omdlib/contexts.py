@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import override
 
 from omdlib.init_scripts import check_status
+from omdlib.site_paths import SitePaths
 from omdlib.skel_permissions import (
     load_skel_permissions_from,
     Permissions,
@@ -65,22 +66,19 @@ class SiteContext(AbstractSiteContext):
     def __init__(self, sitename: str) -> None:
         super().__init__()
         self._sitename = sitename
+        self._paths = SitePaths.from_site_name(sitename)
 
     @property
     def name(self) -> str:
         return self._sitename
 
     @property
-    def dir(self) -> str:
-        return str(Path("/omd/") / f"sites/{self._sitename}")
-
-    @property
     def tmp_dir(self) -> str:
-        return "%s/tmp" % self.dir
+        return "%s/tmp" % self._paths.home
 
     @property
     def real_dir(self) -> str:
-        return "/opt/" + self.dir.lstrip("/")
+        return "/opt/" + self._paths.home.lstrip("/")
 
     @property
     def real_tmp_dir(self) -> str:
@@ -88,18 +86,18 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def hook_dir(self) -> str | None:
-        if version_from_site_dir(Path(self.dir)) is None:
+        if version_from_site_dir(Path(self._paths.home)) is None:
             return None
-        return "/omd/versions/%s/lib/omd/hooks/" % version_from_site_dir(Path(self.dir))
+        return "/omd/versions/%s/lib/omd/hooks/" % version_from_site_dir(Path(self._paths.home))
 
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
-        version = version_from_site_dir(Path(self.dir))
+        version = version_from_site_dir(Path(self._paths.home))
         if version is None:
             raise RuntimeError("Failed to determine site version")
         return {
             "###SITE###": self.name,
-            "###ROOT###": self.dir,
+            "###ROOT###": self._paths.home,
             "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
@@ -110,7 +108,7 @@ class SiteContext(AbstractSiteContext):
 
     @override
     def is_empty(self) -> bool:
-        for entry in os.listdir(self.dir):
+        for entry in os.listdir(self._paths.home):
             if entry not in [".", ".."]:
                 return False
         return True
@@ -121,14 +119,14 @@ class SiteContext(AbstractSiteContext):
 
     def is_stopped(self) -> bool:
         """Check if site is completely stopped"""
-        return check_status(self.dir, display=False) == 1
+        return check_status(self._paths.home, display=False) == 1
 
     @property
     def skel_permissions(self) -> Permissions:
         """Returns the skeleton permissions. Load either from version meta directory
         or from the original version skel.permissions file"""
         if not self._has_version_meta_data():
-            version = version_from_site_dir(Path(self.dir))
+            version = version_from_site_dir(Path(self._paths.home))
             if version is None:
                 raise MKTerminate("Failed to determine site version")
             return load_skel_permissions_from(skel_permissions_file_path(version))
@@ -137,7 +135,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def version_meta_dir(self) -> str:
-        return "%s/.version_meta" % self.dir
+        return f"{self._paths.home}/.version_meta"
 
     @property
     def version_skel_dir(self) -> str:
@@ -145,14 +143,14 @@ class SiteContext(AbstractSiteContext):
         available and fits the sites version use that one instead of the version
         skel directory."""
         if not self._has_version_meta_data():
-            return "/omd/versions/%s/skel" % version_from_site_dir(Path(self.dir))
+            return "/omd/versions/%s/skel" % version_from_site_dir(Path(self._paths.home))
         return self.version_meta_dir + "/skel"
 
     def _has_version_meta_data(self) -> bool:
         if not os.path.exists(self.version_meta_dir):
             return False
 
-        if self._version_meta_data_version() != version_from_site_dir(Path(self.dir)):
+        if self._version_meta_data_version() != version_from_site_dir(Path(self._paths.home)):
             return False
 
         return True

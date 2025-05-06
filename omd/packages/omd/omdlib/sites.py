@@ -8,6 +8,7 @@ import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
+from omdlib.site_paths import SitePaths
 from omdlib.version import default_version, version_from_site_dir
 
 from cmk.utils import tty
@@ -24,12 +25,12 @@ def main_sites(
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for sitename in all_sites(omd_path):
-        site_dir = omd_path / f"sites/{sitename}"
+        site_home = SitePaths.from_site_name(sitename, omd_path).home
         tags = []
         if "bare" in options:
             sys.stdout.write("%s\n" % sitename)
         else:
-            v = version_from_site_dir(Path(site_dir))
+            v = version_from_site_dir(Path(site_home))
             if v is None:
                 v = "(none)"
                 tags.append("empty site dir")

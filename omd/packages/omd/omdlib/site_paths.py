@@ -10,8 +10,12 @@ from typing import Self
 
 @dataclasses.dataclass(frozen=True)
 class SitePaths:
+    home: str
     apache_conf: Path
 
     @classmethod
     def from_site_name(cls, site_name: str, omd_path: Path = Path("/omd/")) -> Self:
-        return cls(apache_conf=omd_path / f"apache/{site_name}.conf")
+        return cls(
+            home=str(omd_path / f"sites/{site_name}"),
+            apache_conf=omd_path / f"apache/{site_name}.conf",
+        )

@@ -11,61 +11,66 @@ import pytest
 
 import omdlib
 import omdlib.backup
-from omdlib.contexts import SiteContext
 
 
-@pytest.fixture()
-def site(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SiteContext:
+def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
-    omd_root = tmp_path / "site"
-    omd_root.mkdir(parents=True, exist_ok=True)
-    (omd_root / "version").symlink_to("../versions/%s" % omdlib.__version__)
-
-    class UnitTestSite(SiteContext):
-        @property
-        def dir(self):
-            return str(omd_root)
-
-    return UnitTestSite("unit")
-
-
-def test_backup_site_to_tarfile(site: SiteContext, tmp_path: Path) -> None:
+    site_name = "site"
+    site_home = tmp_path / site_name
+    site_home.mkdir(parents=True, exist_ok=True)
+    (site_home / "version").symlink_to("../versions/%s" % omdlib.__version__)
     # Write some file for testing the backup procedure
-    with Path(site.dir + "/test123").open("w", encoding="utf-8") as f:
+    with Path(site_home, "test123").open("w", encoding="utf-8") as f:
         f.write("uftauftauftata")
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar:
-        omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
+        omdlib.backup._backup_site_to_tarfile(
+            site_name, str(site_home), True, backup_tar, mode="w:", options={}, verbose=False
+        )
 
     with tar_path.open("rb") as backup_tar:
         with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
-            sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
+            backup_site_name, version = omdlib.backup.get_site_and_version_from_backup(tar)
             names = [tarinfo.name for tarinfo in tar]
-    assert sitename == "unit"
+    assert backup_site_name == site_name
     assert version == "1.3.3i7.cee"
-    assert "unit/test123" in names
+    assert f"{site_name}/test123" in names
 
 
-def test_backup_site_to_tarfile_broken_link(site: SiteContext, tmp_path: Path) -> None:
-    Path(site.dir + "/link").symlink_to("agag")
+def test_backup_site_to_tarfile_broken_link(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
+    site_name = "site"
+    site_home = tmp_path / site_name
+    site_home.mkdir(parents=True, exist_ok=True)
+    (site_home / "version").symlink_to("../versions/%s" % omdlib.__version__)
+    Path(site_home, "link").symlink_to("agag")
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar:
-        omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
+        omdlib.backup._backup_site_to_tarfile(
+            site_name, str(site_home), True, backup_tar, mode="w:", options={}, verbose=False
+        )
 
     with tar_path.open("rb") as backup_tar:
         with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
             _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
 
-            link = tar.getmember("unit/link")
+            link = tar.getmember(f"{site_name}/link")
         assert link.linkname == "agag"
 
 
 def test_backup_site_to_tarfile_vanishing_files(
-    site: SiteContext, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    test_dir = Path(site.dir) / "xyz"
+    monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
+    site_name = "site"
+    site_home = tmp_path / site_name
+    site_home.mkdir(parents=True, exist_ok=True)
+    (site_home / "version").symlink_to("../versions/%s" % omdlib.__version__)
+    test_dir = Path(site_home, "xyz")
     test_file = test_dir / "test_file"
     test_dir.mkdir(parents=True, exist_ok=True)
     test_file.touch()
@@ -74,7 +79,7 @@ def test_backup_site_to_tarfile_vanishing_files(
 
     def gettarinfo(self: tarfile.TarFile, name: str, arcname: str) -> tarfile.TarInfo:
         # Remove the test_file here to simulate a vanished file during this step.
-        if arcname == "unit/xyz/test_file":
+        if arcname == f"{site_name}/xyz/test_file":
             test_file.unlink()
         return orig_gettarinfo(self, name, arcname)
 
@@ -82,8 +87,8 @@ def test_backup_site_to_tarfile_vanishing_files(
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar_w:
-        omdlib.backup.backup_site_to_tarfile(
-            site, backup_tar_w, mode="w:", options={}, verbose=False
+        omdlib.backup._backup_site_to_tarfile(
+            site_name, str(site_home), True, backup_tar_w, mode="w:", options={}, verbose=False
         )
 
     assert not test_file.exists()  # check that the monkeypatch worked

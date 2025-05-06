@@ -19,7 +19,6 @@ def test_root_context() -> None:
 def test_site_context() -> None:
     site = SiteContext("dingeling")
     assert site.name == "dingeling"
-    assert site.dir == "/omd/sites/dingeling"
     assert site.real_dir == "/opt/omd/sites/dingeling"
     assert site.tmp_dir == "/omd/sites/dingeling/tmp"
     assert site.version_meta_dir == "/omd/sites/dingeling/.version_meta"

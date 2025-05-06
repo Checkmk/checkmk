@@ -1688,10 +1688,19 @@ class InventoryPaths:
         return self.delta_cache_host(host_name) / f"{previous}_{current}"
 
 
-def _load_tree(filepath: Path) -> ImmutableTree:
-    if raw_tree := store.load_object_from_file(filepath, default=None):
+def _load_tree(file_path: Path) -> ImmutableTree:
+    if raw_tree := store.load_object_from_file(file_path, default=None):
         return deserialize_tree(raw_tree)
     return ImmutableTree()
+
+
+class SDMeta(TypedDict):
+    version: Literal["1"]
+    do_archive: bool
+
+
+def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTree:
+    return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
 
 
 def _save_tree(
@@ -1706,11 +1715,6 @@ def _save_tree(
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
         f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
     store.save_bytes_to_file(file_path_gz, buf.getvalue())
-
-
-class SDMeta(TypedDict):
-    version: Literal["1"]
-    do_archive: bool
 
 
 def make_meta(*, do_archive: bool) -> SDMeta:
@@ -1775,10 +1779,6 @@ def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
     return _parse_from_unzipped(
         ast.literal_eval(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read().decode("utf-8"))
     )
-
-
-def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTree:
-    return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
 
 
 @dataclass(frozen=True)
@@ -1888,21 +1888,20 @@ class InventoryStore:
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         if not (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
             return
-
-        archive_host = self.inv_paths.archive_host(host_name)
-        archive_host.mkdir(parents=True, exist_ok=True)
-        tree_file.rename(archive_host / str(int(tree_file.stat().st_mtime)))
+        archive_tree = self.inv_paths.archive_tree(host_name, str(int(tree_file.stat().st_mtime)))
+        archive_tree.parent.mkdir(parents=True, exist_ok=True)
+        tree_file.rename(archive_tree)
         self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
     def collect_archive_files(self, *, host_name: HostName) -> HistoryPaths:
         try:
-            archive_file_paths = sorted(self.inv_paths.archive_host(host_name).iterdir())
+            archive_host_file_paths = sorted(self.inv_paths.archive_host(host_name).iterdir())
         except FileNotFoundError:
             return HistoryPaths(paths=[], corrupted=[])
 
         paths = []
         corrupted = []
-        for file_path in archive_file_paths:
+        for file_path in archive_host_file_paths:
             try:
                 paths.append(HistoryPath(path=file_path, timestamp=int(file_path.name)))
             except FileNotFoundError:

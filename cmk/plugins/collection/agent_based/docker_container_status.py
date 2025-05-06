@@ -178,7 +178,7 @@ def check_docker_container_status_health(section: Section) -> CheckResult:
     cur_state = HEALTH_STATUS_MAP.get(health_status, State.UNKNOWN)
     yield Result(state=cur_state, summary="Health status: %s" % health_status.title())
 
-    last_log = health.get("Log", [{}])[-1]
+    last_log = (health.get("Log") or [{}])[-1]  # sometimes 'Log' value is an empty list
     # Remove "\n" from health_report string as this would currently raise a value error.
     # This was observed e.g. for the docker_container_status output of check-mk-enterprise:1.6.0p8
     health_report = last_log.get("Output", "no output").strip().replace("\n", ", ")

@@ -11370,6 +11370,12 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -56988,10 +56994,6 @@ msgstr "Trimiteți notificări către Consola de evenimente"
 msgid "Send notifications to remote Event Console"
 msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "Setări de temporizare pentru metode specifice"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -66570,7 +66572,7 @@ msgstr ""
 "Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
 "conține și %r."
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "Conexiunea livestatus la acest site este configurată să nu fie criptată."
 
@@ -77497,6 +77499,10 @@ msgid "Tried to register incompatible rulespec: %r"
 msgstr "A încercat să înregistreze o specificație de reguli incompatibilă: %r."
 
 #, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "Setări de temporizare pentru metode specifice"
+
+#, fuzzy
 msgid "Triggering events"
 msgstr "Arhiva evenimentelor"
 
@@ -88324,11 +88330,11 @@ msgid "notif."
 msgstr "notificare."
 
 #, fuzzy
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "Notificările au fost trimise. "
-msgstr[1] "Notificările au fost trimise. "
-msgstr[2] "Notificările au fost trimise. "
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "Execuția a fost declanșată"
+msgstr[1] "Execuția a fost declanșată"
+msgstr[2] "Execuția a fost declanșată"
 
 msgid "notification rule"
 msgstr "norma de notificare"
@@ -89218,6 +89224,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "Notificările au fost trimise. "
+#~ msgstr[1] "Notificările au fost trimise. "
+#~ msgstr[2] "Notificările au fost trimise. "
 
 #, python-format
 #~ msgid ""

@@ -11343,6 +11343,12 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -56889,10 +56895,6 @@ msgstr "Enviar notificações para o Console de Eventos"
 msgid "Send notifications to remote Event Console"
 msgstr "Enviar notificações para console de eventos remoto"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "Configurações de tempo para métodos específicos"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -66392,7 +66394,7 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "A lista de tags do host deve conter apenas strings, mas também contém %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "A conexão do livestatus a este site configurada para não ser criptografada."
 
@@ -77279,6 +77281,10 @@ msgid "Tried to register incompatible rulespec: %r"
 msgstr "Tentei registar regras incompatíveispec: %r"
 
 #, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "Configurações de tempo para métodos específicos"
+
+#, fuzzy
 msgid "Triggering events"
 msgstr "Arquivo de eventos"
 
@@ -88046,10 +88052,10 @@ msgid "notif."
 msgstr "Notif."
 
 #, fuzzy
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "Fase de notificação"
-msgstr[1] "Fase de notificação"
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "A execução foi acionada"
+msgstr[1] "A execução foi acionada"
 
 msgid "notification rule"
 msgstr "regra de notificação"
@@ -88929,6 +88935,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "Fase de notificação"
+#~ msgstr[1] "Fase de notificação"
 
 #, python-format
 #~ msgid ""

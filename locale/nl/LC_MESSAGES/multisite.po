@@ -11343,6 +11343,12 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -56901,10 +56907,6 @@ msgstr "Meldingen naar gebeurtenissen Console sturen"
 msgid "Send notifications to remote Event Console"
 msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "Timing-instellingen voor specifieke methoden"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -66416,7 +66418,7 @@ msgstr "De lijst van host tags moet een lijst zijn, maar is %r"
 msgid "The list of host tags must only contain strings but also contains %r"
 msgstr "De lijst van host tags mag alleen strings bevatten maar bevat ook %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "De livestatus verbinding met deze site is geconfigureerd om niet gecodeerd "
 "te zijn."
@@ -77324,6 +77326,10 @@ msgid "Tried to register incompatible rulespec: %r"
 msgstr "Geprobeerd om incompatibele regelspec te registreren: %r"
 
 #, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "Timing-instellingen voor specifieke methoden"
+
+#, fuzzy
 msgid "Triggering events"
 msgstr "Archief gebeurtenissen"
 
@@ -88150,10 +88156,10 @@ msgid "notif."
 msgstr "notif."
 
 #, fuzzy
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "Kennisgevingsfase"
-msgstr[1] "Kennisgevingsfase"
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "De uitvoering is gestart"
+msgstr[1] "De uitvoering is gestart"
 
 msgid "notification rule"
 msgstr "kennisgevingsregel"
@@ -89036,6 +89042,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "Kennisgevingsfase"
+#~ msgstr[1] "Kennisgevingsfase"
 
 #, python-format
 #~ msgid ""

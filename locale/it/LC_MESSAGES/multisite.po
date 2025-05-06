@@ -11239,6 +11239,12 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -56433,10 +56439,6 @@ msgstr "Inviare notifiche a Event Console"
 msgid "Send notifications to remote Event Console"
 msgstr "Inviare notifiche alla console degli eventi remota"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "Impostazioni di temporizzazione per metodi specifici"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -65867,7 +65869,7 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "L'elenco dei tag host deve contenere solo stringhe, ma contiene anche %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "La connessione livestatus a questo sito configurata per non essere criptata."
 
@@ -76659,6 +76661,10 @@ msgid "Tried to register incompatible rulespec: %r"
 msgstr "Si è cercato di registrare un rulespec incompatibile: %r"
 
 #, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "Impostazioni di temporizzazione per metodi specifici"
+
+#, fuzzy
 msgid "Triggering events"
 msgstr "Archivio eventi"
 
@@ -87395,10 +87401,10 @@ msgid "notif."
 msgstr "notifica."
 
 #, fuzzy
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "Le notifiche sono state inviate. "
-msgstr[1] "Le notifiche sono state inviate. "
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "L'esecuzione è stata attivata"
+msgstr[1] "L'esecuzione è stata attivata"
 
 msgid "notification rule"
 msgstr "regola di notifica"
@@ -88272,6 +88278,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "Le notifiche sono state inviate. "
+#~ msgstr[1] "Le notifiche sono state inviate. "
 
 #, python-format
 #~ msgid ""

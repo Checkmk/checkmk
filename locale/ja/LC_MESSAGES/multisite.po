@@ -10761,6 +10761,12 @@ msgstr "クイックセットアップで管理されているルールのフォ
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr "クイックセットアップで管理されているルールの設定を変更できません。"
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr "%s' が原因でperfometerラベルを計算できません"
@@ -54465,10 +54471,6 @@ msgstr "イベントコンソールに通知を送信する"
 msgid "Send notifications to remote Event Console"
 msgstr "リモートイベントコンソールに通知を送信する"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "特定のメソッドのタイミング設定"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -63487,7 +63489,7 @@ msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
 #, python-format
@@ -73471,6 +73473,10 @@ msgstr "トライアル残り時間はユーザー管理パネルで確認でき
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "互換性のないrulespecを登録しようとしました: %r"
+
+#, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "特定のメソッドのタイミング設定"
 
 #, fuzzy
 msgid "Triggering events"
@@ -83879,9 +83885,10 @@ msgstr "現在ではない"
 msgid "notif."
 msgstr "通知."
 
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "通知が送信されました"
+#, fuzzy
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "実行がトリガーされました"
 
 msgid "notification rule"
 msgstr "通知ルール"
@@ -84748,6 +84755,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "通知が送信されました"
 
 #, python-format
 #~ msgid ""

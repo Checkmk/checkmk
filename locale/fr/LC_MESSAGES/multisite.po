@@ -11392,6 +11392,12 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot compute forecast based on the current data. You can either wait until "
+"more data has been collected or you can try to change the time range of the "
+"data taken into account."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -57378,10 +57384,6 @@ msgstr "Envoyer des notifications à la console d'événements"
 msgid "Send notifications to remote Event Console"
 msgstr "Envoyer des notifications à la console d'événements distante"
 
-#, fuzzy
-msgid "Send out notification for specific method"
-msgstr "Paramètres de temporisation pour des méthodes spécifiques"
-
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -66983,7 +66985,7 @@ msgstr ""
 "La liste des balises d'hôtes ne doit contenir que des chaînes de caractères "
 "mais contient également %r"
 
-msgid "The livestatus connection to this site is configured not to be encrypted."
+msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
 "La connexion de livestatus à ce site est configurée pour ne pas être cryptée."
 
@@ -77996,6 +77998,10 @@ msgid "Tried to register incompatible rulespec: %r"
 msgstr "A essayé d'enregistrer des règles incompatibles : %r"
 
 #, fuzzy
+msgid "Trigger notification for a specific method"
+msgstr "Paramètres de temporisation pour des méthodes spécifiques"
+
+#, fuzzy
 msgid "Triggering events"
 msgstr "Événements d'archives"
 
@@ -88962,10 +88968,11 @@ msgstr "pas présent"
 msgid "notif."
 msgstr "notifier."
 
-msgid "notification has been sent out"
-msgid_plural "notifications have been sent out"
-msgstr[0] "Une notification a été envoyée."
-msgstr[1] "Des notifications ont été envoyées."
+#, fuzzy
+msgid "notification has been triggered"
+msgid_plural "notifications have been triggered"
+msgstr[0] "L'exécution a été déclenchée"
+msgstr[1] "L'exécution a été déclenchée"
 
 msgid "notification rule"
 msgstr "règle de notification"
@@ -89845,6 +89852,11 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#~ msgid "notification has been sent out"
+#~ msgid_plural "notifications have been sent out"
+#~ msgstr[0] "Une notification a été envoyée."
+#~ msgstr[1] "Des notifications ont été envoyées."
 
 #, python-format
 #~ msgid ""

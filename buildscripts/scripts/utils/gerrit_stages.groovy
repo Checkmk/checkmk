@@ -82,8 +82,16 @@ def create_stage(Map args, time_stage_started) {
                 ) {
                     withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
                         // Since checkmk_ci:df2be57e we don't have the notes available anymore in the checkout
-                        // however the werk commands tests heavily rely on them, so fetch them here
-                        sh("git fetch origin 'refs/notes/*:refs/notes/*'")
+                        // however the werk commands tests heavily rely on them, so fetch them here.
+                        // The order of the operations is important, because we rely on FETCH_HEAD
+                        // being the checked out revision.
+                        // Fetching with --shallow-since requires an explicit git commit hash to
+                        // work properly.
+                        // We use the same commit limitation as the werk commands uses in stages.yml.
+                        sh("""
+                            git fetch --no-tags --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) origin \$(cat .git/FETCH_HEAD | cut -f 1)
+                            git fetch origin 'refs/notes/*:refs/notes/*'
+                        """)
                     }
                 }
             }

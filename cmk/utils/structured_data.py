@@ -1699,11 +1699,9 @@ class SDMeta(TypedDict):
     do_archive: bool
 
 
-def _save_raw_tree(
-    file_path: Path, file_path_gz: Path, raw_tree: SDRawTree, meta: SDMeta, pretty: bool
-) -> None:
+def _save_raw_tree(file_path: Path, file_path_gz: Path, raw_tree: SDRawTree, meta: SDMeta) -> None:
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    store.save_object_to_file(file_path, raw_tree, pretty=pretty)
+    store.save_object_to_file(file_path, raw_tree)
 
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode="wb") as f:
@@ -1832,15 +1830,12 @@ class InventoryStore:
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
         return _load_tree(self.inv_paths.inventory_tree(host_name))
 
-    def save_inventory_tree(
-        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
-    ) -> None:
+    def save_inventory_tree(self, *, host_name: HostName, tree: MutableTree, meta: SDMeta) -> None:
         _save_raw_tree(
             self.inv_paths.inventory_tree(host_name),
             self.inv_paths.inventory_tree_gz(host_name),
             serialize_tree(tree),
             meta,
-            pretty,
         )
         # Inform Livestatus about the latest inventory update
         self.inv_paths.inventory_marker_file.touch()
@@ -1853,14 +1848,13 @@ class InventoryStore:
         return _load_tree(self.inv_paths.status_data_tree(host_name))
 
     def save_status_data_tree(
-        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta
     ) -> None:
         _save_raw_tree(
             self.inv_paths.status_data_tree(host_name),
             self.inv_paths.status_data_tree_gz(host_name),
             serialize_tree(tree),
             meta,
-            pretty,
         )
         # Inform Livestatus about the latest inventory update
         self.inv_paths.status_data_marker_file.touch()

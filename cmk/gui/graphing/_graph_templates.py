@@ -77,6 +77,9 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
+class MKGraphNotFound(MKGeneralException): ...
+
+
 def _collect_graph_plugins() -> (
     Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
 ):
@@ -341,7 +344,7 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     for id_, graph_plugin in _get_sorted_graph_plugins():
         if template_id == id_:
             return _parse_graph_plugin(id_, graph_plugin)
-    raise MKGeneralException(_("There is no graph plug-in with the id '%s'") % template_id)
+    raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
 def evaluate_metrics(

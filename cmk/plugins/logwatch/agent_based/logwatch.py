@@ -365,7 +365,10 @@ check_plugin_logwatch_groups = CheckPlugin(
     discovery_ruleset_type=RuleSetType.ALL,
     discovery_default_parameters={"grouping_patterns": []},
     check_function=check_logwatch_groups_node,
-    check_default_parameters={"group_patterns": []},
+    check_default_parameters={
+        "group_patterns": [],
+        "host_name": ("cmk_postprocessed", "host_name", None),
+    },
     cluster_check_function=check_logwatch_groups_cluster,
 )
 

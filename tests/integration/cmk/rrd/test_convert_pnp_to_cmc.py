@@ -60,7 +60,9 @@ def test_convert_pnp_to_cmc(request: pytest.FixtureRequest, site: Site) -> None:
             site.read_file(_RELATIVE_PATH_CMC_RRDS / hostname / "Temperature_Zone_0.info")
             == f"HOST {hostname}\nSERVICE Temperature Zone 0\nMETRICS temp\n"
         )
-        assert site.read_binary_file(_RELATIVE_PATH_CMC_RRDS / hostname / "Temperature_Zone_0.rrd")
+        assert site.read_file(
+            _RELATIVE_PATH_CMC_RRDS / hostname / "Temperature_Zone_0.rrd", encoding=None
+        )
 
     finally:
         site.delete_dir(_RELATIVE_PATH_PNP_RRDS / hostname)

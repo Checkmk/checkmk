@@ -77,4 +77,4 @@ def _test_compile_delayed_host_check(request: pytest.FixtureRequest, site: Site)
         site.check_output(["python3", "-P", f"{compiled_file}"])
         # *Now* it has been compiled:
         assert site.resolve_path(compiled_file) != site.resolve_path(source_file)
-        assert site.read_binary_file(compiled_file).startswith(importlib.util.MAGIC_NUMBER)
+        assert site.read_file(compiled_file, encoding=None).startswith(importlib.util.MAGIC_NUMBER)

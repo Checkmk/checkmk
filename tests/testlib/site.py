@@ -54,6 +54,7 @@ from tests.testlib.utils import (
     is_containerized,
     makedirs,
     PExpectDialog,
+    read_file,
     restart_httpd,
     run,
     ServiceInfo,
@@ -750,21 +751,27 @@ class Site:
             raise excp
         return float(stdout)
 
-    def read_file(self, rel_path: str | Path) -> str:
-        try:
-            stdout = self.check_output(["cat", self.path(rel_path).as_posix()])
-        except subprocess.CalledProcessError as excp:
-            excp.add_note(f"Failed to read file '{rel_path}'!")
-            raise excp
-        return stdout
+    @overload
+    def read_file(
+        self,
+        rel_path: str | Path,
+        encoding: str = "utf-8",
+    ) -> str: ...
 
-    def read_binary_file(self, rel_path: str | Path) -> bytes:
-        try:
-            stdout = self.check_output(["cat", self.path(rel_path).as_posix()], encoding=None)
-        except subprocess.CalledProcessError as excp:
-            excp.add_note(f"Failed to read file '{rel_path}'!")
-            raise excp
-        return stdout
+    @overload
+    def read_file(
+        self,
+        rel_path: str | Path,
+        encoding: None,
+    ) -> bytes: ...
+
+    def read_file(
+        self,
+        rel_path: str | Path,
+        encoding: str | None = "utf-8",
+    ) -> str | bytes:
+        """Read a file as the site user."""
+        return read_file(self.path(rel_path), encoding=encoding, sudo=True, substitute_user=self.id)
 
     def delete_file(self, rel_path: str | Path) -> None:
         try:
@@ -1596,7 +1603,7 @@ class Site:
 
     def get_site_internal_secret(self) -> Secret:
         secret_path = "etc/site_internal.secret"
-        secret = self.read_binary_file(secret_path)
+        secret = self.read_file(secret_path, encoding=None)
 
         if secret == b"":
             raise Exception("Failed to read secret from %s" % secret_path)

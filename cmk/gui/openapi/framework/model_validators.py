@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
+from typing import Literal
+
+from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
@@ -12,7 +15,33 @@ from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.watolib.groups_io import load_group_information
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import load_tag_group
+
+
+@dataclass(slots=True)
+class HostValidator:
+    # TODO: skip_validation_on_view?
+    permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor"
+
+    def exists(self, value: str) -> str:
+        host = Host.host(HostName(value))
+        self._verify_user_permissions(host)
+
+        if host is None:
+            raise ValueError(f"Host not found: {value!r}")
+        return value
+
+    def _verify_user_permissions(self, host: Host | None) -> None:
+        if self.permission_type == "monitor":
+            return
+
+        if not host:
+            return
+
+        host._user_needs_permission("read")
+        if self.permission_type == "setup_write":
+            host._user_needs_permission("write")
 
 
 @dataclass(slots=True)

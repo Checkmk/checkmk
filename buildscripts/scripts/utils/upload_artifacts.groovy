@@ -177,7 +177,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
                             dump_bom_artifact_mapping \
-                            --version ${cmk_version} \
+                            --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)
                 );
@@ -197,7 +197,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                             --editions_file "${checkout_dir}/editions.yml" \
                             dump_bom_artifact_mapping \
                             --version_agnostic \
-                            --version ${cmk_version} \
+                            --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)
                 );

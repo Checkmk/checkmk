@@ -83,7 +83,7 @@ class TableFigureDataCreator:
             extra["classes"] = classes
         return extra
 
-    # Cell which contains a dc graphing element
+    # Cell which contains a graphing element
     @classmethod
     def get_figure_cell(cls, figure_config, attrs=None, classes=None):
         classes = classes or []

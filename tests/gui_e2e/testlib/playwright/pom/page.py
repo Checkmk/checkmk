@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from re import Pattern
 from typing import Literal, overload
-from urllib.parse import urljoin
+from urllib.parse import quote_plus, urljoin
 
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
@@ -110,6 +110,7 @@ class CmkPage(LocatorHelper):
         logger.info("Activate changes")
         try:
             self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
+            self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
             self.activate_selected()
             self.expect_success_state()
         except Exception as e:

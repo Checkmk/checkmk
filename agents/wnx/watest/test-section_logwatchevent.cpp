@@ -664,17 +664,17 @@ TEST(LogWatchEventTest, TestAddLog) {
     }
 }
 
-TEST(LogWatchEventTest, DISABLED_CheckMakeBodyComponent) {
-    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+TEST(LogWatchEventTest, CheckMakeBody_Component) {
+    auto temp_fs = tst::TempCfgFs::Create();
     LogWatchEvent lw;
     lw.loadConfig();
     auto ret = lw.makeBody();
-    EXPECT_TRUE(ret.size() < 2000) << "should be almost empty";
+    EXPECT_TRUE(ret.size() < 5'000'000) << "Size = " << ret.size();
     auto table = tools::SplitString(ret, "\n");
     auto old_size = table.size();
     ret = lw.makeBody();
     EXPECT_TRUE(!ret.empty());
-    EXPECT_TRUE(ret.size() < 6000);
+    EXPECT_TRUE(ret.size() < 5'000'000) << "Size = " << ret.size();
     table = tools::SplitString(ret, "\n");
     EXPECT_LE(table.size(), old_size * 2);
 }

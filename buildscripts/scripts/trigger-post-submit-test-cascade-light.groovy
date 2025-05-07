@@ -23,6 +23,7 @@ def main() {
         "test-css-format",
         "test-bazel-lint",
         "test-bazel-format",
+        "test-github-actions",
         "test-groovy-lint",
         "test-shellcheck_agents",
         "test-shell_format",

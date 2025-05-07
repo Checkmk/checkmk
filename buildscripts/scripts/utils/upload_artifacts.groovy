@@ -183,7 +183,9 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                 );
                 println("Updating branch latest BOM symlinks");
                 bom_mapping_branch_latest.each { symlink, target ->
-                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};");
+                    execute_cmd_on_archive_server(
+                        "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
+                    );
                 }
             }
 
@@ -201,7 +203,9 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                 );
                 println("Updating latest BOM symlinks");
                 bom_mapping_latest.each { symlink, target ->
-                    execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};");
+                    execute_cmd_on_archive_server(
+                        "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
+                    );
                 }
             }
         }

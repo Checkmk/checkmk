@@ -673,20 +673,6 @@ class Conditions(base.BaseSchema):
         ),
         example=[{"key": "criticality", "operator": "is", "value": "prod"}],
     )
-    host_labels = fields.Nested(
-        LabelConditionSchema,
-        many=True,
-        description="Further restrict this rule by applying host label conditions.",
-        example=[{"key": "os", "operator": "is", "value": "windows"}],
-    )
-    service_labels = fields.Nested(
-        LabelConditionSchema,
-        many=True,
-        description=(
-            "Restrict the application of the rule, by checking against service label conditions."
-        ),
-        example=[{"key": "os", "operator": "is", "value": "windows"}],
-    )
     host_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
         description="Further restrict this rule by applying host label conditions. Although all items in this list"
@@ -753,6 +739,34 @@ class Conditions(base.BaseSchema):
             "descriptions."
         ),
         example={"match_on": ["foo1", "bar2"], "operator": "none_of"},
+    )
+
+
+class InputConditions(Conditions):
+    """Additionally supports the old label format.
+
+    The conversion of the format itself is done in `LabelConditionSchema`.
+    """
+
+    host_labels = fields.Nested(
+        LabelConditionSchema,
+        many=True,
+        description=(
+            "Further restrict this rule by applying host label conditions."
+            " - Deprecated: Use `host_label_groups` instead."
+        ),
+        example=[{"key": "os", "operator": "is", "value": "windows"}],
+        deprecated=True,
+    )
+    service_labels = fields.Nested(
+        LabelConditionSchema,
+        many=True,
+        description=(
+            "Restrict the application of the rule, by checking against service label conditions."
+            " - Deprecated: Use `service_label_groups` instead."
+        ),
+        example=[{"key": "os", "operator": "is", "value": "windows"}],
+        deprecated=True,
     )
 
     @post_load
@@ -934,7 +948,7 @@ class UpdateRuleObject(base.BaseSchema):
         required=True,
     )
     conditions = fields.Nested(
-        Conditions,
+        InputConditions,
         description="Conditions.",
         example={
             "host_name": {"match_on": ["host1", "host2"], "operator": "one_of"},

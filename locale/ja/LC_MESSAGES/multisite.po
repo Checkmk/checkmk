@@ -9218,9 +9218,6 @@ msgstr "CPU(パーセント)"
 msgid "CPU inventory of all hosts"
 msgstr "全ホストのCPUインベントリ"
 
-msgid "CPU load"
-msgstr "CPU load"
-
 msgid "CPU load (not utilization!)"
 msgstr "CPU負荷(使用率ではありません!)"
 
@@ -56286,7 +56283,9 @@ msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
 #, python-format
@@ -67109,6 +67108,10 @@ msgstr "5xxエラー率の上位レベル"
 msgid "Upper levels for Backend"
 msgstr "バックエンドの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "CPU時間の上位レベル"
+
 msgid "Upper levels for CPU time"
 msgstr "CPU時間の上位レベル"
 
@@ -76021,6 +76024,9 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "CPU load"
+#~ msgstr "CPU load"
 
 #~ msgid "Authorized sites"
 #~ msgstr "認定サイト"

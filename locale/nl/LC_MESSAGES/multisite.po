@@ -9662,9 +9662,6 @@ msgstr "CPU in procenten"
 msgid "CPU inventory of all hosts"
 msgstr "CPU inventaris van alle hosts"
 
-msgid "CPU load"
-msgstr "CPU belasting"
-
 msgid "CPU load (not utilization!)"
 msgstr "CPU belasting (niet bezetting!)"
 
@@ -59096,7 +59093,9 @@ msgstr "De lijst van host tags moet een lijst zijn, maar is %r"
 msgid "The list of host tags must only contain strings but also contains %r"
 msgstr "De lijst van host tags mag alleen strings bevatten maar bevat ook %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "De livestatus verbinding met deze site is geconfigureerd om niet gecodeerd "
 "te zijn."
@@ -70915,6 +70914,10 @@ msgstr "Bovenste niveaus voor 5xx-foutenpercentage"
 msgid "Upper levels for Backend"
 msgstr "Bovenste niveaus voor Backend"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "Bovenste niveaus voor CPU-tijd"
+
 msgid "Upper levels for CPU time"
 msgstr "Bovenste niveaus voor CPU-tijd"
 
@@ -80216,6 +80219,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "CPU load"
+#~ msgstr "CPU belasting"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Toegestane sites"

@@ -9736,9 +9736,6 @@ msgstr "CPU en pourcentage"
 msgid "CPU inventory of all hosts"
 msgstr "Inventaire des CPU de tous les hôtes"
 
-msgid "CPU load"
-msgstr "Charge du CPU"
-
 msgid "CPU load (not utilization!)"
 msgstr "Charge du CPU (pas l'utilisation !)"
 
@@ -59681,7 +59678,9 @@ msgstr ""
 "La liste des balises d'hôtes ne doit contenir que des chaînes de caractères "
 "mais contient également %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "La connexion de livestatus à ce site est configurée pour ne pas être cryptée."
 
@@ -71608,6 +71607,10 @@ msgstr "Niveaux supérieurs pour le taux d'erreur 5xx"
 msgid "Upper levels for Backend"
 msgstr "Niveaux supérieurs pour Backend"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "Niveaux supérieurs pour le temps CPU"
+
 msgid "Upper levels for CPU time"
 msgstr "Niveaux supérieurs pour le temps CPU"
 
@@ -81053,6 +81056,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "CPU load"
+#~ msgstr "Charge du CPU"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Sites autorisés"

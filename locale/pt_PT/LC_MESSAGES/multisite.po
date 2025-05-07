@@ -9658,9 +9658,6 @@ msgstr "CPU em percentagem"
 msgid "CPU inventory of all hosts"
 msgstr "Inventário de CPU de todos os hosts"
 
-msgid "CPU load"
-msgstr "carga da CPU"
-
 msgid "CPU load (not utilization!)"
 msgstr "Carga da CPU (não utilização!)"
 
@@ -59064,7 +59061,9 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "A lista de tags do host deve conter apenas strings, mas também contém %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "A conexão do livestatus a este site configurada para não ser criptografada."
 
@@ -70850,6 +70849,10 @@ msgstr "Níveis superiores para a taxa de erro 5xx"
 msgid "Upper levels for Backend"
 msgstr "Níveis superiores para Backend"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "Níveis superiores para o tempo de CPU"
+
 msgid "Upper levels for CPU time"
 msgstr "Níveis superiores para o tempo de CPU"
 
@@ -80101,6 +80104,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "CPU load"
+#~ msgstr "carga da CPU"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Sites autorizados"

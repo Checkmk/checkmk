@@ -9683,9 +9683,6 @@ msgstr "CPU în procente"
 msgid "CPU inventory of all hosts"
 msgstr "Inventarul CPU al tuturor gazdelor"
 
-msgid "CPU load"
-msgstr "Sarcina CPU"
-
 msgid "CPU load (not utilization!)"
 msgstr "Încărcarea CPU (nu utilizarea!)"
 
@@ -59220,7 +59217,9 @@ msgstr ""
 "Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
 "conține și %r."
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "Conexiunea livestatus la acest site este configurată să nu fie criptată."
 
@@ -71041,6 +71040,10 @@ msgstr "Niveluri superioare pentru rata de eroare 5xx"
 msgid "Upper levels for Backend"
 msgstr "Niveluri superioare pentru Backend"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "Niveluri superioare pentru timpul CPU"
+
 msgid "Upper levels for CPU time"
 msgstr "Niveluri superioare pentru timpul CPU"
 
@@ -80354,6 +80357,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "CPU load"
+#~ msgstr "Sarcina CPU"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Site-uri autorizate"

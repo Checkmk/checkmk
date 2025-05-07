@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-05 19:50+0000\n"
+"PO-Revision-Date: 2025-05-06 18:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9490,9 +9490,6 @@ msgstr "CPU in Prozent"
 msgid "CPU inventory of all hosts"
 msgstr "CPU-Inventur aller Hosts"
 
-msgid "CPU load"
-msgstr "CPU-Last"
-
 msgid "CPU load (not utilization!)"
 msgstr "CPU-Auslastung (nicht Nutzung!)"
 
@@ -9907,6 +9904,9 @@ msgid ""
 "more data has been collected or you can try to change the time range of the "
 "data taken into account."
 msgstr ""
+"Die Prognose kann nicht auf der Grundlage der aktuellen Daten berechnet "
+"werden. Sie können entweder warten, bis mehr Daten gesammelt wurden, oder "
+"Sie können versuchen, den Zeitbereich der berücksichtigten Daten zu ändern."
 
 #, python-format
 msgid "Cannot connect to event daemon via %s: %s"
@@ -19930,7 +19930,7 @@ msgstr "Elektrische Energie"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -57827,7 +57827,9 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "Die Liste der Host-Merkmale darf nur Texte enthalten, aber enthält auch %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "Die Livestatusverbindung zu dieser Instanz ist so konfiguriert, dass sie "
 "nicht verschlüsselt wird."
@@ -69112,6 +69114,10 @@ msgstr "Obergrenzen für 5xx-Fehlerrate"
 msgid "Upper levels for Backend"
 msgstr "Obergrenzen für Backend"
 
+#, fuzzy
+msgid "Upper levels for CPU load"
+msgstr "Obergrenzen für die CPU-Zeit"
+
 msgid "Upper levels for CPU time"
 msgstr "Obergrenzen für die CPU-Zeit"
 
@@ -78384,6 +78390,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "CPU load"
+#~ msgstr "CPU-Last"
 
 #~ msgid "Authorized sites"
 #~ msgstr "Berechtigte Instanzen"

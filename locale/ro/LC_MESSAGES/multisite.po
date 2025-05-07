@@ -1488,12 +1488,6 @@ msgstr ""
 "<b>Nota</b>: Dacă migrați la conectorul <i>htpasswd</i>, utilizatorii vor "
 "trebui să își schimbe parola la următoarea autentificare."
 
-msgid ""
-"<b>Note</b>: The agent installation will neither create this directory, nor "
-"set needed permissions on it. We recommend to use this setting only if you "
-"encounter problems with the default TMPDIR directory on a target system."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
@@ -1530,6 +1524,14 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Avertisment:</b> Există %d lucrări incompatibile nerecunoscute:"
+
+msgid ""
+"<b>Warning</b>: The agent installation will neither create this directory, "
+"nor set needed permissions on it. We recommend to use this setting only if "
+"you encounter problems with the default TMPDIR directory on a target system."
+"<br>Especially when running the agent as non-root, the agent user must have "
+"write access to this directory!"
+msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Nu aveți niciun rol.</b>"
@@ -19719,12 +19721,6 @@ msgstr "Director pentru fișierele de configurare"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
-msgstr ""
-"Director pentru stocarea datelor temporare (setați variabila de mediu TMPDIR)"
-
-#, fuzzy
-msgid ""
-"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Director pentru stocarea datelor temporare (setați variabila de mediu TMPDIR)"
 
@@ -66572,7 +66568,9 @@ msgstr ""
 "Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
 "conține și %r."
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "Conexiunea livestatus la acest site este configurată să nu fie criptată."
 
@@ -70033,6 +70031,15 @@ msgstr ""
 "Această condiție face ca regula să se potrivească numai cu gazdele care sunt "
 "gestionate prin Setup și care sunt conținute în acest dosar - fie direct, "
 "fie într-unul dintre subfolderele sale."
+
+#, python-format
+msgid ""
+"This configuration has no effect in the current installation. It may be "
+"associated with an older version of Checkmk or an unused extension package, "
+"in which case it can be safely removed. Alternatively, it might belong to a "
+"temporarily disabled extension package, so you may want to retain it for "
+"now. You can use the %s page in case you want to remove the rule."
+msgstr ""
 
 msgid "This connection"
 msgstr "Această conexiune"
@@ -89000,6 +89007,10 @@ msgstr "necunoscut"
 msgid "unknown (old agent)"
 msgstr "necunoscut (agent vechi)"
 
+#, fuzzy
+msgid "unknown rulesets"
+msgstr "Utilizator necunoscut"
+
 msgid "unlimited"
 msgstr "nelimitat"
 
@@ -89224,6 +89235,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid ""
+#~ "Directory for storage of temporary data (set TMPDIR environment "
+#~ "variable)<br>"
+#~ msgstr ""
+#~ "Director pentru stocarea datelor temporare (setați variabila de mediu "
+#~ "TMPDIR)"
 
 #, fuzzy
 #~ msgid "notification has been sent out"

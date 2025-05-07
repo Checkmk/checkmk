@@ -1430,15 +1430,6 @@ msgstr ""
 "にパスワードを変更する必要があります。"
 
 msgid ""
-"<b>Note</b>: The agent installation will neither create this directory, nor "
-"set needed permissions on it. We recommend to use this setting only if you "
-"encounter problems with the default TMPDIR directory on a target system."
-msgstr ""
-"<b>注意</b>: エージェントのインストールでは、このディレクトリは作成されず、必"
-"要なパーミッションも設定されません。ターゲットシステム上のデフォルトのTMPDIR"
-"ディレクトリで問題が発生した場合のみ、この設定を使用することをお勧めします。"
-
-msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
 "Python 3.7 installation (or newer) with installed python packages \"pyOpenSSL"
 "\", \"requests\" and \"PySocks\" is required on the target hosts."
@@ -1472,6 +1463,18 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>警告:</b>%dの未確認の互換性のないwerksがあります:"
+
+#, fuzzy
+msgid ""
+"<b>Warning</b>: The agent installation will neither create this directory, "
+"nor set needed permissions on it. We recommend to use this setting only if "
+"you encounter problems with the default TMPDIR directory on a target system."
+"<br>Especially when running the agent as non-root, the agent user must have "
+"write access to this directory!"
+msgstr ""
+"<b>注意</b>: エージェントのインストールでは、このディレクトリは作成されず、必"
+"要なパーミッションも設定されません。ターゲットシステム上のデフォルトのTMPDIR"
+"ディレクトリで問題が発生した場合のみ、この設定を使用することをお勧めします。"
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>あなたには役割がありません。</b>"
@@ -18732,11 +18735,6 @@ msgstr "設定ファイルのディレクトリ"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
-msgstr "一時データを格納するためのディレクトリ(TMPDIR環境変数を設定)"
-
-#, fuzzy
-msgid ""
-"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr "一時データを格納するためのディレクトリ(TMPDIR環境変数を設定)"
 
 msgid "Directory to save the backup to"
@@ -63489,7 +63487,9 @@ msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
 
 #, python-format
@@ -66782,6 +66782,15 @@ msgid ""
 msgstr ""
 "この条件により、ルールは、セットアップを介して管理され、このフォルダー(直接ま"
 "たはそのサブフォルダーの1つ)に含まれているホストのみに一致します。"
+
+#, python-format
+msgid ""
+"This configuration has no effect in the current installation. It may be "
+"associated with an older version of Checkmk or an unused extension package, "
+"in which case it can be safely removed. Alternatively, it might belong to a "
+"temporarily disabled extension package, so you may want to retain it for "
+"now. You can use the %s page in case you want to remove the rule."
+msgstr ""
 
 msgid "This connection"
 msgstr "この接続"
@@ -84530,6 +84539,10 @@ msgstr "不明"
 msgid "unknown (old agent)"
 msgstr "不明(旧エージェント)"
 
+#, fuzzy
+msgid "unknown rulesets"
+msgstr "不明なユーザー"
+
 msgid "unlimited"
 msgstr "無制限"
 
@@ -84755,6 +84768,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy
+#~ msgid ""
+#~ "Directory for storage of temporary data (set TMPDIR environment "
+#~ "variable)<br>"
+#~ msgstr "一時データを格納するためのディレクトリ(TMPDIR環境変数を設定)"
 
 #~ msgid "notification has been sent out"
 #~ msgid_plural "notifications have been sent out"

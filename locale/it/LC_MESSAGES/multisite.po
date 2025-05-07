@@ -1465,12 +1465,6 @@ msgstr ""
 "<b>Nota</b>: se si migra al connettore <i>htpasswd</i>, gli utenti dovranno "
 "cambiare la password al prossimo accesso."
 
-msgid ""
-"<b>Note</b>: The agent installation will neither create this directory, nor "
-"set needed permissions on it. We recommend to use this setting only if you "
-"encounter problems with the default TMPDIR directory on a target system."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
@@ -1504,6 +1498,14 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Avviso:</b> Ci sono %d manufatti incompatibili non riconosciuti:"
+
+msgid ""
+"<b>Warning</b>: The agent installation will neither create this directory, "
+"nor set needed permissions on it. We recommend to use this setting only if "
+"you encounter problems with the default TMPDIR directory on a target system."
+"<br>Especially when running the agent as non-root, the agent user must have "
+"write access to this directory!"
+msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Non hai alcun ruolo.</b>"
@@ -19518,13 +19520,6 @@ msgstr "Directory per i file di configurazione"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
-msgstr ""
-"Directory per la memorizzazione dei dati temporanei (impostare la variabile "
-"d'ambiente TMPDIR)"
-
-#, fuzzy
-msgid ""
-"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Directory per la memorizzazione dei dati temporanei (impostare la variabile "
 "d'ambiente TMPDIR)"
@@ -65869,7 +65864,9 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "L'elenco dei tag host deve contenere solo stringhe, ma contiene anche %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "La connessione livestatus a questo sito configurata per non essere criptata."
 
@@ -69266,6 +69263,15 @@ msgstr ""
 "Questa condizione fa sì che la regola corrisponda solo agli host gestiti "
 "tramite Setup e contenuti in questa cartella, direttamente o in una delle "
 "sue sottocartelle."
+
+#, python-format
+msgid ""
+"This configuration has no effect in the current installation. It may be "
+"associated with an older version of Checkmk or an unused extension package, "
+"in which case it can be safely removed. Alternatively, it might belong to a "
+"temporarily disabled extension package, so you may want to retain it for "
+"now. You can use the %s page in case you want to remove the rule."
+msgstr ""
 
 msgid "This connection"
 msgstr "Questa connessione"
@@ -88057,6 +88063,10 @@ msgstr "sconosciuto"
 msgid "unknown (old agent)"
 msgstr "sconosciuto (vecchio agente)"
 
+#, fuzzy
+msgid "unknown rulesets"
+msgstr "Utente sconosciuto"
+
 msgid "unlimited"
 msgstr "illimitato"
 
@@ -88278,6 +88288,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy
+#~ msgid ""
+#~ "Directory for storage of temporary data (set TMPDIR environment "
+#~ "variable)<br>"
+#~ msgstr ""
+#~ "Directory per la memorizzazione dei dati temporanei (impostare la "
+#~ "variabile d'ambiente TMPDIR)"
 
 #, fuzzy
 #~ msgid "notification has been sent out"

@@ -1484,12 +1484,6 @@ msgstr ""
 "utilisateurs devront changer leur mot de passe lors de la prochaine "
 "connexion."
 
-msgid ""
-"<b>Note</b>: The agent installation will neither create this directory, nor "
-"set needed permissions on it. We recommend to use this setting only if you "
-"encounter problems with the default TMPDIR directory on a target system."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
@@ -1528,6 +1522,14 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Avertissement:</b> Il y a %d werks incompatibles non reconnus :"
+
+msgid ""
+"<b>Warning</b>: The agent installation will neither create this directory, "
+"nor set needed permissions on it. We recommend to use this setting only if "
+"you encounter problems with the default TMPDIR directory on a target system."
+"<br>Especially when running the agent as non-root, the agent user must have "
+"write access to this directory!"
+msgstr ""
 
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Vous n'avez aucun rôle.</b>"
@@ -19824,13 +19826,6 @@ msgstr "Répertoire pour les fichiers de configuration"
 
 msgid ""
 "Directory for storage of temporary data (set TMPDIR environment variable)"
-msgstr ""
-"Répertoire pour le stockage des données temporaires (définir la variable "
-"d'environnement TMPDIR)"
-
-#, fuzzy
-msgid ""
-"Directory for storage of temporary data (set TMPDIR environment variable)<br>"
 msgstr ""
 "Répertoire pour le stockage des données temporaires (définir la variable "
 "d'environnement TMPDIR)"
@@ -66985,7 +66980,9 @@ msgstr ""
 "La liste des balises d'hôtes ne doit contenir que des chaînes de caractères "
 "mais contient également %r"
 
-msgid "The livestatus connection to this site configured not to be encrypted."
+#, fuzzy
+msgid ""
+"The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
 "La connexion de livestatus à ce site est configurée pour ne pas être cryptée."
 
@@ -70439,6 +70436,15 @@ msgstr ""
 "Cette condition fait que la règle ne s'applique qu'aux hôtes qui sont gérés "
 "via Setup et qui sont contenus dans ce dossier - soit directement, soit dans "
 "l'un de ses sous-dossiers."
+
+#, python-format
+msgid ""
+"This configuration has no effect in the current installation. It may be "
+"associated with an older version of Checkmk or an unused extension package, "
+"in which case it can be safely removed. Alternatively, it might belong to a "
+"temporarily disabled extension package, so you may want to retain it for "
+"now. You can use the %s page in case you want to remove the rule."
+msgstr ""
 
 msgid "This connection"
 msgstr "Cette connexion"
@@ -89632,6 +89638,10 @@ msgstr "inconnu"
 msgid "unknown (old agent)"
 msgstr "inconnu (ancien agent)"
 
+#, fuzzy
+msgid "unknown rulesets"
+msgstr "Utilisateur inconnu"
+
 msgid "unlimited"
 msgstr "illimité"
 
@@ -89852,6 +89862,14 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Directory for storage of temporary data (set TMPDIR environment "
+#~ "variable)<br>"
+#~ msgstr ""
+#~ "Répertoire pour le stockage des données temporaires (définir la variable "
+#~ "d'environnement TMPDIR)"
 
 #~ msgid "notification has been sent out"
 #~ msgid_plural "notifications have been sent out"

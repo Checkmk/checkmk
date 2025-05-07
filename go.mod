@@ -4,10 +4,11 @@ module go.opentelemetry.io/collector/cmd/builder
 
 go 1.22.0
 
-toolchain go1.22.2
+toolchain go1.22.10
 
 require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.113.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/syslogexporter v0.113.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.113.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.113.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.113.0

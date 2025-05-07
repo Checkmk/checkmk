@@ -477,6 +477,8 @@ github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter 
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.113.0/go.mod h1:dCkytGVxWwym8gKICm3+GpvN4mH6M5/07orcJ2VWqFY=
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.113.0 h1:sYEmpMeBGMSoy8j1GSEkBO5GM578Qtq3QtmVcsYn51s=
 github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.113.0/go.mod h1:ULlXfiJdXw0ZzUGXLToQvGb1gQuIGC2BjtfyTnw3QtE=
+github.com/open-telemetry/opentelemetry-collector-contrib/exporter/syslogexporter v0.113.0 h1:U9rBWv5gBk0sMjRGdBNbK3wHcuyI15tyFOH2oLXB7xk=
+github.com/open-telemetry/opentelemetry-collector-contrib/exporter/syslogexporter v0.113.0/go.mod h1:7oxHNFvYVNP0UCjWi2VUrSxlFYH498NuzxAIEJPJeAQ=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.113.0 h1:iXIWZhTjYEjKenWgT/cKMKEjx5ixVym2grn1xo9TcuE=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.113.0/go.mod h1:2SJNyMVsFnHkhMjla77osrUsnFQxO4czhig88rlf42Y=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/encoding v0.113.0 h1:NlGfcZLEeGTVPtnNOA2jxXll4ZtevkWYzvG3qz75wGQ=

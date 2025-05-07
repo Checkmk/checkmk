@@ -251,7 +251,7 @@ def _export_msi_file_table(exe_dir: Path, *, name: str, msi_in: Path, out_dir: P
     _verbose(f"Export table {name} from file {msi_in}")
     exe = exe_dir / "msiinfo"
     if not exe.exists():
-        bail_out(f"{exe} is absent")
+        bail_out(f"{exe} is absent in {msi_in}")
 
     command = f"{exe} export {msi_in} {name} > {out_dir}/{name}.idt"
     result = os.system(command)  # nosec B605 # BNS:f6c1b9
@@ -396,6 +396,11 @@ def msi_update_core(
 
 def _unsign_msi(bin_dir: Path, *, signed: Path, unsigned: Path) -> None:
     if not (script := bin_dir / _APPLY_PATCH_SCRIPT).exists():
+        shutil.copy(signed, unsigned)  # fallback case for CI and Testing
+        return
+
+    if not (signed.parent / _UNSIGN_MSI_PATCH).exists():
+        _verbose("Unsign msi patch not found, it is allowed for unsigned msis(mkp, for example)")
         shutil.copy(signed, unsigned)  # fallback case for CI and Testing
         return
 

@@ -12,6 +12,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     MetaDataModel,
     NetworkScanModel,
     NetworkScanResultModel,
+    SNMPCredentialsConverter,
     SNMPCredentialsModel,
 )
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostTagGroupModel
@@ -26,7 +27,6 @@ class BaseFolderAttributeModel:
     site: str | ApiOmitted = api_field(
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
-    # TODO: validation for input
     parents: list[str] | ApiOmitted = api_field(
         description="A list of parents of this host.",
         default_factory=ApiOmitted,
@@ -44,7 +44,6 @@ class BaseFolderAttributeModel:
         description="Bake agent packages for this folder even if it is empty.",
         default_factory=ApiOmitted,
     )
-    # TODO: conversion handling must be reconsidered
     snmp_community: SNMPCredentialsModel | ApiOmitted = api_field(
         description=(
             "The SNMP access configuration. A configured SNMP v1/v2 community here "
@@ -82,6 +81,14 @@ class BaseFolderAttributeModel:
         description="IPMI credentials",
         default_factory=ApiOmitted,
     )
+
+    @staticmethod
+    def snmp_community_from_internal(value: str | tuple) -> SNMPCredentialsModel:
+        return SNMPCredentialsConverter.from_internal(value)
+
+    @staticmethod
+    def snmp_community_to_internal(value: SNMPCredentialsModel) -> str | tuple:
+        return SNMPCredentialsConverter.to_internal(value)
 
 
 @dataclass(kw_only=True, slots=True)

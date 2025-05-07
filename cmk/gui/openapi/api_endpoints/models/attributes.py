@@ -138,6 +138,39 @@ SNMPCredentialsModel = (
 )
 
 
+class SNMPCredentialsConverter:
+    @staticmethod
+    def from_internal(value: str | tuple) -> SNMPCredentialsModel:
+        if isinstance(value, str):
+            return SNMPCommunityModel(
+                community=value,
+            )
+
+        match value[0]:
+            case "noAuthNoPriv":
+                return SNMPv3NoAuthNoPrivacyModel.from_checkmk_tuple(value)
+            case "authPriv":
+                return SNMPv3AuthNoPrivacyModel.from_checkmk_tuple(value)
+            case "authPriv":
+                return SNMPv3AuthPrivacyModel.from_checkmk_tuple(value)
+            case _:
+                raise ValueError(f"Unknown SNMP credentials type: {value[0]!r}")
+
+    @staticmethod
+    def to_internal(field: SNMPCredentialsModel) -> str | tuple:
+        match field:
+            case SNMPCommunityModel():
+                return field.community
+            case SNMPv3NoAuthNoPrivacyModel():
+                return field.to_checkmk_tuple()
+            case SNMPv3AuthNoPrivacyModel():
+                return field.to_checkmk_tuple()
+            case SNMPv3AuthPrivacyModel():
+                return field.to_checkmk_tuple()
+            case _:
+                raise ValueError(f"Unknown SNMP credentials type: {field.type!r}")
+
+
 @dataclass(kw_only=True, slots=True)
 class IPAddressRangeModel:
     type: Literal["ip_range"] = "ip_range"

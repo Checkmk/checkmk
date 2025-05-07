@@ -116,7 +116,7 @@ class MetaData(TypedDict):
 #   -> Built-in tags can be defined here while custom(izable) tag groups can not
 # - How to represent custom host attributes?
 #   -> The values are always of type str, but can have arbritary keys
-class BuiltInHostAttributes(TypedDict, total=False):
+class HostAttributes(TypedDict, total=False):
     """All built-in host attributes to
 
     Host attributes are set on folders (mostly for inheritance to folders) and on hosts
@@ -149,18 +149,11 @@ class BuiltInHostAttributes(TypedDict, total=False):
     bake_agent_package: bool
     # Enterprise editions only
     cmk_agent_connection: Literal["push-agent", "pull-agent"]
-
-
-class BuiltInHostTagGroups(TypedDict, total=False):
+    # Built-in tag groups
     tag_agent: Literal["cmk-agent", "all-agents", "special-agents", "no-agent"]
     tag_piggyback: Literal["auto-piggyback", "piggyback", "no-piggyback"]
     tag_snmp_ds: Literal["no-snmp", "snmp-v2", "snmp-v1"]
     tag_address_family: Literal["ip-v4-only", "ip-v6-only", "ip-v4v6", "no-ip"]
-
-
-class HostAttributes(BuiltInHostAttributes, BuiltInHostTagGroups, total=False):
-    """Built-in and custom host attributes"""
-
     # Shipped tag attributes, but could be changed or even removed by users.
     # So we don't define the shipped literals here
     tag_criticality: str
@@ -514,8 +507,7 @@ class ABCHostAttribute(abc.ABC):
 
     def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
         """Each attribute may set multiple tag groups for a host
-        This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}
-        """
+        This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
 
     @property
@@ -585,8 +577,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     return [
         (t.ident, t.title)
         for t in sorted(
-            [t_class() for t_class in needed_topics],
-            key=lambda e: (e.sort_index, e.title),
+            [t_class() for t_class in needed_topics], key=lambda e: (e.sort_index, e.title)
         )
     ]
 
@@ -730,20 +721,16 @@ def config_based_tag_group_attributes(
             attribute = type(
                 "HostAttributeTag%s" % str(tag_group.id).title(),
                 (
-                    (
-                        ABCHostAttributeHostTagCheckbox
-                        if tag_group.is_checkbox_tag_group
-                        else ABCHostAttributeHostTagList
-                    ),
+                    ABCHostAttributeHostTagCheckbox
+                    if tag_group.is_checkbox_tag_group
+                    else ABCHostAttributeHostTagList,
                 ),
                 {
                     "_tag_group": tag_group,
                     "help": lambda _: tag_group.help,
-                    "_topic": (
-                        _declare_host_attribute_topic(topic_id, topic_spec)
-                        if topic_id not in host_attribute_topic_registry
-                        else host_attribute_topic_registry[topic_id]
-                    ),
+                    "_topic": _declare_host_attribute_topic(topic_id, topic_spec)
+                    if topic_id not in host_attribute_topic_registry
+                    else host_attribute_topic_registry[topic_id],
                     "topic": lambda self: self._topic,
                     "show_in_table": lambda self: False,
                     "show_in_folder": lambda self: True,
@@ -964,8 +951,7 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     def validate_input(self, value: str | None, varprefix: str) -> None:
         if self.is_mandatory() and not value:
             raise MKUserError(
-                varprefix + "attr_" + self.name(),
-                _("Please specify a value for %s") % self.title(),
+                varprefix + "attr_" + self.name(), _("Please specify a value for %s") % self.title()
             )
         if not self._allow_empty and (value is None or not value.strip()):
             raise MKUserError(

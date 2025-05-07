@@ -265,6 +265,25 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         )
 
 
+def is_expected_metric(row_id: str, expected_metric_name: str) -> bool:
+    expected_metric_name_lower = expected_metric_name.lower()
+    return (
+        row_id.startswith(expected_metric_name_lower)
+        or row_id.endswith(expected_metric_name_lower)
+        or expected_metric_name == row_id.split("_", 2)[-1]
+    )
+
+
+def extract_metric_value(row_values: list, convert_sum_stats_to_rate: bool) -> Any | None:
+    try:
+        value, time_period = row_values[0]
+        if convert_sum_stats_to_rate and time_period is not None:
+            return value / time_period
+        return value
+    except (IndexError, ValueError):
+        return None
+
+
 def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
@@ -273,37 +292,29 @@ def extract_aws_metrics_by_labels(
 ) -> Mapping[str, dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
+
     values_by_labels: dict[str, dict[str, Any]] = {}
+
     for row in section:
-        row_id = row["Id"].lower()
+        if (row_id := row.get("Id")) is None:
+            continue
+
         row_label = row["Label"]
         row_values = row["Values"]
+
         for expected_metric_name in expected_metric_names:
-            expected_metric_name_lower = expected_metric_name.lower()
-            if not row_id.startswith(expected_metric_name_lower) and not row_id.endswith(
-                expected_metric_name_lower
-            ):
+            if not is_expected_metric(row_id, expected_metric_name):
                 continue
 
-            try:
-                # AWSSectionCloudwatch in agent_aws.py yields both the actual values of the metrics
-                # as returned by Cloudwatch and the time period over which they were collected (for
-                # example 600 s). However, only for metrics based on the "Sum" statistics, the
-                # period is not None, because these metrics need to be divided by the period to
-                # convert the metric value to a rate. For all other metrics, the time period is
-                # None.
-                value, time_period = row_values[0]
-                if convert_sum_stats_to_rate and time_period is not None:
-                    value /= time_period
-            except IndexError:
-                continue
-            else:
-                values_by_labels.setdefault(row_label, {}).setdefault(expected_metric_name, value)
+            value = extract_metric_value(row_values, convert_sum_stats_to_rate)
+            if value is not None:
+                values_by_labels.setdefault(row_label, {})[expected_metric_name] = value
+
         for extra_key in extra_keys:
             extra_value = row.get(extra_key)
-            if extra_value is None:
-                continue
-            values_by_labels.setdefault(row_label, {}).setdefault(extra_key, extra_value)
+            if extra_value is not None:
+                values_by_labels.setdefault(row_label, {})[extra_key] = extra_value
+
     return values_by_labels
 
 

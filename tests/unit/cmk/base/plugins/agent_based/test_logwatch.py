@@ -167,6 +167,81 @@ def test_check_single(
     assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
 
 
+@pytest.mark.parametrize(
+    "group_name, reg_pattern, expected_result",
+    [
+        pytest.param(
+            "no_errors",
+            [("whatever", "")],
+            [
+                Result(
+                    state=State.OK,
+                    summary="No error messages",
+                ),
+            ],
+        ),
+        pytest.param(
+            "matching_pattern",
+            [("~log\\d$", "")],
+            [
+                Result(
+                    state=State.WARN,
+                    summary='2 WARN messages (Last worst: "very warning")',
+                ),
+            ],
+        ),
+        pytest.param(
+            "other_matching_pattern",
+            [("~log_.*", "")],
+            [
+                Result(
+                    state=State.WARN,
+                    summary='1 WARN messages (Last worst: "another warning")',
+                ),
+            ],
+        ),
+    ],
+)
+def test_check_logwatch_groups_node(
+    monkeypatch: pytest.MonkeyPatch,
+    group_name: str,
+    reg_pattern: Iterable[tuple[str, str]],
+    expected_result: Iterable[Result],
+) -> None:
+    monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
+    monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
+    monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
+
+    section = logwatch_.Section(
+        errors=[],
+        logfiles={
+            "log1": {
+                "attr": "ok",
+                "lines": {"batch1": ["W be cautious!"]},
+            },
+            "log2": {
+                "attr": "ok",
+                "lines": {"batch": ["W very warning"]},
+            },
+            "log_a": {
+                "attr": "ok",
+                "lines": {"batch2": ["W another warning"]},
+            },
+        },
+    )
+
+    assert (
+        list(
+            logwatch.check_logwatch_groups_node(
+                group_name,
+                {"group_patterns": reg_pattern},
+                section,
+            )
+        )
+        == expected_result
+    )
+
+
 SECTION2 = logwatch_.Section(
     errors=[],
     logfiles={

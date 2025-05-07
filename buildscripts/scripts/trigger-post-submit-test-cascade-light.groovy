@@ -22,6 +22,7 @@ def main() {
         "test-python3-typing",
         "test-bazel-lint",
         "test-bazel-format",
+        "test-github-actions",
         "test-groovy-lint",
         "test-shellcheck_agents",
         "test-shell_format",

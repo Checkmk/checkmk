@@ -64,7 +64,6 @@ class BaseFolderAttributeModel:
         ),
         default_factory=ApiOmitted,
     )
-    # TODO: "none" value should be converted to None during deserialization
     management_protocol: Literal["none", "snmp", "ipmi"] | ApiOmitted = api_field(
         description=(
             "The protocol used to connect to the management board."
@@ -89,6 +88,18 @@ class BaseFolderAttributeModel:
     @staticmethod
     def snmp_community_to_internal(value: SNMPCredentialsModel) -> str | tuple:
         return SNMPCredentialsConverter.to_internal(value)
+
+    @staticmethod
+    def management_protocol_to_internal(value: str) -> str | None:
+        if value == "none":
+            return None
+        return value
+
+    @staticmethod
+    def management_protocol_from_internal(value: str | None) -> str:
+        if value is None:
+            return "none"
+        return value
 
 
 @dataclass(kw_only=True, slots=True)

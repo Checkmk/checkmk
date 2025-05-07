@@ -9,6 +9,7 @@ site_crates.from_cargo(
         "//packages/site/check-cert:Cargo.toml",
         "//packages/site/check-http:Cargo.toml",
     ],
+    supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
 
 use_repo(site_crates, "site_crates")

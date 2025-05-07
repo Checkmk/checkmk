@@ -573,6 +573,27 @@ class Site:
         )
         return last_check
 
+    def wait_until_service_has_been_checked(
+        self, hostname: str, service_name: str, timeout: int = 10
+    ) -> None:
+        """Wait until the given service has been executed for a given host.
+
+        Args:
+            hostname: The hostname to check.
+            service_name: The name of the service to check.
+            timeout: The maximum time to wait for the service to be executed (in seconds).
+
+        Raises:
+            TimeoutError: If the service has not been executed within the timeout.
+        """
+
+        def _has_ping_been_executed() -> bool:
+            """Check if the PING service has been executed."""
+            host_services = self.get_host_services(hostname, extra_columns=("has_been_checked",))
+            return host_services[service_name].extra_columns["has_been_checked"] == 1
+
+        wait_until(_has_ping_been_executed, timeout=timeout, interval=0.5)
+
     def get_host_state(self, hostname: str) -> int:
         state: int = self.live.query_value(
             f"GET hosts\nColumns: state\nFilter: host_name = {hostname}"

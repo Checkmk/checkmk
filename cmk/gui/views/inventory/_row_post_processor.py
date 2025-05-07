@@ -78,7 +78,10 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = load_filtered_and_merged_tree(row)
+            row["host_inventory"] = load_filtered_and_merged_tree(
+                host_name=row["host_name"],
+                raw_status_data_tree=row.get("host_structured_status", b""),
+            )
         except Exception as e:
             if active_config.debug:
                 html.show_warning("%s" % e)

@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.inventory import (
-    get_status_data_via_livestatus,
+    get_raw_status_data_via_livestatus,
     load_filtered_and_merged_tree,
     load_latest_delta_tree,
 )
@@ -162,18 +162,21 @@ def _has_inventory_tree(
 
 
 def _get_inventory_tree(
-    is_history: bool, hostname: HostName, site_id: SiteId
+    is_history: bool, host_name: HostName, site_id: SiteId
 ) -> ImmutableTree | ImmutableDeltaTree:
     tree_cache = g.setdefault("inventory_tree_cache", {})
 
-    cache_id = (is_history, hostname, site_id)
+    cache_id = (is_history, host_name, site_id)
     if cache_id in tree_cache:
         return tree_cache[cache_id]
 
     tree: ImmutableTree | ImmutableDeltaTree = (
-        load_latest_delta_tree(InventoryStore(cmk.utils.paths.omd_root), hostname)
+        load_latest_delta_tree(InventoryStore(cmk.utils.paths.omd_root), host_name)
         if is_history
-        else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
+        else load_filtered_and_merged_tree(
+            host_name=host_name,
+            raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
+        )
     )
     tree_cache[cache_id] = tree
     return tree

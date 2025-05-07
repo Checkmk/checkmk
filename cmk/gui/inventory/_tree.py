@@ -31,7 +31,6 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Row
 from cmk.gui.watolib.groups_io import PermittedPath
 
 
@@ -192,12 +191,14 @@ def get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     return permitted_paths
 
 
-def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
+def load_filtered_and_merged_tree(
+    *, host_name: HostName | None, raw_status_data_tree: bytes
+) -> ImmutableTree:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
-    host_name = row.get("host_name")
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    if raw_status_data_tree := row.get("host_structured_status"):
+    if raw_status_data_tree:
+        # TODO
         status_data_tree = deserialize_tree(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
     else:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
@@ -209,10 +210,10 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
     return merged_tree
 
 
-def get_short_inventory_filepath(hostname: HostName) -> Path:
+def get_short_inventory_filepath(host_name: HostName) -> Path:
     return (
         InventoryPaths(cmk.utils.paths.omd_root)
-        .inventory_tree(hostname)
+        .inventory_tree(host_name)
         .relative_to(cmk.utils.paths.omd_root)
     )
 

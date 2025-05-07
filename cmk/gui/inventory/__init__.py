@@ -29,7 +29,6 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -119,10 +118,10 @@ def verify_permission(host_name: HostName, site: SiteId | None) -> None:
         raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
 
 
-def get_status_data_via_livestatus(site: SiteId | None, hostname: HostName) -> Row:
+def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName) -> bytes:
     query = (
         "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
-        % livestatus.lqencode(hostname)
+        % livestatus.lqencode(host_name)
     )
     try:
         sites.live().set_only_sites([site] if site else None)
@@ -130,10 +129,9 @@ def get_status_data_via_livestatus(site: SiteId | None, hostname: HostName) -> R
     finally:
         sites.live().set_only_sites()
 
-    row = {"host_name": hostname}
     if result and result[0]:
-        row["host_structured_status"] = result[0][0]
-    return row
+        return result[0][0]
+    return b""
 
 
 # .
@@ -176,7 +174,10 @@ def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRa
     site = SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
 
-    tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))
+    tree = load_filtered_and_merged_tree(
+        host_name=host_name,
+        raw_status_data_tree=get_raw_status_data_via_livestatus(site, host_name),
+    )
     if "paths" in api_request:
         return serialize_tree(
             tree.filter(make_filter_choices_from_api_request_paths(api_request["paths"]))

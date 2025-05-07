@@ -2,12 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc.hostaddress import HostName
 
-import cmk.utils
 from cmk.utils.structured_data import (
     deserialize_tree,
     ImmutableTree,
@@ -25,7 +25,6 @@ from cmk.gui.inventory._tree import (
     parse_inventory_path,
     TreeSource,
 )
-from cmk.gui.type_defs import Row
 from cmk.gui.watolib.groups_io import PermittedPath
 
 
@@ -289,34 +288,34 @@ def test__make_filter_choices_from_api_request_paths(
 
 
 @pytest.mark.parametrize(
-    "hostname, row, expected_tree",
+    "host_name, raw_status_data_tree, expected_tree",
     [
         (
             None,
-            {},
+            b"",
             deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
-            {},
+            b"",
             deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
-            {"host_structured_status": b""},
+            b"",
             deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
-            {"host_structured_status": b"{'deserialized': 'tree'}"},
+            b"{'deserialized': 'tree'}",
             deserialize_tree({"deserialized": "tree"}),
         ),
     ],
 )
 def test_load_filtered_and_merged_tree(
     monkeypatch: MonkeyPatch,
-    hostname: HostName | None,
-    row: Row,
+    host_name: HostName | None,
+    raw_status_data_tree: bytes,
     expected_tree: ImmutableTree,
     request_context: None,
 ) -> None:
@@ -331,5 +330,10 @@ def test_load_filtered_and_merged_tree(
             )
         ),
     )
-    row.update({"host_name": hostname})
-    assert load_filtered_and_merged_tree(row) == expected_tree
+    assert (
+        load_filtered_and_merged_tree(
+            host_name=host_name,
+            raw_status_data_tree=raw_status_data_tree,
+        )
+        == expected_tree
+    )

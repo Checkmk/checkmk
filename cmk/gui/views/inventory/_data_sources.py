@@ -22,7 +22,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.inventory._history import get_history
 from cmk.gui.inventory._tree import (
-    get_short_inventory_filepath,
     InventoryPath,
     load_filtered_and_merged_tree,
 )
@@ -120,9 +119,13 @@ class RowTableInventory(ABCRowTable):
         if not (self._info_names and (info_name := self._info_names[0])):
             return
 
+        host_name = hostrow.get("host_name")
         try:
             table_rows = (
-                load_filtered_and_merged_tree(hostrow)
+                load_filtered_and_merged_tree(
+                    host_name=host_name,
+                    raw_status_data_tree=hostrow.get("host_structured_status", b""),
+                )
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
             )
@@ -132,8 +135,11 @@ class RowTableInventory(ABCRowTable):
             user_errors.add(
                 MKUserError(
                     "load_inventory_tree",
-                    _("Cannot load HW/SW Inventory tree %s. Please remove the corrupted file.")
-                    % get_short_inventory_filepath(hostrow.get("host_name", "")),
+                    _(
+                        "Cannot load HW/SW Inventory tree of host %s."
+                        " Please remove the corrupted file."
+                    )
+                    % host_name,
                 )
             )
             return

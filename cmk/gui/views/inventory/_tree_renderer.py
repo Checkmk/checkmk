@@ -347,9 +347,12 @@ def ajax_inv_render_tree() -> None:
             )
             return
     else:
-        row = inventory.get_status_data_via_livestatus(site_id, host_name)
+        raw_status_data_tree = inventory.get_raw_status_data_via_livestatus(site_id, host_name)
         try:
-            tree = inventory.load_filtered_and_merged_tree(row)
+            tree = inventory.load_filtered_and_merged_tree(
+                host_name=host_name,
+                raw_status_data_tree=raw_status_data_tree,
+            )
         except Exception as e:
             if active_config.debug:
                 html.show_warning("%s" % e)

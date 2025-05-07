@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import ast
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
@@ -16,10 +15,10 @@ from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
-    deserialize_tree,
     ImmutableTree,
     InventoryPaths,
     InventoryStore,
+    parse_from_raw,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
@@ -197,11 +196,11 @@ def load_filtered_and_merged_tree(
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    if raw_status_data_tree:
-        # TODO
-        status_data_tree = deserialize_tree(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
-    else:
-        status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
+    status_data_tree = (
+        parse_from_raw(raw_status_data_tree)
+        if raw_status_data_tree
+        else _load_tree_from_file(tree_type="status_data", host_name=host_name)
+    )
 
     merged_tree = inventory_tree.merge(status_data_tree)
     if isinstance(permitted_paths := get_permitted_inventory_paths(), list):

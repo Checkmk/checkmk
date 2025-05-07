@@ -1775,6 +1775,10 @@ def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
     )
 
 
+def parse_from_raw(raw: bytes) -> ImmutableTree:
+    return deserialize_tree(ast.literal_eval(raw.decode("utf-8")))
+
+
 @dataclass(frozen=True)
 class HistoryPath:
     path: Path

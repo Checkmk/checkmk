@@ -21,11 +21,11 @@ from cmk.ccc.hostaddress import HostName
 def _set_precompile(site: Site) -> Iterator[None]:
     global_mk = "etc/check_mk/conf.d/wato/global.mk"
     delay_str = "\ndelay_precompile = True\n"
-    site.write_text_file(global_mk, f"{site.read_file(global_mk)}{delay_str}")
+    site.write_file(global_mk, f"{site.read_file(global_mk)}{delay_str}")
     try:
         yield None
     finally:
-        site.write_text_file(global_mk, site.read_file(global_mk).replace(delay_str, ""))
+        site.write_file(global_mk, site.read_file(global_mk).replace(delay_str, ""))
 
 
 @contextmanager

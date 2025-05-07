@@ -15,7 +15,7 @@ def test_www_dir(site: Site) -> None:
     web.get("/%s/testfile.html" % site.id, expected_code=401)
 
     try:
-        site.write_text_file("var/www/testfile.html", "123")
+        site.write_file("var/www/testfile.html", "123")
         assert web.get("/%s/testfile.html" % site.id, auth=("cmkadmin", "cmk")).text == "123"
     finally:
         site.delete_file("var/www/testfile.html")
@@ -27,7 +27,7 @@ def test_checkmk_htdocs(site: Site) -> None:
     web.get(f"/{site.id}/check_mk/local/foobar.txt", expected_code=404)
 
     try:
-        site.write_text_file("local/share/check_mk/web/htdocs/foobar.txt", "123")
+        site.write_file("local/share/check_mk/web/htdocs/foobar.txt", "123")
         assert web.get(f"/{site.id}/check_mk/local/foobar.txt").text == "123"
     finally:
         site.delete_file("local/share/check_mk/web/htdocs/foobar.txt")
@@ -42,7 +42,7 @@ def test_checkmk_htdocs_local_overwrite(site: Site) -> None:
 
     try:
         site.makedirs("local/share/check_mk/web/htdocs/images/icons/")
-        site.write_text_file("local/share/check_mk/web/htdocs/images/icons/core.png", "123")
+        site.write_file("local/share/check_mk/web/htdocs/images/icons/core.png", "123")
 
         response = web.get("/%s/check_mk/images/icons/core.png" % site.id)
         assert response.text == "123"

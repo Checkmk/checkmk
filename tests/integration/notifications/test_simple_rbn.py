@@ -19,9 +19,7 @@ from .watch_log import WatchLog
 
 @pytest.fixture(name="fake_sendmail")
 def fake_sendmail_fixture(site: Site) -> Iterator[None]:
-    site.write_text_file(
-        "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
-    )
+    site.write_file("local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n')
     try:
         site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
         yield
@@ -31,14 +29,14 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="fake_notification_rule")
 def fake_notification_rule(site: Site) -> Iterator[None]:
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/wato/notifications.mk",
         """# Written by Checkmk store\n\nnotification_rules += [{'rule_id': 'f03dd14d-63cd-4dac-8339-9b002753aa9e', 'allow_disable': True, 'contact_all': False, 'contact_all_with_email': False, 'contact_object': True, 'description': 'Notify all contacts of a host/service via HTML email', 'disabled': False, 'notify_plugin': ('mail', '1c131382-2cc5-4979-9026-71a935444d1f')}]""",
     )
     try:
         yield
     finally:
-        site.write_text_file(
+        site.write_file(
             "etc/check_mk/conf.d/wato/notifications.mk",
             """# Written by Checkmk store\n\nnotification_rules += [{'description': 'Notify all contacts of a host/service via HTML email', 'comment': '', 'docu_url': '', 'disabled': False, 'allow_disable': True, 'contact_object': True, 'contact_all': False, 'contact_all_with_email': False, 'rule_id': '50cf4824-12ad-41e2-a6f5-efdd21c55ae7', 'notify_plugin': ('mail', {})}]""",
         )
@@ -46,7 +44,7 @@ def fake_notification_rule(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="fake_notification_parameter")
 def fake_notification_parameter(site: Site) -> Iterator[None]:
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/wato/notification_parameter.mk",
         """# Written by Checkmk store\n\nnotification_parameter.update({'mail': {'1c131382-2cc5-4979-9026-71a935444d1f': {'general': {'description': 'Migrated from notification rule #0', 'comment': 'Auto migrated on update', 'docu_url': ''}, 'parameter_properties': {}}}})""",
     )

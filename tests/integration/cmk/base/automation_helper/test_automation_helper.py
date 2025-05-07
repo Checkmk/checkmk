@@ -153,7 +153,7 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
             cooldown_interval=default_configuration.reloader_config.cooldown_interval,
         ),
     )
-    site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
+    site.write_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
     _restart_automation_helper_and_wait_until_reachable(site)
     try:
         yield
@@ -181,7 +181,7 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
         watcher_config=default_configuration.watcher_config,
         reloader_config=default_configuration.reloader_config,
     )
-    site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
+    site.write_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
     _restart_automation_helper_and_wait_until_reachable(site)
     try:
         yield
@@ -192,7 +192,7 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
 
 @contextmanager
 def _fake_config_file(site: Site) -> Generator[None]:
-    site.write_text_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk", "")
+    site.write_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk", "")
     try:
         yield
     finally:

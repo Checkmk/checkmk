@@ -12,7 +12,7 @@ from tests.testlib.web_session import CMKWebSession
 def test_failed_transid_validations_is_logged(site: Site) -> None:
     web = CMKWebSession(site)
     web.login()
-    site.write_text_file("var/log/security.log", "")
+    site.write_file("var/log/security.log", "")
     # This page is chosen rather arbitrarily, it has only a few parameters
     # If that page changes this Test might fail and need to be adjusted
     web.get(

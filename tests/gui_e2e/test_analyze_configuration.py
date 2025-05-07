@@ -67,7 +67,7 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
     ]
     for path in paths:
         test_site.makedirs(path)
-        test_site.write_text_file(f"{path}/fake.py", "print('Fake')")
+        test_site.write_file(f"{path}/fake.py", "print('Fake')")
     yield
     for path in paths:
         test_site.delete_file(f"{path}/fake.py")

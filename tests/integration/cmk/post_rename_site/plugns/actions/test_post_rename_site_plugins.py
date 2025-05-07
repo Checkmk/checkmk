@@ -31,7 +31,7 @@ def plugin_path(site: Site) -> Iterator[str]:
     base_dir = "local/lib/python3/cmk/post_rename_site/plugins/actions"
     site.makedirs(base_dir)
     path = f"{base_dir}/test_plugin.py"
-    site.write_text_file(path, test_plugin_code)
+    site.write_file(path, test_plugin_code)
     yield path
     site.delete_file(path)
 

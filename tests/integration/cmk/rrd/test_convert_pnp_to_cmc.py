@@ -91,5 +91,5 @@ def _deploy_pnp_temperature_zone_0_files(
     raw_rrd = (our_location / filename_rrd).read_bytes()
 
     site.makedirs(_RELATIVE_PATH_PNP_RRDS / hostname)
-    site.write_text_file(_RELATIVE_PATH_PNP_RRDS / hostname / filename_xml, raw_xml)
-    site.write_binary_file(_RELATIVE_PATH_PNP_RRDS / hostname / filename_rrd, raw_rrd)
+    site.write_file(_RELATIVE_PATH_PNP_RRDS / hostname / filename_xml, raw_xml)
+    site.write_file(_RELATIVE_PATH_PNP_RRDS / hostname / filename_rrd, raw_rrd)

@@ -219,7 +219,7 @@ def _get_failed_logins(site: Site, user: str) -> int:
 
 
 def _set_failed_logins(site: Site, user: str, value: int) -> None:
-    site.write_text_file(f"var/check_mk/web/{user}/num_failed_logins.mk", f"{value}\n")
+    site.write_file(f"var/check_mk/web/{user}/num_failed_logins.mk", f"{value}\n")
 
 
 @contextlib.contextmanager
@@ -353,7 +353,7 @@ def enable_2fa(site: Site, username: str) -> Iterator[None]:
 
     Caution, this overrides any previous 2fa configs"""
 
-    site.write_text_file(
+    site.write_file(
         f"var/check_mk/web/{username}/two_factor_credentials.mk",
         repr(
             TwoFactorCredentials(

@@ -174,7 +174,7 @@ def test_cfg_fixture(
             },
         },
     }
-    site_for_mkbackup_tests.write_text_file("etc/check_mk/backup.mk", str(cfg))
+    site_for_mkbackup_tests.write_file("etc/check_mk/backup.mk", str(cfg))
 
     keys = {
         1: {
@@ -187,7 +187,7 @@ def test_cfg_fixture(
         }
     }
 
-    site_for_mkbackup_tests.write_text_file("etc/check_mk/backup_keys.mk", f"keys.update({keys})")
+    site_for_mkbackup_tests.write_file("etc/check_mk/backup_keys.mk", f"keys.update({keys})")
 
     yield None
 

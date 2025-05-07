@@ -106,12 +106,12 @@ def _get_replication_change() -> ChangeSpec:
 
 def _write_ec_rule(site: Site, rule: list | None) -> None:
     ec_rules_path = site.path("etc/check_mk/mkeventd.d/wato/rules.mk")
-    site.write_text_file(str(ec_rules_path), f"rule_packs += {rule}" if rule else "")
+    site.write_file(str(ec_rules_path), f"rule_packs += {rule}" if rule else "")
 
 
 def _activate_ec_changes(site: Site) -> None:
     replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
-    site.write_text_file(str(replication_changes_path), str(_get_replication_change()))
+    site.write_file(str(replication_changes_path), str(_get_replication_change()))
     site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
@@ -277,7 +277,7 @@ def _enable_receivers(site: Site, restart_site: None) -> Iterator[None]:
 def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
     logger.info("Enabling SNMP trap translation...")
     ec_global_rules_path = site.path("etc/check_mk/mkeventd.d/wato/9999-test_ec.mk")
-    site.write_text_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
+    site.write_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
     _activate_ec_changes(site)
 
     yield

@@ -19,7 +19,7 @@ def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) ->
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)
-    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
+    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_1.py"
@@ -33,7 +33,7 @@ def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) ->
     request.addfinalizer(cleanup)
 
     site.makedirs(test_check_dir)
-    site.write_text_file(
+    site.write_file(
         test_check_path,
         """
 import pprint
@@ -79,7 +79,7 @@ check_plugin_test_check_1 = CheckPlugin(
         raise AssertionError('"test_check_1" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/test_check_1.mk",
         "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )
@@ -102,9 +102,7 @@ def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> No
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)
-    site.write_text_file(
-        "var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n"
-    )
+    site.write_file("var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n")
 
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_2.py"
@@ -118,7 +116,7 @@ def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> No
     request.addfinalizer(cleanup)
 
     site.makedirs(test_check_dir)
-    site.write_text_file(
+    site.write_file(
         test_check_path,
         """
 import pprint
@@ -165,7 +163,7 @@ check_plugin_test_check_2 = CheckPlugin(
         raise AssertionError('"test_check_2" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/test_check_2.mk",
         "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )

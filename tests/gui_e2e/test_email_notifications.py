@@ -59,7 +59,7 @@ def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterat
     try:
         content = test_site.read_file(notification_rule_path)
         new_content = content[:-3] + f", 'match_hosts': ['{hostname}']" + content[-3:]
-        test_site.write_text_file(notification_rule_path, new_content)
+        test_site.write_file(notification_rule_path, new_content)
 
         yield hostname
 

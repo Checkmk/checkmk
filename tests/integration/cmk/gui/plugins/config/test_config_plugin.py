@@ -15,7 +15,7 @@ def plugin_path(site: Site) -> Iterator[str]:
     base_dir = "local/lib/python3/cmk/gui/plugins/config"
     site.makedirs(base_dir)
     path = f"{base_dir}/test_plugin.py"
-    site.write_text_file(path, 'x = "yo"\n')
+    site.write_file(path, 'x = "yo"\n')
     yield path
     site.delete_file(path)
 
@@ -30,7 +30,7 @@ def legacy_plugin_path(site: Site) -> Iterator[str]:
     base_dir = "local/share/check_mk/web/plugins/config"
     site.makedirs(base_dir)
     path = f"{base_dir}/test_plugin.py"
-    site.write_text_file(path, 'x = "legacy"\n')
+    site.write_file(path, 'x = "legacy"\n')
     yield path
     site.delete_file(path)
 

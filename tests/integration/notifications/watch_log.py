@@ -26,7 +26,7 @@ class WatchLog:
 
     def __enter__(self) -> "WatchLog":
         if not self._site.file_exists(self._log_path):
-            self._site.write_text_file(self._log_path, "")
+            self._site.write_file(self._log_path, "")
 
         self._tail_process = self._site.execute(
             ["tail", "-f", self._log_path.as_posix()],

@@ -46,12 +46,10 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
 
     site.openapi.hosts.create(hostname, attributes={"ipaddress": "127.0.0.1"})
 
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
         f"datasource_programs.append({{'condition': {{'hostname': ['{hostname}']}}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'}})\n",
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_text_file(
-        "var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output()
-    )
+    site.write_file("var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output())

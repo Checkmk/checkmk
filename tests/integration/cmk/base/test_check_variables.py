@@ -26,7 +26,7 @@ def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) ->
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, site, host_name)
-    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_3>>>\n1 2\n")
+    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_3>>>\n1 2\n")
 
     test_check_path = "local/share/check_mk/checks/test_check_3"
 
@@ -38,7 +38,7 @@ def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) ->
 
     request.addfinalizer(cleanup)
 
-    site.write_text_file(
+    site.write_file(
         test_check_path,
         """
 
@@ -78,7 +78,7 @@ check_info["test_check_3"] = LegacyCheckDefinition(
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/test_check_3.mk",
         """
 checkgroup_parameters.setdefault('asd', [])

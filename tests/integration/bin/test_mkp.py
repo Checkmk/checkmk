@@ -83,7 +83,7 @@ def _enabled_mkp(site: Site, name: str) -> Iterator[None]:
 @contextmanager
 def _temporary_manifest_file(site: Site, manifest: Manifest) -> Iterator[Path]:
     manifest_file = Path("tmp/manifest.tmp")
-    site.write_text_file(manifest_file, manifest.file_content())
+    site.write_file(manifest_file, manifest.file_content())
     try:
         yield manifest_file
     finally:
@@ -97,7 +97,7 @@ def _legacy_lib_file(site: Site) -> Iterator[Path]:
     site_rel_lib_file = lib_dir / lib_file
 
     with _with_parent_dir(site, site_rel_lib_file):
-        site.write_text_file(site_rel_lib_file, "")
+        site.write_file(site_rel_lib_file, "")
 
         yield lib_file
         assert not site.file_exists(site_rel_lib_file)

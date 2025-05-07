@@ -146,7 +146,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
             logger.info('Rule "%s" created!', ruleset_name)
 
             logger.info("Setting dynamic configuration global settings...")
-            site.write_text_file(
+            site.write_file(
                 "etc/check_mk/dcd.d/wato/global.mk",
                 "dcd_activate_changes_timeout = 30\n"
                 "dcd_bulk_discovery_timeout = 30\n"

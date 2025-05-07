@@ -459,7 +459,7 @@ class Site:
             for _ in self.read_file("etc/environment").splitlines()
             if not _.strip().startswith("TZ=")
         ] + [f"TZ={timezone}"]
-        self.write_text_file("etc/environment", "\n".join(environment) + "\n")
+        self.write_file("etc/environment", "\n".join(environment) + "\n")
         if restart_site:
             self.start()
 
@@ -680,7 +680,7 @@ class Site:
         source_path = caller_file.parent / name
         target_path = Path(target)
         self.makedirs(target_path.parent)
-        self.write_text_file(target_path, source_path.read_text())
+        self.write_file(target_path, source_path.read_text())
         try:
             yield
         finally:
@@ -780,10 +780,12 @@ class Site:
             excp.add_note(f"Failed to delete directory '{rel_path}'!")
             raise excp
 
-    def write_text_file(self, rel_path: str | Path, content: str) -> None:
-        write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
-
-    def write_binary_file(self, rel_path: str | Path, content: bytes) -> None:
+    def write_file(
+        self,
+        rel_path: str | Path,
+        content: bytes | str,
+    ) -> None:
+        """Write a file as the site user."""
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
     def create_rel_symlink(self, link_rel_target: str | Path, rel_link_name: str) -> None:
@@ -1011,13 +1013,13 @@ class Site:
         self.makedirs("etc/check_mk/liveproxyd.d")
         # 15 = verbose
         # 10 = debug
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/liveproxyd.d/logging.mk", "liveproxyd_log_levels = {'cmk.liveproxyd': 15}"
         )
 
     def _enable_mkeventd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/mkeventd.d")
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/mkeventd.d/logging.mk",
             "log_level = %r\n"
             % {
@@ -1038,7 +1040,7 @@ class Site:
             logger.warning("WARNING: /opt/bin/valgrind does not exist. Skip enabling it.")
             return
 
-        self.write_text_file(
+        self.write_file(
             "etc/default/cmc",
             f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet '
             f'--log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
@@ -1046,7 +1048,7 @@ class Site:
 
     def _set_number_of_apache_processes(self) -> None:
         self.makedirs("etc/apache/conf.d")
-        self.write_text_file(
+        self.write_file(
             "etc/apache/conf.d/tune-server-pool.conf",
             "\n".join(
                 [
@@ -1060,7 +1062,7 @@ class Site:
 
     def _set_number_of_cmc_helpers(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/conf.d/cmc-helpers.mk",
             "\n".join(
                 [
@@ -1073,11 +1075,11 @@ class Site:
 
     def _enable_cmc_core_dumps(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_text_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
+        self.write_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
 
     def _enable_cmc_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/conf.d/cmc-debug-logging.mk",
             "cmc_log_levels = %r\n"
             % {
@@ -1096,7 +1098,7 @@ class Site:
 
     def _disable_cmc_log_rotation(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/conf.d/cmc-log-rotation.mk",
             "cmc_log_rotation_method = 4\ncmc_log_limit = 1073741824\n",
         )
@@ -1107,7 +1109,7 @@ class Site:
         # 15: verbose
         # 20: informational
         # 30: warning (default)
-        self.write_text_file(
+        self.write_file(
             "etc/check_mk/multisite.d/logging.mk",
             "log_levels = %r\n"
             % {
@@ -1123,7 +1125,7 @@ class Site:
         )
 
     def _tune_nagios(self) -> None:
-        self.write_text_file(
+        self.write_file(
             "etc/nagios/nagios.d/zzz-test-tuning.cfg",
             # We need to observe these entries with WatchLog for our tests
             "log_passive_checks=1\n"
@@ -1404,7 +1406,7 @@ class Site:
         self.set_config("TRACE_SEND_TARGET", endpoint)
 
     def write_resource_config(self, extra_resource_attributes: Mapping[str, str]) -> None:
-        self.write_text_file(
+        self.write_file(
             "etc/omd/resource_attributes_from_config.json",
             json.dumps(extra_resource_attributes) + "\n",
         )
@@ -1688,7 +1690,7 @@ class Site:
         relative_path: Path,
         global_settings: Mapping[str, object],
     ) -> None:
-        self.write_text_file(
+        self.write_file(
             relative_path,
             "\n".join(f"{key} = {repr(val)}" for key, val in global_settings.items()),
         )
@@ -1711,7 +1713,7 @@ class Site:
         relative_path: Path,
         site_specific_settings: Mapping[str, Mapping[str, object]],
     ) -> None:
-        self.write_text_file(
+        self.write_file(
             relative_path,
             "\n".join(f"{key} = {repr(val)}" for key, val in site_specific_settings.items()),
         )
@@ -1830,7 +1832,7 @@ class SiteFactory:
             f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
             for customer in customers
         )
-        site.write_text_file("etc/check_mk/multisite.d/wato/customers.mk", customer_content)
+        site.write_file("etc/check_mk/multisite.d/wato/customers.mk", customer_content)
 
     def get_existing_site(
         self,
@@ -2305,7 +2307,7 @@ class PythonHelper:
 
     @contextmanager
     def copy_helper(self) -> Iterator[None]:
-        self.site.write_text_file(
+        self.site.write_file(
             str(self.site_path.relative_to(self.site.root)),
             self.helper_path.read_text(),
         )

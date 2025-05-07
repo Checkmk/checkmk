@@ -178,7 +178,7 @@ def _setup_settings(
     finally:
         for path in setting_files:
             if path in backed_settings:
-                central_site.write_text_file(path, backed_settings[path])
+                central_site.write_file(path, backed_settings[path])
             elif central_site.file_exists(path):
                 central_site.delete_file(path)
 

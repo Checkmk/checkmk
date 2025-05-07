@@ -89,10 +89,10 @@ def register(
     painter_registry.register(PainterAggrTreestateFrozenDiff)
     painter_registry.register(PainterAggrTreestateBoxed)
 
-    painter_option_registry.register(PainterOptionAggrExpand)
-    painter_option_registry.register(PainterOptionAggrOnlyProblems)
-    painter_option_registry.register(PainterOptionAggrTreeType)
-    painter_option_registry.register(PainterOptionAggrWrap)
+    painter_option_registry.register(PainterOptionAggrExpand())
+    painter_option_registry.register(PainterOptionAggrOnlyProblems())
+    painter_option_registry.register(PainterOptionAggrTreeType())
+    painter_option_registry.register(PainterOptionAggrWrap())
 
     permission_section_registry.register(PermissionSectionBI)
     permission_registry.register(PermissionBISeeAll)

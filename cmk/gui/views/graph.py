@@ -63,8 +63,8 @@ def register(
     painter_option_registry: PainterOptionRegistry,
     multisite_builtin_views: dict[ViewName, ViewSpec],
 ) -> None:
-    painter_option_registry.register(PainterOptionGraphRenderOptions)
-    painter_option_registry.register(PainterOptionPNPTimerange)
+    painter_option_registry.register(PainterOptionGraphRenderOptions())
+    painter_option_registry.register(PainterOptionPNPTimerange())
 
     multisite_builtin_views.update(_GRAPH_VIEWS)
 

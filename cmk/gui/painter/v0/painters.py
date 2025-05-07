@@ -99,10 +99,10 @@ from .registry import PainterRegistry
 def register(
     painter_option_registry: PainterOptionRegistry, painter_registry: PainterRegistry
 ) -> None:
-    painter_option_registry.register(PainterOptionTimestampFormat)
-    painter_option_registry.register(PainterOptionTimestampDate)
-    painter_option_registry.register(PainterOptionMatrixOmitUniform)
-    painter_option_registry.register(PainterOptionShowInternalGraphAndMetricIds)
+    painter_option_registry.register(PainterOptionTimestampFormat())
+    painter_option_registry.register(PainterOptionTimestampDate())
+    painter_option_registry.register(PainterOptionMatrixOmitUniform())
+    painter_option_registry.register(PainterOptionShowInternalGraphAndMetricIds())
     painter_registry.register(PainterSiteIcon)
     painter_registry.register(PainterSitenamePlain)
     painter_registry.register(PainterSitealias)

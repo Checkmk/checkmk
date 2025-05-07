@@ -46,7 +46,7 @@ def register(
     painter_registry_.register(PainterInvhistRemoved)
     painter_registry_.register(PainterInvhistNew)
     painter_registry_.register(PainterInvhistChanged)
-    painter_option_registry.register(PainterOptionShowInternalTreePaths)
+    painter_option_registry.register(PainterOptionShowInternalTreePaths())
 
     declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)
     declare_1to1_sorter("invhist_removed", cmp_simple_number)

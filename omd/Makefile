@@ -29,7 +29,6 @@ PACKAGES := \
     cpp-libs \
     msitools \
     apache-omd \
-    xinetd \
     check_mk \
     nagios \
     monitoring-plugins \

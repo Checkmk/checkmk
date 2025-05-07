@@ -182,7 +182,6 @@ debug:
 # Include rules to make packages
 include \
     packages/apache-omd/apache-omd.make \
-    packages/xinetd/xinetd.make \
     packages/cpp-libs/cpp-libs.make \
     packages/check_mk/check_mk.make \
     packages/monitoring-plugins/monitoring-plugins.make \

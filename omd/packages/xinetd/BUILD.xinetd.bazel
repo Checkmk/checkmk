@@ -50,3 +50,17 @@ configure_make(
     """,
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":xinetd"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "xinetd_bin",
+    srcs = [":xinetd"],
+    output_group = "xinetd",
+    visibility = ["//visibility:public"],
+)

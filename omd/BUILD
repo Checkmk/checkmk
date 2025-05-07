@@ -71,15 +71,27 @@ create_venv(
                "//packages/unixcat:unixcat_tar",
                ":license_info",
            ] + select({
-               "//:almalinux_8": [],
-               "//:almalinux_9": [],
+               "//:almalinux_8": ["//omd/packages/xinetd"],
+               "//:almalinux_9": ["//omd/packages/xinetd"],
                "//:cma_4": [],
                "//:debian_11": [],
                "//:debian_12": [],
-               "//:sles_15sp3": ["//omd/packages/libgsf"],
-               "//:sles_15sp4": ["//omd/packages/libgsf"],
-               "//:sles_15sp5": ["//omd/packages/libgsf"],
-               "//:sles_15sp6": ["//omd/packages/libgsf"],
+               "//:sles_15sp3": [
+                   "//omd/packages/libgsf",
+                   "//omd/packages/xinetd",
+               ],
+               "//:sles_15sp4": [
+                   "//omd/packages/libgsf",
+                   "//omd/packages/xinetd",
+               ],
+               "//:sles_15sp5": [
+                   "//omd/packages/libgsf",
+                   "//omd/packages/xinetd",
+               ],
+               "//:sles_15sp6": [
+                   "//omd/packages/libgsf",
+                   "//omd/packages/xinetd",
+               ],
                "//:ubuntu_22.04": [],
                "//:ubuntu_24.04": [],
            }) +

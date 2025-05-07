@@ -2,68 +2,74 @@
 
 /// file: trigger-packages.groovy
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-
-def build_stages(packages_file, force_build) {
-    def packages = load_json(packages_file);
-    def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
-
-    inside_container() {
-        sh("make .venv")
-        parallel packages.collectEntries { p ->
-            [("${p.name}"): {
-                stage(p.name) {
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        def job = upstream_build(
-                            omit_build_venv: true,
-                            download: false,
-                            relative_job_name: "builders/build-cmk-package",
-                            force_build: force_build,
-                            dependency_paths: [p.path] + p.dependencies,
-                            build_params: [
-                                "PACKAGE_PATH":  p.path,
-                                "SECRET_VARS": p.sec_vars.join(","),
-                                "COMMAND_LINE": p.command_line,
-                            ],
-                            build_params_no_check: ["CUSTOM_GIT_REF": cmd_output("git rev-parse HEAD")],
-                        );
-                        if (!job.new_build.asBoolean()) {
-                            Utils.markStageSkippedForConditional("${p.name}");
-                        }
-                        if (job.result != "SUCCESS") {
-                            notify.notify_maintainer_of_package(p.maintainers, p.name, "${job.url}" + "console")
-                            throw new Exception("Job ${p.name} failed");
-                        }
-                    }
-                }
-            }
-            ]
-        }
-    }
-}
-
-def preparation(packages_file) {
-    stage("Preparation") {
-        inside_container() {
-            sh("rm -rf results; mkdir results");
-            sh("buildscripts/scripts/collect_packages.py packages non-free/packages > ${packages_file}");
-        }
-    }
-}
-
 def main() {
     check_job_parameters([
         "FORCE_BUILD",
     ]);
 
-    dir("${checkout_dir}") {
-        def results_dir = "results";
-        def packages_file = "${results_dir}/packages_generated.json";
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-        preparation(packages_file);
+    def safe_branch_name = versioning.safe_branch_name();
+    def results_dir = "results";
+    def packages_file = "${results_dir}/packages_generated.json";
+    def packages = "";
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
 
-        build_stages(packages_file, params.FORCE_BUILD);
+    stage("Preparation") {
+        dir("${checkout_dir}") {
+            inside_container_minimal(safe_branch_name: safe_branch_name) {
+                sh("rm -rf results; mkdir results");
+                sh("buildscripts/scripts/collect_packages.py packages non-free/packages > ${packages_file}");
+                packages = load_json(packages_file);
+            }
+        }
+    }
 
+    def test_stages = packages.collectEntries { p ->
+        [("${p.name}"): {
+            def stepName = "${p.name}";
+            def build_instance = null;
+
+            smart_stage(
+                name: stepName,
+                raiseOnError: false,
+            ) {
+                build_instance = smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/builders/build-cmk-package",
+                    force_build: params.FORCE_BUILD,
+                    dependency_paths: [p.path] + p.dependencies,
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        PACKAGE_PATH:  p.path,
+                        SECRET_VARS: p.sec_vars.join(","),
+                        COMMAND_LINE: p.command_line,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
+                );
+
+                if ("${build_instance.result}" != "SUCCESS") {
+                    notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.url}" + "console")
+                    throw new Exception("Job ${stepName} failed");
+                }
+            }
+        }]
+    }
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    stage("Archive stuff") {
         show_duration("archiveArtifacts") {
             archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
         }

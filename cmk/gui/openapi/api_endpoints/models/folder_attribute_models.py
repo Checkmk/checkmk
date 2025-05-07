@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Literal
+from typing import Annotated, Literal
+
+from pydantic import WithJsonSchema
 
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
@@ -52,9 +54,16 @@ class BaseFolderAttributeModel:
         ),
         default_factory=ApiOmitted,
     )
-    # TODO: verify if Annotated can be used here for key and value
-    labels: dict[str, str] | ApiOmitted = api_field(
-        description=HostAttributeLabels().help(),
+    labels: (
+        dict[
+            str,
+            Annotated[
+                str, WithJsonSchema({"type": "string", "description": "The host label value"})
+            ],
+        ]
+        | ApiOmitted
+    ) = api_field(
+        description=f"{HostAttributeLabels().help()} The key is the host label key.",
     )
     network_scan: NetworkScanModel | ApiOmitted = api_field(
         description=(

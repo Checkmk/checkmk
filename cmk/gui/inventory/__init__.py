@@ -9,6 +9,7 @@ import json
 import shutil
 from collections.abc import Mapping
 from datetime import timedelta
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import livestatus
@@ -80,7 +81,7 @@ def register(
     cron_job_registry.register(
         CronJob(
             name="execute_inventory_housekeeping_job",
-            callable=execute_inventory_housekeeping_job,
+            callable=InventoryHousekeeping(cmk.utils.paths.omd_root),
             interval=timedelta(hours=12),
         )
     )
@@ -231,12 +232,12 @@ def page_host_inv_api() -> None:
 
 
 class InventoryHousekeeping:
-    def __init__(self) -> None:
+    def __init__(self, omd_root: Path) -> None:
         super().__init__()
-        self.inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
+        self.inv_paths = InventoryPaths(omd_root)
 
-    def run(self):
-        if not self.inv_paths.delta_cache_dir.exists() or not self.inv_paths.archive_dir.exists():
+    def __call__(self) -> None:
+        if not (self.inv_paths.delta_cache_dir.exists() and self.inv_paths.archive_dir.exists()):
             return
 
         inventory_archive_hosts = {
@@ -260,7 +261,7 @@ class InventoryHousekeeping:
                 delete = False
                 try:
                     first, second = file_path.name.split("_")
-                    if first not in available_timestamps or second not in available_timestamps:
+                    if not (first in available_timestamps and second in available_timestamps):
                         delete = True
                 except ValueError:
                     delete = True
@@ -279,10 +280,6 @@ class InventoryHousekeeping:
         ]:
             timestamps.add(filename.name)
         return timestamps
-
-
-def execute_inventory_housekeeping_job() -> None:
-    cmk.gui.inventory.InventoryHousekeeping().run()
 
 
 class VisualInfoInventoryHistory(VisualInfo):

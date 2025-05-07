@@ -16,6 +16,7 @@ def main() {
     def packages_file = "${results_dir}/packages_generated.json";
     def packages = "";
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
+    def send_notification_mail = !currentBuild.fullProjectName.contains("/cv/");
 
     stage("Preparation") {
         dir("${checkout_dir}") {
@@ -58,7 +59,9 @@ def main() {
                 );
 
                 if ("${build_instance.result}" != "SUCCESS") {
-                    notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.url}" + "console")
+                    if (send_notification_mail) {
+                        notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.url}" + "console")
+                    }
                     throw new Exception("Job ${stepName} failed");
                 }
             }

@@ -17,7 +17,7 @@ from cmk.server_side_calls.v1 import (
 )
 
 
-class Params(BaseModel):
+class Params(BaseModel, frozen=True):
     svc_item: str
     hostname: str | None = None
     protocol: Literal["http", "https"] | None = None
@@ -28,9 +28,12 @@ class Params(BaseModel):
     pattern: str
     fieldname: list[str] | None = None
     timerange: int
-    count: tuple[Literal["fixed"], tuple[int, int]] | tuple[Literal["no_levels"], None] | None = (
-        None
-    )
+    upper_log_count_thresholds: (
+        tuple[Literal["fixed"], tuple[int, int]] | tuple[Literal["no_levels"], None] | None
+    ) = None
+    lower_log_count_thresholds: (
+        tuple[Literal["fixed"], tuple[int, int]] | tuple[Literal["no_levels"], None] | None
+    ) = None
     verify_tls_cert: bool
 
 
@@ -52,9 +55,18 @@ def commands_function(
         args += ["-i", " ".join(params.index)]
     if params.fieldname is not None:
         args += ["-f", " ".join(params.fieldname)]
-    if params.count is not None and params.count[0] == "fixed":
-        warn, crit = params.count[1]
-        args += ["--warn=%d" % warn, "--crit=%d" % crit]
+    if (
+        params.upper_log_count_thresholds is not None
+        and params.upper_log_count_thresholds[0] == "fixed"
+    ):
+        warn, crit = params.upper_log_count_thresholds[1]
+        args += ["--warn-upper-log-count=%d" % warn, "--crit-upper-log-count=%d" % crit]
+    if (
+        params.lower_log_count_thresholds is not None
+        and params.lower_log_count_thresholds[0] == "fixed"
+    ):
+        warn, crit = params.lower_log_count_thresholds[1]
+        args += ["--warn-lower-log-count=%d" % warn, "--crit-lower-log-count=%d" % crit]
 
     if params.hostname is not None:
         args += ["-H", replace_macros(params.hostname, host_config.macros)]

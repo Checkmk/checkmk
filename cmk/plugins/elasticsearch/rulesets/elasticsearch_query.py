@@ -10,11 +10,12 @@ from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     Integer,
     LevelDirection,
+    LevelsType,
     List,
-    migrate_to_integer_simple_levels,
     migrate_to_password,
     Password,
     SimpleLevels,
@@ -164,13 +165,29 @@ def _parameter_form() -> Dictionary:
                 ),
                 required=True,
             ),
-            "count": DictElement(
+            "upper_log_count_thresholds": DictElement(
+                group=DictGroup(
+                    title=Title("Thresholds"),
+                ),
                 parameter_form=SimpleLevels(
-                    title=Title("Thresholds on message count"),
+                    title=Title("Thresholds on upper message count"),
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
                     prefill_fixed_levels=DefaultValue((0, 0)),
-                    migrate=migrate_to_integer_simple_levels,
+                ),
+                required=False,
+            ),
+            "lower_log_count_thresholds": DictElement(
+                group=DictGroup(
+                    title=Title("Thresholds"),
+                ),
+                parameter_form=SimpleLevels(
+                    title=Title("Thresholds on lower message count"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
+                    prefill_fixed_levels=DefaultValue((0, 0)),
                 ),
                 required=False,
             ),
@@ -181,7 +198,15 @@ def _parameter_form() -> Dictionary:
 def _migrate(input_dictionary: object) -> dict[str, object]:
     if not isinstance(input_dictionary, Mapping):
         raise TypeError(input_dictionary)
-    return {"verify_tls_cert": True, **input_dictionary}
+
+    migrated_dictionary = {k: v for k, v in input_dictionary.items() if k != "count"}
+
+    migrated_dictionary.setdefault("verify_tls_cert", True)
+
+    if count := input_dictionary.get("count"):
+        migrated_dictionary["upper_log_count_thresholds"] = count
+
+    return migrated_dictionary
 
 
 rule_spec_active_check_elasticsearch = ActiveCheck(

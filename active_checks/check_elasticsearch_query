@@ -74,32 +74,79 @@ def handle_request(args: argparse.Namespace, auth: tuple[str, str] | None) -> tu
     raw_response = requests.get(
         url, json=query, auth=auth, timeout=900, verify=args.verify_tls_cert
     )
-    msg, state, perfdata = handle_query(raw_response, args.warn, args.crit)
+
+    msg, state, perfdata = handle_query(
+        raw_response,
+        _handle_level_command_line_args(args.warn_upper_log_count, args.crit_upper_log_count),
+        _handle_level_command_line_args(args.warn_lower_log_count, args.crit_lower_log_count),
+    )
 
     return msg, state, perfdata
 
 
+def _handle_level_command_line_args(
+    warn: float | None, crit: float | None
+) -> tuple[float, float] | None:
+    return (warn, crit) if warn is not None and crit is not None else None
+
+
+def _check_lower_levels(
+    value: float,
+    levels: tuple[float, float] | None,
+) -> tuple[int, str]:
+    if levels:
+        lower_level_state = 2 if value < levels[1] else 1 if value < levels[0] else 0
+        if lower_level_state > 0:
+            return lower_level_state, "(warn/crit below %d/%d)" % levels
+    return 0, ""
+
+
+def _check_upper_levels(
+    value: float,
+    levels: tuple[float, float] | None,
+) -> tuple[int, str]:
+    if levels:
+        upper_level_state = 2 if value >= levels[1] else 1 if value >= levels[0] else 0
+        if upper_level_state > 0:
+            return upper_level_state, "(warn/crit at %d/%d)" % levels
+    return 0, ""
+
+
+def _check_levels(
+    value: float,
+    label: str,
+    metric_name: str,
+    upper_levels: tuple[float, float] | None,
+    lower_levels: tuple[float, float] | None,
+) -> tuple[str, int, str]:
+    msg = f"{label}: {value}"
+
+    upper_level_state, upper_level_msg = _check_upper_levels(value, upper_levels)
+    if upper_level_msg:
+        msg += f" {upper_level_msg}"
+
+    lower_level_state, lower_level_msg = _check_lower_levels(value, lower_levels)
+    if lower_level_msg:
+        msg += f" {lower_level_msg}"
+
+    return (
+        msg,
+        max(upper_level_state, lower_level_state),
+        f"{metric_name}={value}",
+    )
+
+
 def handle_query(
-    raw_response: requests.Response, warn: int | None, crit: int | None
+    raw_response: requests.Response,
+    upper_levels: tuple[float, float] | None,
+    lower_levels: tuple[float, float] | None,
 ) -> tuple[str, int, str]:
     response_data = raw_response.json()
 
     if "count" not in response_data:
         raise ValueError("Missing section count in raw response data")
 
-    state = 0
-    value = response_data["count"]
-    perfdata = "count=%s" % value
-    msg = "%s messages found" % value
-
-    if crit and warn:
-        msg += " (warn/crit at %d/%d)" % (warn, crit)
-        if value >= crit:
-            state = 2
-        elif value >= warn:
-            state = 1
-
-    return msg, state, perfdata
+    return _check_levels(response_data["count"], "Messages", "count", upper_levels, lower_levels)
 
 
 def parse_arguments(argv=None):
@@ -171,16 +218,28 @@ def parse_arguments(argv=None):
         help=("Debug mode: let Python exceptions come through"),
     )
     parser.add_argument(
-        "--warn",
+        "--warn-upper-log-count",
         type=int,
         default=None,
         help=("number of log messages above which the check will warn"),
     )
     parser.add_argument(
-        "--crit",
+        "--crit-upper-log-count",
         type=int,
         default=None,
         help=("number of log messages above which the check will become critical"),
+    )
+    parser.add_argument(
+        "--warn-lower-log-count",
+        type=int,
+        default=None,
+        help=("number of log messages below which the check will warn"),
+    )
+    parser.add_argument(
+        "--crit-lower-log-count",
+        type=int,
+        default=None,
+        help=("number of log messages below which the check will become critical"),
     )
     parser.add_argument(
         "-H",

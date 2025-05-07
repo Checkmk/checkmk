@@ -20,6 +20,7 @@ import {CmkGraphShifter} from "./timeseries/cmk_graph_shifter";
 import {CmkGraphTimeseriesFigure} from "./timeseries/cmk_graph_timeseries_figure";
 import {TimeseriesFigure} from "./timeseries/cmk_timeseries";
 import {SingleMetricFigure} from "./timeseries/single_metric_figure";
+import {PieChartFigure} from "@/modules/figures/cmk_pie_chart";
 
 export function register() {
     figure_registry.register(TableFigure);
@@ -30,6 +31,7 @@ export function register() {
     figure_registry.register(BarplotFigure);
     figure_registry.register(DCTableFigure);
     figure_registry.register(GaugeFigure);
+    figure_registry.register(PieChartFigure);
     figure_registry.register(InventoryFigure);
     figure_registry.register(SiteOverview);
     figure_registry.register(StateFigure);

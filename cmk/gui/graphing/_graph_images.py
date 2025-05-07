@@ -18,10 +18,11 @@ import livestatus
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pdf as pdf
+from cmk.gui import pdf
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
+from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._utils import MKGraphNotFound
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -229,6 +230,8 @@ def graph_recipes_for_api_request(
 
     try:
         graph_recipes = graph_specification.recipes()
+    except MKGraphNotFound:
+        raise MKNotFound()
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
@@ -245,6 +248,9 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
         graph_recipe = graph_recipes[0]
+
+    except MKGraphNotFound:
+        raise MKNotFound()
 
     except PydanticValidationError as e:
         raise MKUserError(None, str(e))

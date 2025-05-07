@@ -61,6 +61,9 @@ from ._type_defs import (
 from ._unit_info import unit_info
 
 
+class MKGraphNotFound(MKGeneralException): ...
+
+
 class ScalarDefinition(NamedTuple):
     expression: MetricExpression
     title: str
@@ -1161,7 +1164,7 @@ def get_graph_template(template_id: str) -> GraphTemplate:
         return GraphTemplate.from_name(template_id)
     if template := _graph_templates_internal().get(template_id):
         return template
-    raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
+    raise MKGraphNotFound(_("There is no graph template with the id '%s'") % template_id)
 
 
 def get_graph_templates(

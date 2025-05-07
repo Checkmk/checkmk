@@ -39,3 +39,31 @@ configure_make(
     targets = ["install"],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":libgsf"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gsf",
+    srcs = [":libgsf"],
+    output_group = "gsf",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gsf-office-thumbnailer",
+    srcs = [":libgsf"],
+    output_group = "gsf-office-thumbnailer",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gsf-vba-dump",
+    srcs = [":libgsf"],
+    output_group = "gsf-vba-dump",
+    visibility = ["//visibility:public"],
+)

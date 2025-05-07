@@ -35,6 +35,7 @@ $(DEPS_INSTALL_BAZEL):
 	# TODO: Find a better way to sync the generation and its clean up.
 	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
+	    $(if $(filter sles15%,$(DISTRO_CODE)),--define omd-libgsf=true) \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION_SHORT)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
@@ -185,7 +186,6 @@ include \
     packages/xinetd/xinetd.make \
     packages/cpp-libs/cpp-libs.make \
     packages/check_mk/check_mk.make \
-    packages/libgsf/libgsf.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
     packages/msitools/msitools.make \

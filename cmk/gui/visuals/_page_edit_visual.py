@@ -222,10 +222,16 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         mode,
         what,
     )
-    context_specs = get_context_specs(
-        visual["single_infos"],
-        info_handler(visual) if info_handler else list(visual_info_registry.keys()),
-    )
+    if mode == "clone":
+        context_specs = get_context_specs(
+            [],
+            info_handler(visual) if info_handler else list(visual_info_registry.keys()),
+        )
+    else:
+        context_specs = get_context_specs(
+            visual["single_infos"],
+            info_handler(visual) if info_handler else list(visual_info_registry.keys()),
+        )
 
     # handle case of save or try or press on search button
     save_and_go = None

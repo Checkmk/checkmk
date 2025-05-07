@@ -17,8 +17,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.utils.structured_data import (
     _DeltaDict,
     _deserialize_retention_interval,
-    _MutableAttributes,
-    _MutableTable,
     _parse_from_unzipped,
     _serialize_retention_interval,
     deserialize_delta_tree,
@@ -77,22 +75,6 @@ def test_equality_with_non_empty_nodes(
     left: MutableTree | ImmutableTree, right: MutableTree | ImmutableTree
 ) -> None:
     assert left == right
-
-
-def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
-    return MutableTree(
-        path=tree.path,
-        attributes=_MutableAttributes(
-            pairs=dict(tree.attributes.pairs),
-            retentions=tree.attributes.retentions,
-        ),
-        table=_MutableTable(
-            key_columns=tree.table.key_columns,
-            rows_by_ident={ident: dict(row) for ident, row in tree.table.rows_by_ident.items()},
-            retentions=tree.table.retentions,
-        ),
-        nodes_by_name={name: _make_mutable_tree(node) for name, node in tree.nodes_by_name.items()},
-    )
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
@@ -1169,7 +1151,7 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     try:
         inv_store.save_inventory_tree(
             host_name=HostName("foo"),
-            tree=_make_mutable_tree(orig_tree),
+            tree=orig_tree,
             meta=make_meta(do_archive=False),
         )
         loaded_tree = inv_store.load_inventory_tree(host_name=HostName("foo"))

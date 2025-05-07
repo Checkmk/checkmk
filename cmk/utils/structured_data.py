@@ -1862,7 +1862,9 @@ class InventoryStore:
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
         return _load_tree(self.inv_paths.inventory_tree(host_name))
 
-    def save_inventory_tree(self, *, host_name: HostName, tree: MutableTree, meta: SDMeta) -> None:
+    def save_inventory_tree(
+        self, *, host_name: HostName, tree: MutableTree | ImmutableTree, meta: SDMeta
+    ) -> None:
         _save_raw_tree(
             self.inv_paths.inventory_tree(host_name),
             self.inv_paths.inventory_tree_gz(host_name),
@@ -1880,7 +1882,7 @@ class InventoryStore:
         return _load_tree(self.inv_paths.status_data_tree(host_name))
 
     def save_status_data_tree(
-        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta
+        self, *, host_name: HostName, tree: MutableTree | ImmutableTree, meta: SDMeta
     ) -> None:
         _save_raw_tree(
             self.inv_paths.status_data_tree(host_name),

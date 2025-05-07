@@ -987,19 +987,19 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--vm_pwr_display",
-        choices=("vm", "esxhost"),
-        default=None,
-        help="""Specifies where the virtual machines power state should be shown. Default (no
-        option) is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show
-        on ESX host, vm - show on virtual machine""",
+        choices=("vm", "esxhost", "host"),
+        default="host",
+        help="""Specifies where the virtual machines power state should be shown. Default (host)
+        is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show
+        on ESX host, vm - show on virtual machine, host - show on vCenter.""",
     )
     parser.add_argument(
         "--host_pwr_display",
-        choices=("vm", "esxhost"),
-        default=None,
-        help="""Specifies where the ESX hosts power state should be shown. Default (no option)
+        choices=("vm", "esxhost", "host"),
+        default="host",
+        help="""Specifies where the ESX hosts power state should be shown. Default (host)
         is on the queried vCenter or ESX-Host. Possible options: esxhost - show on ESX host,
-        vm - show on virtual machine.""",
+        vm - show on virtual machine, host - show on vCenter.""",
     )
     parser.add_argument(
         "--snapshots-on-host",

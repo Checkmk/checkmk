@@ -468,7 +468,7 @@ def test_extension_compatibility(
     extension_download_url: str,
     name: str,
 ) -> None:
-    site.write_binary_file(
+    site.write_file(
         extension_filename := "tmp.mkp",
         _download_extension(extension_download_url),
     )

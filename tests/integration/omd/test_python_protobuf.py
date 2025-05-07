@@ -30,7 +30,7 @@ def fixture_test_dir(site: Site) -> Iterator[Path]:
 @pytest.fixture(name="proto_source_file")
 def fixture_proto_source_file(test_dir: Path, site: Site) -> Path:
     proto_path = test_dir / "test.proto"
-    site.write_text_file(
+    site.write_file(
         str(proto_path.relative_to(site.root)),
         """syntax = "proto2";
 

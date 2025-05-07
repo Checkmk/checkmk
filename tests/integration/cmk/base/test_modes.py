@@ -47,21 +47,15 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         },
     )
 
-    site.write_text_file(
+    site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
         "datasource_programs.append({'condition': {}, 'value': 'cat ~/var/check_mk/agent_output/<HOST>'})\n",
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_text_file(
-        "var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output()
-    )
-    site.write_text_file(
-        "var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output()
-    )
-    site.write_text_file(
-        "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
-    )
+    site.write_file("var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output())
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")

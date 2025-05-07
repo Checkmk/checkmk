@@ -18,7 +18,7 @@ def fixture_plugin_path(site: Site) -> Iterator[str]:
     site.makedirs(base_dir)
     plugin_path = f"{base_dir}/test_plugin.py"
 
-    site.write_text_file(
+    site.write_file(
         plugin_path,
         """
 with open("%s", "w") as f:

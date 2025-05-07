@@ -20,11 +20,19 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
                 "index": ["f", "o", "o"],
                 "pattern": "bar",
                 "timerange": 1,
+                "verify_tls_cert": True,
             },
             HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
             ["-q", "bar", "-t", "1", "-i", "f o o", "-H", "test"],
             "Elasticsearch Query stuff",
             id="basic config",
+        ),
+        pytest.param(
+            {"svc_item": "stuff", "pattern": "bar", "timerange": 1, "verify_tls_cert": False},
+            HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
+            ["-q", "bar", "-t", "1", "-H", "test", "--no-verify-tls-cert"],
+            "Elasticsearch Query stuff",
+            id="basic config without TLS verification",
         ),
         pytest.param(
             {
@@ -33,6 +41,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
                 "pattern": "bar",
                 "timerange": 1,
                 "count": ("fixed", (1, 5)),
+                "verify_tls_cert": True,
             },
             HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
             ["-q", "bar", "-t", "1", "-i", "f o o", "--warn=1", "--crit=5", "-H", "test"],

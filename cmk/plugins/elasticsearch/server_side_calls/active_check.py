@@ -31,6 +31,7 @@ class Params(BaseModel):
     count: tuple[Literal["fixed"], tuple[int, int]] | tuple[Literal["no_levels"], None] | None = (
         None
     )
+    verify_tls_cert: bool
 
 
 def commands_function(
@@ -59,6 +60,9 @@ def commands_function(
         args += ["-H", replace_macros(params.hostname, host_config.macros)]
     else:
         args += ["-H", host_config.primary_ip_config.address]
+
+    if not params.verify_tls_cert:
+        args += ["--no-verify-tls-cert"]
 
     item = replace_macros(params.svc_item, host_config.macros)
     yield ActiveCheckCommand(

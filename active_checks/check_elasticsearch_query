@@ -71,8 +71,9 @@ def handle_request(args: argparse.Namespace, auth: tuple[str, str] | None) -> tu
     if args.fieldname:
         query["query"]["bool"]["must"][0]["query_string"]["fields"] = args.fieldname.split(" ")
 
-    raw_response = requests.get(url, json=query, auth=auth, timeout=900)
-
+    raw_response = requests.get(
+        url, json=query, auth=auth, timeout=900, verify=args.verify_tls_cert
+    )
     msg, state, perfdata = handle_query(raw_response, args.warn, args.crit)
 
     return msg, state, perfdata
@@ -185,6 +186,13 @@ def parse_arguments(argv=None):
         "-H",
         "--hostname",
         help=("Defines the elasticsearch instances to query."),
+    )
+    parser.add_argument(
+        "--verify-tls-cert",
+        type=bool,
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help=("Enable or disable TLS cert validation."),
     )
 
     return parser.parse_args()

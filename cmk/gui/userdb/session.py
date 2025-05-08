@@ -70,7 +70,7 @@ def _load_secret() -> bytes:
     # checks for such secrets and creates a new one. This will invalidate all
     # current auth cookies which means that all logged in users will need to
     # renew their login after update.
-    if secret is None or len(secret) == 32:
+    if not secret or len(secret) == 32:
         secret = secrets.token_bytes(256)
         secret_path.write_bytes(secret)
     return secret

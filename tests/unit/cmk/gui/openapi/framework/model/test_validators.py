@@ -10,7 +10,11 @@ from pytest_mock import MockerFixture
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.openapi.framework.model.validators import HostAddressValidator, TagValidator
+from cmk.gui.openapi.framework.model.validators import (
+    HostAddressValidator,
+    TagValidator,
+    UserValidator,
+)
 
 
 class TestHostAddressValidator:
@@ -97,3 +101,23 @@ class TestTagValidatorCriticality:
     def test_not_present_and_omitted(self, tag_is_not_present: None) -> None:
         omitted = ApiOmitted()
         assert omitted == TagValidator.tag_criticality_presence(omitted)
+
+
+class TestUserValidator:
+    @pytest.fixture(name="user_is_present")
+    def fixture_user_is_present(self, mocker: MockerFixture) -> Iterator[str]:
+        user = "test_user"
+        mocker.patch("cmk.gui.userdb.load_users", return_value={user: {"name": user}})
+        yield user
+
+    @pytest.fixture(name="user_is_not_present")
+    def fixture_user_is_not_present(self, mocker: MockerFixture) -> Iterator[None]:
+        mocker.patch("cmk.gui.userdb.load_users", return_value={})
+        yield None
+
+    def test_present(self, user_is_present: str) -> None:
+        assert user_is_present == UserValidator.active(user_is_present)
+
+    def test_not_present(self, user_is_not_present: str) -> None:
+        with pytest.raises(ValueError, match="User .* does not exist"):
+            UserValidator.active(user_is_not_present)

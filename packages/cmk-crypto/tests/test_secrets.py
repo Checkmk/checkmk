@@ -6,6 +6,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.crypto.secrets import LocalSecret, Secret
 
 
@@ -29,8 +31,34 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     )
 
 
+def test_empty_secrets_get_overwritten(tmp_path: Path) -> None:
+    """Empty secret files get overwritten.
+
+    Note that Secret would raise an error if you tried to create an empty secret.
+    This test ensures that LocalSecret deals with empty files.
+    """
+
+    my_secret_file = tmp_path / "mytest.secret"
+    my_secret_file.touch()
+
+    class MySecret(LocalSecret):
+        path = my_secret_file
+
+    assert MySecret().secret.reveal()
+
+
 def test_secret_base64() -> None:
     """Secrets can be converted to and from base64"""
 
     secret = Secret.generate(length=8)
     assert secret.compare(Secret.from_b64(secret.b64_str))
+
+
+def test_refusing_to_create_empty_secrets() -> None:
+    """Refusing to create empty secrets"""
+
+    with pytest.raises(ValueError):
+        Secret.generate(length=0)
+
+    with pytest.raises(ValueError):
+        Secret(b"")

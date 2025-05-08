@@ -182,16 +182,17 @@ def handle_endpoint_request(
     ):
         raw_response = model.validate_request_and_call_handler(request_data, content_type)
 
-    if isinstance(raw_response, Response):
-        _validate_direct_response(raw_response)
-        response = raw_response
-    else:
-        response = _create_response(
-            raw_response,
-            model.response_body_type,
-            endpoint.content_type,
-            add_etag=endpoint.etag in ("output", "both"),
-        )
+    with tracer.span("create-response"):
+        if isinstance(raw_response, Response):
+            _validate_direct_response(raw_response)
+            response = raw_response
+        else:
+            response = _create_response(
+                raw_response,
+                model.response_body_type,
+                endpoint.content_type,
+                add_etag=endpoint.etag in ("output", "both"),
+            )
 
     # Step 5: Check permissions
     if response.status_code < 400:

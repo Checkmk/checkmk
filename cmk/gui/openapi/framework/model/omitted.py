@@ -22,6 +22,10 @@ from typing import Any
 from pydantic import GetCoreSchemaHandler, TypeAdapter
 from pydantic_core import core_schema, CoreSchema
 
+from cmk import trace
+
+tracer = trace.get_tracer()
+
 OMITTED_PLACEHOLDER = "<ApiOmitted_PLACEHOLDER>"
 
 
@@ -71,10 +75,12 @@ def _remove_omitted(json_object: object) -> object:
         raise TypeError("Unsupported type for JSON serialization")
 
 
+@tracer.instrument("json_dump_without_omitted")
 def json_dump_without_omitted[T](instance_type: type[T], instance: T) -> object:
     """Serialize the given dataclass instance to JSON, removing omitted fields."""
     # This will be called at most once per REST-API request
-    adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
+    with tracer.span("create_type_adapter"):
+        adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
     # context can be used by custom validators/serializers to skip some checks
     json_bytes = adapter.dump_json(instance, by_alias=True, context={"direction": "outbound"})
     # In order to remove the omitted values, we load the JSON bytes into a Python object

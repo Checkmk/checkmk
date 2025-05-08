@@ -29,9 +29,14 @@ from cmk.gui.openapi.framework.model.api_field import api_field
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 
+from cmk import trace
+
 type ApiInputModel[T: type[DataclassInstance]] = T
 """Dataclass with optional fields: body, path, query, headers
 This is an implementation detail of the endpoint wrapping, and should not be used elsewhere."""
+
+
+tracer = trace.get_tracer()
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -344,6 +349,7 @@ class EndpointModel[**P, T]:
         self.response_body_type = response_body_type
 
     @classmethod
+    @tracer.instrument("build_endpoint_model")
     def build(cls, handler: Callable[P, T]) -> Self:
         """Build the endpoint model from the handler function."""
         signature = inspect.signature(handler, eval_str=True)
@@ -401,6 +407,7 @@ class EndpointModel[**P, T]:
         out.update(query_args)  # add any extra query args, to trigger pydantic validation errors
         return out
 
+    @tracer.instrument("validate_request_parameters")
     def _validate_request_parameters(
         self, request_data: RawRequestData, content_type: str | None
     ) -> inspect.BoundArguments:
@@ -458,7 +465,8 @@ class EndpointModel[**P, T]:
             bound_arguments = self._validate_request_parameters(request_data, content_type)
         except ValidationError as e:
             RequestDataValidator.raise_formatted_pydantic_error(e)
-        return self._handler(*bound_arguments.args, **bound_arguments.kwargs)
+        with tracer.span("endpoint-body-call"):
+            return self._handler(*bound_arguments.args, **bound_arguments.kwargs)
 
     def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:
         for field_instance in dataclasses.fields(self._input_model):

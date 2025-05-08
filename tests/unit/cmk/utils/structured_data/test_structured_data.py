@@ -15,6 +15,7 @@ from tests.testlib.common.repo import repo_path
 from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import (
+    _DeltaDict,
     _deserialize_retention_interval,
     _MutableAttributes,
     _MutableTable,
@@ -515,8 +516,8 @@ def test_filter_delta_tree_nt() -> None:
     assert not filtered_child.attributes.pairs
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"nt1": SDDeltaValue(None, "NT 01")},
-        {"nt1": SDDeltaValue(None, "NT 11")},
+        {"nt1": SDDeltaValue(old=None, new="NT 01")},
+        {"nt1": SDDeltaValue(old=None, new="NT 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -543,7 +544,7 @@ def test_filter_delta_tree_na() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
     assert len(filtered_child) == 1
     assert filtered_child.path == ("path-to-nta", "na")
-    assert filtered_child.attributes.pairs == {"na1": SDDeltaValue(None, "NA 1")}
+    assert filtered_child.attributes.pairs == {"na1": SDDeltaValue(old=None, new="NA 1")}
     assert filtered_child.table.rows == []
 
 
@@ -569,11 +570,11 @@ def test_filter_delta_tree_ta() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_child) == 3
     assert filtered_child.path == ("path-to-nta", "ta")
-    assert filtered_child.attributes.pairs == {"ta1": SDDeltaValue(None, "TA 1")}
+    assert filtered_child.attributes.pairs == {"ta1": SDDeltaValue(old=None, new="TA 1")}
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"ta1": SDDeltaValue(None, "TA 01")},
-        {"ta1": SDDeltaValue(None, "TA 11")},
+        {"ta1": SDDeltaValue(old=None, new="TA 01")},
+        {"ta1": SDDeltaValue(old=None, new="TA 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -610,11 +611,11 @@ def test_filter_delta_tree_nta_ta() -> None:
 
     filtered_ta = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_ta) == 5
-    assert filtered_ta.attributes.pairs == {"ta0": SDDeltaValue(None, "TA 0")}
+    assert filtered_ta.attributes.pairs == {"ta0": SDDeltaValue(old=None, new="TA 0")}
     assert len(filtered_ta.table.rows) == 2
     for row in (
-        {"ta0": SDDeltaValue(None, "TA 00"), "ta1": SDDeltaValue(None, "TA 01")},
-        {"ta0": SDDeltaValue(None, "TA 10"), "ta1": SDDeltaValue(None, "TA 11")},
+        {"ta0": SDDeltaValue(old=None, new="TA 00"), "ta1": SDDeltaValue(old=None, new="TA 01")},
+        {"ta0": SDDeltaValue(old=None, new="TA 10"), "ta1": SDDeltaValue(old=None, new="TA 11")},
     ):
         assert row in filtered_ta.table.rows
 
@@ -1850,3 +1851,52 @@ def test_serialize_retention_interval(
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
     assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval
+
+
+@pytest.mark.parametrize(
+    "keep_identical, result",
+    [
+        pytest.param(
+            False,
+            _DeltaDict(
+                result={
+                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
+                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+                },
+                has_changes=True,
+            ),
+            id="do-not-keep-identical",
+        ),
+        pytest.param(
+            True,
+            _DeltaDict(
+                result={
+                    SDKey("key1"): SDDeltaValue(old="val1", new="val1"),
+                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
+                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+                },
+                has_changes=True,
+            ),
+            id="keep-identical",
+        ),
+    ],
+)
+def test__delta_dict(keep_identical: bool, result: _DeltaDict) -> None:
+    assert (
+        _DeltaDict.compare(
+            left={
+                SDKey("key1"): "val1",
+                SDKey("key2"): "val2",
+                SDKey("key4"): "val4-new",
+            },
+            right={
+                SDKey("key1"): "val1",
+                SDKey("key3"): "val3",
+                SDKey("key4"): "val4-old",
+            },
+            keep_identical=keep_identical,
+        )
+        == result
+    )

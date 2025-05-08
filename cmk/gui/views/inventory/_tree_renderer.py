@@ -296,7 +296,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                     paint_function=c.paint_function,
                 )
                 for c in columns
-                for v in (row.get(c.key) or SDDeltaValue(None, None),)
+                for v in (row.get(c.key) or SDDeltaValue(old=None, new=None),)
             ]
 
         min_type = _MinType()
@@ -313,7 +313,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 for row in sorted(
                     self.table.rows,
                     key=lambda r: tuple(
-                        _sanitize(r.get(c.key) or SDDeltaValue(None, None)) for c in columns
+                        _sanitize(r.get(c.key) or SDDeltaValue(old=None, new=None)) for c in columns
                     ),
                 )
                 if any(_delta_value_has_change(delta_value) for delta_value in row.values())

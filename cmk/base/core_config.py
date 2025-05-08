@@ -347,8 +347,10 @@ def _bake_on_restart(
 
     agent_bakery.bake_agents(
         target_configs,
-        v1_bakery_plugins=load_v1_plugins(),
-        core_bakelets=load_core_plugins(),
+        plugin_executor=agent_bakery.PluginExecutor(
+            v1_bakery_plugins=load_v1_plugins(),
+            core_bakelets=load_core_plugins(),
+        ),
         bake_revision_mode=(
             BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
         ),

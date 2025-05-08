@@ -1711,11 +1711,11 @@ def _save_raw_tree(file_path: Path, file_path_gz: Path, raw_tree: SDRawTree, met
 
 
 def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
-    if not (tree_file := inv_paths.inventory_tree(host_name)).exists():
+    if not (file_path := inv_paths.inventory_tree(host_name)).exists():
         return
-    archive_tree = inv_paths.archive_tree(host_name, str(int(tree_file.stat().st_mtime)))
+    archive_tree = inv_paths.archive_tree(host_name, str(int(file_path.stat().st_mtime)))
     archive_tree.parent.mkdir(parents=True, exist_ok=True)
-    tree_file.rename(archive_tree)
+    file_path.rename(archive_tree)
     inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
 
@@ -1898,18 +1898,18 @@ class InventoryStore:
         self.inv_paths.status_data_tree_gz(host_name).unlink(missing_ok=True)
 
     def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        if (tree_file := self.inv_paths.inventory_tree(host_name)).exists():
-            return _load_tree(tree_file)
+        if (file_path := self.inv_paths.inventory_tree(host_name)).exists():
+            return _load_tree(file_path)
 
         try:
-            latest_archive_tree_file = max(
+            latest_archive_file_path = max(
                 self.inv_paths.archive_host(host_name).iterdir(),
                 key=lambda tp: int(tp.name),
             )
         except (FileNotFoundError, ValueError):
             return ImmutableTree()
 
-        return _load_tree(latest_archive_tree_file)
+        return _load_tree(latest_archive_file_path)
 
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         _archive_inventory_tree(self.inv_paths, host_name)
@@ -1930,9 +1930,9 @@ class InventoryStore:
             except ValueError:
                 corrupted.append(file_path)
 
-        tree_file = self.inv_paths.inventory_tree(host_name)
+        file_path = self.inv_paths.inventory_tree(host_name)
         try:
-            paths.append(HistoryPath(path=tree_file, timestamp=int(tree_file.stat().st_mtime)))
+            paths.append(HistoryPath(path=file_path, timestamp=int(file_path.stat().st_mtime)))
         except FileNotFoundError:
             pass
 

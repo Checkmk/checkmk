@@ -36,7 +36,7 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi.framework import RawRequestData
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.handler import handle_endpoint_request
-from cmk.gui.openapi.framework.headers import (
+from cmk.gui.openapi.framework.model.headers import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )

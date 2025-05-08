@@ -14,7 +14,7 @@ from marshmallow.fields import Field
 from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
-from cmk.gui.openapi.framework.headers import (
+from cmk.gui.openapi.framework.model.headers import (
     CONTENT_TYPE,
     ETAG_HEADER,
     ETAG_IF_MATCH_HEADER,

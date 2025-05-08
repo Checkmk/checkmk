@@ -11,14 +11,14 @@ from apispec import APISpec
 from pydantic import TypeAdapter
 
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
-from cmk.gui.openapi.framework.headers import (
+from cmk.gui.openapi.framework.model.api_field import api_field
+from cmk.gui.openapi.framework.model.headers import (
     CONTENT_TYPE,
     ETAG_HEADER,
     ETAG_IF_MATCH_HEADER,
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.framework.model.api_field import api_field
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.registry import VersionedSpecEndpoint
 from cmk.gui.openapi.restful_objects.type_defs import (

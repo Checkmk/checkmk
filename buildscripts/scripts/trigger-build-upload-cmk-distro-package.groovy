@@ -40,7 +40,7 @@ def main() {
     def download_dir = "package_download";
     def incremented_counter = "";
     def setup_values = single_tests.common_prepare(version: "daily");
-    def all_editions = ["enterprise", "managed", params.EDITION].unique();
+    def all_editions = ["enterprise", "managed", "raw", params.EDITION].unique();
 
     print(
         """

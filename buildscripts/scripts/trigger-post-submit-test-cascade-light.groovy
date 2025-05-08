@@ -14,25 +14,25 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def job_names = [
-        "test-python3-pylint",
-        "test-python3-bandit",
         "test-agent-plugin-unit",
-        "test-python3-code-quality",
-        "test-python3-format",
-        "test-python3-typing",
+        "test-bazel-lint",
+        "test-bazel-format",
+        "test-css-format",
+        "test-github-actions",
+        "test-groovy-lint",
         "test-javascript-format",
         "test-javascript-build",
         "test-javascript-lint",
-        "test-typescript-types",
-        "test-css-format",
-        "test-bazel-lint",
-        "test-bazel-format",
-        "test-github-actions",
-        "test-groovy-lint",
+        "test-python3-bandit",
+        "test-python3-code-quality",
+        "test-python3-format",
+        "test-python3-pylint",
+        "test-python3-typing",
+        "test-python3-unit-all",
         "test-shellcheck_agents",
         "test-shell_format",
         "test-shell-unit",
-        "test-python3-unit-all",
+        "test-typescript-types",
     ];
 
     print(

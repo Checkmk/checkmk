@@ -6,6 +6,9 @@
 
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name();
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
@@ -27,6 +30,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |safe_branch_name:.... │${safe_branch_name}│
         |job_names:........... │${job_names}│
         |branch_base_folder:.. │${checkout_dir}│
         |===================================================

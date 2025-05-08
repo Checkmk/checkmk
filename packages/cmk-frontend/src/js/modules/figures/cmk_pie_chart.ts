@@ -10,7 +10,7 @@ import {FigureBase} from "@/modules/figures/cmk_figures";
 import {add_scheduler_debugging} from "@/modules/figures/cmk_figures_utils";
 import {FigureData} from "@/modules/figures/figure_types";
 
-interface PieData {
+export interface PieData {
     index: number;
     ident: string;
     label: string;
@@ -24,6 +24,7 @@ export interface PieChartData extends FigureData<PieData> {
 
 export class PieChartFigure extends FigureBase<PieChartData> {
     _radius!: number;
+    _hide_percentile_smaller_than: number;
 
     override ident() {
         return "pie_chart";
@@ -32,6 +33,7 @@ export class PieChartFigure extends FigureBase<PieChartData> {
     constructor(div_selector: string, fixed_size = null) {
         super(div_selector, fixed_size);
         this.margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this._hide_percentile_smaller_than = 5;
     }
 
     getEmptyData() {
@@ -114,7 +116,7 @@ export class PieChartFigure extends FigureBase<PieChartData> {
             .attr(
                 "d",
                 arc<PieArcDatum<PieData>>()
-                    .innerRadius(radius - 40)
+                    .innerRadius(radius - 50)
                     .outerRadius(radius),
             )
             .attr("fill", d => {
@@ -147,6 +149,13 @@ export class PieChartFigure extends FigureBase<PieChartData> {
             .attr("text-anchor", "middle")
             .attr("alignment-baseline", "middle")
             .attr("font-size", "12px")
-            .text(d => d.data.label);
+            .text(d => {
+                if (
+                    (d.endAngle - d.startAngle) / (2 * Math.PI) <
+                    this._hide_percentile_smaller_than / 100
+                )
+                    return "";
+                return d.data.label;
+            });
     }
 }

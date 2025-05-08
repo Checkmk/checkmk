@@ -637,7 +637,7 @@ def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
 
 
 def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
-    return SDDeltaValue(raw_delta_value[0], raw_delta_value[1])
+    return SDDeltaValue(old=raw_delta_value[0], new=raw_delta_value[1])
 
 
 def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
@@ -1166,18 +1166,18 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SDDeltaValue:
     old: SDValue
     new: SDValue
 
 
 def _encode_as_new(value: SDValue) -> SDDeltaValue:
-    return SDDeltaValue(None, value)
+    return SDDeltaValue(old=None, new=value)
 
 
 def _encode_as_removed(value: SDValue) -> SDDeltaValue:
-    return SDDeltaValue(value, None)
+    return SDDeltaValue(old=value, new=None)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1202,10 +1202,10 @@ class _DeltaDict:
         has_changes = False
         for key in compared_keys.both:
             if (left_value := left[key]) != (right_value := right[key]):
-                compared_dict.setdefault(key, SDDeltaValue(left_value, right_value))
+                compared_dict.setdefault(key, SDDeltaValue(old=right_value, new=left_value))
                 has_changes = True
             elif keep_identical:
-                compared_dict.setdefault(key, SDDeltaValue(left_value, left_value))
+                compared_dict.setdefault(key, SDDeltaValue(old=left_value, new=left_value))
 
         compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
         compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}

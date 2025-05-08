@@ -167,16 +167,16 @@ def test_sort_table_rows_displayhint(
                 key_columns=[SDKey("sid")],
                 rows=[
                     {
-                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
-                        SDKey("flashback"): SDDeltaValue(None, None),
+                        SDKey("sid"): SDDeltaValue(old="SID 1", new="SID 1"),
+                        SDKey("flashback"): SDDeltaValue(old=None, new=None),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
-                        SDKey("flashback"): SDDeltaValue("Flashback", "Flashback"),
+                        SDKey("sid"): SDDeltaValue(old="SID 2", new="SID 2"),
+                        SDKey("flashback"): SDDeltaValue(old="Flashback", new="Flashback"),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
-                        SDKey("flashback"): SDDeltaValue(None, None),
+                        SDKey("sid"): SDDeltaValue(old="SID 2", new="SID 2"),
+                        SDKey("flashback"): SDDeltaValue(old=None, new=None),
                     },
                 ],
             ),
@@ -187,12 +187,12 @@ def test_sort_table_rows_displayhint(
                 key_columns=[SDKey("sid")],
                 rows=[
                     {
-                        SDKey("sid"): SDDeltaValue("SID 1", "SID 1"),
-                        SDKey("flashback"): SDDeltaValue(None, None),
+                        SDKey("sid"): SDDeltaValue(old="SID 1", new="SID 1"),
+                        SDKey("flashback"): SDDeltaValue(old=None, new=None),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 2", "SID 2"),
-                        SDKey("flashback"): SDDeltaValue("Flashback 21", "Flashback 22"),
+                        SDKey("sid"): SDDeltaValue(old="SID 2", new="SID 2"),
+                        SDKey("flashback"): SDDeltaValue(old="Flashback 21", new="Flashback 22"),
                     },
                 ],
             ),
@@ -220,22 +220,22 @@ def test_sort_table_rows_displayhint(
                 key_columns=[SDKey("sid")],
                 rows=[
                     {
-                        SDKey("sid"): SDDeltaValue("SID 2", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
-                        SDKey("other"): SDDeltaValue("Other 2", "Other 2"),
-                        SDKey("changed"): SDDeltaValue("Changed 21", "Changed 22"),
+                        SDKey("sid"): SDDeltaValue(old="SID 2", new=None),
+                        SDKey("flashback"): SDDeltaValue(old=None, new="Flashback 2"),
+                        SDKey("other"): SDDeltaValue(old="Other 2", new="Other 2"),
+                        SDKey("changed"): SDDeltaValue(old="Changed 21", new="Changed 22"),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 1", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 1"),
-                        SDKey("other"): SDDeltaValue("Other 1", "Other 1"),
-                        SDKey("changed"): SDDeltaValue("Changed 11", "Changed 12"),
+                        SDKey("sid"): SDDeltaValue(old="SID 1", new=None),
+                        SDKey("flashback"): SDDeltaValue(old=None, new="Flashback 1"),
+                        SDKey("other"): SDDeltaValue(old="Other 1", new="Other 1"),
+                        SDKey("changed"): SDDeltaValue(old="Changed 11", new="Changed 12"),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 3", "SID 3"),
-                        SDKey("flashback"): SDDeltaValue("Flashback 3", "Flashback 3"),
-                        SDKey("other"): SDDeltaValue(None, None),
-                        SDKey("changed"): SDDeltaValue(None, None),
+                        SDKey("sid"): SDDeltaValue(old="SID 3", new="SID 3"),
+                        SDKey("flashback"): SDDeltaValue(old="Flashback 3", new="Flashback 3"),
+                        SDKey("other"): SDDeltaValue(old=None, new=None),
+                        SDKey("changed"): SDDeltaValue(old=None, new=None),
                     },
                 ],
             ),
@@ -307,22 +307,22 @@ def test_sort_table_rows_displayhint(
                 key_columns=[SDKey("sid")],
                 rows=[
                     {
-                        SDKey("sid"): SDDeltaValue("SID 2", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
-                        SDKey("other"): SDDeltaValue("Other 2", "Other 2"),
-                        SDKey("changed"): SDDeltaValue("Changed 21", "Changed 22"),
+                        SDKey("sid"): SDDeltaValue(old="SID 2", new=None),
+                        SDKey("flashback"): SDDeltaValue(old=None, new="Flashback 2"),
+                        SDKey("other"): SDDeltaValue(old="Other 2", new="Other 2"),
+                        SDKey("changed"): SDDeltaValue(old="Changed 21", new="Changed 22"),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 1", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 1"),
-                        SDKey("other"): SDDeltaValue("Other 1", "Other 1"),
-                        SDKey("changed"): SDDeltaValue("Changed 11", "Changed 12"),
+                        SDKey("sid"): SDDeltaValue(old="SID 1", new=None),
+                        SDKey("flashback"): SDDeltaValue(old=None, new="Flashback 1"),
+                        SDKey("other"): SDDeltaValue(old="Other 1", new="Other 1"),
+                        SDKey("changed"): SDDeltaValue(old="Changed 11", new="Changed 12"),
                     },
                     {
-                        SDKey("sid"): SDDeltaValue("SID 3", "SID 3"),
-                        SDKey("flashback"): SDDeltaValue("Flashback 3", "Flashback 3"),
-                        SDKey("other"): SDDeltaValue(None, None),
-                        SDKey("changed"): SDDeltaValue(None, None),
+                        SDKey("sid"): SDDeltaValue(old="SID 3", new="SID 3"),
+                        SDKey("flashback"): SDDeltaValue(old="Flashback 3", new="Flashback 3"),
+                        SDKey("other"): SDDeltaValue(old=None, new=None),
+                        SDKey("changed"): SDDeltaValue(old=None, new=None),
                     },
                 ],
             ),
@@ -523,10 +523,10 @@ def test_sort_attributes_pairs_displayhint(
         (
             ImmutableDeltaAttributes(
                 pairs={
-                    SDKey("b"): SDDeltaValue("B", None),
-                    SDKey("d"): SDDeltaValue(None, "D"),
-                    SDKey("c"): SDDeltaValue("C", "C"),
-                    SDKey("a"): SDDeltaValue("A1", "A2"),
+                    SDKey("b"): SDDeltaValue(old="B", new=None),
+                    SDKey("d"): SDDeltaValue(old=None, new="D"),
+                    SDKey("c"): SDDeltaValue(old="C", new="C"),
+                    SDKey("a"): SDDeltaValue(old="A1", new="A2"),
                 }
             ),
             [

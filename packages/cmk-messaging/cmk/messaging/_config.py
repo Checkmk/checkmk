@@ -43,7 +43,7 @@ def get_local_port() -> int:
 # Non-CME setup central site
 #
 # /etc/rabbitmq/ssl
-#                ├── multisite
+#                ├── multisite_certs
 #                │   └── <site>_cert.pem  (multisite_cert_file)
 #                ├── trusted_cas.pem      (cacert_file)
 #                ├── ca_cert.pem          (cacert_file)
@@ -164,3 +164,27 @@ def _make_ssl_context(omd_root: Path) -> ssl.SSLContext:
 
 def clear_brokers_certs_cache() -> None:
     subprocess.check_output(["rabbitmqctl", "eval", "ssl:clear_pem_cache()."])
+
+
+def get_cert_info() -> dict[Path, str]:
+    "Get certificates information for the certificate overview page"
+
+    certs = {
+        cacert_file(_omd_root()): "Local message broker CA",
+        site_cert_file(_omd_root()): "Local message broker certificate",
+    }
+
+    certs.update(
+        {
+            path: f"Multisite message broker certificate for site '{path.stem.removesuffix('_cert')}'"
+            for path in all_cert_files(_omd_root())
+        }
+    )
+    certs.update(
+        {
+            path: f"Multisite message broker CA certificate for customer '{path.stem.removesuffix('_ca_cert')}'"
+            for path in all_cme_cacert_files(_omd_root())
+        }
+    )
+
+    return certs

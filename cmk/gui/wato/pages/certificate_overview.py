@@ -35,6 +35,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.x509 import X509Name
+from cmk.messaging import get_cert_info
 
 
 @dataclass
@@ -88,6 +89,12 @@ def register(mode_registry: ModeRegistry) -> None:
                 agent_cas_dir / "ca.pem": _("Signing agents' client certificates"),
                 site_cert_file: _("The site certificate"),
             },
+        )
+    )
+    cert_info_registry.register(
+        CertificateInfo(
+            "messaging",
+            get_cert_info,
         )
     )
 

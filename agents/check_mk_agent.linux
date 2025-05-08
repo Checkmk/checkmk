@@ -818,7 +818,7 @@ section_tcp() {
 section_multipathing() {
     if inpath multipath; then
         echo '<<<multipath>>>'
-        multipath -l
+        multipath -l -v2
     fi
 }
 

@@ -57,17 +57,6 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         yield from site_factory.get_test_site(name="central")
 
 
-@pytest.fixture(name="remote_site", scope="module")
-def fixture_remote_site(
-    request: pytest.FixtureRequest, site_factory: SiteFactory
-) -> Iterator[Site]:
-    """Return the remote Checkmk site object."""
-    with exit_pytest_on_exceptions(
-        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
-    ):
-        yield from site_factory.get_test_site(name="remote")
-
-
 @pytest.fixture(name="credentials", scope="session")
 def fixture_credentials(test_site: Site) -> CmkCredentials:
     """Return admin user credentials of the Checkmk site."""

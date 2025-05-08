@@ -5,11 +5,12 @@
 from dataclasses import dataclass
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, WithJsonSchema
+from pydantic import AfterValidator
 
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
     HostContactGroupModel,
+    HostLabels,
     IPMIParametersModel,
     MetaDataModel,
     NetworkScanModel,
@@ -55,15 +56,7 @@ class BaseFolderAttributeModel:
         ),
         default_factory=ApiOmitted,
     )
-    labels: (
-        dict[
-            str,
-            Annotated[
-                str, WithJsonSchema({"type": "string", "description": "The host label value"})
-            ],
-        ]
-        | ApiOmitted
-    ) = api_field(
+    labels: HostLabels | ApiOmitted = api_field(
         description=f"{HostAttributeLabels().help()} The key is the host label key.",
     )
     network_scan: NetworkScanModel | ApiOmitted = api_field(

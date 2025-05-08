@@ -13,6 +13,7 @@ from cmk.utils.tags import TagGroupID
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
     HostContactGroupModel,
+    HostLabels,
     IPMIParametersModel,
     LockedByModel,
     MetaDataModel,
@@ -23,7 +24,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model_validators import HostAddressValidator
-from cmk.gui.watolib.builtin_attributes import HostAttributeWaitingForDiscovery
+from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 
 HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]
 HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv4=False))]
@@ -120,9 +121,8 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    # TODO: annotate key and value
-    labels: dict[str, str] | ApiOmitted = api_field(
-        description="Labels allow you to flexibly group your hosts in order to refer to them later at other places in Checkmk, e.g. in rule chains. Label format: key:value. Neither the key nor the value can contain ':'. Checkmk does not perform any other validation on the labels you use.",
+    labels: HostLabels | ApiOmitted = api_field(
+        description=f"{HostAttributeLabels().help()} The key is the host label key.",
         default_factory=ApiOmitted,
     )
 

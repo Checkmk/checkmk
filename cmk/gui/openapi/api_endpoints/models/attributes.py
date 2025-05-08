@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
-from pydantic import AfterValidator, model_validator
+from pydantic import AfterValidator, model_validator, WithJsonSchema
 
 from cmk.ccc.site import SiteId
 
@@ -484,3 +484,24 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
         ),
         default_factory=dict,
     )
+
+
+@dataclass(slots=True)
+class _LabelValidator:
+    kind: Literal["key", "value"]
+
+    def __call__(self, value: str) -> str:
+        if ":" in value:
+            raise ValueError(f"Invalid label {self.kind}: {value!r}")
+
+        return value
+
+
+HostLabels = dict[
+    Annotated[str, AfterValidator(_LabelValidator(kind="key"))],
+    Annotated[
+        str,
+        AfterValidator(_LabelValidator(kind="value")),
+        WithJsonSchema({"type": "string", "description": "The host label value"}),
+    ],
+]

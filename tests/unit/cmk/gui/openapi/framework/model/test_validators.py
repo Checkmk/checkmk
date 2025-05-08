@@ -2,9 +2,15 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pytest
+from collections.abc import Iterator
 
-from cmk.gui.openapi.framework.model.validators import HostAddressValidator
+import pytest
+from pytest_mock import MockerFixture
+
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
+
+from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.validators import HostAddressValidator, TagValidator
 
 
 class TestHostAddressValidator:
@@ -43,3 +49,51 @@ class TestHostAddressValidator:
     def test_allow_hostname(self, value: str) -> None:
         validator = HostAddressValidator(allow_ipv4=False, allow_ipv6=False, allow_empty=False)
         assert validator(value) == value
+
+
+class TestTagValidatorCriticality:
+    @pytest.fixture(name="tag_is_present")
+    def fixture_tag_is_present(self, mocker: MockerFixture) -> Iterator[TagID]:
+        tag_id = TagID("test_tag")
+        group = TagGroup.from_config(
+            {
+                "id": TagGroupID("test"),
+                "title": "Test Tag Group",
+                "tags": [
+                    {
+                        "id": tag_id,
+                        "title": "Test Tag",
+                        "aux_tags": [],
+                    }
+                ],
+            }
+        )
+        mocker.patch(
+            "cmk.gui.watolib.tags.load_tag_group",
+            return_value=group,
+        )
+        yield tag_id
+
+    @pytest.fixture(name="tag_is_not_present")
+    def fixture_tag_is_not_present(self, mocker: MockerFixture) -> Iterator[None]:
+        mocker.patch("cmk.gui.watolib.tags.load_tag_group", return_value=None)
+        yield None
+
+    def test_present_and_valid_value(self, tag_is_present: TagID) -> None:
+        assert tag_is_present == TagValidator.tag_criticality_presence(tag_is_present)
+
+    def test_present_and_invalid_value(self, tag_is_present: TagID) -> None:
+        with pytest.raises(ValueError, match="is not defined for criticality group"):
+            TagValidator.tag_criticality_presence(TagID("invalid_tag"))
+
+    def test_present_and_omitted(self, tag_is_present: TagID) -> None:
+        with pytest.raises(ValueError, match="tag_criticality must be specified"):
+            TagValidator.tag_criticality_presence(ApiOmitted())
+
+    def test_not_present_and_value(self, tag_is_not_present: None) -> None:
+        with pytest.raises(ValueError, match="tag_criticality must be omitted"):
+            TagValidator.tag_criticality_presence(TagID("test_tag"))
+
+    def test_not_present_and_omitted(self, tag_is_not_present: None) -> None:
+        omitted = ApiOmitted()
+        assert omitted == TagValidator.tag_criticality_presence(omitted)

@@ -21,7 +21,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 import cmk.utils.config_path
-import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
@@ -29,6 +28,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
+from cmk.utils.notify_types import Contact
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
@@ -241,7 +241,9 @@ def create_config(
 
     write_notify_host_file(config_path, all_notify_host_configs)
 
-    _create_nagios_config_contacts(cfg, hostnames)
+    _create_nagios_config_contacts(cfg)
+    if hostnames:
+        _create_nagios_check_mk_notify_contact(cfg)
     _create_nagios_config_hostgroups(cfg)
     _create_nagios_config_servicegroups(cfg)
     _create_nagios_config_contactgroups(cfg)
@@ -1036,87 +1038,90 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
         cfg.write_object("timeperiod", timeperiod_spec)
 
 
-def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostName]) -> None:
+def _create_nagios_config_contacts(cfg: NagiosConfig) -> None:
     if config.contacts:
         cfg.write_str("\n# ------------------------------------------------------------\n")
         cfg.write_str("# Contact definitions (controlled by variable 'contacts')\n")
         cfg.write_str("# ------------------------------------------------------------\n\n")
         for cname, contact in sorted(config.contacts.items()):
-            # Create contact groups in nagios, even when they are empty. This is needed
-            # for RBN to work correctly when using contactgroups as recipients which are
-            # not assigned to any host
-            cfg.contactgroups_to_define.update(contact.get("contactgroups", []))
-            # If the contact is in no contact group or all of the contact groups
-            # of the contact have neither hosts nor services assigned - in other
-            # words if the contact is not assigned to any host or service, then
-            # we do not create this contact in Nagios. It's useless and will produce
-            # warnings.
-            cgrs = [
-                cgr
-                for cgr in contact.get("contactgroups", [])
-                if cgr in cfg.contactgroups_to_define
-            ]
-            if not cgrs:
-                continue
+            if contact_groups := _update_contact_groups(cfg, contact):
+                contact_spec = _make_contact_spec(cname, contact, contact_groups)
+                cfg.write_object("contact", contact_spec)
 
-            contact_spec: ObjectSpec = {
-                "contact_name": cname,
-            }
 
-            if "alias" in contact:
-                contact_spec["alias"] = contact["alias"]
+def _update_contact_groups(cfg: NagiosConfig, contact: Contact) -> list[str]:
+    # Create contact groups in nagios, even when they are empty. This is needed
+    # for RBN to work correctly when using contactgroups as recipients which are
+    # not assigned to any host
+    cfg.contactgroups_to_define.update(contact.get("contactgroups", []))
+    # If the contact is in no contact group or all of the contact groups
+    # of the contact have neither hosts nor services assigned - in other
+    # words if the contact is not assigned to any host or service, then
+    # we do not create this contact in Nagios. It's useless and will produce
+    # warnings.
+    return [cgr for cgr in contact.get("contactgroups", []) if cgr in cfg.contactgroups_to_define]
 
-            if "email" in contact:
-                contact_spec["email"] = contact["email"]
 
-            if "pager" in contact:
-                contact_spec["pager"] = contact["pager"]
+def _make_contact_spec(name: str, contact: Contact, contact_groups: Sequence[str]) -> ObjectSpec:
+    contact_spec: ObjectSpec = {
+        "contact_name": name,
+    }
 
-            for what in ["host", "service"]:
-                if what == "host":
-                    no: str = contact.get("host_notification_options", "")
-                elif what == "service":
-                    no = contact.get("service_notification_options", "")
-                else:
-                    raise ValueError()
+    if "alias" in contact:
+        contact_spec["alias"] = contact["alias"]
 
-                if not no:
-                    contact_spec["%s_notifications_enabled" % what] = 0
-                    no = "n"
+    if "email" in contact:
+        contact_spec["email"] = contact["email"]
 
-                contact_spec.update(
-                    {
-                        "%s_notification_options" % what: ",".join(sorted(no)),
-                        "%s_notification_period" % what: contact.get("notification_period", "24X7"),
-                        "%s_notification_commands" % what: contact.get(
-                            "%s_notification_commands" % what, "check-mk-notify"
-                        ),
-                    }
-                )
+    if "pager" in contact:
+        contact_spec["pager"] = contact["pager"]
 
-            # Add custom macros
-            contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
+    for what in ["host", "service"]:
+        if what == "host":
+            no: str = contact.get("host_notification_options", "")
+        elif what == "service":
+            no = contact.get("service_notification_options", "")
+        else:
+            raise ValueError()
 
-            contact_spec["contactgroups"] = ", ".join(sorted(cgrs))
-            cfg.write_object("contact", contact_spec)
+        if not no:
+            contact_spec["%s_notifications_enabled" % what] = 0
+            no = "n"
 
-    if hostnames:
-        cfg.contactgroups_to_define.add("check-mk-notify")
-        cfg.write_str("# Needed for rule based notifications\n")
-        cfg.write_object(
-            "contact",
+        contact_spec.update(
             {
-                "contact_name": "check-mk-notify",
-                "alias": "Contact for rule based notifications",
-                "host_notification_options": "d,u,r,f,s",
-                "service_notification_options": "u,c,w,r,f,s",
-                "host_notification_period": "24X7",
-                "service_notification_period": "24X7",
-                "host_notification_commands": "check-mk-notify",
-                "service_notification_commands": "check-mk-notify",
-                "contactgroups": "check-mk-notify",
-            },
+                "%s_notification_options" % what: ",".join(sorted(no)),
+                "%s_notification_period" % what: contact.get("notification_period", "24X7"),
+                "%s_notification_commands" % what: contact.get(
+                    "%s_notification_commands" % what, "check-mk-notify"
+                ),
+            }
         )
+
+    # Add custom macros
+    contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
+    contact_spec["contactgroups"] = ", ".join(sorted(contact_groups))
+
+    return contact_spec
+
+
+def _create_nagios_check_mk_notify_contact(cfg: NagiosConfig) -> None:
+    cfg.contactgroups_to_define.add("check-mk-notify")
+    cfg.write_str("# Needed for rule based notifications\n")
+    cfg.write_object(
+        "contact",
+        {
+            "contact_name": "check-mk-notify",
+            "alias": "Contact for rule based notifications",
+            "host_notification_options": "d,u,r,f,s",
+            "service_notification_options": "u,c,w,r,f,s",
+            "host_notification_period": "24X7",
+            "service_notification_period": "24X7",
+            "host_notification_commands": "check-mk-notify",
+            "service_notification_commands": "check-mk-notify",
+            "contactgroups": "check-mk-notify",
+        },
+    )
 
 
 def _quote_nagios_string(s: str) -> str:

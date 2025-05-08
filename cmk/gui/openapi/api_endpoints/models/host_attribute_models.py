@@ -22,7 +22,11 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
+from cmk.gui.openapi.framework.model_validators import HostAddressValidator
 from cmk.gui.watolib.builtin_attributes import HostAttributeWaitingForDiscovery
+
+HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]
+HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv4=False))]
 
 
 def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
@@ -80,23 +84,19 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    # TODO: validate any of validators
-    ipaddress: str | ApiOmitted = api_field(
+    ipaddress: HostNameOrIPv4 | ApiOmitted = api_field(
         description="An IPv4 address.", default_factory=ApiOmitted
     )
 
-    # TODO: validate any of validators
-    ipv6address: str | ApiOmitted = api_field(
+    ipv6address: HostNameOrIPv6 | ApiOmitted = api_field(
         description="An IPv6 address.", default_factory=ApiOmitted
     )
 
-    # TODO: validate any of validators
-    additional_ipv4addresses: list[str] | ApiOmitted = api_field(
+    additional_ipv4addresses: list[HostNameOrIPv4] | ApiOmitted = api_field(
         description="A list of IPv4 addresses.", default_factory=ApiOmitted
     )
 
-    # TODO: validate any of validators
-    additional_ipv6addresses: list[str] | ApiOmitted = api_field(
+    additional_ipv6addresses: list[HostNameOrIPv6] | ApiOmitted = api_field(
         description="A list of IPv6 addresses.", default_factory=ApiOmitted
     )
 

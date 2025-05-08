@@ -2,10 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import ipaddress
 from dataclasses import dataclass
 from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
+
+from cmk.ccc.hostaddress import HostAddress
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
@@ -129,4 +132,32 @@ class TagValidator:
                 raise ValueError(
                     f"tag_criticality value '{value!r}' is not defined for criticality group"
                 )
+        return value
+
+
+@dataclass(slots=True)
+class HostAddressValidator:
+    allow_ipv4: bool = True
+    allow_ipv6: bool = True
+    allow_empty: bool = False
+
+    @staticmethod
+    def _try_parse_ip_address(value: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+        try:
+            return ipaddress.ip_address(value)
+        except ValueError:
+            return None
+
+    def __call__(self, value: str) -> str:
+        if not self.allow_empty and not value:
+            raise ValueError("Empty host address is not allowed.")
+
+        HostAddress(value)  # this allows hostnames and ip addresses
+        if not self.allow_ipv4 or not self.allow_ipv6:
+            if ip := self._try_parse_ip_address(value):
+                if not self.allow_ipv4 and isinstance(ip, ipaddress.IPv4Address):
+                    raise ValueError(f"IPv4 address '{value}' is not allowed.")
+                if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
+                    raise ValueError(f"IPv6 address '{value}' is not allowed.")
+
         return value

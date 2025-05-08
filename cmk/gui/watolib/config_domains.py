@@ -516,21 +516,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 cert_file_path = entry.absolute()
                 try:
                     raw_certs = raw_certificates_from_file(cert_file_path)
-                except (OSError, PermissionError):
-                    # This error is shown to the user as warning message during "activate changes".
-                    # We keep this message for the moment because we think that it is a helpful
-                    # trigger for further checking web.log when a really needed certificate can
-                    # not be read.
-                    #
-                    # We know a permission problem with some files that are created by default on
-                    # some distros. We simply ignore these files because we assume that they are
-                    # not needed.
-                    if cert_file_path != Path("/etc/ssl/certs/localhost.crt"):
-                        logger.exception("Error reading certificates from %s", cert_file_path)
-                        errors.append(
-                            f"Failed to add certificate '{cert_file_path}' to trusted CA certificates. "
-                            "See web.log for details."
-                        )
+                except OSError as e:
+                    logger.error(
+                        "Failed to add certificate '%s' to trusted CA certificates with error '%s'.",
+                        cert_file_path,
+                        e,
+                    )
                     continue
 
                 for raw_cert in raw_certs:

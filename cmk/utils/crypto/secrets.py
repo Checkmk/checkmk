@@ -20,6 +20,11 @@ from cmk.utils.user import UserId
 
 class Secret:
     def __init__(self, value: bytes) -> None:
+        if not value:
+            # This is a safeguard against creating empty secrets, which would be bad for most
+            # cryptographic operations.
+            raise ValueError("Cannot create empty secrets")
+
         self._value = value
 
     def compare(self, other: Secret) -> bool:
@@ -41,11 +46,9 @@ class _LocalSecret(ABC):
         Loading an existing but empty file raises an error.
         """
         # TODO: reading and writing could use some locking, once our locking utilities are improved
-
-        if self.path.exists():
-            self.secret = self.path.read_bytes()
-            if self.secret:
-                return
+        if self.path.exists() and (secret := self.path.read_bytes()):
+            self.secret = secret
+            return
 
         self.regenerate()
 

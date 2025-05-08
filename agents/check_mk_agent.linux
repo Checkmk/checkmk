@@ -1371,7 +1371,8 @@ section_proxmox() {
 }
 
 section_haproxy() {
-    for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
+    # Consider sockets for community v2.x and v3.x AND enterprise edition
+    for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats /var/run/haproxy.sock /var/run/hapee-*/hapee-lb.sock; do
         if [ -r "${HAPROXY_SOCK}" ] && inpath socat; then
             echo "<<<haproxy:sep(44)>>>"
             echo "show stat" | socat - "UNIX-CONNECT:${HAPROXY_SOCK}"

@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Annotated
 
 import pytest
-from pydantic import ValidationError
+from pydantic import AfterValidator, ValidationError
 from werkzeug.datastructures import Headers
 
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam, RawRequestData
@@ -426,6 +426,43 @@ def test_input_model_missing_fields(request_data: RawRequestData) -> None:
     model = EndpointModel.build(_all_endpoint_handler)
     with pytest.raises(ValidationError, match="type=missing"):
         model._validate_request_parameters(request_data, "application/json")
+
+
+class TestAnnotatedValidators:
+    @staticmethod
+    def validate_one(value: str) -> str:
+        if value != "one":
+            raise ValueError("Value must be 'one'")
+        return value
+
+    @staticmethod
+    def validate_two(value: str) -> str:
+        if value != "two":
+            raise ValueError("Value must be 'two'")
+        return value
+
+    def test_multiple_annotated_validators(self) -> None:
+        @dataclasses.dataclass
+        class Body:
+            field: Annotated[
+                str,
+                AfterValidator(TestAnnotatedValidators.validate_one),
+                AfterValidator(TestAnnotatedValidators.validate_two),
+            ]
+
+        def handler(body: Body) -> None:
+            return None
+
+        model = EndpointModel.build(handler)
+        with pytest.raises(ValidationError, match="Value must be 'two'"):
+            model._validate_request_parameters(
+                _request_data(body={"field": "one"}), "application/json"
+            )
+
+        with pytest.raises(ValidationError, match="Value must be 'one'"):
+            model._validate_request_parameters(
+                _request_data(body={"field": "three"}), "application/json"
+            )
 
 
 def test_query_parameter_list() -> None:

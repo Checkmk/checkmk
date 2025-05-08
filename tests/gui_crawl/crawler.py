@@ -158,7 +158,7 @@ class Crawler:
         self.duration = 0.0
         self.results: dict[str, CrawlResult] = {}
         self.site = test_site
-        self.report_file = Path(report_file or self.site.result_dir()) / "crawl.xml"
+        self.report_file = Path(report_file or self.site.result_dir) / "crawl.xml"
         self.requests_session = requests.Session()
         self._ignored_content_types: set[str] = {
             "application/json",

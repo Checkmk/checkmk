@@ -14,23 +14,23 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def job_names = [
-        "test-python3-pylint",
-        "test-python3-ruff",
-        "test-python3-bandit",
         "test-agent-plugin-unit",
+        "test-bazel-format",
+        "test-bazel-lint",
+        "test-github-actions",
+        "test-groovy-lint",
+        "test-python3-bandit",
         // TODO: Re-enable this as soon as fetching the git tags is not expansive as hell anymore
         // Currently the idea is to only run those tests cron triggered in order to avoid git fetch --tags on every commit
         // "test-python3-code-quality",
         "test-python3-format",
+        "test-python3-pylint",
+        "test-python3-ruff",
         "test-python3-typing",
-        "test-bazel-lint",
-        "test-bazel-format",
-        "test-github-actions",
-        "test-groovy-lint",
+        "test-python3-unit-all",
         "test-shellcheck_agents",
         "test-shell_format",
         "test-shell-unit",
-        "test-python3-unit-all",
     ];
 
     print(

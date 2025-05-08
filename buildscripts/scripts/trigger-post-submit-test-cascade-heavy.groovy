@@ -14,17 +14,17 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
     def job_names = [
-        "test-gui-crawl-f12less",
-        "trigger-test-gui-e2e",
-        "test-integration-single-f12less",
-        "test-integration-single-f12less-redfish",
         "test-composition-single-f12less",
         "test-composition-single-f12less-cme",
+        "test-gui-crawl-f12less",
+        "test-integration-single-f12less",
         "test-integration-single-f12less-cme",
-        "test-update-single-f12less",
+        "test-integration-single-f12less-redfish",
         "test-plugins",
         "test-plugins-piggyback",
         "test-plugins-siteless",
+        "test-update-single-f12less",
+        "trigger-test-gui-e2e",
     ];
 
     print(

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
 
 import pytest
@@ -67,6 +68,7 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         tmp_path / "var/check_mk/inventory" / hostname,
         {"inv": "attr"},
     )
+    os.utime(tmp_path / "var/check_mk/inventory" / hostname, (100, 100))
 
     expected_results = [
         (1, 0, 0),
@@ -94,8 +96,6 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
             [
                 fp.name
                 for fp in (tmp_path / "var/check_mk/inventory_delta_cache" / hostname).iterdir()
-                # Timestamp of current inventory tree is not static
-                if not fp.name.startswith("3_")
             ]
         ),
         sorted(
@@ -103,6 +103,7 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
                 "0_1",
                 "1_2",
                 "2_3",
+                "3_100",
                 "None_0",
             ]
         ),

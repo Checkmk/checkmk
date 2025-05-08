@@ -19,11 +19,12 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     MetaDataModel,
     NetworkScanModel,
     NetworkScanResultModel,
+    SNMPCredentialsConverter,
     SNMPCredentialsModel,
 )
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model_validators import HostAddressValidator
+from cmk.gui.openapi.framework.model_validators import HostAddressValidator, HostValidator
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 
 HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]
@@ -75,8 +76,7 @@ class BaseHostAttributeModel:
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
 
-    # TODO: validate hostfield
-    parents: list[str] | ApiOmitted = api_field(
+    parents: list[Annotated[str, AfterValidator(HostValidator.exists)]] | ApiOmitted = api_field(
         description="A list of parents of this host.", default_factory=ApiOmitted
     )
 
@@ -136,16 +136,16 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    # TODO: require "none" value to None translation
     management_protocol: Literal["none", "snmp", "ipmi"] | ApiOmitted = api_field(
         description="The protocol used to connect to the management board. Valid options are: 'none' - No management board, 'snmp' - Connect using SNMP, 'ipmi' - Connect using IPMI",
         default_factory=ApiOmitted,
     )
 
-    # TODO: validate anyOf addition
-    management_address: str | ApiOmitted = api_field(
-        description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
-        default_factory=ApiOmitted,
+    management_address: Annotated[str, AfterValidator(HostAddressValidator())] | ApiOmitted = (
+        api_field(
+            description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
+            default_factory=ApiOmitted,
+        )
     )
 
     management_snmp_community: SNMPCredentialsModel | None | ApiOmitted = api_field(
@@ -171,13 +171,31 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
+    @staticmethod
+    def snmp_community_from_internal(value: str | tuple) -> SNMPCredentialsModel:
+        return SNMPCredentialsConverter.from_internal(value)
+
+    @staticmethod
+    def snmp_community_to_internal(value: SNMPCredentialsModel) -> str | tuple:
+        return SNMPCredentialsConverter.to_internal(value)
+
+    @staticmethod
+    def management_protocol_from_internal(value: str | None) -> str:
+        if value is None:
+            return "none"
+        return value
+
+    @staticmethod
+    def management_protocol_to_internal(value: str) -> str | None:
+        if value == "none":
+            return None
+        return value
+
 
 @dataclass(kw_only=True, slots=True)
 class HostViewAttributeModel(
     BaseHostAttributeModel, BaseHostTagGroupModel, FolderCustomHostAttributesAndTagGroupsModel
 ):
-    # TODO: dateformat = "iso8601"
-
     network_scan_result: NetworkScanResultModel | ApiOmitted = api_field(
         description="Read only access to the network scan result", default_factory=ApiOmitted
     )

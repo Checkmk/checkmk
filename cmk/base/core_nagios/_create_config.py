@@ -475,13 +475,6 @@ def _process_services_data(
         # Services Dependencies for autochecks
         cfg.write_str(_get_dependencies(config_cache, hostname, service.description))
 
-        service_spec = {
-            "use": config.passive_service_template_perf,
-            "host_name": hostname,
-            "service_description": service.description,
-            "check_command": "check_mk-%s" % service.check_plugin_name,
-        }
-
         plugin = get_check_plugin(service.check_plugin_name, plugins)
         passive_service_attributes = _to_nagios_core_attributes(
             core_config.get_cmk_passive_service_attributes(
@@ -498,10 +491,17 @@ def _process_services_data(
 
         service_labels[service.description] = service.labels
 
-        service_spec.update(passive_service_attributes)
-
-        service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, service.description, service.labels)
+        service_spec = (
+            {
+                "use": config.passive_service_template_perf,
+                "host_name": hostname,
+                "service_description": service.description,
+                "check_command": "check_mk-%s" % service.check_plugin_name,
+            }
+            | passive_service_attributes
+            | _extra_service_conf_of(
+                cfg, config_cache, hostname, service.description, service.labels
+            )
         )
 
         cfg.write_object("service", service_spec)
@@ -536,14 +536,14 @@ def create_nagios_servicedefs(
 
     # Active check for Check_MK
     if config_cache.checkmk_check_parameters(hostname).enabled:
-        service_spec = {
-            "use": config.active_service_template,
-            "host_name": hostname,
-            "service_description": "Check_MK",
-        }
-        service_spec.update(check_mk_attrs)
-        service_spec.update(
-            _extra_service_conf_of(cfg, config_cache, hostname, "Check_MK", check_mk_labels)
+        service_spec = (
+            {
+                "use": config.active_service_template,
+                "host_name": hostname,
+                "service_description": "Check_MK",
+            }
+            | check_mk_attrs
+            | _extra_service_conf_of(cfg, config_cache, hostname, "Check_MK", check_mk_labels)
         )
 
         cfg.write_object("service", service_spec)
@@ -871,23 +871,20 @@ def _make_ping_only_spec(
     service_labels: Labels,
 ) -> dict[str, str | HostAddress]:
     ping_command = "check-mk-ping"
-    service_spec = {
-        "use": config.pingonly_template,
-        "host_name": host_name,
-        "service_description": service_name,
-        "check_command": f"{ping_command}!{arguments}",
-    }
-    service_spec.update(
-        _to_nagios_core_attributes(
+    return (
+        {
+            "use": config.pingonly_template,
+            "host_name": host_name,
+            "service_description": service_name,
+            "check_command": f"{ping_command}!{arguments}",
+        }
+        | _to_nagios_core_attributes(
             core_config.get_service_attributes(
                 config_cache, host_name, service_name, service_labels, extra_icon=None
             )
         )
+        | _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
     )
-    service_spec.update(
-        _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
-    )
-    return service_spec
 
 
 def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:

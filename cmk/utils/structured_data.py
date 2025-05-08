@@ -1711,9 +1711,12 @@ def _save_raw_tree(file_path: Path, file_path_gz: Path, raw_tree: SDRawTree, met
 
 
 def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> None:
-    if not (file_path := inv_paths.inventory_tree(host_name)).exists():
+    file_path = inv_paths.inventory_tree(host_name)
+    try:
+        file_path_stat = file_path.stat()
+    except FileNotFoundError:
         return
-    archive_tree = inv_paths.archive_tree(host_name, str(int(file_path.stat().st_mtime)))
+    archive_tree = inv_paths.archive_tree(host_name, str(int(file_path_stat.st_mtime)))
     archive_tree.parent.mkdir(parents=True, exist_ok=True)
     file_path.rename(archive_tree)
     inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
@@ -1898,8 +1901,8 @@ class InventoryStore:
         self.inv_paths.status_data_tree_gz(host_name).unlink(missing_ok=True)
 
     def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        if (file_path := self.inv_paths.inventory_tree(host_name)).exists():
-            return _load_tree(file_path)
+        if tree := _load_tree(self.inv_paths.inventory_tree(host_name)):
+            return tree
 
         try:
             latest_archive_file_path = max(

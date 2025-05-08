@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.3.0p32"
+__version__ = "2.3.0p33"
 
 USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0p32"
+CMK_VERSION="2.3.0p33"
 
 echo "<<<lvm_vgs>>>"
 vgs --units b --nosuffix --noheadings --separator '	'

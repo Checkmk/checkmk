@@ -271,7 +271,7 @@ class InventoryHousekeeping:
     def _get_timestamps_for_host(self, host_name: HostName) -> set[str]:
         timestamps = {"None"}  # 'None' refers to the histories start
         try:
-            timestamps.add("%d" % self.inv_paths.inventory_tree(host_name).stat().st_mtime)
+            timestamps.add(str(int(self.inv_paths.inventory_tree(host_name).stat().st_mtime)))
         except OSError:
             pass
 

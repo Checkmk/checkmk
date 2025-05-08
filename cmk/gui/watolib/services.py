@@ -1050,6 +1050,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
                     ("host_name", host.name()),
                     ("options", json.dumps({"ignore_errors": not raise_errors, "action": action})),
                 ],
+                debug=active_config.debug,
             )
         )
     )

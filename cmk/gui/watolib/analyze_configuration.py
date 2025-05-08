@@ -277,6 +277,7 @@ def _perform_tests_for_site(
                 "check-analyze-config",
                 [("categories", json.dumps(categories))],
                 timeout=request_.request_timeout - 10,
+                debug=active_config.debug,
             )
             assert isinstance(raw_ac_test_results, list)
             ac_test_results = [ACTestResult.from_repr(r) for r in raw_ac_test_results]
@@ -321,7 +322,9 @@ def perform_tests(
     active_config: Config,
     request_: Request,
     test_sites: SiteConfigurations,
-    categories: Sequence[str] | None = None,  # 'None' means 'No filtering'
+    *,
+    categories: Sequence[str] | None,  # 'None' means 'No filtering'
+    debug: bool,
 ) -> Mapping[SiteId, Sequence[ACTestResult]]:
     logger.debug("Executing tests for %d sites" % len(test_sites))
     if not test_sites:
@@ -331,7 +334,7 @@ def perform_tests(
     active_tasks = {
         site_id: pool.apply_async(
             func=copy_request_context(_perform_tests_for_site),
-            args=(logger, active_config, request_, site_id, categories),
+            args=(logger, active_config, request_, site_id, categories, debug),
             error_callback=_error_callback,
         )
         for site_id in test_sites

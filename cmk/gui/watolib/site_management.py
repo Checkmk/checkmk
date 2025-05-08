@@ -587,16 +587,16 @@ class SitesApiMgr:
         raise SiteDoesNotExistException
 
     def login_to_site(
-        self, site_id: SiteId, username: str, password: str, *, pprint_value: bool
+        self, site_id: SiteId, username: str, password: str, *, pprint_value: bool, debug: bool
     ) -> None:
         site = self.get_a_site(site_id)
         try:
-            site["secret"] = do_site_login(site, UserId(username), password)
+            site["secret"] = do_site_login(site, UserId(username), password, debug=debug)
         except Exception as exc:
             raise LoginException(str(exc))
 
         self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
-        trigger_remote_certs_creation(site_id, site)
+        trigger_remote_certs_creation(site_id, site, force=False, debug=debug)
 
     def logout_of_site(self, site_id: SiteId, *, pprint_value: bool) -> None:
         site = self.get_a_site(site_id)

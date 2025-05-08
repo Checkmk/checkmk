@@ -472,6 +472,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
                     }
                 ),
                 categories=["deprecations"],
+                debug=active_config.debug,
             )
         )
     ):

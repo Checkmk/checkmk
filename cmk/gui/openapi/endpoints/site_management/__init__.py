@@ -198,6 +198,7 @@ def site_login(params: Mapping[str, Any]) -> Response:
             username=body["username"],
             password=body["password"],
             pprint_value=active_config.wato_pprint_config,
+            debug=active_config.debug,
         )
     except LoginException as exc:
         return problem(

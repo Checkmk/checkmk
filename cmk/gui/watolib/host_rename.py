@@ -450,6 +450,7 @@ def _rename_host_in_uuid_link_manager(
                                 json.dumps(renamings),
                             )
                         ],
+                        debug=active_config.debug,
                     )
                 )
             )

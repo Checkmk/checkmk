@@ -89,6 +89,7 @@ def execute_network_scan_job() -> None:
                     get_site_config(active_config, folder.site_id()),
                     "network-scan",
                     [("folder", folder.path())],
+                    debug=active_config.debug,
                 )
                 assert isinstance(raw_response, list)
                 found = raw_response

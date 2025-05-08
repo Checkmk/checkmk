@@ -57,7 +57,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
         site = get_site_config(active_config, site_id)
         assert user.id is not None
-        result = self._synchronize_profile(site_id, site, user.id)
+        result = self._synchronize_profile(site_id, site, user.id, debug=active_config.debug)
 
         if result is not True:
             assert result is not False
@@ -67,7 +67,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         return _("Replication completed successfully.")
 
     def _synchronize_profile(
-        self, site_id: SiteId, site: SiteConfiguration, user_id: UserId
+        self, site_id: SiteId, site: SiteConfiguration, user_id: UserId, *, debug: bool
     ) -> bool | str:
         users = userdb.load_users(lock=False)
         visuals_of_user = {
@@ -79,7 +79,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
         start = time.time()
         result = push_user_profiles_to_site_transitional_wrapper(
-            site, {user_id: users[user_id]}, {user_id: visuals_of_user}
+            site, {user_id: users[user_id]}, {user_id: visuals_of_user}, debug=debug
         )
 
         duration = time.time() - start

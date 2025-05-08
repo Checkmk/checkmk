@@ -1518,7 +1518,7 @@ class ModeEditRuleset(WatoMode):
         cache_id = f"{site_id}:{self._hostname}"
         if cache_id in g.get("host_label_sync", {}):
             return
-        execute_host_label_sync(self._hostname, site_id)
+        execute_host_label_sync(self._hostname, site_id, debug=active_config.debug)
         g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:

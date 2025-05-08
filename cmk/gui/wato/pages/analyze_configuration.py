@@ -154,6 +154,8 @@ class ModeAnalyzeConfig(WatoMode):
                 active_config,
                 request,
                 self._analyze_sites(),
+                categories=None,
+                debug=active_config.debug,
             )
         ).items():
             for result in results:

@@ -418,7 +418,9 @@ class ModeEditHost(ABCHostMode):
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_remove_tls_registration"):
-            remove_tls_registration({self._host.site_id(): [self._host.name()]})
+            remove_tls_registration(
+                {self._host.site_id(): [self._host.name()]}, debug=active_config.debug
+            )
             return None
 
         attributes = collect_attributes("host" if not self._is_cluster() else "cluster", new=False)

@@ -295,11 +295,13 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         if site_id and not site_is_local(active_config, SiteId(site_id)):
             background_job_id = start_quick_setup_stage_action_job_on_remote(
                 site_id=site_id,
+                site_config=get_site_config(active_config, SiteId(site_id)),
                 quick_setup_id=quick_setup_id,
                 action_id=stage_action_id,
                 stage_index=stage_index,
                 user_input_stages=body["stages"],
                 language=language,
+                debug=active_config.debug,
             )
         else:
             background_job_id = start_quick_setup_stage_job(
@@ -368,6 +370,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
                     [
                         ("job_id", action_background_job_id),
                     ],
+                    debug=active_config.debug,
                 )
             )
         )

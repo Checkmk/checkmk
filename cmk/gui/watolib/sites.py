@@ -810,7 +810,10 @@ class ReplicationStatusFetcher:
         self._logger = logger.getChild("replication-status")
 
     def fetch(
-        self, sites: Collection[tuple[SiteId, SiteConfiguration]]
+        self,
+        sites: Collection[tuple[SiteId, SiteConfiguration]],
+        *,
+        debug: bool,
     ) -> Mapping[SiteId, ReplicationStatus]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site: dict[SiteId, ReplicationStatus] = {}
@@ -820,7 +823,9 @@ class ReplicationStatusFetcher:
 
         processes = []
         for site_id, site in sites:
-            process = Process(target=self._fetch_for_site, args=(site_id, site, result_queue))
+            process = Process(
+                target=self._fetch_for_site, args=(site_id, site, result_queue, debug)
+            )
             process.start()
             processes.append((site_id, process))
 
@@ -848,6 +853,7 @@ class ReplicationStatusFetcher:
         site_id: SiteId,
         site: SiteConfiguration,
         result_queue: JoinableQueue[ReplicationStatus],
+        debug: bool,
     ) -> None:
         """Executes the tests on the site. This method is executed in a dedicated
         subprocess (One per site)"""
@@ -870,7 +876,7 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            raw_result = do_remote_automation(site, "ping", [], timeout=5)
+            raw_result = do_remote_automation(site, "ping", [], timeout=5, debug=debug)
             assert isinstance(raw_result, dict)
 
             result = ReplicationStatus(

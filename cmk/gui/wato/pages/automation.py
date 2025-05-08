@@ -166,14 +166,14 @@ class PageAutomation(AjaxPage):
             if lock_config
             else nullcontext()
         ):
-            self._execute_automation()
+            self._execute_automation(debug=active_config.debug)
         return None
 
-    def _execute_automation(self) -> None:
+    def _execute_automation(self, *, debug: bool) -> None:
         with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
-                self._execute_cmk_automation()
+                self._execute_cmk_automation(debug=debug)
                 return
             if self._command == "push-profile":
                 self._execute_push_profile()
@@ -190,6 +190,7 @@ class PageAutomation(AjaxPage):
         serialized_result: SerializedResult,
         cmk_command: str,
         cmdline_cmd: Iterable[str],
+        debug: bool,
     ) -> SerializedResult:
         try:
             return (
@@ -203,10 +204,11 @@ class PageAutomation(AjaxPage):
                 cmdline=cmdline_cmd,
                 out=serialized_result,
                 exc=e,
+                debug=debug,
             )
             raise MKAutomationException(msg)
 
-    def _execute_cmk_automation(self) -> None:
+    def _execute_cmk_automation(self, *, debug: bool) -> None:
         cmk_command = request.get_str_input_mandatory("automation")
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
@@ -218,6 +220,7 @@ class PageAutomation(AjaxPage):
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            debug=debug,
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(
@@ -225,6 +228,7 @@ class PageAutomation(AjaxPage):
                 serialized_result=SerializedResult(serialized_result),
                 cmk_command=cmk_command,
                 cmdline_cmd=cmdline_cmd,
+                debug=debug,
             )
         )
 

@@ -712,7 +712,9 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
         job = ServiceDiscoveryBackgroundJob(host.name())
         return job.get_status_snapshot()
 
-    return fetch_service_discovery_background_job_status(host.site_id(), host.name())
+    return fetch_service_discovery_background_job_status(
+        host.site_id(), host.name(), debug=active_config.debug
+    )
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

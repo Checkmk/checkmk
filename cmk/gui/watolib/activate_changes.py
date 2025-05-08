@@ -675,6 +675,7 @@ def _get_config_sync_state(
         site,
         "get-config-sync-state",
         [("replication_paths", repr([r.serialize() for r in replication_paths]))],
+        debug=active_config.debug,
     )
 
     assert isinstance(response, tuple)
@@ -706,6 +707,7 @@ def _synchronize_files(
             ("config_generation", "%d" % remote_config_generation),
         ],
         files={"sync_archive": io.BytesIO(sync_archive)},
+        debug=active_config.debug,
     )
 
     if response is not True:
@@ -914,6 +916,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
                 get_site_config(active_config, site_id),
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
+                debug=active_config.debug,
             )
 
             assert isinstance(raw_omd_response, tuple)
@@ -943,6 +946,7 @@ def _call_activate_changes_automation(
             get_site_config(active_config, site_id),
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
+            debug=active_config.debug,
         )
     except cmk.gui.watolib.automations.MKAutomationException as e:
         if "Invalid automation command: activate-changes" in "%s" % e:
@@ -2167,6 +2171,7 @@ def sync_and_activate(
             site_snapshot_settings,
             task_pool,
             broker_certificate_sync_registry["broker_certificate_sync"],
+            debug=active_config.debug,
         )
         clean_remote_sites_certs(kept_sites=list(get_all_replicated_sites()))
 
@@ -2239,6 +2244,8 @@ def create_broker_certificates(
     settings: SiteConfiguration,
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
+    *,
+    debug: bool,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -2251,7 +2258,7 @@ def create_broker_certificates(
         try:
             _set_sync_state(site_activation_state, _("Syncing broker certificates"))
             broker_cert_sync.create_broker_certificates(
-                site_id, settings, central_ca_bundle, customer_ca_bundle
+                site_id, settings, central_ca_bundle, customer_ca_bundle, debug=debug
             )
             return site_activation_state
         except Exception as e:
@@ -2267,6 +2274,8 @@ def _create_broker_certificates_for_remote_sites(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
     broker_sync: BrokerCertificateSync,
+    *,
+    debug: bool,
 ) -> Mapping[SiteId, SiteActivationState]:
     site_activation_states_certs_synced = dict(site_activation_states)
 
@@ -2294,6 +2303,7 @@ def _create_broker_certificates_for_remote_sites(
                     settings,
                     site_activation_states[site_id],
                     trace.get_current_span(),
+                    debug,
                 )
             )
             site_activation_states_certs_synced.pop(site_id)

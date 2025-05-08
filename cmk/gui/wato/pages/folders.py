@@ -630,7 +630,10 @@ class ModeFolder(WatoMode):
         if request.has_var("_remove_tls_registration_from_folder"):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
-            remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
+            remove_tls_registration(
+                self._folder.get_hosts_by_site(list(self._folder.hosts())),
+                debug=active_config.debug,
+            )
             return None
 
         # Operations on HOSTS
@@ -709,7 +712,9 @@ class ModeFolder(WatoMode):
         if request.var("_remove_tls_registration_from_selection"):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
-            remove_tls_registration(self._folder.get_hosts_by_site(selected_host_names))
+            remove_tls_registration(
+                self._folder.get_hosts_by_site(selected_host_names), debug=active_config.debug
+            )
 
         return None
 

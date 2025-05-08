@@ -63,6 +63,7 @@ class EnforcedHostRequest:
 class SiteRequest:
     newest_host_labels: float
     enforce_host: EnforcedHostRequest | None
+    debug: bool
 
     @classmethod
     def deserialize(cls, serialized: dict[str, Any]) -> SiteRequest:
@@ -88,12 +89,18 @@ class SiteRequest:
 
         newest_host_labels = serialized["newest_host_labels"]
         assert isinstance(newest_host_labels, float)
-        return cls(newest_host_labels, enforce_host)
+
+        # .get() can be replaced by [] with 2.6
+        debug = serialized.get("debug", False)
+        assert isinstance(debug, bool)
+
+        return cls(newest_host_labels, enforce_host, debug)
 
     def serialize(self) -> dict[str, Any]:
         return {
             "newest_host_labels": self.newest_host_labels,
             "enforce_host": asdict(self.enforce_host) if self.enforce_host else None,
+            "debug": self.debug,
         }
 
 
@@ -113,7 +120,7 @@ def register(cron_job_registry: CronJobRegistry) -> None:
     )
 
 
-def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
+def execute_host_label_sync(host_name: HostName, site_id: SiteId, *, debug: bool) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
     site_spec = get_site_config(active_config, site_id)
     result = _execute_site_sync(
@@ -122,6 +129,7 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
         SiteRequest(
             newest_host_labels=0.0,
             enforce_host=EnforcedHostRequest(site_id, host_name),
+            debug=debug,
         ),
     )
     save_updated_host_label_files(result.updated_host_labels)
@@ -133,7 +141,7 @@ def execute_host_label_sync_job() -> None:
     if not has_wato_slave_sites():
         return
 
-    DiscoveredHostLabelSyncJob().do_sync()
+    DiscoveredHostLabelSyncJob().do_sync(debug=active_config.debug)
 
     now = time.time()
     if (
@@ -156,12 +164,12 @@ class DiscoveredHostLabelSyncJob:
     future.
     """
 
-    def do_sync(self) -> None:
+    def do_sync(self, *, debug: bool) -> None:
         logger.info("Synchronization started...")
-        self._execute_sync()
+        self._execute_sync(debug=debug)
         logger.info("The synchronization finished.")
 
-    def _execute_sync(self) -> None:
+    def _execute_sync(self, *, debug: bool) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
         with ThreadPool(20) as pool:
@@ -171,7 +179,7 @@ class DiscoveredHostLabelSyncJob:
                     (
                         site_id,
                         site_spec,
-                        SiteRequest(newest_host_labels.get(site_id, 0.0), None),
+                        SiteRequest(newest_host_labels.get(site_id, 0.0), None, debug=debug),
                     )
                     for site_id, site_spec in wato_slave_sites().items()
                 ],
@@ -235,6 +243,7 @@ def _execute_site_sync(
                 ("request", repr(site_request.serialize())),
             ],
             timeout=100,
+            debug=site_request.debug,
         )
         assert isinstance(raw_result, dict)
         result = DiscoveredHostLabelSyncResponse(**raw_result)

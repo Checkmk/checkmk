@@ -104,6 +104,7 @@ def check_mk_local_automation_serialized(
     stdin_data: str | None = None,
     timeout: int | None = None,
     force_cli_interface: bool = False,
+    debug: bool,
 ) -> tuple[Sequence[str], SerializedResult]:
     with tracer.span(
         f"local_automation[{command}]",
@@ -133,6 +134,7 @@ def check_mk_local_automation_serialized(
                 command=command,
                 cmdline=executor.command_description(command, args, logger, timeout),
                 exc=e,
+                debug=debug,
             )
             raise MKAutomationException(msg)
 
@@ -150,6 +152,7 @@ def check_mk_local_automation_serialized(
                 code=result.exit_code,
                 out=result.output,
                 err=result.error,
+                debug=debug,
             )
 
             if result.exit_code == 1:
@@ -172,8 +175,9 @@ def get_local_automation_failure_message(
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
+    debug: bool,
 ) -> str:
-    call = subprocess.list2cmdline(cmdline) if active_config.debug else command
+    call = subprocess.list2cmdline(cmdline) if debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
         msg += " (exit code %d)" % code
@@ -200,6 +204,7 @@ def check_mk_remote_automation_serialized(
     timeout: int | None = None,
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
+    debug: bool,
 ) -> SerializedResult:
     with tracer.span(
         f"remote_automation[{command}]",
@@ -227,7 +232,9 @@ def check_mk_remote_automation_serialized(
             # This will start a background job process on the remote site to execute the automation
             # asynchronously. It then polls the remote site, waiting for completion of the job.
             return _do_check_mk_remote_automation_in_background_job_serialized(
-                site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
+                site_id,
+                CheckmkAutomationRequest(command, args, indata, stdin_data, timeout, debug=debug),
+                debug=debug,
             )
 
         # Synchronous execution of the actual remote command in a single blocking HTTP request
@@ -243,7 +250,9 @@ def check_mk_remote_automation_serialized(
                     ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
                     ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
                 ],
+                files=None,
                 timeout=timeout,
+                debug=debug,
             )
         )
 
@@ -287,8 +296,9 @@ def _do_remote_automation_serialized(
     site: SiteConfiguration,
     command: str,
     vars_: Sequence[tuple[str, str]],
-    files: Mapping[str, BytesIO] | None = None,
-    timeout: float | None = None,
+    files: Mapping[str, BytesIO] | None,
+    timeout: float | None,
+    debug: bool,
 ) -> str:
     auto_logger.info("RUN [%s]: %s", site_id or "site id not in config", command)
     auto_logger.debug("Site config: %r", sanitize_site_configuration(site))
@@ -305,7 +315,7 @@ def _do_remote_automation_serialized(
     post_data.update(
         {
             "secret": secret,
-            "debug": "1" if active_config.debug else "",
+            "debug": "1" if debug else "",
         }
     )
 
@@ -321,7 +331,9 @@ def _do_remote_automation_serialized(
     return response
 
 
-def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult | str:
+def execute_phase1_result(
+    site_id: SiteId, connection_id: str, *, debug: bool
+) -> PhaseOneResult | str:
     command_args = [
         ("request_format", "python"),
         (
@@ -335,13 +347,14 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
                 site=get_site_config(active_config, site_id),
                 command="execute-dcd-command",
                 vars_=command_args,
+                debug=debug,
             )
         )
     )
 
 
 def fetch_service_discovery_background_job_status(
-    site_id: SiteId, hostname: str
+    site_id: SiteId, hostname: str, *, debug: bool
 ) -> BackgroundStatusSnapshot:
     details = json.loads(
         str(
@@ -349,6 +362,7 @@ def fetch_service_discovery_background_job_status(
                 site=get_site_config(active_config, site_id),
                 command="service-discovery-job-snapshot",
                 vars_=[("hostname", hostname)],
+                debug=debug,
             )
         )
     )
@@ -368,6 +382,7 @@ def do_remote_automation(
     site: SiteConfiguration,
     command: str,
     vars_: Sequence[tuple[str, str]],
+    debug: bool,
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> object:
@@ -379,6 +394,7 @@ def do_remote_automation(
         vars_=vars_,
         files=files,
         timeout=timeout,
+        debug=debug,
     )
     try:
         return ast.literal_eval(serialized_response)
@@ -548,7 +564,7 @@ def get_url(
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
-def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
+def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug: bool) -> str:
     if not name:
         raise MKUserError("_name", _("Please specify your administrator login on the remote site."))
     if not password:
@@ -572,7 +588,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         message = _(
             "Authentication to web service failed.<br>Message:<br>%s"
         ) % escaping.strip_tags(escaping.strip_scripts(response))
-        if active_config.debug:
+        if debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
     if not response:
@@ -603,6 +619,8 @@ class CheckmkAutomationRequest(NamedTuple):
     indata: object
     stdin_data: str | None
     timeout: int | None
+    # Optional value can be removed with 2.6
+    debug: bool = False
 
 
 RemoteAutomationGetStatusResponseRaw = tuple[dict[str, object], str]
@@ -618,7 +636,10 @@ class CheckmkAutomationGetStatusResponse(NamedTuple):
 # - Service discovery of a single host (cmk.gui.wato.pages.services._get_check_table)
 # - Fetch agent / SNMP output (cmk.gui.wato.pages.fetch_agent_output.FetchAgentOutputBackgroundJob)
 def _do_check_mk_remote_automation_in_background_job_serialized(
-    site_id: SiteId, automation_request: CheckmkAutomationRequest
+    site_id: SiteId,
+    automation_request: CheckmkAutomationRequest,
+    *,
+    debug: bool,
 ) -> SerializedResult:
     """Execute the automation in a background job on the remote site
 
@@ -626,7 +647,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
     completion of the job."""
     site_config = get_site_config(active_config, site_id)
 
-    job_id = _start_remote_automation_job(site_config, automation_request)
+    job_id = _start_remote_automation_job(site_config, automation_request, debug=debug)
 
     auto_logger.info("Waiting for job completion")
     result = None
@@ -637,6 +658,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
             [
                 ("request", repr(job_id)),
             ],
+            debug=debug,
         )
         assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
@@ -660,7 +682,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
 
 def _start_remote_automation_job(
-    site_config: SiteConfiguration, automation_request: CheckmkAutomationRequest
+    site_config: SiteConfiguration, automation_request: CheckmkAutomationRequest, *, debug: bool
 ) -> str:
     auto_logger.info("Starting remote automation in background job")
     job_id = str(
@@ -670,6 +692,7 @@ def _start_remote_automation_job(
             [
                 ("request", repr(tuple(automation_request))),
             ],
+            debug=debug,
         )
     )
 
@@ -761,6 +784,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         serialized_result: SerializedResult,
         automation_cmd: str,
         cmdline_cmd: Iterable[str],
+        debug: bool,
     ) -> None:
         try:
             store.save_text_to_file(
@@ -775,6 +799,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 cmdline=cmdline_cmd,
                 out=serialized_result,
                 exc=e,
+                debug=debug,
             )
             raise MKAutomationException(msg)
 
@@ -799,6 +824,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             indata=api_request.indata,
             stdin_data=api_request.stdin_data,
             timeout=api_request.timeout,
+            debug=api_request.debug,
         )
         # This file will be read by the get-status request
         self._store_result(
@@ -806,6 +832,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             serialized_result=serialized_result,
             automation_cmd=api_request.command,
             cmdline_cmd=cmdline_cmd,
+            debug=api_request.debug,
         )
         job_interface.send_result_message(_("Finished."))
 

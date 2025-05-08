@@ -333,7 +333,7 @@ def _create_and_save_special_agent_bundle(
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
     is_local = site_is_local(active_config, site_id)
-    if not _service_discovery_possible(site_id, is_local):
+    if not _service_discovery_possible(site_id, is_local=is_local, debug=active_config.debug):
         progress_logger.log_new_progress_step(
             "service_discovery",
             "Skipping service discovery as target site is unreachable",
@@ -347,6 +347,7 @@ def _create_and_save_special_agent_bundle(
                 site_id,
                 is_local=is_local,
                 pprint_value=active_config.wato_pprint_config,
+                debug=active_config.debug,
             )
         except Exception as e:
             progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
@@ -386,7 +387,7 @@ def _create_and_save_special_agent_bundle(
     )
 
 
-def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
+def _service_discovery_possible(site_id: SiteId, *, is_local: bool, debug: bool) -> bool:
     if is_local:
         return True
 
@@ -395,7 +396,7 @@ def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
     if site is None or not is_replication_enabled(site):
         return False
 
-    remote_status = ReplicationStatusFetcher().fetch([(site_id, site)])
+    remote_status = ReplicationStatusFetcher().fetch([(site_id, site)], debug=debug)
     if not remote_status[site_id].success:
         return False
 
@@ -403,20 +404,22 @@ def _service_discovery_possible(site_id: SiteId, is_local: bool) -> bool:
 
 
 def _run_service_discovery(
-    host_name: str, site_id: SiteId, *, is_local: bool, pprint_value: bool
+    host_name: str, site_id: SiteId, *, is_local: bool, pprint_value: bool, debug: bool
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
     if not is_local:
         # this also implicitly syncs the pending changes to the remote site to run the discovery
         get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
-        snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+        snapshot = fetch_service_discovery_background_job_status(site_id, host_name, debug=debug)
         if not snapshot.exists:
             raise Exception(
                 _("Could not find a running service discovery for host %s on remote site %s")
                 % (host_name, site_id)
             )
         while snapshot.is_active:
-            snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+            snapshot = fetch_service_discovery_background_job_status(
+                site_id, host_name, debug=debug
+            )
 
     check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
     perform_fix_all(

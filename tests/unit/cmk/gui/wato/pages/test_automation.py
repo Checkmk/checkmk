@@ -107,7 +107,7 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation()._execute_cmk_automation()
+            automation.PageAutomation()._execute_cmk_automation(debug=False)
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
@@ -125,7 +125,7 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": "2.4.0b1", "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation()._execute_cmk_automation()
+            automation.PageAutomation()._execute_cmk_automation(debug=False)
             assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.parametrize(
@@ -153,7 +153,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation()._execute_cmk_automation()
+                automation.PageAutomation()._execute_cmk_automation(debug=False)
 
     @pytest.mark.usefixtures(
         "request_context",

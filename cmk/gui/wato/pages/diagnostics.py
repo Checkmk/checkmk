@@ -744,7 +744,9 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         #        results.append(chunk_result)
 
         if len(results) > 1:
-            result = _merge_results(site, results, diagnostics_parameters["timeout"])
+            result = _merge_results(
+                site, results, diagnostics_parameters["timeout"], debug=active_config.debug
+            )
             # The remote tarfiles will be downloaded and the link will point to the local site.
             download_site_id = omd_site()
         elif len(results) == 1:
@@ -785,7 +787,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
 
 
 def _merge_results(
-    site: SiteId, results: Sequence[CreateDiagnosticsDumpResult], timeout: int
+    site: SiteId, results: Sequence[CreateDiagnosticsDumpResult], timeout: int, *, debug: bool
 ) -> CreateDiagnosticsDumpResult:
     output: str = ""
     tarfile_created: bool = False
@@ -801,6 +803,7 @@ def _merge_results(
                     SiteId(site),
                     Path(result.tarfile_path).name,
                     timeout,
+                    debug=debug,
                 )
             tarfile_paths.append(tarfile_localpath)
 
@@ -811,11 +814,13 @@ def _merge_results(
     )
 
 
-def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
+def _get_tarfile_from_remotesite(
+    site: SiteId, tarfile_name: str, timeout: int, *, debug: bool
+) -> str:
     cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
-        file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))
+        file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout, debug=debug))
     return tarfile_localpath
 
 
@@ -850,7 +855,9 @@ class PageDownloadDiagnosticsDump(Page):
         site = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
         timeout = request.get_integer_input_mandatory("timeout")
-        file_content = _get_diagnostics_dump_file(site, tarfile_name, timeout)
+        file_content = _get_diagnostics_dump_file(
+            site, tarfile_name, timeout, debug=active_config.debug
+        )
 
         response.set_content_type("application/x-tgz")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, tarfile_name)
@@ -868,7 +875,9 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
         return request.get_ascii_input_mandatory("tarfile_name")
 
 
-def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str, timeout: int) -> bytes:
+def _get_diagnostics_dump_file(
+    site: SiteId, tarfile_name: str, timeout: int, *, debug: bool
+) -> bytes:
     if site_is_local(active_config, site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
@@ -879,6 +888,7 @@ def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str, timeout: int) ->
             ("tarfile_name", tarfile_name),
         ],
         timeout=timeout,
+        debug=debug,
     )
     assert isinstance(raw_response, bytes)
     return raw_response

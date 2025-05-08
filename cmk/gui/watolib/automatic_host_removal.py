@@ -58,7 +58,9 @@ def execute_host_removal_job() -> None:
 
         if not (
             hosts_to_be_removed := {
-                site_id: hosts for site_id, hosts in _hosts_to_be_removed() if hosts
+                site_id: hosts
+                for site_id, hosts in _hosts_to_be_removed(debug=active_config.debug)
+                if hosts
             }
         ):
             _LOGGER_BACKGROUND_JOB.debug("Found no hosts to be removed, exiting")
@@ -100,12 +102,15 @@ def _init_logging() -> None:
     _LOGGER.propagate = False
 
 
-def _hosts_to_be_removed() -> list[tuple[SiteId, list[Host]]]:
+def _hosts_to_be_removed(*, debug: bool) -> list[tuple[SiteId, list[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
-    return [(site_id, _hosts_to_be_removed_for_site(site_id)) for site_id in wato_site_ids()]
+    return [
+        (site_id, _hosts_to_be_removed_for_site(site_id, debug=debug))
+        for site_id in wato_site_ids()
+    ]
 
 
-def _hosts_to_be_removed_for_site(site_id: SiteId) -> list[Host]:
+def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]:
     if site_is_local(active_config, site_id):
         try:
             # evaluate the generator here to potentially catch the exception below
@@ -124,6 +129,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId) -> list[Host]:
                     get_site_config(active_config, site_id),
                     "hosts-for-auto-removal",
                     [],
+                    debug=debug,
                 )
             )
         except (MKUserError, MKAutomationException) as e:

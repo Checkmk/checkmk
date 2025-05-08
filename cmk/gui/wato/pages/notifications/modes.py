@@ -1701,6 +1701,7 @@ class ModeTestNotifications(ModeNotifications):
                         ("context", json.dumps(context)),
                         ("dispatch", request.var("dispatch", "")),
                     ],
+                    debug=active_config.debug,
                 ),
             )
 

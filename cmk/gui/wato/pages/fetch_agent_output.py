@@ -206,6 +206,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             [
                 ("request", repr(self._request.serialize())),
             ],
+            debug=active_config.debug,
         )
 
     def _get_job_status(self) -> JobStatusSpec:
@@ -219,6 +220,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                 [
                     ("request", repr(self._request.serialize())),
                 ],
+                debug=active_config.debug,
             )
         )
 
@@ -413,6 +415,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
             [
                 ("request", repr(self._request.serialize())),
             ],
+            debug=active_config.debug,
         )
         assert isinstance(raw_response, bytes)
         return raw_response

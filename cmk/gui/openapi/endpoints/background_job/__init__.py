@@ -82,6 +82,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
                         site=get_site_config(active_config, site_id),
                         command="fetch-background-job-snapshot",
                         vars_=[("job_id", job_id)],
+                        debug=active_config.debug,
                     )
                 )
             )

@@ -13,10 +13,11 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.ccc.site import SiteId
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -25,7 +26,6 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
@@ -75,7 +75,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     Widget,
 )
-from cmk.gui.site_config import get_site_config
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
@@ -469,11 +468,14 @@ def get_stage_structure(
 
 def start_quick_setup_stage_action_job_on_remote(
     site_id: str,
+    site_config: SiteConfiguration,
     quick_setup_id: QuickSetupId,
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
     language: str,
+    *,
+    debug: bool,
 ) -> str:
     job_uuid = str(uuid.uuid4())
     args = QuickSetupStageActionJobArgs(
@@ -486,11 +488,12 @@ def start_quick_setup_stage_action_job_on_remote(
     )
     job_id = str(
         do_remote_automation(
-            get_site_config(active_config, SiteId(site_id)),
+            site_config,
             "start-quick-setup-stage-action",
             [
                 ("args", args.model_dump_json()),
             ],
+            debug=debug,
         )
     )
     return job_id

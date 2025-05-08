@@ -20,7 +20,9 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
 
-def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) -> None:
+def remove_tls_registration(
+    hosts_by_site: Mapping[SiteId, Sequence[HostName]], *, debug: bool
+) -> None:
     for site_id, host_names in hosts_by_site.items():
         if not host_names:
             continue
@@ -33,6 +35,7 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
             get_site_config(active_config, site_id),
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
+            debug=debug,
         )
 
 

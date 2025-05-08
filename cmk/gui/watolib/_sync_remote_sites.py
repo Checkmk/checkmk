@@ -239,6 +239,7 @@ class SyncRemoteSitesJob:
                     get_site_config(active_config, site_id),
                     "sync-remote-site",
                     [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
+                    debug=active_config.debug,
                 )
             )
         )
@@ -275,6 +276,7 @@ class SyncRemoteSitesJob:
                     get_site_config(active_config, site_id),
                     "clear-site-changes",
                     [("last_change_id", str(site_changes[-1]["id"]))],
+                    debug=active_config.debug,
                 )
 
     def _get_result_message(

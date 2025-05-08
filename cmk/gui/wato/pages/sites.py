@@ -881,17 +881,19 @@ class ModeDistributedMonitoring(WatoMode):
 
         login_id = request.get_ascii_input("_login")
         if login_id:
-            return self._action_login(SiteId(login_id))
+            return self._action_login(SiteId(login_id), debug=active_config.debug)
 
         if trigger_certs_site_id := request.get_ascii_input("_trigger_certs_creation"):
-            return self._action_trigger_certs(SiteId(trigger_certs_site_id))
+            return self._action_trigger_certs(
+                SiteId(trigger_certs_site_id), debug=active_config.debug
+            )
 
         return None
 
-    def _action_trigger_certs(self, trigger_certs_site_id: SiteId) -> ActionResult:
+    def _action_trigger_certs(self, trigger_certs_site_id: SiteId, *, debug: bool) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[trigger_certs_site_id]
-        trigger_remote_certs_creation(trigger_certs_site_id, site, True)
+        trigger_remote_certs_creation(trigger_certs_site_id, site, force=True, debug=debug)
         flash(_("Remote broker certificates created for site %s.") % trigger_certs_site_id)
         return redirect(mode_url("sites"))
 
@@ -973,7 +975,7 @@ class ModeDistributedMonitoring(WatoMode):
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
 
-    def _action_login(self, login_id: SiteId) -> ActionResult:
+    def _action_login(self, login_id: SiteId, *, debug: bool) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
@@ -997,7 +999,7 @@ class ModeDistributedMonitoring(WatoMode):
                         ),
                     )
 
-                secret = do_site_login(site, name, passwd)
+                secret = do_site_login(site, name, passwd, debug=debug)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(
@@ -1008,7 +1010,7 @@ class ModeDistributedMonitoring(WatoMode):
                 message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
-                trigger_remote_certs_creation(login_id, site)
+                trigger_remote_certs_creation(login_id, site, force=False, debug=debug)
 
                 _audit_log.log_audit(
                     action="edit-site",
@@ -1300,7 +1302,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         replication_sites = [
             (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
         ]
-        remote_status = ReplicationStatusFetcher().fetch(replication_sites)
+        remote_status = ReplicationStatusFetcher().fetch(
+            replication_sites, debug=active_config.debug
+        )
 
         for site_id, site in sites.items():
             site_id_str: str = site_id

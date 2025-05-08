@@ -5,8 +5,9 @@
 
 import ast
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime
+from logging import Logger
 from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, cast, Literal, NamedTuple
@@ -67,7 +68,9 @@ class SynchronizationResult:
         self.succeeded = succeeded
 
 
-def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
+def _synchronize_profiles_to_sites(
+    logger: Logger, profiles_to_synchronize: dict[UserId, UserSpec], debug: bool
+) -> None:
     if not profiles_to_synchronize:
         return
 
@@ -88,7 +91,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
         jobs.append(
             pool.apply_async(
                 copy_request_context(_sychronize_profile_worker),
-                (states, site_id, site, profiles_to_synchronize),
+                (states, site_id, site, profiles_to_synchronize, debug),
             )
         )
 
@@ -141,7 +144,8 @@ def _sychronize_profile_worker(
     states: sites.SiteStates,
     site_id: SiteId,
     site: SiteConfiguration,
-    profiles_to_synchronize: dict[UserId, Any],
+    profiles_to_synchronize: dict[UserId, UserSpec],
+    debug: bool,
 ) -> SynchronizationResult:
     if not is_replication_enabled(site):
         return SynchronizationResult(site_id, disabled=True)
@@ -156,7 +160,9 @@ def _sychronize_profile_worker(
         )
 
     try:
-        result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
+        result = push_user_profiles_to_site_transitional_wrapper(
+            site, profiles_to_synchronize, None, debug=debug
+        )
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
@@ -169,8 +175,10 @@ def _sychronize_profile_worker(
 
 
 # TODO: Why is the logger handed over here? The sync job could simply gather it's own
-def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
-    _synchronize_profiles_to_sites(logger, profiles_to_synchronize)
+def handle_ldap_sync_finished(
+    logger: Logger, profiles_to_synchronize: dict[UserId, UserSpec], changes: Sequence[str]
+) -> None:
+    _synchronize_profiles_to_sites(logger, profiles_to_synchronize, debug=active_config.debug)
 
     if changes and active_config.wato_enabled and not is_wato_slave_site():
         add_change(
@@ -184,10 +192,12 @@ def handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
 def push_user_profiles_to_site_transitional_wrapper(
     site: SiteConfiguration,
     user_profiles: Mapping[UserId, UserSpec],
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None = None,
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
+    *,
+    debug: bool,
 ) -> Literal[True] | str:
     try:
-        return push_user_profiles_to_site(site, user_profiles, visuals)
+        return _push_user_profiles_to_site(site, user_profiles, visuals, debug=debug)
     except MKAutomationException as e:
         if "Invalid automation command: push-profiles" in "%s" % e:
             failed_info = []
@@ -237,10 +247,11 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
     return response
 
 
-def push_user_profiles_to_site(
+def _push_user_profiles_to_site(
     site: SiteConfiguration,
     user_profiles: Mapping[UserId, UserSpec],
-    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None = None,
+    visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
+    debug: bool,
 ) -> Literal[True]:
     def _serialize(user_profiles: Mapping[UserId, UserSpec]) -> Mapping[UserId, UserSpec]:
         """Do not synchronize user session information"""
@@ -254,6 +265,7 @@ def push_user_profiles_to_site(
         "push-profiles",
         [("profiles", repr(_serialize(user_profiles))), ("visuals", repr(visuals))],
         timeout=60,
+        debug=debug,
     )
     return True
 

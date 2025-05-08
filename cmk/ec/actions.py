@@ -356,7 +356,7 @@ def do_notify(
 
     # Send notification context via stdin.
     context_string = "".join(
-        "{}={}\n".format(varname, value.replace("\n", "\\n"))
+        "{}={}\n".format(varname, value.replace("\\", "\\\\").replace("\n", "\\n"))
         for (varname, value) in context.items()
         if isinstance(
             value, str

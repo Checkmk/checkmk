@@ -46,21 +46,6 @@ def create_stage(Map args, time_stage_started) {
         )
 
         smart_stage(
-            name: "Fetch git tags",
-            condition: args.GIT_FETCH_TAGS,
-        ) {
-            dir("${checkout_dir}") {
-                withCredentials([jenkins_gerrit_key]) {
-                    withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
-                        // Since checkmk_ci:df2be57e we don't have the tags available anymore in the checkout
-                        // however the werk tests heavily rely on them, so fetch them here
-                        sh("git fetch origin 'refs/tags/*:refs/tags/*'")
-                    }
-                }
-            }
-        }
-
-        smart_stage(
             name: "Fetch git notes",
             condition: args.GIT_FETCH_NOTES,
         ) {
@@ -83,6 +68,21 @@ def create_stage(Map args, time_stage_started) {
                                 \$(cat .git/FETCH_HEAD | cut -f 1)
                             git fetch origin 'refs/notes/*:refs/notes/*'
                         """)
+                    }
+                }
+            }
+        }
+
+        smart_stage(
+            name: "Fetch git tags",
+            condition: args.GIT_FETCH_TAGS,
+        ) {
+            dir("${checkout_dir}") {
+                withCredentials([jenkins_gerrit_key]) {
+                    withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
+                        // Since checkmk_ci:df2be57e we don't have the tags available anymore in the checkout
+                        // however the werk tests heavily rely on them, so fetch them here
+                        sh("git fetch origin 'refs/tags/*:refs/tags/*'")
                     }
                 }
             }

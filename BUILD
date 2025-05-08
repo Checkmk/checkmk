@@ -195,6 +195,7 @@ create_venv(
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",
+        "//packages/cmk-mkp-tool:wheel_entrypoint_only",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [

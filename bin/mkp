@@ -78,7 +78,6 @@ _SITE_CONTEXT: Final = cli.SiteContext(
 if __name__ == "__main__":
     sys.exit(
         cli.main(
-            sys.argv[1:] or ["--help"],
             _make_path_config(),
             _SITE_CONTEXT,
             cmk.ccc.store.save_bytes_to_file,

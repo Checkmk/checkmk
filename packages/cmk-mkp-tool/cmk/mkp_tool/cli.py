@@ -854,12 +854,11 @@ def set_up_logging(verbosity: int) -> None:
 
 
 def main(
-    argv: list[str],
     path_config: PathConfig | None = None,
     site_context: SiteContext | None = None,
     persisting_function: Callable[[str, bytes], None] = simple_file_write,
 ) -> int:
-    args = _parse_arguments(argv, site_context)
+    args = _parse_arguments(sys.argv[1:] or ["--help"], site_context)
     set_up_logging(args.verbose)
 
     try:

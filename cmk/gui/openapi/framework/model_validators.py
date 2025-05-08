@@ -6,9 +6,7 @@ import ipaddress
 from dataclasses import dataclass
 from typing import Literal
 
-from cmk.ccc.hostaddress import HostName
-
-from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups

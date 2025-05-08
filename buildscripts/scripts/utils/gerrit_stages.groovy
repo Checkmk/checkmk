@@ -89,7 +89,11 @@ def create_stage(Map args, time_stage_started) {
                         // work properly.
                         // We use the same commit limitation as the werk commands uses in stages.yml.
                         sh("""
-                            git fetch --no-tags --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) origin \$(cat .git/FETCH_HEAD | cut -f 1)
+                            git fetch \
+                                --no-tags \
+                                --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) \
+                                origin \
+                                \$(cat .git/FETCH_HEAD | cut -f 1)
                             git fetch origin 'refs/notes/*:refs/notes/*'
                         """)
                     }

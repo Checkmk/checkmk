@@ -441,6 +441,10 @@ class TestAnnotatedValidators:
             raise ValueError("Value must be 'two'")
         return value
 
+    @staticmethod
+    def change_value(value: str) -> None:
+        return None
+
     def test_multiple_annotated_validators(self) -> None:
         @dataclasses.dataclass
         class Body:
@@ -463,6 +467,36 @@ class TestAnnotatedValidators:
             model._validate_request_parameters(
                 _request_data(body={"field": "three"}), "application/json"
             )
+
+    def test_annotated_validator_change_value(self) -> None:
+        @dataclasses.dataclass
+        class Body:
+            field: Annotated[str, AfterValidator(TestAnnotatedValidators.change_value)]
+
+        def handler(body: Body) -> None:
+            return None
+
+        model = EndpointModel.build(handler)
+        request_data = _request_data(body={"field": "one"})
+        bound = model._validate_request_parameters(request_data, "application/json")
+        assert bound.arguments["body"].field is None
+
+    def test_annotated_validator_with_different_return_values(self) -> None:
+        @dataclasses.dataclass
+        class Body:
+            field: Annotated[
+                str,
+                AfterValidator(TestAnnotatedValidators.validate_one),
+                AfterValidator(TestAnnotatedValidators.change_value),
+            ]
+
+        def handler(body: Body) -> None:
+            return None
+
+        model = EndpointModel.build(handler)
+        request_data = _request_data(body={"field": "one"})
+        bound = model._validate_request_parameters(request_data, "application/json")
+        assert bound.arguments["body"].field is None
 
 
 def test_query_parameter_list() -> None:

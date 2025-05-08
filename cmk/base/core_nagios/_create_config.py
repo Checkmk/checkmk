@@ -192,9 +192,11 @@ class NagiosConfig:
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
 
-    def write(self, x: str) -> None:
-        # TODO: Something seems to be mixed up in our call sites...
+    def write_str(self, x: str) -> None:
         self._outfile.write(x)
+
+    def write_object(self, name: str, spec: ObjectSpec) -> None:
+        self._outfile.write(_format_nagios_object(name, spec))
 
 
 def _validate_licensing(
@@ -247,12 +249,12 @@ def create_config(
     _create_nagios_config_timeperiods(cfg)
 
     if config.extra_nagios_conf:
-        cfg.write("\n# extra_nagios_conf\n\n")
-        cfg.write(config.extra_nagios_conf)
+        cfg.write_str("\n# extra_nagios_conf\n\n")
+        cfg.write_str(config.extra_nagios_conf)
 
 
 def _output_conf_header(cfg: NagiosConfig) -> None:
-    cfg.write(
+    cfg.write_str(
         """#
 # Created by Check_MK. Do not edit.
 #
@@ -271,14 +273,14 @@ def _create_nagios_config_host(
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> NotificationHostConfig:
-    cfg.write("\n# ----------------------------------------------------\n")
-    cfg.write("# %s\n" % hostname)
-    cfg.write("# ----------------------------------------------------\n")
+    cfg.write_str("\n# ----------------------------------------------------\n")
+    cfg.write_str("# %s\n" % hostname)
+    cfg.write_str("# ----------------------------------------------------\n")
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:
         host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
-        cfg.write(format_nagios_object("host", host_spec))
+        cfg.write_object("host", host_spec)
 
     return NotificationHostConfig(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
@@ -471,7 +473,7 @@ def _process_services_data(
         services_ids[service.description] = service.id()
 
         # Services Dependencies for autochecks
-        cfg.write(_get_dependencies(config_cache, hostname, service.description))
+        cfg.write_str(_get_dependencies(config_cache, hostname, service.description))
 
         service_spec = {
             "use": config.passive_service_template_perf,
@@ -502,7 +504,7 @@ def _process_services_data(
             _extra_service_conf_of(cfg, config_cache, hostname, service.description, service.labels)
         )
 
-        cfg.write(format_nagios_object("service", service_spec))
+        cfg.write_object("service", service_spec)
         license_counter["services"] += 1
 
         cfg.checknames_to_define.add(service.check_plugin_name)
@@ -543,7 +545,8 @@ def create_nagios_servicedefs(
         service_spec.update(
             _extra_service_conf_of(cfg, config_cache, hostname, "Check_MK", check_mk_labels)
         )
-        cfg.write(format_nagios_object("service", service_spec))
+
+        cfg.write_object("service", service_spec)
         license_counter["services"] += 1
 
     # legacy checks via active_checks
@@ -614,19 +617,19 @@ def create_nagios_servicedefs(
     # Services can be omitted, or rules can result in zero services (theoretically).
     # I am not sure if this is intentional.
     if active_checks_rules_exist:
-        cfg.write("\n\n# Active checks\n")
+        cfg.write_str("\n\n# Active checks\n")
 
         license_counter["services"] += len(active_services)
         for service_spec in active_services:
-            cfg.write(format_nagios_object("service", service_spec))
-            cfg.write(
+            cfg.write_object("service", service_spec)
+            cfg.write_str(
                 _get_dependencies(config_cache, hostname, service_spec["service_description"])
             )
 
     # Legacy checks via custom_checks
     custom_checks = config_cache.custom_checks(hostname)
     if custom_checks:
-        cfg.write("\n\n# Custom checks\n")
+        cfg.write_str("\n\n# Custom checks\n")
         for entry in custom_checks:
             _create_custom_check(
                 entry,
@@ -660,21 +663,19 @@ def create_nagios_servicedefs(
             }
         )
 
-        cfg.write(format_nagios_object("service", service_spec))
+        cfg.write_object("service", service_spec)
         license_counter["services"] += 1
 
         if services_ids:
-            cfg.write(
-                format_nagios_object(
-                    "servicedependency",
-                    {
-                        "use": config.service_dependency_template,
-                        "host_name": hostname,
-                        "service_description": "Check_MK",
-                        "dependent_host_name": hostname,
-                        "dependent_service_description": service_discovery_name,
-                    },
-                )
+            cfg.write_object(
+                "servicedependency",
+                {
+                    "use": config.service_dependency_template,
+                    "host_name": hostname,
+                    "service_description": "Check_MK",
+                    "dependent_host_name": hostname,
+                    "dependent_service_description": service_discovery_name,
+                },
             )
 
     ping_services: list[_PingServiceNames] = []
@@ -779,11 +780,11 @@ def _create_custom_check(
         )
         | _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
     )
-    cfg.write(format_nagios_object("service", service_spec))
+    cfg.write_object("service", service_spec)
     license_counter["services"] += 1
 
     # write service dependencies for custom checks
-    cfg.write(_get_dependencies(config_cache, hostname, description))
+    cfg.write_str(_get_dependencies(config_cache, hostname, description))
 
 
 def _get_service_labels(
@@ -809,7 +810,7 @@ def _get_dependencies(
     config_cache: ConfigCache, hostname: HostName, service_name: ServiceName
 ) -> str:
     return "".join(
-        format_nagios_object(
+        _format_nagios_object(
             "servicedependency",
             {
                 "use": config.service_dependency_template,
@@ -857,7 +858,7 @@ def _add_ping_service(
         cfg, config_cache, host_name, ping_service, arguments, service_labels
     )
 
-    cfg.write(format_nagios_object("service", service_spec))
+    cfg.write_object("service", service_spec)
     licensing_counter["services"] += 1
 
 
@@ -889,7 +890,7 @@ def _make_ping_only_spec(
     return service_spec
 
 
-def format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
+def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
     lines = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
@@ -919,57 +920,51 @@ def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:
 
 def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
     if config.define_hostgroups:
-        cfg.write("\n# ------------------------------------------------------------\n")
-        cfg.write("# Host groups (controlled by define_hostgroups)\n")
-        cfg.write("# ------------------------------------------------------------\n")
+        cfg.write_str("\n# ------------------------------------------------------------\n")
+        cfg.write_str("# Host groups (controlled by define_hostgroups)\n")
+        cfg.write_str("# ------------------------------------------------------------\n")
         for hg in sorted(cfg.hostgroups_to_define):
-            cfg.write(
-                format_nagios_object(
-                    "hostgroup",
-                    {
-                        "hostgroup_name": hg,
-                        "alias": config.define_hostgroups.get(hg, hg),
-                    },
-                )
+            cfg.write_object(
+                "hostgroup",
+                {
+                    "hostgroup_name": hg,
+                    "alias": config.define_hostgroups.get(hg, hg),
+                },
             )
 
     # No creation of host groups but we need to define default host group
     elif config.default_host_group in cfg.hostgroups_to_define:
-        cfg.write(
-            format_nagios_object(
-                "hostgroup",
-                {
-                    "hostgroup_name": config.default_host_group,
-                    "alias": "Check_MK default hostgroup",
-                },
-            )
+        cfg.write_object(
+            "hostgroup",
+            {
+                "hostgroup_name": config.default_host_group,
+                "alias": "Check_MK default hostgroup",
+            },
         )
 
 
 def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
     if not config.define_servicegroups:
         return
-    cfg.write("\n# ------------------------------------------------------------\n")
-    cfg.write("# Service groups (controlled by define_servicegroups)\n")
-    cfg.write("# ------------------------------------------------------------\n")
+    cfg.write_str("\n# ------------------------------------------------------------\n")
+    cfg.write_str("# Service groups (controlled by define_servicegroups)\n")
+    cfg.write_str("# ------------------------------------------------------------\n")
     for sg in sorted(cfg.servicegroups_to_define):
-        cfg.write(
-            format_nagios_object(
-                "servicegroup",
-                {
-                    "servicegroup_name": sg,
-                    "alias": config.define_servicegroups.get(sg, sg),
-                },
-            )
+        cfg.write_object(
+            "servicegroup",
+            {
+                "servicegroup_name": sg,
+                "alias": config.define_servicegroups.get(sg, sg),
+            },
         )
 
 
 def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
     if not cfg.contactgroups_to_define:
         return
-    cfg.write("\n# ------------------------------------------------------------\n")
-    cfg.write("# Contact groups (controlled by define_contactgroups)\n")
-    cfg.write("# ------------------------------------------------------------\n\n")
+    cfg.write_str("\n# ------------------------------------------------------------\n")
+    cfg.write_str("# Contact groups (controlled by define_contactgroups)\n")
+    cfg.write_str("# ------------------------------------------------------------\n\n")
     for name in sorted(cfg.contactgroups_to_define):
         contactgroup_spec = {
             "contactgroup_name": name,
@@ -977,67 +972,59 @@ def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
         }
         if members := config.contactgroup_members.get(name):
             contactgroup_spec["members"] = ",".join(sorted(members))
-        cfg.write(format_nagios_object("contactgroup", contactgroup_spec))
+        cfg.write_object("contactgroup", contactgroup_spec)
 
 
 def create_nagios_config_commands(cfg: NagiosConfig) -> None:
     if config.generate_dummy_commands:
-        cfg.write("\n# ------------------------------------------------------------\n")
-        cfg.write("# Dummy check commands and active check commands\n")
-        cfg.write("# ------------------------------------------------------------\n\n")
+        cfg.write_str("\n# ------------------------------------------------------------\n")
+        cfg.write_str("# Dummy check commands and active check commands\n")
+        cfg.write_str("# ------------------------------------------------------------\n\n")
         for checkname in sorted(cfg.checknames_to_define):
-            cfg.write(
-                format_nagios_object(
-                    "command",
-                    {
-                        "command_name": "check_mk-%s" % checkname,
-                        "command_line": config.dummy_check_commandline,
-                    },
-                )
+            cfg.write_object(
+                "command",
+                {
+                    "command_name": "check_mk-%s" % checkname,
+                    "command_line": config.dummy_check_commandline,
+                },
             )
 
     # active_checks
     for acttype, detected_executable in sorted(cfg.active_checks_to_define.items()):
-        cfg.write(
-            format_nagios_object(
-                "command",
-                {
-                    "command_name": f"check_mk_active-{acttype}",
-                    "command_line": f"{detected_executable} $ARG1$",
-                },
-            )
+        cfg.write_object(
+            "command",
+            {
+                "command_name": f"check_mk_active-{acttype}",
+                "command_line": f"{detected_executable} $ARG1$",
+            },
         )
 
     # custom_checks
     for command_name in sorted(cfg.custom_commands_to_define):
-        cfg.write(
-            format_nagios_object(
-                "command",
-                {
-                    "command_name": command_name,
-                    "command_line": "$ARG1$",
-                },
-            )
+        cfg.write_object(
+            "command",
+            {
+                "command_name": command_name,
+                "command_line": "$ARG1$",
+            },
         )
 
     # custom host checks
     for command_name, command_line in sorted(cfg.hostcheck_commands_to_define):
-        cfg.write(
-            format_nagios_object(
-                "command",
-                {
-                    "command_name": command_name,
-                    "command_line": command_line,
-                },
-            )
+        cfg.write_object(
+            "command",
+            {
+                "command_name": command_name,
+                "command_line": command_line,
+            },
         )
 
 
 def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
     timeperiods = add_builtin_timeperiods(config.timeperiods)
-    cfg.write("\n# ------------------------------------------------------------\n")
-    cfg.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
-    cfg.write("# ------------------------------------------------------------\n\n")
+    cfg.write_str("\n# ------------------------------------------------------------\n")
+    cfg.write_str("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
+    cfg.write_str("# ------------------------------------------------------------\n\n")
     for name in sorted(timeperiods):
         tp = timeperiods[name]
         timeperiod_spec = {
@@ -1049,14 +1036,14 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
                 timeperiod_spec[key] = times
         if exclude := tp.get("exclude", []):
             timeperiod_spec["exclude"] = ",".join(sorted(exclude))
-        cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
+        cfg.write_object("timeperiod", timeperiod_spec)
 
 
 def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostName]) -> None:
     if config.contacts:
-        cfg.write("\n# ------------------------------------------------------------\n")
-        cfg.write("# Contact definitions (controlled by variable 'contacts')\n")
-        cfg.write("# ------------------------------------------------------------\n\n")
+        cfg.write_str("\n# ------------------------------------------------------------\n")
+        cfg.write_str("# Contact definitions (controlled by variable 'contacts')\n")
+        cfg.write_str("# ------------------------------------------------------------\n\n")
         for cname, contact in sorted(config.contacts.items()):
             # Create contact groups in nagios, even when they are empty. This is needed
             # for RBN to work correctly when using contactgroups as recipients which are
@@ -1114,26 +1101,24 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
             contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
 
             contact_spec["contactgroups"] = ", ".join(sorted(cgrs))
-            cfg.write(format_nagios_object("contact", contact_spec))
+            cfg.write_object("contact", contact_spec)
 
     if hostnames:
         cfg.contactgroups_to_define.add("check-mk-notify")
-        cfg.write("# Needed for rule based notifications\n")
-        cfg.write(
-            format_nagios_object(
-                "contact",
-                {
-                    "contact_name": "check-mk-notify",
-                    "alias": "Contact for rule based notifications",
-                    "host_notification_options": "d,u,r,f,s",
-                    "service_notification_options": "u,c,w,r,f,s",
-                    "host_notification_period": "24X7",
-                    "service_notification_period": "24X7",
-                    "host_notification_commands": "check-mk-notify",
-                    "service_notification_commands": "check-mk-notify",
-                    "contactgroups": "check-mk-notify",
-                },
-            )
+        cfg.write_str("# Needed for rule based notifications\n")
+        cfg.write_object(
+            "contact",
+            {
+                "contact_name": "check-mk-notify",
+                "alias": "Contact for rule based notifications",
+                "host_notification_options": "d,u,r,f,s",
+                "service_notification_options": "u,c,w,r,f,s",
+                "host_notification_period": "24X7",
+                "service_notification_period": "24X7",
+                "host_notification_commands": "check-mk-notify",
+                "service_notification_commands": "check-mk-notify",
+                "contactgroups": "check-mk-notify",
+            },
         )
 
 

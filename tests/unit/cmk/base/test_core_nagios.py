@@ -32,10 +32,10 @@ from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlug
 
 from cmk.base import config
 from cmk.base.core_nagios._create_config import (
+    _format_nagios_object,
     create_nagios_config_commands,
     create_nagios_host_spec,
     create_nagios_servicedefs,
-    format_nagios_object,
     NagiosConfig,
 )
 from cmk.base.core_nagios._precompile_host_checks import (
@@ -81,7 +81,7 @@ def test_format_nagios_object() -> None:
         "check_interval": "hüch",
         "_HÄÄÄÄ": "XXXXXX_YYYY",
     }
-    cfg = format_nagios_object("service", spec)
+    cfg = _format_nagios_object("service", spec)
     assert isinstance(cfg, str)
     assert (
         cfg

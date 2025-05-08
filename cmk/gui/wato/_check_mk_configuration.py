@@ -2653,8 +2653,8 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(
-                                        "Warn the user at a specificied time before"
-                                        "the maximum session duration is reached"
+                                        "Warn the user at a specificied time before "
+                                        "the maximum session duration is reached "
                                         "to aid users in preserving data.",
                                     ),
                                     default_value=900,

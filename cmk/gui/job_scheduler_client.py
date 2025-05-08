@@ -50,7 +50,7 @@ class JobSchedulerClient:
                     _(
                         "Could not connect to ui-job-scheduler. "
                         "Possibly the service <tt>ui-job-scheduler</tt> is not started, "
-                        "please make sure that all site services are all started. "
+                        "please make sure that all site services are started. "
                         "Tried to connect via <tt>%s</tt>. Reported error was: %s."
                     )
                     % (paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET), e)

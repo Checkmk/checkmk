@@ -148,7 +148,7 @@ class Site:
             site_version=self._package.version,
         )
 
-        self.result_dir().mkdir(parents=True, exist_ok=True)
+        self.result_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def alias(self) -> str:
@@ -1216,7 +1216,7 @@ class Site:
             ps_output = self.check_output(["ps", "-ef"], stderr=subprocess.STDOUT)
             self.save_results()
 
-            write_file(ps_output_file := self.result_dir() / "processes.out", ps_output, sudo=True)
+            write_file(ps_output_file := self.result_dir / "processes.out", ps_output, sudo=True)
 
             self.report_crashes()
 
@@ -1438,18 +1438,19 @@ class Site:
         self.set_config("AUTOSTART", "off", with_restart=False)
 
     def save_results(self) -> None:
-        if not is_containerized():
-            logger.info("Not containerized: not copying results")
+        if not (is_containerized() or self.result_dir_from_env):
+            logger.info("Not copying results (not containerized and undefined RESULT_PATH)")
             return
-        logger.info("Saving to %s", self.result_dir())
-        if self.path("junit.xml").exists():
-            run(["cp", self.path("junit.xml").as_posix(), self.result_dir().as_posix()], sudo=True)
 
-        run(["cp", "-rL", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True)
+        logger.info("Saving to %s", self.result_dir)
+        if self.path("junit.xml").exists():
+            run(["cp", self.path("junit.xml").as_posix(), self.result_dir.as_posix()], sudo=True)
+
+        run(["cp", "-rL", self.path("var/log").as_posix(), self.result_dir.as_posix()], sudo=True)
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
-            orig_log_path = self.result_dir() / "log" / "apache" / log_name
+            orig_log_path = self.result_dir / "log" / "apache" / log_name
             if self.file_exists(orig_log_path):
                 run(
                     [
@@ -1461,9 +1462,9 @@ class Site:
                 )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
-            run(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
+            run(["cp", nagios_log_path, (self.result_dir / "log").as_posix()], sudo=True)
 
-        core_dir = self.result_dir() / self.core_name()
+        core_dir = self.result_dir / self.core_name()
         makedirs(core_dir, sudo=True)
 
         run(
@@ -1495,15 +1496,13 @@ class Site:
                 "cp",
                 "-r",
                 self.path("var/check_mk/background_jobs").as_posix(),
-                self.result_dir().as_posix(),
+                self.result_dir.as_posix(),
             ],
             sudo=True,
         )
 
         # Change ownership of all copied files to the user that executes the test
-        run(
-            ["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir().as_posix()], sudo=True
-        )
+        run(["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir.as_posix()], sudo=True)
 
         # Rename files to get better handling by the browser when opening a crash file
         for crash_info in self.crash_archive_dir.glob("**/crash.info"):
@@ -1541,9 +1540,17 @@ class Site:
                 See {crash_file} for more details."""
             )
 
+    @property
+    def result_dir_from_env(self) -> Path | None:
+        return (
+            Path(env_result_path) / self.id
+            if (env_result_path := os.getenv("RESULT_PATH"))
+            else None
+        )
+
+    @property
     def result_dir(self) -> Path:
-        base_dir = Path(os.environ.get("RESULT_PATH") or (repo_path() / "results"))
-        return base_dir / self.id
+        return self.result_dir_from_env or (repo_path() / "results" / self.id)
 
     @property
     def crash_report_dir(self) -> Path:
@@ -1551,7 +1558,7 @@ class Site:
 
     @property
     def crash_archive_dir(self) -> Path:
-        return self.result_dir() / "crashes"
+        return self.result_dir / "crashes"
 
     @property
     def logs_dir(self) -> Path:

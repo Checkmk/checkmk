@@ -498,6 +498,23 @@ class TestAnnotatedValidators:
         bound = model._validate_request_parameters(request_data, "application/json")
         assert bound.arguments["body"].field is None
 
+    def test_annotated_validator_with_changing_value_first(self) -> None:
+        @dataclasses.dataclass
+        class Body:
+            field: Annotated[
+                str,
+                AfterValidator(TestAnnotatedValidators.change_value),
+                AfterValidator(TestAnnotatedValidators.validate_one),
+            ]
+
+        def handler(body: Body) -> None:
+            return None
+
+        model = EndpointModel.build(handler)
+        request_data = _request_data(body={"field": "one"})
+        with pytest.raises(ValidationError, match="Value must be 'one'"):
+            model._validate_request_parameters(request_data, "application/json")
+
 
 def test_query_parameter_list() -> None:
     model = EndpointModel.build(_query_list_endpoint_handler)

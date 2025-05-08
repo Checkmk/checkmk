@@ -24,7 +24,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model_validators import HostAddressValidator, HostValidator
+from cmk.gui.openapi.framework.model.validators import HostAddressValidator, HostValidator
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 
 HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]

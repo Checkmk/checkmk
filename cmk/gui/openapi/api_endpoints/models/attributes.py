@@ -22,7 +22,7 @@ from cmk.gui.fields.attributes import (
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import IPv4NetworkString, IPv4String, RegexString
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
-from cmk.gui.openapi.framework.model_validators import GroupValidator, TagValidator, UserValidator
+from cmk.gui.openapi.framework.model.validators import GroupValidator, TagValidator, UserValidator
 
 
 @dataclass(kw_only=True, slots=True)

@@ -20,7 +20,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostTagGroupModel
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model_validators import HostValidator
+from cmk.gui.openapi.framework.model.validators import HostValidator
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 
 

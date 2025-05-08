@@ -23,6 +23,11 @@ class Secret:
     """
 
     def __init__(self, value: bytes) -> None:
+        if not value:
+            # This is a safeguard against creating empty secrets, which would be bad for most
+            # cryptographic operations.
+            raise ValueError("Cannot create empty secrets")
+
         self._value = value
 
     def compare(self, other: Secret) -> bool:
@@ -60,8 +65,8 @@ class LocalSecret(ABC):
 
         If the file at `self.path` does not exist or is empty, a new secret will be generated.
         """
-        if self.path.exists():
-            self.secret = Secret(self.path.read_bytes())
+        if self.path.exists() and (secret := self.path.read_bytes()):
+            self.secret = Secret(secret)
             return
 
         self.regenerate()

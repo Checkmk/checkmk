@@ -16,7 +16,7 @@ import pytest
 from tests.testlib.extensions import (
     compatible_extensions_sorted_by_n_downloads,
     download_extension,
-    install_extension,
+    install_extensions,
 )
 from tests.testlib.site import Site
 
@@ -467,7 +467,7 @@ def test_extension_compatibility(
         extension_filename := "tmp.mkp",
         download_extension(extension_download_url),
     )
-    with install_extension(site, site.resolve_path(Path(extension_filename))):
+    with install_extensions(site, [site.resolve_path(Path(extension_filename))]):
         encountered_errors = ImportErrors.collect_from_site(site)
         expected_errors = _EXPECTED_IMPORT_ERRORS.get(name, ImportErrors())
 

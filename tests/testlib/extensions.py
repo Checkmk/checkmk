@@ -43,14 +43,16 @@ class DownloadedExtension(NamedTuple):
 
 
 @contextlib.contextmanager
-def install_extension(site: Site, path: Path) -> Iterator[DownloadedExtension]:
-    extension = None
+def install_extensions(site: Site, paths: list[Path]) -> Iterator[list[DownloadedExtension]]:
+    added_extensions = []
     try:
-        extension = add_extension(site, path)
-        enable_extension(site, extension.name, extension.version)
-        yield extension
+        for path in paths:
+            extension = add_extension(site, path)
+            enable_extension(site, extension.name, extension.version)
+            added_extensions.append(extension)
+        yield added_extensions
     finally:
-        if extension:
+        for extension in added_extensions:
             disable_extension(site, extension.name, extension.version)
             remove_extension(site, extension.name, extension.version)
 

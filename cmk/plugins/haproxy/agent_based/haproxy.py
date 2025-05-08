@@ -8,9 +8,9 @@ from enum import Enum
 from time import time
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -143,7 +143,7 @@ def check_haproxy_frontend(item: str, params: Mapping[str, Any], section: Sectio
     if stot is not None:
         value_store = get_value_store()
         session_rate = get_rate(value_store, f"sessions.{item}", time(), stot)
-        yield from check_levels_v1(
+        yield from check_levels(
             value=session_rate, metric_name="session_rate", label="Session Rate"
         )
 

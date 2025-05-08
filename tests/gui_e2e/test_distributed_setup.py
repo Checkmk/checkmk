@@ -9,6 +9,7 @@ import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+import pytest
 from playwright.sync_api import Page
 
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
@@ -20,7 +21,8 @@ from tests.gui_e2e.testlib.playwright.pom.setup.distributed_monitoring import (
     DistributedMonitoring,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
-from tests.testlib.site import Site
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.site import Site, SiteFactory
 
 
 @contextmanager
@@ -77,6 +79,17 @@ def _check_host_is_monitored_from_remote_site(
 
     finally:
         page.goto(_previous_url, wait_until="load")
+
+
+@pytest.fixture(name="remote_site", scope="module")
+def fixture_remote_site(
+    request: pytest.FixtureRequest, site_factory: SiteFactory
+) -> Iterator[Site]:
+    """Return the remote Checkmk site object."""
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from site_factory.get_test_site(name="remote")
 
 
 def test_remote_host_configuring(

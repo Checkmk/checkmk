@@ -133,7 +133,7 @@ def test_parse_haproxy(info: StringTable, expected_parsed: Section) -> None:
                     "",
                     "",
                     "",
-                    "UP",
+                    "OPEN",
                     "",
                     "",
                     "",
@@ -524,7 +524,7 @@ def test_discover_haproxy_frontent(info: StringTable, expected_result: Discovery
                 ],
             ],
             [
-                Result(state=State.WARN, summary="Status: ASDF"),
+                Result(state=State.UNKNOWN, summary="Unknown status: ASDF"),
                 Result(state=State.OK, summary="Session Rate: 0.00"),
                 Metric("session_rate", 0.0),
             ],
@@ -976,7 +976,7 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
                 ]
             ],
             [
-                Result(state=State.WARN, summary="Status: ASDF"),
+                Result(state=State.UNKNOWN, summary="Unknown status: ASDF"),
                 Result(state=State.OK, summary="Active"),
                 Result(state=State.OK, summary="Layer Check: L4OK"),
                 Result(state=State.OK, summary="Up since 4 days 4 hours"),

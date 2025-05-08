@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from enum import Enum
 from time import time
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypeVar
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -22,40 +21,16 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-
-
-class HAProxyFrontendStatus(Enum):
-    OPEN = "OPEN"
-    STOP = "STOP"
-
-
-class HAProxyServerStatus(Enum):
-    """
-    https://www.haproxy.com/documentation/haproxy-configuration-manual/2-5r1/management/
-
-    Notes:
-        * MAINT (resolution) and MAINT (via) are listed explicitly as states in the linked
-        documentation, therefore including them in the enum instead of treating them as a partial
-        status.
-    """
-
-    UP = "UP"
-    DOWN = "DOWN"
-    NOLB = "NOLB"
-    MAINT = "MAINT"
-    MAINT_RES = "MAINT (resolution)"
-    MAINT_VIA = "MAINT (via)"
-    DRAIN = "DRAIN"
-    NO_CHECK = "no check"
+from cmk.plugins.haproxy.lib import HAProxyFrontendStatus, HAProxyServerStatus
 
 
 class Frontend(NamedTuple):
-    status: str
+    status: HAProxyFrontendStatus | str
     stot: int | None
 
 
 class Server(NamedTuple):
-    status: str
+    status: HAProxyServerStatus | str
     layer_check: str
     uptime: int | None
     active: int | None
@@ -67,26 +42,42 @@ class Section(NamedTuple):
     servers: dict[str, Server]
 
 
-def parse_int(val):
+def parse_int(val: str) -> int | None:
     try:
         return int(val)
     except ValueError:
         return None
 
 
-def status_result(status: str, params: Mapping[str, Any]) -> CheckResult:
+def status_result(
+    status: HAProxyFrontendStatus | HAProxyServerStatus | str, params: Mapping[str, Any]
+) -> CheckResult:
     """
     Yield the proper Result based on the available statuses in the params.
     State.WARN if status not in params.
     """
-    if status in params:
-        yield Result(state=State(params[status]), summary=f"Status: {status}")
+    if isinstance(status, str):
+        yield Result(state=State.UNKNOWN, summary=f"Unknown status: {status}")
+        return
+
+    if status.name in params:
+        yield Result(state=State(params[status.name]), summary=f"Status: {status.value}")
     else:
         # covers partial statuses like DOWN 1/2
         yield Result(
             state=State.WARN,
-            summary=f"Status: {status}",
+            summary=f"Status: {status.value}",
         )
+
+
+T = TypeVar("T", HAProxyServerStatus, HAProxyFrontendStatus)
+
+
+def status_to_enum(status: str, _enum: type[T]) -> T | str:
+    try:
+        return _enum(status)
+    except ValueError:
+        return status
 
 
 def parse_haproxy(string_table: StringTable) -> Section:
@@ -104,7 +95,9 @@ def parse_haproxy(string_table: StringTable) -> Section:
                 stot = int(line[7])
             except ValueError:
                 continue
-            frontends[name] = Frontend(status=status, stot=stot)
+            frontends[name] = Frontend(
+                status=status_to_enum(status=status, _enum=HAProxyFrontendStatus), stot=stot
+            )
 
         elif line[32] == "2":
             name = f"{line[0]}/{line[1]}"
@@ -114,7 +107,11 @@ def parse_haproxy(string_table: StringTable) -> Section:
             backup = parse_int(line[20])
 
             servers[name] = Server(
-                status=status, layer_check=layer_check, uptime=uptime, active=active, backup=backup
+                status=status_to_enum(status=status, _enum=HAProxyServerStatus),
+                layer_check=layer_check,
+                uptime=uptime,
+                active=active,
+                backup=backup,
             )
 
     return Section(frontends=frontends, servers=servers)
@@ -156,8 +153,8 @@ check_plugin_haproxy_frontend = CheckPlugin(
     check_function=check_haproxy_frontend,
     check_ruleset_name="haproxy_frontend",
     check_default_parameters={
-        HAProxyFrontendStatus.OPEN.value: State.OK.value,
-        HAProxyFrontendStatus.STOP.value: State.CRIT.value,
+        HAProxyFrontendStatus.OPEN.name: State.OK.value,
+        HAProxyFrontendStatus.STOP.name: State.CRIT.value,
     },
 )
 
@@ -197,13 +194,13 @@ check_plugin_haproxy_server = CheckPlugin(
     check_function=check_haproxy_server,
     check_ruleset_name="haproxy_server",
     check_default_parameters={
-        HAProxyServerStatus.UP.value: State.OK.value,
-        HAProxyServerStatus.DOWN.value: State.CRIT.value,
-        HAProxyServerStatus.NOLB.value: State.CRIT.value,
-        HAProxyServerStatus.MAINT.value: State.CRIT.value,
-        HAProxyServerStatus.MAINT_VIA.value: State.WARN.value,
-        HAProxyServerStatus.MAINT_RES.value: State.WARN.value,
-        HAProxyServerStatus.DRAIN.value: State.CRIT.value,
-        HAProxyServerStatus.NO_CHECK.value: State.CRIT.value,
+        HAProxyServerStatus.UP.name: State.OK.value,
+        HAProxyServerStatus.DOWN.name: State.CRIT.value,
+        HAProxyServerStatus.NOLB.name: State.CRIT.value,
+        HAProxyServerStatus.MAINT.name: State.CRIT.value,
+        HAProxyServerStatus.MAINT_VIA.name: State.WARN.value,
+        HAProxyServerStatus.MAINT_RES.name: State.WARN.value,
+        HAProxyServerStatus.DRAIN.name: State.CRIT.value,
+        HAProxyServerStatus.NO_CHECK.name: State.CRIT.value,
     },
 )

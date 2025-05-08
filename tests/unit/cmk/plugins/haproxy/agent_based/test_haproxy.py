@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.haproxy import (
+from cmk.plugins.haproxy.agent_based.haproxy import (
     check_haproxy_frontend,
     check_haproxy_server,
     discover_haproxy_frontend,
@@ -680,7 +680,7 @@ def test_discover_haproxy_frontent(info: StringTable, expected_result: Discovery
     ],
 )
 @mock.patch(
-    "cmk.plugins.collection.agent_based.haproxy.get_value_store",
+    "cmk.plugins.haproxy.agent_based.haproxy.get_value_store",
     mock.MagicMock(return_value={"sessions.some_server": (time(), 0.0)}),
 )
 def test_haproxy_frontend(

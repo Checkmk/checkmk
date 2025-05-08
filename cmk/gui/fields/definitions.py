@@ -1019,6 +1019,8 @@ class _CustomerField(base.String):
         "invalid_global": "Invalid customer: global",
         "should_exist": "Customer missing: {customer!r}",
         "should_not_exist": "Customer {customer!r} already exists.",
+        "edition_not_supported": "Customer field not supported in this edition.",
+        "required": "This field is required for the Managed edition.",
     }
 
     def __init__(
@@ -1034,15 +1036,26 @@ class _CustomerField(base.String):
     ):
         self._should_exist = should_exist
         self._allow_global = allow_global
+        self._required = required
+        description = f"[Managed Edition only] {description}"
+        if required:
+            description += " This field is required for the Managed edition."
+
         super().__init__(
             example=example,
             description=description,
-            required=required,
+            required=False,  # since all editions are supported this must be False
             validate=validate,
             **kwargs,
         )
 
     def _validate(self, value):
+        if version.edition(paths.omd_root) is not version.Edition.CME:
+            raise self.make_error("edition_not_supported")
+
+        if self._required and not self._allow_global and not value:
+            raise self.make_error("required")
+
         super()._validate(value)
         if value == "global":
             value = SCOPE_GLOBAL
@@ -1062,9 +1075,7 @@ class _CustomerField(base.String):
 
 
 def customer_field(**kw: Any) -> _CustomerField | None:
-    if version.edition(paths.omd_root) is version.Edition.CME:
-        return _CustomerField(**kw)
-    return None
+    return _CustomerField(**kw)
 
 
 def customer_field_response(**kw: Any) -> _CustomerField | None:

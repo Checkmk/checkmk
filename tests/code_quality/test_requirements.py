@@ -418,6 +418,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("cmk/plugins/aws/special_agent/agent_aws.py")
     },
     ImportName("tinkerforge"): {Path("cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py")},
+    ImportName("rados"): {Path("cmk/plugins/ceph/agents/mk_ceph.py")},
     ImportName("netsnmp"): {  # We ship it with omd/packages
         Path("cmk/fetchers/cee/snmp_backend/inline.py")
     },

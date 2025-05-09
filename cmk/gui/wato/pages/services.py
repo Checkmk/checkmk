@@ -1807,6 +1807,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
                 self._host_name,
                 self._check_type,
                 self._item,
+                debug=active_config.debug,
             )
             state = 3 if active_check_result.state is None else active_check_result.state
             output = active_check_result.output

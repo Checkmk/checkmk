@@ -1371,7 +1371,7 @@ class ACTestDeprecatedRuleSets(ACTest):
         site_id = omd_site()
         unknown_check_parameter_rule_sets = [
             f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"
-            for r in find_unknown_check_parameter_rule_sets().result
+            for r in find_unknown_check_parameter_rule_sets(debug=active_config.debug).result
         ]
         if deprecated_rule_sets := [
             r
@@ -1420,7 +1420,7 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
-        if rule_sets := find_unknown_check_parameter_rule_sets().result:
+        if rule_sets := find_unknown_check_parameter_rule_sets(debug=active_config.debug).result:
             for rule_set in rule_sets:
                 yield ACSingleResult(
                     state=ACResultState.WARN,

@@ -505,6 +505,7 @@ class PageAjaxDiagHost(AjaxPage):
             host.site_id(),
             hostname,
             _test,
+            active_config.debug,
             *args,
         )
         return {

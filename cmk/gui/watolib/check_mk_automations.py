@@ -545,6 +545,7 @@ def diag_host(
     site_id: SiteId,
     host_name: HostName,
     test: str,
+    debug: bool,
     *args: str,
 ) -> results.DiagHostResult:
     return _deserialize(
@@ -552,10 +553,10 @@ def diag_host(
             "diag-host",
             siteid=site_id,
             args=[host_name, test, *args],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.DiagHostResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -564,6 +565,8 @@ def active_check(
     host_name: HostName,
     check_type: str,
     item: str,
+    *,
+    debug: bool,
 ) -> results.ActiveCheckResult:
     return _deserialize(
         _automation_serialized(
@@ -571,22 +574,22 @@ def active_check(
             siteid=site_id,
             args=[host_name, check_type, item],
             sync=False,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.ActiveCheckResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
-def update_dns_cache(site_id: SiteId) -> results.UpdateDNSCacheResult:
+def update_dns_cache(site_id: SiteId, *, debug: bool) -> results.UpdateDNSCacheResult:
     return _deserialize(
         _automation_serialized(
             "update-dns-cache",
             siteid=site_id,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.UpdateDNSCacheResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -594,7 +597,9 @@ def get_agent_output(
     site_id: SiteId,
     host_name: HostName,
     agent_type: str,
-    timeout: int | None = None,
+    timeout: int | None,
+    *,
+    debug: bool,
 ) -> results.GetAgentOutputResult:
     return _deserialize(
         _automation_serialized(
@@ -602,60 +607,67 @@ def get_agent_output(
             siteid=site_id,
             args=[host_name, agent_type],
             timeout=timeout,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetAgentOutputResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
-def notification_replay(notification_number: int) -> results.NotificationReplayResult:
+def notification_replay(
+    notification_number: int, *, debug: bool
+) -> results.NotificationReplayResult:
     return _deserialize(
         _automation_serialized(
             "notification-replay",
             args=[str(notification_number)],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.NotificationReplayResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
-def notification_analyse(notification_number: int) -> results.NotificationAnalyseResult:
+def notification_analyse(
+    notification_number: int, *, debug: bool
+) -> results.NotificationAnalyseResult:
     return _deserialize(
         _automation_serialized(
             "notification-analyse",
             args=[str(notification_number)],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.NotificationAnalyseResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 def notification_test(
-    raw_context: NotificationContext, dispatch: str
+    raw_context: NotificationContext,
+    dispatch: str,
+    *,
+    debug: bool,
 ) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",
             args=[json.dumps(raw_context), dispatch],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.NotificationTestResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
-def notification_get_bulks(only_ripe: bool) -> results.NotificationGetBulksResult:
+def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.NotificationGetBulksResult:
     return _deserialize(
         _automation_serialized(
             "notification-get-bulks",
             args=[str(int(only_ripe))],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.NotificationGetBulksResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -694,12 +706,14 @@ def bake_agents(
     )
 
 
-def find_unknown_check_parameter_rule_sets() -> results.UnknownCheckParameterRuleSetsResult:
+def find_unknown_check_parameter_rule_sets(
+    *, debug: bool
+) -> results.UnknownCheckParameterRuleSetsResult:
     return _deserialize(
         _automation_serialized(
             "find-unknown-check-parameter-rule-sets",
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.UnknownCheckParameterRuleSetsResult,
-        debug=active_config.debug,
+        debug=debug,
     )

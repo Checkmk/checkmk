@@ -397,7 +397,9 @@ class ModeEditHost(ABCHostMode):
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
-            update_dns_cache_result = update_dns_cache(self._host.site_id())
+            update_dns_cache_result = update_dns_cache(
+                self._host.site_id(), debug=active_config.debug
+            )
             infotext = (
                 _("Successfully updated IP addresses of %d hosts.")
                 % update_dns_cache_result.n_updated

@@ -324,9 +324,11 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
     def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
         with job_interface.gui_context():
-            self._fetch_agent_output(job_interface)
+            self._fetch_agent_output(job_interface, debug=active_config.debug)
 
-    def _fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
+    def _fetch_agent_output(
+        self, job_interface: BackgroundProcessInterface, *, debug: bool
+    ) -> None:
         job_interface.send_progress_update(_("Fetching '%s'...") % self._agent_type)
 
         agent_output_result = get_agent_output(
@@ -336,6 +338,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             timeout=int(active_config.reschedule_timeout)
             if self._agent_type == "agent"
             else int(active_config.snmp_walk_download_timeout),
+            debug=debug,
         )
 
         if not agent_output_result.success:

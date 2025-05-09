@@ -3441,7 +3441,7 @@ class ModeUnknownRulesets(WatoMode):
         )
 
     def _unknown_rulesets(
-        self,
+        self, *, debug: bool
     ) -> tuple[
         Sequence[Ruleset],
         Mapping[RulesetName, Sequence[tuple[FolderPath, RuleSpec[object]]]],
@@ -3451,7 +3451,7 @@ class ModeUnknownRulesets(WatoMode):
 
         found_rule_sets: dict[RulesetName, Ruleset] = {}
         unknown_rule_sets: dict[RulesetName, list[tuple[FolderPath, RuleSpec[object]]]] = {}
-        for rule_set_name in find_unknown_check_parameter_rule_sets().result:
+        for rule_set_name in find_unknown_check_parameter_rule_sets(debug=debug).result:
             for ty in RuleGroupType:
                 if (rule_set := rulesets.get(f"{ty.value}:{rule_set_name}")) is not None:
                     found_rule_sets.setdefault(rule_set.name, rule_set)
@@ -3567,7 +3567,9 @@ class ModeUnknownRulesets(WatoMode):
         )
 
     def page(self) -> None:
-        unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets()
+        unknown_check_parameter_rulesets, unknown_rulesets = self._unknown_rulesets(
+            debug=active_config.debug
+        )
         with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
             html.hidden_field("mode", "unknown_rulesets", add_var=True)
             with table_element(

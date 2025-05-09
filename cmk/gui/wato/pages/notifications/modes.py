@@ -1310,33 +1310,31 @@ class ModeAnalyzeNotifications(ModeNotifications):
         )
 
     def page(self) -> None:
-        result = self._get_result_from_request()
-        self._show_bulk_notifications()
+        result = self._get_result_from_request(debug=active_config.debug)
+        self._show_bulk_notifications(debug=active_config.debug)
         self._show_notification_backlog()
         if request.var("analyse") and result:
             self._show_resulting_notifications(result=result)
         self._show_rules(result)
 
-    def _get_result_from_request(
-        self,
-    ) -> NotifyAnalysisInfo | None:
+    def _get_result_from_request(self, *, debug: bool) -> NotifyAnalysisInfo | None:
         if request.var("analyse"):
             nr = request.get_integer_input_mandatory("analyse")
-            return notification_analyse(nr).result
+            return notification_analyse(nr, debug=debug).result
 
         return None
 
-    def _show_bulk_notifications(self) -> None:
+    def _show_bulk_notifications(self, *, debug: bool) -> None:
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
-            if not self._render_bulks(only_ripe=False):
+            if not self._render_bulks(only_ripe=False, debug=debug):
                 html.show_message(_("Currently there are no unsent notification bulks pending."))
         else:
             # Warn if there are unsent bulk notifications
-            self._render_bulks(only_ripe=True)
+            self._render_bulks(only_ripe=True, debug=debug)
 
-    def _render_bulks(self, only_ripe: bool) -> bool:
-        bulks = notification_get_bulks(only_ripe).result
+    def _render_bulks(self, *, only_ripe: bool, debug: bool) -> bool:
+        bulks = notification_get_bulks(only_ripe=only_ripe, debug=debug).result
         if not bulks:
             return False
 
@@ -1454,7 +1452,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         if request.has_var("_replay"):
             if transactions.check_transaction():
                 replay_nr = request.get_integer_input_mandatory("_replay")
-                notification_replay(replay_nr)
+                notification_replay(replay_nr, debug=active_config.debug)
                 flash(_("Replayed notification number %d") % (replay_nr + 1))
                 return None
 
@@ -1473,6 +1471,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 class NotificationTestRequest(NamedTuple):
     context: str
     dispatch: str
+    debug: bool
 
 
 class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
@@ -1486,12 +1485,14 @@ class AutomationNotificationTest(AutomationCommand[NotificationTestRequest]):
         return NotificationTestRequest(
             context=context,
             dispatch=request.var("dispatch", ""),
+            debug=request.var("debug", "") == "1",
         )
 
     def execute(self, api_request: NotificationTestRequest) -> NotifyAnalysisInfo | None:
         return notification_test(
             raw_context=json.loads(api_request.context),
             dispatch=api_request.dispatch,
+            debug=api_request.debug,
         ).result
 
 
@@ -1661,7 +1662,7 @@ class ModeTestNotifications(ModeNotifications):
 
         analyse = None
         if not user_errors:
-            context, analyse = self._result_from_request()
+            context, analyse = self._result_from_request(debug=active_config.debug)
             self._show_notification_test_overview(context, analyse)
             self._show_notification_test_details(context, analyse)
             if request.var("test_notification") and analyse:
@@ -1669,7 +1670,7 @@ class ModeTestNotifications(ModeNotifications):
         self._show_rules(analyse)
 
     def _result_from_request(
-        self,
+        self, *, debug: bool
     ) -> tuple[NotificationContext | None, NotifyAnalysisInfo | None]:
         if request.var("test_notification"):
             try:
@@ -1689,6 +1690,7 @@ class ModeTestNotifications(ModeNotifications):
                     notification_test(
                         raw_context=context,
                         dispatch=request.var("dispatch", ""),
+                        debug=debug,
                     ).result,
                 )
 
@@ -1700,8 +1702,9 @@ class ModeTestNotifications(ModeNotifications):
                     [
                         ("context", json.dumps(context)),
                         ("dispatch", request.var("dispatch", "")),
+                        ("debug", "1" if debug else ""),
                     ],
-                    debug=active_config.debug,
+                    debug=debug,
                 ),
             )
 

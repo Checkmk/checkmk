@@ -52,7 +52,6 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     Timerange,
     Transform,
-    ValueSpec,
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
@@ -404,26 +403,19 @@ class PainterHostGraphs(Painter):
 
 
 class PainterOptionGraphRenderOptions(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "graph_render_options"
-
-    @property
-    def valuespec(self) -> ValueSpec:
-        return vs_graph_render_options()
+    def __init__(self) -> None:
+        super().__init__(ident="graph_render_options", valuespec=vs_graph_render_options())
 
 
 class PainterOptionPNPTimerange(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "pnp_timerange"
-
-    @property
-    def valuespec(self) -> Timerange:
-        return Timerange(
-            title=_("Graph time range"),
-            default_value=None,
-            include_time=True,
+    def __init__(self) -> None:
+        super().__init__(
+            ident="pnp_timerange",
+            valuespec=Timerange(
+                title=_("Graph time range"),
+                default_value=None,
+                include_time=True,
+            ),
         )
 
 

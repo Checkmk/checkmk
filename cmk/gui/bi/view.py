@@ -43,7 +43,7 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
-from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.command import (
     Command,
@@ -664,7 +664,7 @@ def paint_aggr_hosts(
     row: Row,
     link_to_view: str,
     *,
-    request: Request,
+    request: Request,  # pylint: disable=redefined-outer-name
 ) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
@@ -712,76 +712,68 @@ class PainterAggrHostsServices(Painter):
 
 
 class PainterOptionAggrExpand(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "aggr_expand"
-
-    @property
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Initial expansion of aggregations"),
-            default_value="0",
-            choices=[
-                ("0", _("collapsed")),
-                ("1", _("first level")),
-                ("2", _("two levels")),
-                ("3", _("three levels")),
-                ("999", _("complete")),
-            ],
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_expand",
+            valuespec=DropdownChoice(
+                title=_("Initial expansion of aggregations"),
+                default_value="0",
+                choices=[
+                    ("0", _("collapsed")),
+                    ("1", _("first level")),
+                    ("2", _("two levels")),
+                    ("3", _("three levels")),
+                    ("999", _("complete")),
+                ],
+            ),
         )
 
 
 class PainterOptionAggrOnlyProblems(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "aggr_onlyproblems"
-
-    @property
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Show only problems"),
-            default_value="0",
-            choices=[
-                ("0", _("show all")),
-                ("1", _("show only problems")),
-            ],
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_onlyproblems",
+            valuespec=DropdownChoice(
+                title=_("Show only problems"),
+                default_value="0",
+                choices=[
+                    ("0", _("show all")),
+                    ("1", _("show only problems")),
+                ],
+            ),
         )
 
 
 class PainterOptionAggrTreeType(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "aggr_treetype"
-
-    @property
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Type of tree layout"),
-            default_value="foldable",
-            choices=[
-                ("foldable", _("Foldable tree")),
-                ("boxes", _("Boxes")),
-                ("boxes-omit-root", _("Boxes (omit root)")),
-                ("bottom-up", _("Table: bottom up")),
-                ("top-down", _("Table: top down")),
-            ],
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_treetype",
+            valuespec=DropdownChoice(
+                title=_("Type of tree layout"),
+                default_value="foldable",
+                choices=[
+                    ("foldable", _("Foldable tree")),
+                    ("boxes", _("Boxes")),
+                    ("boxes-omit-root", _("Boxes (omit root)")),
+                    ("bottom-up", _("Table: bottom up")),
+                    ("top-down", _("Table: top down")),
+                ],
+            ),
         )
 
 
 class PainterOptionAggrWrap(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "aggr_wrap"
-
-    @property
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Handling of too long texts (affects only table)"),
-            default_value="wrap",
-            choices=[
-                ("wrap", _("wrap")),
-                ("nowrap", _("don't wrap")),
-            ],
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_wrap",
+            valuespec=DropdownChoice(
+                title=_("Handling of too long texts (affects only table)"),
+                default_value="wrap",
+                choices=[
+                    ("wrap", _("wrap")),
+                    ("nowrap", _("don't wrap")),
+                ],
+            ),
         )
 
 
@@ -1019,8 +1011,8 @@ class PainterAggrTreestateBoxed(Painter):
 def render_tree_json(
     row: typing.Mapping[str, typing.Any],
     *,
-    user: LoggedInUser,
-    request: Request,
+    user: LoggedInUser,  # pylint: disable=redefined-outer-name
+    request: Request,  # pylint: disable=redefined-outer-name
 ) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 

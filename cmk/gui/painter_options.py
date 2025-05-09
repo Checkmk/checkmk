@@ -33,20 +33,18 @@ def register(painter_option_registry_: PainterOptionRegistry) -> None:
 
 
 class PainterOption(abc.ABC):
-    def __init__(self) -> None:
+    def __init__(self, ident: str, valuespec: ValueSpec | None = None) -> None:
+        self.ident = ident
+        self._valuespec = valuespec
         self.request = request
         self.config = active_config
 
     @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """The identity of a painter option. One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
     def valuespec(self) -> ValueSpec:
-        raise NotImplementedError()
+        """Use this getter when active_config is required for valuespecs, else use the init paramater"""
+        if not self._valuespec:
+            raise NotImplementedError()
+        return self._valuespec
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -217,28 +215,23 @@ painter_option_registry = PainterOptionRegistry()
 
 
 class PainterOptionRefresh(PainterOption):
-    @override
-    @property
-    def ident(self) -> str:
-        return "refresh"
+    def __init__(self) -> None:
+        super().__init__(ident="refresh")
 
     @override
     @property
     def valuespec(self) -> ValueSpec:
-        choices = [
-            (x, {0: _("off")}.get(x, str(x) + "s")) for x in self.config.view_option_refreshes
-        ]
         return DropdownChoice(
             title=_("Refresh interval"),
-            choices=choices,
+            choices=[
+                (x, {0: _("off")}.get(x, str(x) + "s")) for x in self.config.view_option_refreshes
+            ],
         )
 
 
 class PainterOptionNumColumns(PainterOption):
-    @override
-    @property
-    def ident(self) -> str:
-        return "num_columns"
+    def __init__(self) -> None:
+        super().__init__(ident="num_columns")
 
     @override
     @property

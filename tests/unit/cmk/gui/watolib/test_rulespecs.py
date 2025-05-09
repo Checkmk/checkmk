@@ -130,6 +130,7 @@ def _expected_rulespec_group_choices():
         ("custom_checks", "Other services"),
         ("datasource_programs/apps", "&nbsp;&nbsp;⌙ Applications"),
         ("datasource_programs/cloud", "&nbsp;&nbsp;⌙ Cloud based environments"),
+        ("datasource_programs/container", "&nbsp;&nbsp;⌙ Containerization"),
         ("datasource_programs/custom", "&nbsp;&nbsp;⌙ Custom integrations"),
         ("datasource_programs/hw", "&nbsp;&nbsp;⌙ Hardware"),
         ("datasource_programs/os", "&nbsp;&nbsp;⌙ Operating systems"),
@@ -275,6 +276,7 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
+        "datasource_programs/container",
         "inventory",
         "eventconsole",
     ]
@@ -313,6 +315,7 @@ def test_rulespec_get_host_groups() -> None:
         "datasource_programs",
         "datasource_programs/apps",
         "datasource_programs/cloud",
+        "datasource_programs/container",
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",

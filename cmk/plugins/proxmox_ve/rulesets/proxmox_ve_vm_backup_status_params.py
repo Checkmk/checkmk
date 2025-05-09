@@ -77,7 +77,7 @@ def _parameter_valuespec_proxmox_ve_vm_backup_requirements() -> Dictionary:
 
 rule_spec_proxmox_ve_vm_backup_status = CheckParameters(
     name="proxmox_ve_vm_backup_status",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_valuespec_proxmox_ve_vm_backup_requirements,
     title=Title("Proxmox VE VM Backup"),
     condition=HostCondition(),

@@ -31,7 +31,7 @@ def _parameter_valuespec_proxmox_ve_vm_info():
 
 rule_spec_proxmox_ve_vm_info = CheckParameters(
     name="proxmox_ve_vm_info",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_valuespec_proxmox_ve_vm_info,
     title=Title("Proxmox VE VM Info"),
     condition=HostCondition(),

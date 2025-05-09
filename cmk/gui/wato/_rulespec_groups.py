@@ -27,6 +27,7 @@ def register(rulespec_group_registry: RulespecGroupRegistry) -> None:
     rulespec_group_registry.register(RulespecGroupDatasourceProgramsApps)
     rulespec_group_registry.register(RulespecGroupDatasourceProgramsCloud)
     rulespec_group_registry.register(RulespecGroupDatasourceProgramsCustom)
+    rulespec_group_registry.register(RulespecGroupDatasourceProgramsContainer)
     rulespec_group_registry.register(RulespecGroupDatasourceProgramsHardware)
     rulespec_group_registry.register(RulespecGroupDatasourceProgramsTesting)
 

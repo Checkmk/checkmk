@@ -117,6 +117,6 @@ def _form_special_agents_proxmox_ve() -> Dictionary:
 rule_spec_proxmox_ve = SpecialAgent(
     name="proxmox_ve",
     title=Title("Proxmox VE"),
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_form_special_agents_proxmox_ve,
 )

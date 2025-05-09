@@ -34,7 +34,7 @@ def _parameter_rulespec_proxmox_ve_disk_percentage_levels():
 
 rule_spec_proxmox_ve_disk_percentage_used = CheckParameters(
     name="proxmox_ve_disk_percentage_used",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_rulespec_proxmox_ve_disk_percentage_levels,
     title=Title("Proxmox VE disk percentage used"),
     condition=HostCondition(),

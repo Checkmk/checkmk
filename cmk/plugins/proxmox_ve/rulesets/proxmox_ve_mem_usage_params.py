@@ -34,7 +34,7 @@ def _parameter_rulespec_proxmox_ve_mem_usage():
 
 rule_spec_proxmox_ve_mem_usage = CheckParameters(
     name="proxmox_ve_mem_usage",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_rulespec_proxmox_ve_mem_usage,
     title=Title("Proxmox VE memory percentage used"),
     condition=HostCondition(),

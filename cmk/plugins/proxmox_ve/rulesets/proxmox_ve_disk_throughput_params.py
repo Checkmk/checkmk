@@ -60,7 +60,7 @@ def _parameter_valuespec_proxmox_ve_disk_throughput():
 
 rule_spec_proxmox_ve_disk_throughput = CheckParameters(
     name="proxmox_ve_disk_throughput",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_valuespec_proxmox_ve_disk_throughput,
     title=Title("Proxmox VE disk throughput"),
     condition=HostCondition(),

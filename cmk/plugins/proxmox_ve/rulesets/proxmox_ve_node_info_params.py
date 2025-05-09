@@ -40,7 +40,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
 
 rule_spec_proxmox_ve_node_info = CheckParameters(
     name="proxmox_ve_node_info",
-    topic=Topic.CLOUD,
+    topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_rulespec_proxmox_ve_node_info,
     title=Title("Proxmox VE Node Info"),
     condition=HostCondition(),

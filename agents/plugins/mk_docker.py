@@ -502,6 +502,9 @@ def section_node_images(client):
     LOGGER.debug(images)
     section.append("[[[images]]]")
     for image in images:
+        if image.attrs.get("Config", {}).get("Env"):
+            # do not collect env - could contain sensitive data
+            del image.attrs["Config"]["Env"]
         section.append(json.dumps(image.attrs))
 
     LOGGER.debug(client.all_containers)

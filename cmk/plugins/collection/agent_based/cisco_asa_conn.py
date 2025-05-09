@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# example output
-
 from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (
@@ -30,10 +28,15 @@ def parse_cisco_asa_conn(string_table: Sequence[StringTable]) -> Section:
     parsed = {}
     for line in string_table[0]:
         parsed[line[0]] = [line[1]]
+
     for line in string_table[2]:
         parsed[line[0]].append(line[1])
         parsed[line[0]].append(line[2])
+
     for line in string_table[1]:
+        if line[0] not in parsed:
+            # this is an IP but without network interface
+            parsed[line[0]] = [line[0], "1", "N/A"]
         parsed[line[0]].append(line[1])
 
     return parsed
@@ -58,7 +61,11 @@ def check_cisco_asa_conn(item: str, section: Section) -> CheckResult:
 
     for key, values in section.items():
         if item == key:
-            yield Result(state=State.OK, summary="Name: %s" % values[0])
+            has_network_device = True
+            if values[2] == "N/A":
+                has_network_device = False
+            else:
+                yield Result(state=State.OK, summary=f"Name: {values[0]}")
 
             try:
                 ip_address = values[3]
@@ -66,12 +73,18 @@ def check_cisco_asa_conn(item: str, section: Section) -> CheckResult:
                 ip_address = None
 
             if ip_address:
-                yield Result(state=State.OK, summary="IP: %s" % ip_address)
+                yield Result(
+                    state=State.OK if has_network_device else State.UNKNOWN,
+                    summary=f"IP: {ip_address}"
+                    if has_network_device
+                    else f"IP: {ip_address} - No network device associated",
+                )
             else:  # CRIT if no IP is assigned
                 yield Result(state=State.CRIT, summary="IP: Not found!")
 
-            state, state_readable = translate_status.get(values[2], (State.UNKNOWN, "N/A"))
-            yield Result(state=state, summary="Status: %s" % state_readable)
+            if has_network_device:
+                state, state_readable = translate_status.get(values[2], (State.UNKNOWN, "N/A"))
+                yield Result(state=state, summary=f"Status: {state_readable}")
 
 
 snmp_section_cisco_asa_conn = SNMPSection(
@@ -84,15 +97,25 @@ snmp_section_cisco_asa_conn = SNMPSection(
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.31.1.1.1",
-            oids=[OIDEnd(), "1"],
+            oids=[
+                OIDEnd(),  # IP-MIB::ipAdEntIfIndex
+                "1",  # IF-MIB::ifName
+            ],
         ),
         SNMPTree(
             base=".1.3.6.1.2.1.4.20.1",
-            oids=["2", "1"],
+            oids=[
+                "2",  # IP-MIB::ipAdEntIfIndex
+                "1",  # IP-MIB::ipAdEntAddr
+            ],
         ),
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
-            oids=[OIDEnd(), "7", "8"],
+            oids=[
+                OIDEnd(),  # IP-MIB::ipAdEntIfIndex
+                "7",  # IF-MIB::ifAdminStatus
+                "8",  # IF-MIB::ifOperStatus
+            ],
         ),
     ],
     parse_function=parse_cisco_asa_conn,

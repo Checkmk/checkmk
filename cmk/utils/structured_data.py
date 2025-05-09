@@ -1907,7 +1907,7 @@ class InventoryStore:
         try:
             latest_archive_file_path = max(
                 self.inv_paths.archive_host(host_name).iterdir(),
-                key=lambda tp: int(tp.name),
+                key=lambda fp: int(fp.with_suffix("").name),
             )
         except (FileNotFoundError, ValueError):
             return ImmutableTree()
@@ -1927,7 +1927,12 @@ class InventoryStore:
         corrupted = []
         for file_path in archive_host_file_paths:
             try:
-                paths.append(HistoryPath(path=file_path, timestamp=int(file_path.name)))
+                paths.append(
+                    HistoryPath(
+                        path=file_path,
+                        timestamp=int(file_path.with_suffix("").name),
+                    )
+                )
             except FileNotFoundError:
                 pass
             except ValueError:

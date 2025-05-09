@@ -260,7 +260,7 @@ class InventoryHousekeeping:
             ]:
                 delete = False
                 try:
-                    first, second = file_path.name.split("_")
+                    first, second = file_path.with_suffix("").name.split("_")
                     if not (first in available_timestamps and second in available_timestamps):
                         delete = True
                 except ValueError:
@@ -278,7 +278,7 @@ class InventoryHousekeeping:
         for filename in [
             x for x in self.inv_paths.archive_host(host_name).iterdir() if not x.is_dir()
         ]:
-            timestamps.add(filename.name)
+            timestamps.add(filename.with_suffix("").name)
         return timestamps
 
 

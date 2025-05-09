@@ -106,6 +106,7 @@ single_version_override(
     module_name = "rules_cc",
     patch_strip = 1,
     patches = [
+        "//bazel/patches:rules_cc-publicize_unix_cc_toolchain_config.patch",
         "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
     ],
 )

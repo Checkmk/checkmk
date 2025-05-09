@@ -1,20 +1,3 @@
-diff --git a/cc/cc_toolchain_config.bzl b/cc/cc_toolchain_config.bzl
-new file mode 100644
-index 0000000..ae2269b
---- /dev/null
-+++ b/cc/cc_toolchain_config.bzl
-@@ -0,0 +1,11 @@
-+"""cc_toolchain_config"""
-+
-+load(
-+    # There's a lot of file generation using repository rules upstream so that
-+    # it's difficult to find out whether this rule is available under another
-+    # path than private.
-+    "//cc/private/toolchain:unix_cc_toolchain_config.bzl",
-+    _unix_cc_toolchain_config = "cc_toolchain_config",
-+)
-+
-+unix_cc_toolchain_config = _unix_cc_toolchain_config
 diff --git a/cc/private/toolchain/unix_cc_toolchain_config.bzl b/cc/private/toolchain/unix_cc_toolchain_config.bzl
 index ee26a55..907637c 100644
 --- a/cc/private/toolchain/unix_cc_toolchain_config.bzl

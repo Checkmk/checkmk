@@ -479,7 +479,7 @@ def test_package_list_up_to_date() -> None:
     parsed_version = parse_check_mk_version(__version__)
     extensions = compatible_extensions_sorted_by_n_downloads(parsed_version)
 
-    # uncomment this to get output that you can paste into a spread sheet.
+    # uncomment this to get output that you can paste into a spreadsheet.
     # for extension in extensions:
     #     print(f"{extension.latest_version.link}\t{extension.downloads:5}")
     # assert False

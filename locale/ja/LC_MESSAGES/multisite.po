@@ -69761,9 +69761,10 @@ msgstr "サブスクリプションステータス値がそうでない場合に
 msgid "Warn on unexpected active interface"
 msgstr "予期しないアクティブなインターフェイスについて警告する"
 
+#, fuzzy
 msgid ""
-"Warn the user at a specificied time beforethe maximum session duration is "
-"reachedto aid users in preserving data."
+"Warn the user at a specificied time before the maximum session duration is "
+"reached to aid users in preserving data."
 msgstr ""
 "セッションの最大継続時間に達する前に、特定の時間でユーザーに警告を発し、ユー"
 "ザーがデータを保存できるようにします。"

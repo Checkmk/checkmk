@@ -74371,9 +74371,10 @@ msgstr "Avisa si el valor del estado de la suscripción no es"
 msgid "Warn on unexpected active interface"
 msgstr "Advertencia sobre una interfaz activa inesperada"
 
+#, fuzzy
 msgid ""
-"Warn the user at a specificied time beforethe maximum session duration is "
-"reachedto aid users in preserving data."
+"Warn the user at a specificied time before the maximum session duration is "
+"reached to aid users in preserving data."
 msgstr ""
 "Avisar al usuario en un momento determinado antes de que se alcance la "
 "duración máxima de la sesión para ayudarle a conservar los datos."

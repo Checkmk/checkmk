@@ -73698,8 +73698,8 @@ msgid "Warn on unexpected active interface"
 msgstr "Waarschuwing voor onverwachte actieve interface"
 
 msgid ""
-"Warn the user at a specificied time beforethe maximum session duration is "
-"reachedto aid users in preserving data."
+"Warn the user at a specificied time before the maximum session duration is "
+"reached to aid users in preserving data."
 msgstr ""
 
 #, fuzzy

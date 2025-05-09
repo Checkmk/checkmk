@@ -73839,9 +73839,10 @@ msgstr "Avertizează în cazul în care valoarea statutului de abonament nu este
 msgid "Warn on unexpected active interface"
 msgstr "Avertizare privind o interfață activă neașteptată"
 
+#, fuzzy
 msgid ""
-"Warn the user at a specificied time beforethe maximum session duration is "
-"reachedto aid users in preserving data."
+"Warn the user at a specificied time before the maximum session duration is "
+"reached to aid users in preserving data."
 msgstr ""
 "Avertizează utilizatorul la un moment specificat înainte ca durata maximă a "
 "sesiunii să fie atinsă pentru a ajuta utilizatorii să păstreze datele."

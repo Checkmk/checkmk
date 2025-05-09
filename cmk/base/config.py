@@ -3420,21 +3420,6 @@ class ConfigCache:
         hostname: HostName,
         ip_address_of: IPLookup,
     ) -> ObjectAttributes:
-        def _set_addresses(
-            attrs: ObjectAttributes,
-            addresses: list[HostAddress] | None,
-            what: Literal["4", "6"],
-        ) -> None:
-            key_base = f"_ADDRESSES_{what}"
-            if not addresses:
-                # If other addresses are not available, set to empty string in order to avoid unresolved macros
-                attrs[key_base] = ""
-                return
-            attrs[key_base] = " ".join(addresses)
-            for nr, address in enumerate(addresses):
-                key = f"{key_base}_{nr + 1}"
-                attrs[key] = address
-
         attrs = self.extra_host_attributes(hostname)
 
         # Pre 1.6 legacy attribute. We have changed our whole code to use the
@@ -3480,8 +3465,14 @@ class ConfigCache:
             attrs["_ADDRESS_FAMILY"] = "4"
 
         add_ipv4addrs, add_ipv6addrs = self.additional_ipaddresses(hostname)
-        _set_addresses(attrs, add_ipv4addrs, "4")
-        _set_addresses(attrs, add_ipv6addrs, "6")
+
+        attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
+        for n, address in enumerate(add_ipv4addrs, start=1):
+            attrs[f"_ADDRESSES_4_{n}"] = address
+
+        attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
+        for n, address in enumerate(add_ipv6addrs, start=1):
+            attrs[f"_ADDRESSES_6_{n}"] = address
 
         # Add the optional WATO folder path
         path = host_paths.get(hostname)

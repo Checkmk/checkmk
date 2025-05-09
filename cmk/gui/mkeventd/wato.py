@@ -3517,7 +3517,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         filename, mimetype, content = request.uploaded_file("_upload_mib")
         if filename:
             try:
-                flash(self._upload_mib(filename, mimetype, content))
+                flash(self._upload_mib(filename, mimetype, content, debug=active_config.debug))
                 return None
             except Exception as e:
                 if active_config.debug:
@@ -3525,11 +3525,11 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 raise MKUserError("_upload_mib", "%s" % e)
         return None
 
-    def _upload_mib(self, filename: str, mimetype: str, content: bytes) -> str:
+    def _upload_mib(self, filename: str, mimetype: str, content: bytes, *, debug: bool) -> str:
         self._validate_mib_file_name(filename)
 
         if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(filename, content)
+            msg = self._process_uploaded_zip_file(filename, content, debug=debug)
         else:
             if (
                 mimetype == "application/tar"
@@ -3538,7 +3538,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             ):
                 raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
 
-            msg = self._process_uploaded_mib_file(filename, content)
+            msg = self._process_uploaded_mib_file(filename, content, debug=debug)
 
         return msg
 
@@ -3553,7 +3553,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         except zipfile.BadZipfile:
             return False
 
-    def _process_uploaded_zip_file(self, filename: str, content: bytes) -> str:
+    def _process_uploaded_zip_file(self, filename: str, content: bytes, *, debug: bool) -> str:
         with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
             messages = []
             success, fail = 0, 0
@@ -3565,7 +3565,9 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                     self._validate_mib_file_name(mib_file_name)
                     with zip_obj.open(mib_file_name) as mib_obj:
                         messages.append(
-                            self._process_uploaded_mib_file(mib_file_name, mib_obj.read())
+                            self._process_uploaded_mib_file(
+                                mib_file_name, mib_obj.read(), debug=debug
+                            )
                         )
                     success += 1
                 except Exception as e:
@@ -3576,13 +3578,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             messages
         ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
 
-    def _process_uploaded_mib_file(self, filename: str, content: bytes) -> str:
+    def _process_uploaded_mib_file(self, filename: str, content: bytes, *, debug: bool) -> str:
         if "." in filename:
             mibname = filename.split(".")[0]
         else:
             mibname = filename
 
-        msg = self._validate_and_compile_mib(mibname.upper(), content)
+        msg = self._validate_and_compile_mib(mibname.upper(), content, debug=debug)
         mib_upload_dir().mkdir(parents=True, exist_ok=True)
         with (mib_upload_dir() / filename).open("wb") as f:
             f.write(content)
@@ -3596,7 +3598,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         if filename.startswith(".") or "/" in filename:
             raise Exception(_("Invalid filename"))
 
-    def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes) -> str:
+    def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes, *, debug: bool) -> str:
         compiled_mibs_dir = _compiled_mibs_dir()
         compiled_mibs_dir.mkdir(mode=0o770, exist_ok=True)
 
@@ -3652,7 +3654,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             return msg
 
         except PySmiError as e:
-            if active_config.debug:
+            if debug:
                 raise e
             raise Exception(_("Failed to process your MIB file (%s): %s") % (mibname, e))
 

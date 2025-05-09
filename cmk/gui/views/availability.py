@@ -183,6 +183,8 @@ def _show_availability_options_controls() -> None:
 def show_availability_page(
     view: View,
     filterheaders: FilterHeader,
+    *,
+    debug: bool,
 ) -> None:
     user.need_permission("general.see_availability")
 
@@ -244,7 +246,7 @@ def show_availability_page(
         )
     )
 
-    if handle_edit_annotations(breadcrumb):
+    if _handle_edit_annotations(breadcrumb, debug=debug):
         return
 
     # Deletion must take place before computation, since it affects the outcome
@@ -301,6 +303,7 @@ def show_availability_page(
                 else None
             ),
             browser_reload=html.browser_reload,
+            debug=debug,
         )
         html.begin_page_content()
 
@@ -790,6 +793,8 @@ def render_timeline_bar(
 def show_bi_availability(
     view: View,
     aggr_rows: Rows,
+    *,
+    debug: bool,
 ) -> None:
     user.need_permission("general.see_availability")
 
@@ -859,6 +864,7 @@ def show_bi_availability(
             breadcrumb,
             page_menu,
             browser_reload=html.browser_reload,
+            debug=debug,
         )
 
         avoptions = availability.get_availability_options_from_request("bi")
@@ -1121,7 +1127,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 )
 
 
-def edit_annotation(breadcrumb: Breadcrumb) -> bool:
+def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     (
         site_id,
         hostname,
@@ -1187,6 +1193,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
         breadcrumb,
         _edit_annotation_page_menu(breadcrumb),
         browser_reload=html.browser_reload,
+        debug=debug,
     )
 
     with html.form_context("editanno", method="GET"):
@@ -1318,12 +1325,12 @@ def handle_delete_annotations():
         availability.save_annotations(annotations)
 
 
-def handle_edit_annotations(breadcrumb: Breadcrumb) -> bool:
+def _handle_edit_annotations(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     # Avoid reshowing edit form after edit and reload
     if transactions.is_transaction() and not transactions.transaction_valid():
         return False
     if request.var("anno_host") and not request.var("_delete_annotation"):
-        finished = edit_annotation(breadcrumb)
+        finished = _edit_annotation(breadcrumb, debug=debug)
     else:
         finished = False
 

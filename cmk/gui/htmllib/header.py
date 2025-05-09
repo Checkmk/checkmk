@@ -5,6 +5,7 @@
 
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.page_menu import PageMenu
@@ -41,5 +42,6 @@ def make_header(
                 page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
                 page_state=page_state,
                 browser_reload=writer.browser_reload,
+                debug=active_config.debug,
             )
     writer.begin_page_content()

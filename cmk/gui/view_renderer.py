@@ -95,6 +95,8 @@ class ABCViewRenderer(abc.ABC):
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
+        *,
+        debug: bool,
     ) -> None:
         raise NotImplementedError()
 
@@ -118,6 +120,8 @@ class GUIViewRenderer(ABCViewRenderer):
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
+        *,
+        debug: bool,
     ) -> None:
         view_spec = self.view.spec
 
@@ -137,6 +141,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters),
                 browser_reload=html.browser_reload,
+                debug=debug,
             )
             html.begin_page_content()
 

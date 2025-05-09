@@ -11,6 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletId, DashletSize
 from cmk.gui.data_source import data_source_registry
@@ -170,7 +171,9 @@ class ABCViewDashlet(IFrameDashlet[VT]):
     def has_context(cls) -> bool:
         return True
 
-    def _show_view_as_dashlet(self, view_spec: ViewSpec | ViewDashletConfig) -> None:
+    def _show_view_as_dashlet(
+        self, view_spec: ViewSpec | ViewDashletConfig, *, debug: bool
+    ) -> None:
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
 
@@ -224,8 +227,11 @@ class ABCViewDashlet(IFrameDashlet[VT]):
 
         process_view(
             GUIViewRenderer(
-                view, show_buttons=False, page_menu_dropdowns_callback=lambda x, y, z: None
-            )
+                view,
+                show_buttons=False,
+                page_menu_dropdowns_callback=lambda x, y, z: None,
+            ),
+            debug=debug,
         )
 
         html.close_div()
@@ -306,7 +312,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         }
 
     def update(self):
-        self._show_view_as_dashlet(self._dashlet_spec)
+        self._show_view_as_dashlet(self._dashlet_spec, debug=active_config.debug)
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:
@@ -429,7 +435,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return makeuri_contextless(request, request_vars, filename="view.py")
 
     def update(self) -> None:
-        self._show_view_as_dashlet(self._get_view_spec())
+        self._show_view_as_dashlet(self._get_view_spec(), debug=active_config.debug)
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:

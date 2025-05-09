@@ -8,7 +8,6 @@ from __future__ import annotations
 from cmk.utils.licensing.registry import get_licensing_user_effect
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
-from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
@@ -32,6 +31,7 @@ def top_heading(
     page_state: PageState | None = None,
     *,
     browser_reload: float,
+    debug: bool,
 ) -> None:
     _may_show_license_expiry(writer)
 
@@ -79,7 +79,7 @@ def top_heading(
     if page_menu:
         PageMenuPopupsRenderer().show(page_menu)
 
-    if active_config.debug:
+    if debug:
         _dump_get_vars(
             writer,
             request,

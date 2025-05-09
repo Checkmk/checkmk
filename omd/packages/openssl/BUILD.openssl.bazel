@@ -25,7 +25,6 @@ configure_make(
         "--libdir=lib",
         # Do not build shared legacy module
         "no-module",
-        "-fPIC",
         "-O2",
     ],
     copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],

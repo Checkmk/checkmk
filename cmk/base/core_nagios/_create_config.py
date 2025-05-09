@@ -24,7 +24,7 @@ import cmk.utils.config_path
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import Labels
+from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
@@ -527,7 +527,7 @@ def create_nagios_servicedefs(
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_labels = _get_service_labels(config_cache, hostname, "Check_MK")
+    check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
         get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None)
     )
@@ -562,7 +562,7 @@ def create_nagios_servicedefs(
         password_store.core_password_store_path(LATEST_CONFIG),
     ):
         active_service_labels = _get_service_labels(
-            config_cache, hostname, service_data.description
+            config_cache.label_manager, hostname, service_data.description
         )
 
         if _skip_service(config_cache, hostname, service_data.description, active_service_labels):
@@ -647,7 +647,7 @@ def create_nagios_servicedefs(
 
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
-        labels = _get_service_labels(config_cache, hostname, service_discovery_name)
+        labels = _get_service_labels(config_cache.label_manager, hostname, service_discovery_name)
         service_spec = (
             {
                 "use": config.inventory_check_template,
@@ -768,7 +768,7 @@ def _create_custom_check(
 
     command = f"{command_name}!{command_line}"
 
-    labels = _get_service_labels(config_cache, hostname, description)
+    labels = _get_service_labels(config_cache.label_manager, hostname, description)
 
     service_attr = _to_nagios_core_attributes(
         get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
@@ -796,9 +796,9 @@ def _create_custom_check(
 
 
 def _get_service_labels(
-    config_cache: ConfigCache, hostname: HostName, service_name: ServiceName
+    label_manager: LabelManager, hostname: HostName, service_name: ServiceName
 ) -> Labels:
-    return config_cache.label_manager.labels_of_service(hostname, service_name, {})
+    return label_manager.labels_of_service(hostname, service_name, {})
 
 
 def _skip_service(
@@ -841,7 +841,7 @@ def _add_ping_service(
     licensing_counter: Counter,
 ) -> None:
     ipaddress = host_attrs["address"]
-    service_labels = _get_service_labels(config_cache, host_name, ping_service)
+    service_labels = _get_service_labels(config_cache.label_manager, host_name, ping_service)
     match ping_service:
         case "PING IPv4":
             family = AddressFamily.AF_INET

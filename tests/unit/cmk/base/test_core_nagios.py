@@ -10,7 +10,7 @@ import itertools
 import os
 import socket
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
@@ -27,6 +27,8 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
 
@@ -469,8 +471,26 @@ MOCK_PLUGIN = ActiveCheckConfig(
 )
 
 
+class FakeLabelConfig(ABCLabelConfig):
+    def __init__(self, service_labels: Mapping[str, str]):
+        self._service_lables = service_labels
+
+    def host_labels(self, host_name: HostName, /) -> Labels:
+        """Returns the configured labels for a host"""
+        return {}
+
+    def service_labels(
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        labels_of_host: Callable[[HostName], Labels],
+        /,
+    ) -> Labels:
+        return self._service_lables
+
+
 @pytest.mark.parametrize(
-    "active_checks, loaded_active_checks, host_attrs, expected_result",
+    "active_checks, loaded_active_checks, host_attrs, service_labels, expected_result",
     [
         pytest.param(
             [
@@ -484,10 +504,13 @@ MOCK_PLUGIN = ActiveCheckConfig(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {"os": "aix"},  # service labels
             "\n"
             "\n"
             "# Active checks\n"
             "define service {\n"
+            "  __LABELSOURCE_6F73            616978\n"
+            "  __LABEL_6F73                  616978\n"
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
@@ -510,10 +533,13 @@ MOCK_PLUGIN = ActiveCheckConfig(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {"os": "aix"},  # service labels
             "\n"
             "\n"
             "# Active checks\n"
             "define service {\n"
+            "  __LABELSOURCE_6F73            616978\n"
+            "  __LABEL_6F73                  616978\n"
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!'Failed to lookup IP address and no explicit IP address configured'\n"
             "  check_interval                1.0\n"
@@ -537,6 +563,7 @@ MOCK_PLUGIN = ActiveCheckConfig(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},  # service labels
             "\n"
             "\n"
             "# Active checks\n"
@@ -557,6 +584,7 @@ def test_create_nagios_servicedefs_active_check(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, Any],
+    service_labels: Mapping[str, str],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -565,6 +593,7 @@ def test_create_nagios_servicedefs_active_check(
 
     hostname = HostName("my_host")
     config_cache = config._create_config_cache(EMPTYCONFIG)
+    config_cache.label_manager = LabelManager(FakeLabelConfig(service_labels), {}, {}, {})
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 

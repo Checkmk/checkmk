@@ -255,6 +255,8 @@ create_python_requirements(
         "agent-receiver",  # don't build with pip (yet)
         "werks",  # don't build with pip (yet)
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
+        # Currently broken due to new cython version, see https://github.com/pymssql/pymssql/issues/937
+        "pymssql",
     ],
     requirements = "//:Pipfile",
 )

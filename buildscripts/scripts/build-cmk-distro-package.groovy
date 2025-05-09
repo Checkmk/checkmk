@@ -19,7 +19,6 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
-        "NEXUS_BUILD_CACHE_URL",
     ]);
 
     def distro = params.DISTRO;
@@ -34,9 +33,7 @@ def main() {
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
         "DEBEMAIL='feedback@checkmk.com'",
-    ] + (disable_cache ? [
-        "NEXUS_BUILD_CACHE_URL=",
-        ] : []);
+    ]
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);

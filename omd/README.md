@@ -45,26 +45,10 @@ these faked artifacts.
 TODO: Shouldn't we put them into dedicated packages which can then easily be
 excluded when there is no need to pack them (e.g. for tests)?
 
-## Using package cache
-
-Some of the OMD packages support some kind of build cache which helps to reduce
-the overall build times. To make use of this mechanism, you will have to set the
-following environment variables before executing the package build targets:
-
-- `NEXUS_BUILD_CACHE_URL=https://[NEXUS_URL]/repository/omd-build-cache`
-- `NEXUS_USERNAME=nexus-user`
-- `NEXUS_PASSWORD=nexus-password`
+## Using bazel remote cache
 
 In case you want to use the (internal) bazel remote cache, add a `remote.bazelrc`
 to the repository root (see `.bazelrc` for more information)
-
-Once this is configured correctly the first build will produce build artifacts
-and upload them to the nexus/bazel server. On the next run, either the locally
-or remotely cached build artifacts are used.
-
-The build cache is saved per branch based on the `BRANCH_VERSION` definition in
-`defines.make`. It needs to be updated when a new stable branch is forked from
-the master branch.
 
 ## How to build locally?
 
@@ -77,11 +61,6 @@ scripts/run-in-docker.sh bash
 
 # Fake the windows artifacts - they need to be built on a windows node
 scripts/fake-artifacts
-
-# Enable using the omd build cache
-NEXUS_BUILD_CACHE_URL=https://artifacts.lan.tribe29.com/repository/omd-build-cache \
-NEXUS_USERNAME=nexus-user \
-NEXUS_PASSWORD=nexus-pw \
 
 # And now build a debian package
 make deb

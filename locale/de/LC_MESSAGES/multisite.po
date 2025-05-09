@@ -79190,9 +79190,10 @@ msgstr "Warnung wenn kein Subskriptionszustand vorhanden"
 msgid "Warn on unexpected active interface"
 msgstr "Warnung bei unerwarteter aktiver Schnittstelle"
 
+#, fuzzy
 msgid ""
-"Warn the user at a specificied time beforethe maximum session duration is "
-"reachedto aid users in preserving data."
+"Warn the user at a specificied time before the maximum session duration is "
+"reached to aid users in preserving data."
 msgstr ""
 "Warnung des Benutzers zu einem bestimmten Zeitpunkt vor dem Erreichen der "
 "maximalen Sitzungsdauer, um den Benutzern zu helfen, ihre Daten zu schützen."

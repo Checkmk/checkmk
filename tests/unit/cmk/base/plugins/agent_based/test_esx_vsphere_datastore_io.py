@@ -163,17 +163,14 @@ def test_check_summary(section: SectionCounter) -> None:
 
 
 def test_check_summary_negative_values(section_with_negative_values: SectionCounter) -> None:
-    with pytest.raises(ValueError):
-        # Because of the negative value in the latency, we expect a ValueError
-        # from the render.timespan() function
-        assert (
-            list(
-                _check_esx_vsphere_datastore_io(
-                    "SUMMARY", {}, section_with_negative_values, 1659382581, {}
-                )
-            )
-            == []
-        )
+    assert list(
+        _check_esx_vsphere_datastore_io("SUMMARY", {}, section_with_negative_values, 1659382581, {})
+    ) == [
+        Result(state=State.OK, summary="Read: 19.5 kB/s"),
+        Metric("disk_read_throughput", 19456.0),
+        Result(state=State.OK, summary="Latency: 0 seconds"),
+        Metric("disk_latency", 0.0),
+    ]
 
 
 def test_check_item(section: SectionCounter) -> None:
@@ -194,14 +191,11 @@ def test_check_item(section: SectionCounter) -> None:
 
 
 def test_check_item_negative_values(section_with_negative_values: SectionCounter) -> None:
-    with pytest.raises(ValueError):
-        # Because of the negative value in the latency, we expect a ValueError
-        # from the render.timespan() function
-        assert (
-            list(
-                _check_esx_vsphere_datastore_io(
-                    "SSD_sgrz3par_vmstore1", {}, section_with_negative_values, 1659382581, {}
-                )
-            )
-            == []
+    assert list(
+        _check_esx_vsphere_datastore_io(
+            "SSD_sgrz3par_vmstore1", {}, section_with_negative_values, 1659382581, {}
         )
+    ) == [
+        Result(state=State.OK, summary="Read: 0.00 B/s"),
+        Metric("disk_read_throughput", 0.0),
+    ]

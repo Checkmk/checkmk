@@ -1,0 +1,22 @@
+Title: esx_vsphere_datastore_io: Handle negative values in the metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1746796405
+Edition: cre
+Level: 1
+Version: 2.2.0p43
+
+**Description:**
+This update improves the handling of negative values reported by ESX systems in datastore metrics.
+Previously, negative values could cause unexpected behavior or crashes.
+With this change, negative values are now gracefully skipped.
+
+**Impact:**
+- Negative values in metrics like latency or throughput are ignored.
+
+**Compatibility:**
+This change is backward-compatible and does not affect existing configurations.
+
+**Action Required:**
+No manual action is required. The update will automatically handle negative values during metric processing.

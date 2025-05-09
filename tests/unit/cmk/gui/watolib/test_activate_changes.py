@@ -108,6 +108,16 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
+            ident="mkps_avail",
+            site_path="var/check_mk/packages_local",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkps_disabled",
+            site_path="var/check_mk/disabled_packages",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="local",
             site_path="local",
         ),
@@ -342,7 +352,9 @@ def test_get_replication_components(
         expected = [e for e in expected if e.ident not in ["mkeventd", "mkeventd_mkp"]]
 
     if not replicate_mkps:
-        expected = [e for e in expected if e.ident not in ["local", "mkps"]]
+        expected = [
+            e for e in expected if e.ident not in ["local", "mkps", "mkps_avail", "mkps_disabled"]
+        ]
 
     assert sorted(
         activate_changes._get_replication_components(partial_site_config),

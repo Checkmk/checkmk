@@ -272,6 +272,20 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
+            ident="mkps_disabled",
+            site_path=os.path.relpath(
+                cmk.utils.paths.disabled_packages_dir, cmk.utils.paths.omd_root
+            ),
+        ),
+        ReplicationPath.make(  # add this explicitly, it is *not* below `local` despite the name.
+            ty=ReplicationPathType.DIR,
+            ident="mkps_avail",
+            site_path=os.path.relpath(
+                cmk.utils.paths.local_optional_packages_dir, cmk.utils.paths.omd_root
+            ),
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="local",
             site_path="local",
         ),

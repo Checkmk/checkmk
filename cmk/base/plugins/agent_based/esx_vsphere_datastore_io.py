@@ -5,7 +5,8 @@
 
 import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import Any, ClassVar
 
 from cmk.plugins.lib.diskstat import (
     check_diskstat_dict,
@@ -31,10 +32,21 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 # datastore.totalWriteLatency|4c4ece34-3d60f64f-1584-0022194fe902|0#2#7|millisecond
 
 
-class PostParser(NamedTuple):
+@dataclass(frozen=True)
+class PostParser:
+    # Based on a chat with ChatGPT and a search on Perplexity.ai:
+    # In VMware vSphere metrics, a value of -1 typically indicates that the metric data is unavailable,
+    # not applicable, or not collected for that particular interval or object.
+
+    _RAW_INVALID_VALUE: ClassVar[str] = "-1"
+
     key: str
     evaluate: Callable[[CounterValues], float]
     counter: str
+
+    def __call__(self, values: CounterValues) -> float | None:
+        valid_values = [value for value in values if value != self._RAW_INVALID_VALUE]
+        return self.evaluate(valid_values) if any(valid_values) else None
 
 
 _POST_PARSERS = [
@@ -131,7 +143,8 @@ def _check_esx_vsphere_datastore_io(
 
         for instance, values in field_data.items():
             item_name = item_mapping[instance]
-            datastores.setdefault(item_name, {})[parser.key] = parser.evaluate(values[0][0])
+            if (parsed_value := parser(values[0][0])) is not None:
+                datastores.setdefault(item_name, {})[parser.key] = parsed_value
 
     if item == "SUMMARY":
         disk = combine_disks(datastores.values())

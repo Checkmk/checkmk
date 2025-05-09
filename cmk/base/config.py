@@ -3441,28 +3441,23 @@ class ConfigCache:
 
         ip_stack_config = ConfigCache.ip_stack_config(hostname)
 
-        # Now lookup configured IP addresses
-        v4address: str | None = None
-        if IPStackConfig.IPv4 in ip_stack_config:
-            v4address = ip_address_of(hostname, socket.AddressFamily.AF_INET)
+        v4address = (
+            ip_address_of(hostname, socket.AddressFamily.AF_INET)
+            if IPStackConfig.IPv4 in ip_stack_config
+            else None
+        )
+        attrs["_ADDRESS_4"] = "" if v4address is None else v4address
 
-        if v4address is None:
-            v4address = ""
-        attrs["_ADDRESS_4"] = v4address
+        v6address = (
+            ip_address_of(hostname, socket.AddressFamily.AF_INET6)
+            if IPStackConfig.IPv6 in ip_stack_config
+            else None
+        )
+        attrs["_ADDRESS_6"] = "" if v6address is None else v6address
 
-        v6address: str | None = None
-        if IPStackConfig.IPv6 in ip_stack_config:
-            v6address = ip_address_of(hostname, socket.AddressFamily.AF_INET6)
-        if v6address is None:
-            v6address = ""
-        attrs["_ADDRESS_6"] = v6address
-
-        if self.default_address_family(hostname) is socket.AF_INET6:
-            attrs["address"] = attrs["_ADDRESS_6"]
-            attrs["_ADDRESS_FAMILY"] = "6"
-        else:
-            attrs["address"] = attrs["_ADDRESS_4"]
-            attrs["_ADDRESS_FAMILY"] = "4"
+        ipv6_is_default = self.default_address_family(hostname) is socket.AF_INET6
+        attrs["address"] = attrs["_ADDRESS_6"] if ipv6_is_default else attrs["_ADDRESS_4"]
+        attrs["_ADDRESS_FAMILY"] = "6" if ipv6_is_default else "4"
 
         add_ipv4addrs, add_ipv6addrs = self.additional_ipaddresses(hostname)
 
@@ -3474,14 +3469,10 @@ class ConfigCache:
         for n, address in enumerate(add_ipv6addrs, start=1):
             attrs[f"_ADDRESSES_6_{n}"] = address
 
-        # Add the optional WATO folder path
-        path = host_paths.get(hostname)
-        if path:
+        if path := host_paths.get(hostname):
             attrs["_FILENAME"] = path
 
-        # Add custom user icons and actions
-        actions = self.icons_and_actions(hostname)
-        if actions:
+        if actions := self.icons_and_actions(hostname):
             attrs["_ACTIONS"] = ",".join(actions)
 
         if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:

@@ -10,6 +10,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.gui_e2e.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.gui_e2e.testlib.playwright.timeouts import ANIMATION_TIMEOUT
@@ -93,6 +94,13 @@ class BaseQuickSetupConfigurationList(CmkPage):
         ).not_to_be_visible()
 
 
+class PasswordType(DropdownOptions):
+    """Represent the options of the password type dropdown."""
+
+    EXPLICIT = "Explicit"
+    FROM_PASSWORD_STORE = "From password store"
+
+
 class BaseQuickSetupAddNewConfiguration(CmkPage):
     """Base class for adding quick setup configuration pages."""
 
@@ -161,6 +169,20 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
     @property
     def save_and_go_to_activate_changes_button(self) -> Locator:
         return self.main_area.locator().get_by_role("button", name="Save")
+
+    @property
+    def quick_setup_area(self) -> Locator:
+        """Get main area of the quick setup."""
+        return self.main_area.locator("ol.quick-setup")
+
+    @property
+    def password_type_dropdown(self) -> DropdownHelper[PasswordType]:
+        """Represent the password type dropdown for the quick setup configuration pages."""
+        return DropdownHelper[PasswordType](
+            dropdown_name="Password type",
+            dropdown_box=self.quick_setup_area.get_by_role("combobox", name="Choose password type"),
+            dropdown_list=self.quick_setup_area.get_by_role("listbox"),
+        )
 
     def save_quick_setup(self) -> None:
         logger.info("Save Quick setup configuration.")
@@ -240,6 +262,15 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
     def _checkbox_service_in_row(self, row_name: str, name: str) -> Locator:
         return self._get_row(row_name).get_by_text(name)
 
+    def fill_explicit_password(self, password: str) -> None:
+        """Fill the explicit password field with the given password.
+
+        Args:
+            password: The password to fill in.
+        """
+        self.password_type_dropdown.select_option(PasswordType.EXPLICIT)
+        self.main_area.locator().get_by_role("textbox", name="explicit password").fill(password)
+
 
 class AWSConfigurationList(BaseQuickSetupConfigurationList):
     """Represent the page 'Amazon Web Services (AWS)', which lists the configuration setup.
@@ -311,9 +342,7 @@ class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         logger.info("Initialize stage-1 details.")
         self._get_row("Configuration name").get_by_role("textbox").fill(self.configuration_name)
         self._get_row("Access key ID").get_by_role("textbox").fill(access_key)
-        self._get_row("Secret access key").get_by_role("combobox").click()
-        self._get_row("Secret access key").get_by_role("option", name="Explicit").click()
-        self._get_row("Secret access key").locator('input[type="password"]').fill(access_password)
+        self.fill_explicit_password(access_password)
 
     def specify_stage_two_details(
         self, host_name: str, regions_to_monitor: list[str], site_name: str
@@ -406,9 +435,7 @@ class GCPAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         main_area = self.main_area.locator()
         main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
         main_area.get_by_role("textbox", name="Project ID").fill(project_id)
-        main_area.get_by_role("combobox", name="Choose password type").click()
-        main_area.get_by_role("option", name="Explicit").click()
-        main_area.get_by_role("textbox", name="explicit password").fill(json_credentials)
+        self.fill_explicit_password(json_credentials)
 
     def specify_stage_two_details(self, host_name: str, site_name: str) -> None:
         logger.info("Initialize stage-2 details.")
@@ -439,6 +466,13 @@ class AzureConfigurationList(BaseQuickSetupConfigurationList):
 
     suffix = "azure"
     page_title = "Microsoft Azure"
+
+
+class Authority(DropdownOptions):
+    """Represent the options of the authority dropdown for Azure configuration."""
+
+    GLOBAL = "Global"
+    CHINA = "China"
 
 
 class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
@@ -473,6 +507,15 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
     def button_proceed_from_stage_four(self) -> Locator:
         return self._button_proceed_from_stage("Test configuration")
 
+    @property
+    def authority_dropdown(self) -> DropdownHelper[Authority]:
+        """Represent the authority dropdown for Azure configuration."""
+        return DropdownHelper[Authority](
+            dropdown_name="Authority",
+            dropdown_box=self.quick_setup_area.get_by_role("combobox", name="Authority"),
+            dropdown_list=self.quick_setup_area.get_by_role("listbox"),
+        )
+
     def check_service_to_monitor(self, service: str, check: bool) -> None:
         service_checkbox = self._checkbox_service_in_row("Azure services to monitor", service)
         if service_checkbox.is_checked() != check:
@@ -488,12 +531,9 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         main_area.get_by_role("textbox", name="Tenant ID / Directory ID").fill(tenant_id)
         main_area.get_by_role("textbox", name="Client ID / Application ID").fill(client_id)
 
-        main_area.get_by_role("combobox", name="Choose password type").click()
-        main_area.get_by_role("option", name="Explicit").click()
-        main_area.get_by_role("textbox", name="explicit password").fill(secret)
+        self.fill_explicit_password(secret)
 
-        main_area.get_by_role("combobox", name="Authority").click()
-        main_area.get_by_role("option", name="Global").click()
+        self.authority_dropdown.select_option(Authority.GLOBAL)
 
     def specify_stage_two_details(self, host_name: str, site_name: str) -> None:
         logger.info("Initialize stage-2 details.")

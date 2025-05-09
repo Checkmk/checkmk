@@ -6,11 +6,12 @@
 import logging
 import re
 from enum import StrEnum
-from typing import Generic, override, TypeVar
+from typing import override, TypeVar
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.gui_e2e.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials, DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 from tests.testlib.site import Site
@@ -21,49 +22,18 @@ logger = logging.getLogger(__name__)
 TOptions = TypeVar("TOptions", bound=StrEnum)
 
 
-class EncryptionType(StrEnum):
-    """Encryption type for the site connection."""
+class EncryptionType(DropdownOptions):
+    """Encryption type DropdownOptions the site connection."""
 
     TLS = "Encrypt data using TLS"
     NONE = "Plain text (Unencrypted)"
 
 
-class ReplicationType(StrEnum):
+class ReplicationType(DropdownOptions):
     """Replication type for the site connection."""
 
     NO_REPLICATION = "No replication with this site"
     PUSH_CONFIGURATION = "Push configuration to this site"
-
-
-class AddSiteDropdown(Generic[TOptions]):
-    """Represent a dropdown menu to choose between different options defined in a StrEnum type."""
-
-    def __init__(self, dropdown_name: str, dropdown_box: Locator, dropdown_list: Locator) -> None:
-        """Initialize the dropdown menu.
-
-        Args:
-            dropdown_name: The name of the dropdown.
-            dropdown_box: The locator for the dropdown box.
-            dropdown_list: The locator for the dropdown list of options.
-        """
-        self.__dropdown_name = dropdown_name
-        self.__dropdown_box = dropdown_box
-        self.__dropdown_list = dropdown_list
-
-    def select_option(self, option: TOptions) -> None:
-        """Select an option from the dropdown.
-
-        Args:
-            option: The option to select.
-        """
-        logger.info("Select option '%s' in '%s' dropdown", option, self.__dropdown_name)
-        self.__dropdown_box.click()
-        self.__dropdown_list.wait_for(state="visible")
-        self.__dropdown_list.get_by_role("option", name=option).click()
-        expect(
-            self.__dropdown_box,
-            message=f"Option '{option}' not set in '{self.__dropdown_name}' dropdown",
-        ).to_have_text(option)
 
 
 class DistributedMonitoring(CmkPage):
@@ -269,7 +239,7 @@ class AddSiteConnection(CmkPage):
         return self.form_site.locator("input[name='site_p_socket_1_p_address_1']")
 
     @property
-    def connection_encryptor_dropdown(self) -> AddSiteDropdown[EncryptionType]:
+    def connection_encryptor_dropdown(self) -> DropdownHelper[EncryptionType]:
         """The dropdown for the encryption setting."""
         connection_encryption_selector = self.form_site.get_by_role("combobox").filter(
             has=self.locator("#select2-site_p_socket_1_p_tls_sel-container")
@@ -277,7 +247,7 @@ class AddSiteConnection(CmkPage):
         connection_encryption_options = self.main_area.locator(
             "ul#select2-site_p_socket_1_p_tls_sel-results"
         )
-        return AddSiteDropdown[EncryptionType](
+        return DropdownHelper[EncryptionType](
             "Encryption", connection_encryption_selector, connection_encryption_options
         )
 
@@ -287,13 +257,13 @@ class AddSiteConnection(CmkPage):
         return self.form_site.locator("input[name='site_p_url_prefix']")
 
     @property
-    def replication_type_dropdown(self) -> AddSiteDropdown[ReplicationType]:
+    def replication_type_dropdown(self) -> DropdownHelper[ReplicationType]:
         """The dropdown for the replication setting."""
         replication_type_selector = self.form_site.get_by_role("combobox").filter(
             has=self.locator("#select2-site_p_replication-container")
         )
         replication_type_options = self.main_area.locator("ul#select2-site_p_replication-results")
-        return AddSiteDropdown[ReplicationType](
+        return DropdownHelper[ReplicationType](
             "Replication", replication_type_selector, replication_type_options
         )
 

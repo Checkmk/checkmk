@@ -144,6 +144,7 @@ def local_discovery(
     raise_errors: bool,
     timeout: int | None = None,
     non_blocking_http: bool = False,
+    debug: bool,
 ) -> results.ServiceDiscoveryResult:
     return discovery(
         None,
@@ -153,6 +154,7 @@ def local_discovery(
         raise_errors=raise_errors,
         timeout=timeout,
         non_blocking_http=non_blocking_http,
+        debug=debug,
     )
 
 
@@ -165,6 +167,7 @@ def discovery(
     raise_errors: bool,
     timeout: int | None = None,
     non_blocking_http: bool = False,
+    debug: bool,
 ) -> results.ServiceDiscoveryResult:
     return _deserialize(
         _automation_serialized(
@@ -178,10 +181,10 @@ def discovery(
             ],
             timeout=timeout,
             non_blocking_http=non_blocking_http,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.ServiceDiscoveryResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -213,6 +216,7 @@ def local_discovery_preview(
     *,
     prevent_fetching: bool,
     raise_errors: bool,
+    debug: bool,
 ) -> results.ServiceDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
@@ -223,10 +227,10 @@ def local_discovery_preview(
                 *(("@raiseerrors",) if raise_errors else ()),
                 host_name,
             ],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.ServiceDiscoveryPreviewResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

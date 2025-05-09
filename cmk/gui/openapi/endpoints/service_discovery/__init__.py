@@ -171,7 +171,12 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     host = Host.load_host(params["host_name"])
 
     try:
-        discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+        discovery_result = get_check_table(
+            host,
+            DiscoveryAction.NONE,
+            raise_errors=False,
+            debug=active_config.debug,
+        )
     except MKAutomationException:
         pass
     else:
@@ -272,6 +277,7 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
         check_type,
         service_item,
         pprint_value=active_config.wato_pprint_config,
+        debug=active_config.debug,
     )
     return Response(status=204)
 
@@ -283,6 +289,7 @@ def _update_single_service_phase(
     service_item: str | None,
     *,
     pprint_value: bool,
+    debug: bool,
 ) -> None:
     action = DiscoveryAction.SINGLE_UPDATE
     Discovery(
@@ -292,7 +299,14 @@ def _update_single_service_phase(
         selected_services=((check_type, service_item),),
         user_need_permission=user.need_permission,
     ).do_discovery(
-        get_check_table(host, action, raise_errors=False), host.name(), pprint_value=pprint_value
+        get_check_table(
+            host,
+            action,
+            raise_errors=False,
+            debug=debug,
+        ),
+        host.name(),
+        pprint_value=pprint_value,
     )
 
 
@@ -396,12 +410,19 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     host = Host.load_host(body["host_name"])
     discovery_action = APIDiscoveryAction(body["mode"])
     return _execute_service_discovery(
-        discovery_action, host, pprint_value=active_config.wato_pprint_config
+        discovery_action,
+        host,
+        pprint_value=active_config.wato_pprint_config,
+        debug=active_config.debug,
     )
 
 
 def _execute_service_discovery(
-    api_discovery_action: APIDiscoveryAction, host: Host, *, pprint_value: bool
+    api_discovery_action: APIDiscoveryAction,
+    host: Host,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
@@ -418,7 +439,7 @@ def _execute_service_discovery(
             title="Permission denied",
             detail="You do not have the necessary permissions to execute this action",
         )
-    discovery_result = get_check_table(host, discovery_action, raise_errors=False)
+    discovery_result = get_check_table(host, discovery_action, raise_errors=False, debug=debug)
     match api_discovery_action:
         case APIDiscoveryAction.new:
             discovery_result = perform_service_discovery(
@@ -430,6 +451,7 @@ def _execute_service_discovery(
                 selected_services=EVERYTHING,
                 raise_errors=False,
                 pprint_value=pprint_value,
+                debug=debug,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
@@ -441,6 +463,7 @@ def _execute_service_discovery(
                 selected_services=EVERYTHING,
                 raise_errors=False,
                 pprint_value=pprint_value,
+                debug=debug,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
@@ -448,6 +471,7 @@ def _execute_service_discovery(
                 host=host,
                 raise_errors=False,
                 pprint_value=pprint_value,
+                debug=debug,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -461,6 +485,7 @@ def _execute_service_discovery(
                 host=host,
                 raise_errors=False,
                 pprint_value=pprint_value,
+                debug=debug,
             )
         case APIDiscoveryAction.only_service_labels:
             discovery_result = perform_service_discovery(
@@ -472,6 +497,7 @@ def _execute_service_discovery(
                 selected_services=EVERYTHING,
                 raise_errors=False,
                 pprint_value=pprint_value,
+                debug=debug,
             )
 
         case _:
@@ -693,6 +719,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
             body["ignore_errors"],
             body["bulk_size"],
             pprint_value=active_config.wato_pprint_config,
+            debug=active_config.debug,
         )
     ).is_error():
         raise result.error

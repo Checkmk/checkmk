@@ -221,6 +221,7 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
     host_name: HostName
     action: DiscoveryAction
     raise_errors: bool
+    debug: bool
 
 
 class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
@@ -256,7 +257,11 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         self._check_permissions(host_name)
 
         return _AutomationServiceDiscoveryRequest(
-            host_name=host_name, action=action, raise_errors=raise_errors
+            host_name=host_name,
+            action=action,
+            raise_errors=raise_errors,
+            # Default value can be removed in 2.6
+            debug=options.get("debug", False),
         )
 
     def _check_permissions(self, host_name: HostName) -> None:
@@ -281,6 +286,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
             api_request.host_name,
             api_request.action,
             raise_errors=api_request.raise_errors,
+            debug=api_request.debug,
         ).serialize(central_version)
 
 
@@ -331,6 +337,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             ),
             raise_errors=not api_request.discovery_options.ignore_errors,
             pprint_value=active_config.wato_pprint_config,
+            debug=active_config.debug,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -406,6 +413,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         *,
         raise_errors: bool,
         pprint_value: bool,
+        debug: bool,
     ) -> DiscoveryResult:
         if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
@@ -413,6 +421,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 host,
                 previous_discovery_result,
                 raise_errors=raise_errors,
+                debug=debug,
             )
 
         if action in (
@@ -420,10 +429,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             DiscoveryAction.TABULA_RASA,
             DiscoveryAction.STOP,
         ):
-            return get_check_table(host, action, raise_errors=raise_errors)
+            return get_check_table(host, action, raise_errors=raise_errors, debug=debug)
 
         discovery_result = initial_discovery_result(
-            action, host, previous_discovery_result, raise_errors=raise_errors
+            action, host, previous_discovery_result, raise_errors=raise_errors, debug=debug
         )
 
         match action:
@@ -433,6 +442,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     raise_errors=raise_errors,
                     pprint_value=pprint_value,
+                    debug=debug,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -441,6 +451,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     raise_errors=raise_errors,
                     pprint_value=pprint_value,
+                    debug=debug,
                 )
             case (
                 DiscoveryAction.SINGLE_UPDATE
@@ -459,6 +470,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     selected_services=selected_services,
                     raise_errors=raise_errors,
                     pprint_value=pprint_value,
+                    debug=debug,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
@@ -470,6 +482,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     selected_services=selected_services,
                     raise_errors=raise_errors,
                     pprint_value=pprint_value,
+                    debug=debug,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")

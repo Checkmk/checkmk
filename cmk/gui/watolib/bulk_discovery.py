@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import multiprocessing as mp
 import threading
+import traceback
 from collections.abc import Mapping, Sequence
 from typing import Literal, NamedTuple, NewType, override
 
@@ -229,7 +230,7 @@ def _migrate_automatic_rediscover_parameters(
 class _DiscoveryTaskResult(NamedTuple):
     task: DiscoveryTask
     result: AutomationDiscoveryResult | None
-    error: Exception | None
+    error: tuple[Exception, str] | None
 
 
 class BulkDiscoveryBackgroundJob(BackgroundJob):
@@ -260,12 +261,19 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with job_interface.gui_context(), store.locked(self.lock_file):
             job_interface.send_progress_update(_("Acquired lock"))
             self._do_execute(
-                mode, do_scan, ignore_errors, tasks, job_interface, pprint_value=pprint_value
+                mode,
+                do_scan,
+                ignore_errors,
+                tasks,
+                job_interface,
+                pprint_value=pprint_value,
+                debug=debug,
             )
 
     def _do_execute(
@@ -277,6 +285,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
@@ -293,12 +302,15 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             args=(result_queue, len(tasks_by_site), job_interface, pprint_value),
         )
 
+        def run(site_tasks: list[DiscoveryTask]) -> None:
+            self._run_discovery_tasks(
+                result_queue, site_tasks, mode, do_scan, ignore_errors, debug=debug
+            )
+
         with mp.pool.ThreadPool(processes=len(tasks_by_site)) as task_pool:
             for site_tasks in tasks_by_site.values():
-                task_pool.apply_async(
-                    func=copy_request_context(self._run_discovery_tasks),
-                    args=(result_queue, site_tasks, mode, do_scan, ignore_errors),
-                )
+                task_pool.apply_async(func=copy_request_context(run), args=(site_tasks,))
+
             try:
                 result_processing_thread.start()
 
@@ -348,6 +360,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
+        *,
+        debug: bool,
     ) -> None:
         for task in site_tasks:
             try:
@@ -359,6 +373,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                     raise_errors=not ignore_errors,
                     timeout=request.request_timeout - 2,
                     non_blocking_http=True,
+                    debug=debug,
                 )
                 queue.put(
                     _DiscoveryTaskResult(
@@ -368,7 +383,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                     )
                 )
             except Exception as exc:
-                queue.put(_DiscoveryTaskResult(task, None, exc))
+                # Needs to be formatted in this thread, since the traceback is a thread local
+                # and the error handling is done in another thread.
+                queue.put(_DiscoveryTaskResult(task, None, (exc, traceback.format_exc())))
 
         # Indicate result processing thread that we're done
         queue.put(None)
@@ -384,8 +401,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _process_discovery_error(
         self,
+        job_interface: BackgroundProcessInterface,
         task: DiscoveryTask,
-        exception: Exception,
+        exception: tuple[Exception, str],
     ) -> None:
         self._num_hosts_failed += len(task.host_names)
         if task.site_id:
@@ -395,10 +413,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             )
         else:
             msg = _("Error during discovery of %s") % (", ".join(task.host_names))
-        self._logger.warning(f"{msg}, Error: {exception}")
+        self._logger.warning(f"{msg}, Error: {exception[0]}")
+        job_interface.send_progress_update(f"{msg}, Error: {exception[0]}")
 
         # only show traceback on debug
-        self._logger.debug("Exception", exc_info=exception)
+        self._logger.debug(f"Traceback: {exception[1]}")
 
     def _process_discovery_results(
         self,
@@ -418,7 +437,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 continue
 
             if result.error:
-                self._process_discovery_error(result.task, result.error)
+                self._process_discovery_error(job_interface, result.task, result.error)
             elif result.result:
                 try:
                     self._process_discovery_result(
@@ -428,7 +447,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                         pprint_value=pprint_value,
                     )
                 except Exception as exc:
-                    self._process_discovery_error(result.task, exc)
+                    self._process_discovery_error(
+                        job_interface, result.task, (exc, traceback.format_exc())
+                    )
 
             self._num_hosts_processed += len(result.task.host_names)
 
@@ -529,6 +550,7 @@ def start_bulk_discovery(
     bulk_size: BulkSize,
     *,
     pprint_value: bool,
+    debug: bool,
 ) -> result.Result[None, AlreadyRunningError | StartupError]:
     """Start a bulk discovery job with the given options
 
@@ -566,6 +588,7 @@ def start_bulk_discovery(
                 ignore_errors=ignore_errors,
                 tasks=tasks,
                 pprint_value=pprint_value,
+                debug=debug,
             ),
         ),
         InitialStatusArgs(
@@ -583,6 +606,7 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     ignore_errors: IgnoreErrors
     tasks: Sequence[DiscoveryTask]
     pprint_value: bool
+    debug: bool
 
 
 def bulk_discovery_job_entry_point(
@@ -595,6 +619,7 @@ def bulk_discovery_job_entry_point(
         args.tasks,
         job_interface,
         pprint_value=args.pprint_value,
+        debug=args.debug,
     )
 
 

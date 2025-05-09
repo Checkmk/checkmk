@@ -579,6 +579,7 @@ def perform_fix_all(
     host: Host,
     raise_errors: bool,
     pprint_value: bool,
+    debug: bool,
 ) -> DiscoveryResult:
     """
     Handle fix all ('Accept All' on UI) discovery action
@@ -593,7 +594,12 @@ def perform_fix_all(
             selected_services=(),  # does not matter in case of "FIX_ALL"
             user_need_permission=user.need_permission,
         ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
-        discovery_result = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=raise_errors)
+        discovery_result = get_check_table(
+            host,
+            DiscoveryAction.FIX_ALL,
+            raise_errors=raise_errors,
+            debug=debug,
+        )
     return discovery_result
 
 
@@ -604,11 +610,17 @@ def perform_host_label_discovery(
     host: Host,
     raise_errors: bool,
     pprint_value: bool,
+    debug: bool,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(discovery_result.labels_by_host)
-        discovery_result = get_check_table(host, action, raise_errors=raise_errors)
+        discovery_result = get_check_table(
+            host,
+            action,
+            raise_errors=raise_errors,
+            debug=debug,
+        )
     return discovery_result
 
 
@@ -622,6 +634,7 @@ def perform_service_discovery(
     selected_services: Container[tuple[str, Item]],
     raise_errors: bool,
     pprint_value: bool,
+    debug: bool,
 ) -> DiscoveryResult:
     """
     Handle discovery action for Update Services, Single Update & Bulk Update
@@ -635,7 +648,7 @@ def perform_service_discovery(
             selected_services=selected_services,
             user_need_permission=user.need_permission,
         ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
-        discovery_result = get_check_table(host, action, raise_errors=raise_errors)
+        discovery_result = get_check_table(host, action, raise_errors=raise_errors, debug=debug)
     return discovery_result
 
 
@@ -708,9 +721,10 @@ def initial_discovery_result(
     host: Host,
     previous_discovery_result: DiscoveryResult | None,
     raise_errors: bool,
+    debug: bool,
 ) -> DiscoveryResult:
     return (
-        get_check_table(host, action, raise_errors=raise_errors)
+        get_check_table(host, action, raise_errors=raise_errors, debug=debug)
         if previous_discovery_result is None or previous_discovery_result.is_active()
         else previous_discovery_result
     )
@@ -997,7 +1011,13 @@ def checkbox_service(checkbox_id_value: str) -> tuple[str, Item]:
     return check_name, item_str or None
 
 
-def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) -> DiscoveryResult:
+def get_check_table(
+    host: Host,
+    action: DiscoveryAction,
+    *,
+    raise_errors: bool,
+    debug: bool,
+) -> DiscoveryResult:
     """Gathers the check table using a background job
 
     Cares about handling local / remote sites using an automation call. In both cases
@@ -1037,6 +1057,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
             host.name(),
             action,
             raise_errors=raise_errors,
+            debug=debug,
         )
 
     sync_changes_before_remote_automation(host.site_id())
@@ -1048,9 +1069,18 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
                 "service-discovery-job",
                 [
                     ("host_name", host.name()),
-                    ("options", json.dumps({"ignore_errors": not raise_errors, "action": action})),
+                    (
+                        "options",
+                        json.dumps(
+                            {
+                                "ignore_errors": not raise_errors,
+                                "action": action,
+                                "debug": debug,
+                            }
+                        ),
+                    ),
                 ],
-                debug=active_config.debug,
+                debug=debug,
             )
         )
     )
@@ -1060,6 +1090,7 @@ class ServiceDiscoveryJobArgs(BaseModel, frozen=True):
     host_name: AnnotatedHostName
     action: DiscoveryAction
     raise_errors: bool
+    debug: bool
 
 
 def discovery_job_entry_point(
@@ -1068,7 +1099,7 @@ def discovery_job_entry_point(
 ) -> None:
     job = ServiceDiscoveryBackgroundJob(args.host_name)
     with job_interface.gui_context():
-        job.discover(args.action, raise_errors=args.raise_errors)
+        job.discover(args.action, raise_errors=args.raise_errors, debug=args.debug)
 
 
 def execute_discovery_job(
@@ -1076,6 +1107,7 @@ def execute_discovery_job(
     action: DiscoveryAction,
     *,
     raise_errors: bool,
+    debug: bool,
 ) -> DiscoveryResult:
     """Either execute the discovery job to scan the host or return the discovery result
     based on the currently cached data"""
@@ -1093,6 +1125,7 @@ def execute_discovery_job(
                         host_name=host_name,
                         action=action,
                         raise_errors=raise_errors,
+                        debug=debug,
                     ),
                 ),
                 InitialStatusArgs(
@@ -1109,7 +1142,7 @@ def execute_discovery_job(
     if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()
 
-    return job.get_result()
+    return job.get_result(debug=debug)
 
 
 class ServiceDiscoveryBackgroundJob(BackgroundJob):
@@ -1162,24 +1195,24 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         finally:
             self._preview_store.path.unlink(missing_ok=True)
 
-    def discover(self, action: DiscoveryAction, *, raise_errors: bool) -> None:
+    def discover(self, action: DiscoveryAction, *, raise_errors: bool, debug: bool) -> None:
         """Target function of the background job"""
         sys.stdout.write("Starting job...\n")
-        self._pre_discovery_preview = self._get_discovery_preview()
+        self._pre_discovery_preview = self._get_discovery_preview(debug=debug)
 
         if action == DiscoveryAction.REFRESH:
             self._jobstatus_store.update({"title": _("Refresh")})
-            self._perform_service_scan(raise_errors=raise_errors)
+            self._perform_service_scan(raise_errors=raise_errors, debug=debug)
 
         elif action == DiscoveryAction.TABULA_RASA:
             self._jobstatus_store.update({"title": _("Tabula rasa")})
-            self._perform_automatic_refresh()
+            self._perform_automatic_refresh(debug=debug)
 
         else:
             raise NotImplementedError()
         sys.stdout.write("Completed.\n")
 
-    def _perform_service_scan(self, *, raise_errors: bool) -> None:
+    def _perform_service_scan(self, *, raise_errors: bool, debug: bool) -> None:
         """The service-discovery-preview automation refreshes the Checkmk internal cache and makes
         the new information available to the next service-discovery-preview call made by get_result().
         """
@@ -1187,11 +1220,12 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             self.host_name,
             prevent_fetching=False,
             raise_errors=raise_errors,
+            debug=debug,
         )
         self._store_last_preview(result)
         sys.stdout.write(result.output)
 
-    def _perform_automatic_refresh(self) -> None:
+    def _perform_automatic_refresh(self, *, debug: bool) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         local_discovery(
@@ -1206,13 +1240,14 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             scan=True,
             raise_errors=False,
             non_blocking_http=True,
+            debug=debug,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (api_request.host.name(), count_added)
         # _changes.add_service_change(api_request.host, "refresh-autochecks", message)
 
-    def get_result(self) -> DiscoveryResult:
+    def get_result(self, *, debug: bool) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status.is_active = self.is_active()
@@ -1225,7 +1260,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         elif (last_result := self._load_last_preview()) is not None:
             check_table_created, result = last_result
         else:
-            check_table_created, result = self._get_discovery_preview()
+            check_table_created, result = self._get_discovery_preview(debug=debug)
 
         return DiscoveryResult(
             job_status=dict(job_status),
@@ -1240,10 +1275,15 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             sources=result.source_results,
         )
 
-    def _get_discovery_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult]:
+    def _get_discovery_preview(self, *, debug: bool) -> tuple[int, ServiceDiscoveryPreviewResult]:
         return (
             int(time.time()),
-            local_discovery_preview(self.host_name, prevent_fetching=False, raise_errors=False),
+            local_discovery_preview(
+                self.host_name,
+                prevent_fetching=False,
+                raise_errors=False,
+                debug=debug,
+            ),
         )
 
     @staticmethod

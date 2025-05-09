@@ -409,7 +409,12 @@ def _run_service_discovery(
     host: Host = Host.load_host(HostName(host_name))
     if not is_local:
         # this also implicitly syncs the pending changes to the remote site to run the discovery
-        get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
+        get_check_table(
+            host,
+            DiscoveryAction.REFRESH,
+            raise_errors=False,
+            debug=debug,
+        )
         snapshot = fetch_service_discovery_background_job_status(site_id, host_name, debug=debug)
         if not snapshot.exists:
             raise Exception(
@@ -421,10 +426,16 @@ def _run_service_discovery(
                 site_id, host_name, debug=debug
             )
 
-    check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
+    check_table = get_check_table(
+        host,
+        DiscoveryAction.FIX_ALL,
+        raise_errors=False,
+        debug=debug,
+    )
     perform_fix_all(
         discovery_result=check_table,
         host=host,
         raise_errors=False,
         pprint_value=pprint_value,
+        debug=debug,
     )

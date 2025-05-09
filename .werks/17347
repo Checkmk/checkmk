@@ -10,9 +10,11 @@ Version: 2.2.0p42
 When viewing the states of services or hosts the Checkmk site queries that information from all remote sites.
 In larger deployments this can take some time so in order to decrease the amount of remote sites that need to be queried an option to limit this number was introduced with <a href="https://checkmk.com/werk/4921">Werk #4921</a>.
 
-Unfortunately the naming is misleading since it has nothing to do with Authorization.
+Unfortunately the naming is misleading since its primarily focus was not authorization and these effects are not guaranteed.
 This could and has in some instances mislead users so this option is now renamed to <em>Monitored sites</em>.
 The help text was also adjusted.
+
+We marked this Werk as incompatible since you should review if that setting was used for authorization in your setup. (Use contact groups for proper authorization)
 
 <em>Vulnerability Management</em>:
 

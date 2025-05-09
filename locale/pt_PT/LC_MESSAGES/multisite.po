@@ -8,7 +8,7 @@ msgstr ""
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-07-25 09:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
-"checkmk/dev/pt_PT/>\n"
+"checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -165,7 +165,7 @@ msgstr " e o %s '%s'."
 
 #, fuzzy
 msgid " batch is"
-msgstr "Identificação do caminho"
+msgstr "Sites de jogo"
 
 #, fuzzy
 msgid " batches are"
@@ -175,9 +175,8 @@ msgstr "fósforos regex"
 msgid " changes"
 msgstr "%d modificações"
 
-#, fuzzy
 msgid " current cycle to complete"
-msgstr "À espera que outros interruptores estejam online"
+msgstr ""
 
 #, python-format
 msgid " for %d of %d recipients."
@@ -204,9 +203,8 @@ msgstr " maior que"
 msgid " left in your free trial"
 msgstr " à esquerda no seu teste gratuito"
 
-#, fuzzy
 msgid " next cycle start"
-msgstr "Próxima verificação"
+msgstr ""
 
 msgid " next week"
 msgstr " próxima semana"
@@ -454,20 +452,20 @@ msgstr "Propriedades Gerais"
 #, fuzzy, python-format
 msgid "%d discovery parameter added"
 msgid_plural "%d discovery parameters added"
-msgstr[0] "Propriedades Gerais"
-msgstr[1] "Propriedades Gerais"
+msgstr[0] "A descoberta a granel começou..."
+msgstr[1] "A descoberta a granel começou..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d discovery parameter changed"
 msgid_plural "%d discovery parameters changed"
-msgstr[0] "Descoberta de serviços: "
-msgstr[1] "Descoberta de serviços: "
+msgstr[0] ""
+msgstr[1] ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d discovery parameter removed"
 msgid_plural "%d discovery parameters removed"
-msgstr[0] "Propriedades Gerais"
-msgstr[1] "Propriedades Gerais"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-format
 msgid "%d errors occured:"
@@ -669,9 +667,9 @@ msgstr "As %s foram eliminadas."
 msgid "%s instances"
 msgstr "%s instâncias"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s is locked by quick setup."
-msgstr "Configuração rápida"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "%s is not a valid Unix timestamp"
@@ -735,7 +733,7 @@ msgstr "%s de %s%%"
 
 #, fuzzy, python-format
 msgid "%s parameter"
-msgstr "Parâmetros do modelo"
+msgstr "Parâmetros do sistema"
 
 #, python-format
 msgid "%s properties"
@@ -892,16 +890,15 @@ msgstr ""
 "versionar a configuração. Por favor, instale o 'git' ou desactive o git no "
 "WATO."
 
-#, fuzzy, python-format
+#, python-format
 msgid "(%s more items)"
-msgstr "Entradas removidas"
+msgstr ""
 
 msgid "(0 is current period)"
 msgstr "(0 é o período atual)"
 
-#, fuzzy
 msgid "(1 more item)"
-msgstr "(sem entrada)"
+msgstr ""
 
 msgid "(Edit presets)"
 msgstr "Editar Presets"
@@ -911,7 +908,7 @@ msgstr "(Max sugestões alcançadas, seja mais específico)"
 
 #, fuzzy
 msgid "(No choices available)"
-msgstr "Não há informação disponível"
+msgstr "não disponíveis"
 
 msgid "(No fallback email address configured!)"
 msgstr "(Nenhum endereço de correio electrónico de recurso configurado!)"
@@ -934,7 +931,7 @@ msgstr "Eliminar o anfitrião"
 
 #, fuzzy
 msgid "(Select service)"
-msgstr "Eliminar utilizador"
+msgstr "Seleccionar vista"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(nomes TLS, HTTP e DNS)"
@@ -2126,14 +2123,12 @@ msgstr ""
 "passou ou ainda não passou. Pode definir um tempo para o tempo que uma "
 "condição pode estar num estado de falha antes dos alertas de verificação."
 
-#, fuzzy
 msgid "A Two-factor Authenticator app has been added to your Checkmk account."
-msgstr "Autenticação de dois factores não activada"
+msgstr ""
 
-#, fuzzy
 msgid ""
 "A Two-factor Authenticator app has been removed from your Checkmk account."
-msgstr "Autenticação de dois factores não activada"
+msgstr ""
 
 msgid "A Two-factor security token has been added to your Checkmk account."
 msgstr ""
@@ -2545,11 +2540,11 @@ msgstr ""
 "de tempo, o que atualmente só é suportado em agentes linux e windows, assim "
 "como em dispositivos monitorados através da mib de recursos de host"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "A site is allowed to be used in exactly one OpenTelemetry collector "
 "configuration: %s"
-msgstr "Adicionar nova configuração de usuário"
+msgstr ""
 
 msgid "A stored SNMP walk"
 msgstr "Um passeio SNMP armazenado"
@@ -2785,7 +2780,7 @@ msgstr "APT normal e atualizações de segurança (Linux)"
 
 #, fuzzy
 msgid "ASCII Email parameters"
-msgstr "Parâmetros do modelo"
+msgstr "Parâmetros do sistema"
 
 #, fuzzy
 msgid "ASCII email"
@@ -2998,7 +2993,7 @@ msgstr "Sobre a Checkmk"
 
 #, fuzzy
 msgid "About the processing cycle"
-msgstr "Tempo de processamento de eventos"
+msgstr "Quantidade de dados processados"
 
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Nível absoluto para o número total de descritores de arquivo usados"
@@ -3438,6 +3433,7 @@ msgstr "Agradecimento Autor"
 msgid "Acknowledgement comment"
 msgstr "Comentário de agradecimento"
 
+#, fuzzy
 msgid "Acknowledgement of problem"
 msgstr "Reconhecimento do problema"
 
@@ -3567,7 +3563,7 @@ msgstr "Activar as alterações de outros utilizadores"
 
 #, fuzzy
 msgid "Activate changes timeout"
-msgstr "Activou as alterações"
+msgstr "Activar as alterações terminadas"
 
 msgid "Activate configuration"
 msgstr "Ativar a configuração"
@@ -3643,7 +3639,7 @@ msgstr "Activando"
 
 #, fuzzy
 msgid "Activating changes: "
-msgstr "Activou as alterações"
+msgstr "Ativar mudanças pendentes"
 
 msgid "Activation"
 msgstr "Ativação"
@@ -3867,7 +3863,7 @@ msgstr "Adicionar %s"
 
 #, fuzzy, python-format
 msgid "Add %s configuration"
-msgstr "Configuração RRA"
+msgstr "Adicionar configuração do estado"
 
 #, fuzzy, python-format
 msgid "Add %s notification parameter"
@@ -4795,7 +4791,7 @@ msgstr "Estados administrativos a descobrir"
 
 #, fuzzy
 msgid "Administrate robots"
-msgstr "Estados administrativos"
+msgstr "Administradores"
 
 msgid "Administrative port states to discover"
 msgstr "Estados administrativos portuários a descobrir"
@@ -8838,7 +8834,7 @@ msgstr "Bases de dados Azure"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
-msgstr "Ligações à base de dados"
+msgstr "Bases de dados Azure"
 
 #, fuzzy
 msgid "Azure SQL database storage"
@@ -8878,7 +8874,7 @@ msgstr "Ligações à base de dados"
 
 #, fuzzy
 msgid "Azure services found!"
-msgstr "Não foram encontrados hospedeiros/serviços."
+msgstr "Serviços do Azure a monitorizar"
 
 msgid "Azure services to monitor"
 msgstr "Serviços do Azure a monitorizar"
@@ -9016,9 +9012,8 @@ msgstr "Regra de BI ou agregação"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "Regras do BI %s do pacote BI '%s'"
 
-#, fuzzy
 msgid "BI runtime data"
-msgstr "Tempo de execução do teste"
+msgstr ""
 
 msgid "BI service details"
 msgstr "Detalhes do serviço de BI"
@@ -9767,7 +9762,7 @@ msgstr "Movimento a granel"
 
 #, fuzzy
 msgid "Bulk notification"
-msgstr "Notificações em massa abertas"
+msgstr "última notificação"
 
 #, fuzzy
 msgid "Bulk notifications"
@@ -10981,7 +10976,7 @@ msgstr "Tempo de CPU no espaço do usuário"
 
 #, fuzzy
 msgid "CPU time upper levels"
-msgstr "Definir níveis superiores"
+msgstr "Contentores níveis superiores"
 
 msgid "CPU total in ms"
 msgstr "Total de CPU em ms"
@@ -11028,7 +11023,7 @@ msgstr "Utilização da CPU (percentil 99)"
 
 #, fuzzy
 msgid "CPU utilization (Windows)"
-msgstr "utilização da CPU"
+msgstr "Utilização da CPU (média)"
 
 msgid "CPU utilization (average)"
 msgstr "Utilização da CPU (média)"
@@ -11054,8 +11049,9 @@ msgstr ""
 "simplificar este máximo pode ser redimensionado para baixo, tornando 100% o "
 "máximo e pensando em termos de utilização total da CPU."
 
+#, fuzzy
 msgid "CPU utilization last 15 minutes"
-msgstr "A utilização da CPU dura 15 minutos"
+msgstr "A utilização da CPU dura 5 minutos"
 
 msgid "CPU utilization last 5 minutes"
 msgstr "A utilização da CPU dura 5 minutos"
@@ -11424,11 +11420,11 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid "Cannot delete %s because it is managed by quick setup."
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr "Você não pode apagar esta %s porque é <a href=\"%s\">em uso</a>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Cannot delete %s because it's managed by Quick setup."
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr ""
 
 msgid "Cannot delete job. Job cannot be stopped."
 msgstr "Não é possível apagar o trabalho. O trabalho não pode ser parado."
@@ -12038,7 +12034,7 @@ msgstr "Mudanças"
 
 #, fuzzy
 msgid "Changes activated on"
-msgstr "Nunca foi ativado"
+msgstr "Mudar de estado"
 
 msgid "Changes since last dump"
 msgstr "Mudanças desde a última lixeira"
@@ -13531,7 +13527,7 @@ msgstr "Clonar %s para empacotamento"
 
 #, fuzzy, python-format
 msgid "Clone %s notification parameter"
-msgstr "Adicionar regra de notificação"
+msgstr "Período de notificação do anfitrião"
 
 #, fuzzy, python-format
 msgid "Clone & edit notification rule #%d"
@@ -13583,7 +13579,7 @@ msgstr "Clonar anfitriões"
 
 #, fuzzy, python-format
 msgid "Clone managed robot %s"
-msgstr "Objetos Gerenciados"
+msgstr "Agregação de Clones %s"
 
 #, python-format
 msgid "Clone report schedule entry %s"
@@ -13616,7 +13612,7 @@ msgstr "Clonar esta métrica"
 
 #, fuzzy
 msgid "Clone this managed robot"
-msgstr "Objetos Gerenciados"
+msgstr "Clonar esta métrica"
 
 msgid "Clone this metric"
 msgstr "Clonar esta métrica"
@@ -14416,11 +14412,10 @@ msgstr "Monitorização de Amazon Web Services (AWS)"
 
 #, fuzzy
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
-msgstr "Monitorização de Amazon Web Services (AWS)"
+msgstr "Monitorização do Google Cloud Platform (GCP)"
 
-#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
-msgstr "Monitorização de Amazon Web Services (AWS)"
+msgstr ""
 
 #, fuzzy
 msgid "Configure SNMP related settings using rule sets"
@@ -14497,11 +14492,11 @@ msgstr "Configure"
 
 #, fuzzy
 msgid "Configure host and authority"
-msgstr "Configuração"
+msgstr "Configurar a barra lateral"
 
 #, fuzzy
 msgid "Configure host and regions"
-msgstr "Configuração"
+msgstr "Agregações de um único anfitrião"
 
 #, fuzzy
 msgid "Configure levels"
@@ -14780,7 +14775,6 @@ msgstr ""
 msgid "Configure the target state of the remote support tunnel."
 msgstr "Configurar o estado de destino do túnel de suporte remoto."
 
-#, fuzzy
 msgid "Configure the user name here."
 msgstr "Configure o nome do usuário aqui."
 
@@ -15030,7 +15024,7 @@ msgstr "ID de conexão"
 
 #, fuzzy, python-format
 msgid "Connection ID %s already exists."
-msgstr "Já existe um pacote de regras com esta identificação."
+msgstr "Este ID já existe."
 
 #, fuzzy
 msgid "Connection buildup"
@@ -15047,7 +15041,7 @@ msgstr "Conexão estabelecida. As configurações da conexão parecem estar bem.
 
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
-msgstr "Já existe um pacote de regras com esta identificação."
+msgstr "Este ID já existe."
 
 msgid "Connection is disabled"
 msgstr "A ligação está desactivada"
@@ -15489,9 +15483,8 @@ msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Refrigeração antes de tentar novamente a entrega remota ou local falhou"
 
-#, fuzzy
 msgid "Cooldown time after processing cycle"
-msgstr "Tempo de processamento de eventos"
+msgstr ""
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -15620,7 +15613,7 @@ msgstr "Cósmico"
 
 #, fuzzy
 msgid "Cost per month"
-msgstr "Bloqueios MSSQL por Lote"
+msgstr "Últimos 3 meses"
 
 #, fuzzy
 msgid "Costs"
@@ -15679,19 +15672,13 @@ msgid ""
 "and try again."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Could not access your Azure account. Please check your credentials and/or "
 "HTTP proxy setting."
 msgstr ""
-"Não encontrei nenhum objeto de usuário para sincronização. Por favor, "
-"verifique as suas configurações de filtro."
 
-#, fuzzy
 msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
-"Não encontrei nenhum objeto de usuário para sincronização. Por favor, "
-"verifique as suas configurações de filtro."
 
 #, fuzzy, python-format
 msgid ""
@@ -17111,8 +17098,9 @@ msgstr ""
 msgid "Cycle steps"
 msgstr ""
 
+#, fuzzy
 msgid "Cycles"
-msgstr ""
+msgstr "recicla"
 
 #, fuzzy
 msgid "DATAPROXY - Throttled server connections"
@@ -17191,7 +17179,7 @@ msgstr "Estado do DCD"
 
 #, fuzzy
 msgid "DCD Batches"
-msgstr "Jogo"
+msgstr "Caches"
 
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
@@ -17203,7 +17191,7 @@ msgstr "Histórico de pesquisa"
 
 #, fuzzy
 msgid "DCD global settings"
-msgstr "Editar cenário global"
+msgstr "Configurações globais"
 
 msgid "DCD status"
 msgstr "Estado do DCD"
@@ -18523,7 +18511,7 @@ msgstr "Eliminar a última regra do manipulador de alerta"
 
 #, fuzzy
 msgid "Delete managed robot"
-msgstr "Objetos Gerenciados"
+msgstr "Eliminar hospedeiros desaparecidos"
 
 #, fuzzy, python-format
 msgid "Delete notification parameter #%d"
@@ -19564,9 +19552,9 @@ msgstr "Lixeira de diagnóstico"
 msgid "Diagnostics dump started..."
 msgstr "A lixeira de diagnóstico começou..."
 
-#, python-format
+#, fuzzy, python-format
 msgid "Dictionary contains invalid keys: %r"
-msgstr ""
+msgstr "O nome do anfitrião contém caracteres ilegais: %s"
 
 msgid "Did not changed"
 msgstr "Não mudou"
@@ -20957,7 +20945,7 @@ msgstr "Não monitorar"
 
 #, fuzzy
 msgid "Do not monitor hosts without discovered services"
-msgstr "Nenhum anfitrião a ser descoberto"
+msgstr "Número de Anfitriões e Serviços Monitorados"
 
 #, fuzzy
 msgid "Do not monitor limits"
@@ -22199,7 +22187,7 @@ msgstr "Editar este alvo de backup"
 
 #, fuzzy
 msgid "Edit this configuration"
-msgstr "Configuração do anfitrião"
+msgstr "Editar esta ligação"
 
 msgid "Edit this connection"
 msgstr "Editar esta ligação"
@@ -22218,7 +22206,7 @@ msgstr "Editar este anfitrião"
 
 #, fuzzy
 msgid "Edit this managed robot"
-msgstr "Estados administrativos"
+msgstr "Editar este grupo de etiquetas"
 
 #, fuzzy
 msgid "Edit this notification parameter"
@@ -23022,13 +23010,13 @@ msgstr "Remover a autenticação de dois factores"
 msgid "Enforce two-factor authentication"
 msgstr "Remover a autenticação de dois factores"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Enforce two-factor on %s role"
-msgstr "Remover a autenticação de dois factores"
+msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Enforce two-factor on all users with %s role?"
-msgstr "Remover a autenticação de dois factores"
+msgstr ""
 
 #, fuzzy
 msgid "Enforced service"
@@ -25398,7 +25386,7 @@ msgstr "Filtrar %s seleção por serviço: "
 
 #, fuzzy
 msgid "Filter tags imported as host/service labels"
-msgstr "Use o nome da porta como nome do serviço"
+msgstr "Mostrar as etiquetas de serviço descobertas"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrar anotações válidas por padrão de chave"
@@ -26536,7 +26524,7 @@ msgstr "Serviços GCP piggyback"
 
 #, fuzzy
 msgid "GCP services found!"
-msgstr "Não foram encontrados hospedeiros/serviços."
+msgstr "Serviços GCP a monitorizar"
 
 msgid "GCP services to monitor"
 msgstr "Serviços GCP a monitorizar"
@@ -26710,6 +26698,7 @@ msgstr "Opções Gerais"
 msgid "General Permissions"
 msgstr "Permissões gerais"
 
+#, fuzzy
 msgid "General Settings"
 msgstr "Configurações Gerais"
 
@@ -26851,8 +26840,9 @@ msgstr ""
 msgid "Getting started"
 msgstr "Estado resultante"
 
+#, fuzzy
 msgid "GiB"
-msgstr "GiB"
+msgstr "GB"
 
 #, no-python-format
 msgid ""
@@ -27627,7 +27617,7 @@ msgstr "Hardware/Software-Inventário (Linux, Windows, Solaris, AIX)"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
-msgstr "Histórico de inventário do anfitrião"
+msgstr "Histórico de Inventário"
 
 #, fuzzy
 msgid "HW/SW Inventory plug-in"
@@ -33323,7 +33313,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Ignore certificate"
-msgstr "Ignorar erros no certificado SSL"
+msgstr "Sem certificado"
 
 msgid "Ignore certificate errors (insecure)"
 msgstr "Ignorar erros de certificado (inseguro)"
@@ -33475,9 +33465,8 @@ msgstr "Importar"
 msgid "Import all valid annotations"
 msgstr "Importar todas as anotações válidas"
 
-#, fuzzy
 msgid "Import annotations as host labels"
-msgstr "Use o nome da porta como nome do serviço"
+msgstr ""
 
 #, fuzzy
 msgid "Import hosts"
@@ -34494,7 +34483,7 @@ msgstr "Pacotes de transmissão de entrada"
 
 #, fuzzy
 msgid "Input cannot be empty"
-msgstr "Chave secreta"
+msgstr "Canal de entrada"
 
 msgid "Input channel"
 msgstr "Canal de entrada"
@@ -34597,7 +34586,7 @@ msgstr "Instalação"
 
 #, fuzzy
 msgid "Installation directories"
-msgstr "Auditoria de instalação do Checkmk Agent"
+msgstr "Instalação"
 
 #, fuzzy
 msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
@@ -34959,7 +34948,7 @@ msgstr "Chamada inválida: Falta o perfil."
 
 #, fuzzy
 msgid "Invalid catalog data"
-msgstr "Ident inválido"
+msgstr "Parte do pacote inválido"
 
 msgid "Invalid certificate"
 msgstr "Certificado inválido"
@@ -34992,7 +34981,7 @@ msgstr "Especificação de cor inválida '%s'"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
-msgstr "Erro de configuração"
+msgstr "hash de configuração inválido"
 
 msgid "Invalid configuration hash"
 msgstr "hash de configuração inválido"
@@ -35033,7 +35022,7 @@ msgstr "Fonte de dados inválida '%s' configurada."
 
 #, fuzzy
 msgid "Invalid datatype"
-msgstr "Teste inválido."
+msgstr "Tipo visual inválido"
 
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo de data inválido do carimbo da hora: deve ser int ou float."
@@ -35330,7 +35319,7 @@ msgstr "Transação inválida"
 
 #, fuzzy
 msgid "Invalid tuple"
-msgstr "Teste inválido."
+msgstr "Local inválido"
 
 msgid "Invalid type specified."
 msgstr "Tipo inválido especificado."
@@ -35422,7 +35411,6 @@ msgstr "Histórico de Estoques"
 msgid "Inventory history"
 msgstr "Histórico de Inventário"
 
-#, fuzzy
 msgid "Inventory history of host"
 msgstr "Histórico de inventário do anfitrião"
 
@@ -35437,7 +35425,6 @@ msgstr "Inventário da configuração do kernel Linux (sysctl)"
 msgid "Inventory of all deployed agent plug-ins and their versions"
 msgstr "Inventário de todos os plug-ins de agente implantados e suas versões"
 
-#, fuzzy
 msgid "Inventory of host"
 msgstr "Inventário do anfitrião"
 
@@ -39401,7 +39388,7 @@ msgstr "Correios em fila de correio de saída/correspondência"
 
 #, fuzzy
 msgid "Mails received time"
-msgstr "Receção de correio"
+msgstr "Taxa de recepção de correio"
 
 msgid "Main"
 msgstr "Principal"
@@ -39577,9 +39564,8 @@ msgstr "Gerir todos os relatórios agendados"
 msgid "Manage InfluxDB connections"
 msgstr "Gerir ligações InfluxDB"
 
-#, fuzzy
 msgid "Manage OpenTelemetry configurations (experimental)"
-msgstr "Adicionar, editar e eliminar ligações InfluxDB."
+msgstr ""
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gerir os próprios relatórios programados"
@@ -41613,9 +41599,8 @@ msgstr "Estados Modem que levam a um estado crítico"
 msgid "Modem URL"
 msgstr "URL do modem"
 
-#, fuzzy
 msgid "Modem URL cannot be empty"
-msgstr "Chave de acesso"
+msgstr ""
 
 msgid "Modem type"
 msgstr "Tipo de modem"
@@ -43010,7 +42995,7 @@ msgstr "Namespaces"
 
 #, fuzzy
 msgid "Naming for outlets at discovery"
-msgstr "Netapp descoberta da porta"
+msgstr "Estados administrativos a descobrir"
 
 msgid "Native cluster mode"
 msgstr "Modo de cluster nativo"
@@ -43447,9 +43432,8 @@ msgstr "Plugins de notificação"
 msgid "Next step: Recipient"
 msgstr "Destinatário"
 
-#, fuzzy
 msgid "Next step: Review all settings"
-msgstr "Propriedades Gerais"
+msgstr ""
 
 #, fuzzy
 msgid "Next step: Sending conditions"
@@ -43803,7 +43787,7 @@ msgstr "não disponíveis"
 
 #, fuzzy, python-format
 msgid "No notification parameters for method '%s' found"
-msgstr "Regra de notificação modificada %d"
+msgstr "Notificações são desativadas para esta %s"
 
 msgid "No object type"
 msgstr "Nenhum tipo de objeto"
@@ -43841,7 +43825,7 @@ msgstr "Contacte o seu administrador."
 
 #, fuzzy
 msgid "No previous cycle available"
-msgstr "Não há informação disponível"
+msgstr "Dispositivo disponível"
 
 #, fuzzy
 msgid "No proxy"
@@ -43943,9 +43927,8 @@ msgstr "Sem hospedeiro de teste"
 msgid "No title"
 msgstr "Sem título"
 
-#, fuzzy
 msgid "No unknown check parameter rule sets found."
-msgstr "Regra de notificação modificada %d"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -43980,7 +43963,7 @@ msgstr "Não foram encontrados directórios de temas válidos."
 
 #, fuzzy
 msgid "No valid users available"
-msgstr "Portos disponíveis"
+msgstr "Não há dados disponíveis"
 
 #, fuzzy
 msgid "No values defined"
@@ -43995,7 +43978,7 @@ msgstr "Nenhuma vista definida com o nome \"%s\"."
 
 #, fuzzy
 msgid "No waiting batches"
-msgstr "Mostrar todos os tópicos"
+msgstr "Sem fósforos"
 
 #, fuzzy
 msgid "No, adjust settings"
@@ -44338,7 +44321,7 @@ msgstr "Não é um membro activo da pilha"
 
 #, fuzzy
 msgid "Not an integer number"
-msgstr "Nome de arquivo inválido"
+msgstr "Número do ponto flutuante"
 
 msgid "Not authenticated"
 msgstr "Não autenticado"
@@ -44599,7 +44582,7 @@ msgstr "Comentário de notificação"
 
 #, fuzzy
 msgid "Notification delivery rate"
-msgstr "Sistema de Notificação"
+msgstr "Níveis mais baixos para a taxa de entrega de notificações"
 
 #, fuzzy
 msgid "Notification effect"
@@ -44628,7 +44611,7 @@ msgstr "Plugins de notificação"
 
 #, fuzzy
 msgid "Notification method and parameter"
-msgstr "Fase de notificação"
+msgstr "Método de Notificação"
 
 #, fuzzy
 msgid "Notification overview"
@@ -44674,7 +44657,7 @@ msgstr "Regra de notificação"
 
 #, fuzzy
 msgid "Notification rule does not exist."
-msgstr "A colecção de gráficos '%s' não existe"
+msgstr "Regras de notificação de usuários %s"
 
 #, fuzzy, python-format
 msgid "Notification rule number #%d successfully edited!"
@@ -44856,7 +44839,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Number is not a float value."
-msgstr "O parâmetro \"%s\" não é um número inteiro."
+msgstr "%s não é um valor válido"
 
 #, fuzzy
 msgid "Number is not an integer value."
@@ -45910,7 +45893,7 @@ msgstr "%s na lista de exclusões."
 
 #, fuzzy
 msgid "On host: Schedule downtime"
-msgstr "Horário de paradas"
+msgstr "Programar o tempo de inatividade?"
 
 msgid "On recovery (OK/UP)"
 msgstr ""
@@ -46111,11 +46094,10 @@ msgstr ""
 "isto pode levar a uma descrição de serviço que não é única, resultando em "
 "alguns serviços, que não são mostrados!"
 
-#, fuzzy
 msgid ""
 "Only applies to problem notifications and if periodic notifications are "
 "enabled."
-msgstr "Habilitar notificações periódicas"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -46336,7 +46318,7 @@ msgstr "Log aberto"
 
 #, fuzzy
 msgid "Open Telemetry Collector configuration"
-msgstr "Adicionar configuração do estado"
+msgstr "Configuração da consola de eventos"
 
 msgid "Open bulk notifications"
 msgstr "Notificações em massa abertas"
@@ -46380,13 +46362,12 @@ msgstr "Alças de saída abertas"
 msgid "Open slots"
 msgstr "Abertura de vagas"
 
-#, fuzzy
 msgid "Open telemetry collector creation options"
-msgstr "Adicionar configuração do estado"
+msgstr ""
 
 #, fuzzy
 msgid "Open telemetry hosts creation options"
-msgstr "Opções de criação de porquinhos"
+msgstr "Abrir o menu de acção do anfitrião"
 
 msgid "Open the action menu"
 msgstr "Abra o menu de ação"
@@ -46424,21 +46405,18 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
-#, fuzzy
 msgid "OpenTelemetry (experimental)"
-msgstr "Adicionar configuração do estado"
+msgstr ""
 
-#, fuzzy
 msgid "OpenTelemetry collector (experimental)"
-msgstr "Adicionar configuração do estado"
+msgstr ""
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
 msgstr "Adicionar configuração do estado"
 
-#, fuzzy
 msgid "OpenTelemetry metric name"
-msgstr "Adicionar configuração do estado"
+msgstr ""
 
 msgid "OpenVMS processes"
 msgstr "Processos OpenVMS"
@@ -46448,7 +46426,7 @@ msgstr "Clientes OpenVPN"
 
 #, fuzzy
 msgid "Opentelemetry collector data"
-msgstr "Adicionar configuração do estado"
+msgstr "Intervalo para recolha de dados"
 
 msgid "Operating CPU"
 msgstr "CPU em funcionamento"
@@ -46806,7 +46784,7 @@ msgstr "Comutadores de Registo Oracle"
 
 #, fuzzy
 msgid "Oracle PDB Total Size"
-msgstr "BD da Oracle"
+msgstr "ORACLE Total esperado"
 
 msgid "Oracle PGA info"
 msgstr "Informação Oracle PGA"
@@ -48015,7 +47993,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Override managed plan settings"
-msgstr "Substituir unidade de sensor"
+msgstr "Configurações dos dados de desempenho"
 
 msgid "Override unit of sensor"
 msgstr "Substituir unidade de sensor"
@@ -48847,7 +48825,7 @@ msgstr "Senha"
 
 #, fuzzy
 msgid "Password cannot be empty"
-msgstr "Chave de acesso"
+msgstr "Gestão de palavras-passe"
 
 #, python-format
 msgid "Password changed (sync failed: %s)"
@@ -49780,7 +49758,7 @@ msgstr "Colocação"
 
 #, fuzzy
 msgid "Placement groups"
-msgstr "Colocação"
+msgstr "Grupos de parâmetros"
 
 #, fuzzy
 msgid "Plain email"
@@ -49813,7 +49791,7 @@ msgstr "Mapear combinações de estado operacional e administrativo"
 
 #, fuzzy
 msgid "Plan Settings"
-msgstr "Configurações globais"
+msgstr "Configurações Globais"
 
 #, fuzzy
 msgid "Plan configuration"
@@ -49838,11 +49816,11 @@ msgstr ""
 
 #, fuzzy
 msgid "Please add a Rule ID."
-msgstr "Por favor, acrescente pelo menos um nó de criança."
+msgstr "Adicionar ID da regra"
 
 #, fuzzy
 msgid "Please add an event comment.."
-msgstr "Por favor, acrescente pelo menos um nó de criança."
+msgstr "Actualizar um evento: alterar comentário"
 
 #, fuzzy
 msgid "Please add at least one Rule ID."
@@ -49860,11 +49838,11 @@ msgstr "Por favor, adicione pelo menos uma coluna à sua vista."
 
 #, fuzzy
 msgid "Please add at least one contact group"
-msgstr "Por favor, acrescente pelo menos um nó de criança."
+msgstr "Por favor, adicione pelo menos uma coluna à sua vista."
 
 #, fuzzy
 msgid "Please add at least one contact group."
-msgstr "Por favor, acrescente pelo menos um nó de criança."
+msgstr "Por favor, adicione pelo menos uma coluna à sua vista."
 
 #, fuzzy
 msgid "Please add at least one email address"
@@ -49989,9 +49967,8 @@ msgstr "Por favor, escolha uma imagem PNG válida."
 msgid "Please choose an audit log to view:"
 msgstr "Por favor, escolha um arquivo para carregar."
 
-#, fuzzy
 msgid "Please choose parameters or click \"Create\" to add a new one."
-msgstr "Eliminar esta regra de notificação"
+msgstr ""
 
 #, fuzzy
 msgid "Please choose the check plug-in"
@@ -50090,7 +50067,7 @@ msgstr "Por favor, introduza um nome de ficheiro."
 
 #, fuzzy
 msgid "Please enter a required match."
-msgstr "Por favor, especifique um nome de caminho absoluto"
+msgstr "Por favor, introduza uma hora."
 
 msgid "Please enter a time."
 msgstr "Por favor, introduza uma hora."
@@ -50362,7 +50339,7 @@ msgstr "Por favor, selecione pelo menos um elemento"
 #, fuzzy, python-brace-format
 msgid ""
 "Please select at least one and at most {max_regions} regions to continue"
-msgstr "Por favor, escolha um relatório para agendar"
+msgstr "Por favor, selecione pelo menos um elemento"
 
 msgid "Please select at least one element"
 msgstr "Por favor, selecione pelo menos um elemento"
@@ -50379,7 +50356,7 @@ msgstr "Por favor, selecione pelo menos uma métrica"
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
-msgstr "Por favor, escolha um relatório para agendar"
+msgstr "Seleccione pelo menos um método de envio de mensagens."
 
 #, fuzzy
 msgid "Please select some hosts before doing bulk actions on hosts."
@@ -51086,9 +51063,8 @@ msgstr ""
 msgid "Prepare AWS for Checkmk"
 msgstr "GIT Inicializado para Checkmk"
 
-#, fuzzy
 msgid "Prepare Azure for Checkmk"
-msgstr "GIT Inicializado para Checkmk"
+msgstr ""
 
 #, fuzzy
 msgid "Prepare GCP for Checkmk"
@@ -51150,7 +51126,7 @@ msgstr "Pré-visualizar este relatório"
 
 #, fuzzy
 msgid "Previous cycle"
-msgstr "Descoberta do processo"
+msgstr "recicla"
 
 msgid "PrimSeq erros"
 msgstr "PrimSeq erros"
@@ -51497,7 +51473,7 @@ msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 msgid "Prometheus targets"
-msgstr "Gestor de alertas"
+msgstr "Prometheus"
 
 msgid "Prominent change"
 msgstr "Mudança proeminente"
@@ -51529,7 +51505,7 @@ msgstr "Visão geral do protocolo"
 
 #, fuzzy
 msgid "Protocol for the connection to the Rest API."
-msgstr "Número de porta para conexão HTTPS à vSphere"
+msgstr "Porta TCP para conexão com o agente Checkmk"
 
 msgid "Protocol of Server"
 msgstr "Protocolo de Servidor"
@@ -51715,7 +51691,7 @@ msgstr "Empurre a configuração para este site"
 
 #, fuzzy
 msgid "Push notification parameters"
-msgstr "Fase de notificação"
+msgstr "Notificações do usuário"
 
 msgid "Push: Checkmk agent contacts the server"
 msgstr "Empurrar: O agente Checkmk contacta o servidor"
@@ -53258,9 +53234,9 @@ msgid "Remote automation tried to sync pending changes but failed: %s"
 msgstr ""
 "Automação remota tentou sincronizar alterações pendentes mas falhou: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Remote broker certificates created for site %s."
-msgstr "Criada nova ligação ao site %s"
+msgstr ""
 
 msgid "Remote configuration"
 msgstr "Configuração remota"
@@ -53323,7 +53299,7 @@ msgstr "Remover %s das extensões"
 
 #, fuzzy
 msgid "Remove Instance"
-msgstr "Remover tudo"
+msgstr "Instâncias remotas %s"
 
 msgid "Remove TLS registration"
 msgstr "Remover o registo TLS"
@@ -54526,9 +54502,8 @@ msgstr ""
 "Recuperar informações do processo usando o WMI (Windows Management "
 "Instrumentation)"
 
-#, fuzzy
 msgid "Retroactively apply max duration to existing notifications"
-msgstr "Restringir ao número de notificação"
+msgstr ""
 
 msgid "Retry"
 msgstr "Tentativa"
@@ -54615,7 +54590,9 @@ msgstr "Configuração remota"
 
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
-msgstr "Guardar & executar a descoberta de serviços"
+msgstr ""
+"A descoberta do serviço deste hospedeiro falhou durante uma descoberta de "
+"serviço em massa anterior."
 
 msgid "Revolutions per minute"
 msgstr "Revoluções por minuto"
@@ -54671,7 +54648,7 @@ msgstr "Estrutura do robô: Último registo"
 
 #, fuzzy
 msgid "Robot Package"
-msgstr "Remover a embalagem"
+msgstr "Pacote"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -54828,13 +54805,13 @@ msgstr "Árvore das Regras"
 msgid "Rule activation"
 msgstr "Ativação da regra"
 
-#, fuzzy
 msgid "Rule can only be deleted via quick setup"
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr ""
 
 #, fuzzy
 msgid "Rule cannot be moved, because it is managed by quick setup"
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr ""
+"Você não pode alterar sua senha, porque ela é gerenciada por outro sistema."
 
 msgid "Rule contact groups"
 msgstr "Grupos de contato de regras"
@@ -55232,9 +55209,9 @@ msgstr "certificado de roteador SAP"
 msgid "SAML connections"
 msgstr "Ligações SAML"
 
-#, fuzzy, python-format
+#, python-format
 msgid "SAML custom encryption certificate for the connection '%s'"
-msgstr "Opções de tempo do certificado de roteador SAP"
+msgstr ""
 
 #, python-format
 msgid "SAML custom signing certificate for the connection '%s'"
@@ -55402,7 +55379,7 @@ msgstr "SID"
 
 #, fuzzy
 msgid "SIGNL4 Alerting parameters"
-msgstr "Parâmetros por defeito"
+msgstr "Parâmetros de Plugin"
 
 #, fuzzy
 msgid "SIP - Authentication errors"
@@ -56179,7 +56156,7 @@ msgstr "Âmbito da pesquisa"
 
 #, fuzzy
 msgid "Search selected options"
-msgstr "Ligações rejeitadas"
+msgstr "Em anfitriões seleccionados"
 
 msgid "Search string"
 msgstr "Cadeia de pesquisa"
@@ -56287,9 +56264,8 @@ msgstr "Segundos para esperar entre o envio do fio e a votação para resposta"
 msgid "Secret access key"
 msgstr "Chave secreta"
 
-#, fuzzy
 msgid "Secret access key cannot be empty"
-msgstr "Chave secreta"
+msgstr ""
 
 msgid "Secret access key is required but not specified."
 msgstr ""
@@ -56470,22 +56446,19 @@ msgstr "Selecione um Ícone"
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Seleccione um ficheiro iCalendar (<tt>*.ics</tt>) a partir do seu PC"
 
-#, fuzzy
 msgid ""
 "Select and configure AWS services you would like to monitor, and optionally "
 "restrict them with AWS tags."
-msgstr "Serviços do Azure a monitorizar"
+msgstr ""
 
-#, fuzzy
 msgid ""
 "Select and configure the Google Cloud Platform services you would like to "
 "monitor"
-msgstr "Serviços do Azure a monitorizar"
+msgstr ""
 
-#, fuzzy
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
-msgstr "Serviços do Azure a monitorizar"
+msgstr ""
 
 #, fuzzy
 msgid "Select at least one graph line to edit"
@@ -56563,7 +56536,7 @@ msgstr "Parâmetros por defeito"
 
 #, fuzzy
 msgid "Select recipient"
-msgstr "Destinatário"
+msgstr "Selecione o arquivo"
 
 #, python-format
 msgid ""
@@ -57233,7 +57206,7 @@ msgstr "Descoberta de serviços"
 
 #, fuzzy
 msgid "Service discovery and activation: "
-msgstr "Descoberta de serviços: "
+msgstr "Detalhes da descoberta do serviço"
 
 msgid "Service discovery details"
 msgstr "Detalhes da descoberta do serviço"
@@ -57602,7 +57575,7 @@ msgstr "ServiçoAgora URL"
 
 #, fuzzy
 msgid "ServiceNow parameters"
-msgstr "Exemplo de parâmetros"
+msgstr "Métricas de Serviço"
 
 msgid "Services"
 msgstr "Serviços"
@@ -58446,7 +58419,7 @@ msgstr "Curta - Use os primeiros 12 caracteres do ID do container portuário"
 
 #, fuzzy
 msgid "Short ID"
-msgstr "Porto"
+msgstr "O mais curto"
 
 #, python-format
 msgid "Short description for host %s"
@@ -59543,7 +59516,7 @@ msgstr "Saltar mensagens de registo pré-existentes"
 
 #, fuzzy
 msgid "Skip test"
-msgstr "Parou"
+msgstr "teste"
 
 msgid "Skip the following SIDs (if found)"
 msgstr "Salte os seguintes SIDs (se encontrados)"
@@ -59567,7 +59540,7 @@ msgstr "Saltado %s: %s"
 
 #, fuzzy
 msgid "Skipped the configuration test."
-msgstr "Configuração predefinida"
+msgstr "Adicionar configuração do estado"
 
 msgid ""
 "Skipping sections reduces CPU load on the monitored host and the amount of "
@@ -60893,7 +60866,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Spectrum Server parameters"
-msgstr "Exemplo de parâmetros"
+msgstr "Parâmetros efetivos"
 
 msgid "Speed"
 msgstr "Velocidade"
@@ -61166,9 +61139,8 @@ msgstr "Começou em %s"
 msgid "Started at: %s."
 msgstr "Comecei por aí: %s."
 
-#, fuzzy
 msgid "Starting Quick setup action..."
-msgstr "Sessões de execução"
+msgstr ""
 
 msgid "Starting Quick stage action..."
 msgstr ""
@@ -62294,9 +62266,8 @@ msgstr ""
 msgid "Store size"
 msgstr "Tamanho da loja"
 
-#, fuzzy
 msgid "Store the secret in cleartext"
-msgstr "Segredo pré-partilhado"
+msgstr ""
 
 #, fuzzy
 msgid "Stored location"
@@ -62429,7 +62400,7 @@ msgstr "Assunto para notificações em massa"
 
 #, fuzzy
 msgid "Subject line"
-msgstr "Nome da seção"
+msgstr "Assunto"
 
 #, fuzzy
 msgid "Subject line for host notifications"
@@ -63359,9 +63330,8 @@ msgstr ""
 msgid "Tags enabled but no tags defined."
 msgstr ""
 
-#, fuzzy
 msgid "Tags enabled but no values defined."
-msgstr "Nenhuma fonte de dados definida."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
@@ -63785,11 +63755,11 @@ msgstr "As %s que você está tentando apagar não existem."
 
 #, fuzzy
 msgid "The 'notification number' value must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
+msgstr "O tempo não deve ser maior do que %02d:%02d."
 
 #, fuzzy
 msgid "The 'send every' value must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
+msgstr "O tempo não deve ser maior do que %02d:%02d."
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "O tempo <i> de</i> não deve ser posterior, então o tempo <i> até</i>."
@@ -65096,7 +65066,7 @@ msgstr "O inventário completo de hardware e software de um host"
 
 #, fuzzy, python-format
 msgid "The configuration bundle %s does not exist"
-msgstr "O site \"%s\" não existe."
+msgstr "A ligação %r não existe"
 
 #, python-format
 msgid ""
@@ -66483,13 +66453,12 @@ msgstr "O logfile não existe no site."
 msgid "The login is currently locked"
 msgstr "O login está actualmente bloqueado"
 
-#, fuzzy
 msgid "The lower bound is greater than the upper bound."
-msgstr "O agrupamento deve ter pelo menos um nó"
+msgstr ""
 
 #, fuzzy
 msgid "The lower bound must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
+msgstr "O tempo não deve ser maior do que %02d:%02d."
 
 #, fuzzy, python-format
 msgid ""
@@ -68482,7 +68451,7 @@ msgstr ""
 
 #, fuzzy
 msgid "The upper bound must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
+msgstr "O tempo não deve ser maior do que %02d:%02d."
 
 #, no-python-format
 msgid ""
@@ -70658,6 +70627,7 @@ msgstr ""
 "que nem todos os dados de todos os sites foram mostrados. Outras pessoas - "
 "no entanto - acham essas mensagens perturbadoras. "
 
+#, fuzzy
 msgid ""
 "This option defines the interval of the LDAP synchronization. This setting "
 "is only used by sites which have the <a href=\"wato.py?mode=sites"
@@ -71045,9 +71015,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This permission allows users to edit (add, delete, modify) managed robots."
-msgstr ""
-"Esta permissão permite aos utilizadores migrarem outros utilizadores para "
-"outra ligação"
+msgstr "Esta permissão permite o registo de qualquer novo anfitrião."
 
 msgid ""
 "This permission allows users to migrate other users to another connection"
@@ -71914,11 +71882,10 @@ msgstr ""
 "dados pode resultar em saída enganosa (por exemplo, transmissões de "
 "interface muito grandes) em tais casos."
 
-#, fuzzy
 msgid ""
 "This rule cannot be moved above rules that are defined as part of a quick "
 "setup."
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr ""
 
 msgid "This rule configures bulk notifications."
 msgstr "Esta regra configura as notificações em massa."
@@ -71971,13 +71938,10 @@ msgid ""
 "REST API"
 msgstr ""
 
-#, fuzzy
 msgid ""
 "This rule configures the Redfish integration to query management controller "
 "via the Redfish REST API"
 msgstr ""
-"Esta regra selecciona o Agente HP MSA em vez do Agente Checkmk normal que "
-"recolhe os dados através da interface Web do HP MSA"
 
 msgid ""
 "This rule configures the storage scheme of historic metric data for hosts. "
@@ -73766,8 +73730,9 @@ msgstr "Período de tempo"
 msgid "Time horizon"
 msgstr "Horizonte de tempo"
 
+#, fuzzy
 msgid "Time horizon for repeated events"
-msgstr "Horizonte temporal para eventos repetidos"
+msgstr "Tempo para a cobertura dos eventos"
 
 msgid "Time horizon to keep in cache"
 msgstr "Horizonte temporal a manter em cache"
@@ -74203,7 +74168,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Timeout for connection"
-msgstr "Média de pedidos por conexão"
+msgstr "Porta TCP para conexão"
 
 msgid "Timeout for requests in seconds."
 msgstr "Tempo limite para pedidos em segundos."
@@ -77152,7 +77117,7 @@ msgstr "Saída do estado da transformação"
 
 #, fuzzy
 msgid "Transformation"
-msgstr "Informação térmica"
+msgstr "Informações"
 
 msgid "Transformation on selected metric"
 msgstr "Transformação em métrica selecionada"
@@ -78044,11 +78009,10 @@ msgstr "Memória irrecuperável"
 
 #, fuzzy
 msgid "Unexpected 'notification count' values passed to form."
-msgstr "Eliminar regra de notificação #%d"
+msgstr "Eliminada regra de notificação %d de usuário %s"
 
-#, fuzzy
 msgid "Unexpected 'throttling' values passed to form."
-msgstr "Eliminar regra de notificação #%d"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -78388,11 +78352,10 @@ msgstr "Evento de atualização?"
 
 #, fuzzy
 msgid "Update existing security notifications"
-msgstr "última notificação"
+msgstr "Editar as notificações deste usuário"
 
-#, fuzzy
 msgid "Update existing security notifications to use the new max duration."
-msgstr "última notificação"
+msgstr ""
 
 msgid "Update host labels"
 msgstr "Actualizar etiquetas do anfitrião"
@@ -78416,7 +78379,7 @@ msgstr "Combinar etiquetas de serviço"
 
 #, fuzzy
 msgid "Update service parameters"
-msgstr "Exemplo de parâmetros"
+msgstr "Combinar etiquetas de serviço"
 
 msgid "Update site DNS Cache"
 msgstr "Atualizar cache DNS do site"
@@ -79452,7 +79415,7 @@ msgstr "Use o WMI"
 
 #, fuzzy
 msgid "Use World Wide Name (WWN) as service name"
-msgstr "Usar novas descrições de serviço"
+msgstr "Use o nome da porta como nome do serviço"
 
 #, fuzzy
 msgid ""
@@ -80498,9 +80461,8 @@ msgstr "Nome de usuário"
 msgid "Username / Password"
 msgstr "Nome de utilizador/Palavra-passe"
 
-#, fuzzy
 msgid "Username cannot be empty"
-msgstr "Chave secreta"
+msgstr ""
 
 msgid "Username for login"
 msgstr "Nome de usuário para login"
@@ -81790,7 +81752,7 @@ msgstr "Ver cronologia"
 
 #, fuzzy
 msgid "View trial details"
-msgstr "Opções adicionais"
+msgstr "Detalhes do serviço de BI"
 
 #, fuzzy
 msgid "Viewport information"
@@ -83170,9 +83132,6 @@ msgid ""
 "repeating events will be resolved to single events for the number of years "
 "you specify here."
 msgstr ""
-"Quando o ficheiro iCalendar contém definições de eventos de repetição, estes "
-"eventos de repetição serão resolvidos para eventos únicos durante o número "
-"de anos que especificar aqui."
 
 msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
@@ -85669,11 +85628,10 @@ msgstr "Não é possível eliminar este período de tempo."
 msgid "You cannot delete your own account!"
 msgstr "Você não pode apagar a sua própria conta!"
 
-#, fuzzy
 msgid ""
 "You cannot disable the replication on this site. It is used in a broker peer-"
 "to-peer connection."
-msgstr "Você não pode apagar a conexão com o site local."
+msgstr ""
 
 msgid "You cannot do replication with the local site."
 msgstr "Você não pode fazer replicação com o site local."
@@ -85727,7 +85685,8 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid "You cannot rename host \"%s\", because it is managed by Quick setup."
-msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
+msgstr ""
+"Você não pode alterar sua senha, porque ela é gerenciada por outro sistema."
 
 msgid "You cannot save this rule."
 msgstr "Você não pode salvar esta regra."
@@ -85780,9 +85739,7 @@ msgstr "Você definiu o hospedeiro inexistente '%s' como um pai."
 msgid ""
 "You do not have permission to create a new host in the folder %s. Please "
 "choose a different folder."
-msgstr ""
-"Já existe um hospedeiro com o nome <b><tt>%s</tt></b> na pasta <a href=\"%s"
-"\">%s</a>."
+msgstr "Você não tem as permissões para modificar o modelo de previsão."
 
 msgid "You do not have the permissions to design this graph."
 msgstr "Você não tem as permissões para desenhar este gráfico."
@@ -85918,7 +85875,7 @@ msgstr ""
 
 #, fuzzy
 msgid "You have not created any parameters for this notification method yet."
-msgstr "Parâmetros para este anfitrião"
+msgstr "Você ainda não criou nenhuma regra."
 
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
@@ -86751,7 +86708,7 @@ msgstr "adicionar ISL"
 
 #, fuzzy
 msgid "advanced configuration"
-msgstr "Configuração RRA"
+msgstr "Opções disponíveis"
 
 msgid "aggregation"
 msgid_plural "aggregations"
@@ -88349,7 +88306,7 @@ msgstr "expressão regular, correspondência de substrato"
 
 #, fuzzy
 msgid "regular file"
-msgstr "Substituir por"
+msgstr "Filtro de busca"
 
 #, fuzzy
 msgid "regular file or directory"
@@ -88400,7 +88357,7 @@ msgstr "requerem que a interface primária esteja ativa"
 
 #, fuzzy
 msgid "required"
-msgstr "Porto necessário"
+msgstr " é necessário"
 
 msgid "reset"
 msgstr "reinicialização"
@@ -88895,8 +88852,9 @@ msgstr "s"
 msgid "year"
 msgstr "ano"
 
+#, fuzzy
 msgid "years"
-msgstr "anos"
+msgstr "ano"
 
 msgid "yes"
 msgstr "sim"
@@ -88946,19 +88904,1054 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
-#, fuzzy
+#, python-format
 #~ msgid ""
-#~ "Directory for storage of temporary data (set TMPDIR environment "
-#~ "variable)<br>"
+#~ "!!! Error: Received class in RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
 #~ msgstr ""
-#~ "Directório para armazenamento de dados temporários (definir variável de "
-#~ "ambiente TMPDIR)"
+#~ "!!! Erro: Classe recebida em RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
+
+#, python-format
+#~ msgid "%s latency %s"
+#~ msgstr "%s latência %s"
+
+#, fuzzy, python-format
+#~ msgid "%s per second"
+#~ msgstr "%s por Segundo"
+
+#, fuzzy, python-format
+#~ msgid "%s resulting notifications"
+#~ msgstr "Notificações resultantes"
+
+#, fuzzy, python-format
+#~ msgid "%s: Services: %s, Host labels: %s"
+#~ msgstr "%s: Serviços: %s, Etiquetas de anfitrião: %s"
+
+#, python-format
+#~ msgid "%sPacket loss"
+#~ msgstr "%sPacote de perda"
+
+#, python-format
+#~ msgid "%sResponse time"
+#~ msgstr "%sTempo de Resposta"
+
+#, python-format
+#~ msgid "%sRound trip average"
+#~ msgstr "%sMédia da viagem"
+
+#~ msgid ""
+#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
+#~ msgstr ""
+#~ "© <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
+
+#~ msgid "(not supported)"
+#~ msgstr "(não suportado)"
+
+#~ msgid "(unused)"
+#~ msgstr "(não usado)"
+
+#, python-format
+#~ msgid "<b>%%s of %s length</b>?"
+#~ msgstr "<b>%%s de %s comprimento</b>?"
+
+#, python-format
+#~ msgid "<b>%s until 24:00:00</b>?"
+#~ msgstr "<b>%s até às 24:00:00</b>?"
+
+#, python-format
+#~ msgid "<b>%s until end of month</b>?"
+#~ msgstr "<b>%s até ao final do mês</b>?"
+
+#, python-format
+#~ msgid "<b>%s until end of year</b>?"
+#~ msgstr "<b>%s até ao final do ano</b>?"
+
+#, python-format
+#~ msgid "<b>%s until sunday night</b>?"
+#~ msgstr "<b>%s até domingo à noite</b>?"
+
+#~ msgid "<b>Keyword</b> pattern"
+#~ msgstr "<b>Palavra-chave</b> padrão"
+
+#~ msgid "<b>Keyword</b> runtime"
+#~ msgstr "<b>Keyword</b> runtime"
+
+#, python-format
+#~ msgid ""
+#~ "<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback "
+#~ "email address</a> nor enabled receiving fallback emails for any user. If "
+#~ "your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, please configure either the global setting or enable the "
+#~ "fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>Aviso</b>>>br>>br>Você não configurou um <a href=\"%s\">fallback email "
+#~ "address</a> nem habilitou o recebimento de fallback emails para nenhum "
+#~ "usuário. Se a sua monitorização produzir uma notificação que não "
+#~ "corresponda a nenhuma das suas regras de notificação, a notificação não "
+#~ "será enviada. Para evitar isso, por favor configure a configuração global "
+#~ "ou habilite a opção de contato fallback para pelo menos um de seus "
+#~ "usuários."
+
+#~ msgid ""
+#~ "<p>You should have a backup configured for being able to restore your "
+#~ "monitoring environment in case of a data loss.<br>In case you a using a "
+#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
+#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
+#~ "the backed up data may not be reliably backed up or not up-to-date in the "
+#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
+#~ "to create a backup of the runnning site to be sure that the data is "
+#~ "consistent. If you need to, you can then use the 3rd party tool to "
+#~ "archive the Checkmk backups.</p>"
+#~ msgstr ""
+#~ "<p>Você deve ter um backup configurado para ser capaz de restaurar seu "
+#~ "ambiente de monitoramento em caso de perda de dados.<br>No caso de você "
+#~ "usar uma máquina virtual como servidor Checkmk e realizar backups "
+#~ "baseados em snapshot, você deve estar seguro.</p><p>No caso de você estar "
+#~ "usando uma solução de backup de terceiros, os dados de backup podem não "
+#~ "ser confiáveis ou não estar atualizados no momento do backup.</p><p> "
+#~ "Recomenda-se usar o backup Checkmk para criar um backup do site em "
+#~ "execução para ter certeza de que os dados são consistentes. Se "
+#~ "necessário, você pode então usar a ferramenta de terceiros para arquivar "
+#~ "os backups Checkmk.</p>"
+
+#~ msgid ""
+#~ "A delay can be configured here so that multiple changes can be activated "
+#~ "in one go. This avoids frequent activation of changes in situations with "
+#~ "frequent services changes."
+#~ msgstr ""
+#~ "Um atraso pode ser configurado aqui para que múltiplas alterações possam "
+#~ "ser ativadas de uma só vez. Isto evita a ativação frequente de mudanças "
+#~ "em situações com mudanças frequentes de serviços."
+
+#~ msgid ""
+#~ "A voluntary context switch occurs when a thread blocks because it "
+#~ "requires a resource that is unavailable"
+#~ msgstr ""
+#~ "Uma mudança de contexto voluntária ocorre quando uma thread bloqueia "
+#~ "porque requer um recurso que não está disponível"
+
+#~ msgid "API key from password store"
+#~ msgstr "Chave API da loja de senhas"
+
+#~ msgid "API key/token"
+#~ msgstr "Chave API/token"
+
+#~ msgid "Activate"
+#~ msgstr "Ativar"
+
+#~ msgid "Activation cleanup"
+#~ msgstr "Limpeza da ativação"
+
+#~ msgid "Activation cleanup finished"
+#~ msgstr "Limpeza da ativação concluída"
+
+#~ msgid "Add a title or describe this rule"
+#~ msgstr "Adicionar um título ou descrever esta regra"
 
 #, fuzzy
-#~ msgid "notification has been sent out"
-#~ msgid_plural "notifications have been sent out"
-#~ msgstr[0] "Fase de notificação"
-#~ msgstr[1] "Fase de notificação"
+#~ msgid "Add new threshold"
+#~ msgstr "Adicionar nova função"
+
+#~ msgid "Add warning"
+#~ msgstr "Adicionar aviso"
+
+#~ msgid "Address Check mode"
+#~ msgstr "Modo de Verificação de Endereço"
+
+#, fuzzy
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "Depois de configurar um novo serviço no PagerDuty você receberá uma chave "
+#~ "de integração associada a esse serviço. Copie esse valor aqui."
+
+#~ msgid "Age, in seconds, of the oldest message on the queue."
+#~ msgstr "Idade, em segundos, da mensagem mais antiga da fila."
+
+#~ msgid "Allow upload of insecure Setup snapshots"
+#~ msgstr "Permitir o carregamento de instantâneos de Configuração inseguros"
+
+#~ msgid "Alternative Service description"
+#~ msgstr "Descrição do serviço alternativo"
+
+#~ msgid ""
+#~ "Amount of time that the application of redo data on the standby database "
+#~ "lags behind the primary database"
+#~ msgstr ""
+#~ "Tempo que a aplicação dos dados de refazer na base de dados em standby "
+#~ "fica atrás da base de dados principal"
+
+#~ msgid ""
+#~ "Amount of time that the replica server is lagging against the source "
+#~ "server"
+#~ msgstr ""
+#~ "Quantidade de tempo que o servidor de réplica está atrasado em relação ao "
+#~ "servidor de origem"
+
+#~ msgid ""
+#~ "An involuntary context switch takes place when a thread executes for the "
+#~ "duration of its time slice or when the system identifies a higher-"
+#~ "priority thread to run"
+#~ msgstr ""
+#~ "Um interruptor de contexto involuntário ocorre quando um fio é executado "
+#~ "pela duração de sua fatia de tempo ou quando o sistema identifica um fio "
+#~ "de maior prioridade para ser executado"
+
+#, fuzzy
+#~ msgid "Analysis results"
+#~ msgstr "Último resultado"
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr "Outro trabalho de renomeação de host já está em andamento: %s"
+
+#~ msgid "Another omd config change job is already running."
+#~ msgstr ""
+#~ "Já está a decorrer outra tarefa de alteração da configuração do omd."
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "Outra operação de renomeação está actualmente em curso"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "Outro trabalho de sincronização já está em execução: %s"
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr "Outra sincronização de usuários já está em execução: %s"
+
+#~ msgid "Applied Filters:"
+#~ msgstr "Filtros Aplicados:"
+
+#~ msgid "Automation secret"
+#~ msgstr "Segredo de automação"
+
+#, python-format
+#~ msgid "Background Job %s already running"
+#~ msgstr "Antecedentes Emprego %s já em execução"
+
+#~ msgid "Biggest input buffer lower level"
+#~ msgstr "O maior buffer de entrada de nível inferior"
+
+#~ msgid "Biggest input buffer upper level"
+#~ msgstr "O maior buffer de entrada do nível superior"
+
+#~ msgid "Bulk notifications with graphs (default: 5)"
+#~ msgstr "Notificações em massa com gráficos (padrão: 5)"
+
+#, python-format
+#~ msgid ""
+#~ "By default Checkmk uses command line calls of Net-SNMP tools like snmpget "
+#~ "or snmpwalk to gather SNMP information. For each request a new command "
+#~ "line program is being executed. It is now possible to use the inline SNMP "
+#~ "implementation which calls the net-snmp libraries directly via its python "
+#~ "bindings. This should increase the performance of SNMP checks in a "
+#~ "significant way. The inline SNMP mode is a feature which improves the "
+#~ "performance for large installations and only available via our "
+#~ "subscription.<b>Note:</b> This option is deprecated and has been replaced "
+#~ "by '%s'. Changes to this option will have no effect to the behaviour of "
+#~ "Checkmk"
+#~ msgstr ""
+#~ "Por padrão a Checkmk usa chamadas de linha de comando de ferramentas Net-"
+#~ "SNMP como snmpget ou snmpwalk para coletar informações SNMP. Para cada "
+#~ "pedido um novo programa de linha de comando está sendo executado. Agora é "
+#~ "possível usar a implementação SNMP inline que chama as bibliotecas net-"
+#~ "snmp diretamente através de seus python bindings. Isso deve aumentar o "
+#~ "desempenho das verificações SNMP de forma significativa. O modo SNMP "
+#~ "inline é um recurso que melhora o desempenho de grandes instalações e só "
+#~ "está disponível através de nossa assinatura.<b>Note:</b> Esta opção é "
+#~ "depreciada e foi substituída por '%s'. Alterações a esta opção não terão "
+#~ "efeito no comportamento da Checkmk"
+
+#~ msgid ""
+#~ "By default all multiple graphs in emails are displayed floating nearby. "
+#~ "You can enable this option to show the graphs among each other."
+#~ msgstr ""
+#~ "Por padrão, todos os gráficos múltiplos em e-mails são exibidos flutuando "
+#~ "nas proximidades. Você pode habilitar esta opção para mostrar os gráficos "
+#~ "entre si."
+
+#~ msgid ""
+#~ "By default, all resources associated to the configured tenant ID will be "
+#~ "monitored."
+#~ msgstr ""
+#~ "Por padrão, todos os recursos associados ao ID do locatário configurado "
+#~ "serão monitorados."
+
+#~ msgid "CPU idle time"
+#~ msgstr "tempo de ociosidade da CPU"
+
+#~ msgid "CPU time spent for executing guest operating systems"
+#~ msgstr "Tempo de CPU gasto para executar sistemas operacionais convidados"
+
+#~ msgid "CPU time spent in kernel space"
+#~ msgstr "Tempo de CPU gasto no espaço do kernel"
+
+#~ msgid "CPU time spent in user space"
+#~ msgstr "Tempo de CPU gasto no espaço do usuário"
+
+#~ msgid "CPU time spent in user space for niced processes"
+#~ msgstr "Tempo de CPU gasto no espaço do usuário para processos com gelo"
+
+#~ msgid "CPU time spent waiting for I/O"
+#~ msgstr "Tempo de espera de E/S pela CPU"
+
+#~ msgid "CPU time stolen by other operating systems"
+#~ msgstr "Tempo de CPU roubado por outros sistemas operacionais"
+
+#~ msgid "CRITICAL services"
+#~ msgstr "serviços CRÍTICOS"
+
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr "Não é possível fazer gráfico: host %s, service %s não encontrados."
+
+#, python-format
+#~ msgid "Cannot render image: %s"
+#~ msgstr "Não é possível renderizar imagem: %s"
+
+#~ msgid "Check for Version"
+#~ msgstr "Verificar a Versão"
+
+#, fuzzy
+#~ msgid "Checkmk agent local directory"
+#~ msgstr "Checkmk Agente de Direção Local"
+
+#, fuzzy
+#~ msgid "Checkmk agent plug-ins directory"
+#~ msgstr "Checkmk Agent Plugins-Directory"
+
+#~ msgid "Checkmk: Message"
+#~ msgstr "Checkmk: Mensagem"
+
+#~ msgid ""
+#~ "Choose, whether you just want to query the version number, or if you want "
+#~ "to check the response to an address query."
+#~ msgstr ""
+#~ "Escolha se pretende apenas consultar o número da versão ou se pretende "
+#~ "verificar a resposta a uma consulta de endereço."
+
+#~ msgid "Collect performance data for disk latency"
+#~ msgstr "Recolher dados de desempenho para a latência do disco"
+
+#~ msgid "Common Name"
+#~ msgstr "Nome Comum"
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+#~ msgstr ""
+#~ "Configure o URL do seu modem aqui (por exemplo, https://mymodem.mydomain."
+#~ "example)."
+
+#~ msgid "Connect"
+#~ msgstr "Ligue"
+
+#~ msgid "Connect Timeout"
+#~ msgstr "Tempo limite de ligação"
+
+#~ msgid "Connect to ACME SBC"
+#~ msgstr "Conectar à ACME SBC"
+
+#~ msgid "Connected clients"
+#~ msgstr "Clientes conectados"
+
+#~ msgid "Connection option"
+#~ msgstr "Opção de conexão"
+
+#~ msgid "Connection to the REST API"
+#~ msgstr "Ligação à API REST"
+
+#~ msgid "Country"
+#~ msgstr "País"
+
+#~ msgid "Create notification with the following parameters"
+#~ msgstr "Criar nota com os seguintes parâmetros"
+
+#, python-format
+#~ msgid "Creating scheduled report '%s'..."
+#~ msgstr "Criando relatórios programados '%s'..."
+
+#~ msgid "Critical (In)"
+#~ msgstr "Crítico (In)"
+
+#~ msgid "Critical (Out)"
+#~ msgstr "Crítico (Fora)"
+
+#~ msgid "Critical if over"
+#~ msgstr "Crítico se acabou"
+
+#, fuzzy
+#~ msgid "Critical of "
+#~ msgstr "Crítico se %s"
+
+#~ msgid "Custom Notes"
+#~ msgstr "Notas personalizadas"
+
+#~ msgid "Custom URL prefix"
+#~ msgstr "Prefixo URL personalizado"
+
+#~ msgid "Custom URL server address"
+#~ msgstr "Endereço de servidor URL personalizado"
+
+#~ msgid "Custom path prefix"
+#~ msgstr "Prefixo do caminho personalizado"
+
+#~ msgid "DOWN hosts"
+#~ msgstr "Anfitriões DOWN"
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Base de dados para PostgreSQL"
+
+#~ msgid "Deactivate"
+#~ msgstr "Desativar"
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Depuração (registar cada acção)"
+
+#~ msgid "Delete messages"
+#~ msgstr "Eliminar mensagens"
+
+#, fuzzy
+#~ msgid "Deploy the TSM plug-in"
+#~ msgstr "Implantar o plugin TSM"
+
+#, fuzzy
+#~ msgid "Deprecated check plug-ins"
+#~ msgstr "Plugins de verificação obsoletos"
+
+#~ msgid ""
+#~ "Difference between the first and last operation in the oplog in seconds"
+#~ msgstr "Diferença entre a primeira e a última operação no oplog em segundos"
+
+#~ msgid "Directly forward to event console"
+#~ msgstr "Diretamente para o console de eventos"
+
+#~ msgid "Discover registered hosts"
+#~ msgstr "Descobrir anfitriões registados"
+
+#, fuzzy
+#~ msgid "Discovered by plug-in"
+#~ msgstr "Descoberto pelo plugin"
+
+#~ msgid "Discovered host label synchronization"
+#~ msgstr "Descoberta da sincronização do host label"
+
+#~ msgid "Discovered host labels"
+#~ msgstr "Etiquetas de anfitrião descobertas"
+
+#, fuzzy
+#~ msgid "Dispatch notification"
+#~ msgstr "Desactivar as notificações"
+
+#~ msgid "Display additional information"
+#~ msgstr "Apresentar informações adicionais"
+
+#~ msgid "Display graphs among each other"
+#~ msgstr "Mostrar gráficos entre si"
+
+#~ msgid "Do hardware/software inventory"
+#~ msgstr "Fazer inventário de hardware/software"
+
+#~ msgid "Edit metric"
+#~ msgstr "Editar métrica"
+
+#~ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
+#~ msgstr ""
+#~ "Habilitar SNMP em linha (usar diretamente bibliotecas net-snmp) "
+#~ "(depreciado)"
+
+#, fuzzy
+#~ msgid "Error Handling"
+#~ msgstr "Tratamento de erros"
+
+#, python-format
+#~ msgid "Error: %s"
+#~ msgstr "Erro: %s"
+
+#, python-format
+#~ msgid "Failed to get changes from sites: %s."
+#~ msgstr "Falha ao obter alterações dos sítios: %s."
+
+#~ msgid "Follow, but stay to same IP-address and port"
+#~ msgstr "Siga, mas fique no mesmo endereço de IP e porta"
+
+#~ msgid ""
+#~ "Gain a complete view of your entire IT infrastructure: from public cloud "
+#~ "providers, to your data centers, across servers, networks, containers, "
+#~ "and more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
+#~ "performance."
+#~ msgstr ""
+#~ "Obtenha uma visão completa de toda a sua infraestrutura de TI: desde "
+#~ "fornecedores de nuvens públicas até aos seus centros de dados, passando "
+#~ "por servidores, redes, contentores e muito mais. O Checkmk permite que as "
+#~ "equipas de ITOps e DevOps executem as suas TI com o máximo desempenho."
+
+#, python-format
+#~ msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#~ msgstr ""
+#~ "A receita gráfica '%s' utiliza métrica indefinida '%s', estão "
+#~ "disponíveis: %s"
+
+#~ msgid "Graphs are shown among each other"
+#~ msgstr "Os gráficos são mostrados entre si"
+
+#~ msgid "Group \"Activate changes\""
+#~ msgstr "Grupo \"Activar alterações\""
+
+#~ msgid "Growing"
+#~ msgstr "Cultivo"
+
+#~ msgid "HTTP Errors"
+#~ msgstr "Erros HTTP"
+
+#~ msgid "Hardware / Software Inventory"
+#~ msgstr "Inventário de Hardware / Software"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can set upper levels for the time difference between agent and "
+#~ "system time."
+#~ msgstr ""
+#~ "Aqui você pode Definir níveis superiores para a diferença de tempo entre "
+#~ "o tempo do agente e o tempo do sistema."
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can specify an alternative user that the agent should be run as. "
+#~ "Please note that only root has enough privileges for all commands and "
+#~ "plug-ins. When run as another user then some information will be missing."
+#~ msgstr ""
+#~ "Aqui pode especificar um utilizador alternativo com o qual o agente deve "
+#~ "ser executado. Tenha em atenção que apenas o root tem privilégios "
+#~ "suficientes para todos os comandos e plug-ins. Quando executado como "
+#~ "outro utilizador, faltarão algumas informações."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Análise de ocultação"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Esconder granéis"
+
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"
+
+#~ msgid "Hide user rules"
+#~ msgstr "Ocultar regras do usuário"
+
+#~ msgid "History of hardware/software inventory"
+#~ msgstr "Histórico do inventário de hardware/software"
+
+#~ msgid "Host & service events"
+#~ msgstr "Acolhimento & eventos de serviço"
+
+#~ msgid "Host & service history"
+#~ msgstr "Histórico de serviços e hospedagem"
+
+#~ msgid "Host registration"
+#~ msgstr "Registo do anfitrião"
+
+#~ msgid "Host removal"
+#~ msgstr "Remoção do anfitrião"
+
+#~ msgid ""
+#~ "If you specify an URL prefix here, then several parts of the email body "
+#~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
+#~ "the email can directly visit the host or service in question in Checkmk. "
+#~ "Specify an absolute URL including the <tt>.../check_mk/</tt>"
+#~ msgstr ""
+#~ "Se especificar um prefixo de URL aqui, várias partes do corpo do e-mail "
+#~ "são armadas com hiperligações para a GUI do Checkmk, para que o "
+#~ "destinatário do e-mail possa visitar directamente o anfitrião ou serviço "
+#~ "em questão no Checkmk. Especifique um URL absoluto, incluindo o prefixo "
+#~ "<tt>.../check_mk/</tt>"
+
+#~ msgid "Ignore certificate errors (unsecure)"
+#~ msgstr "Ignorar erros de certificado (não seguros)"
+
+#~ msgid "Individual automation user credentials"
+#~ msgstr "Credenciais de usuário de automação individual"
+
+#, python-format
+#~ msgid "Invalid combined graph representation '%s'"
+#~ msgstr "Representação gráfica combinada inválida '%s'"
+
+#~ msgid "Inventory: History"
+#~ msgstr "Inventário: História"
+
+#~ msgid "Job Name"
+#~ msgstr "Nome do emprego"
+
+#~ msgid "Job finished"
+#~ msgstr "Trabalho concluído"
+
+#~ msgid "Key from password store"
+#~ msgstr "Chave da loja de senhas"
+
+#, fuzzy
+#~ msgid "Last updated"
+#~ msgstr "Última Atualização"
+
+#~ msgid "License agreement"
+#~ msgstr "Contrato de licença"
+
+#~ msgid "Linux Agent"
+#~ msgstr "Agente Linux"
+
+#~ msgid "Locality Name"
+#~ msgstr "Nome da Localidade"
+
+#~ msgid "Longest output list lower level"
+#~ msgstr "Lista de saída mais longa nível inferior"
+
+#~ msgid "Longest output list upper level"
+#~ msgstr "Lista de saída mais longa nível superior"
+
+#~ msgid "Lower critical level"
+#~ msgstr "Nível crítico inferior"
+
+#~ msgid "Lower warning level"
+#~ msgstr "Nível de aviso inferior"
+
+#, fuzzy
+#~ msgid "MK Remote Plug-in Executor (MRPE)"
+#~ msgstr "Executor de Plugin Remoto MK (MRPE)"
+
+#, python-format
+#~ msgid ""
+#~ "Mail could not be delivered. Exit code of command is %r. Output is: %s"
+#~ msgstr ""
+#~ "O correio não pôde ser entregue. O código de saída de comando é %r. A "
+#~ "saída é: %s"
+
+#, fuzzy
+#~ msgid "Matching: "
+#~ msgstr "Correspondência"
+
+#~ msgid "Max Perm used"
+#~ msgstr "Max Perm usado"
+
+#, fuzzy
+#~ msgid "Maximum <b>Keyword</b> runtime"
+#~ msgstr "Monitorização da rede"
+
+#~ msgid "Maximum inodes"
+#~ msgstr "Máximo de nós"
+
+#, fuzzy
+#~ msgid "Maximum of "
+#~ msgstr "Máximo"
+
+#~ msgid "Mean time in queue for the last few messages."
+#~ msgstr "Tempo médio em fila para as últimas mensagens."
+
+#~ msgid "Mean time in queue for the last medium number of messages."
+#~ msgstr "Tempo médio em fila para o último número médio de mensagens."
+
+#~ msgid "Metric aggregation"
+#~ msgstr "Agregação métrica"
+
+#, fuzzy
+#~ msgid "Minimum of "
+#~ msgstr "Mínimo"
+
+#~ msgid "More information can be found in ~/var/log/web.log"
+#~ msgstr "Mais informações podem ser encontradas em ~/var/log/web.log"
+
+#~ msgid "Name of the node"
+#~ msgstr "Nome do nó"
+
+#~ msgid "Negotiate SSL"
+#~ msgstr "Negociar SSL"
+
+#~ msgid "NetApp via WebAPI"
+#~ msgstr "NetApp via WebAPI"
+
+#, fuzzy
+#~ msgid "Netapp instance state"
+#~ msgstr "Estado de Netapp Instance"
+
+#~ msgid "Netapp systemtime"
+#~ msgstr "Netapp systemtime"
+
+#~ msgid "Never logged in"
+#~ msgstr "Nunca fez login"
+
+#, fuzzy
+#~ msgid "Newly discovered"
+#~ msgstr "descoberta do NTP"
+
+#, python-format
+#~ msgid "No Forecast graph with the name <tt>%s</tt>"
+#~ msgstr "Não Previsão gráfica com o nome <tt>%s</tt>"
+
+#~ msgid "No activation needed"
+#~ msgstr "Não é necessária ativação"
+
+#~ msgid "No agent registration requests processed"
+#~ msgstr "Não foram processados pedidos de registo de agentes"
+
+#, python-format
+#~ msgid "No custom graph with the name <tt>%s</tt>"
+#~ msgstr "Nenhum gráfico personalizado com o nome <tt>%s</tt>"
+
+#~ msgid "No declined requests"
+#~ msgstr "Nenhum pedido recusado"
+
+#~ msgid "No discoverable hosts found"
+#~ msgstr "Não foram encontrados anfitriões detectáveis"
+
+#~ msgid "No hosts discovered"
+#~ msgstr "Nenhum anfitrião descoberto"
+
+#~ msgid "No need for syncing sites"
+#~ msgstr "Não é necessário sincronizar sítios"
+
+#, fuzzy, python-format
+#~ msgid "No remote %s processed."
+#~ msgstr "Nenhum %s remoto processado."
+
+#, fuzzy, python-format
+#~ msgid "No such tree below %r"
+#~ msgstr "Não existe nenhuma árvore abaixo %r"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Registo normal (apenas arranque, encerramento e erros)"
+
+#~ msgid "Not activated"
+#~ msgstr "Não ativado"
+
+#~ msgid ""
+#~ "Note: enabling performance data for the latency might cause "
+#~ "incompatibilities with existing historical data if you are running "
+#~ "PNP4Nagios in SINGLE mode."
+#~ msgstr ""
+#~ "Nota: a ativação de dados de desempenho para a latência pode causar "
+#~ "incompatibilidades com dados históricos existentes se você estiver "
+#~ "executando o PNP4Nagios no modo SINGLE."
+
+#, fuzzy
+#~ msgid "Notifications have been sent. "
+#~ msgstr "Fase de notificação"
+
+#~ msgid "Number of documents per collection"
+#~ msgstr "Número de documentos por coleção"
+
+#~ msgid "Number of handles that are currently open for input for the queue."
+#~ msgstr ""
+#~ "Número de alças que estão atualmente abertas para entrada para a fila."
+
+#~ msgid "Number of handles that are currently open for output for the queue."
+#~ msgstr ""
+#~ "Número de alças que estão atualmente abertas para a saída para a fila."
+
+#~ msgid "Number of jumbo chunks per collection"
+#~ msgstr "Número de pedaços de jumbo por coleção"
+
+#, fuzzy, python-format
+#~ msgid "Oracle %s"
+#~ msgstr "Oracle"
+
+#~ msgid "Organization Name"
+#~ msgstr "Nome da Organização"
+
+#, fuzzy
+#~ msgid "Parallel plan groups"
+#~ msgstr "Programação da execução"
+
+#, fuzzy
+#~ msgid "Performance data for latency"
+#~ msgstr "Dados de desempenho para a latência"
+
+#, fuzzy
+#~ msgid "Performance data for queue length"
+#~ msgstr "Dados de Desempenho para Comprimento da Fila"
+
+#~ msgid "Persistent Connection"
+#~ msgstr "Ligação Persistente"
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "Fase 1.1: Executando no local \"%s"
+
+#~ msgid "Phase 2.1: Extracting result"
+#~ msgstr "Fase 2.1: Resultado da extração"
+
+#~ msgid "Phase 2.2: Fetching existing hosts"
+#~ msgstr "Fase 2.2: Buscando hospedeiros existentes"
+
+#~ msgid "Phase 2.3: Updating config"
+#~ msgstr "Fase 2.3: Atualização da configuração"
+
+#~ msgid "Phase 2.4: Activating changes"
+#~ msgstr "Fase 2.4: Ativação de mudanças"
+
+#~ msgid "Physical disks"
+#~ msgstr "Discos físicos"
+
+#~ msgid "Plugins"
+#~ msgstr "Plugins"
+
+#~ msgid "Port number that server is listening on."
+#~ msgstr "Número da porta em que o servidor está a ouvir."
+
+#, fuzzy
+#~ msgid "Previously discovered"
+#~ msgstr "Descoberta do processo"
+
+#~ msgid "Process stored SNMP walks with agent simulator"
+#~ msgstr "Processo armazenado SNMP anda com simulador de agente"
+
+#~ msgid ""
+#~ "Provide individual credentials of an automation user with administrative "
+#~ "privileges on the remote site."
+#~ msgstr ""
+#~ "Fornecer credenciais individuais de um usuário de automação com "
+#~ "privilégios administrativos no local remoto."
+
+#~ msgid "Queried host is a host system"
+#~ msgstr "O anfitrião consultado é um sistema anfitrião"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "URL do Endpoint REST"
+
+#~ msgid "Ready containers"
+#~ msgstr "Contentores prontos"
+
+#~ msgid "Receive full response"
+#~ msgstr "Receber resposta completa"
+
+#~ msgid "Receive start of response"
+#~ msgstr "Receber o início da resposta"
+
+#~ msgid "Received mails"
+#~ msgstr "E-mails recebidos"
+
+#~ msgid "Recent hardware/software inventory"
+#~ msgstr "Inventário recente de hardware/software"
+
+#~ msgid "Remaining supply"
+#~ msgstr "Fornecimento restante"
+
+#~ msgid "Remote site URL"
+#~ msgstr "URL do site remoto"
+
+#~ msgid "Remove downtimes?"
+#~ msgstr "Eliminar os tempos de inatividade?"
+
+#~ msgid "Report generation"
+#~ msgstr "Geração de relatórios"
+
+#~ msgid "Requests data from a RabbitMQ instance."
+#~ msgstr "Solicita dados de uma instância RabbitMQ."
+
+#~ msgid "Resulting notifications"
+#~ msgstr "Notificações resultantes"
+
+#~ msgid "Roundtrip"
+#~ msgstr "Ida e Volta"
+
+#, fuzzy
+#~ msgid "SNMP agent simulator"
+#~ msgstr "Simulador de Agente SNMP"
+
+#~ msgid "Save filters & go to designer"
+#~ msgstr "Guardar filtros & ir para designer"
+
+#~ msgid "Schedule downtime?"
+#~ msgstr "Programar o tempo de inatividade?"
+
+#~ msgid ""
+#~ "Selecting this option will disable the rule, but it will remain in the "
+#~ "configuration."
+#~ msgstr ""
+#~ "Se seleccionar esta opção, a regra será desactivada, mas permanecerá na "
+#~ "configuração."
+
+#, fuzzy
+#~ msgid ""
+#~ "Send out HTML/ASCII email notification according to notification rules "
+#~ "(uncheck to avoid spam)"
+#~ msgstr ""
+#~ "As notificações serão enviadas de acordo com as regras de notificação"
+
+#~ msgid "Send request"
+#~ msgstr "Enviar pedido"
+
+#~ msgid "Service description: "
+#~ msgstr "Descrição do serviço: "
+
+#~ msgid "Service descriptions"
+#~ msgstr "Descrição dos serviços"
+
+#~ msgid "Service level of forwarded logs shown in Event Console."
+#~ msgstr ""
+#~ "Nível de serviço dos registos reencaminhados apresentados na Consola de "
+#~ "Eventos."
+
+#~ msgid "Show analysis"
+#~ msgstr "Mostrar análise"
+
+#~ msgid "Show bulks"
+#~ msgstr "Mostrar granéis"
+
+#, fuzzy
+#~ msgid "Show service description"
+#~ msgstr "Descrição do serviço"
+
+#~ msgid "Shrinkage"
+#~ msgstr "Encolhimento"
+
+#~ msgid "Shrinking"
+#~ msgstr "Encolhendo"
+
+#~ msgid "Site base URL"
+#~ msgstr "URL base do site"
+
+#~ msgid ""
+#~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "
+#~ "<tt>https://myhost/mysite</tt>)."
+#~ msgstr ""
+#~ "URL de base do sítio para aceder à API REST para, por exemplo, criar "
+#~ "anfitriões (por exemplo, <tt>https://myhost/mysite</tt>)."
+
+#~ msgid ""
+#~ "Space in the database that has not been reserved for database objects"
+#~ msgstr ""
+#~ "Espaço na base de dados que não tenha sido reservado para objetos da base "
+#~ "de dados"
+
+#, fuzzy
+#~ msgid ""
+#~ "Specifies a URL prefix which is prepended to the path in calls to the "
+#~ "API. This is e.g. useful if you use the ip address or the host name as "
+#~ "base address but require some additional prefix to make the correct API "
+#~ "call. Use the custom URL option if you need to specify a more complex API "
+#~ "url."
+#~ msgstr ""
+#~ "Especifica um prefixo URL que é prefixado ao caminho nas chamadas para a "
+#~ "API. Isto é útil se você usa o endereço ip ou o nome da máquina como "
+#~ "endereço base, mas requer algum prefixo adicional para fazer a chamada "
+#~ "API correta. Use a opção URL personalizada se você precisar especificar "
+#~ "uma url de API mais complexa."
+
+#, fuzzy
+#~ msgid ""
+#~ "Specifies an URL path suffix which is appended to the path in calls to "
+#~ "the API. This is e.g. useful if you use the ip address or the host name "
+#~ "as base address and require to specify a path URL in order to make the "
+#~ "correct API calls. Do not prepend or append your custom path with \"/\". "
+#~ "Use the custom URL option if you need to specify a more complex API URL"
+#~ msgstr ""
+#~ "Especifica um sufixo de caminho URL que é anexado ao caminho nas chamadas "
+#~ "para a API. Isto é útil se você usar o endereço ip ou o nome da máquina "
+#~ "como endereço base e precisar especificar um URL de caminho para fazer as "
+#~ "chamadas corretas à API. Não prefira ou anexe o seu caminho personalizado "
+#~ "com \"/\". Use a opção URL personalizada se você precisar especificar uma "
+#~ "URL de API mais complexa"
+
+#~ msgid ""
+#~ "Specify a custom URL to connect to your server. Do not include the "
+#~ "protocol. This option overwrites all available options such as port and "
+#~ "other URL prefixes."
+#~ msgstr ""
+#~ "Especifique um URL personalizado para se conectar ao seu servidor. Não "
+#~ "inclua o protocolo. Esta opção substitui todas as opções disponíveis, "
+#~ "tais como porta e outros prefixos de URL."
+
+#~ msgid "Spool to event console"
+#~ msgstr "Spool para console de eventos"
+
+#, python-format
+#~ msgid "Started activate changes: %s"
+#~ msgstr "Começou a ativar as alterações: %s"
+
+#~ msgid "State for <i>some remaining</i>"
+#~ msgstr "Indique para <i>alguns restantes</i>"
+
+#~ msgid "State or Province Name"
+#~ msgstr "Nome do Estado ou Província"
+
+#, python-format
+#~ msgid "Stored declined bundle: %s"
+#~ msgstr "Pacote armazenado recusado: %s"
+
+#, fuzzy, python-format
+#~ msgid "Successfully got %s from sites: %s<br>%s"
+#~ msgstr "Obteve com êxito %s dos sítios: %s<br>%s"
+
+#~ msgid "Sync remote site changes and audit log"
+#~ msgstr "Sincronizar as alterações do sítio remoto e o registo de auditoria"
+
+#, python-format
+#~ msgid "Synced created hosts with sites: %s"
+#~ msgstr "Anfitriões criados sincronizados com sites: %s"
+
+#~ msgid "Syslog facility of forwarded events shown in Event Console."
+#~ msgstr ""
+#~ "Recurso Syslog de eventos encaminhados mostrado no Console de Eventos."
+
+#~ msgid ""
+#~ "The current depth of the queue, that is, the number of messages on the "
+#~ "queue, including both committed messages and uncommitted messages."
+#~ msgstr ""
+#~ "A profundidade atual da fila, ou seja, o número de mensagens na fila, "
+#~ "incluindo tanto as mensagens comprometidas como as não comprometidas."
+
+#~ msgid ""
+#~ "The email address and visible name used in the From header of "
+#~ "notifications messages. If no email address is specified the default "
+#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
+#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
+#~ msgstr ""
+#~ "O endereço de e-mail e o nome visível utilizado no cabeçalho das "
+#~ "mensagens de notificação. Se nenhum endereço de e-mail for especificado o "
+#~ "endereço padrão é <tt>OMD_SITE@FQDN</tt> é usado. Se a variável de "
+#~ "ambiente <tt>OMD_SITE</tt> não estiver definida como <tt>checkmk</tt>."
+
+#~ msgid ""
+#~ "The email address and visible name used in the Reply-To header of "
+#~ "notifications messages."
+#~ msgstr ""
+#~ "O endereço de e-mail e o nome visível utilizado no cabeçalho das "
+#~ "mensagens de resposta às notificações."
+
+#~ msgid "The given host does not exist"
+#~ msgstr "O hospedeiro dado não existe"
+
+#~ msgid ""
+#~ "The specified choice is no longer available. Please use another, like "
+#~ "'header' instead."
+#~ msgstr ""
+#~ "A opção especificada já não está disponível. Utilize outra opção, como "
+#~ "'header'."
+
+#~ msgid "The synchronization finished."
+#~ msgstr "A sincronização terminou."
+
+#~ msgid "The total size of all indexes for the collection"
+#~ msgstr "O tamanho total de todos os índices para a coleção"
+
+#~ msgid ""
+#~ "The user, used for login, has to have at least the role 'itil' in "
+#~ "ServiceNow."
+#~ msgstr ""
+#~ "O usuário, usado para login, tem que ter pelo menos a função 'itil' no "
+#~ "ServiceNow."
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr ""
+#~ "A versão deste site não é uma edição dos serviços gerenciados pela Checkmk"
+
+#~ msgid ""
+#~ "This rule allows monitoring of VMware ESX via the vSphere API. You can "
+#~ "configure your connection settings here."
+#~ msgstr ""
+#~ "Esta regra permite a monitorização do VMware ESX através da API do "
+#~ "vSphere. Pode configurar as suas definições de ligação aqui."
 
 #, python-format
 #~ msgid ""
@@ -88996,94 +89989,21 @@ msgstr "Use SSL para a conexão."
 #~ "local - o dir de instalação do agente. Regras múltiplas podem ser "
 #~ "aplicadas, isto significa que os pacotes de regras múltiplas são fundidos."
 
-#~ msgid "VMs"
-#~ msgstr "VMs"
+#~ msgid "This rule allows you to override netapp warnings"
+#~ msgstr "Esta regra permite que você substitua os avisos de netapp"
 
-#, fuzzy
-#~ msgid "Connectee"
-#~ msgstr "Ligue"
-
-#, fuzzy
-#~ msgid "Connecter"
-#~ msgstr "Ligue"
-
-#, fuzzy
-#~ msgid "Update service params"
-#~ msgstr "Combinar etiquetas de serviço"
-
-#, fuzzy
-#~ msgid "connectee"
-#~ msgstr "desconectado"
-
-#, fuzzy
-#~ msgid "connecter"
-#~ msgstr "desconectado"
-
-#, fuzzy
 #~ msgid ""
-#~ "Only care about hosts that receive data from resources which name matches "
-#~ "one of these regular expressions."
+#~ "This rule controls which and how many checks will be created for "
+#~ "monitoring individual physical and logical disks. Note: the option "
+#~ "<i>Create a summary for all read, one for write</i> has been removed. "
+#~ "Some checks will still support this settings, but it will be removed "
+#~ "there soon."
 #~ msgstr ""
-#~ "Só se preocupam com os anfitriões que recebem dados piggyback de "
-#~ "anfitriões cujo nome corresponde a uma destas expressões regulares."
-
-#, fuzzy
-#~ msgid ""
-#~ "Only create hosts that receive open telemetry data from resources which "
-#~ "name matches one of these regular expressions."
-#~ msgstr ""
-#~ "Só se preocupam com os anfitriões que recebem dados piggyback de "
-#~ "anfitriões cujo nome corresponde a uma destas expressões regulares."
-
-#, fuzzy
-#~ msgid "Piggyback-hub turned on on remote site"
-#~ msgstr "Informações de outros anfitriões"
-
-#, fuzzy, python-format
-#~ msgid ""
-#~ "Your license has been suspended. Please contact the Checkmk sales team at "
-#~ "%s. "
-#~ msgstr ""
-#~ "A sua licença foi suspensa. Contacte a equipa de vendas da Checkmk em %s."
-
-#~ msgid "Persistent Connection"
-#~ msgstr "Ligação Persistente"
-
-#~ msgid "Plugins"
-#~ msgstr "Plugins"
-
-#, fuzzy
-#~ msgid "Checkmk agent local directory"
-#~ msgstr "Checkmk Agente de Direção Local"
-
-#, fuzzy
-#~ msgid "Checkmk agent plug-ins directory"
-#~ msgstr "Checkmk Agent Plugins-Directory"
-
-#, fuzzy
-#~ msgid "MK Remote Plug-in Executor (MRPE)"
-#~ msgstr "Executor de Plugin Remoto MK (MRPE)"
-
-#~ msgid "Authorized sites"
-#~ msgstr "Sites autorizados"
-
-#~ msgid "The sites the user is authorized to see in the GUI."
-#~ msgstr "Os sites que o usuário está autorizado a ver na GUI."
-
-#~ msgid "Access Point"
-#~ msgstr "Ponto de Acesso"
-
-#~ msgid "Bulk Discovery"
-#~ msgstr "Descoberta a Granel"
-
-#, fuzzy
-#~ msgid ""
-#~ "Only applies to notifications triggered by the command `Custom "
-#~ "notifications`"
-#~ msgstr "Ordem de ordenação de notificação para notificações em massa"
-
-#~ msgid "Queried host is a host system"
-#~ msgstr "O anfitrião consultado é um sistema anfitrião"
+#~ "Esta regra controla quais e quantas verificações serão criadas para "
+#~ "monitorar os discos físicos e lógicos individuais. Nota: a opção <i>Criar "
+#~ "um resumo para todos os lidos, um para escrever</i> foi removida. Algumas "
+#~ "verificações ainda suportarão essa configuração, mas ela será removida em "
+#~ "breve."
 
 #~ msgid ""
 #~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
@@ -89097,723 +90017,111 @@ msgstr "Use SSL para a conexão."
 #~ "monitorização. Certifique-se de que está instalado e a funcionar. Pode "
 #~ "configurar as definições de ligação aqui."
 
-#, fuzzy, python-format
-#~ msgid "Got invalid status of remote site %s"
-#~ msgstr "Saiu do site remoto %s"
-
-#~ msgid " (Copy)"
-#~ msgstr " (Copiar)"
+#~ msgid ""
+#~ "This rule set selects the NetApp special agent instead of the normal "
+#~ "Checkmk Agent and allows monitoring via the NetApp Web API. To access the "
+#~ "data the user requires permissions to several API classes. They are shown "
+#~ "when you call the agent with <tt>agent_netapp --help</tt>. The agent "
+#~ "itself is located in the site directory under <tt>~/share/check_mk/agents/"
+#~ "special</tt>."
+#~ msgstr ""
+#~ "Este conjunto de regras selecciona o agente especial da NetApp em vez do "
+#~ "agente Checkmk normal e permite a monitorização através da NetApp Web "
+#~ "API. Para acessar os dados, o usuário precisa de permissões para várias "
+#~ "classes de API. Elas são mostradas quando você chama o agente com "
+#~ "<tt>agent_netapp --help</tt>. O próprio agente está localizado no "
+#~ "directório do site em <tt>~/share/check_mk/agents/special</tt>."
 
 #~ msgid ""
-#~ "Gain a complete view of your entire IT infrastructure: from public cloud "
-#~ "providers, to your data centers, across servers, networks, containers, "
-#~ "and more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
-#~ "performance."
+#~ "This rule set selects the special agent for HPE StoreOnce Applainces "
+#~ "instead of the normal Checkmk agent and allows monitoring via Web API. "
 #~ msgstr ""
-#~ "Obtenha uma visão completa de toda a sua infraestrutura de TI: desde "
-#~ "fornecedores de nuvens públicas até aos seus centros de dados, passando "
-#~ "por servidores, redes, contentores e muito mais. O Checkmk permite que as "
-#~ "equipas de ITOps e DevOps executem as suas TI com o máximo desempenho."
+#~ "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
+#~ "Applainces em vez do agente Checkmk normal e permite a monitorização "
+#~ "através da API Web. "
 
-#~ msgid "License agreement"
-#~ msgstr "Contrato de licença"
-
-#, python-format
-#~ msgid "Visit our %s to learn more about Checkmk and about the %s."
-#~ msgstr "Visite o nosso %s para saber mais sobre a Checkmk e sobre o %s."
-
-#~ msgid "Your IT monitoring platform"
-#~ msgstr "A sua plataforma de monitorização de TI"
-
-#~ msgid "latest version"
-#~ msgstr "última versão"
-
-#~ msgid "website"
-#~ msgstr "sítio Web"
-
-#, python-format
-#~ msgid "© %s Checkmk GmbH. All Rights Reserved."
-#~ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
-
-#, fuzzy
-#~ msgid "Unsorted"
-#~ msgstr "Acção não suportada"
-
-#, fuzzy
-#~ msgid "Import all valid tags"
-#~ msgstr "Importar todas as anotações válidas"
-
-#, fuzzy
-#~ msgid "Date sent"
-#~ msgstr "Dados enviados"
-
-#, fuzzy, python-format
-#~ msgid "Extension package %r"
-#~ msgstr "Pacotes de extensão"
-
-#, fuzzy, python-format
-#~ msgid "Unpackaged file %r"
-#~ msgstr "Arquivos descompactados"
-
-#, python-format
 #~ msgid ""
-#~ "!!! Error: Received class in RulespecRegistry:"
-#~ "register_manual_check_rulespec %r"
+#~ "This rule set selects the special agent for HPE StoreOnce Appliances "
+#~ "instead of the normal Checkmk agent and allows monitoring via REST API v4."
+#~ "x or higher. "
 #~ msgstr ""
-#~ "!!! Erro: Classe recebida em RulespecRegistry:"
-#~ "register_manual_check_rulespec %r"
+#~ "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
+#~ "Appliances em vez do agente Checkmk normal e permite a monitorização "
+#~ "através da API REST v4.x ou superior. "
 
-#~ msgid "Hide user rules"
-#~ msgstr "Ocultar regras do usuário"
+#~ msgid "Total RAM installed"
+#~ msgstr "Total de RAM instalado"
 
-#, fuzzy
-#~ msgid "Check man page uses the deprecated API"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
+#~ msgid "Total amount of space allocated by objects in the database"
+#~ msgstr "Quantidade total de espaço alocado por objetos no banco de dados"
 
-#, fuzzy
-#~ msgid "Check plug-in uses the deprecated API"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
-
-#, fuzzy
-#~ msgid "Check plug-in uses the deprecated API (v1)"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
-
-#, fuzzy
-#~ msgid "GUI extension uses the deprecated API"
-#~ msgstr "Extensões GUI"
-
-#, fuzzy
-#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
-
-#~ msgid "Job finished"
-#~ msgstr "Trabalho concluído"
-
-#, fuzzy
-#~ msgid "Legacy GUI extension uses the deprecated API"
-#~ msgstr "Extensões GUI herdadas"
-
-#, fuzzy
-#~ msgid "PNP template uses the deprecated API"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
-
-#~ msgid "User profile cleanup"
-#~ msgstr "Limpeza do perfil do usuário"
-
-#, python-format
 #~ msgid ""
-#~ "By default Checkmk uses command line calls of Net-SNMP tools like snmpget "
-#~ "or snmpwalk to gather SNMP information. For each request a new command "
-#~ "line program is being executed. It is now possible to use the inline SNMP "
-#~ "implementation which calls the net-snmp libraries directly via its python "
-#~ "bindings. This should increase the performance of SNMP checks in a "
-#~ "significant way. The inline SNMP mode is a feature which improves the "
-#~ "performance for large installations and only available via our "
-#~ "subscription.<b>Note:</b> This option is deprecated and has been replaced "
-#~ "by '%s'. Changes to this option will have no effect to the behaviour of "
-#~ "Checkmk"
+#~ "Total amount of space allocated to the oplog rather than the current size "
+#~ "of operations stored in the oplog"
 #~ msgstr ""
-#~ "Por padrão a Checkmk usa chamadas de linha de comando de ferramentas Net-"
-#~ "SNMP como snmpget ou snmpwalk para coletar informações SNMP. Para cada "
-#~ "pedido um novo programa de linha de comando está sendo executado. Agora é "
-#~ "possível usar a implementação SNMP inline que chama as bibliotecas net-"
-#~ "snmp diretamente através de seus python bindings. Isso deve aumentar o "
-#~ "desempenho das verificações SNMP de forma significativa. O modo SNMP "
-#~ "inline é um recurso que melhora o desempenho de grandes instalações e só "
-#~ "está disponível através de nossa assinatura.<b>Note:</b> Esta opção é "
-#~ "depreciada e foi substituída por '%s'. Alterações a esta opção não terão "
-#~ "efeito no comportamento da Checkmk"
+#~ "Quantidade total de espaço alocado ao oplog em vez do tamanho atual das "
+#~ "operações armazenadas no oplog"
 
-#~ msgid "CRITICAL services"
-#~ msgstr "serviços CRÍTICOS"
-
-#~ msgid "DOWN hosts"
-#~ msgstr "Anfitriões DOWN"
-
-#~ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
-#~ msgstr ""
-#~ "Habilitar SNMP em linha (usar diretamente bibliotecas net-snmp) "
-#~ "(depreciado)"
-
-#, fuzzy
 #~ msgid ""
-#~ "Here you can configure the credentials to be used. Keep in mind that the "
-#~ "<tt>automation</tt> user needs to exist if you choose this option"
+#~ "Total amount of space currently used by operations stored in the oplog "
+#~ "rather than the total amount of space allocated"
 #~ msgstr ""
-#~ "Aqui você pode configurar as credenciais a serem usadas. Tenha em mente "
-#~ "que o usuário <tt>automation</tt> precisa existir se você escolher esta "
-#~ "opção"
+#~ "Quantidade total de espaço actualmente utilizado pelas operações "
+#~ "armazenadas no oplog em vez da quantidade total de espaço atribuído"
+
+#~ msgid ""
+#~ "Total amount of space reserved for objects in the database, but not yed "
+#~ "used"
+#~ msgstr ""
+#~ "Espaço total reservado para objetos no banco de dados, mas não yed "
+#~ "utilizado"
+
+#~ msgid "Total number of client connections lower level"
+#~ msgstr "Número total de conexões de clientes nível inferior"
+
+#~ msgid "Total number of client connections upper level"
+#~ msgstr "Número total de ligações de clientes nível superior"
 
 #~ msgid "UNKNOWN services"
 #~ msgstr "serviços UNKNOWN"
 
-#~ msgid "Use Inline SNMP (deprecated)"
-#~ msgstr "Usar SNMP Inline (depreciado)"
-
-#~ msgid "WARNING services"
-#~ msgstr "Serviços de ADVERTÊNCIA"
-
-#~ msgid "Create notification with the following parameters"
-#~ msgstr "Criar nota com os seguintes parâmetros"
-
-#, fuzzy, python-format
-#~ msgid "Edit %s parameter"
-#~ msgstr "Parâmetros do modelo"
-
-#, fuzzy, python-format
-#~ msgid "Invalid characters in %s"
-#~ msgstr "Parâmetro inválido %r: %s"
-
-#, fuzzy
-#~ msgid "Create remote broker certificates"
-#~ msgstr "Falha na obtenção do certificado do par (%s)"
-
-#, fuzzy
-#~ msgid ""
-#~ "Defines what information to query. Checks for cluster, indices and shard "
-#~ "statistics follow soon."
-#~ msgstr ""
-#~ "Define que informação consultar. Logo em seguida, são feitas as "
-#~ "verificações das estatísticas de Cluster, Índices e Fragmentos."
-
-#~ msgid ""
-#~ "This setting determines additional actions during uninstallation of "
-#~ "Checkmk agent."
-#~ msgstr ""
-#~ "Esta configuração determina ações adicionais durante a desinstalação do "
-#~ "agente Checkmk."
-
-#~ msgid "When the Agent to be uninstalled"
-#~ msgstr "Quando o Agente a ser desinstalado"
-
-#, fuzzy
-#~ msgid "Distributed piggyback"
-#~ msgstr "Monitoramento distribuído"
-
-#, fuzzy
-#~ msgid "Number of graphs per event (default: 5)"
-#~ msgstr "Gráficos por notificação (padrão: 5)"
-
-#, fuzzy, python-format
-#~ msgid "%d check plug-ins trying to use the removed API: %s"
-#~ msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
-
-#, fuzzy, python-format
-#~ msgid "%d check plug-ins using the deprecated API: %s"
-#~ msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
-
-#, fuzzy, python-format
-#~ msgid "%d ignored HW/SW Inventory plug-ins found: %s"
-#~ msgstr "%d plug-ins de inventário HW/SW ignorados encontrados: %s"
-
-#, fuzzy
-#~ msgid "Maximum time between batch start and forced activation of changes"
-#~ msgstr "Comentário para ativação das mudanças"
-
-#, fuzzy
-#~ msgid "No check plug-ins trying to use the removed API"
-#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
-
-#, fuzzy
-#~ msgid "No ignored HW/SW Inventory plug-ins found"
-#~ msgstr "Não foram encontrados plugins de inventário HW/SW ignorados"
-
-#, fuzzy
-#~ msgid "Skip monitoring non discovered hosts"
-#~ msgstr "Núcleos de monitorização OMD"
-
-#, fuzzy
-#~ msgid "The first value must be lower than the second value."
-#~ msgstr "O agrupamento deve ter pelo menos um nó"
-
-#, fuzzy, python-format
-#~ msgid "The following files are missing in the archive: %s"
-#~ msgstr "O seguinte %s não pôde ser encontrado: %s"
-
-#, fuzzy
-#~ msgid "The second value must be equal to or greater than the first value."
-#~ msgstr "O agrupamento deve ter pelo menos um nó"
-
-#, fuzzy
-#~ msgid ""
-#~ "This setting decides how many hosts will be discovered in one Api call. "
-#~ "Default is 20"
-#~ msgstr ""
-#~ "Esta configuração determina como as portas serão habilitadas no Firewall "
-#~ "do Windows."
+#~ msgid "URL from password store"
+#~ msgstr "URL da loja de senhas"
 
 #, python-format
-#~ msgid "Cannot render graph: host %s, service %s not found."
-#~ msgstr "Não é possível fazer gráfico: host %s, service %s não encontrados."
-
-#, fuzzy, python-format
-#~ msgid "%s other service"
-#~ msgid_plural "%s other services"
-#~ msgstr[0] "Outros serviços"
-#~ msgstr[1] "Outros serviços"
-
-#~ msgid "Show discovered service labels"
-#~ msgstr "Mostrar as etiquetas de serviço descobertas"
-
-#~ msgid "Do you really want to move the selected rules?"
-#~ msgstr "Você realmente quer mover as regras selecionadas?"
-
-#~ msgid "Do not show title"
-#~ msgstr "Não mostrar título"
-
-#, fuzzy
-#~ msgid "Newly discovered"
-#~ msgstr "descoberta do NTP"
-
-#, fuzzy
-#~ msgid "Previously discovered"
-#~ msgstr "Descoberta do processo"
-
-#~ msgid "Use the status of the Checkmk Agent"
-#~ msgstr "Use o status do Agente Checkmk"
-
-#~ msgid ""
-#~ "<p>You should have a backup configured for being able to restore your "
-#~ "monitoring environment in case of a data loss.<br>In case you a using a "
-#~ "virtual machine as Checkmk server and perform snapshot based backups, you "
-#~ "should be safe.</p><p>In case you are using a 3rd party backup solution "
-#~ "the backed up data may not be reliably backed up or not up-to-date in the "
-#~ "moment of the backup.</p><p>It is recommended to use the Checkmk backup "
-#~ "to create a backup of the runnning site to be sure that the data is "
-#~ "consistent. If you need to, you can then use the 3rd party tool to "
-#~ "archive the Checkmk backups.</p>"
-#~ msgstr ""
-#~ "<p>Você deve ter um backup configurado para ser capaz de restaurar seu "
-#~ "ambiente de monitoramento em caso de perda de dados.<br>No caso de você "
-#~ "usar uma máquina virtual como servidor Checkmk e realizar backups "
-#~ "baseados em snapshot, você deve estar seguro.</p><p>No caso de você estar "
-#~ "usando uma solução de backup de terceiros, os dados de backup podem não "
-#~ "ser confiáveis ou não estar atualizados no momento do backup.</p><p> "
-#~ "Recomenda-se usar o backup Checkmk para criar um backup do site em "
-#~ "execução para ter certeza de que os dados são consistentes. Se "
-#~ "necessário, você pode então usar a ferramenta de terceiros para arquivar "
-#~ "os backups Checkmk.</p>"
-
-#, fuzzy
-#~ msgid "Invalid choice"
-#~ msgstr "Tópico inválido"
-
-#, fuzzy
-#~ msgid "Analysis results"
-#~ msgstr "Último resultado"
-
-#~ msgid "Resulting notifications"
-#~ msgstr "Notificações resultantes"
-
-#~ msgid "message"
-#~ msgid_plural "messages"
-#~ msgstr[0] "mensagem"
-#~ msgstr[1] "mensagens"
-
-#, fuzzy
-#~ msgid "notification"
-#~ msgid_plural "notifications"
-#~ msgstr[0] "Notificação"
-#~ msgstr[1] "Notificação"
-
-#, fuzzy
-#~ msgid "Changes activated"
-#~ msgstr "Nunca foi ativado"
-
-#, fuzzy
-#~ msgid "Go to \"All hosts\""
-#~ msgstr "Todos os anfitriões"
-
-#, fuzzy
-#~ msgid "The changes have been activated successfully."
-#~ msgstr "Nunca foi ativado"
-
-#~ msgid "Another omd config change job is already running."
-#~ msgstr ""
-#~ "Já está a decorrer outra tarefa de alteração da configuração do omd."
-
-#~ msgid "Physical disks"
-#~ msgstr "Discos físicos"
-
-#, fuzzy
-#~ msgid "Rule rendering mode"
-#~ msgstr "Cápsulas de corrida"
+#~ msgid "Unhandled exception: %s"
+#~ msgstr "Exceção: %s"
 
 #, fuzzy, python-format
 #~ msgid "Unknown rendering mode %s"
 #~ msgstr "Tipo de métrica desconhecida %s"
 
 #, fuzzy
-#~ msgid "Vue experimental features"
-#~ msgstr "Característica da empresa"
+#~ msgid "Unsorted"
+#~ msgstr "Acção não suportada"
 
-#, fuzzy
-#~ msgid "Export this connection for API"
-#~ msgstr "Exportar esta regra para a API"
-
-#, fuzzy
-#~ msgid "Activate automation helper"
-#~ msgstr "Ativar o Agendador de Mudanças"
-
-#, fuzzy
-#~ msgid "Unique ID:"
-#~ msgstr "Identificação única"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can specify an alternative user that the agent should be run as. "
-#~ "Please note that only root has enough privileges for all commands and "
-#~ "plug-ins. When run as another user then some information will be missing."
+#, python-format
+#~ msgid "Unsupported image format of \"%s\" (invalid file extension)"
 #~ msgstr ""
-#~ "Aqui pode especificar um utilizador alternativo com o qual o agente deve "
-#~ "ser executado. Tenha em atenção que apenas o root tem privilégios "
-#~ "suficientes para todos os comandos e plug-ins. Quando executado como "
-#~ "outro utilizador, faltarão algumas informações."
+#~ "Formato de imagem não suportado de \"%s\" (extensão de arquivo inválido)"
 
-#~ msgid "Job Name"
-#~ msgstr "Nome do emprego"
+#~ msgid "Upper critical level"
+#~ msgstr "Nível crítico superior"
 
-#, fuzzy
-#~ msgid "Beta Trial"
-#~ msgstr "Em série"
+#~ msgid "Upper warning level"
+#~ msgstr "Nível de aviso superior"
 
-#, fuzzy
-#~ msgid "Beta phase: too many services"
-#~ msgstr "Ver todos os anfitriões e serviços"
+#~ msgid "Use \"Checkmk Automation\" user"
+#~ msgstr "Use o usuário \"Checkmk Automation"
 
-#, fuzzy
-#~ msgid "Sign up"
-#~ msgstr "Assine"
+#~ msgid "Use Inline SNMP (deprecated)"
+#~ msgstr "Usar SNMP Inline (depreciado)"
 
-#, fuzzy
-#~ msgid ""
-#~ "Until you reduce the number of services, 'Activate changes' is blocked."
-#~ msgstr "Licença expirada: \"Ativar alterações\" está bloqueado"
+#~ msgid "Use new service descriptions"
+#~ msgstr "Usar novas descrições de serviço"
 
-#, fuzzy
-#~ msgid "Matching: "
-#~ msgstr "Correspondência"
-
-#~ msgid "Requests data from a RabbitMQ instance."
-#~ msgstr "Solicita dados de uma instância RabbitMQ."
-
-#, fuzzy
-#~ msgid "Experimental rendering"
-#~ msgstr "Características experimentais"
-
-#, fuzzy
-#~ msgid "Form specs"
-#~ msgstr "Para SIDs específicos"
-
-#, fuzzy
-#~ msgid "Invalid FixedValue"
-#~ msgstr "Ident inválido"
-
-#, fuzzy
-#~ msgid "Invalid boolean choice"
-#~ msgstr "Tópico inválido"
-
-#, fuzzy
-#~ msgid "Invalid conditions"
-#~ msgstr "Ação inválida"
-
-#, fuzzy
-#~ msgid "Invalid file"
-#~ msgstr "Nome de arquivo inválido"
-
-#, fuzzy
-#~ msgid "Invalid folder"
-#~ msgstr "Ident inválido"
-
-#, fuzzy
-#~ msgid "Invalid integer number"
-#~ msgstr "Nome de arquivo inválido"
-
-#, fuzzy
-#~ msgid "Invalid metric"
-#~ msgstr "Tópico inválido"
-
-#, fuzzy
-#~ msgid "Invalid multiple choice value"
-#~ msgstr "Tópico inválido"
-
-#, fuzzy
-#~ msgid "Invalid optional choice"
-#~ msgstr "Tópico inválido"
-
-#, fuzzy
-#~ msgid "Invalid value for valuespec"
-#~ msgstr "Valor inválido para o parâmetro ack."
-
-#, fuzzy
-#~ msgid "Active Calls"
-#~ msgstr "Caminhos activos"
-
-#, fuzzy
-#~ msgid "Active Calls In"
-#~ msgstr "Caminhos activos"
-
-#, fuzzy
-#~ msgid "Active Calls Out"
-#~ msgstr "Unidade activa"
-
-#, fuzzy
-#~ msgid "Average Call Duration"
-#~ msgstr "Latência média"
-
-#, fuzzy
-#~ msgid "Average Success Ratio"
-#~ msgstr "Relação de sucesso do verniz backend"
-
-#, fuzzy
-#~ msgid "Calls In"
-#~ msgstr "Identificação de chamada"
-
-#, fuzzy
-#~ msgid "Calls In/Out"
-#~ msgstr "Chamar uma regra"
-
-#, fuzzy
-#~ msgid "Calls Out"
-#~ msgstr "Chamar uma regra"
-
-#, fuzzy
-#~ msgid "Calls per Second"
-#~ msgstr "Páginas por segundo"
-
-#, fuzzy
-#~ msgid "Disk IO Utilization"
-#~ msgstr "Utilização do disco"
-
-#, fuzzy
-#~ msgid "Generic percentage value"
-#~ msgstr "Valor numérico genérico"
-
-#, fuzzy
-#~ msgid "IP Group Active Calls In"
-#~ msgstr "Caminhos activos"
-
-#, fuzzy
-#~ msgid "IP Group Active Calls Out"
-#~ msgstr "Unidade activa"
-
-#, fuzzy
-#~ msgid "IP Group Calls In"
-#~ msgstr "Identificação de chamada"
-
-#, fuzzy
-#~ msgid "IP Group Calls In/Out"
-#~ msgstr "Chamar uma regra"
-
-#, fuzzy
-#~ msgid "IP Group Calls Out"
-#~ msgstr "Chamar uma regra"
-
-#, fuzzy
-#~ msgid "Indeterminate"
-#~ msgstr "Intervalo"
-
-#, fuzzy
-#~ msgid "Lower levels for average success ratio"
-#~ msgstr "Níveis mais baixos para a taxa de sucesso de SMS"
-
-#, fuzzy
-#~ msgid "Map severity levels to alarm states"
-#~ msgstr "Níveis superiores para reinícios"
-
-#, fuzzy
-#~ msgid "Number of SIP/H323 fax success calls"
-#~ msgstr "Número de pontos de acesso"
-
-#, fuzzy
-#~ msgid "Number of failed SIP/H323 calls"
-#~ msgstr "Número de caminhos falhados"
-
-#, fuzzy
-#~ msgid "Total duration of SIP/H323 calls"
-#~ msgstr "Duração total"
-
-#, fuzzy
-#~ msgid "Complete variable list"
-#~ msgstr "Lista completa de variáveis (para testes)"
-
-#, fuzzy
-#~ msgid "Documentation"
-#~ msgstr "URL da documentação"
-
-#~ msgid "Collect performance data for disk latency"
-#~ msgstr "Recolher dados de desempenho para a latência do disco"
-
-#, fuzzy
-#~ msgid "Next step: Summary"
-#~ msgstr "Resumo do estado do anfitrião"
-
-#~ msgid ""
-#~ "Note: enabling performance data for the latency might cause "
-#~ "incompatibilities with existing historical data if you are running "
-#~ "PNP4Nagios in SINGLE mode."
-#~ msgstr ""
-#~ "Nota: a ativação de dados de desempenho para a latência pode causar "
-#~ "incompatibilidades com dados históricos existentes se você estiver "
-#~ "executando o PNP4Nagios no modo SINGLE."
-
-#, fuzzy
-#~ msgid "Performance data for latency"
-#~ msgstr "Dados de desempenho para a latência"
-
-#, fuzzy
-#~ msgid "Performance data for queue length"
-#~ msgstr "Dados de Desempenho para Comprimento da Fila"
-
-#, fuzzy
-#~ msgid "Schedule downtime on service"
-#~ msgstr "Programar o tempo de inatividade no host"
-
-#, fuzzy
-#~ msgid "Jenkins version"
-#~ msgstr "ligações pendentes"
-
-#, fuzzy
-#~ msgid "Service state on version difference"
-#~ msgstr "Percentagem do estado de serviço"
-
-#, fuzzy
-#~ msgid ""
-#~ "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
-#~ msgstr ""
-#~ "As etiquetas devem ter o formato \"[KEY]:[VALUE]\". Por exemplo, \"os:"
-#~ "windows\"."
-
-#~ msgid "Custom Notes"
-#~ msgstr "Notas personalizadas"
-
-#, fuzzy
-#~ msgid "Free text"
-#~ msgstr "Fitas gratuitas"
-
-#, fuzzy
-#~ msgid "Missing catalog topic."
-#~ msgstr "Siteid variável em falta"
-
-#, fuzzy
-#~ msgid "Rules for host names"
-#~ msgstr "Regex para o nome do anfitrião"
-
-#, fuzzy
-#~ msgid "Use the value of the key"
-#~ msgstr "Use o status do serviço..."
-
-#, fuzzy, python-format
-#~ msgid "%s notification %s"
-#~ msgstr "última notificação"
-
-#, fuzzy
-#~ msgid "Advanced - Number of retries"
-#~ msgstr "Número de tentativas"
-
-#, fuzzy
-#~ msgid "Advanced - Protocol"
-#~ msgstr "Opções disponíveis"
-
-#, fuzzy
-#~ msgid "Advanced - TCP Port number"
-#~ msgstr "Número da porta TCP"
-
-#, fuzzy
-#~ msgid "Automation user"
-#~ msgstr "Segredo de automação"
-
-#, fuzzy
-#~ msgid "Cached times for single sections"
-#~ msgstr "Falhas de cache por segundo"
-
-#, fuzzy
-#~ msgid "Connect to the remote site"
-#~ msgstr "Conectar-se a locais remotos"
-
-#~ msgid "Connection to the REST API"
-#~ msgstr "Ligação à API REST"
-
-#, fuzzy
-#~ msgid "Disabled Sections..."
-#~ msgstr "Seções para deficientes físicos"
-
-#, fuzzy
-#~ msgid "If there are problems please use disabled sections."
-#~ msgstr ""
-#~ "<br>Se houver problemas de permissão, por favor assegure-se de que o "
-#~ "usuário do site tem permissões de escrita."
-
-#, fuzzy
-#~ msgid "Section ArrayControllers"
-#~ msgstr "Arrays (Controladores)"
-
-#, fuzzy
-#~ msgid "Section Drives"
-#~ msgstr "Secções"
-
-#, fuzzy
-#~ msgid "Section EthernetInterfaces"
-#~ msgstr "Interfaces de Fibra-canal"
-
-#, fuzzy
-#~ msgid "Section FirmwareInventory"
-#~ msgstr "Inventário"
-
-#, fuzzy
-#~ msgid "Section HostBusAdapters"
-#~ msgstr "Estado da ligação"
-
-#, fuzzy
-#~ msgid "Section LogicalDrives"
-#~ msgstr "Seleção de alarmes"
-
-#, fuzzy
-#~ msgid "Section Memory"
-#~ msgstr "Nome da seção"
-
-#, fuzzy
-#~ msgid "Section NetworkAdapters"
-#~ msgstr "Adaptadores de rede"
-
-#, fuzzy
-#~ msgid "Section NetworkInterfaces"
-#~ msgstr "Interfaces de rede"
-
-#, fuzzy
-#~ msgid "Section PhysicalDrives"
-#~ msgstr "Discos Físicos"
-
-#, fuzzy
-#~ msgid "Section Power"
-#~ msgstr "Envio de energia"
-
-#, fuzzy
-#~ msgid "Section Processors"
-#~ msgstr "Processador"
-
-#, fuzzy
-#~ msgid "Section SimpleStorage"
-#~ msgstr "Nome da seção"
-
-#, fuzzy
-#~ msgid "Section SmartStorage"
-#~ msgstr "Nome da seção"
-
-#, fuzzy
-#~ msgid "Section Storage"
-#~ msgstr "Nome da seção"
-
-#, fuzzy
-#~ msgid "Section Thermal"
-#~ msgstr "Nome da seção"
-
-#, fuzzy
-#~ msgid "Section Volumes"
-#~ msgstr "Nome da seção"
-
-#~ msgid "Site base URL"
-#~ msgstr "URL base do site"
+#~ msgid "Use the mail subject"
+#~ msgstr "Use o assunto do correio"
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "
@@ -89830,385 +90138,105 @@ msgstr "Use SSL para a conexão."
 #~ "configurações distribuídas, terá de configurar a API REST do site de "
 #~ "configuração central a partir da vista do site remoto."
 
-#, fuzzy
-#~ msgid "Assignee filters"
-#~ msgstr "Filtros de serviço"
+#~ msgid "Used quota: Absolute or relative upper levels"
+#~ msgstr "Quota usada: Níveis superiores absolutos ou relativos"
 
-#~ msgid "Host & service events"
-#~ msgstr "Acolhimento & eventos de serviço"
-
-#~ msgid "Host & service history"
-#~ msgstr "Histórico de serviços e hospedagem"
-
-#, python-format
-#~ msgid "%s notification rules are matching"
-#~ msgstr "%s regras de notificação são correspondentes"
-
-#, fuzzy, python-format
-#~ msgid "%s resulting notifications"
-#~ msgstr "Notificações resultantes"
-
-#, fuzzy
-#~ msgid "."
-#~ msgstr "S."
-
-#, fuzzy
-#~ msgid "Checkmk Cloud Trial"
-#~ msgstr "Logotipo Checkmk"
-
-#, fuzzy
-#~ msgid "Collect ruleset matching statistics"
-#~ msgstr "Estatísticas de tráfego de clusters"
-
-#, fuzzy
-#~ msgid "Dispatch notification"
-#~ msgstr "Desactivar as notificações"
-
-#, fuzzy
-#~ msgid ""
-#~ "Send out HTML/ASCII email notification according to notification rules"
-#~ msgstr ""
-#~ "As notificações serão enviadas de acordo com as regras de notificação"
-
-#~ msgid "Individual automation user credentials"
-#~ msgstr "Credenciais de usuário de automação individual"
-
-#~ msgid ""
-#~ "Provide individual credentials of an automation user with administrative "
-#~ "privileges on the remote site."
-#~ msgstr ""
-#~ "Fornecer credenciais individuais de um usuário de automação com "
-#~ "privilégios administrativos no local remoto."
-
-#~ msgid "Remote site URL"
-#~ msgstr "URL do site remoto"
-
-#~ msgid ""
-#~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "
-#~ "<tt>https://myhost/mysite</tt>)."
-#~ msgstr ""
-#~ "URL de base do sítio para aceder à API REST para, por exemplo, criar "
-#~ "anfitriões (por exemplo, <tt>https://myhost/mysite</tt>)."
-
-#~ msgid "Use \"Checkmk Automation\" user"
-#~ msgstr "Use o usuário \"Checkmk Automation"
-
-#, fuzzy
-#~ msgid "This permission allows users to view managed robots."
-#~ msgstr "Esta permissão permite o registo de qualquer novo anfitrião."
-
-#, fuzzy
-#~ msgid "View managed robots"
-#~ msgstr "Objetos Gerenciados"
-
-#~ msgid "Go to the Saas Admin Panel"
-#~ msgstr "Aceder ao painel de administração do Saas"
-
-#, fuzzy
-#~ msgid "Waiting on team Engelbart"
-#~ msgstr "Contentores em espera"
-
-#, fuzzy, python-format
-#~ msgid "%s: Services: %s, Host labels: %s"
-#~ msgstr "%s: Serviços: %s, Etiquetas de anfitrião: %s"
-
-#~ msgid "Activation cleanup"
-#~ msgstr "Limpeza da ativação"
-
-#~ msgid "Activation cleanup finished"
-#~ msgstr "Limpeza da ativação concluída"
-
-#~ msgid "Discover registered hosts"
-#~ msgstr "Descobrir anfitriões registados"
-
-#~ msgid "Discovered host label synchronization"
-#~ msgstr "Descoberta da sincronização do host label"
-
-#, python-format
-#~ msgid "Error: %s"
-#~ msgstr "Erro: %s"
-
-#~ msgid "Host registration"
-#~ msgstr "Registo do anfitrião"
-
-#~ msgid "Host removal"
-#~ msgstr "Remoção do anfitrião"
-
-#~ msgid "No agent registration requests processed"
-#~ msgstr "Não foram processados pedidos de registo de agentes"
-
-#~ msgid "No declined requests"
-#~ msgstr "Nenhum pedido recusado"
-
-#~ msgid "No discoverable hosts found"
-#~ msgstr "Não foram encontrados anfitriões detectáveis"
-
-#~ msgid "No hosts discovered"
-#~ msgstr "Nenhum anfitrião descoberto"
-
-#~ msgid "No need for syncing sites"
-#~ msgstr "Não é necessário sincronizar sítios"
-
-#, fuzzy
-#~ msgid "Some value"
-#~ msgstr "Remover tudo"
-
-#, python-format
-#~ msgid "Started activate changes: %s"
-#~ msgstr "Começou a ativar as alterações: %s"
-
-#, fuzzy
-#~ msgid "State of the host manager"
-#~ msgstr "Estado de um país anfitrião"
-
-#, python-format
-#~ msgid "Stored declined bundle: %s"
-#~ msgstr "Pacote armazenado recusado: %s"
-
-#, python-format
-#~ msgid "Synced created hosts with sites: %s"
-#~ msgstr "Anfitriões criados sincronizados com sites: %s"
-
-#~ msgid "The synchronization finished."
-#~ msgstr "A sincronização terminou."
-
-#, python-format
-#~ msgid "Failed to get changes from sites: %s."
-#~ msgstr "Falha ao obter alterações dos sítios: %s."
-
-#, fuzzy, python-format
-#~ msgid "No remote %s processed."
-#~ msgstr "Nenhum %s remoto processado."
-
-#, fuzzy
-#~ msgid "Show batch details"
-#~ msgstr "Mostrar detalhes"
-
-#, fuzzy, python-format
-#~ msgid "Successfully got %s from sites: %s<br>%s"
-#~ msgstr "Obteve com êxito %s dos sítios: %s<br>%s"
-
-#~ msgid "Sync remote site changes and audit log"
-#~ msgstr "Sincronizar as alterações do sítio remoto e o registo de auditoria"
-
-#, fuzzy
-#~ msgid "Recent processing transactions"
-#~ msgstr "Tempo de processamento de eventos"
-
-#, fuzzy
-#~ msgid "Show all transactions"
-#~ msgstr "Mostrar todos os resultados"
-
-#, fuzzy
-#~ msgid "Transaction id"
-#~ msgstr "Transacções"
-
-#~ msgid "Non-ASCII characters are not allowed here."
-#~ msgstr "Não são permitidos aqui caracteres não-ASCII."
-
-#, python-format
-#~ msgid "Creating scheduled report '%s'..."
-#~ msgstr "Criando relatórios programados '%s'..."
-
-#, fuzzy
-#~ msgid "Trial Phase"
-#~ msgstr "Mudança trivial"
-
-#, fuzzy
-#~ msgid ""
-#~ "After setting up a new service in PagerDuty you will receive an "
-#~ "Integration key associated with that service. Copy that value here."
-#~ msgstr ""
-#~ "Depois de configurar um novo serviço no PagerDuty você receberá uma chave "
-#~ "de integração associada a esse serviço. Copie esse valor aqui."
-
-#, fuzzy, python-format
-#~ msgid "Finished %s"
-#~ msgstr "Concluído"
-
-#, fuzzy, python-format
-#~ msgid "In Progress %s"
-#~ msgstr "Em andamento"
-
-#~ msgid "Integration Key"
-#~ msgstr "Chave de Integração"
-
-#~ msgid "REST Endpoint URL"
-#~ msgstr "URL do Endpoint REST"
-
-#~ msgid "URL from password store"
-#~ msgstr "URL da loja de senhas"
-
-#~ msgid "Webhook-URL"
-#~ msgstr "Webhook-URL"
-
-#, fuzzy, python-format
-#~ msgid "Activation (%s)"
-#~ msgstr "Ativação"
-
-#, python-format
-#~ msgid "Background Job %s already running"
-#~ msgstr "Antecedentes Emprego %s já em execução"
-
-#, fuzzy
-#~ msgid "DCD Work State"
-#~ msgstr "pior estado"
-
-#, fuzzy, python-format
-#~ msgid "Discovery (%s)"
-#~ msgstr "Discovery"
-
-#, fuzzy
-#~ msgid "Initialized"
-#~ msgstr "Inicializando"
-
-#, fuzzy, python-format
-#~ msgid "Processing (%s)"
-#~ msgstr "Processamento do primeiro local %s"
+#~ msgid "User profile cleanup"
+#~ msgstr "Limpeza do perfil do usuário"
 
 #~ msgid "Users in the Active Directory"
 #~ msgstr "Utilizadores no Active Directory"
 
-#, fuzzy, python-format
-#~ msgid "Waiting (%s)"
-#~ msgstr "Aguardando"
+#~ msgid "VMs"
+#~ msgstr "VMs"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Registo verbal (também notificações spooled)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Verbosidade da exploração madeireira"
 
 #, python-format
-#~ msgid "Another host renaming job is already running: %s"
-#~ msgstr "Outro trabalho de renomeação de host já está em andamento: %s"
+#~ msgid "Visit our %s to learn more about Checkmk and about the %s."
+#~ msgstr "Visite o nosso %s para saber mais sobre a Checkmk e sobre o %s."
 
-#~ msgid "Another renaming operation is currently in progress"
-#~ msgstr "Outra operação de renomeação está actualmente em curso"
+#~ msgid "WARNING services"
+#~ msgstr "Serviços de ADVERTÊNCIA"
 
-#, python-format
-#~ msgid "Another synchronization job is already running: %s"
-#~ msgstr "Outro trabalho de sincronização já está em execução: %s"
+#~ msgid "Warning (In)"
+#~ msgstr "Advertência (In)"
 
-#, python-format
-#~ msgid "Another user synchronization is already running: %s"
-#~ msgstr "Outra sincronização de usuários já está em execução: %s"
+#~ msgid "Warning (Out)"
+#~ msgstr "Aviso (Fora)"
+
+#~ msgid "Warning if over"
+#~ msgstr "Alerta se acabou"
 
 #, fuzzy
-#~ msgid "No elements available, create one"
-#~ msgstr "não disponíveis"
+#~ msgid "Warning of "
+#~ msgstr "Aviso se %s"
+
+#~ msgid "Warning starts with"
+#~ msgstr "O aviso começa com"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #~ msgid ""
-#~ "A delay can be configured here so that multiple changes can be activated "
-#~ "in one go. This avoids frequent activation of changes in situations with "
-#~ "frequent services changes."
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
 #~ msgstr ""
-#~ "Um atraso pode ser configurado aqui para que múltiplas alterações possam "
-#~ "ser ativadas de uma só vez. Isto evita a ativação frequente de mudanças "
-#~ "em situações com mudanças frequentes de serviços."
-
-#, fuzzy
-#~ msgid "Bulk service discovery batch size"
-#~ msgstr "Executar a descoberta de serviços em massa"
-
-#, fuzzy
-#~ msgid "Cooldown interval to update update "
-#~ msgstr "Intervalo para verificação de atualização"
-
-#, fuzzy
-#~ msgid "Delete hosts automatically"
-#~ msgstr "detectar automaticamente"
-
-#, fuzzy
-#~ msgid "Dynamic configuration activate changes timeout"
-#~ msgstr "Registro dinâmico de configuração"
-
-#, fuzzy
-#~ msgid "Dynamic configuration bulk discovery timeout"
-#~ msgstr "Registro dinâmico de configuração"
-
-#, fuzzy
-#~ msgid "Dynamic configuration site activate changes delay"
-#~ msgstr "Registro dinâmico de configuração"
-
-#~ msgid "Group \"Activate changes\""
-#~ msgstr "Grupo \"Activar alterações\""
-
-#~ msgid "Service level of forwarded logs shown in Event Console."
-#~ msgstr ""
-#~ "Nível de serviço dos registos reencaminhados apresentados na Consola de "
-#~ "Eventos."
-
-#~ msgid "Syslog facility of forwarded events shown in Event Console."
-#~ msgstr ""
-#~ "Recurso Syslog de eventos encaminhados mostrado no Console de Eventos."
-
-#, fuzzy
-#~ msgid "Access key ID cannot be empty"
-#~ msgstr "Chave de acesso"
-
-#, fuzzy
-#~ msgid "New notification setup"
-#~ msgstr "Próxima notificação"
-
-#, fuzzy
-#~ msgid "Batch num"
-#~ msgstr "número de comutação"
-
-#, fuzzy
-#~ msgid "Connector Id"
-#~ msgstr "ID de conexão"
-
-#, fuzzy
-#~ msgid "Discovering"
-#~ msgstr "Descobrir"
-
-#, fuzzy
-#~ msgid "Processing"
-#~ msgstr "Correspondência de processos"
-
-#, fuzzy
-#~ msgid "Recipients"
-#~ msgstr "Destinatário"
-
-#, fuzzy
-#~ msgid "Save & go to service discovery"
-#~ msgstr "Guardar & executar a descoberta de serviços"
-
-#, fuzzy
-#~ msgid "TBD"
-#~ msgstr "MiB"
-
-#~ msgid "Add a title or describe this rule"
-#~ msgstr "Adicionar um título ou descrever esta regra"
-
-#, fuzzy
-#~ msgid "Error updating broker connections."
-#~ msgstr "Editar conexão ao site %s"
-
-#~ msgid "Never logged in"
-#~ msgstr "Nunca fez login"
+#~ "Quando desactivada, a Configuração mostra os textos de ajuda das regras "
+#~ "também nas vistas de lista."
 
 #~ msgid ""
-#~ "Selecting this option will disable the rule, but it will remain in the "
-#~ "configuration."
+#~ "When enabled, insecure snapshots are allowed. Please keep in mind that "
+#~ "the upload of unverified snapshots represents a security risk, since the "
+#~ "content of a snapshot is executed during runtime. Any manipulations in "
+#~ "the content - either willingly or unwillingly (XSS attack) - pose a "
+#~ "serious security risk."
 #~ msgstr ""
-#~ "Se seleccionar esta opção, a regra será desactivada, mas permanecerá na "
-#~ "configuração."
+#~ "Quando ativado, são permitidos instantâneos inseguros. Tenha em mente que "
+#~ "o upload de snapshots não verificados representa um risco de segurança, "
+#~ "uma vez que o conteúdo de um snapshot é executado durante a execução. "
+#~ "Qualquer manipulação no conteúdo - seja de boa ou má vontade (ataque XSS) "
+#~ "- representa um sério risco de segurança."
 
-#~ msgid "The given host does not exist"
-#~ msgstr "O hospedeiro dado não existe"
-
-#, fuzzy
-#~ msgid "Unable to analyze matching, because \"host\" parameter is missing"
+#~ msgid ""
+#~ "When this option is activated then the block rate is being averaged "
+#~ "<b>before</b> the levels are being applied."
 #~ msgstr ""
-#~ "Impossível analisar a correspondência, porque falta o parâmetro \"serviço"
-#~ "\""
+#~ "Quando esta opção é ativada, a taxa de blocos está sendo calculada como "
+#~ "média <b> antes de</b> os níveis estão sendo aplicados."
 
-#, fuzzy
-#~ msgid "Dynamic configuration site update interval"
-#~ msgstr "Registro dinâmico de configuração"
+#~ msgid ""
+#~ "When using stored SNMP walks you can place inline code generating dynamic "
+#~ "simulation data. This feature can be activated here. There is a big "
+#~ "chance that you will never need this feature..."
+#~ msgstr ""
+#~ "Ao utilizar as caminhadas SNMP armazenadas, você pode colocar em linha o "
+#~ "código gerando dados de simulação dinâmica. Este recurso pode ser ativado "
+#~ "aqui. Há uma grande chance de que você nunca precisará desta "
+#~ "funcionalidade..."
 
-#, fuzzy
-#~ msgid "Edit notification parameter"
-#~ msgstr "Editar esta regra de notificação"
+#~ msgid ""
+#~ "With this rule you can set limits for various disk IO statistics. Keep in "
+#~ "mind that not all of these settings may be applicable for the actual "
+#~ "check. For example, if the check doesn't provide a <i>Read wait</i> "
+#~ "information in its output, any configuration setting referring to <i>Read "
+#~ "wait</i> will have no effect."
+#~ msgstr ""
+#~ "Com esta regra você pode definir limites para várias estatísticas de IO "
+#~ "de disco. Tenha em mente que nem todas essas configurações podem ser "
+#~ "aplicáveis para a verificação real. Por exemplo, se a verificação não "
+#~ "fornecer uma <i>Ler espera</i> informação na sua saída, qualquer "
+#~ "configuração referente a <i>Ler espera</i> não terá efeito."
 
-#~ msgid "Ignore certificate errors (unsecure)"
-#~ msgstr "Ignorar erros de certificado (não seguros)"
+#~ msgid ""
+#~ "You can specify a separate monitoring state for each possible combination "
+#~ "of service state."
+#~ msgstr ""
+#~ "É possível especificar um estado de monitorização separado para cada "
+#~ "combinação possível de estado de serviço."
 
 #, python-brace-format
 #~ msgid ""
@@ -90231,194 +90259,197 @@ msgstr "Use SSL para a conexão."
 #~ "função control-plane e infra são omitidos."
 
 #~ msgid ""
-#~ "If you specify an URL prefix here, then several parts of the email body "
-#~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
-#~ "the email can directly visit the host or service in question in Checkmk. "
-#~ "Specify an absolute URL including the <tt>.../check_mk/</tt>"
+#~ "You need to provide a valid password to be able to send notifications."
 #~ msgstr ""
-#~ "Se especificar um prefixo de URL aqui, várias partes do corpo do e-mail "
-#~ "são armadas com hiperligações para a GUI do Checkmk, para que o "
-#~ "destinatário do e-mail possa visitar directamente o anfitrião ou serviço "
-#~ "em questão no Checkmk. Especifique um URL absoluto, incluindo o prefixo "
-#~ "<tt>.../check_mk/</tt>"
+#~ "Você precisa fornecer uma senha válida para poder enviar notificações."
 
-#, fuzzy
-#~ msgid "Bulk Notification"
-#~ msgstr "Notificações em massa abertas"
+#~ msgid "Your IT monitoring platform"
+#~ msgstr "A sua plataforma de monitorização de TI"
 
-#, fuzzy
-#~ msgid "Linux/UNIX Agent Options"
-#~ msgstr "Agente Linux"
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Your license has been suspended. Please contact the Checkmk sales team at "
+#~ "%s. "
+#~ msgstr ""
+#~ "A sua licença foi suspensa. Contacte a equipa de vendas da Checkmk em %s."
+
+#~ msgid "average"
+#~ msgstr "média"
 
 #~ msgid "graphs"
 #~ msgstr "gráficos"
 
-#, fuzzy
-#~ msgid "No selected graph line"
-#~ msgstr "Operação em métricas selecionadas"
+#~ msgid "hits"
+#~ msgstr "hits"
 
-#, fuzzy
-#~ msgid "No selected graph lines"
-#~ msgstr "Operação em métricas selecionadas"
+#~ msgid "latest version"
+#~ msgstr "última versão"
 
-#, fuzzy
-#~ msgid ""
-#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
-#~ msgstr ""
-#~ "Configure o URL do seu modem aqui (por exemplo, https://mymodem.mydomain."
-#~ "example)."
+#~ msgid "message"
+#~ msgid_plural "messages"
+#~ msgstr[0] "mensagem"
+#~ msgstr[1] "mensagens"
 
-#, fuzzy
-#~ msgid "First with unit"
-#~ msgstr "Buscar com comprimento"
-
-#, fuzzy
-#~ msgid "The maximum number of projects per resource is 50."
-#~ msgstr "O número máximo de tags por recurso é de 50."
-
-#, fuzzy
-#~ msgid "Vertical range"
-#~ msgstr "Forro vertical"
-
-#~ msgid "Key from password store"
-#~ msgstr "Chave da loja de senhas"
-
-#, fuzzy, python-format
-#~ msgid "No FormSpec implementation for method '%s' found."
-#~ msgstr "Regra de notificação modificada %d"
-
-#, fuzzy
-#~ msgid "File upload"
-#~ msgstr "Bytes carregados"
-
-#, fuzzy
-#~ msgid "Placeholder"
-#~ msgstr "Colocar VMs de suporte"
-
-#~ msgid "API key from password store"
-#~ msgstr "Chave API da loja de senhas"
-
-#, fuzzy
-#~ msgid "Host Path"
-#~ msgstr "Alerta do anfitrião"
-
-#, fuzzy
-#~ msgid ""
-#~ "If your monitoring produces a notification that is not matched by any of "
-#~ "your notification rules, the notification will not be sent out. To "
-#~ "prevent that, we recommend configuring either the global setting or "
-#~ "enable the fallback contact option for at least one of your users."
-#~ msgstr ""
-#~ "<b>Aviso</b>>>br>>br>Você não configurou um <a href=\"%s\">fallback email "
-#~ "address</a> nem habilitou o recebimento de fallback emails para nenhum "
-#~ "usuário. Se a sua monitorização produzir uma notificação que não "
-#~ "corresponda a nenhuma das suas regras de notificação, a notificação não "
-#~ "será enviada. Para evitar isso, por favor configure a configuração global "
-#~ "ou habilite a opção de contato fallback para pelo menos um de seus "
-#~ "usuários."
-
-#~ msgid "Bulk notifications with graphs (default: 5)"
-#~ msgstr "Notificações em massa com gráficos (padrão: 5)"
-
-#~ msgid ""
-#~ "By default all multiple graphs in emails are displayed floating nearby. "
-#~ "You can enable this option to show the graphs among each other."
-#~ msgstr ""
-#~ "Por padrão, todos os gráficos múltiplos em e-mails são exibidos flutuando "
-#~ "nas proximidades. Você pode habilitar esta opção para mostrar os gráficos "
-#~ "entre si."
-
-#~ msgid "Display additional information"
-#~ msgstr "Apresentar informações adicionais"
-
-#~ msgid "Display graphs among each other"
-#~ msgstr "Mostrar gráficos entre si"
-
-#~ msgid "Graphs are shown among each other"
-#~ msgstr "Os gráficos são mostrados entre si"
-
-#~ msgid ""
-#~ "The email address and visible name used in the From header of "
-#~ "notifications messages. If no email address is specified the default "
-#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
-#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
-#~ msgstr ""
-#~ "O endereço de e-mail e o nome visível utilizado no cabeçalho das "
-#~ "mensagens de notificação. Se nenhum endereço de e-mail for especificado o "
-#~ "endereço padrão é <tt>OMD_SITE@FQDN</tt> é usado. Se a variável de "
-#~ "ambiente <tt>OMD_SITE</tt> não estiver definida como <tt>checkmk</tt>."
-
-#~ msgid ""
-#~ "The email address and visible name used in the Reply-To header of "
-#~ "notifications messages."
-#~ msgstr ""
-#~ "O endereço de e-mail e o nome visível utilizado no cabeçalho das "
-#~ "mensagens de resposta às notificações."
-
-#~ msgid "Activate"
-#~ msgstr "Ativar"
-
-#~ msgid "Deactivate"
-#~ msgstr "Desativar"
-
-#~ msgid ""
-#~ "This rule allows monitoring of VMware ESX via the vSphere API. You can "
-#~ "configure your connection settings here."
-#~ msgstr ""
-#~ "Esta regra permite a monitorização do VMware ESX através da API do "
-#~ "vSphere. Pode configurar as suas definições de ligação aqui."
-
-#~ msgid ""
-#~ "This rule set selects the special agent for HPE StoreOnce Appliances "
-#~ "instead of the normal Checkmk agent and allows monitoring via REST API v4."
-#~ "x or higher. "
-#~ msgstr ""
-#~ "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
-#~ "Appliances em vez do agente Checkmk normal e permite a monitorização "
-#~ "através da API REST v4.x ou superior. "
+#~ msgid "misses"
+#~ msgstr "falhas"
 
 #~ msgid "monitor"
 #~ msgstr "monitor"
 
-#, fuzzy
-#~ msgid "AWS account name"
-#~ msgstr "Nome da conta de armazenamento"
+#~ msgid "not attempted"
+#~ msgstr "não tentado"
+
+#~ msgid "retry"
+#~ msgstr "tente novamente"
+
+#~ msgid "reuses"
+#~ msgstr "reutilizações"
+
+#~ msgid "success"
+#~ msgstr "sucesso"
+
+#~ msgid "too many"
+#~ msgstr "demasiados"
+
+#~ msgid "upload insecure snapshots"
+#~ msgstr "carregar snapshots inseguros"
+
+#~ msgid "was closed"
+#~ msgstr "foi encerrada"
+
+#, python-format
+#~ msgid "© %s Checkmk GmbH. All Rights Reserved."
+#~ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "CPU load"
+#~ msgstr "carga da CPU"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "Os sites que o usuário está autorizado a ver na GUI."
+
+#~ msgid "Access Point"
+#~ msgstr "Ponto de Acesso"
+
+#~ msgid "Bulk Discovery"
+#~ msgstr "Descoberta a Granel"
+
+#~ msgid " (Copy)"
+#~ msgstr " (Copiar)"
 
 #, fuzzy
-#~ msgid "Parallel plan groups"
-#~ msgstr "Programação da execução"
+#~ msgid "Import all valid tags"
+#~ msgstr "Importar todas as anotações válidas"
 
-#~ msgid "(not supported)"
-#~ msgstr "(não suportado)"
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Pacotes de extensão"
 
-#~ msgid "Remove downtimes?"
-#~ msgstr "Eliminar os tempos de inatividade?"
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Arquivos descompactados"
 
-#~ msgid "Schedule downtime?"
-#~ msgstr "Programar o tempo de inatividade?"
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
-#~ msgid "Common Name"
-#~ msgstr "Nome Comum"
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
-#~ msgid "Country"
-#~ msgstr "País"
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
-#~ msgid "Locality Name"
-#~ msgstr "Nome da Localidade"
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "Extensões GUI"
 
-#~ msgid "Organization Name"
-#~ msgstr "Nome da Organização"
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
-#~ msgid "State or Province Name"
-#~ msgstr "Nome do Estado ou Província"
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Extensões GUI herdadas"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
+
+#, fuzzy, python-format
+#~ msgid "%d check plug-ins using the deprecated API: %s"
+#~ msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
+
+#, python-format
+#~ msgid "%d ignored HW/SW inventory plug-ins found: %s"
+#~ msgstr "%d plug-ins de inventário HW/SW ignorados encontrados: %s"
+
+#, fuzzy
+#~ msgid "No ignored HW/SW inventory plug-ins found"
+#~ msgstr "Não foram encontrados plugins de inventário HW/SW ignorados"
+
+#, fuzzy
+#~ msgid ""
+#~ "Defines what information to query. Checks for cluster, indices and shard "
+#~ "statistics follow soon."
+#~ msgstr ""
+#~ "Define que informação consultar. Logo em seguida, são feitas as "
+#~ "verificações das estatísticas de Cluster, Índices e Fragmentos."
 
 #~ msgid ""
-#~ "This rule set selects the special agent for HPE StoreOnce Applainces "
-#~ "instead of the normal Checkmk agent and allows monitoring via Web API. "
+#~ "This setting determines additional actions during uninstallation of "
+#~ "Checkmk agent."
 #~ msgstr ""
-#~ "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
-#~ "Applainces em vez do agente Checkmk normal e permite a monitorização "
-#~ "através da API Web. "
+#~ "Esta configuração determina ações adicionais durante a desinstalação do "
+#~ "agente Checkmk."
+
+#~ msgid "When the Agent to be uninstalled"
+#~ msgstr "Quando o Agente a ser desinstalado"
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Você realmente quer mover as regras selecionadas?"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Use o status do Agente Checkmk"
+
+#, fuzzy
+#~ msgid "Beta Trial"
+#~ msgstr "Em série"
+
+#, fuzzy
+#~ msgid "Beta phase: too many services"
+#~ msgstr "Ver todos os anfitriões e serviços"
+
+#, fuzzy
+#~ msgid "Sign up"
+#~ msgstr "Assine"
+
+#, fuzzy
+#~ msgid ""
+#~ "Until you reduce the number of services, 'Activate changes' is blocked."
+#~ msgstr "Licença expirada: \"Ativar alterações\" está bloqueado"
+
+#, fuzzy
+#~ msgid "Schedule downtime on service"
+#~ msgstr "Programar o tempo de inatividade no host"
+
+#, fuzzy
+#~ msgid "Checkmk Cloud"
+#~ msgstr "Logotipo Checkmk"
+
+#, fuzzy
+#~ msgid "Trial Phase"
+#~ msgstr "Mudança trivial"
+
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Aceder ao painel de administração do Saas"
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Não são permitidos aqui caracteres não-ASCII."
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Desconhecido (%s)"
 
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "
@@ -90430,138 +90461,18 @@ msgstr "Use SSL para a conexão."
 #~ msgid "Force agent to run in single thread"
 #~ msgstr "Forçar o agente a funcionar em uma única linha"
 
-#, fuzzy
-#~ msgid "Phase 2.1: Fetchin  g existing hosts"
-#~ msgstr "Fase 2.2: Buscando hospedeiros existentes"
-
 #~ msgid "Run agent in single thread"
 #~ msgstr "Agente de execução em um único fio"
 
 #~ msgid "Run agent multithreaded"
 #~ msgstr "Agente de execução multi-tarefa"
 
-#, python-format
-#~ msgid "No Forecast graph with the name <tt>%s</tt>"
-#~ msgstr "Não Previsão gráfica com o nome <tt>%s</tt>"
-
-#, python-format
-#~ msgid "No custom graph with the name <tt>%s</tt>"
-#~ msgstr "Nenhum gráfico personalizado com o nome <tt>%s</tt>"
-
-#, fuzzy, python-format
-#~ msgid "Graph recipe '%s' has the error '%s', available are: %s"
-#~ msgstr ""
-#~ "A receita gráfica '%s' utiliza métrica indefinida '%s', estão "
-#~ "disponíveis: %s"
-
-#, python-format
-#~ msgid "Invalid combined graph representation '%s'"
-#~ msgstr "Representação gráfica combinada inválida '%s'"
-
-#~ msgid "Debugging (log every single action)"
-#~ msgstr "Depuração (registar cada acção)"
-
-#~ msgid "Normal logging (only startup, shutdown and errors)"
-#~ msgstr "Registo normal (apenas arranque, encerramento e erros)"
-
-#~ msgid "Verbose logging (also spooled notifications)"
-#~ msgstr "Registo verbal (também notificações spooled)"
-
-#~ msgid "Verbosity of logging"
-#~ msgstr "Verbosidade da exploração madeireira"
-
-#~ msgid "Hide help text of rules in list views"
-#~ msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"
-
-#~ msgid "The version of this site is not a Checkmk managed services edition"
-#~ msgstr ""
-#~ "A versão deste site não é uma edição dos serviços gerenciados pela Checkmk"
-
-#~ msgid ""
-#~ "When disabled, Setup shows the help texts of rules also in the list views."
-#~ msgstr ""
-#~ "Quando desactivada, a Configuração mostra os textos de ajuda das regras "
-#~ "também nas vistas de lista."
-
-#~ msgid "Database for PostgreSQL"
-#~ msgstr "Base de dados para PostgreSQL"
-
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"
 #~ msgstr "agente Checkmk"
 
-#, fuzzy
-#~ msgid "Report an issue here. "
-#~ msgstr "Relatório a programar"
-
-#, python-format
-#~ msgid "Phase 1.1: Executing on site \"%s\""
-#~ msgstr "Fase 1.1: Executando no local \"%s"
-
-#, fuzzy
-#~ msgid "Phase 1.2: Extracting result"
-#~ msgstr "Fase 2.1: Resultado da extração"
-
-#, fuzzy
-#~ msgid "Phase 2.2: Deliver existing hosts"
-#~ msgstr "Fase 2.2: Buscando hospedeiros existentes"
-
-#, fuzzy, python-format
-#~ msgid "Phase 2: Deliver %s piggyback hosts"
-#~ msgstr "Prefixo para o nome da mangueira piggyback"
-
 #~ msgid "Contact Groups"
 #~ msgstr "Grupos de contato"
-
-#~ msgid "Phase 2.3: Updating config"
-#~ msgstr "Fase 2.3: Atualização da configuração"
-
-#~ msgid "Used quota: Absolute or relative upper levels"
-#~ msgstr "Quota usada: Níveis superiores absolutos ou relativos"
-
-#, fuzzy
-#~ msgid "Decimal places"
-#~ msgstr "Tablespaces"
-
-#, fuzzy
-#~ msgid "Fixed"
-#~ msgstr "Misto"
-
-#~ msgid "No activation needed"
-#~ msgstr "Não é necessária ativação"
-
-#~ msgid "Not activated"
-#~ msgstr "Não ativado"
-
-#~ msgid "Phase 2.4: Activating changes"
-#~ msgstr "Fase 2.4: Ativação de mudanças"
-
-#, fuzzy
-#~ msgid "automatic"
-#~ msgstr "Automático"
-
-#~ msgid "Hide analysis"
-#~ msgstr "Análise de ocultação"
-
-#~ msgid "Hide bulks"
-#~ msgstr "Esconder granéis"
-
-#, fuzzy
-#~ msgid "Plug-in parameters"
-#~ msgstr "Parâmetros de Plugin"
-
-#~ msgid "Show analysis"
-#~ msgstr "Mostrar análise"
-
-#~ msgid "Show bulks"
-#~ msgstr "Mostrar granéis"
-
-#~ msgid ""
-#~ "You can specify a separate monitoring state for each possible combination "
-#~ "of service state."
-#~ msgstr ""
-#~ "É possível especificar um estado de monitorização separado para cada "
-#~ "combinação possível de estado de serviço."
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Níveis de capacidade de leitura/escrita"
@@ -90612,25 +90523,6 @@ msgstr "Use SSL para a conexão."
 #~ msgid "File Size Levels"
 #~ msgstr "Níveis de tamanho de arquivo"
 
-#~ msgid "Applied Filters:"
-#~ msgstr "Filtros Aplicados:"
-
-#~ msgid "Edit metric"
-#~ msgstr "Editar métrica"
-
-#~ msgid "Save filters & go to designer"
-#~ msgstr "Guardar filtros & ir para designer"
-
-#, fuzzy
-#~ msgid "Error Handling"
-#~ msgstr "Tratamento de erros"
-
-#~ msgid "Metric aggregation"
-#~ msgstr "Agregação métrica"
-
-#~ msgid "Connect Timeout"
-#~ msgstr "Tempo limite de ligação"
-
 #~ msgid "Database Name"
 #~ msgstr "Nome da base de dados"
 
@@ -90643,314 +90535,13 @@ msgstr "Use SSL para a conexão."
 #~ msgid "API Key"
 #~ msgstr "Chave API"
 
-#, fuzzy
-#~ msgid "Critical of "
-#~ msgstr "Crítico se %s"
-
-#, fuzzy
-#~ msgid "Warning of "
-#~ msgstr "Aviso se %s"
-
-#~ msgid "(unused)"
-#~ msgstr "(não usado)"
-
 #~ msgid "Item match list"
 #~ msgstr "Lista de correspondência de itens"
-
-#~ msgid "CPU idle time"
-#~ msgstr "tempo de ociosidade da CPU"
-
-#~ msgid "CPU time spent for executing guest operating systems"
-#~ msgstr "Tempo de CPU gasto para executar sistemas operacionais convidados"
-
-#~ msgid "CPU time spent in kernel space"
-#~ msgstr "Tempo de CPU gasto no espaço do kernel"
-
-#~ msgid "CPU time spent in user space"
-#~ msgstr "Tempo de CPU gasto no espaço do usuário"
-
-#~ msgid "CPU time spent in user space for niced processes"
-#~ msgstr "Tempo de CPU gasto no espaço do usuário para processos com gelo"
-
-#~ msgid "CPU time spent waiting for I/O"
-#~ msgstr "Tempo de espera de E/S pela CPU"
-
-#~ msgid "CPU time stolen by other operating systems"
-#~ msgstr "Tempo de CPU roubado por outros sistemas operacionais"
-
-#~ msgid "Growing"
-#~ msgstr "Cultivo"
-
-#~ msgid "Shrinkage"
-#~ msgstr "Encolhimento"
-
-#~ msgid "Shrinking"
-#~ msgstr "Encolhendo"
-
-#~ msgid "Total RAM installed"
-#~ msgstr "Total de RAM instalado"
-
-#~ msgid "Connect to ACME SBC"
-#~ msgstr "Conectar à ACME SBC"
-
-#~ msgid ""
-#~ "The specified choice is no longer available. Please use another, like "
-#~ "'header' instead."
-#~ msgstr ""
-#~ "A opção especificada já não está disponível. Utilize outra opção, como "
-#~ "'header'."
-
-#~ msgid ""
-#~ "You need to provide a valid password to be able to send notifications."
-#~ msgstr ""
-#~ "Você precisa fornecer uma senha válida para poder enviar notificações."
-
-#~ msgid ""
-#~ "By default, all resources associated to the configured tenant ID will be "
-#~ "monitored."
-#~ msgstr ""
-#~ "Por padrão, todos os recursos associados ao ID do locatário configurado "
-#~ "serão monitorados."
 
 #~ msgid "This URL can also be collected from the Password Store from Checkmk."
 #~ msgstr ""
 #~ "Este URL também pode ser recolhido a partir do armazenamento de palavras-"
 #~ "passe da Checkmk."
-
-#~ msgid "Biggest input buffer lower level"
-#~ msgstr "O maior buffer de entrada de nível inferior"
-
-#~ msgid "Biggest input buffer upper level"
-#~ msgstr "O maior buffer de entrada do nível superior"
-
-#~ msgid "Longest output list lower level"
-#~ msgstr "Lista de saída mais longa nível inferior"
-
-#~ msgid "Longest output list upper level"
-#~ msgstr "Lista de saída mais longa nível superior"
-
-#~ msgid "Total number of client connections lower level"
-#~ msgstr "Número total de conexões de clientes nível inferior"
-
-#~ msgid "Total number of client connections upper level"
-#~ msgstr "Número total de ligações de clientes nível superior"
-
-#~ msgid ""
-#~ "A voluntary context switch occurs when a thread blocks because it "
-#~ "requires a resource that is unavailable"
-#~ msgstr ""
-#~ "Uma mudança de contexto voluntária ocorre quando uma thread bloqueia "
-#~ "porque requer um recurso que não está disponível"
-
-#~ msgid ""
-#~ "An involuntary context switch takes place when a thread executes for the "
-#~ "duration of its time slice or when the system identifies a higher-"
-#~ "priority thread to run"
-#~ msgstr ""
-#~ "Um interruptor de contexto involuntário ocorre quando um fio é executado "
-#~ "pela duração de sua fatia de tempo ou quando o sistema identifica um fio "
-#~ "de maior prioridade para ser executado"
-
-#~ msgid "Max Perm used"
-#~ msgstr "Max Perm usado"
-
-#~ msgid "Maximum inodes"
-#~ msgstr "Máximo de nós"
-
-#~ msgid ""
-#~ "Space in the database that has not been reserved for database objects"
-#~ msgstr ""
-#~ "Espaço na base de dados que não tenha sido reservado para objetos da base "
-#~ "de dados"
-
-#~ msgid "Total amount of space allocated by objects in the database"
-#~ msgstr "Quantidade total de espaço alocado por objetos no banco de dados"
-
-#~ msgid ""
-#~ "Total amount of space reserved for objects in the database, but not yed "
-#~ "used"
-#~ msgstr ""
-#~ "Espaço total reservado para objetos no banco de dados, mas não yed "
-#~ "utilizado"
-
-#~ msgid "Critical (In)"
-#~ msgstr "Crítico (In)"
-
-#~ msgid "Critical (Out)"
-#~ msgstr "Crítico (Fora)"
-
-#, fuzzy
-#~ msgid "Double check your configuration"
-#~ msgstr "Desactivar a configuração remota"
-
-#~ msgid ""
-#~ "The user, used for login, has to have at least the role 'itil' in "
-#~ "ServiceNow."
-#~ msgstr ""
-#~ "O usuário, usado para login, tem que ter pelo menos a função 'itil' no "
-#~ "ServiceNow."
-
-#~ msgid "Warning (In)"
-#~ msgstr "Advertência (In)"
-
-#~ msgid "Warning (Out)"
-#~ msgstr "Aviso (Fora)"
-
-#~ msgid ""
-#~ "Amount of time that the application of redo data on the standby database "
-#~ "lags behind the primary database"
-#~ msgstr ""
-#~ "Tempo que a aplicação dos dados de refazer na base de dados em standby "
-#~ "fica atrás da base de dados principal"
-
-#~ msgid ""
-#~ "Amount of time that the replica server is lagging against the source "
-#~ "server"
-#~ msgstr ""
-#~ "Quantidade de tempo que o servidor de réplica está atrasado em relação ao "
-#~ "servidor de origem"
-
-#, fuzzy
-#~ msgid "Last updated"
-#~ msgstr "Última Atualização"
-
-#~ msgid "Lower critical level"
-#~ msgstr "Nível crítico inferior"
-
-#~ msgid "Lower warning level"
-#~ msgstr "Nível de aviso inferior"
-
-#~ msgid "Negotiate SSL"
-#~ msgstr "Negociar SSL"
-
-#~ msgid "Receive full response"
-#~ msgstr "Receber resposta completa"
-
-#~ msgid "Receive start of response"
-#~ msgstr "Receber o início da resposta"
-
-#~ msgid "Roundtrip"
-#~ msgstr "Ida e Volta"
-
-#~ msgid "Send request"
-#~ msgstr "Enviar pedido"
-
-#~ msgid "Upper critical level"
-#~ msgstr "Nível crítico superior"
-
-#~ msgid "Upper warning level"
-#~ msgstr "Nível de aviso superior"
-
-#~ msgid "Hardware / Software Inventory"
-#~ msgstr "Inventário de Hardware / Software"
-
-#, fuzzy
-#~ msgid "History of HW/SW Inventory"
-#~ msgstr "História do Evento"
-
-#~ msgid "Inventory: History"
-#~ msgstr "Inventário: História"
-
-#, fuzzy
-#~ msgid "Recent HW/SW Inventory"
-#~ msgstr "Inventário HW/SW"
-
-#~ msgid "Do hardware/software inventory"
-#~ msgstr "Fazer inventário de hardware/software"
-
-#~ msgid "History of hardware/software inventory"
-#~ msgstr "Histórico do inventário de hardware/software"
-
-#~ msgid "Recent hardware/software inventory"
-#~ msgstr "Inventário recente de hardware/software"
-
-#, python-format
-#~ msgid "Unknown (%s)"
-#~ msgstr "Desconhecido (%s)"
-
-#~ msgid "More information can be found in ~/var/log/web.log"
-#~ msgstr "Mais informações podem ser encontradas em ~/var/log/web.log"
-
-#~ msgid "NetApp via WebAPI"
-#~ msgstr "NetApp via WebAPI"
-
-#~ msgid ""
-#~ "This rule set selects the NetApp special agent instead of the normal "
-#~ "Checkmk Agent and allows monitoring via the NetApp Web API. To access the "
-#~ "data the user requires permissions to several API classes. They are shown "
-#~ "when you call the agent with <tt>agent_netapp --help</tt>. The agent "
-#~ "itself is located in the site directory under <tt>~/share/check_mk/agents/"
-#~ "special</tt>."
-#~ msgstr ""
-#~ "Este conjunto de regras selecciona o agente especial da NetApp em vez do "
-#~ "agente Checkmk normal e permite a monitorização através da NetApp Web "
-#~ "API. Para acessar os dados, o usuário precisa de permissões para várias "
-#~ "classes de API. Elas são mostradas quando você chama o agente com "
-#~ "<tt>agent_netapp --help</tt>. O próprio agente está localizado no "
-#~ "directório do site em <tt>~/share/check_mk/agents/special</tt>."
-
-#~ msgid "Address Check mode"
-#~ msgstr "Modo de Verificação de Endereço"
-
-#~ msgid "Check for Version"
-#~ msgstr "Verificar a Versão"
-
-#~ msgid ""
-#~ "Choose, whether you just want to query the version number, or if you want "
-#~ "to check the response to an address query."
-#~ msgstr ""
-#~ "Escolha se pretende apenas consultar o número da versão ou se pretende "
-#~ "verificar a resposta a uma consulta de endereço."
-
-#~ msgid "Add warning"
-#~ msgstr "Adicionar aviso"
-
-#, fuzzy
-#~ msgid ""
-#~ "Here you can set upper levels for the time difference between agent and "
-#~ "system time."
-#~ msgstr ""
-#~ "Aqui você pode Definir níveis superiores para a diferença de tempo entre "
-#~ "o tempo do agente e o tempo do sistema."
-
-#~ msgid "Name of the node"
-#~ msgstr "Nome do nó"
-
-#, fuzzy
-#~ msgid "Netapp instance state"
-#~ msgstr "Estado de Netapp Instance"
-
-#~ msgid "Netapp systemtime"
-#~ msgstr "Netapp systemtime"
-
-#, fuzzy, python-format
-#~ msgid "No such tree below %r"
-#~ msgstr "Não existe nenhuma árvore abaixo %r"
-
-#~ msgid "This rule allows you to override netapp warnings"
-#~ msgstr "Esta regra permite que você substitua os avisos de netapp"
-
-#~ msgid "Warning starts with"
-#~ msgstr "O aviso começa com"
-
-#~ msgid ""
-#~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
-#~ msgstr ""
-#~ "© <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
-
-#~ msgid "<b>Keyword</b> pattern"
-#~ msgstr "<b>Palavra-chave</b> padrão"
-
-#~ msgid "<b>Keyword</b> runtime"
-#~ msgstr "<b>Keyword</b> runtime"
-
-#, fuzzy
-#~ msgid "Add new threshold"
-#~ msgstr "Adicionar nova função"
-
-#, fuzzy
-#~ msgid "Maximum <b>Keyword</b> runtime"
-#~ msgstr "Monitorização da rede"
 
 #, fuzzy
 #~ msgid "Exclude following SIDs (if detected or manually added)"
@@ -90959,70 +90550,8 @@ msgstr "Use SSL para a conexão."
 #~ msgid " (packaged)"
 #~ msgstr " (embalado)"
 
-#~ msgid "Alternative Service description"
-#~ msgstr "Descrição do serviço alternativo"
-
-#~ msgid "Service description: "
-#~ msgstr "Descrição do serviço: "
-
-#~ msgid "Service descriptions"
-#~ msgstr "Descrição dos serviços"
-
-#, fuzzy
-#~ msgid "Show service description"
-#~ msgstr "Descrição do serviço"
-
-#~ msgid ""
-#~ "This rule controls which and how many checks will be created for "
-#~ "monitoring individual physical and logical disks. Note: the option "
-#~ "<i>Create a summary for all read, one for write</i> has been removed. "
-#~ "Some checks will still support this settings, but it will be removed "
-#~ "there soon."
-#~ msgstr ""
-#~ "Esta regra controla quais e quantas verificações serão criadas para "
-#~ "monitorar os discos físicos e lógicos individuais. Nota: a opção <i>Criar "
-#~ "um resumo para todos os lidos, um para escrever</i> foi removida. Algumas "
-#~ "verificações ainda suportarão essa configuração, mas ela será removida em "
-#~ "breve."
-
-#, fuzzy
-#~ msgid "Use device name as service description"
-#~ msgstr "Usar novas descrições de serviço"
-
-#~ msgid "Use new service descriptions"
-#~ msgstr "Usar novas descrições de serviço"
-
-#~ msgid ""
-#~ "With this rule you can set limits for various disk IO statistics. Keep in "
-#~ "mind that not all of these settings may be applicable for the actual "
-#~ "check. For example, if the check doesn't provide a <i>Read wait</i> "
-#~ "information in its output, any configuration setting referring to <i>Read "
-#~ "wait</i> will have no effect."
-#~ msgstr ""
-#~ "Com esta regra você pode definir limites para várias estatísticas de IO "
-#~ "de disco. Tenha em mente que nem todas essas configurações podem ser "
-#~ "aplicáveis para a verificação real. Por exemplo, se a verificação não "
-#~ "fornecer uma <i>Ler espera</i> informação na sua saída, qualquer "
-#~ "configuração referente a <i>Ler espera</i> não terá efeito."
-
 #~ msgid "Discard foreign changes"
 #~ msgstr "Rejeitar alterações estrangeiras"
-
-#, python-format
-#~ msgid "%sPacket loss"
-#~ msgstr "%sPacote de perda"
-
-#, python-format
-#~ msgid "%sResponse time"
-#~ msgstr "%sTempo de Resposta"
-
-#, python-format
-#~ msgid "%sRound trip average"
-#~ msgstr "%sMédia da viagem"
-
-#, fuzzy
-#~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
-#~ msgstr "Monitorização de Amazon Web Services (AWS)"
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "
@@ -91038,27 +90567,6 @@ msgstr "Use SSL para a conexão."
 #~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
 #~ msgstr ""
 #~ "Caminho local onde colocar o ficheiro descarregado (por exemplo, 'tmp' )."
-
-#~ msgid "Delete messages"
-#~ msgstr "Eliminar mensagens"
-
-#~ msgid "Directly forward to event console"
-#~ msgstr "Diretamente para o console de eventos"
-
-#~ msgid "Spool to event console"
-#~ msgstr "Spool para console de eventos"
-
-#~ msgid "Use the mail subject"
-#~ msgstr "Use o assunto do correio"
-
-#~ msgid "Username/Password"
-#~ msgstr "Nome de utilizador/Palavra-passe"
-
-#~ msgid "Critical if over"
-#~ msgstr "Crítico se acabou"
-
-#~ msgid "Warning if over"
-#~ msgstr "Alerta se acabou"
 
 #~ msgid "Access Points"
 #~ msgstr "Pontos de Acesso"

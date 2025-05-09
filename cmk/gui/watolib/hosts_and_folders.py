@@ -85,9 +85,7 @@ from cmk.gui.watolib.config_domain_name import (
     DomainSettings,
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.config_domain_name import (
-    CORE as CORE_DOMAIN,
-)
+from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -102,15 +100,9 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-)
+from cmk.gui.watolib.search import ABCMatchItemGenerator, MatchItem, MatchItems
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-)
+from cmk.gui.watolib.utils import wato_root_dir
 
 _ContactgroupName = str
 
@@ -297,7 +289,8 @@ class _RedisHelper:
     - communicates with redis
     - handles the entire redis cache and checks its integrity
     - computes the metadata out of Folder instances and stores it in redis
-    - provides functions to compute the number of hosts and fetch the metadata for folders"""
+    - provides functions to compute the number of hosts and fetch the metadata for folders
+    """
 
     def __init__(self, tree: FolderTree) -> None:
         self.tree = tree
@@ -422,9 +415,12 @@ class _RedisHelper:
             return zip(a, a, a, a)
 
         results = pipeline.execute()
-        for folder_path, title, title_path_without_root, permitted_contact_groups in pairwise(
-            results[0]
-        ):
+        for (
+            folder_path,
+            title,
+            title_path_without_root,
+            permitted_contact_groups,
+        ) in pairwise(results[0]):
             self._folder_metadata[folder_path] = FolderMetaData(
                 self.tree,
                 folder_path,
@@ -676,7 +672,9 @@ class _RedisHelper:
         return self._timestamp_to_fixed_precision_str(0.0)
 
 
-def _get_fully_loaded_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]:
+def _get_fully_loaded_wato_folders(
+    tree: FolderTree,
+) -> Mapping[PathWithoutSlash, Folder]:
     wato_folders: dict[PathWithoutSlash, Folder] = {}
     Folder.load(tree=tree, name="", parent_folder=None).add_to_dictionary(wato_folders)
     return wato_folders
@@ -717,7 +715,8 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         pickle_store = store.ObjectStore(
-            self._add_suffix(file_path), serializer=store.PickleSerializer[WATOFolderInfo]()
+            self._add_suffix(file_path),
+            serializer=store.PickleSerializer[WATOFolderInfo](),
         )
         with pickle_store.locked():
             pickle_store.write_obj(data)
@@ -1978,7 +1977,11 @@ class Folder(FolderProtocol):
 
             parent = parent.parent()
 
-        return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
+        return (
+            permitted_groups,
+            host_contact_groups,
+            cgconf.get("use_for_services", False),
+        )
 
     def find_host_recursively(self, host_name: HostName) -> Host | None:
         host: Host | None = self.host(host_name)
@@ -2206,7 +2209,11 @@ class Folder(FolderProtocol):
 
         # 2. Actual modification
         new_subfolder = Folder.new(
-            tree=self.tree, name=name, parent_folder=self, title=title, attributes=attributes
+            tree=self.tree,
+            name=name,
+            parent_folder=self,
+            title=title,
+            attributes=attributes,
         )
         self._subfolders[name] = new_subfolder
         new_subfolder.save(pprint_value=pprint_value)
@@ -2537,7 +2544,9 @@ class Folder(FolderProtocol):
             )
 
     @staticmethod
-    def _get_hosts_locked_by_quick_setup(host_names: Collection[HostName]) -> list[HostName]:
+    def _get_hosts_locked_by_quick_setup(
+        host_names: Collection[HostName],
+    ) -> list[HostName]:
         return [
             host_name
             for host_name in host_names
@@ -2587,7 +2596,11 @@ class Folder(FolderProtocol):
         return hosts_by_site
 
     def move_hosts(
-        self, host_names: Collection[HostName], target_folder: Folder, *, pprint_value: bool
+        self,
+        host_names: Collection[HostName],
+        target_folder: Folder,
+        *,
+        pprint_value: bool,
     ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
@@ -2782,7 +2795,8 @@ class FolderLookupCache:
     def get(self, host_name: HostName) -> Host | None:
         """This function tries to create a host object using its name from a lookup cache.
         If this does not work (cache miss), the regular search for the host is started.
-        If the host was found by the regular search, the lookup cache is updated accordingly."""
+        If the host was found by the regular search, the lookup cache is updated accordingly.
+        """
 
         try:
             cache = self.get_cache()
@@ -3036,7 +3050,11 @@ class SearchFolder(FolderProtocol):
             )
 
     def move_hosts(
-        self, host_names: Sequence[HostName], target_folder: Folder, *, pprint_value: bool
+        self,
+        host_names: Sequence[HostName],
+        target_folder: Folder,
+        *,
+        pprint_value: bool,
     ) -> None:
         auth_errors = []
         for folder, host_names1 in self._group_hostnames_by_folder(host_names):
@@ -3224,7 +3242,8 @@ class Host:
 
     def tag_groups(self) -> Mapping[TagGroupID, TagID]:
         """Compute tags from host attributes
-        Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)"""
+        Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)
+        """
 
         if self._cached_host_tags is not None:
             return self._cached_host_tags  # Cached :-)
@@ -3944,7 +3963,8 @@ class FolderValidators:
     ident: str
     validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
     validate_create_hosts: Callable[
-        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
+        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId],
+        None,
     ]
     validate_create_subfolder: Callable[[Folder, HostAttributes], None]
     validate_edit_folder: Callable[[Folder, HostAttributes], None]

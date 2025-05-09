@@ -7,14 +7,7 @@ from collections.abc import Callable, Collection, Container, Iterable, Mapping, 
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
-from typing import (
-    Any,
-    get_args,
-    Literal,
-    NotRequired,
-    TypedDict,
-    TypeVar,
-)
+from typing import Any, get_args, Literal, NotRequired, TypedDict, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -147,7 +140,10 @@ def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
 
 
 def identify_bundle_references(
-    bundle_group: str | None, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
+    bundle_group: str | None,
+    bundle_ids: set[BundleId],
+    *,
+    rulespecs_hint: set[str] | None = None,
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles.
 
@@ -176,7 +172,8 @@ def identify_bundle_references(
     bundle_dcd_connections = (
         _collect_many(
             _collect_dcd_connections(
-                finder=bundle_id_finder, dcd_connections=DCDConnectionHook.load_dcd_connections()
+                finder=bundle_id_finder,
+                dcd_connections=DCDConnectionHook.load_dcd_connections(),
             )
         )
         if "dcd" in affected_entities
@@ -254,7 +251,9 @@ def _validate_and_prepare_create_calls(
     if entities.dcd_connections:
         create_functions.append(
             _prepare_create_dcd_connections(
-                bundle_ident, entities.dcd_connections, DCDConnectionHook.load_dcd_connections()
+                bundle_ident,
+                entities.dcd_connections,
+                DCDConnectionHook.load_dcd_connections(),
             )
         )
     return create_functions

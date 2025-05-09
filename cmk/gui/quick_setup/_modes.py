@@ -831,7 +831,9 @@ class ModeConfigurationBundle(WatoMode):
                 }
             )
             edit_config_bundle_configuration(
-                self._bundle_id, self._bundle, pprint_value=active_config.wato_pprint_config
+                self._bundle_id,
+                self._bundle,
+                pprint_value=active_config.wato_pprint_config,
             )
 
         return redirect(self.parent_mode().mode_url(varname=self._bundle_group))

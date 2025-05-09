@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -53,7 +52,7 @@ def _load_plugin_config(mk_confdir: str) -> tuple[str, str]:
     ceph_client = "client.admin"
 
     try:
-        with open(os.path.join(mk_confdir, "ceph.cfg"), "r") as config:
+        with open(os.path.join(mk_confdir, "ceph.cfg")) as config:
             content = config.readlines()
     except FileNotFoundError:
         return ceph_config, ceph_client

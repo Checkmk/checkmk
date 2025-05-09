@@ -54,4 +54,3 @@ If access doesn't work right away you can test the tcp wrapper settings using
 tcpdchk.
 Alternatively you can of course also use key-based ssh or any other more secure
 means of transportation.
-

@@ -1,8 +1,0 @@
-Are you looking for certain performance counters?
-
-C:\> lodctr /s:counters.ini
-
-then copy this file to Linux and there:
-
-user@linux> recode UTF-16LE..UTF-8 counters.ini
-

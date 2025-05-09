@@ -6,7 +6,7 @@ With inetd, this should be something in the basic system search path like /usr/b
 cp /tmp/check_mk_agent.aix /usr/bin/check_mk_agent
 
 # Agent Config
-Inside the Agent you'll find two config settings, which need to be changed from the 
+Inside the Agent you'll find two config settings, which need to be changed from the
 defaults to a value that is OK on your system.
 Edit /usr/bin/check_mk_agent and change
 export MK_LIBDIR="/to/be/changed"
@@ -28,7 +28,7 @@ check_mk        6556/tcp    # Checkmk monitoring agent
 
 
 # Access security
-Besides SSH which works anywhere, on AIX you have the choices of using inetd with or 
+Besides SSH which works anywhere, on AIX you have the choices of using inetd with or
 without TCPWrappers. TCPWrappers are not available on AIX by default.
 In the following you find instructions for setting up with and without TCPWrappers.
 Note - in our testing, tcpwrappers only delivered correct example every 2nd call, so
@@ -44,7 +44,7 @@ Then enable the service using:
 # Restart inetd
 refresh -s inetd
 
-Alternatively, 
+Alternatively,
 #        WITH TCPWRAPPERS
 edit /etc/inetd.conf to point to the tcpd daemon.
 check_mk        stream  tcp     nowait  root    /path/to/tcpd /usr/bin/check_mk_agent
@@ -74,10 +74,10 @@ http://pic.dhe.ibm.com/infocenter/aix/v6r1/index.jsp?topic=%2Fcom.ibm.aix.commad
 
 
 b)
-you need to get a hold of the utilities for perfstat from 
+you need to get a hold of the utilities for perfstat from
 http://www.ibm.com/developerworks/wikis/display/WikiPtype/ryo
-Do not use the binaries since they do an eternal loop. Instead download 
-adapt.c, cpu.c, memory.c and net.c and remove the loops. 
+Do not use the binaries since they do an eternal loop. Instead download
+adapt.c, cpu.c, memory.c and net.c and remove the loops.
 
 This code seems to be not GPLed, so we cannot include it. In fact it seems to have no
 license at all.
@@ -85,5 +85,5 @@ license at all.
 
 c) compile install libstatgrab
 Compiling libstatgrab should be OK on 5.3, on 6.x we ran into bigger issues.
-There was some changes in AIX6.1 to make it easier to code for and libstatgrab 
+There was some changes in AIX6.1 to make it easier to code for and libstatgrab
 still has an definition to do complex stuff, if the OS is AIX.

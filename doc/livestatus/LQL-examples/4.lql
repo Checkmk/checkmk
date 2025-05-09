@@ -1,3 +1,0 @@
-GET columns
-Columns: name
-Filter: table = services

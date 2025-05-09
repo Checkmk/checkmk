@@ -1,3 +1,0 @@
-GET services
-Columns: host_name description last_check last_hard_state_change
-Filter: host_name = windows

@@ -1,4 +1,0 @@
-GET log
-Columns: message
-Filter: host_name = windows
-Limit: 10

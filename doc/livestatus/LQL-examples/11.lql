@@ -1,3 +1,0 @@
-GET log
-Columns: message
-Limit: 10

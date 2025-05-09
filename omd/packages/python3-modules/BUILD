@@ -80,12 +80,48 @@ build_python_module(
     }),
 )
 
+# TODO: Switch to official release when pymssql is cython 3.1.0 compatible
+# see also https://github.com/pymssql/pymssql/pull/938
+MODULE_PYMSSQL = "pymssql"
+
+MODULE_PYMSSQL_SOURCE = "git+https://github.com/TimotheusBachinger/pymssql@2a02c839c59c2b87e2acdfad8bc0187b2b6c4fe9"
+
+build_python_module(
+    name = "%s_compile" % MODULE_PYMSSQL,
+    srcs = [
+        "@freetds",
+        "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@openssl",
+        "@python",
+    ],
+    outs = [
+        "compiled_%s.tar" % MODULE_PYMSSQL,
+    ],
+    cmd = select({
+        "//conditions:default": build_cmd.format(
+            git_ssl_no_verify = "",
+            module_name = MODULE_PYMSSQL,
+            pip_add_opts = get_pip_options(MODULE_PYMSSQL),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            requirements = MODULE_PYMSSQL_SOURCE,
+        ),
+        ":git_ssl_no_verify": build_cmd.format(
+            git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = MODULE_PYMSSQL,
+            pip_add_opts = get_pip_options(MODULE_PYMSSQL),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            requirements = MODULE_PYMSSQL_SOURCE,
+        ),
+    }),
+)
+
 genrule(
     name = "python3-modules",
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
             "netapp-ontap",
+            "pymssql",
         ]
     ],
     outs = [

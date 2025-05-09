@@ -196,6 +196,8 @@ create_python_requirements(
     ignored_modules = [
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
+        # Currently broken due to new cython version, see https://github.com/pymssql/pymssql/issues/937
+        "pymssql",
     ],
     requirements_lock = "//:requirements_runtime_lock.txt",
 )

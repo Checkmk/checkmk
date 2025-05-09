@@ -73,10 +73,57 @@ STRING_TABLE = [  # only a snippet!
     ["datastore.write", "fce701f6-867094ae", "0#0", "kiloBytesPerSecond"],
 ]
 
+STRING_TABLE_WITH_NEGATIVE_VALUES = [  # only a snippet!
+    ["datastore.name", "192.168.99.100:/vmtestnfs1", "NFS_sgrznac1_Test", "string"],
+    ["datastore.name", "192.168.99.101:/vmprodnfs1", "NFS_sgrznac1_Prod", "string"],
+    [
+        "datastore.name",
+        "192.168.99.99:/VeeamBackup_SGRZVeeam.acp.local",
+        "VeeamBackup_SGRZVeeam.acp.local",
+        "string",
+    ],
+    ["datastore.name", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "SSD_sgrz3par_vmstore1", "string"],
+    ["datastore.name", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "vsa_vol1", "string"],
+    ["datastore.name", "5847d774-2bdca236-23df-645106f0c5d0", "SSD_sgrz3par_vmstore2", "string"],
+    ["datastore.name", "vvol:bf19e892e24d4f74-9246b507ebac9dec", "3par VVOL", "string"],
+    ["datastore.read", "56490e2e-692ac36c", "0#0", "kiloBytesPerSecond"],
+    ["datastore.read", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
+    ["datastore.read", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
+    ["datastore.read", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
+    ["datastore.read", "79d8b527-45291f84", "13#26", "kiloBytesPerSecond"],
+    ["datastore.read", "fce701f6-867094ae", "0#0", "kiloBytesPerSecond"],
+    ["datastore.sizeNormalizedDatastoreLatency", "56490e2e-692ac36c", "0#0", "microsecond"],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "-1#-1",
+        "microsecond",
+    ],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "57e121ef-2bb2dbaa-ad99-645106f0c5d0",
+        "0#0",
+        "microsecond",
+    ],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "0#0",
+        "microsecond",
+    ],
+    ["datastore.sizeNormalizedDatastoreLatency", "79d8b527-45291f84", "0#0", "microsecond"],
+    ["datastore.sizeNormalizedDatastoreLatency", "fce701f6-867094ae", "0#0", "microsecond"],
+]
+
 
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> SectionCounter:
     return parse_esx_vsphere_counters(STRING_TABLE)
+
+
+@pytest.fixture(name="section_with_negative_values", scope="module")
+def _get_section_negative_values() -> SectionCounter:
+    return parse_esx_vsphere_counters(STRING_TABLE_WITH_NEGATIVE_VALUES)
 
 
 def test_discovery_summary(section: SectionCounter) -> None:
@@ -141,6 +188,20 @@ def test_check_summary(section: SectionCounter) -> None:
     ]
 
 
+def test_check_summary_negative_values(section_with_negative_values: SectionCounter) -> None:
+    with pytest.raises(ValueError):
+        # Because of the negative value in the latency, we expect a ValueError
+        # from the render.timespan() function
+        assert (
+            list(
+                _check_esx_vsphere_datastore_io(
+                    "SUMMARY", {}, section_with_negative_values, 1659382581, {}
+                )
+            )
+            == []
+        )
+
+
 def test_check_item(section: SectionCounter) -> None:
     assert list(
         _check_esx_vsphere_datastore_io(
@@ -162,3 +223,17 @@ def test_check_item(section: SectionCounter) -> None:
         Result(state=State.OK, summary="Latency: 0 seconds"),
         Metric("disk_latency", 0.0),
     ]
+
+
+def test_check_item_negative_values(section_with_negative_values: SectionCounter) -> None:
+    with pytest.raises(ValueError):
+        # Because of the negative value in the latency, we expect a ValueError
+        # from the render.timespan() function
+        assert (
+            list(
+                _check_esx_vsphere_datastore_io(
+                    "SSD_sgrz3par_vmstore1", {}, section_with_negative_values, 1659382581, {}
+                )
+            )
+            == []
+        )

@@ -237,6 +237,21 @@ http_archive(
     ],
 )
 
+openssl_version_str = "3.0.16"
+
+openssl_filename = "openssl-" + openssl_version_str + ".tar.gz"
+
+http_archive(
+    name = "openssl",
+    build_file = "//omd/packages/openssl:BUILD.openssl.bazel",
+    sha256 = "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",
+    strip_prefix = "openssl-" + openssl_version_str,
+    urls = [
+        "https://github.com/openssl/openssl/releases/download/openssl-" + openssl_version_str + "/" + openssl_filename,
+        UPSTREAM_MIRROR_URL + openssl_filename,
+    ],
+)
+
 http_archive(
     name = "redis",
     build_file = "//omd/packages/redis:BUILD.redis.bazel",
@@ -323,6 +338,10 @@ rust.repository_set(
     target_triple = "x86_64-unknown-linux-musl",
 )
 use_repo(rust, "rust_toolchains")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+
+inject_repo(crate, "openssl")
 
 register_toolchains("@rust_toolchains//:all")
 

@@ -17,14 +17,14 @@ use_repo(site_crates, "site_crates")
 site_crates.annotation(
     crate = "openssl-sys",
     build_script_data = [
-        "@@openssl//:gen_dir",
+        "@openssl//:gen_dir",
     ],
     build_script_env = {
-        "OPENSSL_DIR": "$(execpath @@openssl//:gen_dir)",
+        "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
         "OPENSSL_NO_VENDOR": "1",
     },
     deps = [
-        "@@openssl//:openssl_shared",
+        "@openssl//:openssl_shared",
     ],
     repositories = ["site_crates"],
 )

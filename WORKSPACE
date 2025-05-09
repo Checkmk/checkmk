@@ -9,10 +9,6 @@ load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
 re2_workspace()
 
-load("//omd/packages/openssl:openssl_http.bzl", "openssl_workspace")
-
-openssl_workspace()
-
 load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec_workspace")
 
 xmlsec_workspace()

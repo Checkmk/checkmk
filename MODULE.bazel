@@ -238,6 +238,17 @@ http_archive(
 )
 
 http_archive(
+    name = "redis",
+    build_file = "//omd/packages/redis:BUILD.redis.bazel",
+    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+    strip_prefix = "redis-6.2.6",
+    urls = [
+        "https://download.redis.io/releases/redis-6.2.6.tar.gz",
+        UPSTREAM_MIRROR_URL + "redis-6.2.6.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

@@ -1,10 +1,6 @@
 workspace(name = "omd_packages")
 
 load("//:bazel_variables.bzl", "RUFF_VERSION")
-load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
-
-redis_workspace()
-
 load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
 
 asio_workspace()

@@ -264,6 +264,17 @@ http_archive(
 )
 
 http_archive(
+    name = "erlang",
+    build_file = "//omd/packages/erlang:BUILD",
+    sha256 = "e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872",
+    strip_prefix = "otp_src_26.2.5.2",
+    urls = [
+        UPSTREAM_MIRROR_URL + "otp_src_26.2.5.2.tar.gz",
+        "https://github.com/erlang/otp/releases/download/OTP-26.2.5.2/otp_src_26.2.5.2.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

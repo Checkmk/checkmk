@@ -122,10 +122,6 @@ load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
 jaeger_workspace()
 
-load("//omd/packages/erlang:erlang_http.bzl", "erlang_workspace")
-
-erlang_workspace()
-
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()

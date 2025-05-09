@@ -307,6 +307,7 @@ def _update_single_service_phase(
         ),
         host.name(),
         pprint_value=pprint_value,
+        debug=debug,
     )
 
 

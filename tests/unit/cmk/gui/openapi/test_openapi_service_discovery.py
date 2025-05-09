@@ -1163,6 +1163,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
             expected_autochecks,
             {},
         ),
+        debug=False,
     )
     mock_set_autochecks.reset_mock()
 
@@ -1190,6 +1191,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
             expected_autochecks_2,
             {},
         ),
+        debug=False,
     )
 
 

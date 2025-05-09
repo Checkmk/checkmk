@@ -271,7 +271,12 @@ class Discovery:
         self.user_need_permission: Final = user_need_permission
 
     def do_discovery(
-        self, discovery_result: DiscoveryResult, target_host_name: HostName, *, pprint_value: bool
+        self,
+        discovery_result: DiscoveryResult,
+        target_host_name: HostName,
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
@@ -283,13 +288,15 @@ class Discovery:
                 transition.remove_disabled_rule,
                 transition.add_disabled_rule,
                 pprint_value=pprint_value,
+                debug=debug,
             )
 
         self._save_services(
             target_host_name,
             transition.old_autochecks,
             transition.new_autochecks,
-            transition.need_sync,
+            need_sync=transition.need_sync,
+            debug=debug,
         )
 
     def compute_discovery_transition(
@@ -370,10 +377,15 @@ class Discovery:
         )
 
     def _save_host_service_enable_disable_rules(
-        self, remove_disabled_rule: set[str], add_disabled_rule: set[str], *, pprint_value: bool
+        self,
+        remove_disabled_rule: set[str],
+        add_disabled_rule: set[str],
+        *,
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
-            remove_disabled_rule, add_disabled_rule, pprint_value=pprint_value
+            remove_disabled_rule, add_disabled_rule, pprint_value=pprint_value, debug=debug
         )
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
@@ -442,7 +454,9 @@ class Discovery:
         affected_host_name: HostName,
         old_autochecks: SetAutochecksInput,
         autochecks_table: SetAutochecksInput,
+        *,
         need_sync: bool,
+        debug: bool,
     ) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (
             affected_host_name,
@@ -452,6 +466,7 @@ class Discovery:
         set_autochecks_v2(
             self._host.site_id(),
             autochecks_table,
+            debug=debug,
         )
 
     def _add_service_change(
@@ -585,7 +600,7 @@ def perform_fix_all(
     Handle fix all ('Accept All' on UI) discovery action
     """
     with _service_discovery_context(host, pprint_value=pprint_value):
-        _perform_update_host_labels(discovery_result.labels_by_host)
+        _perform_update_host_labels(discovery_result.labels_by_host, debug=debug)
         Discovery(
             host,
             DiscoveryAction.FIX_ALL,
@@ -593,7 +608,12 @@ def perform_fix_all(
             update_source=None,
             selected_services=(),  # does not matter in case of "FIX_ALL"
             user_need_permission=user.need_permission,
-        ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
+        ).do_discovery(
+            discovery_result,
+            host.name(),
+            pprint_value=pprint_value,
+            debug=debug,
+        )
         discovery_result = get_check_table(
             host,
             DiscoveryAction.FIX_ALL,
@@ -614,7 +634,7 @@ def perform_host_label_discovery(
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
-        _perform_update_host_labels(discovery_result.labels_by_host)
+        _perform_update_host_labels(discovery_result.labels_by_host, debug=debug)
         discovery_result = get_check_table(
             host,
             action,
@@ -647,7 +667,12 @@ def perform_service_discovery(
             update_source=update_source,
             selected_services=selected_services,
             user_need_permission=user.need_permission,
-        ).do_discovery(discovery_result, host.name(), pprint_value=pprint_value)
+        ).do_discovery(
+            discovery_result,
+            host.name(),
+            pprint_value=pprint_value,
+            debug=debug,
+        )
         discovery_result = get_check_table(host, action, raise_errors=raise_errors, debug=debug)
     return discovery_result
 
@@ -730,7 +755,9 @@ def initial_discovery_result(
     )
 
 
-def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[HostLabel]]) -> None:
+def _perform_update_host_labels(
+    labels_by_nodes: Mapping[HostName, Sequence[HostLabel]], *, debug: bool
+) -> None:
     for host_name, host_labels in labels_by_nodes.items():
         if (host := Host.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
@@ -753,6 +780,7 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
             host.site_id(),
             host.name(),
             host_labels,
+            debug=debug,
         )
 
 

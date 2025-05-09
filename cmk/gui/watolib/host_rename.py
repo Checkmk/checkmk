@@ -77,6 +77,7 @@ def perform_rename_hosts(
     *,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> tuple[dict[str, int], list[tuple[HostName, MKAuthException]]]:
     def update_interface(message: str) -> None:
         job_interface.send_progress_update(message)
@@ -135,7 +136,7 @@ def perform_rename_hosts(
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
     update_interface(_("This might take some time and involves a core restart..."))
     renamings_by_site = group_renamings_by_site(successful_renamings)
-    action_counts = _rename_hosts_in_check_mk(renamings_by_site, use_git=use_git)
+    action_counts = _rename_hosts_in_check_mk(renamings_by_site, use_git=use_git, debug=debug)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
@@ -281,6 +282,7 @@ def _rename_hosts_in_check_mk(
     renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
     *,
     use_git: bool,
+    debug: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
     for site_id, name_pairs in renamings_by_site.items():
@@ -303,6 +305,7 @@ def _rename_hosts_in_check_mk(
         new_counts = rename_hosts(
             site_id,
             name_pairs,
+            debug=debug,
         ).action_counts
 
         _merge_action_counts(action_counts, new_counts)

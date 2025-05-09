@@ -126,6 +126,7 @@ def test_rename_host(
         job_interface=job_interface,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
     # THEN

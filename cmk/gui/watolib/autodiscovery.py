@@ -66,8 +66,8 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             discovery_result.host_labels.kept,
         )
 
-    def execute(self, job_interface: BackgroundProcessInterface) -> None:
-        result = autodiscovery(self.site_id)
+    def execute(self, job_interface: BackgroundProcessInterface, *, debug: bool) -> None:
+        result = autodiscovery(self.site_id, debug=debug)
 
         if not result.hosts:
             job_interface.send_result_message(_("No hosts to be discovered"))
@@ -139,4 +139,4 @@ def execute_autodiscovery() -> None:
 
 def autodiscovery_job_entry_point(job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
     with job_interface.gui_context():
-        AutodiscoveryBackgroundJob().execute(job_interface)
+        AutodiscoveryBackgroundJob().execute(job_interface, debug=active_config.debug)

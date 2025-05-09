@@ -1538,13 +1538,17 @@ class EnabledDisabledServicesEditor:
         self._host = host
 
     def save_host_service_enable_disable_rules(
-        self, to_enable: set[str], to_disable: set[str], *, pprint_value: bool
+        self, to_enable: set[str], to_disable: set[str], *, pprint_value: bool, debug: bool
     ) -> None:
-        self._save_service_enable_disable_rules(to_enable, value=False, pprint_value=pprint_value)
-        self._save_service_enable_disable_rules(to_disable, value=True, pprint_value=pprint_value)
+        self._save_service_enable_disable_rules(
+            to_enable, value=False, pprint_value=pprint_value, debug=debug
+        )
+        self._save_service_enable_disable_rules(
+            to_disable, value=True, pprint_value=pprint_value, debug=debug
+        )
 
     def _save_service_enable_disable_rules(
-        self, services: set[str], *, value: bool, pprint_value: bool
+        self, services: set[str], *, value: bool, pprint_value: bool, debug: bool
     ) -> None:
         """
         Load all disabled services rules from the folder, then check whether or not there is a
@@ -1580,7 +1584,9 @@ class EnabledDisabledServicesEditor:
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
-        services_labels = get_services_labels(self._host.site_id(), self._host.name(), services)
+        services_labels = get_services_labels(
+            self._host.site_id(), self._host.name(), services, debug=debug
+        )
         for service in list(services):
             service_labels = services_labels.labels[service]
             value_without_host_rule, _ = ruleset.analyse_ruleset(

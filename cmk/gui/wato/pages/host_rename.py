@@ -180,6 +180,7 @@ class ModeBulkRenameHost(WatoMode):
                             renamings=_renamings_to_job_args(renamings),
                             pprint_value=active_config.wato_pprint_config,
                             use_git=active_config.wato_use_git,
+                            debug=active_config.debug,
                         ),
                     ),
                     InitialStatusArgs(
@@ -441,6 +442,7 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     renamings: Sequence[tuple[str, AnnotatedHostName, AnnotatedHostName]]
     pprint_value: bool
     use_git: bool
+    debug: bool
 
 
 def rename_hosts_job_entry_point(
@@ -455,6 +457,7 @@ def rename_hosts_job_entry_point(
             job_interface,
             pprint_value=args.pprint_value,
             use_git=args.use_git,
+            debug=args.debug,
         )  # Already activates the changes!
 
         for site_id in group_renamings_by_site(renamings):
@@ -579,6 +582,7 @@ class ModeRenameHost(WatoMode):
                         renamings=_renamings_to_job_args(renamings),
                         pprint_value=active_config.wato_pprint_config,
                         use_git=active_config.wato_use_git,
+                        debug=active_config.debug,
                     ),
                 ),
                 InitialStatusArgs(
@@ -657,12 +661,14 @@ def _rename_hosts(
     *,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
     action_counts, auth_problems = perform_rename_hosts(
         renamings,
         job_interface,
         pprint_value=pprint_value,
         use_git=use_git,
+        debug=debug,
     )
     action_texts = render_renaming_actions(action_counts)
     return action_texts, auth_problems

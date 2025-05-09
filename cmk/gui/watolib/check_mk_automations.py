@@ -234,21 +234,23 @@ def local_discovery_preview(
     )
 
 
-def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
+def autodiscovery(site_id: SiteId, *, debug: bool) -> results.AutodiscoveryResult:
     return _deserialize(
         _automation_serialized(
             "autodiscovery",
             siteid=site_id,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AutodiscoveryResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 def set_autochecks_v2(
     site_id: SiteId,
     checks: SetAutochecksInput,
+    *,
+    debug: bool,
 ) -> results.SetAutochecksV2Result:
     return _deserialize(
         _automation_serialized(
@@ -256,10 +258,10 @@ def set_autochecks_v2(
             siteid=site_id,
             args=None,
             stdin_data=checks.serialize(),
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.SetAutochecksV2Result,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -267,6 +269,8 @@ def update_host_labels(
     site_id: SiteId,
     host_name: HostName,
     host_labels: Sequence[HostLabel],
+    *,
+    debug: bool,
 ) -> results.UpdateHostLabelsResult:
     return _deserialize(
         _automation_serialized(
@@ -274,16 +278,18 @@ def update_host_labels(
             siteid=site_id,
             args=[host_name],
             indata={label.name: label.to_dict() for label in host_labels},
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.UpdateHostLabelsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 def rename_hosts(
     site_id: SiteId,
     name_pairs: Sequence[tuple[HostName, HostName]],
+    *,
+    debug: bool,
 ) -> results.RenameHostsResult:
     return _deserialize(
         _automation_serialized(
@@ -291,10 +297,10 @@ def rename_hosts(
             siteid=site_id,
             indata=name_pairs,
             non_blocking_http=True,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.RenameHostsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -302,30 +308,32 @@ def get_services_labels(
     site_id: SiteId,
     host_name: HostName,
     service_names: Iterable[ServiceName],
+    *,
+    debug: bool,
 ) -> results.GetServicesLabelsResult:
     return _deserialize(
         _automation_serialized(
             "get-services-labels",
             siteid=site_id,
             args=[host_name, *service_names],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetServicesLabelsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 def get_service_name(
-    host_name: HostName, check_plugin_name: CheckPluginName, item: Item
+    host_name: HostName, check_plugin_name: CheckPluginName, item: Item, *, debug: bool
 ) -> results.GetServiceNameResult:
     return _deserialize(
         _automation_serialized(
             "get-service-name",
             args=[host_name, str(check_plugin_name), repr(item)],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetServiceNameResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

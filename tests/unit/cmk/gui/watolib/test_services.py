@@ -346,6 +346,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             sample_autochecks,
             {},
         ),
+        debug=False,
     )
     mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
@@ -604,6 +605,7 @@ def test_perform_discovery_single_update(
             sample_autochecks,
             {},
         ),
+        debug=False,
     )
     mock_discovery_preview.assert_called_with(
         sample_host_name,
@@ -824,6 +826,7 @@ def test_perform_discovery_action_update_services(
             sample_autochecks,
             {},
         ),
+        debug=False,
     )
     mock_discovery_preview.assert_called_with(
         sample_host_name,
@@ -928,6 +931,7 @@ def test_perform_discovery_action_update_host_labels(
             # HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
             HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
         ],
+        debug=False,
     )
     mock_set_autochecks.assert_not_called()
     mock_discovery_preview.assert_called_with(

@@ -7,20 +7,20 @@ from __future__ import annotations
 
 import dataclasses
 import json
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Self
 
 import pytest
-import requests
-from pydantic import BaseModel
 
-from tests.testlib.extensions import download_extension, install_extension
+from tests.testlib.extensions import (
+    compatible_extensions_sorted_by_n_downloads,
+    download_extension,
+    install_extension,
+)
 from tests.testlib.site import Site
 
 from cmk.ccc.version import __version__, parse_check_mk_version
-
-REQUESTS_TIMEOUT = 10
 
 NUMBER_OF_EXTENSIONS_TO_COVER = 120
 
@@ -477,7 +477,7 @@ def test_extension_compatibility(
 
 def test_package_list_up_to_date() -> None:
     parsed_version = parse_check_mk_version(__version__)
-    extensions = _compatible_extensions_sorted_by_n_downloads(parsed_version)
+    extensions = compatible_extensions_sorted_by_n_downloads(parsed_version)
 
     # uncomment this to get output that you can paste into a spread sheet.
     # for extension in extensions:
@@ -488,48 +488,3 @@ def test_package_list_up_to_date() -> None:
 
     missing_test_cases = must_haves - set(CURRENTLY_UNDER_TEST) - UNTESTABLE
     assert not missing_test_cases
-
-
-def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_Extension]:
-    return sorted(
-        _compatible_extensions(parsed_version),
-        key=lambda extension: extension.downloads,
-        reverse=True,
-    )
-
-
-def _compatible_extensions(parsed_version: int) -> Iterator[_Extension]:
-    response = requests.get(
-        "https://exchange.checkmk.com/api/packages/all", timeout=REQUESTS_TIMEOUT
-    )
-    response.raise_for_status()
-    all_packages_response = _ExchangeResponseAllPackages.model_validate(response.json())
-    assert all_packages_response.success, "Querying packages from Checkmk exchange unsuccessful"
-    for extension in all_packages_response.data.packages:
-        try:
-            min_version = parse_check_mk_version(extension.latest_version.min_version)
-        except ValueError:
-            continue
-        if min_version < parsed_version:
-            yield extension
-
-
-class _LatestVersion(BaseModel, frozen=True):
-    id: int
-    min_version: str
-    link: str
-
-
-class _Extension(BaseModel, frozen=True):
-    id: int
-    latest_version: _LatestVersion
-    downloads: int
-
-
-class _ExchangeResponseAllPackagesData(BaseModel, frozen=True):
-    packages: Sequence[_Extension]
-
-
-class _ExchangeResponseAllPackages(BaseModel, frozen=True):
-    success: bool
-    data: _ExchangeResponseAllPackagesData

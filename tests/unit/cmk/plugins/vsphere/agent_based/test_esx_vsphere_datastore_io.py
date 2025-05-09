@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 from cmk.plugins.vsphere.agent_based.esx_vsphere_datastore_io import (
     _check_esx_vsphere_datastore_io,
@@ -20,12 +20,14 @@ STRING_TABLE = [  # only a snippet!
     ["datastore.datastoreReadIops", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "number"],
     ["datastore.datastoreReadIops", "79d8b527-45291f84", "0#0", "number"],
     ["datastore.datastoreReadIops", "fce701f6-867094ae", "0#0", "number"],
+    ["datastore.datastoreReadIops", "e480ac65-cd8bcbd5", "-1#-1#-1", "number"],
     ["datastore.datastoreWriteIops", "56490e2e-692ac36c", "0#0", "number"],
     ["datastore.datastoreWriteIops", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#0", "number"],
     ["datastore.datastoreWriteIops", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "number"],
     ["datastore.datastoreWriteIops", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "number"],
     ["datastore.datastoreWriteIops", "79d8b527-45291f84", "0#0", "number"],
     ["datastore.datastoreWriteIops", "fce701f6-867094ae", "0#0", "number"],
+    ["datastore.datastoreWriteIops", "e480ac65-cd8bcbd5", "-1#-1#-1", "number"],
     ["datastore.name", "192.168.99.100:/vmtestnfs1", "NFS_sgrznac1_Test", "string"],
     ["datastore.name", "192.168.99.101:/vmprodnfs1", "NFS_sgrznac1_Prod", "string"],
     [
@@ -110,6 +112,7 @@ def test_discovery_physical(section: SectionCounter) -> None:
         [
             Service(item="56490e2e-692ac36c"),
             Service(item="79d8b527-45291f84"),
+            Service(item="e480ac65-cd8bcbd5"),
             Service(item="SSD_sgrz3par_vmstore1"),
             Service(item="SSD_sgrz3par_vmstore2"),
             Service(item="fce701f6-867094ae"),
@@ -141,24 +144,40 @@ def test_check_summary(section: SectionCounter) -> None:
     ]
 
 
-def test_check_item(section: SectionCounter) -> None:
-    assert list(
-        _check_esx_vsphere_datastore_io(
+@pytest.mark.parametrize(
+    ["item", "expected"],
+    [
+        pytest.param(
             "SSD_sgrz3par_vmstore1",
-            {"summary": False, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
-            section,
-            1659382581,
-            {},
+            [
+                Result(state=State.OK, summary="Read: 0.00 B/s"),
+                Metric("disk_read_throughput", 0.0),
+                Result(state=State.OK, summary="Write: 2.05 kB/s"),
+                Metric("disk_write_throughput", 2048.0),
+                Result(state=State.OK, notice="Read operations: 0.00/s"),
+                Metric("disk_read_ios", 0.0),
+                Result(state=State.OK, notice="Write operations: 0.00/s"),
+                Metric("disk_write_ios", 0.0),
+                Result(state=State.OK, summary="Latency: 0 seconds"),
+                Metric("disk_latency", 0.0),
+            ],
+        ),
+        pytest.param(
+            "e480ac65-cd8bcbd5",
+            [Result(state=State.UNKNOWN, summary="No valid data from queried host")],
+        ),
+    ],
+)
+def test_check_item(section: SectionCounter, item: str, expected: CheckResult) -> None:
+    assert (
+        list(
+            _check_esx_vsphere_datastore_io(
+                item,
+                {"summary": False, "physical": {}, "lvm": False, "vxvm": False, "diskless": False},
+                section,
+                1659382581,
+                {},
+            )
         )
-    ) == [
-        Result(state=State.OK, summary="Read: 0.00 B/s"),
-        Metric("disk_read_throughput", 0.0),
-        Result(state=State.OK, summary="Write: 2.05 kB/s"),
-        Metric("disk_write_throughput", 2048.0),
-        Result(state=State.OK, notice="Read operations: 0.00/s"),
-        Metric("disk_read_ios", 0.0),
-        Result(state=State.OK, notice="Write operations: 0.00/s"),
-        Metric("disk_write_ios", 0.0),
-        Result(state=State.OK, summary="Latency: 0 seconds"),
-        Metric("disk_latency", 0.0),
-    ]
+        == expected
+    )

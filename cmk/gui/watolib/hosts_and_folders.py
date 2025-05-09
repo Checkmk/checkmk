@@ -2480,6 +2480,20 @@ class Folder(FolderProtocol):
             use_git=active_config.wato_use_git,
         )
 
+    def user_may_delete_hosts(
+        self,
+        host_names: Sequence[HostName],
+        *,
+        allow_locked_deletion: bool = False,
+    ) -> None:
+        # Check preconditions
+        user.need_permission("wato.manage_hosts")
+        self.need_unlocked_hosts()
+        self.permissions.need_permission("write")
+
+        # Check if hosts can be deleted
+        self._validate_delete_hosts(host_names, allow_locked_deletion)
+
     def delete_hosts(
         self,
         host_names: Sequence[HostName],
@@ -2488,18 +2502,13 @@ class Folder(FolderProtocol):
         pprint_value: bool,
         allow_locked_deletion: bool = False,
     ) -> None:
-        # 1. Check preconditions
-        user.need_permission("wato.manage_hosts")
-        self.need_unlocked_hosts()
-        self.permissions.need_permission("write")
+        # 1. Check preconditions and whether hosts can be deleted
+        self.user_may_delete_hosts(host_names, allow_locked_deletion=allow_locked_deletion)
 
-        # 2. Check if hosts can be deleted
-        self._validate_delete_hosts(host_names, allow_locked_deletion)
-
-        # 3. Delete host specific files (caches, tempfiles, ...)
+        # 2. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(host_names, automation=automation)
 
-        # 4. Actual modification
+        # 3. Actual modification
         assert self._hosts is not None
         for host_name in host_names:
             host = self.hosts()[host_name]

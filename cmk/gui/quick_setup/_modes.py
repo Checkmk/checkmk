@@ -8,14 +8,13 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import override, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.user import UserId
 
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -36,7 +35,6 @@ from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
@@ -59,7 +57,6 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle_objects,
     edit_config_bundle_configuration,
     identify_bundle_references,
-    read_config_bundle,
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import make_action_link
@@ -262,27 +259,6 @@ class ModeEditConfigurationBundles(WatoMode):
             # revert changes does not work correctly when a config sync to another site occurred
             # for consistency reasons we always prevent the user from reverting the changes
             prevent_discard_changes = True
-
-            bundle = read_config_bundle(bundle_id)
-            owned_by = bundle.get("owned_by")
-            # If the current user is different from the one who created the bundle, they need
-            # permission to edit all passwords in order to (find and) delete the password.
-            if not user.may("wato.edit_all_passwords"):
-                if owned_by and owned_by != user.id:
-                    raise MKAuthException(_("You are not permitted to perform this action."))
-
-            # Only admins may delete bundles which were created by an admin
-            if (
-                owned_by
-                and "admin" in roles_of_user(UserId(owned_by))
-                and "admin" not in user.role_ids
-            ):
-                raise MKAuthException(
-                    _(
-                        "You are not permitted to perform this action. Only an admin is permitted to "
-                        "delete a bundle which was created by an admin."
-                    )
-                )
         else:
             raise MKGeneralException("Not implemented")
 
@@ -811,9 +787,9 @@ class ModeConfigurationBundle(WatoMode):
             return redirect(self.mode_url(bundle_id=self._bundle_id))
 
         if request.has_var("_clean_up"):
+            references = identify_bundle_references(None, {self._bundle_id})[self._bundle_id]
             delete_config_bundle_objects(
-                self._bundle_id,
-                bundle_group=None,
+                references,
                 user_id=user.id,
                 pprint_value=active_config.wato_pprint_config,
                 use_git=active_config.wato_use_git,

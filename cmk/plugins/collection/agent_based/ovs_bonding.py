@@ -42,7 +42,7 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
                 raise InvalidOvsBondingStringTable("Missing bond value.")
 
             case _ if not last_interface:
-                raise InvalidOvsBondingStringTable("Missing slave inteface value.")
+                raise InvalidOvsBondingStringTable("Missing slave interface value.")
 
     parsed: dict[str, bonding.Bond] = {}
 

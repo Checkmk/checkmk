@@ -310,6 +310,10 @@ builtin_views.update(
             "painters": [
                 ColumnSpec(name="service_state"),
                 ColumnSpec(
+                    name="host",
+                    link_spec=VisualLinkSpec(type_name="views", name="host"),
+                ),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),

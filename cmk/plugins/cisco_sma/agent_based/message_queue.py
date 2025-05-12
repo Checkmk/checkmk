@@ -82,15 +82,15 @@ def _check_message_queue(params: Params, section: Queue) -> CheckResult:
         case QueueAvailabilityStatus.queue_space_available:
             yield Result(
                 state=State(params["monitoring_status_memory_available"]),
-                notice="Memory available",
+                summary="Memory available",
             )
         case QueueAvailabilityStatus.queue_space_shortage:
             yield Result(
                 state=State(params["monitoring_status_memory_shortage"]),
-                notice="Memory shortage",
+                summary="Memory shortage",
             )
         case QueueAvailabilityStatus.queue_full:
-            yield Result(state=State(params["monitoring_status_queue_full"]), notice="Memory full")
+            yield Result(state=State(params["monitoring_status_queue_full"]), summary="Memory full")
         case _:
             assert_never(section.availability_status)
 
@@ -107,7 +107,6 @@ def _check_message_queue(params: Params, section: Queue) -> CheckResult:
         label="Total messages",
         metric_name="cisco_sma_queue_length",
         levels_upper=params["levels_queue_length"],
-        notice_only=True,
         render_func=lambda x: str(int(x)),
     )
 
@@ -117,7 +116,6 @@ def _check_message_queue(params: Params, section: Queue) -> CheckResult:
         metric_name="cisco_sma_queue_oldest_message_age",
         levels_upper=params["levels_oldest_message_age"],
         render_func=render.timespan,
-        notice_only=True,
     )
 
 

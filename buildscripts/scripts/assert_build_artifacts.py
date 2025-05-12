@@ -8,6 +8,7 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
+from typing import NamedTuple
 
 import requests
 
@@ -127,43 +128,85 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
     return True
 
 
+class ArtifactState(NamedTuple):
+    missing: str = "ARTIFACT_MISSING"
+    present: str = "ARTIFACT_PRESENT"
+
+
+class AssertResult(NamedTuple):
+    assertion_ok: bool
+    message: str
+
+
 def assert_presence_on_download_server(
     args: Args, internal_only: bool, artifact_name: str, credentials: Credentials
-) -> None:
+) -> AssertResult:
     if (
         not file_exists_on_download_server(artifact_name, args.version, credentials)
         != internal_only
     ):
-        raise RuntimeError(
-            f"{artifact_name} should {'not' if internal_only else ''} "
-            "be available on download server!"
+        return AssertResult(
+            assertion_ok=False,
+            message=(
+                f"{ArtifactState().missing if internal_only else ArtifactState().present}: "
+                f"{artifact_name} should {'not' if internal_only else ''} "
+                "be available on download server!"
+            ),
         )
+
+    return AssertResult(assertion_ok=True, message="")
 
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     registries = get_default_registries()
 
+    results = []
     for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        results.append(
+            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        )
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        results.append(
+            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        )
 
     for artifact_name, internal_only in build_bom_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        results.append(
+            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        )
 
     for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
-        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        results.append(
+            assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
+        )
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
         args, loaded_yaml, registries
     ):
-        if not registry.image_exists(image_name, edition):
-            raise RuntimeError(f"{image_name} not found!")
+        image_exists = registry.image_exists(image_name, edition)
+        results.append(
+            AssertResult(
+                assertion_ok=image_exists,
+                message=f"{image_name} not found!" if not image_exists else "",
+            )
+        )
 
-    # cloud images
-    # TODO
+    errors = [r.message for r in results if not r.assertion_ok]
+
+    print("ARTIFACTS_COUNTED: ", len(results))
+    print("ARTIFACTS_ERRORS: ", len(errors))
+
+    if errors:
+        raise RuntimeError(
+            f"The following {len(errors)} build artifacts errors were detected:\n"
+            + "\n".join([str(e) for e in errors])
+        )
+
+
+# cloud images
+# TODO
 
 
 def dump_bom_artifact_mapping(args: Args, loaded_yaml: dict) -> None:

@@ -69,7 +69,7 @@ _STR_PATHS: Final = {
 }
 
 
-_IGNORED_VARS = {"Path", "os", "sys", "Union"}
+_IGNORED_VARS = {"Path", "os", "sys", "Union", "LOCAL_SEGMENT"}
 
 
 def _ignore(varname: str) -> bool:

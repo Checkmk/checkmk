@@ -701,7 +701,7 @@ class TestAutomationReceiveConfigSync:
         monkeypatch.setattr(
             cmk.gui.watolib.activate_changes,
             "_execute_post_config_sync_actions",
-            lambda site_id: None,
+            lambda site_id, local_files_changed: None,
         )
 
         remote_path.mkdir(parents=True, exist_ok=True)

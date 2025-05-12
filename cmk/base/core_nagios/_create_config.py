@@ -641,6 +641,7 @@ def create_nagios_servicedefs(
                 hostname,
                 license_counter,
                 services_ids,
+                service_labels,
             )
     service_discovery_name = ConfigCache.service_discovery_name()
 
@@ -707,6 +708,7 @@ def _create_custom_check(
     hostname: HostName,
     license_counter: Counter,
     services_ids: dict[ServiceName, AbstractServiceID],
+    service_labels: dict[ServiceName, Labels],
 ) -> None:
     # entries are dicts with the following keys:
     # "service_description"        Service name to use
@@ -768,6 +770,9 @@ def _create_custom_check(
 
     labels = _get_service_labels(config_cache, hostname, description)
 
+    service_attr = _to_nagios_core_attributes(
+        get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
+    )
     service_spec = (
         {
             "use": "check_mk_perf,check_mk_default",
@@ -777,11 +782,12 @@ def _create_custom_check(
             "active_checks_enabled": str(1 if (command_line and not freshness) else 0),
         }
         | freshness
-        | _to_nagios_core_attributes(
-            get_service_attributes(config_cache, hostname, description, labels, extra_icon=None)
-        )
+        | service_attr
         | _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
     )
+
+    service_labels[description] = dict(get_labels_from_attributes(list(service_attr.items())))
+
     cfg.write_object("service", service_spec)
     license_counter["services"] += 1
 

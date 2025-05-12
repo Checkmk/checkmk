@@ -2258,7 +2258,6 @@ def create_broker_certificates(
     settings: SiteConfiguration,
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
-    *,
     debug: bool,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]

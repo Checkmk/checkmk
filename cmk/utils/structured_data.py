@@ -1685,8 +1685,11 @@ class InventoryPaths:
     def delta_cache_host(self, host_name: HostName) -> Path:
         return self.delta_cache_dir / str(host_name)
 
-    def delta_cache_tree(self, host_name: HostName, previous: str, current: str) -> Path:
-        return self.delta_cache_host(host_name) / f"{previous}_{current}"
+    def delta_cache_tree(self, host_name: HostName, previous: int, current: int) -> Path:
+        if previous < -1 or previous >= current:
+            raise ValueError(previous)
+        previous_name = "None" if previous == -1 else str(previous)
+        return self.delta_cache_host(host_name) / f"{previous_name}_{current}"
 
 
 def _load_tree(file_path: Path) -> ImmutableTree:
@@ -1815,7 +1818,7 @@ class RawInventoryStore:
 @dataclass(frozen=True)
 class HistoryPath:
     path: Path
-    timestamp: int | None
+    timestamp: int
 
 
 @dataclass(frozen=True)
@@ -1826,16 +1829,14 @@ class HistoryPaths:
 
 @dataclass(frozen=True)
 class HistoryEntry:
-    timestamp: int | None
+    timestamp: int
     new: int
     changed: int
     removed: int
     delta_tree: ImmutableDeltaTree
 
     @classmethod
-    def from_raw(
-        cls, timestamp: int | None, raw: tuple[int, int, int, SDRawDeltaTree]
-    ) -> HistoryEntry:
+    def from_raw(cls, timestamp: int, raw: tuple[int, int, int, SDRawDeltaTree]) -> HistoryEntry:
         new, changed, removed, raw_delta_tree = raw
         return cls(
             timestamp,
@@ -1846,7 +1847,7 @@ class HistoryEntry:
         )
 
     @classmethod
-    def from_delta_tree(cls, timestamp: int | None, delta_tree: ImmutableDeltaTree) -> HistoryEntry:
+    def from_delta_tree(cls, timestamp: int, delta_tree: ImmutableDeltaTree) -> HistoryEntry:
         delta_stats = delta_tree.get_stats()
         return cls(
             timestamp,
@@ -1919,7 +1920,7 @@ class InventoryStore:
 
     def collect_archive_files(self, *, host_name: HostName) -> HistoryPaths:
         try:
-            archive_host_file_paths = sorted(self.inv_paths.archive_host(host_name).iterdir())
+            archive_host_file_paths = list(self.inv_paths.archive_host(host_name).iterdir())
         except FileNotFoundError:
             return HistoryPaths(paths=[], corrupted=[])
 
@@ -1944,17 +1945,17 @@ class InventoryStore:
         except FileNotFoundError:
             pass
 
-        return HistoryPaths(paths=paths, corrupted=corrupted)
+        return HistoryPaths(paths=sorted(paths, key=lambda hp: hp.timestamp), corrupted=corrupted)
 
     def load_history_entry(
-        self, *, host_name: HostName, previous_timestamp: int | None, current_timestamp: int
+        self, *, host_name: HostName, previous_timestamp: int, current_timestamp: int
     ) -> HistoryEntry | None:
         try:
             raw = store.load_object_from_file(
                 self.inv_paths.delta_cache_tree(
                     host_name,
-                    str(previous_timestamp),
-                    str(current_timestamp),
+                    previous_timestamp,
+                    current_timestamp,
                 ),
                 default=None,
             )
@@ -1976,14 +1977,14 @@ class InventoryStore:
         self,
         *,
         host_name: HostName,
-        previous_timestamp: int | None,
+        previous_timestamp: int,
         current_timestamp: int,
         entry: HistoryEntry,
     ) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(
             host_name,
-            str(previous_timestamp),
-            str(current_timestamp),
+            previous_timestamp,
+            current_timestamp,
         )
         delta_cache_tree.parent.mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
@@ -1997,7 +1998,7 @@ def _get_pairs(
 ) -> Sequence[tuple[HistoryPath, HistoryPath]]:
     if not history_file_paths:
         return []
-    paths = [HistoryPath(Path(), None)] + list(history_file_paths)
+    paths = [HistoryPath(Path(), -1)] + list(history_file_paths)
     return list(zip(paths, paths[1:]))
 
 
@@ -2019,9 +2020,6 @@ def load_history(
     files = inv_store.collect_archive_files(host_name=host_name)
     entries: list[HistoryEntry] = []
     for previous, current in filter_history_paths(_get_pairs(files.paths)):
-        if current.timestamp is None:
-            continue
-
         if (
             entry := inv_store.load_history_entry(
                 host_name=host_name,

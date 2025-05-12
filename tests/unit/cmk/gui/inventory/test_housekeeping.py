@@ -75,10 +75,10 @@ def test_no_inventory_tree(tmp_path: Path) -> None:
     archive_tree_1 = inv_paths.archive_tree(HostName("hostname"), "1")
     archive_tree_2 = inv_paths.archive_tree(HostName("hostname"), "2")
     archive_tree_3 = inv_paths.archive_tree(HostName("hostname"), "3")
-    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), "None", "1")
-    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), "1", "2")
-    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), "2", "3")
-    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), "3", "100")
+    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), -1, 1)
+    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), 1, 2)
+    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), 2, 3)
+    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), 3, 100)
     for file_path in [
         archive_tree_1,
         archive_tree_2,
@@ -108,10 +108,10 @@ def test_no_archive_tree_1(tmp_path: Path) -> None:
     archive_tree_1 = inv_paths.archive_tree(HostName("hostname"), "1")
     archive_tree_2 = inv_paths.archive_tree(HostName("hostname"), "2")
     archive_tree_3 = inv_paths.archive_tree(HostName("hostname"), "3")
-    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), "None", "1")
-    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), "1", "2")
-    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), "2", "3")
-    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), "3", "100")
+    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), -1, 1)
+    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), 1, 2)
+    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), 2, 3)
+    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), 3, 100)
     for file_path in [
         inventory_tree,
         archive_tree_2,
@@ -142,10 +142,10 @@ def test_no_archive_tree_2(tmp_path: Path) -> None:
     archive_tree_1 = inv_paths.archive_tree(HostName("hostname"), "1")
     archive_tree_2 = inv_paths.archive_tree(HostName("hostname"), "2")
     archive_tree_3 = inv_paths.archive_tree(HostName("hostname"), "3")
-    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), "None", "1")
-    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), "1", "2")
-    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), "2", "3")
-    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), "3", "100")
+    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), -1, 1)
+    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), 1, 2)
+    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), 2, 3)
+    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), 3, 100)
     for file_path in [
         inventory_tree,
         archive_tree_1,
@@ -176,10 +176,10 @@ def test_no_archive_tree_3(tmp_path: Path) -> None:
     archive_tree_1 = inv_paths.archive_tree(HostName("hostname"), "1")
     archive_tree_2 = inv_paths.archive_tree(HostName("hostname"), "2")
     archive_tree_3 = inv_paths.archive_tree(HostName("hostname"), "3")
-    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), "None", "1")
-    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), "1", "2")
-    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), "2", "3")
-    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), "3", "100")
+    delta_cache_tree_None_1 = inv_paths.delta_cache_tree(HostName("hostname"), -1, 1)
+    delta_cache_tree_1_2 = inv_paths.delta_cache_tree(HostName("hostname"), 1, 2)
+    delta_cache_tree_2_3 = inv_paths.delta_cache_tree(HostName("hostname"), 2, 3)
+    delta_cache_tree_3_100 = inv_paths.delta_cache_tree(HostName("hostname"), 3, 100)
     for file_path in [
         inventory_tree,
         archive_tree_1,

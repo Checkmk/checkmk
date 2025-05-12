@@ -98,3 +98,52 @@ class DomainObjectCollectionModel(LinkableModel):
     extensions: dict = api_field(
         description="Additional attributes alongside the collection.", default_factory=dict
     )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectMemberBaseModel(LinkableModel):
+    id: str = api_field(description="The id of this object.")
+    disabledReason: str | None = api_field(
+        description=(
+            'Provides the reason (or the literal "disabled") why an object property or '
+            "collection is un-modifiable, or, in the case of an action, unusable (and "
+            "hence no links to mutate that member's state, or invoke the action, are "
+            "provided)."
+        )
+    )
+    invalidReason: str | None = api_field(
+        description=(
+            'Provides the reason (or the literal "invalid") why a proposed value for a '
+            "property, collection or action argument is invalid. Appears within an "
+            "argument representation 2.9 returned as a response."
+        ),
+        example="invalid",
+    )
+    x_ro_invalidReason: str | None = api_field(
+        alias="x-ro-invalidReason",
+        description=(
+            "Provides the reason why a SET OF proposed values for properties or arguments "
+            "is invalid."
+        ),
+        example="invalid",
+    )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectCollectionMemberModel(ObjectMemberBaseModel):
+    memberType: Literal["collection"] = api_field(description="The type of this member.")
+    value: list[LinkModel]
+    name: str = api_field(description="The name of the object.", example="import_values")
+    title: str = api_field(
+        description="A human readable title of this object. Can be used for user interfaces."
+    )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectActionMemberModel(ObjectMemberBaseModel):
+    memberType: Literal["action"] = api_field(description="The type of this member.")
+    parameters: dict
+    name: str = api_field(description="The name of the object.", example="import_values")
+    title: str = api_field(
+        description="A human readable title of this object. Can be used for user interfaces."
+    )

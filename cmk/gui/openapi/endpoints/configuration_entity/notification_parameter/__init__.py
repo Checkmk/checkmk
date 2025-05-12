@@ -18,11 +18,33 @@ from cmk.gui.openapi.endpoints.configuration_entity._common import (
     serve_configuration_entity_list,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
+from cmk import fields
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
-@list_endpoint_decorator(ConfigEntityType.notification_parameter)
+class NotificationParamResponse(DomainObject):
+    domainType = fields.Constant(
+        ConfigEntityType.notification_parameter.value,
+        description="The domain type of the object.",
+    )
+
+
+class NotificationParamResponseCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        ConfigEntityType.notification_parameter.value,
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(NotificationParamResponse),
+        description="A list of notification parameter objects.",
+    )
+
+
+@list_endpoint_decorator(
+    ConfigEntityType.notification_parameter, NotificationParamResponseCollection
+)
 def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
     """List existing notification parameters"""
     return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params)

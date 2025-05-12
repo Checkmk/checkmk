@@ -16,11 +16,31 @@ from cmk.gui.openapi.endpoints.configuration_entity._common import (
     serve_configuration_entity_list,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
+from cmk import fields
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
-@list_endpoint_decorator(ConfigEntityType.folder)
+class FolderResponse(DomainObject):
+    domainType = fields.Constant(
+        ConfigEntityType.folder.value,
+        description="The domain type of the object.",
+    )
+
+
+class FolderResponseCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        ConfigEntityType.folder.value,
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(FolderResponse),
+        description="A list of folder objects.",
+    )
+
+
+@list_endpoint_decorator(ConfigEntityType.folder, FolderResponseCollection)
 def _list_folder(params: Mapping[str, Any]) -> Response:
     """List existing folder"""
     return serve_configuration_entity_list(ConfigEntityType.folder, params)

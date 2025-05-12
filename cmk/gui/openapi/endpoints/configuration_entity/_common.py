@@ -44,14 +44,16 @@ def to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             assert_never(other)
 
 
-def list_endpoint_decorator(entity_type: ConfigEntityType) -> Endpoint:
+def list_endpoint_decorator(
+    entity_type: ConfigEntityType, response_schema: type[response_schemas.DomainObjectCollection]
+) -> Endpoint:
     return Endpoint(
         constructors.collection_href(to_domain_type(entity_type), "{entity_type_specifier}"),
         "cmk/list",
         tag_group="Checkmk Internal",
         path_params=[ENTITY_TYPE_SPECIFIER_FIELD],
         method="get",
-        response_schema=response_schemas.DomainObjectCollection,
+        response_schema=response_schema,
     )
 
 

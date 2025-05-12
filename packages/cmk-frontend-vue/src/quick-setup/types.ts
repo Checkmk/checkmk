@@ -60,4 +60,7 @@ export interface QuickSetupStageWidgetContentProps {
 
   /** @property {LogStep[]} backgroundJobLog - Array of LogStep from the Quick Setup background job log */
   backgroundJobLog?: LogStep[]
+
+  /** @property {boolean} isBackgroundJobRunning - Flag to indicate if a background job is running */
+  isBackgroundJobRunning?: boolean
 }

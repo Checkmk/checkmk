@@ -222,7 +222,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
       errors: [],
       user_input: ref(userInput),
       actions: acts,
-      background_job_log: useBackgroundJobLog()
+      background_job_log: useBackgroundJobLog(true)
     })
   }
 
@@ -237,7 +237,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     user_input: ref({}),
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     actions: [...data.actions.map((action) => processActionData(ActionType.Save, action, save))],
-    background_job_log: useBackgroundJobLog()
+    background_job_log: useBackgroundJobLog(true)
   })
   loadedAllStages.value = true
   return result
@@ -275,7 +275,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
       errors: [],
       user_input: ref(userInput),
       actions: acts,
-      background_job_log: useBackgroundJobLog()
+      background_job_log: useBackgroundJobLog(true)
     })
   }
 
@@ -301,7 +301,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
         prevStage
       )
     ],
-    background_job_log: useBackgroundJobLog()
+    background_job_log: useBackgroundJobLog(true)
   })
 
   return result
@@ -420,6 +420,7 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
         stg.components || [],
         (value) => update(index, value),
         stg.background_job_log.entries,
+        stg.background_job_log.isRunning,
         stg.form_spec_errors,
         stg.user_input
       ),
@@ -440,6 +441,7 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
       stg.components || [],
       () => {},
       stg.background_job_log.entries,
+      stg.background_job_log.isRunning,
       stg.form_spec_errors,
       stg.user_input
     )

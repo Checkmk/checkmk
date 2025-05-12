@@ -86,3 +86,27 @@ test('shoud set active taks to error', async () => {
   expect(isTaskActive()).toBe(false)
   expect(entries.value[0]!.status).toBe('error')
 })
+
+test('should stop waiting on error', async () => {
+  const { update, setActiveTasksToError, isRunning } = useBackgroundJobLog(true)
+
+  expect(isRunning.value).toBe(false)
+
+  update(DUMMY_LOG)
+  expect(isRunning.value).toBe(true)
+
+  setActiveTasksToError()
+  expect(isRunning.value).toBe(false)
+})
+
+test('should never be running', async () => {
+  const { update, setActiveTasksToError, isRunning } = useBackgroundJobLog()
+
+  expect(isRunning.value).toBe(false)
+
+  update(DUMMY_LOG)
+  expect(isRunning.value).toBe(false)
+
+  setActiveTasksToError()
+  expect(isRunning.value).toBe(false)
+})

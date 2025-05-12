@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
 export type LogStepStatus = 'active' | 'completed' | 'pending' | 'error'
 export interface LogStep {
@@ -25,25 +25,28 @@ export interface BackgroundJobLog {
   count: () => number
   isTaskActive: () => boolean
   setActiveTasksToError: () => void
+  isRunning: Ref<boolean>
 
   entries: BackgroundJobLogEntries
 }
 
-export const useBackgroundJobLog = (): BackgroundJobLog => {
+export const useBackgroundJobLog = (displayWaitingAnimation?: boolean): BackgroundJobLog => {
   const entries: Ref<LogStep[]> = ref([])
+  const running: Ref<boolean> = ref(false)
 
   const update = (newLog: LogUpdate | null): void => {
-    clear()
     if (newLog === null || newLog.steps.length === 0) {
       return
     }
 
     entries.value = []
     entries.value.push(...newLog.steps)
+    running.value = true
   }
 
   const clear = (): void => {
     entries.value = []
+    running.value = false
   }
 
   const isEmpty = (): boolean => {
@@ -64,7 +67,12 @@ export const useBackgroundJobLog = (): BackgroundJobLog => {
         step.status = 'error'
       }
     })
+    running.value = false
   }
+
+  const isRunning = computed(() => {
+    return running.value && !!displayWaitingAnimation
+  })
 
   return {
     update,
@@ -73,6 +81,7 @@ export const useBackgroundJobLog = (): BackgroundJobLog => {
     count,
     isTaskActive,
     setActiveTasksToError,
-    entries
+    entries,
+    isRunning
   }
 }

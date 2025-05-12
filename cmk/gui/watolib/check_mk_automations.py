@@ -341,16 +341,18 @@ def analyse_service(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    *,
+    debug: bool,
 ) -> results.AnalyseServiceResult:
     return _deserialize(
         _automation_serialized(
             "analyse-service",
             siteid=site_id,
             args=[host_name, service_name],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AnalyseServiceResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

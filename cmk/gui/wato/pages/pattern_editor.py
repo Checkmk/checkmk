@@ -353,6 +353,7 @@ class ModePatternEditor(WatoMode):
             site_id,
             host_name,
             service_desc,
+            debug=debug,
         ).labels
 
         return {

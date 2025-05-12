@@ -1400,6 +1400,7 @@ class ModeEditRuleset(WatoMode):
                     site_id,
                     host_name,
                     service_name,
+                    debug=debug,
                 ).labels
                 if service_name
                 else {}

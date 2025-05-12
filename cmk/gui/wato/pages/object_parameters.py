@@ -140,6 +140,7 @@ class ModeObjectParameters(WatoMode):
                 self._host.site_id(),
                 self._hostname,
                 self._service,
+                debug=active_config.debug,
             )
             self._show_service_info(all_rulesets=all_rulesets, service_result=service_result)
 

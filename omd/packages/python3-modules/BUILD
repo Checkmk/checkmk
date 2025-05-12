@@ -30,13 +30,11 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
-            module_name = module,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
-            module_name = module,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
@@ -63,13 +61,11 @@ build_python_module(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
-            module_name = MODULE_NETAPP,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_NETAPP_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
-            module_name = MODULE_NETAPP,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_NETAPP_SOURCE,
         ),
@@ -96,13 +92,11 @@ build_python_module(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
-            module_name = MODULE_PYMSSQL,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_PYMSSQL_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
-            module_name = MODULE_PYMSSQL,
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = MODULE_PYMSSQL_SOURCE,
         ),

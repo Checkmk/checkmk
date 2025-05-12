@@ -24,6 +24,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     """This macro is creating an empty file.
     """
     requirements = requirements if requirements else "-r $$HOME/$(execpath %s_requirements.txt)" % name
+    openssl_dir = Label("@openssl").repo_name
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -33,11 +34,13 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 git_ssl_no_verify = "",
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
+                openssl_dir = openssl_dir,
             ),
             ":git_ssl_no_verify": build_cmd.format(
                 git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
+                openssl_dir = openssl_dir,
             ),
         }),
         **kwargs
@@ -58,7 +61,7 @@ build_cmd = """
     EXT_DEPS_PATH=$$(echo $(SRCS) | sed 's/.*\\s\\(.*external\\).*\\s.*/\\1/')
 
     # This is where the Python Modules should be found
-    export LD_LIBRARY_PATH="$$PWD/$$EXT_DEPS_PATH/python/python/lib/:$$PWD/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/lib/"
+    export LD_LIBRARY_PATH="$$PWD/$$EXT_DEPS_PATH/python/python/lib/:$$PWD/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib/"
 
     # Python binary supplied by bazel build process
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/python/python/bin/python3
@@ -71,7 +74,7 @@ build_cmd = """
     # Build directory
     mkdir -p $$HOME/$$MODULE_NAME
 
-    export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
+    export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
     # Keep in sync with scripts/run-uvenv
@@ -85,8 +88,8 @@ build_cmd = """
     # https://github.com/sfackler/rust-openssl/blob/10cee24f49cd3f37da1dbf663ba67bca6728db1f/openssl-sys/build/find_normal.rs#L8
     # TODO: we should ideally adjust the PKG_CONFIG_PATH to add the openssl pkgconfig files
 
-    export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/lib"
-    export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/include"
+    export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib"
+    export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include"
 
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
     # Enforce here the usage of the build image compiler and in the same time enable local building.
@@ -95,8 +98,8 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
-    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/_main~_repo_rules~openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freetds/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
+    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
+    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freetds/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\

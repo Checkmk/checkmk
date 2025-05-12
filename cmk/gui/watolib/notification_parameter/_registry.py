@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import inspect
 from collections.abc import Callable
 
 from cmk.ccc.i18n import _
@@ -21,6 +20,7 @@ from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecompose
 from cmk.gui.form_specs.private import (
     Catalog,
     CommentTextArea,
+    DictionaryExtended,
     LegacyValueSpec,
     ListOfStrings,
     not_empty,
@@ -49,15 +49,14 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
     def registration_hook(self, instance):
         plugin = instance
 
-        method_source = inspect.getsource(plugin._form_spec)
-        if "raise NotImplementedError" in method_source:
+        if plugin.form_spec is None:
             # old ValueSpec
             _rulespecs.rulespec_registry.register(
                 _rulespecs.HostRulespec(
                     name=RuleGroup.NotificationParameters(plugin.ident),
                     title=lambda: notification_script_title(plugin.ident),
                     group=RulespecGroupMonitoringConfigurationNotifications,
-                    valuespec=lambda: plugin.spec,
+                    valuespec=plugin.spec,
                     match_type="dict",
                 )
             )
@@ -66,7 +65,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
                 title=Title("%s") % notification_script_title(plugin.ident),
                 name=plugin.ident,
                 topic=rule_specs.Topic.NOTIFICATIONS,
-                parameter_form=plugin._form_spec,
+                parameter_form=plugin.form_spec,
             )
             _rulespec.register_plugins(
                 [LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))]
@@ -90,16 +89,18 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
         )
 
     def form_spec(self, method: str) -> TransformDataForLegacyFormatOrRecomposeFunction:
-        try:
-            param_form_spec = self._entries[method]._form_spec()
-        except KeyError:
+        param_form_spec: Dictionary | DictionaryExtended
+        instance = self._entries.get(method)
+        if not instance:
             if any(method == script_name for script_name, _title in notification_script_choices()):
                 param_form_spec = self.parameter_called()
             else:
                 raise MKUserError(
                     None, _("No notification parameters for method '%s' found") % method
                 )
-        except NotImplementedError:
+        elif instance.form_spec:
+            param_form_spec = instance.form_spec()
+        else:
             try:
                 param_form_spec = self._construct_form_spec_from_valuespec(method)
             except Exception as e:
@@ -189,7 +190,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
         least one built-in parameter that uses a Migrate, handle also this case.
         """
         migrate: Callable | None = None
-        if isinstance((valuespec := self._entries[method].spec), ValueSpecMigrate):
+        if isinstance((valuespec := self._entries[method].spec()), ValueSpecMigrate):
             if isinstance(valuespec._valuespec, ValueSpecDictionary):
                 valuespec_elements = valuespec._valuespec._elements()
                 required_keys = valuespec._valuespec._required_keys
@@ -221,13 +222,10 @@ notification_parameter_registry = NotificationParameterRegistry()
 
 
 # TODO: Kept for pre 1.6 plug-in compatibility
-def register_notification_parameters(scriptname, valuespec):
-    parameter_class = type(
-        "NotificationParameter%s" % scriptname.title(),
-        (NotificationParameter,),
-        {
-            "ident": scriptname,
-            "spec": valuespec,
-        },
+def register_notification_parameters(scriptname: str, valuespec: ValueSpecDictionary) -> None:
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident=scriptname,
+            spec=lambda: valuespec,
+        )
     )
-    notification_parameter_registry.register(parameter_class())

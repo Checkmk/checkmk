@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast
 
 from cmk.gui.form_specs.private.definitions import SingleChoiceElementExtended, SingleChoiceExtended
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
-from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.watolib.notification_parameter import NotificationParameter
 from cmk.gui.watolib.password_store import passwordstore_choices_without_user
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -28,79 +24,68 @@ from cmk.rulesets.v1.form_specs import (
 from ._helpers import _get_url_prefix_setting
 
 
-class NotificationParameterSlack(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "slack"
-
-    @property
-    def spec(self) -> ValueSpecDictionary:
-        return cast(ValueSpecDictionary, recompose(self._form_spec()).valuespec)
-
-    def _form_spec(self) -> Dictionary:
-        return Dictionary(
-            title=Title("Slack or Mattermost parameters"),
-            elements={
-                "webhook_url": DictElement(
-                    required=True,
-                    parameter_form=CascadingSingleChoice(
-                        title=Title("Webhook URL"),
-                        prefill=DefaultValue("webhook_url"),
-                        help_text=Help(
-                            "Webhook URL. Setup Slack Webhook "
-                            '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
-                            "<br />For Mattermost follow the documentation "
-                            '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
-                            "<br />This URL can also be collected from the password store of Checkmk."
-                        ),
-                        elements=[
-                            CascadingSingleChoiceElement(
-                                title=Title("Explicit"),
-                                name="webhook_url",
-                                parameter_form=String(
-                                    custom_validate=[
-                                        validators.LengthInRange(
-                                            min_value=1,
-                                            error_msg=Message("Please enter a valid Webhook URL"),
-                                        ),
-                                        validators.Url(protocols=[validators.UrlProtocol.HTTPS]),
-                                    ]
-                                ),
-                            ),
-                            CascadingSingleChoiceElement(
-                                title=Title("From password store"),
-                                name="store",
-                                parameter_form=SingleChoiceExtended(
-                                    no_elements_text=Message(
-                                        "There are no passwords defined for this selection yet."
-                                    ),
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            title=Title("%s") % title, name=ident
-                                        )
-                                        for ident, title in passwordstore_choices_without_user()
-                                        if ident is not None
-                                    ],
-                                ),
-                            ),
-                        ],
+def form_spec() -> Dictionary:
+    return Dictionary(
+        title=Title("Slack or Mattermost parameters"),
+        elements={
+            "webhook_url": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Webhook URL"),
+                    prefill=DefaultValue("webhook_url"),
+                    help_text=Help(
+                        "Webhook URL. Setup Slack Webhook "
+                        '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
+                        "<br />For Mattermost follow the documentation "
+                        '<a href="https://docs.mattermost.com/developer/webhooks-incoming.html" target="_blank">here</a>'
+                        "<br />This URL can also be collected from the password store of Checkmk."
                     ),
-                ),
-                "ignore_ssl": DictElement(
-                    parameter_form=FixedValue(
-                        title=Title("Disable SSL certificate verification"),
-                        label=Label("Disable SSL certificate verification"),
-                        help_text=Help(
-                            "Ignore unverified HTTPS request warnings. Use with caution."
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            title=Title("Explicit"),
+                            name="webhook_url",
+                            parameter_form=String(
+                                custom_validate=[
+                                    validators.LengthInRange(
+                                        min_value=1,
+                                        error_msg=Message("Please enter a valid Webhook URL"),
+                                    ),
+                                    validators.Url(protocols=[validators.UrlProtocol.HTTPS]),
+                                ]
+                            ),
                         ),
-                        value=True,
-                    )
+                        CascadingSingleChoiceElement(
+                            title=Title("From password store"),
+                            name="store",
+                            parameter_form=SingleChoiceExtended(
+                                no_elements_text=Message(
+                                    "There are no passwords defined for this selection yet."
+                                ),
+                                elements=[
+                                    SingleChoiceElementExtended(
+                                        title=Title("%s") % title, name=ident
+                                    )
+                                    for ident, title in passwordstore_choices_without_user()
+                                    if ident is not None
+                                ],
+                            ),
+                        ),
+                    ],
                 ),
-                "url_prefix": _get_url_prefix_setting(),
-                "proxy_url": DictElement(
-                    parameter_form=Proxy(
-                        migrate=migrate_to_proxy,
-                    )
-                ),
-            },
-        )
+            ),
+            "ignore_ssl": DictElement(
+                parameter_form=FixedValue(
+                    title=Title("Disable SSL certificate verification"),
+                    label=Label("Disable SSL certificate verification"),
+                    help_text=Help("Ignore unverified HTTPS request warnings. Use with caution."),
+                    value=True,
+                )
+            ),
+            "url_prefix": _get_url_prefix_setting(),
+            "proxy_url": DictElement(
+                parameter_form=Proxy(
+                    migrate=migrate_to_proxy,
+                )
+            ),
+        },
+    )

@@ -27,33 +27,34 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
-class DummyNotificationParams(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "dummy_params"
+def spec() -> ValueSpecDictionary:
+    raise NotImplementedError()
 
-    @property
-    def spec(self) -> ValueSpecDictionary:
-        raise NotImplementedError()
 
-    def _form_spec(self) -> DictionaryExtended:
-        return DictionaryExtended(
-            title=Title("Create notification with the following parameters"),
-            elements={
-                "test_param": DictElement(
-                    parameter_form=String(
-                        custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
-                    ),
-                    required=True,
+def form_spec() -> DictionaryExtended:
+    return DictionaryExtended(
+        title=Title("Create notification with the following parameters"),
+        elements={
+            "test_param": DictElement(
+                parameter_form=String(
+                    custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
                 ),
-            },
-        )
+                required=True,
+            ),
+        },
+    )
 
 
 @pytest.fixture(name="registry", autouse=True)
 def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterRegistry:
     notification_parameter_registry = NotificationParameterRegistry()
-    notification_parameter_registry.register(DummyNotificationParams())
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="dummy_params",
+            spec=spec,
+            form_spec=form_spec,
+        )
+    )
     monkeypatch.setattr(
         cmk.gui.watolib.configuration_entity.configuration_entity,
         "notification_parameter_registry",

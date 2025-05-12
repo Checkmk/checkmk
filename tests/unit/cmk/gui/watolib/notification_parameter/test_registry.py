@@ -62,8 +62,8 @@ def test_register_legacy_notification_parameters(
         ),
     )
 
-    cls = _registry.notification_parameter_registry["xyz"]
-    assert isinstance(cls.spec, Dictionary)
-    assert cls.spec.help() == "slosh"
+    instance = _registry.notification_parameter_registry["xyz"]
+    assert isinstance(instance.spec(), Dictionary)
+    assert instance.spec().help() == "slosh"
 
     assert RuleGroup.NotificationParameters("xyz") in rulespecs.rulespec_registry

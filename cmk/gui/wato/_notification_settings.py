@@ -63,12 +63,12 @@ ConfigVariableNotificationFallbackFormat = ConfigVariable(
             (
                 "asciimail",
                 _("ASCII email"),
-                notification_parameter_registry["asciimail"].spec,
+                notification_parameter_registry["asciimail"].spec(),
             ),
             (
                 "mail",
                 _("HTML email"),
-                notification_parameter_registry["mail"].spec,
+                notification_parameter_registry["mail"].spec(),
             ),
         ],
     ),

@@ -58,7 +58,9 @@ from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import (
+    recompose_dictionary_spec,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -286,7 +288,13 @@ def register(
     match_item_generator_registry.register(MatchItemEventConsole)
     match_item_generator_registry.register(MatchItemEventConsoleSettings)
 
-    notification_parameter_registry.register(NotificationParameterMKEventDaemon())
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="mkeventd",
+            spec=lambda: recompose_dictionary_spec(form_spec),
+            form_spec=form_spec,
+        )
+    )
 
     hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 
@@ -5384,52 +5392,42 @@ def query_ec_directly(query: bytes) -> dict[str, Any]:
         )
 
 
-class NotificationParameterMKEventDaemon(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "mkeventd"
-
-    @property
-    def spec(self) -> Dictionary:
-        # TODO needed because of mixed Form Spec and old style setup
-        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
-
-    def _form_spec(self) -> DictionaryExtended:
-        # TODO register CSE specific version
-        return DictionaryExtended(
-            title=Title("Forward to EC parameters"),
-            elements={
-                "facility": DictElement(
-                    parameter_form=SingleChoiceExtended(
-                        title=Title("Syslog facility to use"),
-                        help_text=Help(
-                            "The notifications will be converted into syslog messages with "
-                            "the facility that you choose here. In the Event Console you can "
-                            "later create a rule matching this facility."
-                        ),
-                        elements=[
-                            SingleChoiceElementExtended(
-                                title=Title("%s") % title,
-                                name=ident,
-                            )
-                            for ident, title in syslog_facilities
-                        ],
+def form_spec() -> DictionaryExtended:
+    # TODO register CSE specific version
+    return DictionaryExtended(
+        title=Title("Forward to EC parameters"),
+        elements={
+            "facility": DictElement(
+                parameter_form=SingleChoiceExtended(
+                    title=Title("Syslog facility to use"),
+                    help_text=Help(
+                        "The notifications will be converted into syslog messages with "
+                        "the facility that you choose here. In the Event Console you can "
+                        "later create a rule matching this facility."
                     ),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            title=Title("%s") % title,
+                            name=ident,
+                        )
+                        for ident, title in syslog_facilities
+                    ],
                 ),
-                "remote": DictElement(
-                    parameter_form=String(
-                        title=Title("IP address of remote Event Console"),
-                        help_text=Help(
-                            "If you set this parameter then the notifications will be sent via "
-                            "syslog/UDP (port 514) to a remote Event Console or syslog server."
-                        ),
-                        custom_validate=[
-                            HostAddressValidator(
-                                allow_host_name=False,
-                                allow_empty=False,
-                            )
-                        ],
-                    )
-                ),
-            },
-        )
+            ),
+            "remote": DictElement(
+                parameter_form=String(
+                    title=Title("IP address of remote Event Console"),
+                    help_text=Help(
+                        "If you set this parameter then the notifications will be sent via "
+                        "syslog/UDP (port 514) to a remote Event Console or syslog server."
+                    ),
+                    custom_validate=[
+                        HostAddressValidator(
+                            allow_host_name=False,
+                            allow_empty=False,
+                        )
+                    ],
+                )
+            ),
+        },
+    )

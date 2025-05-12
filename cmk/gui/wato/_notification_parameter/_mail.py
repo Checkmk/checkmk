@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -11,10 +12,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
-from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
-from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
-from cmk.gui.watolib.notification_parameter import NotificationParameter
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -37,61 +35,44 @@ from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 from ._helpers import _get_url_prefix_setting
 
 
-class NotificationParameterMail(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "mail"
+def form_spec_mail() -> DictionaryExtended:
+    # TODO register CSE specific version
+    return DictionaryExtended(
+        title=Title("HTML Email parameters"),
+        elements=_parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
+        ignored_elements=("no_floating_graphs",),
+    )
 
-    @property
-    def spec(self) -> ValueSpecDictionary:
-        # TODO needed because of mixed Form Spec and old style setup
-        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
 
-    def _form_spec(self) -> DictionaryExtended:
-        # TODO register CSE specific version
-        return DictionaryExtended(
-            title=Title("HTML Email parameters"),
-            elements=self._parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
-            ignored_elements=("no_floating_graphs",),
+def _parameter_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
+    return (
+        _settings_elements(is_cse)
+        | _header_elements(is_cse)
+        | _content_elements()
+        | _testing_elements()
+        | _bulk_elements()
+    )
+
+
+def _settings_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
+    return _url_prefix_setting(is_cse)
+
+
+def _url_prefix_setting(is_cse: bool) -> dict[str, DictElement[Any]]:
+    return {
+        "url_prefix": _get_url_prefix_setting(
+            is_cse,
+            default_value="automatic_https" if request.is_ssl_request else "automatic_http",
+            group_title="Settings",
         )
-
-    def _parameter_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
-        return {
-            **self._settings_elements(is_cse),
-            **_header_elements(is_cse),
-            **_content_elements(),
-            **_testing_elements(),
-            **_bulk_elements(),
-        }
-
-    def _settings_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
-        return self._url_prefix_setting(is_cse)
-
-    def _url_prefix_setting(self, is_cse: bool) -> dict[str, DictElement[Any]]:
-        return {
-            "url_prefix": _get_url_prefix_setting(
-                is_cse,
-                default_value="automatic_https" if request.is_ssl_request else "automatic_http",
-                group_title="Settings",
-            )
-        }
+    }
 
 
-class NotificationParameterASCIIMail(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "asciimail"
-
-    @property
-    def spec(self) -> ValueSpecDictionary:
-        # TODO needed because of mixed Form Spec and old style setup
-        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]
-
-    def _form_spec(self) -> DictionaryExtended:
-        return DictionaryExtended(
-            title=Title("ASCII Email parameters"),
-            elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CSE),
-        )
+def form_spec_asciimail() -> DictionaryExtended:
+    return DictionaryExtended(
+        title=Title("ASCII Email parameters"),
+        elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CSE),
+    )
 
 
 def _elements_ascii(is_cse: bool) -> Mapping[str, DictElement[Any]]:

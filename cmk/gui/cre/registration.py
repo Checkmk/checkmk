@@ -11,6 +11,7 @@ from cmk.ccc.version import Edition
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
+import cmk.gui.wato._notification_parameter._mail as mail
 from cmk.gui import nagvis, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
@@ -26,6 +27,7 @@ from cmk.gui.dashboard import (
 )
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose_dictionary_spec
 from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_items,
@@ -65,7 +67,6 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import (
     default_user_menu_topics,
-    NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.wato.pages import ldap, roles
@@ -94,7 +95,10 @@ from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
-from cmk.gui.watolib.notification_parameter import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import (
+    notification_parameter_registry,
+    NotificationParameter,
+)
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.sample_config import SampleConfigGeneratorGroups
@@ -254,7 +258,13 @@ def register(edition: Edition) -> None:
     broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())
 
     site_management_registry.register(SiteManagement())
-    notification_parameter_registry.register(NotificationParameterMail())
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="mail",
+            spec=lambda: recompose_dictionary_spec(mail.form_spec_mail),
+            form_spec=mail.form_spec_mail,
+        )
+    )
     register_pages()
     register_painters()
     backup_register(

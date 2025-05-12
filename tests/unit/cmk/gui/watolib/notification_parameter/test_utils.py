@@ -34,42 +34,44 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-class DummyNotificationParams(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "dummy_params"
+def spec() -> ValueSpecDictionary:
+    raise NotImplementedError()
 
-    @property
-    def spec(self) -> ValueSpecDictionary:
-        raise NotImplementedError()
 
-    def _form_spec(self) -> DictionaryExtended:
-        return DictionaryExtended(
-            title=Title("Create notification with the following parameters"),
-            elements={
-                "test_param": DictElement(
-                    parameter_form=String(
-                        custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
-                    ),
-                    required=True,
+def form_spec() -> DictionaryExtended:
+    return DictionaryExtended(
+        title=Title("Create notification with the following parameters"),
+        elements={
+            "test_param": DictElement(
+                parameter_form=String(
+                    custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
                 ),
-                "select_param": DictElement(
-                    parameter_form=SingleChoice(
-                        elements=[
-                            SingleChoiceElement(name="name1", title=Title("title1")),
-                            SingleChoiceElement(name="name2", title=Title("title2")),
-                        ]
-                    ),
-                    required=False,
+                required=True,
+            ),
+            "select_param": DictElement(
+                parameter_form=SingleChoice(
+                    elements=[
+                        SingleChoiceElement(name="name1", title=Title("title1")),
+                        SingleChoiceElement(name="name2", title=Title("title2")),
+                    ]
                 ),
-            },
-        )
+                required=False,
+            ),
+        },
+    )
 
 
 @pytest.fixture(name="registry")
 def _registry() -> NotificationParameterRegistry:
     registry = NotificationParameterRegistry()
-    registry.register(DummyNotificationParams())
+    registry.register(
+        NotificationParameter(
+            ident="dummy_params",
+            spec=spec,
+            form_spec=form_spec,
+        )
+    )
+
     return registry
 
 

@@ -95,7 +95,6 @@ from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
 from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
-from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
 from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
 from ._rulespec_groups import (

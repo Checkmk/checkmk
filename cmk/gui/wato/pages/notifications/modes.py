@@ -3033,7 +3033,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         choices = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name].spec
+                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name].spec()
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -3487,7 +3487,7 @@ class ABCNotificationParameterMode(WatoMode):
 
     def _spec(self) -> Dictionary | LegacyValueSpec:
         try:
-            return notification_parameter_registry[self._method()].spec
+            return notification_parameter_registry[self._method()].spec()
         except KeyError:
             if any(
                 self._method() == script_name

@@ -42,6 +42,7 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from .api_endpoints.host_config import registration as api_host_config
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
@@ -92,3 +93,5 @@ def register(
     spec_generator_job.register(job_registry)
     quick_setup.register(endpoint_registry)
     broker_connection.register(endpoint_registry)
+
+    api_host_config.register(versioned_endpoint_registry)

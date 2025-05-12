@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
@@ -615,7 +615,7 @@ class _LabelValidator:
         return value
 
 
-HostLabels = Mapping[
+HostLabels = dict[
     Annotated[str, AfterValidator(_LabelValidator(kind="key"))],
     Annotated[
         str,

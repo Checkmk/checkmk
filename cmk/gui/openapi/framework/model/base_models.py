@@ -86,7 +86,7 @@ class DomainObjectModel(LinkableModel):
 
 @dataclass(kw_only=True, slots=True)
 class DomainObjectCollectionModel(LinkableModel):
-    id: str = api_field(description="The name of this collection.", default="all")
+    id: str = api_field(description="The name of this collection.")
     domainType: str = api_field(description="The domain type of the objects in the collection.")
     title: str | ApiOmitted = api_field(
         description="A human readable title of this object. Can be used for user interfaces.",
@@ -95,9 +95,7 @@ class DomainObjectCollectionModel(LinkableModel):
     value: list = api_field(
         description="The collection itself. Each entry in here is part of the collection."
     )
-    extensions: dict = api_field(
-        description="Additional attributes alongside the collection.", default_factory=dict
-    )
+    extensions: dict = api_field(description="Additional attributes alongside the collection.")
 
 
 @dataclass(kw_only=True, slots=True)

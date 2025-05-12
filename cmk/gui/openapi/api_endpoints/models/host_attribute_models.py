@@ -249,7 +249,7 @@ class HostViewAttributeModel(
             )
             if "snmp_community" in value
             else ApiOmitted(),
-            labels=value.get("labels", ApiOmitted()),
+            labels=dict(value["labels"]) if "labels" in value else ApiOmitted(),
             waiting_for_discovery=value.get("waiting_for_discovery", ApiOmitted()),
             network_scan=NetworkScanModel.from_internal(value["network_scan"])
             if "network_scan" in value

@@ -2130,6 +2130,7 @@ class SiteFactory:
                 site.report_crashes()
             if auto_cleanup and cleanup_site:
                 logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.stop()
                 site.rm()
 
     def remove_site(self, name: str) -> None:

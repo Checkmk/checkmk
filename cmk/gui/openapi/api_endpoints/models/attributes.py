@@ -482,7 +482,6 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
             " * A custom host attribute\n"
             " * A custom tag group starting with `tag_`\n"
         ),
-        default_factory=dict,
     )
 
 

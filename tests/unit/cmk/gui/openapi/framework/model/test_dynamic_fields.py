@@ -171,7 +171,6 @@ def test_json_schema_dynamic_field_custom_type() -> None:
     class _CustomType(WithDynamicFields):
         field: int
         dynamic_fields: dict[str, str] = dataclasses.field(
-            default_factory=dict,
             metadata={
                 "title": "custom_title",
                 "description": "custom_description",

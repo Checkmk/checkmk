@@ -28,11 +28,11 @@ class WithDynamicFields:
     The `dynamic_fields` field can be overridden, meeting the following requirements:
     * the type must be a mapping, with the keys being strings
     * the mappings values can be any type, but they must be (de-)serializable to JSON
-    * the field must have a default or default_factory
+    * the field must not have a default or default_factory
     * the field can include additional metadata, which will be included in the OpenAPI schema.
     """
 
-    dynamic_fields: Mapping[str, object] = dataclasses.field(default_factory=dict)
+    dynamic_fields: Mapping[str, object]
 
     @classmethod
     def _populate_dynamic_fields(cls, values: object) -> object:
@@ -88,4 +88,8 @@ class WithDynamicFields:
         else:
             # this is supported by OpenAPI
             json_schema["additionalProperties"] = True
+
+        # remove the `dynamic_fields` key from the required list
+        json_schema["required"].remove("dynamic_fields")
+
         return json_schema

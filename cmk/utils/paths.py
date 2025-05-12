@@ -8,13 +8,19 @@ to all components of Check_MK."""
 import os
 from pathlib import Path
 
+LOCAL_SEGMENT = "local"
+
 
 def _omd_path(path: str) -> Path:
     return omd_root / path
 
 
-def _local_path(global_path: Path) -> Path:
-    return omd_root / "local" / global_path.relative_to(omd_root)
+def _omd_path_str(path: str) -> str:
+    return str(_omd_path(path))
+
+
+def _local_path(global_path: str | Path) -> Path:
+    return omd_root / LOCAL_SEGMENT / Path(global_path).relative_to(omd_root)
 
 
 # TODO: Add active_checks_dir and use it in code

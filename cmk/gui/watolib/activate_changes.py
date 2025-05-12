@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import subprocess
+import tarfile
 import time
 import traceback
 from collections.abc import (
@@ -2674,6 +2675,9 @@ def _execute_update_mkps(
 
 
 def _execute_changed_local_files_actions() -> None:
+    # I'm not changing this for fear of repercussions, but
+    # NOTE: Users might be deploying a fix to a check function via MKP (for example).
+    # In that case, we'd have to re*start* the core.
     mkp_tool.reload_services_affected_by_mkp_changes()
     invalidate_visuals_cache()
     setup_search_index.request_index_rebuild()
@@ -2711,7 +2715,15 @@ def _execute_update_passwords() -> None:
         raise MKGeneralException(_("Collection of passwords failed\n%s") % e.output)
 
 
-def _execute_post_config_sync_actions(site_id: SiteId) -> None:
+def _has_local_file_changes(sync_archive: bytes, to_delete: list[str]) -> bool:
+    if any(p.startswith(f"{paths.LOCAL_SEGMENT}/") for p in to_delete):
+        return True  # no need to check the archive.
+
+    with tarfile.open(fileobj=io.BytesIO(sync_archive), mode="r|") as archive:
+        return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in archive.getmembers())
+
+
+def _execute_post_config_sync_actions(site_id: SiteId, *, local_files_changed: bool) -> None:
     try:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
@@ -2724,14 +2736,23 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
             uninstalled, installed = _execute_update_mkps(local_path, addons_path)
             mkps_changed = bool(uninstalled or installed)
         else:
+            installed = ()
             mkps_changed = False
 
-        if mkps_changed:
+        if local_files_changed or mkps_changed:
             _execute_changed_local_files_actions()
 
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
+        elif installed:
+            cmd = ["cmk-migrate-extension-rulesets", *(m.name for m in installed)]
+            logger.debug("Executing `%s`", " ".join(cmd))
+            try:
+                for line in subprocess.check_output(cmd, text=True).splitlines():
+                    logger.debug("  %s", line.strip())
+            except subprocess.CalledProcessError as e:
+                logger.warning("Error while running migration script: %s", e)
 
         _execute_update_passwords()
 
@@ -3202,7 +3223,12 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
             self._update_config_on_remote_site(api_request.sync_archive, api_request.to_delete)
 
             logger.debug("Executing post sync actions")
-            _execute_post_config_sync_actions(api_request.site_id)
+            _execute_post_config_sync_actions(
+                api_request.site_id,
+                local_files_changed=_has_local_file_changes(
+                    api_request.sync_archive, api_request.to_delete
+                ),
+            )
 
             logger.debug("Done")
             return True

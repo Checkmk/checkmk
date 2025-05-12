@@ -369,6 +369,8 @@ def _get_expected_paths(
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "local",
             "var/check_mk/packages",
+            "var/check_mk/packages_local",
+            "var/check_mk/disabled_packages",
             "var/check_mk/topology",
         ]
 

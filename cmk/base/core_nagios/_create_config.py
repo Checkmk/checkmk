@@ -657,13 +657,18 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 "active_checks_enabled": str(1 if (command_line and not freshness) else 0),
             }
             service_spec.update(freshness)
-            service_spec.update(
-                _to_nagios_core_attributes(
-                    core_config.get_service_attributes(
-                        hostname, description, config_cache, extra_icon=None
-                    )
+
+            service_attr = _to_nagios_core_attributes(
+                core_config.get_service_attributes(
+                    hostname, description, config_cache, extra_icon=None
                 )
             )
+            service_spec.update(service_attr)
+
+            service_labels[description] = dict(
+                get_labels_from_attributes(list(service_attr.items()))
+            )
+
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             cfg.write(format_nagios_object("service", service_spec))
             license_counter["services"] += 1

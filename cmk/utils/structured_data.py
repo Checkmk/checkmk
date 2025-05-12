@@ -1934,8 +1934,6 @@ class InventoryStore:
                         timestamp=int(file_path.with_suffix("").name),
                     )
                 )
-            except FileNotFoundError:
-                pass
             except ValueError:
                 corrupted.append(file_path)
 
@@ -2030,16 +2028,8 @@ def load_history(
             entries.append(entry)
             continue
 
-        try:
-            previous_tree = inv_store.lookup_tree(previous.path)
-        except FileNotFoundError:
-            continue
-
-        try:
-            current_tree = inv_store.lookup_tree(current.path)
-        except FileNotFoundError:
-            continue
-
+        previous_tree = inv_store.lookup_tree(previous.path)
+        current_tree = inv_store.lookup_tree(current.path)
         entry = HistoryEntry.from_delta_tree(
             current.timestamp, current_tree.difference(previous_tree)
         )

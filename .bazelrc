@@ -57,7 +57,7 @@ common:ci --color=no
 common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
-common:ci --extra_toolchains="//bazel/toolchains/cc/gcc/ci:ci"
+common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
 common:ci --local_resources=cpu=HOST_CPUS*.21
 common:ci --local_resources=memory=HOST_RAM*.67
 # the later flags will override the previous flags

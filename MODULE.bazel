@@ -287,7 +287,7 @@ exports_files([
 
 repo_license(name = "repo_license")
 
-register_toolchains("//bazel/toolchains/cc/gcc/local:linux_gcc13")
+register_toolchains("//bazel/toolchains/cc/gcc/local:linux_x86_64")
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 llvm.toolchain(llvm_version = "19.1.7")

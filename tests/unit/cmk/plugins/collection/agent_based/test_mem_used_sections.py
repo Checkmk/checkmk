@@ -7,7 +7,10 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.mem_used_sections import parse_openbsd_mem
+from cmk.plugins.collection.agent_based.mem_used_sections import (
+    parse_freebsd_mem,
+    parse_openbsd_mem,
+)
 from cmk.plugins.lib.memory import SectionMemUsed
 
 
@@ -86,3 +89,63 @@ def test_parse_openbsd_mem(
 def test_parse_openbsd_mem_error(string_table: StringTable) -> None:
     with pytest.raises(KeyError):
         parse_openbsd_mem(string_table)
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        pytest.param(
+            [
+                ["vm.stats.vm.v_page_size:", "4096"],
+                ["vm.stats.vm.v_cache_count:", "0"],
+                ["vm.stats.vm.v_free_count:", "1400469"],
+                ["vm.kmem_size:", "16567554048"],
+                ["vm.swap_total:", "4172431360"],
+                ["swap.used", "0"],
+            ],
+            {
+                "MemFree": 5736321024,
+                "MemTotal": 16567554048,
+                "SwapFree": 4172431360,
+                "SwapTotal": 4172431360,
+                "Cached": 0,
+            },
+            id="With trailing colon",
+        ),
+        pytest.param(
+            [
+                ["vm.stats.vm.v_page_size", "4096"],
+                ["vm.stats.vm.v_cache_count", "0"],
+                ["vm.stats.vm.v_free_count", "1400469"],
+                ["vm.kmem_size", "16567554048"],
+                ["vm.swap_total", "4172431360"],
+                ["swap.used", "0"],
+            ],
+            {
+                "MemFree": 5736321024,
+                "MemTotal": 16567554048,
+                "SwapFree": 4172431360,
+                "SwapTotal": 4172431360,
+                "Cached": 0,
+            },
+            id="W/o trailing colon",
+        ),
+        pytest.param(
+            [
+                ["vm.stats.vm.v_page_size:", "4096"],
+                ["vm.stats.vm.v_cache_count:", "0"],
+                ["vm.kmem_size:", "16567554048"],
+                ["vm.swap_total:", "4172431360"],
+                ["swap.used", "0"],
+            ],
+            None,
+            id="Missing v_free_count",
+        ),
+    ],
+)
+def test_parse_freebsd_mem(
+    string_table: StringTable,
+    expected_result: SectionMemUsed | None,
+) -> None:
+    result = parse_freebsd_mem(string_table)
+    assert result == expected_result

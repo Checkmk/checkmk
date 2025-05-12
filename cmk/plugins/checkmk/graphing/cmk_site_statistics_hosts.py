@@ -7,6 +7,9 @@ from cmk.graphing.v1 import graphs, metrics, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
+# The main dashboard shows the metrics defined here right next to host stats dashlet (in the total
+# host problems graphs). Therefore, we should keep the colors in sync.
+
 metric_cmk_hosts_up = metrics.Metric(
     name="cmk_hosts_up",
     title=Title("Up hosts"),
@@ -17,19 +20,19 @@ metric_cmk_hosts_down = metrics.Metric(
     name="cmk_hosts_down",
     title=Title("Down hosts"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.RED,
+    color=metrics.Color.RED,  # CSS counterpart: $hexagon-critical-color
 )
 metric_cmk_hosts_unreachable = metrics.Metric(
     name="cmk_hosts_unreachable",
     title=Title("Unreachable hosts"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.ORANGE,
+    color=metrics.Color.ORANGE,  # CSS counterpart: $hexagon-unknown-color
 )
 metric_cmk_hosts_in_downtime = metrics.Metric(
     name="cmk_hosts_in_downtime",
     title=Title("Hosts in downtime"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.BLUE,
+    color=metrics.Color.LIGHT_BLUE,  # CSS counterpart: $hexagon-downtime-color
 )
 
 graph_cmk_hosts_total = graphs.Graph(

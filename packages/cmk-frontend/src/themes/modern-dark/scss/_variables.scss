@@ -194,10 +194,18 @@ $log-output-color: $ux-theme-0;
 $dashlet-editor-controls-color: rgb(78, 93, 105);
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
+// =============================
+// The main dashboard shows the hosts and services stats dashlets right next to the total host and
+// service problems graphs. Therefore, we should keep the colors in sync.
+// metrics counterpart: cmk_hosts_down, cmk_services_critical
 $hexagon-critical-color: $danger;
+// metrics counterpart: cmk_hosts_unreachable, cmk_services_unknown
 $hexagon-unknown-color: rgb(255, 136, 0);
+// metrics counterpart: cmk_hosts_in_downtime, cmk_services_in_downtime
 $hexagon-downtime-color: rgb(60, 194, 255);
+// metrics counterpart: cmk_services_on_down_hosts
 $hexagon-host-down-color: rgb(16, 99, 176);
+// =============================
 $hexagon-empty-color: $white;
 $hexagon-empty-fill-opacity: 0.03;
 $hexagon-empty-stroke-color: $white;

@@ -2651,7 +2651,9 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
-        if _need_to_update_mkps_after_sync():
+        if not _need_to_update_mkps_after_sync():
+            mkps_changed = False
+        else:
             logger.debug("Updating active packages")
 
             local_path = plugins_local_path()
@@ -2692,13 +2694,13 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     version.__version__,
                     parse_version=version.parse_check_mk_version,
                 )
-                mkp_tool.make_post_package_change_actions(
-                    on_any_change=(
-                        mkp_tool.reload_services_affected_by_mkp_changes,
-                        invalidate_visuals_cache,
-                        setup_search_index.request_index_rebuild,
-                    )
-                )([*uninstalled, *installed])
+                mkps_changed = bool(uninstalled or installed)
+
+        if mkps_changed:
+            mkp_tool.reload_services_affected_by_mkp_changes()
+            invalidate_visuals_cache()
+            setup_search_index.request_index_rebuild()
+
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()

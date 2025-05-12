@@ -1,3 +1,4 @@
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "packages")
 
 def get_pip_options(module_name):
@@ -19,14 +20,26 @@ def create_requirements_file(name, outs):
         """ % (packages[name], get_pip_options(name)),
     )
 
-def build_python_module(name, srcs, outs, cmd, **kwargs):
+def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     """This macro is creating an empty file.
     """
+    requirements = requirements if requirements else "-r $$HOME/$(execpath %s_requirements.txt)" % name
     native.genrule(
-        name = name,
+        name = name + "_compile",
         srcs = srcs,
         outs = outs,
-        cmd = cmd,
+        cmd = select({
+            "//conditions:default": build_cmd.format(
+                git_ssl_no_verify = "",
+                pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+                requirements = requirements,
+            ),
+            ":git_ssl_no_verify": build_cmd.format(
+                git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+                pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+                requirements = requirements,
+            ),
+        }),
         **kwargs
     )
 

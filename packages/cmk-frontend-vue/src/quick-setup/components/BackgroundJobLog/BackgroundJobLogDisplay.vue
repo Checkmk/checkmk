@@ -31,7 +31,7 @@ const getIcon = (step: LogStep) => {
     <li v-for="(item, idx) in props.steps" :key="idx">
       <CmkIcon :name="getIcon(item)" variant="inline" size="medium" /> {{ item.title }}
     </li>
-    <li v-if="props.displayLoading">
+    <li v-if="!!props.displayLoading">
       <CmkLoading class="qs-background-job-loading-dots" />
     </li>
   </ul>

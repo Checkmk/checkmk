@@ -30,7 +30,7 @@ const updateData = (id: string, value: object) => {
   <BackgroundJobLogDisplay
     v-if="props.backgroundJobLog && props.backgroundJobLog.length > 0"
     :steps="backgroundJobLog!"
-    :display-loading="true"
+    :display-loading="props.isBackgroundJobRunning"
   />
 </template>
 

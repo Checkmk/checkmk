@@ -42,6 +42,7 @@ export const renderContent = (
   components: ComponentSpec[],
   onUpdate: UpdateCallback,
   bagckgroundJobLog: LogStep[],
+  isBackgroundJobRunning: boolean,
   formSpecErrors?: AllValidationMessages,
   userInput?: StageData
 ): VnodeOrNull => {
@@ -51,7 +52,8 @@ export const renderContent = (
       formSpecErrors: formSpecErrors || {},
       userInput: userInput || {},
       onUpdate: onUpdate,
-      backgroundJobLog: bagckgroundJobLog
+      backgroundJobLog: bagckgroundJobLog,
+      isBackgroundJobRunning: isBackgroundJobRunning
     })
   )
 }

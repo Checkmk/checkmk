@@ -76,7 +76,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -486,16 +486,22 @@ def start_quick_setup_stage_action_job_on_remote(
         user_input_stages=user_input_stages,
         language=language,
     )
-    job_id = str(
-        do_remote_automation(
-            site_config,
-            "start-quick-setup-stage-action",
-            [
-                ("args", args.model_dump_json()),
-            ],
-            debug=debug,
+    try:
+        job_id = str(
+            do_remote_automation(
+                site_config,
+                "start-quick-setup-stage-action",
+                [
+                    ("args", args.model_dump_json()),
+                ],
+                debug=debug,
+            )
         )
-    )
+    except (MKAutomationException, MKUserError) as e:
+        raise MKUserError(
+            None,
+            _("Failed to start the stage action on remote site %s: %s") % (site_id, e),
+        ) from e
     return job_id
 
 

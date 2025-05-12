@@ -14,7 +14,7 @@ config_setting(
     ],
 ) for module in all_requirements]
 
-# Third Party packages parsed from Pipfile
+# Third Party packages parsed from runtime-requirements.txt
 [build_python_module(
     name = module,
     srcs = [
@@ -31,12 +31,8 @@ config_setting(
 
 # TODO: Switch to official release when netapp has fixed their build process
 # See: https://github.com/NetApp/ontap-rest-python/issues/46
-MODULE_NETAPP = "netapp-ontap"
-
-MODULE_NETAPP_SOURCE = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"
-
 build_python_module(
-    name = MODULE_NETAPP,
+    name = "netapp-ontap",
     srcs = [
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
@@ -44,19 +40,15 @@ build_python_module(
         "@python",
     ],
     outs = [
-        "compiled_%s.tar" % MODULE_NETAPP,
+        "compiled_netapp-ontap.tar",
     ],
-    requirements = MODULE_NETAPP_SOURCE,
+    requirements = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce",
 )
 
 # TODO: Switch to official release when pymssql is cython 3.1.0 compatible
 # see also https://github.com/pymssql/pymssql/pull/938
-MODULE_PYMSSQL = "pymssql"
-
-MODULE_PYMSSQL_SOURCE = "git+https://github.com/TimotheusBachinger/pymssql@2a02c839c59c2b87e2acdfad8bc0187b2b6c4fe9"
-
 build_python_module(
-    name = MODULE_PYMSSQL,
+    name = "pymssql",
     srcs = [
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
@@ -64,9 +56,9 @@ build_python_module(
         "@python",
     ],
     outs = [
-        "compiled_%s.tar" % MODULE_PYMSSQL,
+        "compiled_pymssql.tar",
     ],
-    requirements = MODULE_PYMSSQL_SOURCE,
+    requirements = "git+https://github.com/TimotheusBachinger/pymssql@2a02c839c59c2b87e2acdfad8bc0187b2b6c4fe9",
 )
 
 genrule(

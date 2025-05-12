@@ -40,7 +40,9 @@ class ApiOmitted:
     """
 
     __slots__ = ()
+    _instance = None
 
+    # TODO: remove method and associating functions and tests
     @classmethod
     def __get_pydantic_core_schema__(
         cls, _source_type: type[Any], _handler: GetCoreSchemaHandler
@@ -53,6 +55,12 @@ class ApiOmitted:
                 lambda _: OMITTED_PLACEHOLDER
             ),
         )
+
+    def __new__(cls, *args: object, **kwargs: object) -> "ApiOmitted":
+        # Singleton pattern to ensure only one instance of ApiOmitted exists
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}"
@@ -75,14 +83,11 @@ def _remove_omitted(json_object: object) -> object:
         raise TypeError("Unsupported type for JSON serialization")
 
 
-@tracer.instrument("json_dump_without_omitted")
 def json_dump_without_omitted[T](instance_type: type[T], instance: T) -> object:
     """Serialize the given dataclass instance to JSON, removing omitted fields."""
     # This will be called at most once per REST-API request
-    with tracer.span("create_type_adapter"):
-        adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
-    # context can be used by custom validators/serializers to skip some checks
-    json_bytes = adapter.dump_json(instance, by_alias=True, context={"direction": "outbound"})
-    # In order to remove the omitted values, we load the JSON bytes into a Python object
-    json_object = json.loads(json_bytes)
-    return _remove_omitted(json_object)
+    adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
+    json_bytes = adapter.dump_json(
+        instance, by_alias=True, exclude_defaults=True, context={"direction": "outbound"}
+    )
+    return json.loads(json_bytes)

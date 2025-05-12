@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.omitted import (
     _remove_omitted,
     ApiOmitted,
@@ -18,7 +19,7 @@ from cmk.gui.openapi.framework.model.omitted import (
 
 @dataclass
 class _TestModel:
-    field: int | None | ApiOmitted
+    field: int | None | ApiOmitted = api_field(description="field", default_factory=ApiOmitted)
 
 
 def test_validation_valid_type_works():

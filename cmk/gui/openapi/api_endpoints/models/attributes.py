@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
@@ -12,6 +12,8 @@ from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator, model_validator, WithJsonSchema
 
 from cmk.ccc.site import SiteId
+
+from cmk.utils.translations import TranslationOptionsSpec
 
 from cmk.gui.fields.attributes import (
     AuthProtocolConverter,
@@ -23,6 +25,13 @@ from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import IPv4NetworkString, IPv4String, RegexString
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 from cmk.gui.openapi.framework.model.validators import GroupValidator, TagValidator, UserValidator
+from cmk.gui.watolib.host_attributes import (
+    HostContactGroupSpec,
+    IPMICredentials,
+    MetaData,
+    NetworkScanResult,
+    NetworkScanSpec,
+)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -30,45 +39,53 @@ class HostContactGroupModel:
     groups: list[Annotated[str, AfterValidator(GroupValidator(group_type="host").exists)]] = (
         api_field(description="A list of contact groups.", example="all")
     )
-    use: bool = api_field(description="Add these contact groups to the host.", default=False)
+    use: bool = api_field(description="Add these contact groups to the host.")
     use_for_services: bool = api_field(
         description="<p>Always add host contact groups also to its services.</p>With this option contact groups that are added to hosts are always being added to services, as well. This only makes a difference if you have assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. As long as you do not have any such rule a service always inherits all contact groups from its host.",
-        default=False,
     )
     recurse_use: bool = api_field(
         description="Add these groups as contacts to all hosts in all sub-folders of this folder.",
-        default=False,
     )
     recurse_perms: bool = api_field(
-        description="Give these groups also permission on all sub-folders.", default=False
+        description="Give these groups also permission on all sub-folders."
     )
+
+    @classmethod
+    def from_internal(cls, value: HostContactGroupSpec) -> "HostContactGroupModel":
+        return cls(
+            groups=value["groups"],
+            use=value["use"],
+            use_for_services=value["use_for_services"],
+            recurse_use=value["recurse_use"],
+            recurse_perms=value["recurse_perms"],
+        )
 
 
 @dataclass(kw_only=True, slots=True)
 class SNMPCommunityModel:
-    type: Literal["v1_v2_community"] = "v1_v2_community"
+    type: Literal["v1_v2_community"]
     community: str = api_field(description="SNMP community (SNMP Versions 1 and 2c)")
 
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3NoAuthNoPrivacyModel:
-    type: Literal["noAuthNoPriv"] = "noAuthNoPriv"
+    type: Literal["noAuthNoPriv"]
     security_name: str = api_field(description="Security name")
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["noAuthNoPriv"], str]) -> Self:
+    def from_internal(cls, value: tuple[Literal["noAuthNoPriv"], str]) -> Self:
         return cls(
             type=value[0],
             security_name=value[1],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["noAuthNoPriv"], str]:
+    def to_internal(self) -> tuple[Literal["noAuthNoPriv"], str]:
         return self.type, self.security_name
 
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3AuthNoPrivacyModel:
-    type: Literal["authNoPriv"] = "authNoPriv"
+    type: Literal["authNoPriv"]
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
     auth_password: Annotated[str, MinLen(8)] = api_field(
@@ -76,7 +93,7 @@ class SNMPv3AuthNoPrivacyModel:
     )
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["authNoPriv"], str, str, str]) -> Self:
+    def from_internal(cls, value: tuple[Literal["authNoPriv"], str, str, str]) -> Self:
         return cls(
             type=value[0],
             auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
@@ -84,7 +101,7 @@ class SNMPv3AuthNoPrivacyModel:
             auth_password=value[3],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["authNoPriv"], str, str, str]:
+    def to_internal(self) -> tuple[Literal["authNoPriv"], str, str, str]:
         return (
             self.type,
             AuthProtocolConverter.to_checkmk(self.auth_protocol),
@@ -95,7 +112,7 @@ class SNMPv3AuthNoPrivacyModel:
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3AuthPrivacyModel:
-    type: Literal["authPriv"] = "authPriv"
+    type: Literal["authPriv"]
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
     auth_password: Annotated[str, MinLen(8)] = api_field(
@@ -109,7 +126,7 @@ class SNMPv3AuthPrivacyModel:
     )
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["authPriv"], str, str, str, str, str]) -> Self:
+    def from_internal(cls, value: tuple[Literal["authPriv"], str, str, str, str, str]) -> Self:
         return cls(
             type=value[0],
             auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
@@ -119,7 +136,7 @@ class SNMPv3AuthPrivacyModel:
             privacy_password=value[5],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["authPriv"], str, str, str, str, str]:
+    def to_internal(self) -> tuple[Literal["authPriv"], str, str, str, str, str]:
         return (
             self.type,
             AuthProtocolConverter.to_checkmk(self.auth_protocol),
@@ -143,16 +160,17 @@ class SNMPCredentialsConverter:
     def from_internal(value: str | tuple) -> SNMPCredentialsModel:
         if isinstance(value, str):
             return SNMPCommunityModel(
+                type="v1_v2_community",
                 community=value,
             )
 
         match value[0]:
             case "noAuthNoPriv":
-                return SNMPv3NoAuthNoPrivacyModel.from_checkmk_tuple(value)
+                return SNMPv3NoAuthNoPrivacyModel.from_internal(value)
             case "authPriv":
-                return SNMPv3AuthNoPrivacyModel.from_checkmk_tuple(value)
+                return SNMPv3AuthNoPrivacyModel.from_internal(value)
             case "authPriv":
-                return SNMPv3AuthPrivacyModel.from_checkmk_tuple(value)
+                return SNMPv3AuthPrivacyModel.from_internal(value)
             case _:
                 raise ValueError(f"Unknown SNMP credentials type: {value[0]!r}")
 
@@ -162,11 +180,11 @@ class SNMPCredentialsConverter:
             case SNMPCommunityModel():
                 return field.community
             case SNMPv3NoAuthNoPrivacyModel():
-                return field.to_checkmk_tuple()
+                return field.to_internal()
             case SNMPv3AuthNoPrivacyModel():
-                return field.to_checkmk_tuple()
+                return field.to_internal()
             case SNMPv3AuthPrivacyModel():
-                return field.to_checkmk_tuple()
+                return field.to_internal()
             case _:
                 raise ValueError(f"Unknown SNMP credentials type: {field.type!r}")
 
@@ -178,7 +196,7 @@ class IPAddressRangeModel:
     to_address: IPv4String = api_field(description="The last IPv4 address of this range.")
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["ip_range"], tuple[str, str]]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_range"], tuple[str, str]]) -> Self:
         return cls(
             type=value[0],
             from_address=IPv4String(value[1][0]),
@@ -197,7 +215,7 @@ class IPNetworkModel:
     )
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["ip_network"], str]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_network"], str]) -> Self:
         return cls(
             type=value[0],
             network=value[1],
@@ -213,7 +231,7 @@ class IPAddressesModel:
     addresses: list[IPv4String] = api_field(description="List of IPv4 addresses")
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["ip_list"], list[str]]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_list"], list[str]]) -> Self:
         return cls(
             type=value[0],
             addresses=[IPv4String(x) for x in value[1]],
@@ -231,7 +249,7 @@ class IPRegexpModel:
     )
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[Literal["ip_regex_list"], list[str]]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_regex_list"], list[str]]) -> Self:
         return cls(
             type=value[0],
             regexp_list=[RegexString(x) for x in value[1]],
@@ -243,6 +261,22 @@ class IPRegexpModel:
 
 IPRangeWithRegexpModel = IPAddressRangeModel | IPNetworkModel | IPAddressesModel | IPRegexpModel
 _CheckmkTime = tuple[int, int]
+
+
+class IPRangeConverter:
+    @staticmethod
+    def from_internal(value: tuple) -> IPRangeWithRegexpModel:
+        match value[0]:
+            case "ip_range":
+                return IPAddressRangeModel.from_internal(value)
+            case "ip_network":
+                return IPNetworkModel.from_internal(value)
+            case "ip_list":
+                return IPAddressesModel.from_internal(value)
+            case "ip_regex_list":
+                return IPRegexpModel.from_internal(value)
+            case _:
+                raise ValueError(f"Unknown IP range type: {value[0]!r}")
 
 
 @dataclass(kw_only=True, slots=True)
@@ -263,7 +297,7 @@ class TimeAllowedRangeModel:
         return dt.time(value[0], value[1])
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[_CheckmkTime, _CheckmkTime]) -> Self:
+    def from_internal(cls, value: tuple[_CheckmkTime, _CheckmkTime]) -> Self:
         return cls(
             start=cls._from_checkmk_time(value[0]),
             end=cls._from_checkmk_time(value[1]),
@@ -302,7 +336,7 @@ class RegexpRewritesModel:
         return self
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[str, str]) -> Self:
+    def from_internal(cls, value: tuple[str, str]) -> Self:
         return cls(
             search=RegexString(value[0]),
             replace_with=value[1],
@@ -319,7 +353,7 @@ class DirectMappingModel:
     replace_with: str = api_field(description="The replacement string.")
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[str, str]) -> Self:
+    def from_internal(cls, value: tuple[str, str]) -> Self:
         return cls(
             hostname=value[0],
             replace_with=value[1],
@@ -375,6 +409,23 @@ class TranslateNamesModel:
         default_factory=ApiOmitted,
     )
 
+    @staticmethod
+    def case_from_internal(
+        value: Literal["lower", "upper"] | None,
+    ) -> Literal["nop", "lower", "upper"]:
+        if value is None:
+            return "nop"
+        return value
+
+    @classmethod
+    def from_internal(cls, value: TranslationOptionsSpec) -> "TranslateNamesModel":
+        return cls(
+            case=TranslateNamesModel.case_from_internal(value.get("case")),
+            drop_domain=value["drop_domain"] if "drop_domain" in value else ApiOmitted(),
+            regex=[RegexpRewritesModel.from_internal(entry) for entry in value["mapping"]],
+            mapping=[DirectMappingModel.from_internal(entry) for entry in value["regex"]],
+        )
+
 
 @dataclass(kw_only=True, slots=True)
 class NetworkScanModel:
@@ -388,20 +439,23 @@ class NetworkScanModel:
     )
     scan_interval: Annotated[int, Ge(3600)] | ApiOmitted = api_field(
         description="Scan interval in seconds. Default is 1 day, minimum is 1 hour.",
-        default=60 * 60 * 24,
+        default_factory=ApiOmitted,
+        # default=60 * 60 * 24,
     )
     time_allowed: list[TimeAllowedRangeModel] = api_field(
         description="Only execute the discovery during this time range each day."
     )
     set_ipaddress: bool = api_field(
-        description="When set, the found IPv4 address is set on the discovered host.", default=True
+        description="When set, the found IPv4 address is set on the discovered host.",
+        # default=True
     )
     max_parallel_pings: Annotated[int, Interval(ge=1, le=200)] = api_field(
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
-        default=100,
+        # default=100,
     )
     run_as: Annotated[str, AfterValidator(UserValidator.active)] | ApiOmitted = api_field(
         description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
+        default_factory=ApiOmitted,
     )
     tag_criticality: Annotated[
         str | ApiOmitted, AfterValidator(TagValidator.tag_criticality_presence)
@@ -414,33 +468,86 @@ class NetworkScanModel:
         default_factory=ApiOmitted,
     )
 
+    @classmethod
+    def from_internal(cls, value: NetworkScanSpec) -> "NetworkScanModel":
+        return cls(
+            ip_ranges=[IPRangeConverter.from_internal(entry) for entry in value["ip_ranges"]],
+            exclude_ranges=[
+                IPRangeConverter.from_internal(entry) for entry in value["exclude_ranges"]
+            ]
+            if "exclude_ranges" in value
+            else ApiOmitted(),
+            scan_interval=value["scan_interval"],
+            time_allowed=[
+                TimeAllowedRangeModel.from_internal(entry) for entry in value["time_allowed"]
+            ],
+            set_ipaddress=value["set_ipaddress"],
+            max_parallel_pings=value["max_parallel_pings"],
+            run_as=value["run_as"],
+            tag_criticality=value["tag_criticality"]
+            if "tag_criticality" in value
+            else ApiOmitted(),
+            translate_names=TranslateNamesModel.from_internal(value["translate_names"])
+            if "translate_names" in value
+            else ApiOmitted(),
+        )
+
 
 @dataclass(kw_only=True, slots=True)
 class IPMIParametersModel:
-    username: str = api_field(description="IPMI username")
-    password: str = api_field(description="IPMI password")
+    username: str | ApiOmitted = api_field(description="IPMI username", default_factory=ApiOmitted)
+    password: str | ApiOmitted = api_field(description="IPMI password", default_factory=ApiOmitted)
+
+    @classmethod
+    def from_internal(cls, value: IPMICredentials) -> "IPMIParametersModel":
+        return cls(
+            username=value.get("username", ApiOmitted()),
+            password=value.get("password", ApiOmitted()),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
 class NetworkScanResultModel:
-    start: dt.datetime | ApiOmitted = api_field(
-        description="When the scan started", default_factory=ApiOmitted
+    start: dt.datetime | None = api_field(
+        description="When the scan started",
     )
-    end: dt.datetime | ApiOmitted = api_field(
+    end: dt.datetime | None | ApiOmitted = api_field(
         description="When the scan finished. Will be Null if not yet run.",
         default_factory=ApiOmitted,
     )
     state: Literal["running", "succeeded", "failed"] = api_field(description="Last scan result")
     output: str = api_field(description="Short human readable description of what is happening.")
 
+    @staticmethod
+    def state_from_internal(value: bool | None) -> Literal["running", "succeeded", "failed"]:
+        if value is None:
+            return "running"
+        return "succeeded" if value else "failed"
+
+    @classmethod
+    def from_internal(cls, value: NetworkScanResult) -> "NetworkScanResultModel":
+        end_time: dt.datetime | None | ApiOmitted
+        if (end_time_internal := value.get("end")) is True:
+            end_time = ApiOmitted()
+        elif end_time_internal is not None:
+            end_time = dt.datetime.fromtimestamp(end_time_internal)
+        else:
+            end_time = None
+        return cls(
+            start=dt.datetime.fromtimestamp(start) if (start := value.get("start")) else None,
+            end=end_time,
+            state=NetworkScanResultModel.state_from_internal(value.get("state")),
+            output=value.get("output", ""),
+        )
+
 
 @dataclass(kw_only=True, slots=True)
 class MetaDataModel:
-    created_at: dt.datetime | None | ApiOmitted = api_field(
+    created_at: dt.datetime | ApiOmitted = api_field(
         description="When has this object been created.",
         default_factory=ApiOmitted,
     )
-    updated_at: dt.datetime | None | ApiOmitted = api_field(
+    updated_at: dt.datetime | ApiOmitted = api_field(
         description="When this object was last changed.",
         default_factory=ApiOmitted,
     )
@@ -448,6 +555,18 @@ class MetaDataModel:
         description="The user id under which this object has been created.",
         default_factory=ApiOmitted,
     )
+
+    @classmethod
+    def from_internal(cls, value: MetaData) -> Self:
+        return cls(
+            created_at=dt.datetime.fromtimestamp(value["created_at"])
+            if "created_at" in value
+            else ApiOmitted(),
+            updated_at=dt.datetime.fromtimestamp(value["updated_at"])
+            if "updated_at" in value
+            else ApiOmitted(),
+            created_by=value["created_by"] if "created_by" in value else ApiOmitted(),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -457,7 +576,7 @@ class LockedByModel:
     instance_id: str = api_field(description="Instance ID")
 
     @classmethod
-    def from_checkmk_tuple(cls, value: tuple[SiteId, str, str] | Sequence[str]) -> Self:
+    def from_internal(cls, value: tuple[SiteId, str, str] | Sequence[str]) -> Self:
         # see `to_checkmk_tuple` - we allow tuples and lists...
         assert len(value) == 3, f"Expected 3 values, got {len(value)}"
         return cls(
@@ -496,7 +615,7 @@ class _LabelValidator:
         return value
 
 
-HostLabels = dict[
+HostLabels = Mapping[
     Annotated[str, AfterValidator(_LabelValidator(kind="key"))],
     Annotated[
         str,

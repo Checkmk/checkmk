@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal
 
@@ -26,6 +27,7 @@ from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_ta
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.validators import HostAddressValidator, HostValidator
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
+from cmk.gui.watolib.host_attributes import HostAttributes
 
 HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]
 HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv4=False))]
@@ -48,22 +50,36 @@ class BaseHostTagGroupModel:
     tag_address_family: (
         Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("address_family")))]
         | ApiOmitted
-    ) = api_field(description="The IP address family of the host.", example="ip-v4-only")
+    ) = api_field(
+        description="The IP address family of the host.",
+        example="ip-v4-only",
+        default_factory=ApiOmitted,
+    )
 
     tag_agent: (
         Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("agent")))]
         | ApiOmitted
-    ) = api_field(description="Agent and API integrations", example="cmk-agent")
+    ) = api_field(
+        description="Agent and API integrations", example="cmk-agent", default_factory=ApiOmitted
+    )
 
     tag_snmp_ds: (
         Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("snmp_ds")))]
         | ApiOmitted
-    ) = api_field(description="The SNMP data source of the host.", example="snmp-v2")
+    ) = api_field(
+        description="The SNMP data source of the host.",
+        example="snmp-v2",
+        default_factory=ApiOmitted,
+    )
 
     tag_piggyback: (
         Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("piggyback")))]
         | ApiOmitted
-    ) = api_field(description="Use piggyback data for this host.", example="piggyback")
+    ) = api_field(
+        description="Use piggyback data for this host.",
+        example="piggyback",
+        default_factory=ApiOmitted,
+    )
 
 
 @dataclass(kw_only=True)
@@ -76,8 +92,8 @@ class BaseHostAttributeModel:
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
 
-    parents: list[Annotated[str, AfterValidator(HostValidator.exists)]] | ApiOmitted = api_field(
-        description="A list of parents of this host.", default_factory=ApiOmitted
+    parents: Sequence[Annotated[str, AfterValidator(HostValidator.exists)]] | ApiOmitted = (
+        api_field(description="A list of parents of this host.", default_factory=ApiOmitted)
     )
 
     contactgroups: HostContactGroupModel | ApiOmitted = api_field(
@@ -93,11 +109,11 @@ class BaseHostAttributeModel:
         description="An IPv6 address.", default_factory=ApiOmitted
     )
 
-    additional_ipv4addresses: list[HostNameOrIPv4] | ApiOmitted = api_field(
+    additional_ipv4addresses: Sequence[HostNameOrIPv4] | ApiOmitted = api_field(
         description="A list of IPv4 addresses.", default_factory=ApiOmitted
     )
 
-    additional_ipv6addresses: list[HostNameOrIPv6] | ApiOmitted = api_field(
+    additional_ipv6addresses: Sequence[HostNameOrIPv6] | ApiOmitted = api_field(
         description="A list of IPv6 addresses.", default_factory=ApiOmitted
     )
 
@@ -180,7 +196,9 @@ class BaseHostAttributeModel:
         return SNMPCredentialsConverter.to_internal(value)
 
     @staticmethod
-    def management_protocol_from_internal(value: str | None) -> str:
+    def management_protocol_from_internal(
+        value: Literal["none", "snmp", "ipmi"] | None,
+    ) -> Literal["none", "snmp", "ipmi"]:
         if value is None:
             return "none"
         return value
@@ -202,3 +220,63 @@ class HostViewAttributeModel(
     meta_data: MetaDataModel | ApiOmitted = api_field(
         description="Read only access to configured metadata.", default_factory=ApiOmitted
     )
+
+    @staticmethod
+    def from_internal(
+        value: HostAttributes, static_attributes: set[str]
+    ) -> "HostViewAttributeModel":
+        return HostViewAttributeModel(
+            alias=value.get("alias", ApiOmitted()),
+            site=value.get("site", ApiOmitted()),
+            meta_data=MetaDataModel.from_internal(value["meta_data"])
+            if "meta_data" in value
+            else ApiOmitted(),
+            network_scan_result=NetworkScanResultModel.from_internal(value["network_scan_result"])
+            if "network_scan_result" in value
+            else ApiOmitted(),
+            parents=value["parents"] if "parents" in value else ApiOmitted(),
+            contactgroups=HostContactGroupModel.from_internal(value["contactgroups"])
+            if "contactgroups" in value
+            else ApiOmitted(),
+            ipaddress=value.get("ipaddress", ApiOmitted()),
+            ipv6address=value.get("ipv6address", ApiOmitted()),
+            additional_ipv4addresses=value.get("additional_ipv4addresses", ApiOmitted()),
+            additional_ipv6addresses=value.get("additional_ipv6addresses", ApiOmitted()),
+            bake_agent_package=value.get("bake_agent_package", ApiOmitted()),
+            cmk_agent_connection=value.get("cmk_agent_connection", ApiOmitted()),
+            snmp_community=BaseHostAttributeModel.snmp_community_from_internal(
+                value["snmp_community"]
+            )
+            if "snmp_community" in value
+            else ApiOmitted(),
+            labels=value.get("labels", ApiOmitted()),
+            waiting_for_discovery=value.get("waiting_for_discovery", ApiOmitted()),
+            network_scan=NetworkScanModel.from_internal(value["network_scan"])
+            if "network_scan" in value
+            else ApiOmitted(),
+            management_protocol=BaseHostAttributeModel.management_protocol_from_internal(
+                value["management_protocol"]
+            )
+            if "management_protocol" in value
+            else ApiOmitted(),
+            management_address=value.get("management_address", ApiOmitted()),
+            management_snmp_community=SNMPCredentialsConverter.from_internal(
+                value["management_snmp_community"]
+            )
+            if "management_snmp_community" in value
+            else ApiOmitted(),
+            management_ipmi_credentials=IPMIParametersModel.from_internal(
+                value["management_ipmi_credentials"]
+            )
+            if "management_ipmi_credentials" in value
+            else ApiOmitted(),
+            tag_agent=value.get("tag_agent", ApiOmitted()),
+            tag_piggyback=value.get("tag_piggyback", ApiOmitted()),
+            tag_snmp_ds=value.get("tag_snmp_ds", ApiOmitted()),
+            tag_address_family=value.get("tag_address_family", ApiOmitted()),
+            dynamic_fields={
+                k: v
+                for k, v in value.items()
+                if (k not in static_attributes or k == "tag_criticality") and isinstance(v, str)
+            },
+        )

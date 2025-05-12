@@ -58,6 +58,7 @@ class BaseFolderAttributeModel:
     )
     labels: HostLabels | ApiOmitted = api_field(
         description=f"{HostAttributeLabels().help()} The key is the host label key.",
+        default_factory=ApiOmitted,
     )
     network_scan: NetworkScanModel | ApiOmitted = api_field(
         description=(

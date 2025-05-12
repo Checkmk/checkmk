@@ -99,7 +99,7 @@ def alertmanager_rules_section(
 
 
 def retrieve_rule_data(api_client: AlertmanagerAPI) -> dict[str, Any]:
-    endpoint_result = api_client.query_static_endpoint("/rules")
+    endpoint_result = api_client.query_static_endpoint("rules")
     return json.loads(endpoint_result.content)["data"]
 
 

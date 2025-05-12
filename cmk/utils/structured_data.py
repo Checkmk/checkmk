@@ -1679,8 +1679,8 @@ class InventoryPaths:
     def archive_host(self, host_name: HostName) -> Path:
         return self.archive_dir / str(host_name)
 
-    def archive_tree(self, host_name: HostName, file_name: str) -> Path:
-        return self.archive_host(host_name) / file_name
+    def archive_tree(self, host_name: HostName, file_name: int) -> Path:
+        return self.archive_host(host_name) / str(file_name)
 
     def delta_cache_host(self, host_name: HostName) -> Path:
         return self.delta_cache_dir / str(host_name)
@@ -1719,7 +1719,7 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> N
         file_path_stat = file_path.stat()
     except FileNotFoundError:
         return
-    archive_tree = inv_paths.archive_tree(host_name, str(int(file_path_stat.st_mtime)))
+    archive_tree = inv_paths.archive_tree(host_name, int(file_path_stat.st_mtime))
     archive_tree.parent.mkdir(parents=True, exist_ok=True)
     file_path.rename(archive_tree)
     inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)

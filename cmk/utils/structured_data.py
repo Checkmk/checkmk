@@ -1980,12 +1980,14 @@ class InventoryStore:
         current_timestamp: int,
         entry: HistoryEntry,
     ) -> None:
+        delta_cache_tree = self.inv_paths.delta_cache_tree(
+            host_name,
+            str(previous_timestamp),
+            str(current_timestamp),
+        )
+        delta_cache_tree.parent.mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(
-            self.inv_paths.delta_cache_tree(
-                host_name,
-                str(previous_timestamp),
-                str(current_timestamp),
-            ),
+            delta_cache_tree,
             repr((entry.new, entry.changed, entry.removed, serialize_delta_tree(entry.delta_tree))),
         )
 

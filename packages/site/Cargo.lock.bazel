@@ -1,5 +1,5 @@
 {
-  "checksum": "6c163fe50d3ef7ec78fc90b1e377a08f3ab6b997a6c8ae32b27bc2c8065e626c",
+  "checksum": "ec4d08a53f3a06509c67f6581a6e0044014a25b8c5c68b2ed18dea2d98c894f2",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -7349,12 +7349,6 @@
               "id": "openssl-sys 0.9.105",
               "target": "build_script_main"
             }
-          ],
-          "selects": {}
-        },
-        "extra_deps": {
-          "common": [
-            "@openssl//:openssl_shared"
           ],
           "selects": {}
         },

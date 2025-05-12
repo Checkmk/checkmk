@@ -25,10 +25,6 @@ host_crates.annotation(
         "OPENSSL_NO_VENDOR": "1",
         "OPENSSL_STATIC": "1",
     },
-    data = ["@openssl//:gen_dir"],
-    deps = [
-        "@openssl",
-    ],
     repositories = ["host_crates"],
 )
 

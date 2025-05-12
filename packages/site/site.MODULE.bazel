@@ -23,9 +23,6 @@ site_crates.annotation(
         "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
         "OPENSSL_NO_VENDOR": "1",
     },
-    deps = [
-        "@openssl//:openssl_shared",
-    ],
     repositories = ["site_crates"],
 )
 

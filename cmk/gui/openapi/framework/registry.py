@@ -11,6 +11,7 @@ from typing import Annotated, get_args, get_origin
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel, SignatureParametersProcessor
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointBehavior,
@@ -216,29 +217,101 @@ def _validate_endpoint_parameters(handler: HandlerFunction) -> None:
             raise ValueError("Request body annotation must be a dataclass")
 
 
-def _validate_endpoint_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
-    """Validate the content type of the endpoint"""
-    if endpoint.content_type == "application/json" and not model.has_response_schema:
-        raise ValueError(
-            f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
-            f"requires a response schema."
-        )
+def _type_contains_api_omitted(type_: type) -> bool:
+    """Check if the type contains ApiOmitted"""
+    if type_ is ApiOmitted:
+        return True
 
-    if endpoint.content_type != "application/json" and model.has_response_schema:
+    for arg in get_args(type_):
+        if _type_contains_api_omitted(arg):
+            return True
+
+    return False
+
+
+def _validate_defaults(
+    operation_id: str, path: str, schema: type, other_defaults_allowed: bool
+) -> None:
+    """Validate the model defaults"""
+    if not dataclasses.is_dataclass(schema):
+        raise ValueError(f"Endpoint {operation_id}: expected a dataclass annotation for `{path}`.")
+
+    for field in dataclasses.fields(schema):
+        if not isinstance(field.type, type):
+            raise ValueError(
+                f"Endpoint {operation_id} uses a string annotation for `{path}.{field.name}`."
+            )
+
+        if dataclasses.is_dataclass(field.type):
+            _validate_defaults(
+                operation_id, f"{path}.{field.name}", field.type, other_defaults_allowed
+            )
+            continue
+
+        if _type_contains_api_omitted(field.type):
+            if field.default is not dataclasses.MISSING:
+                raise ValueError(
+                    f"Endpoint {operation_id} uses `default` for `{path}.{field.name}`. Use `default_factory=ApiOmitted` instead."
+                )
+            if field.default_factory is dataclasses.MISSING:
+                raise ValueError(
+                    f"Endpoint {operation_id} must set `default_factory=ApiOmitted` for `{path}.{field.name}`."
+                )
+            if field.default_factory is not ApiOmitted:
+                raise ValueError(
+                    f"Endpoint {operation_id} uses incorrect `default_factory` for `{path}.{field.name}`. Use `default=ApiOmitted` instead."
+                )
+            continue
+
+        if other_defaults_allowed:
+            continue
+
+        if field.default is not dataclasses.MISSING:
+            raise ValueError(
+                f"Endpoint {operation_id} uses forbidden `default` for `{path}.{field.name}`."
+            )
+        if field.default_factory is not dataclasses.MISSING:
+            raise ValueError(
+                f"Endpoint {operation_id} uses forbidden `default_factory` for `{path}.{field.name}`."
+            )
+
+
+def _validate_endpoint_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
+    """Validate the response of the endpoint"""
+    if model.response_body_type is None:
+        if endpoint.content_type == "application/json":
+            raise ValueError(
+                f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
+                f"requires a response schema."
+            )
+        return
+
+    if endpoint.content_type != "application/json":
         raise ValueError(
             f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
             f"should not have a response schema."
         )
 
+    _validate_defaults(
+        endpoint.operation_id, "response", model.response_body_type, other_defaults_allowed=False
+    )
+
 
 def _validate_endpoint_request_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
-    if endpoint.method in ("delete", "get") and model.has_request_schema:
+    if model.request_body_type is None:
+        return
+
+    if endpoint.method in ("delete", "get"):
         # add an exception list if necessary but this should serve as double check that this is
         # intended
         raise ValueError(
             f"Endpoint {endpoint.operation_id} with method {endpoint.method} "
             f"should not have a request schema according to RFC"
         )
+
+    _validate_defaults(
+        endpoint.operation_id, "body", model.request_body_type, other_defaults_allowed=True
+    )
 
 
 def _validate_endpoint_error_schemas(

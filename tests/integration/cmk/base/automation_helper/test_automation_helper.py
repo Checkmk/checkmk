@@ -235,7 +235,7 @@ def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
             return False
         return True
 
-    site.run(["omd", "restart", "automation-helper"])
+    site.omd("restart", "automation-helper", check=True)
     wait_until(
         health_endpoint_is_reachable,
         timeout=10,

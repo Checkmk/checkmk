@@ -125,7 +125,7 @@ def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
 
 
 def _runs_cmc(site: Site) -> bool:
-    return site.run(["omd", "config", "show", "CORE"]).stdout.strip() == "cmc"
+    return site.omd("config", "show", "CORE", check=True).stdout.strip() == "cmc"
 
 
 def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site) -> None:

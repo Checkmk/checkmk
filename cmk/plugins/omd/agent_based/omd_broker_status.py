@@ -89,8 +89,8 @@ def _check_queues(item: str, section_omd_broker_queues: SectionQueues) -> CheckR
     messages = sum(queue.messages for queue in intersite_queues)
     yield from check_levels(
         messages,
-        metric_name="messages",
-        label="Messages in queue",
+        metric_name="omd_broker_messages",
+        label="Queued broker messages",
         render_func=lambda v: str(int(v)),
     )
 

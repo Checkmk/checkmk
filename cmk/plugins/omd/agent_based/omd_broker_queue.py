@@ -69,8 +69,8 @@ def check(item: str, section: SectionQueues) -> CheckResult:
 
     yield from check_levels(
         sum(q.messages for q in queues),
-        metric_name="messages",
-        label="Queued messages",
+        metric_name="omd_application_messages",
+        label="Queued application messages",
         render_func=str,
     )
     for queue in queues:

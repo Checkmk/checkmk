@@ -1,5 +1,6 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("//bazel/rules:platform_transition_binary.bzl", "platform_transition_binary")
 
 rust_library(
     name = "mk-sql-lib",
@@ -47,6 +48,12 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-sql-lib"],
+)
+
+platform_transition_binary(
+    name = "mk-sql-musl",
+    binary = ":mk-sql",
+    platform = "//bazel/platforms:x86_64-unknown-linux-musl",
 )
 
 rust_test(

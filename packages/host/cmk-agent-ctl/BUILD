@@ -1,5 +1,6 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("//bazel/rules:platform_transition_binary.bzl", "platform_transition_binary")
 
 rust_library(
     name = "cmk-agent-ctl-lib",
@@ -119,4 +120,10 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
+)
+
+platform_transition_binary(
+    name = "cmk-agent-ctl-musl",
+    binary = ":cmk-agent-ctl",
+    platform = "//bazel/platforms:x86_64-unknown-linux-musl",
 )

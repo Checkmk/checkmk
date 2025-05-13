@@ -96,7 +96,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument("--key-fields", action="append", help="field for host name generation")
     parser.add_argument(
         "--partition",
-        nargs="+",
+        default=[],
         type=_get_partition_list,
         help="Partition id for connection parameters (dmPartitionId)",
     )
@@ -281,9 +281,7 @@ def agent_mobileiron_main(args: Args) -> int:
             auth=(args.username, args.password),
             proxy=args.proxy,
         ) as mobileiron_api:
-            all_devices = mobileiron_api.get_all_devices(
-                partitions=[] if args.partition is None else args.partition
-            )
+            all_devices = mobileiron_api.get_all_devices(partitions=args.partition)
 
         if args.debug:
             LOGGER.debug("Received the following devices: %s", all_devices)

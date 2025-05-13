@@ -17,6 +17,7 @@ const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)
 const defaultEmpty3 = ref<string | null>(null)
 const defaultEmpty4 = ref<string | null>(null)
+const defaultEmpty5 = ref<string | null>(null)
 </script>
 
 <template>
@@ -158,6 +159,25 @@ const defaultEmpty4 = ref<string | null>(null)
       }
     }"
     input-hint="long dropdown"
+    no-results-hint="no results hint"
+    required-text="required"
+    label="some label"
+  />
+  <h2>element namess that are very very long</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty5"
+    :options="{
+      type: 'filtered',
+      suggestions: [
+        ...Array(20)
+          .fill(0)
+          .map((_, i) => ({
+            name: i.toString(),
+            title: `some very very very very very very very very very long title number ${i.toString()}`
+          }))
+      ]
+    }"
+    input-hint="long names"
     no-results-hint="no results hint"
     required-text="required"
     label="some label"

@@ -95,6 +95,9 @@ const addItem = (item: string | null) => {
 }
 
 function filterKeyValuePairs(element: Suggestion) {
+  if (element.name === null) {
+    return false
+  }
   const key = element.name.split(':')[0]
   if (key === undefined) {
     return true

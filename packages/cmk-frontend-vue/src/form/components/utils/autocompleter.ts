@@ -36,7 +36,7 @@ class AutoCompleterResponseError extends CmkError {
 }
 
 export async function fetchData<OutputType>(
-  value: unknown,
+  query: string,
   data: AutocompleterData
 ): Promise<OutputType> {
   const body = structuredClone(data)
@@ -46,7 +46,7 @@ export async function fetchData<OutputType>(
       delete body.params[k as keyof typeof body.params]
     }
   })
-  const request = `request=${JSON.stringify({ ...body, value })}`
+  const request = `request=${JSON.stringify({ ...body, value: query })}`
 
   const response = await cmkFetch('ajax_vs_autocomplete.py', {
     method: 'POST',
@@ -66,7 +66,7 @@ export async function fetchData<OutputType>(
   return ajaxResponse.result as OutputType
 }
 
-type AjaxVsAutocompleterResponse = { choices: Array<[string, string]> }
+export type AjaxVsAutocompleterResponse = { choices: Array<[string | null, string]> }
 
 export async function fetchSuggestions(
   autocompleter: Autocompleter,

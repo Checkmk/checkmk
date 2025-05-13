@@ -378,7 +378,7 @@ test('dropdown doesnt interfere with tab order', async () => {
   expect(document.activeElement).toBe(dropdown)
 })
 
-test('dropdown with callback and freeform element in first place still selects correclty', async () => {
+test('dropdown with callback and freeform element in first place still selects correctly', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -413,4 +413,125 @@ test('dropdown with callback and freeform element in first place still selects c
   await fireEvent.update(input, 'ut_something')
   await fireEvent.click(await screen.findByText('three'))
   await waitFor(() => expect(selectedOption).toBe('three'))
+})
+
+test('dropdown with callback and unselectable suggestion shows title', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: null, title: 'unselectable' },
+            { name: 'one', title: 'one' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'dropdown-label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+  await screen.findByText('unselectable')
+})
+
+test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
+  let selectedOption: string | null = ''
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: null, title: 'unselectable' },
+            { name: 'one', title: 'one' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  await userEvent.keyboard('[Enter]')
+  expect(selectedOption).toBe('one')
+})
+
+test('dropdown with callback skips unselectable with keyboard', async () => {
+  let selectedOption: string | null = ''
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: 'one', title: 'one' },
+            { name: null, title: 'unselectable' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  await userEvent.keyboard('[ArrowDown][Enter]')
+  expect(selectedOption).toBe('three')
+})
+
+test('dropdown unselectable is unselectable', async () => {
+  let selectedOption: string | null = 'one'
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (_) => {
+          return new Response([
+            { name: 'one', title: 'one' },
+            { name: null, title: 'unselectable' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption,
+      inputHint: 'Select an option',
+      label: 'dropdown-label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
+  await fireEvent.click(dropdown)
+
+  const unselectable = await screen.findByText('unselectable')
+  await fireEvent.click(unselectable)
+
+  expect(selectedOption).toBe('one')
+  expect(screen.getByText('unselectable')).toBeInTheDocument()
 })

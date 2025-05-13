@@ -55,43 +55,39 @@ const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
 const filteredSuggestions = ref<Array<Suggestion>>([])
-const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means first element
+const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means no selection, (no selectable elements)
 
-function isSuggestionSelected(suggestion: Suggestion, index: number): boolean {
-  if (currentlySelectedElement.value === null && index === 0) {
-    return true
+function isSuggestionSelected(suggestion: Suggestion): boolean {
+  if (currentlySelectedElement.value === null) {
+    return false
   }
-  if (suggestion.name === currentlySelectedElement.value?.name) {
-    return true
-  }
-  return false
+  return suggestion.name === currentlySelectedElement.value?.name
 }
 
 function scrollCurrentlySelectedIntoView(): void {
   if (suggestionRefs.value === null) {
     return
   }
-  const index = getCurrentlySelectedAsIndex()
+  const index = findSuggestionAsIndex(filteredSuggestions.value, currentlySelectedElement.value)
   if (index === null) {
     return
   }
   suggestionRefs.value[index]?.scrollIntoView({ block: 'nearest' })
 }
 
-function getCurrentlySelectedAsIndex(): number | null {
-  let currentlySelected = currentlySelectedElement.value
-  if (currentlySelected === null) {
-    if (!filteredSuggestions.value[0]) {
-      return null
-    }
-    currentlySelected = filteredSuggestions.value[0]
+function findSuggestionAsIndex(
+  suggestions: Array<Suggestion>,
+  suggestion: Suggestion | null
+): number | null {
+  if (suggestion === null) {
+    return null
   }
-  const currentElement = filteredSuggestions.value
+  const currentElement = suggestions
     .map((suggestion, index) => ({
       name: suggestion.name,
       index: index
     }))
-    .find(({ name }) => currentlySelected.name === name)
+    .find(({ name }) => suggestion.name === name)
   if (currentElement === undefined) {
     return null
   }
@@ -126,6 +122,8 @@ immediateWatch(
     } else {
       error.value = ''
       filteredSuggestions.value = result.choices
+      currentlySelectedElement.value = null
+      selectSibilingElement(0)
     }
   },
   { deep: 2 }
@@ -134,31 +132,33 @@ immediateWatch(
 function onKeyEnter(event: InputEvent): void {
   event.stopPropagation()
   if (currentlySelectedElement.value === null) {
-    selectSibilingElement(0)
-  }
-  if (currentlySelectedElement.value === null) {
     return
   }
-  emit('select', currentlySelectedElement.value)
+  selectSuggestion(currentlySelectedElement.value)
 }
 
-function onClickSuggestion(suggestion: Suggestion) {
+function selectSuggestion(suggestion: Suggestion) {
+  if (suggestion.name === null) {
+    return
+  }
   emit('select', suggestion)
 }
 
 function selectSibilingElement(direction: number) {
-  if (!filteredSuggestions.value.length) {
+  const selectableElements = filteredSuggestions.value.filter(
+    (suggestion) => suggestion.name !== null
+  )
+
+  if (!selectableElements.length) {
+    currentlySelectedElement.value = null
     return
   }
 
-  const currentIndex = getCurrentlySelectedAsIndex()
-  if (currentIndex === null) {
-    currentlySelectedElement.value = null
-  } else {
-    currentlySelectedElement.value =
-      filteredSuggestions.value[wrap(currentIndex + direction, filteredSuggestions.value.length)] ||
-      null
-  }
+  const currentIndex =
+    findSuggestionAsIndex(selectableElements, currentlySelectedElement.value) ?? 0
+
+  currentlySelectedElement.value =
+    selectableElements[wrap(currentIndex + direction, selectableElements.length)] || null
 }
 
 function wrap(index: number, length: number): number {
@@ -195,7 +195,7 @@ function inputLostFocus(event: unknown) {
   const elementClicked = (event as FocusEvent).relatedTarget
   for (const [index, suggestionRef] of suggestionRefs.value.entries()) {
     if (suggestionRef === elementClicked) {
-      emit('select', filteredSuggestions.value[index]!)
+      selectSuggestion(filteredSuggestions.value[index]!)
       return
     }
   }
@@ -231,13 +231,15 @@ defineExpose({
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
       <li
-        v-for="(suggestion, index) in filteredSuggestions"
+        v-for="suggestion in filteredSuggestions"
         ref="suggestionRefs"
         tabindex="-1"
         :role="role"
-        class="selectable"
-        :class="{ selected: isSuggestionSelected(suggestion, index) }"
-        @click="onClickSuggestion(suggestion)"
+        :class="{
+          selectable: suggestion.name !== null,
+          selected: isSuggestionSelected(suggestion)
+        }"
+        @click="selectSuggestion(suggestion)"
       >
         <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
         {{ suggestion.title }}
@@ -281,6 +283,7 @@ defineExpose({
   li {
     padding: 6px;
     cursor: default;
+    color: var(--font-color-dimmed);
 
     &:focus {
       outline: none;
@@ -288,6 +291,7 @@ defineExpose({
 
     &.selectable {
       cursor: pointer;
+      color: var(--font-color);
       &.selected {
         color: var(--default-select-focus-color);
       }

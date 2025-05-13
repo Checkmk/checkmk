@@ -133,6 +133,26 @@ const defaultEmpty4 = ref<string | null>(null)
     required-text="required"
     label="some label"
   />
+  <h2>Queried dropdown with unselectable</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty3"
+    :options="{
+      type: 'callback-filtered',
+      querySuggestions: async (_) => {
+        return new Response([
+          { name: 'one', title: 'one' },
+          { name: null, title: 'unselectable' },
+          { name: 'three', title: 'three' },
+          { name: 'four', title: 'four' }
+        ])
+      }
+    }"
+    input-hint="long dropdown"
+    no-results-hint="no results hint"
+    component-id="some component id"
+    required-text="required"
+    label="some label"
+  />
 
   <h1>CmkDropdownButton</h1>
   <h2>button</h2>

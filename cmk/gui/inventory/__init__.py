@@ -37,14 +37,16 @@ from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec, _xml
-from ._history import get_history, load_delta_tree, load_latest_delta_tree
 from ._icon import InventoryIcon
 from ._rulespec import RulespecGroupInventory
 from ._store import has_inventory
 from ._tree import (
+    get_history,
     get_short_inventory_filepath,
     InventoryPath,
+    load_delta_tree,
     load_filtered_and_merged_tree,
+    load_latest_delta_tree,
     make_filter_choices_from_api_request_paths,
     parse_inventory_path,
     TreeSource,
@@ -53,16 +55,16 @@ from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_pat
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 __all__ = [
+    "InventoryPath",
+    "RulespecGroupInventory",
+    "TreeSource",
     "get_history",
     "get_short_inventory_filepath",
     "has_inventory",
-    "InventoryPath",
     "load_delta_tree",
     "load_filtered_and_merged_tree",
     "load_latest_delta_tree",
     "parse_inventory_path",
-    "RulespecGroupInventory",
-    "TreeSource",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",
 ]

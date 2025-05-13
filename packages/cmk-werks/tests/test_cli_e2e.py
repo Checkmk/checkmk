@@ -18,6 +18,8 @@ def initialize_werks_project(
     project: str,
     first_free: int,
     commit: bool = True,
+    repo_url: str = "some-url/check_mk",
+    branch_name: str = "testmain",
 ) -> Repo:
     path.mkdir()
     werks = path / ".werks"
@@ -47,6 +49,8 @@ compatible = [
 online_url = "https://checkmk.com/werk/%d"
 project = "{project}"
 current_version = "0.1.0"
+branch = "{branch_name}"
+repo = "{repo_url}"
 {commit_option}
     """)
     Repo.init(path)
@@ -58,9 +62,9 @@ current_version = "0.1.0"
     cw.release()
     repo.index.add(["README.md", ".werks/first_free"])
     repo.index.commit("initial commit")
-    repo.create_remote("origin", "some-url/check_mk")
-    repo.create_head("master")
-
+    repo.create_remote("origin", f"git@{repo_url}")
+    branch = repo.create_head(branch_name)
+    repo.head.reference = branch  # type: ignore[misc]
     return repo
 
 
@@ -102,7 +106,13 @@ def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     cloudmk_repo_path = tmp_path / "repo_cloudmk"
 
     initialize_werks_project(cmk_repo_path, project="cmk", first_free=11_111)
-    initialize_werks_project(cloudmk_repo_path, project="cloudmk", first_free=1_111_111)
+    initialize_werks_project(
+        cloudmk_repo_path,
+        project="cloudmk",
+        first_free=1_111_111,
+        repo_url="some-url/cloudmk",
+        branch_name="foobar",
+    )
 
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
         os.chdir(cmk_repo_path)

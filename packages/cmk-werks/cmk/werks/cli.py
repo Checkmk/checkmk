@@ -1055,7 +1055,7 @@ def current_branch() -> str:
 
 
 def current_repo() -> str:
-    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
+    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("@")[-1]
 
 
 def _reserve_werk_ids(
@@ -1096,8 +1096,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
         sys.exit(0)
 
-    if current_branch() != "master" or current_repo() != "check_mk":
-        bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")
+    if current_branch() != get_config().branch or current_repo() != get_config().repo:
+        bail_out(
+            f"Werk IDs can only be reserved on the '{get_config().branch}' branch of the repository, not '{current_branch()}'."
+        )
 
     # Get the start werk_id to reserve
     try:
@@ -1127,7 +1129,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     )
 
     if get_config().create_commit:
-        if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
+        if os.system(f"git commit --no-verify -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
             sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
         else:
             bail_out("Cannot commit.")

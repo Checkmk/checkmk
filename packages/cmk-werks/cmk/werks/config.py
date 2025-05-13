@@ -18,6 +18,8 @@ class Config(BaseModel):
     compatible: list[tuple[str, str]]
     online_url: str
     project: Literal["cmk", "cloudmk", "cma"]
+    branch: str
+    repo: str
     create_commit: bool = True
     """
     Should the werk tool automatically create a commit when reserving ids or creating a werk?

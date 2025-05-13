@@ -62,3 +62,5 @@ compatible = [
 online_url = "https://checkmk.com/werk/%d"
 
 project = "cmk"
+repo = "review.lan.tribe29.com:29418/check_mk"
+branch = "master"

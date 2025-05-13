@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, rule_specs, Title
+from cmk.rulesets.v1 import form_specs, Label, rule_specs, Title
 
 
 def _parameters_valuespec_prism_hosts() -> form_specs.Dictionary:
@@ -15,9 +15,16 @@ def _parameters_valuespec_prism_hosts() -> form_specs.Dictionary:
                     prefill=form_specs.DefaultValue("NORMAL"),
                     custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
                 ),
-            )
+            ),
+            "acropolis_connection_state": form_specs.DictElement(
+                parameter_form=form_specs.BooleanChoice(
+                    title=Title("Monitor Acropolis State"),
+                    label=Label("Alert if Acropolis disconnects from hypervisor"),
+                    prefill=form_specs.DefaultValue(True),
+                ),
+            ),
         },
-        title=Title("Wanted Host State for defined Nutanix Host"),
+        title=Title("States of Nutanix Host"),
     )
 
 

@@ -683,15 +683,18 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             # Filter out buttons
             if cell.css is not None and "buttons" in cell.css:
                 continue
+
+            cell_string = str(cell.content)
             # The inpage search of the folder page adds href with
             # "search=searchterm" to cell.content and would always match => remove for matching
             if "inpage_search_form" in cell.content:
-                cell_string = str(cell.content).replace("search=" + search_term, "")
-                if match_regex.search(cell_string) is not None:
-                    filtered_rows.append(row)
-                    break
-                continue
-            if match_regex.search(str(cell.content)):
+                cell_string = (
+                    str(cell.content)
+                    .replace("search=" + search_term, "")
+                    .replace("search%253D" + search_term, "")  # url encoded string
+                )
+
+            if match_regex.search(cell_string):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
     return filtered_rows

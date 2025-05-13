@@ -17,7 +17,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-iwyu.sh install-clang.sh \
         install-docker.sh \
         install-nodejs.sh \
-        install-musl-tools.sh \
         install-packer.sh \
         install-make-dist-deps.sh \
         install-aws-cli.sh \

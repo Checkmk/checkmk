@@ -24,9 +24,6 @@ DEFAULT_TOOLCHAIN_VERSION="1.79"
 ADDITIONAL_TOOLCHAIN_VERSIONS="1.75"
 
 DEFAULT_TARGET="x86_64-unknown-linux-gnu"
-# List additional targets here, separated by space.
-# These targets will be installed for all toolchain versions.
-ADDITIONAL_TARGETS="x86_64-unknown-linux-musl"
 DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${DEFAULT_TARGET}"
 DIR_NAME="rust"
 TARGET_DIR="${TARGET_DIR:-/opt}"

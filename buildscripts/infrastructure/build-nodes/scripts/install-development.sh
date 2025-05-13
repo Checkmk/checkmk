@@ -354,11 +354,6 @@ install_for_rust_dev() {
     print_red "${IMPORTANT_MESSAGES[${#IMPORTANT_MESSAGES[@]} - 1]}"
 }
 
-strip_for_rust() {
-    # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
-}
-
 install_for_frontend_dev() {
     print_green "Installing everything for Frontend development ..."
 

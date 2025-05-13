@@ -12,7 +12,7 @@ use mk_sql::config::ms_sql::Discovery;
 use mk_sql::platform;
 #[cfg(windows)]
 use mk_sql::platform::odbc;
-use mk_sql::types::InstanceName;
+use mk_sql::types::{Edition, InstanceName};
 
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
@@ -674,7 +674,7 @@ async fn validate_clusters(_instance: &SqlInstance, _client: &mut UniClient, _en
 
 async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
     let result = instance
-        .generate_unified_section(endpoint, &make_section(names::JOBS), None)
+        .generate_unified_section(endpoint, &make_section(names::JOBS), None, &Edition::Normal)
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
@@ -702,6 +702,7 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
             endpoint,
             section,
             sqls::find_known_query(sqls::Id::BadQuery).ok(),
+            &Edition::Normal,
         )
         .await;
 
@@ -715,7 +716,7 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
 async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = make_section(names::MIRRORING);
     let lines: Vec<String> = instance
-        .generate_unified_section(endpoint, &section, None)
+        .generate_unified_section(endpoint, &section, None, &Edition::Normal)
         .await
         .split('\n')
         .map(|l| l.to_string())
@@ -728,7 +729,7 @@ async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint)
 async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = make_section(names::AVAILABILITY_GROUPS);
     let lines: Vec<String> = instance
-        .generate_unified_section(endpoint, &section, None)
+        .generate_unified_section(endpoint, &section, None, &Edition::Normal)
         .await
         .split('\n')
         .map(|l| l.to_string())

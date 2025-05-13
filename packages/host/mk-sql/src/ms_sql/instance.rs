@@ -374,7 +374,7 @@ impl SqlInstance {
         log::trace!("{:?} @ {:?}", self, self.endpoint);
         let body = match self.create_client(&self.endpoint, None).await {
             Ok(mut client) => {
-                let (real_name, _edition) = obtain_instance_signature(&mut client)
+                let (real_name, edition) = obtain_instance_signature(&mut client)
                     .await
                     .ok()
                     .unwrap_or((InstanceName::from("???"), Edition::Normal));
@@ -398,7 +398,7 @@ impl SqlInstance {
                     instance_section.to_plain_header()
                         + &self.generate_bad_state_entry(instance_section.sep(), &error_text)
                 } else {
-                    self._generate_sections(&mut client, &self.endpoint, sections)
+                    self._generate_sections(&mut client, &self.endpoint, sections, &edition)
                         .await
                 }
             }
@@ -435,12 +435,13 @@ impl SqlInstance {
         client: &mut UniClient,
         endpoint: &Endpoint,
         sections: &[Section],
+        edition: &Edition,
     ) -> String {
         let mut data: Vec<String> = Vec::new();
         let databases = self.gather_databases(client, sections).await;
         for section in sections.iter() {
             data.push(
-                self.generate_section(client, endpoint, section, &databases)
+                self.generate_section(client, endpoint, section, &databases, edition)
                     .await,
             );
         }
@@ -492,12 +493,13 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
+        edition: &Edition,
     ) -> String {
         let body = match self.read_data_from_cache(section.name(), section.cache_age() as u64) {
             Some(from_cache) => from_cache,
             None => {
                 let from_sql = self
-                    .generate_section_body(client, endpoint, section, databases)
+                    .generate_section_body(client, endpoint, section, databases, edition)
                     .await;
                 if section.kind() == &SectionKind::Async {
                     self.write_data_in_cache(section.name(), &from_sql);
@@ -514,6 +516,7 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
+        edition: &Edition,
     ) -> String {
         if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
             let sep = section.sep();
@@ -539,7 +542,8 @@ impl SqlInstance {
                     databases, endpoint, section, &query, sep,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                    self.generate_unified_section(endpoint, section, None).await
+                    self.generate_unified_section(endpoint, section, None, edition)
+                        .await
                 }
                 _ => self
                     .generate_custom_section(endpoint, section)
@@ -1080,8 +1084,9 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         query: Option<&str>,
+        edition: &Edition,
     ) -> String {
-        match self.create_client(endpoint, section.main_db()).await {
+        match self.create_client(endpoint, section.main_db(edition)).await {
             Ok(mut c) => {
                 let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
                     section

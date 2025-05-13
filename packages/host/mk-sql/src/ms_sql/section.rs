@@ -7,6 +7,7 @@ use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
+use crate::types::Edition;
 use crate::{constants, types::InstanceName, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -162,9 +163,15 @@ impl Section {
             .ok()
     }
 
-    pub fn main_db(&self) -> Option<String> {
+    pub fn main_db(&self, edition: &Edition) -> Option<String> {
         match self.name.as_ref() {
-            section::names::JOBS => Some("msdb"),
+            section::names::JOBS => {
+                if edition == &Edition::Azure {
+                    None
+                } else {
+                    Some("msdb")
+                }
+            }
             section::names::MIRRORING => Some("master"),
             _ => None,
         }
@@ -257,6 +264,7 @@ mod tests {
     use crate::config::ms_sql::Config;
     use crate::config::section;
     use crate::ms_sql::custom;
+    use crate::types::Edition;
 
     #[test]
     fn test_section_header() {
@@ -357,5 +365,30 @@ mod tests {
     fn test_header_name() {
         assert_eq!(to_header_name(names::CLUSTERS), "cluster");
         assert_eq!(to_header_name("xxx"), "xxx");
+    }
+
+    #[test]
+    fn test_main_db() {
+        let ret: Vec<(String, Option<String>, Option<String>)> = section::Sections::default()
+            .sections()
+            .iter()
+            .map(|s| s.name().to_string())
+            .map(|n| {
+                let s = Section::new(&section::SectionBuilder::new(n.clone()).build(), Some(100));
+                (n, s.main_db(&Edition::Azure), s.main_db(&Edition::Normal))
+            })
+            .filter(|(_, azure, normal)| azure.is_some() || normal.is_some())
+            .collect();
+        assert_eq!(
+            ret,
+            vec![
+                (
+                    names::MIRRORING.to_string(),
+                    Some("master".to_string()),
+                    Some("master".to_string()),
+                ),
+                (names::JOBS.to_string(), None, Some("msdb".to_string()),),
+            ]
+        );
     }
 }

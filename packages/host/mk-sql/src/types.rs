@@ -79,6 +79,7 @@ pub struct HostName(String);
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct CertPath(String);
 
+#[derive(PartialEq)]
 pub enum Edition {
     Azure,
     Normal,

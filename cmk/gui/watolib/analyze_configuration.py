@@ -332,10 +332,14 @@ def perform_tests(
         return {}
 
     pool = ThreadPool(processes=len(test_sites))
+
+    def run(site_id: SiteId) -> _TestResult:
+        return _perform_tests_for_site(logger, active_config, request_, site_id, categories, debug)
+
     active_tasks = {
         site_id: pool.apply_async(
-            func=copy_request_context(_perform_tests_for_site),
-            args=(logger, active_config, request_, site_id, categories, debug),
+            func=copy_request_context(run),
+            args=(site_id,),
             error_callback=_error_callback,
         )
         for site_id in test_sites

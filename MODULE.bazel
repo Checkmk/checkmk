@@ -280,6 +280,17 @@ http_file(
 )
 
 http_archive(
+    name = "nrpe",
+    build_file = "//omd/packages/nrpe:BUILD.nrpe.bazel",
+    sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
+    strip_prefix = "nrpe-3.2.1",
+    urls = [
+        "https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-3.2.1/nrpe-3.2.1.tar.gz",
+        UPSTREAM_MIRROR_URL + "nrpe-3.2.1.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

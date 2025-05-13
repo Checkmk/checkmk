@@ -57,10 +57,6 @@ load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
 
 crypt_ssleay_workspace()
 
-load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe_workspace")
-
-nrpe_workspace()
-
 load("//omd/packages/Python:Python_http.bzl", "python_workspace")
 
 python_workspace()

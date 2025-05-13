@@ -495,7 +495,8 @@ def main() -> None:
         case _:
             raise Exception(f"ERROR: Unknown edition '{args.edition}'")
 
-    version_tag = Path(args.source_path).name
+    # remove potential meta data of tag
+    version_tag = Path(args.source_path).name.split("+")[0]
 
     LOG.debug(f"tmp_path: {tmp_path}")
     LOG.debug(f"version_tag: {version_tag}")

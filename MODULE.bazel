@@ -352,9 +352,11 @@ toolchains_musl = use_extension("@toolchains_musl//:toolchains_musl.bzl", "toolc
 toolchains_musl.config(
     extra_target_compatible_with = ["//bazel/platforms:musl"],
 )
+use_repo(toolchains_musl, "musl_toolchains_hub")
 
 register_toolchains(
     "@rust_toolchains//:all",
+    "@musl_toolchains_hub//:all",
     "//bazel/toolchains/cc/gcc/local:linux_x86_64",
 )
 

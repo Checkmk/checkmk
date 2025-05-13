@@ -21,7 +21,7 @@ platform(
 
 constraint_setting(
     name = "linker",
-    default_constraint_value = ":unknown",
+    default_constraint_value = ":linker_unknown",
 )
 
 constraint_value(
@@ -30,6 +30,6 @@ constraint_value(
 )
 
 constraint_value(
-    name = "unknown",
+    name = "linker_unknown",
     constraint_setting = ":linker",
 )

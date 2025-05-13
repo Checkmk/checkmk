@@ -6,6 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from cmk.ccc.hostaddress import HostName
+
+import cmk.utils.paths
+from cmk.utils.structured_data import InventoryPaths
 from cmk.utils.tags import TagID
 
 from cmk.gui.http import request
@@ -15,7 +19,13 @@ from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
 
-from ._store import has_inventory
+
+def _has_inventory(host_name: HostName) -> bool:
+    return (
+        InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host_name).exists()
+        if host_name
+        else False
+    )
 
 
 def _render_inventory_icon(
@@ -27,7 +37,7 @@ def _render_inventory_icon(
     if (
         what == "host"
         or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
-    ) and has_inventory(row["host_name"]):
+    ) and _has_inventory(row["host_name"]):
         if not user.may("view.inv_host"):
             return None
 

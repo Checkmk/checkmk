@@ -39,7 +39,6 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from . import _rulespec, _xml
 from ._icon import InventoryIcon
 from ._rulespec import RulespecGroupInventory
-from ._store import has_inventory
 from ._tree import (
     get_history,
     get_short_inventory_filepath,
@@ -60,7 +59,6 @@ __all__ = [
     "TreeSource",
     "get_history",
     "get_short_inventory_filepath",
-    "has_inventory",
     "load_delta_tree",
     "load_filtered_and_merged_tree",
     "load_latest_delta_tree",

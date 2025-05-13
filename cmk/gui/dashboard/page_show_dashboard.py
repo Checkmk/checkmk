@@ -383,17 +383,16 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | s
             dashlet.type_name(),
         )
 
-    with output_funnel.plugged():
-        if isinstance(e, MKException):
-            html.show_error(
-                _(
-                    "Problem while rendering dashboard element %d of type %s: %s. Have a look at "
-                    "<tt>var/log/web.log</tt> for further information."
-                )
-                % (dashlet.dashlet_id, dashlet.type_name(), str(e))
+    if isinstance(e, MKException):
+        return html.render_error(
+            _(
+                "Problem while rendering dashboard element %d of type %s: %s. Have a look at "
+                "<tt>var/log/web.log</tt> for further information."
             )
-            return output_funnel.drain()
+            % (dashlet.dashlet_id, dashlet.type_name(), str(e))
+        )
 
+    with output_funnel.plugged():
         crash_handler.handle_exception_as_gui_crash_report(
             details=GUIDetails(
                 dashlet_id=dashlet.dashlet_id,

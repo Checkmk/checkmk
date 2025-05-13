@@ -37,6 +37,12 @@ cc_toolchain(
 toolchain(
     name = "host_gcc_toolchain",
     exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = [
+        "//bazel/platforms:hermetic",
+        "@platforms//cpu:x86_64",
         "@platforms//os:linux",
     ],
     toolchain = ":host_gcc",

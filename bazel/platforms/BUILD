@@ -33,3 +33,31 @@ constraint_value(
     name = "linker_unknown",
     constraint_setting = ":linker",
 )
+
+platform(
+    name = "x86_64-linux-gcc-hermetic",
+    constraint_values = [
+        ":hermetic",
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+constraint_setting(
+    name = "hermeticity",
+    default_constraint_value = ":hermeticity_unknown",
+    visibility = ["//visibility:public"],
+)
+
+constraint_value(
+    name = "hermetic",
+    constraint_setting = ":hermeticity",
+    visibility = ["//visibility:public"],
+)
+
+constraint_value(
+    name = "hermeticity_unknown",
+    constraint_setting = ":hermeticity",
+    visibility = ["//visibility:public"],
+)

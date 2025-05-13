@@ -5,6 +5,7 @@
 """Modes for managing folders"""
 
 import abc
+import json
 import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import override, TypeVar
@@ -26,6 +27,7 @@ from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    confirmed_form_submit_options,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_display_options_dropdown,
@@ -1199,7 +1201,30 @@ class ModeFolder(WatoMode):
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
-        self._show_host_actions_menu(host)
+            if host.permissions.may("write"):
+                delete_host_options: dict[str, str | dict[str, str]] = (
+                    confirmed_form_submit_options(
+                        title=_("Delete host"),
+                        confirm_text=_("Remove"),
+                        suffix=host.name(),
+                    )
+                )
+                html.icon_button(
+                    url=None,
+                    onclick="cmk.selection.execute_bulk_action_for_single_host(this,"
+                    " cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
+                    % json.dumps(
+                        [
+                            "hosts",
+                            "_bulk_delete",
+                            delete_host_options,
+                        ],
+                    ),
+                    title=_("Delete host"),
+                    icon="delete",
+                )
+
+            self._show_host_actions_menu(host)
 
     def _show_host_actions_menu(self, host: Host) -> None:
         action_menu_show_flags: list[str] = []

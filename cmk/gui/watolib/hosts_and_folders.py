@@ -3925,28 +3925,6 @@ def ajax_popup_host_action_menu() -> None:
         html.write_text_permissive(_("Remove TLS registration"))
         html.close_a()
 
-    # Delete host
-    if request.get_str_input("show_delete_link"):
-        delete_host_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(
-            title=_("Delete host"),
-            confirm_text=_("Remove"),
-            suffix=host.name(),
-        )
-        html.open_a(
-            href=None,
-            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
-            % json.dumps(
-                [
-                    form_name,
-                    "_bulk_delete",
-                    delete_host_options,
-                ]
-            ),
-        )
-        html.icon("delete")
-        html.write_text_permissive(_("Delete host"))
-        html.close_a()
-
 
 def find_usages_of_contact_group_in_hosts_and_folders(
     name: GroupName, _settings: GlobalSettings, folder: Folder | None = None

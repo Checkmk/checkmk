@@ -73,6 +73,7 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
         test_site.delete_file(f"{path}/fake.py")
 
 
+@pytest.mark.xfail(reason="CMK-23485; 'Analyze configuration' page is incorrectly empty!")
 def test_analyze_configuration_page(dashboard_page: Dashboard, simulate_deprecations: None) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 

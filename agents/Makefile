@@ -96,7 +96,7 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 $(AGENT_CTL):
 	$(AGENT_CTL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
+	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
@@ -105,7 +105,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(MK_SQL):
 	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
+	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/mk-sql/mk-sql-musl $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

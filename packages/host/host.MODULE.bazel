@@ -18,10 +18,10 @@ use_repo(host_crates, "host_crates")
 host_crates.annotation(
     crate = "openssl-sys",
     build_script_data = [
-        "@openssl//:gen_dir",
+        "@openssl//:gen_dir_static",
     ],
     build_script_env = {
-        "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+        "OPENSSL_DIR": "$(execpath @openssl//:gen_dir_static)",
         "OPENSSL_NO_VENDOR": "1",
         "OPENSSL_STATIC": "1",
     },

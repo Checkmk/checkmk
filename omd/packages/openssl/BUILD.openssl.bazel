@@ -1,9 +1,45 @@
-load("@//bazel/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
+load("@//bazel/rules:cc_export.bzl", "cc_export_shared_library")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
     name = "all_srcs",
     srcs = glob(["**"]),
+)
+
+configure_make(
+    name = "openssl_static",
+    args = ["-j6"],
+    configure_command = "Configure",
+    configure_in_place = True,
+    configure_options = [
+        "no-comp",
+        "no-idea",
+        "no-module",
+        "no-shared",
+        "no-static-engine",
+        "no-tests",
+        "no-weak-ssl-ciphers",
+        "-fPIC",
+    ],
+    lib_name = "openssl",
+    lib_source = ":all_srcs",
+    out_lib_dir = "lib64",
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    targets = [
+        "build_libs",
+        "install_dev",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gen_dir_static",
+    srcs = [":openssl_static"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )
 
 configure_make(
@@ -19,12 +55,10 @@ configure_make(
         # have to be writeable at build time. Left relative it will be prefixed
         # to an also absolute path provided by foreign_cc's `configure_make`
         "--openssldir='skel/etc/ssl'",
-        "enable-md2",
-        "no-tests",
-        # default is lib64 since 3.x some other software might be surprised to find artifacts under lib
         "--libdir=lib",
-        # Do not build shared legacy module
+        "enable-md2",
         "no-module",
+        "no-tests",
         "-O2",
     ],
     copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
@@ -61,10 +95,6 @@ configure_make(
         "libcrypto.so",
         "libcrypto.so.3",
     ],
-    out_static_libs = [
-        "libssl.a",
-        "libcrypto.a",
-    ],
     targets = [
         "build_programs",
         "install_sw",
@@ -97,18 +127,6 @@ cc_export_shared_library(
     shared_library = "libcrypto.so",
 )
 
-cc_export_static_library(
-    name = "libssl.a",
-    srcs = [":openssl"],
-    static_library = "libssl.a",
-)
-
-cc_export_static_library(
-    name = "libcrypto.a",
-    srcs = [":openssl"],
-    static_library = "libcrypto.a",
-)
-
 filegroup(
     name = "gen_dir",
     srcs = [":openssl"],
@@ -126,14 +144,5 @@ cc_library(
         ":libssl.so.3",
         ":libcrypto.so",
         ":libcrypto.so.3",
-    ],
-)
-
-cc_library(
-    name = "openssl_static",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":libcrypto.a",
-        ":libssl.a",
     ],
 )

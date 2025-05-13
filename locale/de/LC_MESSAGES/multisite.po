@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-07 22:50+0000\n"
+"PO-Revision-Date: 2025-05-13 00:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -466,7 +466,7 @@ msgid_plural "%d discovery parameters removed"
 msgstr[0] "%d entfernter Erkennungsparameter"
 msgstr[1] "%d entfernte Erkennungsparameter"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d errors occurred:"
 msgstr "%d aufgetretene Fehler:"
 
@@ -617,10 +617,9 @@ msgid "%s Click on the icon to download the agent output."
 msgstr ""
 "%s Klicken Sie auf das Symbol, um die Ausgabe des Agenten herunterzuladen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s Click on the icon to review."
-msgstr ""
-"%s Klicken Sie auf das Symbol, um die Ausgabe des Agenten herunterzuladen."
+msgstr "%s Klicken Sie zur Überprüfung auf das Symbol."
 
 #, python-format
 msgid "%s Locks"
@@ -931,11 +930,11 @@ msgstr "(alte Version: %s, neue Version: %s)"
 
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
-msgstr "(SLA Alert-Level bei %d/%d Vorfällen verbleibend)"
+msgstr "(SLA Alert-Levels bei %d/%d Vorfällen verbleibend)"
 
 #, python-format
 msgid "(SLA alert levels at %r%%/%r%% left)"
-msgstr "(SLA Alert-Level bei %r%%/%r%% verbleibend)"
+msgstr "(SLA Alert-Levels bei %r%%/%r%% verbleibend)"
 
 msgid "(Select host)"
 msgstr "(Host auswählen)"
@@ -2411,7 +2410,7 @@ msgstr ""
 "Eine Provisionierung von über 100% heißt Überprovisionierung und kann eine "
 "sinnvolle Strategie zur Speicherplatzersparnis sein, doch es kann nicht mehr "
 "garantiert werden, dass jede VM wirklich allen Platz, der ihr zugeteilt "
-"wurde, nutzen kann. Hier können Sie die Level für die maximale "
+"wurde, nutzen kann. Hier können Sie die Levels für die maximale "
 "Provisionierung einstellen. Ein Warn-Level von 150% warnt bei 50% "
 "Überprovisionierung."
 
@@ -2669,7 +2668,6 @@ msgstr "A4"
 msgid "A5"
 msgstr "A5"
 
-#, fuzzy
 msgid "ACME Certificates"
 msgstr "ACME-Zertifikate"
 
@@ -3035,57 +3033,57 @@ msgid "Absolute levels for committed heap space"
 msgstr "Absolute Levels für 'comitted heap space'"
 
 msgid "Absolute levels for decoded traffic"
-msgstr "Absolute Level für 'decoded traffic'"
+msgstr "Absolute Levels für 'decoded traffic'"
 
 #, python-format
 msgid "Absolute levels for free %s"
-msgstr "Absolute Level für freien %s"
+msgstr "Absolute Levels für freien %s"
 
 msgid "Absolute levels for free RAM"
-msgstr "Absolute Level für freien RAM"
+msgstr "Absolute Levels für freien RAM"
 
 msgid "Absolute levels for free memory"
-msgstr "Absolute Level für freien Speicher"
+msgstr "Absolute Levels für freien Speicher"
 
 msgid "Absolute levels for free swap"
-msgstr "Absolute Level für freien Swap"
+msgstr "Absolute Levels für freien Swap"
 
 msgid "Absolute levels for free temp space"
-msgstr "Absolute Level für freien temporären Speicherplatz"
+msgstr "Absolute Levels für freien temporären Speicherplatz"
 
 msgid "Absolute levels for input traffic"
-msgstr "Absolute Level für eingehenden Verkehr"
+msgstr "Absolute Levels für eingehenden Verkehr"
 
 msgid "Absolute levels for logged-in users"
 msgstr "Absolute Levels für angemeldete Benutzer"
 
 msgid "Absolute levels for memory reclaimed by GC"
-msgstr "Absolute Level für Arbeitsspeicher 'reclaimed by GC'"
+msgstr "Absolute Levels für Arbeitsspeicher 'reclaimed by GC'"
 
 msgid "Absolute levels for output traffic"
-msgstr "Absolute Level für ausgehenden Verkehr"
+msgstr "Absolute Levels für ausgehenden Verkehr"
 
 msgid "Absolute levels for total number of used processes"
-msgstr "Absolute Level für die Gesamtanzahl an benutzten Prozessen"
+msgstr "Absolute Levels für die Gesamtanzahl an benutzten Prozessen"
 
 msgid "Absolute levels for unused licenses"
-msgstr "Absolute Level für ungenutzte Lizenzen"
+msgstr "Absolute Levels für ungenutzte Lizenzen"
 
 #, python-format
 msgid "Absolute levels for used %s"
-msgstr "Absolute Level für belegten %s"
+msgstr "Absolute Levels für belegten %s"
 
 msgid "Absolute levels for used heap space"
-msgstr "Absolute Level für belegten 'heap space'"
+msgstr "Absolute Levels für belegten 'heap space'"
 
 msgid "Absolute levels for used memory"
-msgstr "Absolute Level für benutzten Arbeitsspeicher"
+msgstr "Absolute Levels für benutzten Arbeitsspeicher"
 
 msgid "Absolute levels in bits or bytes per second"
-msgstr "Absolute Level in Bits oder Bytes pro Sekunde"
+msgstr "Absolute Levels in Bits oder Bytes pro Sekunde"
 
 msgid "Absolute levels of active sessions"
-msgstr "Absolute Level für aktive Sitzungen"
+msgstr "Absolute Levels für aktive Sitzungen"
 
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
@@ -3109,7 +3107,7 @@ msgid "Absolute used commit charge"
 msgstr "Absolute, verbrauchte Commit Charge"
 
 msgid "Absolute used leases levels"
-msgstr "Absolute Level für benutzte Leases"
+msgstr "Absolute Levels für benutzte Leases"
 
 msgid "Absolute used memory"
 msgstr "Absoluter genutzter Speicherplatz"
@@ -3324,7 +3322,7 @@ msgstr ""
 "ausstehenden Pods wird festgehalten, wie lange sie bereits ausstehend sind. "
 "Wenn eine tolerierbare Zeitperiode eingestellt ist, geht der Dienst auf WARN/"
 "CRIT, sobald einer der Pods länger als die eingestellte Dauer ausstehend "
-"ist. Für Cluster und Knoten können Level für die Anzahl der freien Pods "
+"ist. Für Cluster und Knoten können Levels für die Anzahl der freien Pods "
 "festgelegt werden."
 
 msgid "Accounts display name"
@@ -3680,15 +3678,12 @@ msgstr "Aktiver und inaktiver Speicher"
 msgid "Active and inactive memory - files and anonymous"
 msgstr "Aktiver und inaktiver Speicher - Dateien und anonym"
 
-#, fuzzy
 msgid "Active calls"
 msgstr "Aktive Anrufe"
 
-#, fuzzy
 msgid "Active calls in"
 msgstr "Aktive eingehende Anrufe"
 
-#, fuzzy
 msgid "Active calls out"
 msgstr "Aktive ausgehende Anrufe"
 
@@ -6144,7 +6139,7 @@ msgid ""
 "Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
-"Ermöglicht die Festlegung absoluter Level für laufende, wartende, beendete "
+"Ermöglicht die Festlegung absoluter Levels für laufende, wartende, beendete "
 "und gesamte Container."
 
 msgid ""
@@ -6429,11 +6424,10 @@ msgstr "Beim letzten Update ist ein Fehler aufgetreten"
 msgid "An exception occurred"
 msgstr "Eine Exception ist aufgetreten"
 
-#, fuzzy, python-format
+#, python-format
 msgid "An exception occurred: %s"
-msgstr "Es ist eine Exception aufgetreten: %s"
+msgstr "Eine Exception ist aufgetreten: %s"
 
-#, fuzzy
 msgid "An fatal error occurred:"
 msgstr "Ein schwerwiegender Fehler ist aufgetreten:"
 
@@ -6485,15 +6479,14 @@ msgstr ""
 "melden. Detaillierte Informationen finden Sie in dem Absturzbericht oder "
 "unter <tt>var/log/web.log</tt>."
 
-#, fuzzy
 msgid ""
 "An internal error occurred while processing your request. You can report "
 "this issue to the Checkmk team to help fixing this issue. Please use the "
 "form below for reporting."
 msgstr ""
-"Beim Verarbeiten Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
-"können dem Checkmk-Team helfen, indem Sie einen Fehlerbericht senden. Bitte "
-"benutzen Sie das Formular unten."
+"Bei der Bearbeitung Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
+"können dieses Problem dem Checkmk-Team melden, damit dieses Problem behoben "
+"werden kann. Bitte verwenden Sie für die Meldung das untenstehende Formular."
 
 msgid ""
 "An internal error occurred while processing your request. You can report "
@@ -6785,9 +6778,8 @@ msgstr "Application Load Balancer"
 msgid "Application Pool name"
 msgstr "Name des Anwendungspools"
 
-#, fuzzy
 msgid "Application Type"
-msgstr "Applikationsschlüssel"
+msgstr "Applikationstyp"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
@@ -6917,14 +6909,14 @@ msgid ""
 "Apply the levels for single cores to the averaged instead of the "
 "instantaneous utilizations."
 msgstr ""
-"Anwenden der Level für einzelne Kerne auf die gemittelte statt auf die "
+"Anwenden der Levels für einzelne Kerne auf die gemittelte statt auf die "
 "momentane Auslastung."
 
 msgid ""
 "Apply these levels to clusters that have at least the following number of "
 "nodes:"
 msgstr ""
-"Wenden Sie diese Level auf Cluster an, die mindestens die folgende Anzahl "
+"Wenden Sie diese Levels auf Cluster an, die mindestens die folgende Anzahl "
 "von Knoten haben:"
 
 msgid "Apply this rule only on the following sites"
@@ -7403,9 +7395,8 @@ msgstr "Von Hosts zu entfernende Attribute"
 msgid "AudioCodes SBC Calls"
 msgstr "AudioCodes SBC Anrufe"
 
-#, fuzzy
 msgid "AudioCodes System Events"
-msgstr "APC Inrow-Systemereignisse"
+msgstr "AudioCodes-Systemereignisse"
 
 msgid "Audit log"
 msgstr "Audit Log"
@@ -7758,9 +7749,8 @@ msgstr "Automatisierungspasswort für Maschinenkonten"
 msgid "Automation user authentication via HTTP parameters"
 msgstr "Authentifizierung des Automationsbenutzers über HTTP-Parameter"
 
-#, fuzzy
 msgid "Automation user for connection to central site"
-msgstr "Automationsbenutzer für Verbindung zur Zentralinstanz (veraltet)"
+msgstr "Automationsbenutzer für die Verbindung zur Zentralinstanz"
 
 msgid "Automation user name"
 msgstr "Name des Automationsbenutzers"
@@ -7809,10 +7799,10 @@ msgid "Availability is unknown"
 msgstr "Verfügbarkeit ist nicht bekannt"
 
 msgid "Availability levels"
-msgstr "Verfügbarkeitslevel"
+msgstr "Verfügbarkeitslevels"
 
 msgid "Availability levels:"
-msgstr "Verfügbarkeitslevel:"
+msgstr "Verfügbarkeitslevels:"
 
 msgid "Availability of"
 msgstr "Verfügbarkeit von"
@@ -7871,13 +7861,16 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Durchschnittswert"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
 
 msgid "Average active check latency"
 msgstr "Durchschnittliche Latenz aktiver Checks"
 
-#, fuzzy
 msgid "Average call duration"
 msgstr "Durchschnittliche Anrufdauer"
 
@@ -7923,13 +7916,12 @@ msgstr ""
 "Durchschnittliche End-to-End-Latenzzeit erfolgreicher Anfragen an einen "
 "Speicherdienst"
 
-#, fuzzy
 msgid ""
 "Average end-to-end latency of successful requests made to a storage service "
 "in milliseconds"
 msgstr ""
 "Durchschnittliche End-to-End-Latenzzeit erfolgreicher Anfragen an einen "
-"Speicherdienst"
+"Speicherdienst in Millisekunden"
 
 msgid "Average fetcher latency"
 msgstr "Durchschnittliche Fetcher-Latenz"
@@ -7974,12 +7966,12 @@ msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
 "Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
 
-#, fuzzy
 msgid ""
 "Average latency used by Azure Storage to process a successful request in "
 "milliseconds"
 msgstr ""
-"Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
+"Durchschnittliche Latenzzeit, die Azure Storage zur Verarbeitung einer "
+"erfolgreichen Anfrage benötigt, in Millisekunden"
 
 msgid "Average message count lower levels"
 msgstr "Untergrenzen für die durchschnittliche Anzahl an Meldungen"
@@ -8035,7 +8027,6 @@ msgstr "Durschnittliches Größenwachstum"
 msgid "Average speed of backup"
 msgstr "Durchschnittliche Geschwindigkeit des Backups"
 
-#, fuzzy
 msgid "Average success ratio"
 msgstr "Durchschnittliche Erfolgsrate"
 
@@ -8044,7 +8035,7 @@ msgid ""
 "applied."
 msgstr ""
 "Durchschnittliche CPU-Auslastung über die angegebene Zeitperiode, bevor die "
-"Level angewendet werden."
+"Levels angewendet werden."
 
 msgid "Average time messages stay on queue"
 msgstr "Durchnittliche Zeit, die eine Nachricht in der Warteschlange verbringt"
@@ -8529,17 +8520,14 @@ msgstr "Durchsatz der Azure SQL-Datenbank"
 msgid "Azure Storage"
 msgstr "Azure Speicher"
 
-#, fuzzy
 msgid "Azure Storage Data Flow"
-msgstr "Azure Speicher"
+msgstr "Azure Speicherdatenfluss"
 
-#, fuzzy
 msgid "Azure Storage Performance"
-msgstr "Azure Speicher"
+msgstr "Azure Speicherleistung"
 
-#, fuzzy
 msgid "Azure Storage Usage"
-msgstr "Azure Speicher"
+msgstr "Azure Speicherauslastung"
 
 msgid "Azure Traffic Manager Probe State"
 msgstr "Azure Traffic Manager Probe Zustand"
@@ -8786,9 +8774,8 @@ msgstr "Hintergrund-Prozess wurde gestoppt"
 msgid "Background job info is not available"
 msgstr "Hintergrund-Prozess Information ist nicht verfügbar"
 
-#, fuzzy
 msgid "Background job timed out due to the global setting "
-msgstr "Sie sind nicht berechtigt, diese globale Einstellung zu editieren."
+msgstr "Background-Job wurde aufgrund der globalen Einstellung abgebrochen "
 
 msgid "Background jobs"
 msgstr "Hintergrund-Jobs"
@@ -8914,9 +8901,8 @@ msgstr "Band"
 msgid "Bandwidth"
 msgstr "Bandbreite"
 
-#, fuzzy
 msgid "Bandwidth levels (per second)"
-msgstr "Bandbreiten-Level"
+msgstr "Bandbreiten-Levels (pro Sekunde)"
 
 msgid "Bank (30 day) month"
 msgstr "Vorrat (30 Tage) Monat"
@@ -9015,7 +9001,7 @@ msgid "Batches"
 msgstr "Batches"
 
 msgid "Battery Levels"
-msgstr "Batterie-Level"
+msgstr "Batterie-Levels"
 
 msgid "Battery capacity"
 msgstr "Batteriekapazität"
@@ -9250,7 +9236,7 @@ msgid "Brightness"
 msgstr "Helligkeit"
 
 msgid "Brightness Levels"
-msgstr "Helligkeitslevel"
+msgstr "Helligkeitslevels"
 
 msgid "Broadcast packet rates"
 msgstr "Rate an Broadcast-Paketen"
@@ -9261,9 +9247,8 @@ msgstr "Broadcastpakete"
 msgid "Broadcast/Multicast"
 msgstr "Broadcast/Multicast"
 
-#, fuzzy
 msgid "Broadcom RAID physical disks"
-msgstr "Physische Festplatten des LSI RAID"
+msgstr "Physische Festplatten von Broadcom RAID"
 
 msgid "Broadcom bonding network interface on Windows"
 msgstr "Broadcom Bonding-Netzwerkschnittstelle unter Windows"
@@ -9312,18 +9297,18 @@ msgid "Buckets"
 msgstr "Buckets"
 
 msgid "Buckets only: Levels for disk queue drain rate"
-msgstr "Nur für Buckets: Level für die Abbaurate der Festplattenwarteschlange"
+msgstr "Nur für Buckets: Levels für die Abbaurate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for disk queue fill rate"
 msgstr ""
-"Nur für Buckets: Level für die Auffüllrate der Festplattenwarteschlange"
+"Nur für Buckets: Levels für die Auffüllrate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for length of disk write queue"
-msgstr "Nur für Buckets: Level für die Länge der Festplattenwarteschlange"
+msgstr "Nur für Buckets: Levels für die Länge der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for number of items fetched from disk"
 msgstr ""
-"Nur für Buckets: Level für Anzahl an abgerufenen Items von einer Festplatte"
+"Nur für Buckets: Levels für Anzahl an abgerufenen Items von einer Festplatte"
 
 msgid "Buffer cache size"
 msgstr "Größe des Puffercache"
@@ -9534,7 +9519,7 @@ msgid ""
 msgstr ""
 "Indem Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der Resident-Memory-Auslastung in "
-"Prozent des gesamten RAMs. Wenn Sie Alerting-Level definiert haben, so "
+"Prozent des gesamten RAMs. Wenn Sie Alerting-Levels definiert haben, so "
 "werden diese automatisch auf den Durchschnittswert angewandt. So können "
 "kurze Lastspitzen maskiert werden. "
 
@@ -9546,7 +9531,7 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der Resident-Memory-Auslastung in "
-"Prozent des gesamten RAMs. Wenn Sie Alerting-Level definiert haben, so "
+"Prozent des gesamten RAMs. Wenn Sie Alerting-Levels definiert haben, so "
 "werden diese automatisch auf den Durchschnittswert angewandt. So können "
 "kurze Lastspitzen maskiert werden. "
 
@@ -9558,7 +9543,7 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der CPU-Auslastung. Wenn Sie "
-"Alerting-Level definiert haben, so werden diese automatisch auf den "
+"Alerting-Levels definiert haben, so werden diese automatisch auf den "
 "Durchschnittswert angewandt. So können kurze Lastspitzen maskiert werden. "
 
 msgid ""
@@ -9569,8 +9554,9 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der virtuellen Speicher-Auslastung. "
-"Wenn Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
-"Durchschnittswert angewandt. So können kurze Lastspitzen maskiert werden. "
+"Wenn Sie Alerting-Levels definiert haben, so werden diese automatisch auf "
+"den Durchschnittswert angewandt. So können kurze Lastspitzen maskiert "
+"werden. "
 
 msgid ""
 "By activating averaging, Checkmk will compute the average of the message "
@@ -9580,7 +9566,7 @@ msgid ""
 msgstr ""
 "Wenn Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Wenn "
-"Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
+"Sie Alerting-Levels definiert haben, so werden diese automatisch auf den "
 "Durchschnittswert angewandt. So können kurze Lastspitzen maskiert werden. "
 
 msgid ""
@@ -9591,7 +9577,7 @@ msgid ""
 msgstr ""
 "Indem Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Wenn "
-"Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
+"Sie Alerting-Levels definiert haben, so werden diese automatisch auf den "
 "Durchschnittswert angewandt. So können kurze Lastspitzen maskiert werden."
 
 msgid ""
@@ -9600,7 +9586,7 @@ msgid ""
 "make the check react only on long-time changes, not on one-minute events."
 msgstr ""
 "Durch die Aktivierung der Berechnung von Durchschnittswerten orientieren "
-"sich auch die Level für Broad- und Multicast Datenraten an den "
+"sich auch die Levels für Broad- und Multicast Datenraten an den "
 "Durchschnitten. Damit erreichen Sie dass ein Check auf langfristige "
 "Veränderungen reagiert und nicht auf 1-Minuten-Ereignisse."
 
@@ -9610,7 +9596,7 @@ msgid ""
 "only on long-time changes, not on one-minute events."
 msgstr ""
 "Durch die Aktivierung der Berechnung von Durchschnittswerten orientieren "
-"sich auch die Level für Fehler/Datenverkehr an den Durchschnitten. Damit "
+"sich auch die Levels für Fehler/Datenverkehr an den Durchschnitten. Damit "
 "erreichen Sie dass ein Check langfristig reagiert und nicht auf 1-Minuten-"
 "Ereignisse."
 
@@ -9620,7 +9606,7 @@ msgid ""
 "only on long-time changes, not on one-minute events."
 msgstr ""
 "Durch die Aktivierung der Berechnung von Durchschnittswerten orientieren "
-"sich auch die Level für Datenmenge und Geschwindigkeiten an den "
+"sich auch die Levels für Datenmenge und Geschwindigkeiten an den "
 "Durchschnitten. Damit erreichen Sie dass ein Check auf langfristige "
 "Veränderungen reagiert und nicht auf 1-Minuten-Ereignisse."
 
@@ -9644,9 +9630,9 @@ msgid ""
 "is optional. If you set levels you might also consider using averaging."
 msgstr ""
 "Bei Aktivierung dieses Items wird die Summe über den ein- und ausgehenden "
-"Verkehr mittels einer separaten Metrik überwacht. Das Festlegen von Leveln "
-"für die verbrauchte Bandbreite ist optional. Wenn Sie Level einrichten, dann "
-"sollten Sie auch einen Durchschnittswert verwenden."
+"Verkehr mittels einer separaten Metrik überwacht. Das Festlegen von Levels "
+"für die verbrauchte Bandbreite ist optional. Wenn Sie Levels einrichten, "
+"dann sollten Sie auch einen Durchschnittswert verwenden."
 
 msgid ""
 "By activating this option you can set levels on the total CPU utilization "
@@ -10502,6 +10488,14 @@ msgstr "CPG Mitglieds Name"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Energie Verbrauch"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "CPU Credits"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10519,6 +10513,10 @@ msgid "CPU Time"
 msgstr "CPU-Zeit"
 
 msgid "CPU Utilization"
+msgstr "CPU-Auslastung"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "CPU-Auslastung"
 
 msgid "CPU Utilization of Clusters"
@@ -10665,11 +10663,12 @@ msgstr "CPU-Auslastung (99te Percentile)"
 msgid "CPU utilization (Windows)"
 msgstr "CPU-Auslastung (Windows)"
 
-#, fuzzy
 msgid ""
 "CPU utilization (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
 "\"max\"} CPU Threads)"
-msgstr "CPU-Auslastung (%(util_numcpu_as_max:max@count) CPU-Threads)"
+msgstr ""
+"CPU-Auslastung (_EXPRESSION:{\"metric\":\"util_numcpu_as_max\",\"scalar\":"
+"\"max\"} CPU Threads)"
 
 msgid "CPU utilization (average)"
 msgstr "CPU-Auslastung (Durchschnitt)"
@@ -10876,9 +10875,8 @@ msgstr "Eine Regel aufrufen"
 msgid "Call legs"
 msgstr "Call legs"
 
-#, fuzzy
 msgid "Call progress tones"
-msgstr "Letzte Update zum Fortschritt"
+msgstr ""
 
 msgid "Call with the following parameters"
 msgstr "Mit den folgenden Parametern aufrufen"
@@ -10908,19 +10906,15 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
-#, fuzzy
 msgid "Calls in"
 msgstr "Eingehende Anrufe"
 
-#, fuzzy
 msgid "Calls in/out"
 msgstr "Eingehende/ausgehende Anrufe"
 
-#, fuzzy
 msgid "Calls out"
 msgstr "Ausgehende Anrufe"
 
-#, fuzzy
 msgid "Calls per second"
 msgstr "Aufrufe pro Sekunde"
 
@@ -11176,13 +11170,13 @@ msgstr ""
 "Kann den Baum der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot load HW/SW Inventory tree of host %s. Please remove the corrupted "
 "file."
 msgstr ""
 "Kann die Bäume der HW-/SW-Inventur %s nicht laden. Bitte entfernen Sie die "
-"beschädigten Dateien."
+"beschädigte Datei."
 
 #, python-format
 msgid ""
@@ -12465,10 +12459,10 @@ msgid ""
 msgstr ""
 "Die Checks <tt>fileinfo</tt> und <tt>sap_hana_fileinfo</tt> überwachen das "
 "Alter und die Größe einer einzelnen Datei. Jede Dateiinformation, die vom "
-"Agenten gesendet wird, erzeugt einen Dienst. Durch die Definition von "
+"Agenten gesendet wird, erzeugt einen Service. Durch die Definition von "
 "Gruppierungs-Patterns können Sie zu den Prüfungen <tt>fileinfo.groups</tt> "
 "oder <tt>sap_hana_fileinfo.groups</tt> wechseln. Diese Prüfungen überwachen "
-"jeweils eine ganze Liste von Dateien. Sie können nicht nur Level für die "
+"jeweils eine ganze Liste von Dateien. Sie können nicht nur Levels für die "
 "Gesamtgröße und das Alter der ältesten/jüngsten Datei festlegen, sondern "
 "auch für die Anzahl. Sie können ein oder mehrere Patterns für eine Gruppe "
 "definieren, die <tt>*</tt> und <tt>?</tt> enthält, zum Beispiel <tt>/var/log/"
@@ -12728,20 +12722,20 @@ msgid ""
 "Choose time levels (in seconds) for which a unit is allowed to be in a "
 "'reloading' state"
 msgstr ""
-"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"Wählen Sie die Levels für die Zeit (in Sekunden) die sich eine Einheit in "
 "einem 'neu ladenden' Zustand befinden darf"
 
 msgid ""
 "Choose time levels (in seconds) for which a unti is allowed to be in an "
 "'deactivating' state"
 msgstr ""
-"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"Wählen Sie die Levels für die Zeit (in Sekunden) die sich eine Einheit in "
 "einem 'deaktivierenden' Zustand befinden darf"
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr ""
-"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"Wählen Sie die Levels für die Zeit (in Sekunden) die sich eine Einheit in "
 "einem 'aktivierenden' Zustand befinden darf"
 
 msgid "Choose unit"
@@ -12878,9 +12872,8 @@ msgstr "Cisco Prime WiFi Zugangspunkte"
 msgid "Cisco Prime WiFi Connections"
 msgstr "Cisco Prime WiFi Verbindungen"
 
-#, fuzzy
 msgid "Cisco SMA DNS requests"
-msgstr "HEAD-Anfragen"
+msgstr "Cisco SMA DNS Anfragen"
 
 msgid "Cisco SMA files and sockets"
 msgstr ""
@@ -12940,9 +12933,8 @@ msgstr "Citrix Netscaler Load Balancer TCP-Verbindungen"
 msgid "Citrix Netscaler SSL certificates"
 msgstr "Citrix Netscaler SSL Zertifikate"
 
-#, fuzzy
 msgid "Citrix Netscaler load balancer HA"
-msgstr "Citrix Netscaler Load Balancer TCP-Verbindungen"
+msgstr "Citrix Netscaler Load Balancer HA"
 
 msgid "Citrix Server load"
 msgstr "Last von Citrix-Servern"
@@ -13516,9 +13508,8 @@ msgstr "Übereinstimmende Spalten"
 msgid "Com. buf. max/total"
 msgstr "Bef. buf. max/gesamt"
 
-#, fuzzy
 msgid "Combine the nodename and the name of the container"
-msgstr "Name - Benutze den Namen des Containers"
+msgstr "Kombiniere den Knoten-Namen und den Namen des Containers"
 
 msgid "Combine within last"
 msgstr "Zusammenfassen innerhalb der letzten"
@@ -13659,7 +13650,7 @@ msgid "Commit charge in percent (relative to commit limit)"
 msgstr "Commit Charge in Prozent (bezogen auf Commit-Limit)"
 
 msgid "Commit charge levels"
-msgstr "Commit Charge Level"
+msgstr "Commit Charge Levels"
 
 msgid "Commit limit"
 msgstr "Commit-Limit"
@@ -13699,9 +13690,8 @@ msgstr "Community-übersetzte Sprachen (nicht unterstützt)"
 msgid "Compare against discovered state"
 msgstr "Vergleiche mit dem erkannten Zustand"
 
-#, fuzzy
 msgid "Compare against failover mode at discovery time"
-msgstr "Vergleiche mit dem erkannten Zustand"
+msgstr "Vergleiche mit dem Failover-Modus zur Zeit der Erkennung"
 
 msgid "Compare history"
 msgstr "Historie vergleichen"
@@ -13760,7 +13750,7 @@ msgid ""
 msgstr ""
 "Vergleicht die Zeit, welche die Remote-Instanz hinter der Zentralinstanz her "
 "sein kann. Diese Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich "
-"oder über den eingestellten Leveln liegt."
+"oder über den eingestellten Levels liegt."
 
 msgid "Comparison"
 msgstr "Vergleich"
@@ -13796,7 +13786,6 @@ msgstr ""
 msgid "Completion"
 msgstr "Fertigstellung"
 
-#, fuzzy
 msgid "Completion time over threshold occurred"
 msgstr "Ausführungszeit über dem Schwellwert ist aufgetreten"
 
@@ -14101,14 +14090,14 @@ msgid ""
 "for user processes and kernel routines over all available cores within the "
 "last check interval. The possible range is from 0% to 100%"
 msgstr ""
-"Konfigurieren Sie die Level für die gemittelte CPU-Auslastung in "
+"Konfigurieren Sie die Levels für die gemittelte CPU-Auslastung in "
 "Abhängigkeit von der Anzahl der Cluster-Knoten. Die CPU-Auslastung summiert "
 "den prozentualen Anteil der CPU-Zeit, der für Benutzerprozesse und Kernel-"
 "Routinen über alle verfügbaren Kerne innerhalb des letzten Prüfintervalls "
 "verwendet wird. Der zulässige Bereich reicht von 0% bis 100%"
 
 msgid "Configure levels on smoke"
-msgstr "Rauch-Level festlegen"
+msgstr "Rauch-Levels festlegen"
 
 msgid "Configure lower levels"
 msgstr "Untergrenzen konfigurieren"
@@ -14128,7 +14117,7 @@ msgstr ""
 "Lizenzierung von Checkmk-Instanzen."
 
 msgid "Configure policy violation levels"
-msgstr "Konfigurieren Sie die Level der Richtlinienverletzung"
+msgstr "Konfigurieren Sie die Levels der Richtlinienverletzung"
 
 msgid "Configure proxy server usage"
 msgstr "Proxy-Server Gebrauch konfigurieren"
@@ -14647,9 +14636,8 @@ msgstr "Die Verbindungs-ID %s existiert bereits."
 msgid "Connection is disabled"
 msgstr "Verbindung ist deaktiviert"
 
-#, fuzzy
 msgid "Connection lost occurred"
-msgstr "Eine abgebrochene Verbindung ist aufgetreten"
+msgstr "Abgebrochene Verbindung ist aufgetreten"
 
 msgid "Connection name"
 msgstr "Verbindungsname"
@@ -15277,14 +15265,14 @@ msgstr ""
 msgid "Could not connect to the remote site (%s)"
 msgstr "Konnte sich nicht mit Remote-Instanz (%s) verbinden"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to ui-job-scheduler. Possibly the service <tt>ui-job-"
 "scheduler</tt> is not started, please make sure that all site services are "
 "started. Tried to connect via <tt>%s</tt>. Reported error was: %s."
 msgstr ""
 "Es konnte keine Verbindung zu ui-job-scheduler hergestellt werden. "
-"Möglicherweise ist der Dienst <tt>ui-job-scheduler</tt> nicht gestartet. "
+"Möglicherweise ist der Service <tt>ui-job-scheduler</tt> nicht gestartet. "
 "Bitte stellen Sie sicher, dass alle Instanz-Services gestartet sind. Es "
 "wurde versucht, eine Verbindung über <tt>%s</tt> herzustellen. Gemeldeter "
 "Fehler war: %s."
@@ -15456,7 +15444,7 @@ msgid "Counter level"
 msgstr "Zähler-Level"
 
 msgid "Counter levels"
-msgstr "Zähler-Level"
+msgstr "Zähler-Levels"
 
 msgid ""
 "Counter rates of DNS parameters for Citrix Netscaler Load Balancer Appliances"
@@ -16253,10 +16241,10 @@ msgid "Current subscriptions"
 msgstr "Aktuelle Subskription"
 
 msgid "Current thread count levels"
-msgstr "Level für die Anzahl von Threads"
+msgstr "Levels für die Anzahl von Threads"
 
 msgid "Current threads busy levels"
-msgstr "Level für die Anzahl von arbeitenden Threads"
+msgstr "Levels für die Anzahl von arbeitenden Threads"
 
 msgid "Current users"
 msgstr "Aktuelle Benutzer"
@@ -17682,21 +17670,21 @@ msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
 
 msgid "Define levels for pending pods"
-msgstr "Level für ausstehende Pods festlegen"
+msgstr "Levels für ausstehende Pods festlegen"
 
 #, python-format
 msgid "Define levels on the %s detection rate."
-msgstr "Level der Erkennungsrate für %s festlegen."
+msgstr "Levels der Erkennungsrate für %s festlegen."
 
 msgid ""
 "Define levels on the number of authentication failures within the last 5 "
 "minutes."
 msgstr ""
-"Level für die Anzahl von Authentifizierungsfehlern innerhalb von 5 Minuten "
+"Levels für die Anzahl von Authentifizierungsfehlern innerhalb von 5 Minuten "
 "festlegen."
 
 msgid "Define levels on the queue length."
-msgstr "Level für die Warteschlangenlänge festlegen."
+msgstr "Levels für die Warteschlangenlänge festlegen."
 
 msgid "Define lower levels for free pods (clusters and nodes only)"
 msgstr "Untergrenzen für freie Pods definieren (nur Cluster und Knoten)"
@@ -18405,7 +18393,7 @@ msgid ""
 "Depending on the measurement unit (defaults to bit), the absolute levels are "
 "set in bits or bytes per second."
 msgstr ""
-"Je nach Maßeinheit (Standardeinstellung: Bit) werden die absoluten Level in "
+"Je nach Maßeinheit (Standardeinstellung: Bit) werden die absoluten Levels in "
 "Bits oder Bytes pro Sekunde angegeben."
 
 msgid ""
@@ -19732,7 +19720,7 @@ msgid "Display values in (see also help text)"
 msgstr "Werte anzeigen in (siehe auch Hilfetext)"
 
 msgid "Display warn/crit levels in check output..."
-msgstr "Level für WARN/CRIT im Check anzeigen..."
+msgstr "Levels für WARN/CRIT im Check anzeigen..."
 
 msgid "Displaying the overall state of Checkmk servers\n"
 msgstr "Zeigt den allgemeinen Zustand des Checkmk-Servers an.\n"
@@ -20220,7 +20208,7 @@ msgid "Do not display icons for history and timeline"
 msgstr "Keine Symbole für Historie und Zeitleiste anzeigen"
 
 msgid "Do not display legend for availability levels"
-msgstr "Keine Legende für die Verfügbarkeitslevel zeigen"
+msgstr "Keine Legende für die Verfügbarkeitslevels zeigen"
 
 msgid "Do not display plug-in output in timeline"
 msgstr "Plugin-Ausgabe nicht in der Timeline anzeigen"
@@ -20277,10 +20265,10 @@ msgid "Do not import tags"
 msgstr "Keine Merkmale importieren"
 
 msgid "Do not impose levels"
-msgstr "Keine Level anwenden"
+msgstr "Keine Levels anwenden"
 
 msgid "Do not impose levels, always be OK"
-msgstr "Keine Level anwenden, immer OK"
+msgstr "Keine Levels anwenden, immer OK"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "Die Autoregistrierung von Controllern nicht verwalten"
@@ -20384,7 +20372,7 @@ msgid "Do not use a prefix"
 msgstr "Kein Präfix verwenden"
 
 msgid "Do not use absolute levels"
-msgstr "Keine absoluten Level benutzen"
+msgstr "Keine absoluten Levels benutzen"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage nicht validieren"
@@ -20428,7 +20416,7 @@ msgid "Docker node and containers"
 msgstr "Docker-Knoten und Container"
 
 msgid "Docker node container levels"
-msgstr "Docker-Knoten Container Level"
+msgstr "Docker-Knoten Container Levels"
 
 msgid "Docker node disk usage"
 msgstr "Docker-Knoten Festplattenauslastung"
@@ -20569,7 +20557,7 @@ msgid "Don't wait for document body"
 msgstr "Warte nicht auf Text"
 
 msgid "DotNet (.Net) runtime memory levels"
-msgstr "DotNet (.Net) Runtime Speicher-Level"
+msgstr "DotNet (.Net) Runtime Speicher-Levels"
 
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
@@ -20851,7 +20839,7 @@ msgid "Duration in percent of Lambda timeout"
 msgstr "Dauer in Prozent des Lambda-Timeouts"
 
 msgid "Duration levels"
-msgstr "Level für die Dauer"
+msgstr "Levels für die Dauer"
 
 msgid "Duration of CRITICAL state of 'Check_MK' service"
 msgstr "Dauer des CRITICAL-Zustands des 'Check_MK' Service"
@@ -20946,13 +20934,13 @@ msgid "Dynamic host management"
 msgstr "Dynamische Host-Verwaltung"
 
 msgid "Dynamic levels"
-msgstr "Dynamische Level"
+msgstr "Dynamische Levels"
 
 msgid "Dynamic levels - lower bound"
-msgstr "Dynamische Level - Untergrenze"
+msgstr "Dynamische Levels - Untergrenze"
 
 msgid "Dynamic levels - upper bound"
-msgstr "Dynamische Level - Obergrenze"
+msgstr "Dynamische Levels - Obergrenze"
 
 msgid "DynamoDB"
 msgstr "DynamoDB"
@@ -24152,6 +24140,10 @@ msgstr "Parent-Scan konnte nicht gestartet werden: %s"
 msgid "Failed to start the job: %s"
 msgstr "Fehler beim Starten des Jobs: %s"
 
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Python-Anfrage konnte nicht verarbeitet werden: '%s': %s"
+
 #, python-format
 msgid "Failed to stop job: %s"
 msgstr "Fehler beim Stoppen des Jobs: %s"
@@ -24542,7 +24534,7 @@ msgid "File size exceeds the maximum allowed size of %s bytes"
 msgstr "Die Dateigröße überschreitet die maximal zulässige Größe von %s Bytes"
 
 msgid "File size levels"
-msgstr "Level für Dateigrößen"
+msgstr "Levels für Dateigrößen"
 
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
@@ -24576,7 +24568,7 @@ msgid "Filename: %s"
 msgstr "Dateiname: %s"
 
 msgid "Filer Disk Levels (NetApp, IBM SVC)"
-msgstr "Level für Filer-Platten (NetApp, IBM SVC)"
+msgstr "Levels für Filer-Platten (NetApp, IBM SVC)"
 
 msgid "Files"
 msgstr "Dateien"
@@ -24849,13 +24841,13 @@ msgid "Fix this"
 msgstr "Problem beheben"
 
 msgid "Fixed Levels"
-msgstr "Feste Level"
+msgstr "Feste Levels"
 
 msgid "Fixed el."
 msgstr "Seitenel."
 
 msgid "Fixed levels"
-msgstr "Feste Level"
+msgstr "Feste Levels"
 
 msgid "Fixed limits"
 msgstr "Feste Grenzen"
@@ -25593,10 +25585,10 @@ msgid "Free floating style"
 msgstr "Stil \"Frei schwebend\""
 
 msgid "Free leases levels"
-msgstr "Level für freie Leases"
+msgstr "Levels für freie Leases"
 
 msgid "Free leases levels in percent"
-msgstr "Level für freie Leases in Prozent"
+msgstr "Levels für freie Leases in Prozent"
 
 msgid "Free space"
 msgstr "Freier Platz"
@@ -26123,7 +26115,7 @@ msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
 msgstr ""
-"FPGA-Auslastungslevel in Prozent angeben. Der Wertebereich ist von 0% bis "
+"FPGA-Auslastungslevels in Prozent angeben. Der Wertebereich ist von 0% bis "
 "100%."
 
 msgid ""
@@ -26669,7 +26661,7 @@ msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
 
 msgid "HP MSA power supply voltage levels"
-msgstr "HP MSA Netzteilspannungslevel"
+msgstr "HP MSA Netzteilspannungslevels"
 
 msgid "HP MSA via Web Interface"
 msgstr "HP MSA via Web-Schnittstelle"
@@ -27201,18 +27193,18 @@ msgid ""
 msgstr ""
 "Hier können Sie das Cluster-Verhalten auswählen. Der beste Zustand aller "
 "Knoten ist der Standard. Das heißt, wenn Sie mindestens einen Knoten im "
-"Zustand UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevel sollte "
+"Zustand UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevels sollte "
 "auf jedem Knoten gleich sein. Wenn Sie am schlechtesten wählen, gibt die "
 "Prüfung CRIT zurück, wenn sich mindestens ein Knoten in einem anderen "
-"Zustand als OK befindet. Die Gesundheitslevel sollten auf jedem Knoten "
-"gleich sein, so dass nur der erste Knoten die Gesundheitslevel überprüft "
+"Zustand als OK befindet. Die Gesundheitslevels sollten auf jedem Knoten "
+"gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
 "werden."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
 "in the last hour."
 msgstr ""
-"Hier können Sie absolute Level für die Gesamtzahl der Neustarts und "
+"Hier können Sie absolute Levels für die Gesamtzahl der Neustarts und "
 "Neustarts in der letzten Stunde konfigurieren."
 
 msgid ""
@@ -27228,26 +27220,26 @@ msgid ""
 "Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
 msgstr ""
-"Hier können Sie die Level für die Auslastung, die Anfrage-Auslastung und die "
-"Grenzwert-Auslastung einzeln konfigurieren."
+"Hier können Sie die Levels für die Auslastung, die Anfrage-Auslastung und "
+"die Grenzwert-Auslastung einzeln konfigurieren."
 
 msgid ""
 "Here you can configure levels for usage, requests utilization, limits "
 "utilization and node utilization, respectively."
 msgstr ""
-"Hier können Sie die Level für die Auslastung, die Anfrage-Auslastung, die "
+"Hier können Sie die Levels für die Auslastung, die Anfrage-Auslastung, die "
 "Grenzwert-Auslastung und Knoten-Auslastung einzeln konfigurieren."
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
-"Hier können Sie die Level für die 3.3 V und 12 V Versorgungsspannung für "
+"Hier können Sie die Levels für die 3.3 V und 12 V Versorgungsspannung für "
 "jede Gehäuse definieren."
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each power supply."
 msgstr ""
-"Hier können Sie die Level für die 3.3 V und 12 V Versorgungsspannung für "
+"Hier können Sie die Levels für die 3.3 V und 12 V Versorgungsspannung für "
 "jedes Netzteil konfigurieren."
 
 msgid ""
@@ -27400,7 +27392,7 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"Hier können Sie Level für die CPU-Auslastung einzelner Prozesse definieren. "
+"Hier können Sie Levels für die CPU-Auslastung einzelner Prozesse definieren. "
 "Aus Performancegründen wird die CPU-Mittelung nicht auf die Ebenen einzelner "
 "Prozesse angewendet."
 
@@ -27409,9 +27401,9 @@ msgid ""
 "of total RAM) of single processes. For performance reasons resident memory "
 "averaging will not be applied to to the levels of single processes."
 msgstr ""
-"Hier können Sie Level für die Auslastung des permanenten Speichers (in "
+"Hier können Sie Levels für die Auslastung des permanenten Speichers (in "
 "Prozent des Gesamt-RAM) einzelner Prozesse festlegen. Aus Performancegründen "
-"wird die Mittelung des permanenten Speichers nicht auf die Level einzelner "
+"wird die Mittelung des permanenten Speichers nicht auf die Levels einzelner "
 "Prozesse angewendet."
 
 msgid ""
@@ -27421,16 +27413,16 @@ msgid ""
 msgstr ""
 "Hier können Sie Level für die Auslastung des permanenten Speichers einzelner "
 "Prozesse festlegen. Aus Performancegründen wird der Mittelwert des "
-"permanenten Speichers nicht auf die Level einzelner Prozesse angewendet."
+"permanenten Speichers nicht auf die Levels einzelner Prozesse angewendet."
 
 msgid ""
 "Here you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"Hier können Sie Level für die Auslastung des virtuellen Speichers einzelner "
+"Hier können Sie Levels für die Auslastung des virtuellen Speichers einzelner "
 "Prozesse festlegen. Aus Performancegründen wird der Mittelwert des "
-"virtuellen Speichers nicht auf die Level einzelner Prozesse angewendet."
+"virtuellen Speichers nicht auf die Levels einzelner Prozesse angewendet."
 
 #, python-format
 msgid ""
@@ -27593,7 +27585,7 @@ msgid ""
 "required data, you must configure the plug-in mk_filestats."
 msgstr ""
 "Hier können Sie die vom mk_filstats-Plugin gemeldeten Ergebnisse mit "
-"verschiedenen Leveln versehen. Beachten Sie, dass einige Level nur für ein "
+"verschiedenen Levels versehen. Beachten Sie, dass einige Levels nur für ein "
 "passendes Ausgabeformat gelten (z.B. max/min count levels werden nicht "
 "angewendet, wenn nur die kleinste, größte, älteste und neueste Datei "
 "gemeldet werden). Um die erforderlichen Daten zu erhalten, müssen Sie das "
@@ -27604,7 +27596,7 @@ msgid ""
 "mk_filstats plug-in. Note that those levels only concern about a single file."
 msgstr ""
 "Hier können Sie die vom Plugin mk_filstats gemeldeten Ergebnisse mit "
-"verschiedenen Leveln versehen. Beachten Sie, dass sich diese Level nur auf "
+"verschiedenen Levels versehen. Beachten Sie, dass sich diese Levels nur auf "
 "eine einzelne Datei beziehen."
 
 msgid ""
@@ -27620,8 +27612,8 @@ msgid ""
 "levels are applied on the number of used processes in percentage of the "
 "configured limit."
 msgstr ""
-"Hier können Sie die Standard-Level vom Oracle-Prozesscheck anpassen. Die "
-"Level werden auf die Anzahl der benutzten Prozesse als Prozentwert vom "
+"Hier können Sie die Standard-Levels vom Oracle-Prozesscheck anpassen. Die "
+"Levels werden auf die Anzahl der benutzten Prozesse als Prozentwert vom "
 "eingestellten Limit angewandt."
 
 msgid ""
@@ -27709,14 +27701,14 @@ msgid ""
 "Here you can set different warn/crit levels regarding the available cooling  "
 "capacity."
 msgstr ""
-"Hier können Sie unterschiedliche warn/crit Level für die verfügbare "
+"Hier können Sie unterschiedliche warn/crit Levels für die verfügbare "
 "Kühlleistung festlegen."
 
 msgid ""
 "Here you can set different warn/crit levels regarding the free cooling "
 "positions."
 msgstr ""
-"Hier können Sie die Level für WARN/CRIT bezüglich der freien Kühlpositionen "
+"Hier können Sie die Levels für WARN/CRIT bezüglich der freien Kühlpositionen "
 "einstellen."
 
 msgid ""
@@ -27743,21 +27735,22 @@ msgstr ""
 "automatisch erstellt werden."
 
 msgid "Here you can set levels for the Oracle performance metrics."
-msgstr "Hier können Sie die Level für die Metriken der Oracle-Leistung setzen."
+msgstr ""
+"Hier können Sie die Levels für die Metriken der Oracle-Leistung setzen."
 
 msgid ""
 "Here you can set levels on failures in the time range specified in the "
 "datasource (default: 30m)."
 msgstr ""
-"Hier können Sie Level für Ausfälle in dem angegebenen Zeitraum der "
+"Hier können Sie Levels für Ausfälle in dem angegebenen Zeitraum der "
 "Datenquelle festlegen (Standard: 30m)."
 
 msgid "Here you can set levels on the CPU utilization on single cores"
 msgstr ""
-"Hier können Sie Level für CPU-Auslastung für die einzelnen Kerne festlegen"
+"Hier können Sie Levels für CPU-Auslastung für die einzelnen Kerne festlegen"
 
 msgid "Here you can set levels on the steal CPU utilization."
-msgstr "Hier können Sie die Level der Steal-CPU-Auslastung einstellen."
+msgstr "Hier können Sie die Levels der Steal-CPU-Auslastung einstellen."
 
 msgid "Here you can set the failover state for BIG-IP system of version 11.2.0"
 msgstr ""
@@ -27851,8 +27844,8 @@ msgid ""
 "from the <i>Default levels</i> parameter. This setting only works in NetApp "
 "Clustermode setups."
 msgstr ""
-"Hier können Sie angepasste Level für verschiedene Policies definieren, "
-"welche die Level des Parameters <i>Standard-Level</i> überschreiben. Diese "
+"Hier können Sie angepasste Levels für verschiedene Policies definieren, "
+"welche die Levels des Parameters <i>Standard-Levels</i> überschreiben. Diese "
 "Einstellung funktioniert nur im NetApp-Cluster-Modus."
 
 msgid "Here you can specify the allowed license states for Windows."
@@ -27867,7 +27860,7 @@ msgstr ""
 
 msgid "Here you can specify the total memory usage levels for clustered hosts."
 msgstr ""
-"Hier können Sie die Level für die gesamte Speicherauslastung von "
+"Hier können Sie die Levels für die gesamte Speicherauslastung von "
 "geclusterten Hosts angeben."
 
 msgid ""
@@ -29950,10 +29943,10 @@ msgid "Humidity"
 msgstr "Feuchtigkeit"
 
 msgid "Humidity Levels"
-msgstr "Level für Feuchtigkeit"
+msgstr "Levels für Feuchtigkeit"
 
 msgid "Humidity levels for devices with a single sensor"
-msgstr "Feuchtigkeitslevel für Geräte mit einem einzelnen Sensor"
+msgstr "Feuchtigkeitslevels für Geräte mit einem einzelnen Sensor"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Zustand von VMs"
@@ -30134,7 +30127,7 @@ msgid "IMAP"
 msgstr "IMAP"
 
 msgid "INotify Levels"
-msgstr "INotify-Level"
+msgstr "INotify-Levels"
 
 msgid "INotify Operation"
 msgstr "INotify Operation"
@@ -30291,9 +30284,8 @@ msgstr ""
 msgid "IP2Tel Number of failed SIP/H323 calls"
 msgstr "Anzahl fehlgeschlagener SIP/H323 Anrufe"
 
-#, fuzzy
 msgid "IP2Tel Total duration of SIP/H323 calls"
-msgstr "Gesamtdauer der SIP/H323 Anrufe"
+msgstr "IP2Tel Gesamtdauer der SIP/H323 Anrufe"
 
 msgid "IPC semaphore IDs"
 msgstr "IPC-Semaphoren IDs"
@@ -30335,17 +30327,15 @@ msgstr "IPMI-Sensorerkennung"
 msgid "IPMI sensors"
 msgstr "IMPI-Sensoren"
 
-#, fuzzy
 msgid ""
 "IPMI sensors with these states that should be ignored during discovery. The "
 "pattern specified here must match exactly the beginning of the actual sensor "
 "state (case sensitive)."
 msgstr ""
-"IPMI-Sensoren mit diesen Zuständen, die bei der Service-Erkennung ignoriert "
-"werden sollen. Das hier angegebene Pattern muss exakt mit dem Anfang des "
+"IPMI-Sensoren mit diesen Zuständen, die bei der Erkennung ignoriert werden "
+"sollen. Das hier angegebene Pattern muss exakt mit dem Anfang des aktuellen "
 "Sensorzustands übereinstimmen (Groß-/Kleinschreibung beachten)."
 
-#, fuzzy
 msgid ""
 "IPMI sensors with these states that should be ignored when summarizing. The "
 "pattern specified here must match exactly the beginning of the actual sensor "
@@ -30353,7 +30343,7 @@ msgid ""
 msgstr ""
 "IPMI-Sensoren mit diesen Zuständen, die bei der Zusammenfassung ignoriert "
 "werden sollen. Das hier angegebene Pattern muss exakt mit dem Anfang des "
-"Sensorzustands übereinstimmen (Groß-/Kleinschreibung beachten)."
+"aktuellen Sensorzustands übereinstimmen (Groß-/Kleinschreibung beachten)."
 
 msgid ""
 "IPPROCS: The number of applications that are currently connected to the "
@@ -30514,7 +30504,6 @@ msgstr ""
 "Unterordner, also verwenden Sie dies mit Bedacht in tief verschachtelten "
 "Dateisystemen."
 
-#, fuzzy
 msgid ""
 "If Checkmk is unable to notify users about problems, the site will warn "
 "about this situation very visibly inside the UI (both in the tactical "
@@ -31296,7 +31285,7 @@ msgid ""
 "averaging is turned off. "
 msgstr ""
 "Wenn dieser Parameter gesetzt ist, werden alle Messwerte über das angegebene "
-"Zeitintervall gemittelt, bevor die Level angewendet werden. Standardmäßig "
+"Zeitintervall gemittelt, bevor die Levels angewendet werden. Standardmäßig "
 "ist die Durchschnittsbildung ausgeschaltet. "
 
 msgid ""
@@ -31305,7 +31294,7 @@ msgid ""
 "averaging is turned off."
 msgstr ""
 "Wenn dieser Parameter gesetzt ist, werden alle Messwerte über das angegebene "
-"Zeitintervall gemittelt, bevor die Level angewendet werden. Per Default ist "
+"Zeitintervall gemittelt, bevor die Levels angewendet werden. Per Default ist "
 "die Durchschnittsbildung abgeschaltet."
 
 msgid ""
@@ -31325,7 +31314,7 @@ msgid ""
 msgstr ""
 "Wenn dieser Parameter gesetzt ist, wird die Anzahl der Deltas des Dokuments "
 "der letzten Minute mit dem Delta der durchschnittlichen X Minuten "
-"verglichen. Sie können WARN- oder CRIT-Level einstellen, um zu prüfen, ob "
+"verglichen. Sie können WARN- oder CRIT-Levels einstellen, um zu prüfen, ob "
 "das Delta der letzten Minute um X Prozent höher ist als das "
 "durchschnittliche Delta."
 
@@ -31336,7 +31325,7 @@ msgid ""
 msgstr ""
 "Wenn dieser Parameter gesetzt ist, wird das Delta der Größe der letzten "
 "Minute mit dem Delta der durchschnittlichen X Minuten verglichen. Sie können "
-"WARN- oder CRIT-Level einstellen, um zu prüfen, ob das Delta der letzten "
+"WARN- oder CRIT-Levels einstellen, um zu prüfen, ob das Delta der letzten "
 "Minute um X Prozent höher ist als das durchschnittliche Delta."
 
 msgid ""
@@ -31718,9 +31707,9 @@ msgid ""
 "large number of log entries. "
 msgstr ""
 "Wenn Sie diese Option aktivieren, wird bei jeder Übereinstimmung einer Regel "
-"(normal, Zugriff, Abbruch, Zählen, verwerfen) ein Logeintrag in die Log-"
+"(normal, Zugriff, Abbruch, Zählen, verwerfen) ein Log-Eintrag in die Log-"
 "Datei der Event Console geschrieben. Bitte beachten: Kann zu einer großen "
-"Anzahl von Logeinträgen führen. "
+"Anzahl von Log-Einträgen führen. "
 
 msgid ""
 "If you enable this option then the remote site will automatically takeover "
@@ -32269,7 +32258,7 @@ msgid "Ignore default increment"
 msgstr "Standardinkrement ignorieren"
 
 msgid "Ignore device's own levels"
-msgstr "Die Level des Gerätes ignorieren"
+msgstr "Die Levels des Gerätes ignorieren"
 
 msgid "Ignore errors in single check plug-ins"
 msgstr "Fehler in einzelnen Check-Plugins ignorieren"
@@ -32281,7 +32270,7 @@ msgid "Ignore intervals shorter or equal"
 msgstr "Ignoriere kürzere oder gleiche Intervalle"
 
 msgid "Ignore levels"
-msgstr "Ignoriere die Level"
+msgstr "Ignoriere die Levels"
 
 msgid "Ignore not-available (i.e. N/A) sensors in output"
 msgstr "Nicht verfügbare (d.h. N/A) Sensoren in der Ausgabe ignorieren"
@@ -32336,7 +32325,7 @@ msgid "Ignore the version"
 msgstr "Version ignorieren"
 
 msgid "Ignore these levels"
-msgstr "Diese Level ignorieren"
+msgstr "Diese Levels ignorieren"
 
 msgid "Ignore undo tablespaces (Default)"
 msgstr "Undo Tablespaces ignorieren (Standard)"
@@ -32422,9 +32411,8 @@ msgstr "iCalender-Datei importieren, um eine Zeitperiode zu definieren"
 msgid "Import state from Nagios core"
 msgstr "Zustand von Nagios-Kern übernehmen"
 
-#, fuzzy
 msgid "Import tags as host labels"
-msgstr "Anmerkungen als Host-Label importieren"
+msgstr "Merkmale als Host-Labels importieren"
 
 msgid ""
 "Important! This check is only for monitoring datafiles which were left in "
@@ -32438,10 +32426,10 @@ msgid "Imported %d hosts into the current folder."
 msgstr "In den aktuellen Ordner wurden %d Hosts importiert."
 
 msgid "Impose levels"
-msgstr "Level vorschreiben"
+msgstr "Levels vorschreiben"
 
 msgid "Impose levels on number of processes"
-msgstr "Level für Anzahl der Prozesse setzen"
+msgstr "Levels für Anzahl der Prozesse setzen"
 
 msgid "Impose limits on the size of the database"
 msgstr "Grenzen für Größe der Datenbank setzen"
@@ -32475,9 +32463,8 @@ msgstr ""
 msgid "In Progress"
 msgstr "In Bearbeitung"
 
-#, fuzzy
 msgid "In Throughput"
-msgstr "Durchsatz"
+msgstr "Im Durchsatz"
 
 msgid ""
 "In a distributed monitoring setup, only services on the local site are "
@@ -32714,9 +32701,9 @@ msgid ""
 "levels within a conjunction are reached then the related state is reported."
 msgstr ""
 "Um die Statistiken der abhängigen Dateigruppen zu überprüfen, können Sie nun "
-"Verbindungen von einzelnen Leveln konfigurieren. Eine Verbindung besteht aus "
+"Verbindungen von einzelnen Levels konfigurieren. Eine Verbindung besteht aus "
 "einem Monitoring-Zustand und einer beliebigen Anzahl von Ober- oder "
-"Untergrenzen. Wenn alle konfigurierten Level innerhalb einer Verbindung "
+"Untergrenzen. Wenn alle konfigurierten Levels innerhalb einer Verbindung "
 "erreicht sind, wird der zugehörige Zustand gemeldet."
 
 msgid ""
@@ -33015,9 +33002,8 @@ msgstr "Eingehende NAT-Regeln"
 msgid "Inbound and Outbound Messages"
 msgstr "Eingehende und ausgehende Nachrichten"
 
-#, fuzzy
 msgid "Inbound levels (per second)"
-msgstr "Ereignisse pro Sekunde"
+msgstr "Eingangslevels (pro Sekunde)"
 
 msgid "Inbound messages"
 msgstr "Eingehende Nachrichten"
@@ -33212,7 +33198,7 @@ msgid "Index"
 msgstr "Index"
 
 msgid "Index absolute levels"
-msgstr "Absolute Level für den Index"
+msgstr "Absolute Levels für den Index"
 
 msgid "Index failure in the defined time range upper levels"
 msgstr "Indexfehler in den definierten Obergrenzen für Zeiträume"
@@ -33221,7 +33207,7 @@ msgid "Index hitratio"
 msgstr "Index-Hitrate"
 
 msgid "Index percentage bloat levels"
-msgstr "Prozentuale Level für Index-Bloat"
+msgstr "Prozentuale Levels für Index-Bloat"
 
 msgid "Index space"
 msgstr "Index-Platz"
@@ -34127,9 +34113,8 @@ msgstr "Ungültiger Bericht"
 msgid "Invalid report element type '%s'"
 msgstr "Es gibt kein Berichtselement vom Typ '%s'"
 
-#, fuzzy
 msgid "Invalid request"
-msgstr "Ungültige Anfrage: %r"
+msgstr "Ungültige Anfrage"
 
 #, python-format
 msgid "Invalid request: %r"
@@ -34599,13 +34584,13 @@ msgid "JVM Execute Queue Count"
 msgstr "JVM Execute Queue"
 
 msgid "JVM garbage collection levels"
-msgstr "JVM Garbagecollection-Level"
+msgstr "JVM Garbagecollection-Levels"
 
 msgid "JVM heap size"
 msgstr "JVM heap-Größe"
 
 msgid "JVM memory levels"
-msgstr "JVM Speicher-Level"
+msgstr "JVM Speicher-Levels"
 
 msgid "JVM memory pool G1 Eden Space: available by OS"
 msgstr "JVM-Speicherpool G1 Eden Space: vom Betriebssystem verfügbar"
@@ -34671,7 +34656,7 @@ msgid "JVM memory pool Metaspace: used"
 msgstr "JVM-Speicherpool Metaspace: genutzt"
 
 msgid "JVM memory pool levels"
-msgstr "JVM Speicher-Pool Level"
+msgstr "JVM Speicher-Pool Levels"
 
 msgid "JVM memory total: available by OS"
 msgstr "JVM-Speicher gesamt: vom Betriebssystem verfügbar"
@@ -34734,7 +34719,7 @@ msgid "JVM threads"
 msgstr "JVM Threads"
 
 msgid "JVM tomcat threadpool levels"
-msgstr "JVM Tomcat Threadpool-Level"
+msgstr "JVM Tomcat Threadpool-Levels"
 
 msgid "JVM total memory"
 msgstr "JVM-Speicher gesamt"
@@ -34941,7 +34926,7 @@ msgid ""
 msgstr ""
 "Beachten Sie, dass Sie bei 1 GB RAM und 1 GB Swap-Speicher 120 % oder 1200 "
 "MB angeben müssen, um einen Alert zu erhalten, wenn nur noch 20 % freier "
-"Speicher verfügbar sind. Die Level für den freien Speicher funktionieren "
+"Speicher verfügbar sind. Die Levels für den freien Speicher funktionieren "
 "nicht mit dem Fortigate-Check, da diese keine Gesamtspeicherdaten liefert."
 
 msgid "Keep service level from message (if available)"
@@ -35676,22 +35661,22 @@ msgid "Level definition in relation to the predicted value"
 msgstr "Level-Definition in Bezug auf den vorhergesagten Wert"
 
 msgid "Levels"
-msgstr "Level"
+msgstr "Levels"
 
 msgid "Levels CPU"
-msgstr "Level für CPU"
+msgstr "Levels für CPU"
 
 msgid "Levels CPU credits"
-msgstr "Level CPU Credits"
+msgstr "Levels CPU Credits"
 
 msgid "Levels CPU utilization"
-msgstr "Level für die CPU-Auslastung"
+msgstr "Levels für die CPU-Auslastung"
 
 msgid "Levels SNAT usage"
-msgstr "Level für SNAT-Nutzung"
+msgstr "Levels für SNAT-Nutzung"
 
 msgid "Levels app gateway"
-msgstr "Level app gateway"
+msgstr "Levels app gateway"
 
 msgid ""
 "Levels are applied to the value as reported by the application, or to the "
@@ -35701,631 +35686,622 @@ msgstr ""
 "berechnete Rate (falls aktiviert) angewendet."
 
 msgid "Levels byte count"
-msgstr "Level für die Byte-Zählung"
+msgstr "Levels für die Byte-Zählung"
 
 msgid "Levels clients"
 msgstr "Levels Kunden"
 
 msgid "Levels connections"
-msgstr "Level-Verbindungen"
+msgstr "Levels-Verbindungen"
 
 msgid "Levels disk"
-msgstr "Level Festplatte"
+msgstr "Levels Festplatte"
 
 msgid "Levels disk IO"
-msgstr "Level der Festplatten-E/A"
+msgstr "Levels der Festplatten-E/A"
 
 #, python-format
 msgid "Levels for %s"
-msgstr "Level für %s"
+msgstr "Levels für %s"
 
 #, python-format
 msgid "Levels for %s mail queue"
-msgstr "Level für %s Mail-Warteschlange"
+msgstr "Levels für %s Mail-Warteschlange"
 
 msgid "Levels for ATS output parameters"
-msgstr "Level für ATS-Ausgabeparameter"
+msgstr "Levels für ATS-Ausgabeparameter"
 
 msgid "Levels for CPU utilization"
-msgstr "Level für die CPU-Auslastung"
+msgstr "Levels für die CPU-Auslastung"
 
 msgid "Levels for Cisco CPU memory"
-msgstr "Level für Cisco CPU Speicher"
+msgstr "Levels für Cisco CPU Speicher"
 
 msgid "Levels for DB time"
-msgstr "Level für DB-Zeit"
+msgstr "Levels für DB-Zeit"
 
 msgid "Levels for Data"
-msgstr "Level für Daten"
+msgstr "Levels für Daten"
 
 msgid "Levels for Deferred Queue length"
-msgstr "Level für die Queuelänge der verzögerten Mails"
+msgstr "Levels für die Warteschlangenlänge der verzögerten Mails"
 
 msgid "Levels for Drop Queue length"
-msgstr "Level für die Queuelänge von weggeworfenen Mails"
+msgstr "Levels für die Warteschlangenlänge von weggeworfenen Mails"
 
 msgid "Levels for Fireeye License Expiration"
-msgstr "Level für Fireeye-Lizenzablauf"
+msgstr "Levels für Fireeye-Lizenzablauf"
 
 msgid "Levels for Gude PDU Devices"
-msgstr "Level für Gude PDU Geräte"
+msgstr "Levels für Gude PDU Geräte"
 
 msgid "Levels for Hold Queue length"
-msgstr "Level für die Queuelänge von wartenden Mails"
+msgstr "Levels für die Queuelänge von wartenden Mails"
 
 msgid "Levels for IO latency."
-msgstr "Level für die E/A-Latenz."
+msgstr "Levels für die E/A-Latenz."
 
 msgid "Levels for IO operations per second."
-msgstr "Level für die E/A-Operationen pro Sekunde."
+msgstr "Levels für die E/A-Operationen pro Sekunde."
 
 msgid "Levels for IO stats bytes"
-msgstr "Level für E/A-Zustand in Bytes"
+msgstr "Levels für E/A-Zustand in Bytes"
 
 msgid "Levels for IO stats requests"
-msgstr "Level für E/A-Zustand-Anfragen"
+msgstr "Levels für E/A-Zustand-Anfragen"
 
 msgid "Levels for IO traffic per second."
-msgstr "Level für den E/A-Verkehr pro Sekunde."
+msgstr "Levels für den E/A-Verkehr pro Sekunde."
 
 msgid "Levels for Inodes"
-msgstr "Level für Inodes"
+msgstr "Levels für Inodes"
 
 msgid "Levels for Meta"
-msgstr "Level für Metadaten"
+msgstr "Levels für Metadaten"
 
 msgid "Levels for Number of Licenses"
-msgstr "Level für die Anzahl von Lizenzen"
+msgstr "Levels für die Anzahl von Lizenzen"
 
 msgid "Levels for Prometheus services"
-msgstr "Level für Prometheus Services"
+msgstr "Levels für Prometheus Services"
 
 msgid "Levels for Quarantine Usage"
-msgstr "Level für die Auslastung der Quarantäne"
+msgstr "Levels für die Auslastung der Quarantäne"
 
 msgid "Levels for RAM usage"
-msgstr "Level für RAM-Nutzung"
+msgstr "Levels für RAM-Nutzung"
 
 msgid "Levels for SLA monitoring"
-msgstr "Level für das SLA-Monitoring"
+msgstr "Levels für das SLA-Monitoring"
 
 msgid "Levels for Stratum "
-msgstr "Level für das Stratum "
+msgstr "Levels für das Stratum "
 
 msgid "Levels for active VMs"
-msgstr "Level für aktive VMs"
+msgstr "Levels für aktive VMs"
 
 msgid "Levels for active connections"
-msgstr "Level für aktive Verbindungen"
+msgstr "Levels für aktive Verbindungen"
 
 msgid "Levels for active items"
-msgstr "Level für aktive Items"
+msgstr "Levels für aktive Items"
 
 msgid "Levels for active sessions"
-msgstr "Level für aktive Sitzungen"
+msgstr "Levels für aktive Sitzungen"
 
 msgid "Levels for age of jobs"
-msgstr "Level für das Alter von Jobs"
+msgstr "Levels für das Alter von Jobs"
 
 msgid "Levels for battery parameters"
-msgstr "Level für Batterieparameter"
+msgstr "Levels für Batterieparameter"
 
 msgid "Levels for checkpoint time"
-msgstr "Level für Checkpoint-Zeit"
+msgstr "Levels für Checkpoint-Zeit"
 
 msgid "Levels for data size"
-msgstr "Level für Datengröße"
+msgstr "Levels für Datengröße"
 
 msgid "Levels for discards rates"
-msgstr "Level für Ablehnungsraten"
+msgstr "Levels für Ablehnungsraten"
 
 msgid "Levels for disk usage"
-msgstr "Level für genutzten Speicherplatz"
+msgstr "Levels für genutzten Speicherplatz"
 
 msgid "Levels for duration of backup job"
-msgstr "Level für die Dauer des Backup-Jobs"
+msgstr "Levels für die Dauer des Backup-Jobs"
 
 msgid "Levels for erlang process usage"
-msgstr "Level für Erlang-Prozessbenutzung"
+msgstr "Levels für Erlang-Prozessbenutzung"
 
 msgid "Levels for error rates"
-msgstr "Level für Fehlerraten"
+msgstr "Levels für Fehlerraten"
 
 msgid "Levels for established connections"
-msgstr "Level für bestehende Verbindungen"
+msgstr "Levels für bestehende Verbindungen"
 
 msgid "Levels for execution time"
-msgstr "Level für die Ausführungszeit"
+msgstr "Levels für die Ausführungszeit"
 
 msgid "Levels for failed capacity in percent"
-msgstr "Level für fehlerhafte Kapazität in Prozent"
+msgstr "Levels für fehlerhafte Kapazität in Prozent"
 
 msgid "Levels for file descriptor usage"
-msgstr "Level für die Verwendung von Dateideskriptoren"
+msgstr "Levels für die Verwendung von Dateideskriptoren"
 
 msgid "Levels for free memory"
-msgstr "Level für freien Speicher"
+msgstr "Levels für freien Speicher"
 
 msgid "Levels for free space"
-msgstr "Level für freien Platz"
+msgstr "Levels für freien Platz"
 
 msgid "Levels for half closed connections"
-msgstr "Level für halbgeschlossene Verbindungen"
+msgstr "Levels für halbgeschlossene Verbindungen"
 
 msgid "Levels for half opened connections"
-msgstr "Level für halboffene Verbindungen"
+msgstr "Levels für halboffene Verbindungen"
 
 msgid "Levels for laser input"
-msgstr "Level für Laser Eingang"
+msgstr "Levels für Laser Eingang"
 
 msgid "Levels for laser output"
-msgstr "Level für Laser Ausgang"
+msgstr "Levels für Laser Ausgang"
 
 msgid "Levels for logged-in users"
-msgstr "Level für angemeldete Benutzer"
+msgstr "Levels für angemeldete Benutzer"
 
 msgid "Levels for memory"
-msgstr "Level für Speicher"
+msgstr "Levels für Speicher"
 
 msgid "Levels for memory usage"
-msgstr "Level für Speicherauslastung"
+msgstr "Levels für Speicherauslastung"
 
 msgid "Levels for memory utilization"
-msgstr "Level für Speicherauslastung"
+msgstr "Levels für Speicherauslastung"
 
 msgid "Levels for minimum wait time for a lock"
-msgstr "Level für die minimale Wartezeit auf ein Lock"
+msgstr "Levels für die minimale Wartezeit auf ein Lock"
 
 msgid "Levels for non-compliant devices"
-msgstr "Level für nicht-konforme Geräte"
+msgstr "Levels für nicht-konforme Geräte"
 
 msgid "Levels for non-resident items"
-msgstr "Level für nicht residente Items"
+msgstr "Levels für nicht residente Items"
 
 msgid "Levels for number of days until expiration"
-msgstr "Level für Anzahl an Tagen bis Ablauf"
+msgstr "Levels für Anzahl an Tagen bis Ablauf"
 
 msgid "Levels for number of down channels"
-msgstr "Level für die Anzahl von Kanälen, die DOWN sind"
+msgstr "Levels für die Anzahl von Kanälen, die DOWN sind"
 
 msgid "Levels for occupied memory"
-msgstr "Level für belegten Speicher"
+msgstr "Levels für belegten Speicher"
 
 msgid "Levels for optimized connections"
-msgstr "Level für optimierte Verbindungen"
+msgstr "Levels für optimierte Verbindungen"
 
 msgid "Levels for passthrough connections"
-msgstr "Level für passthrough Verbindungen"
+msgstr "Levels für passthrough Verbindungen"
 
 msgid "Levels for pending important updates"
-msgstr "Level für ausstehende wichtige Updates"
+msgstr "Levels für ausstehende wichtige Updates"
 
 msgid "Levels for pending optional updates"
-msgstr "Level für ausstehende optionale Updates"
+msgstr "Levels für ausstehende optionale Updates"
 
 msgid "Levels for power state count"
-msgstr "Level für die Anzahl von Stromzuständen"
+msgstr "Levels für die Anzahl von Stromzuständen"
 
 msgid "Levels for power supply wattage"
-msgstr "Level für die Wattleistung des Netzteils"
+msgstr "Levels für die Wattleistung des Netzteils"
 
 msgid "Levels for process count"
-msgstr "Level für Prozessanzahl"
+msgstr "Levels für Prozessanzahl"
 
 msgid "Levels for provisioning count"
-msgstr "Level für die Anzahl der Datenbereitstellungen"
+msgstr "Levels für die Anzahl der Datenbereitstellungen"
 
 msgid "Levels for queue length"
-msgstr "Level für die Länge der Warteschlange"
+msgstr "Levels für die Länge der Warteschlange"
 
 msgid "Levels for rate of corrected errors"
-msgstr "Level für Rate korrigierter Fehler"
+msgstr "Levels für Rate korrigierter Fehler"
 
 msgid "Levels for rate of fragmented packets"
-msgstr "Level für Rate fragmentierter Pakete"
+msgstr "Levels für Rate fragmentierter Pakete"
 
 msgid "Levels for rate of incoming IPv4 packets blocked"
-msgstr "Level für Rate blockierter eingehender IPv4-Pakete"
+msgstr "Levels für Rate blockierter eingehender IPv4-Pakete"
 
 msgid "Levels for rate of normalized packets"
-msgstr "Level für Rate normalisierter Pakete"
+msgstr "Levels für Rate normalisierter Pakete"
 
 msgid "Levels for rate of packets dropped due to memory limitations"
 msgstr ""
-"Level für Rate von aufgrund von Speicherbeschränkungen verworfener Pakete"
+"Levels für Rate von aufgrund von Speicherbeschränkungen verworfener Pakete"
 
 msgid "Levels for rate of packets with bad offset"
-msgstr "Level für Rate von Paketen mit fehlerhaftem Offset"
+msgstr "Levels für Rate von Paketen mit fehlerhaftem Offset"
 
 msgid "Levels for rate of short packets"
-msgstr "Level für Rate kurzer Pakete"
+msgstr "Levels für Rate kurzer Pakete"
 
 msgid "Levels for rate of uncorrectable errors"
-msgstr "Level für Rate unkorrigierbarer Fehler"
+msgstr "Levels für Rate unkorrigierbarer Fehler"
 
 msgid "Levels for remaining supply"
-msgstr "Level für restliches Verbrauchsmaterial"
+msgstr "Levels für restliches Verbrauchsmaterial"
 
 msgid "Levels for remaining undo retention"
-msgstr "Level für restliche Undo-Retention"
+msgstr "Levels für restliche Undo-Retention"
 
 msgid "Levels for sessions used"
-msgstr "Level für benutzte Sitzungen"
+msgstr "Levels für benutzte Sitzungen"
 
 msgid "Levels for signal/noise ratio"
-msgstr "Level für Signal/Rauschen-Verhältnis"
+msgstr "Levels für Signal/Rauschen-Verhältnis"
 
 msgid "Levels for size on disk"
-msgstr "Level für benutzten Plattenspeicher"
+msgstr "Levels für benutzten Plattenspeicher"
 
 msgid "Levels for sockets usage"
-msgstr "Level für die Socket-Nutzung"
+msgstr "Levels für die Socket-Nutzung"
 
 msgid "Levels for swap usage"
-msgstr "Level für die Swap-Nutzung"
+msgstr "Levels für die Swap-Nutzung"
 
 msgid "Levels for system wait"
-msgstr "Level für System Wait"
+msgstr "Levels für System Wait"
 
 #, python-format
 msgid "Levels for the %s %s size"
-msgstr "Level für %s %s"
+msgstr "Levels für %s %s"
 
 msgid "Levels for the Tablespace size"
-msgstr "Level für die Tablespace-Grösse"
+msgstr "Levels für die Tablespace-Grösse"
 
 msgid "Levels for the Tablespace usage"
-msgstr "Level für die Tablespacebelegung"
+msgstr "Levels für die Tablespacebelegung"
 
 msgid "Levels for the consumer count"
-msgstr "Level für die Anzahl der Consumer"
+msgstr "Levels für die Anzahl der Consumer"
 
 msgid "Levels for the electrical power consumption of a device "
-msgstr "Level für den Stromverbrauch eines Gerätes "
+msgstr "Levels für den Stromverbrauch eines Gerätes "
 
 msgid ""
 "Levels for the electrical power consumption of a device like a UPS or a PDU. "
 "Several phases may be addressed independently."
 msgstr ""
-"Level für den Stromverbrauch eines Gerätes wie z.B. einer USV oder PDU. "
+"Levels für den Stromverbrauch eines Gerätes wie z.B. einer USV oder PDU. "
 "Einzelne Phasen werden unabhängig bewertet."
 
 msgid ""
 "Levels for the nominal frequencies of AC devices like UPSs or PDUs. Several "
 "phases may be addressed independently."
 msgstr ""
-"Level für die Nominalfrequenzen von Wechselstromgeräten wie USVs oder PDUs. "
+"Levels für die Nominalfrequenzen von Wechselstromgeräten wie USVs oder PDUs. "
 "Einzelne Phasen werden evtl. individuell bewertet."
 
 msgid "Levels for the number of active plugs in a device."
-msgstr "Level für die Anzahl der aktiven Anschlüsse in einem Gerät."
+msgstr "Levels für die Anzahl der aktiven Anschlüsse in einem Gerät."
 
 msgid ""
 "Levels for the number of current connections to a JVM application on the "
 "servlet level"
 msgstr ""
-"Level für die Zahl der aktuellen Verbindungen zu einer JVM Applikation "
+"Levels für die Zahl der aktuellen Verbindungen zu einer JVM Applikation "
 "bezogen auf ein Servlet"
 
 msgid "Levels for the number of print jobs"
-msgstr "Level für die Anzahl Druckerjobs"
+msgstr "Levels für die Anzahl Druckerjobs"
 
 msgid "Levels for the number of sessions that are currently active"
-msgstr "Level für Anzahl von aktuell laufenden Sitzungen"
+msgstr "Levels für Anzahl von aktuell laufenden Sitzungen"
 
 msgid "Levels for the number of threads running in a JVM"
-msgstr "Level für die Zahl der laufenden Threads in einer JVM"
+msgstr "Levels für die Zahl der laufenden Threads in einer JVM"
 
 msgid "Levels for the percentual growth per time range"
-msgstr "Level für prozentuales Wachstum pro Zeitraum"
+msgstr "Levels für prozentuales Wachstum pro Zeitraum"
 
 msgid "Levels for the percentual shrinking per time range"
-msgstr "Level für das prozentuale Schrumpfen pro Zeitraum"
+msgstr "Levels für das prozentuale Schrumpfen pro Zeitraum"
 
 msgid "Levels for the queue length"
-msgstr "Level für die Längen der Schlange"
+msgstr "Levels für die Längen der Schlange"
 
 msgid "Levels for time since last update"
-msgstr "Level für die Zeit seit letztem Update"
+msgstr "Levels für die Zeit seit letztem Update"
 
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
-"Level für die Zeit bis zum erzwungenen Reboot aufgrund anstehender wichtiger "
-"Updates"
+"Levels für die Zeit bis zum erzwungenen Reboot aufgrund anstehender "
+"wichtiger Updates"
 
 msgid "Levels for total amount of connections"
-msgstr "Level für Gesamtanzahl an Verbindungen"
+msgstr "Levels für Gesamtanzahl an Verbindungen"
 
 msgid "Levels for total number of items"
-msgstr "Level für die Gesamtanzahl der Items"
+msgstr "Levels für die Gesamtanzahl der Items"
 
 msgid "Levels for transmitted and received words"
-msgstr "Level für gesendete und empfangene Words"
+msgstr "Levels für gesendete und empfangene Words"
 
 msgid "Levels for used configured reserve"
-msgstr "Level für benutzte konfigurierte Reserve"
+msgstr "Levels für benutzte konfigurierte Reserve"
 
 msgid "Levels for used disk space"
-msgstr "Level für benutzten Speicherplatz"
+msgstr "Levels für benutzten Speicherplatz"
 
 msgid "Levels for used memory"
-msgstr "Level für benutzten Speicher"
+msgstr "Levels für benutzten Speicher"
 
 msgid "Levels for used processes"
-msgstr "Level für die benutzten Prozesse"
+msgstr "Levels für die benutzten Prozesse"
 
 msgid "Levels for used space (reclaimable is considered as free)"
-msgstr "Level für belegten Platz (Reclaimable wird als frei betrachtet)"
+msgstr "Levels für belegten Platz (Reclaimable wird als frei betrachtet)"
 
 msgid "Levels for used/free space"
-msgstr "Level für genutzten/freien Platz"
+msgstr "Levels für genutzten/freien Platz"
 
 msgid "Levels for user managed backup files"
-msgstr "Level für benutzerverwaltete Backup-Dateien"
+msgstr "Levels für benutzerverwaltete Backup-Dateien"
 
 msgid "Levels for wait"
-msgstr "Level für Wartezeiten"
+msgstr "Levels für Wartezeiten"
 
 msgid "Levels health"
-msgstr "Level Gesundheit"
+msgstr "Levels Gesundheit"
 
 msgid "Levels helper usage Checkmk"
-msgstr "Level der Helper-Auslastung Checkmk"
+msgstr "Levels der Helper-Auslastung Checkmk"
 
 msgid "Levels helper usage check"
-msgstr "Level der Helper-Auslastung Check"
+msgstr "Levels der Helper-Auslastung Check"
 
 msgid "Levels helper usage checker"
-msgstr "Level der Helper-Auslastung Checker"
+msgstr "Levels der Helper-Auslastung Checker"
 
 msgid "Levels helper usage fetcher"
-msgstr "Level der Helper-Auslastung Fetcher"
+msgstr "Levels der Helper-Auslastung Fetcher"
 
 msgid "Levels hosts"
 msgstr "Levels Hosts"
 
 msgid "Levels in percentage of total RAM"
-msgstr "Level in Prozent des gesamten RAM"
+msgstr "Levels in Prozent des gesamten RAM"
 
 msgid "Levels in percentage of total memory usage"
-msgstr "Level in Prozent der gesamten Speicherauslastung"
+msgstr "Levels in Prozent der gesamten Speicherauslastung"
 
 msgid "Levels instance"
-msgstr "Level für Instanzen"
+msgstr "Levels für Instanzen"
 
 msgid "Levels latency check"
 msgstr "Levels Checklatenz"
 
 msgid "Levels latency checker"
-msgstr "Level Latenz Checker"
+msgstr "Levels Latenz Checker"
 
 msgid "Levels latency fetcher"
-msgstr "Level Latenz Fetcher"
+msgstr "Levels Latenz Fetcher"
 
 msgid "Levels livestatus overflows"
-msgstr "Level Livestatus Überläufe"
+msgstr "Levels Livestatus Überläufe"
 
 msgid "Levels livestatus usage"
-msgstr "Level Livestatus-Auslastung"
+msgstr "Levels Livestatus-Auslastung"
 
 msgid "Levels memory"
 msgstr "Speicher-Levels"
 
 msgid "Levels monthly GCP costs"
-msgstr "Level der monatlichen GCP-Kosten"
+msgstr "Levels der monatlichen GCP-Kosten"
 
 msgid "Levels network"
-msgstr "Level des Netzwerks"
+msgstr "Levels des Netzwerks"
 
 #, python-format
 msgid "Levels of %s %s"
-msgstr "Level von %s %s"
+msgstr "Levels von %s %s"
 
 msgid "Levels of active sessions"
-msgstr "Level für aktive Sitzungen"
+msgstr "Levels für aktive Sitzungen"
 
 msgid "Levels of battery capacity"
-msgstr "Level für Batteriekapazität"
+msgstr "Levels für Batteriekapazität"
 
 msgid "Levels of battery parameters after diagnostics"
-msgstr "Level für die Batterieparameter nach der Diagnose"
+msgstr "Levels für die Batterieparameter nach der Diagnose"
 
 msgid "Levels of current jobs"
-msgstr "Level für aktuelle Jobs"
+msgstr "Levels für aktuelle Jobs"
 
 msgid "Levels of folders to create"
-msgstr "Anzulegende Ordner-Level"
+msgstr "Anzulegende Ordner-Levels"
 
 #, python-format
 msgid "Levels on %s single-request consumption"
-msgstr "Level für den %s Verbrauch einzelner Anfragen"
+msgstr "Levels für den %s Verbrauch einzelner Anfragen"
 
 msgid "Levels on CPU load: 1 minute average"
-msgstr "Level der CPU-Last: 1 Minute Durchschnitt"
+msgstr "Levels der CPU-Last: 1 Minute Durchschnitt"
 
 msgid "Levels on CPU load: 15 minutes average"
-msgstr "Level der CPU-Last: 15 Minuten Durchschnitt"
+msgstr "Levels der CPU-Last: 15 Minuten Durchschnitt"
 
 msgid "Levels on CPU load: 5 minutes average"
-msgstr "Level der CPU-Last: 5 Minuten Durchschnitt"
+msgstr "Levels der CPU-Last: 5 Minuten Durchschnitt"
 
 msgid "Levels on CPU utilization of a single process"
-msgstr "Level für die CPU Auslastung eines einzelnen Prozesses"
+msgstr "Levels für die CPU Auslastung eines einzelnen Prozesses"
 
 msgid "Levels on IO wait (UNIX only)"
-msgstr "Level für IO-Wait (nur Unix)"
+msgstr "Levels für E/A-Wait (nur Unix)"
 
 msgid "Levels on Web ACL requests"
-msgstr "Level für die Web-ACL-Anfragen"
+msgstr "Levels für die Web-ACL-Anfragen"
 
-#, fuzzy
 msgid "Levels on age of oldest message"
-msgstr "Alter der ältesten Nachricht"
+msgstr "Levels für das Alter der ältesten Nachricht"
 
-#, fuzzy
 msgid "Levels on availability"
-msgstr "Level für die Verfügbarkeit in Prozent"
+msgstr "Levels für die Verfügbarkeit"
 
 msgid "Levels on availability in percent"
-msgstr "Level für die Verfügbarkeit in Prozent"
+msgstr "Levels für die Verfügbarkeit in Prozent"
 
 msgid "Levels on average usage"
-msgstr "Level für die durchschnittliche Nutzung"
+msgstr "Levels für die durchschnittliche Nutzung"
 
 msgid "Levels on decreasing trends in MB per time range"
-msgstr "Level für abnehmende Trends in MB pro Zeitraum"
+msgstr "Levels für abnehmende Trends in MB pro Zeitraum"
 
-#, fuzzy
 msgid "Levels on egress data"
-msgstr "Level für die Ausgangscontroller-Daten in Bytes"
+msgstr "Levels für egress Daten"
 
 msgid "Levels on egress data in bytes"
-msgstr "Level für die Ausgangscontroller-Daten in Bytes"
+msgstr "Levels für die Ausgangscontroller-Daten in Bytes"
 
-#, fuzzy
 msgid "Levels on end-to-end latency"
-msgstr "Level der End-to-End-Latenz in Sekunden"
+msgstr "Levels der End-to-End-Latenz"
 
 msgid "Levels on end-to-end latency in seconds"
-msgstr "Level der End-to-End-Latenz in Sekunden"
+msgstr "Levels der End-to-End-Latenz in Sekunden"
 
 msgid "Levels on health status score in percent"
-msgstr "Level für den Gesundheitszustand in Prozent"
+msgstr "Levels für den Gesundheitszustand in Prozent"
 
-#, fuzzy
 msgid "Levels on ingress data"
-msgstr "Level für die Eingangscontroller-Daten in Bytes"
+msgstr "Levels für ingress Daten"
 
 msgid "Levels on ingress data in bytes"
-msgstr "Level für die Eingangscontroller-Daten in Bytes"
+msgstr "Levels für die Eingangscontroller-Daten in Bytes"
 
 msgid "Levels on instances"
-msgstr "Level auf Instanzen"
+msgstr "Levels auf Instanzen"
 
 msgid "Levels on latency"
-msgstr "Level für die Latenzzeit"
+msgstr "Levels für die Latenzzeit"
 
 msgid "Levels on network"
-msgstr "Level im Netzwerk"
+msgstr "Levels im Netzwerk"
 
 msgid "Levels on network traffic"
-msgstr "Level für Netzverkehr"
+msgstr "Levels für Netzverkehr"
 
 msgid "Levels on performance"
-msgstr "Level der Leistung"
+msgstr "Levels der Leistung"
 
-#, fuzzy
 msgid "Levels on queue utilization"
-msgstr "Level für die CPU-Auslastung"
+msgstr "Levels für die Warteschlangen-Auslastung"
 
 msgid "Levels on read capacity"
-msgstr "Level für die Lesekapazität"
+msgstr "Levels für die Lesekapazität"
 
 msgid "Levels on read/write capacity"
-msgstr "Level für die Lese-/Schreibkapazität"
+msgstr "Levels für die Lese-/Schreibkapazität"
 
-#, fuzzy
 msgid "Levels on server latency"
-msgstr "Level für die Latenzzeit"
+msgstr "Levels für die Server-Latenz"
 
 msgid "Levels on server latency in seconds"
-msgstr "Level der Server-Latenzzeit in Sekunden"
+msgstr "Levels der Server-Latenzzeit in Sekunden"
 
 msgid "Levels on single cores"
-msgstr "Level für die einzelne Kerne"
+msgstr "Levels für die einzelne Kerne"
 
 msgid "Levels on steal CPU utilization (UNIX only)"
-msgstr "Level für die Steal-CPU-Auslastung (nur Unix)"
+msgstr "Levels für die Steal-CPU-Auslastung (nur Unix)"
 
 msgid "Levels on task count"
-msgstr "Level für die Anzahl der Aufgaben"
+msgstr "Levels für die Anzahl der Aufgaben"
 
 msgid "Levels on temperature decrease per period"
-msgstr "Level für Temperaturabfall pro Zeitperiode"
+msgstr "Levels für Temperaturabfall pro Zeitperiode"
 
 msgid "Levels on temperature increase per period"
-msgstr "Level für Temperaturanstieg pro Zeitperiode"
+msgstr "Levels für Temperaturanstieg pro Zeitperiode"
 
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
 "reached"
 msgstr ""
-"Level für die Restzeit, bis eine kritische Temperatur (hoch oder niedrig) "
+"Levels für die Restzeit, bis eine kritische Temperatur (hoch oder niedrig) "
 "erreicht wird"
 
 msgid "Levels on the time left until full"
-msgstr "Level für die Zeit bis das Limit erreicht ist"
+msgstr "Levels für die Zeit bis das Limit erreicht ist"
 
 msgid "Levels on the time left until limit is reached"
-msgstr "Level für Zeitspanne bis das Limit erreicht ist"
+msgstr "Levels für Zeitspanne bis das Limit erreicht ist"
 
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
 msgstr ""
-"Die Level für die Gesamtbandbreite verhalten sich genauso wie für die In/Out-"
-"Bandbreite."
+"Die Levels für die Gesamtbandbreite verhalten sich genauso wie für die In/"
+"Out-Bandbreite."
 
 msgid "Levels on time offset"
-msgstr "Level für Zeitversatz"
+msgstr "Levels für Zeitversatz"
 
 msgid "Levels on time since last successful backup"
-msgstr "Level der Zeit seit dem letzten erfolgreichen Backup"
+msgstr "Levels der Zeit seit dem letzten erfolgreichen Backup"
 
 msgid "Levels on total CPU utilization"
-msgstr "Level für die gesamte CPU-Auslastung"
+msgstr "Levels für die gesamte CPU-Auslastung"
 
-#, fuzzy
 msgid "Levels on total number of messages in queue"
-msgstr "Untergrenze für die Gesamtzahl der Meldungen"
+msgstr "Levels für die Gesamtzahl der Meldungen in der Warteschlange"
 
 msgid "Levels on transaction count"
-msgstr "Level für die Anzahl an Transaktionen"
+msgstr "Levels für die Anzahl an Transaktionen"
 
 msgid "Levels on trends in degrees Celsius per time range"
-msgstr "Level für Trends in Grad Celsius pro Zeitraum"
+msgstr "Levels für Trends in Grad Celsius pro Zeitraum"
 
 msgid "Levels on trends per time range"
-msgstr "Level für Trends pro Zeitraum"
+msgstr "Levels für Trends pro Zeitraum"
 
-#, fuzzy
 msgid "Levels on used capacity"
-msgstr "Level für die Lesekapazität"
+msgstr "Levels für die genutzte Kapazität"
 
 msgid "Levels on used capacity in bytes"
-msgstr "Level für benutzte Kapazität in Bytes"
+msgstr "Levels für benutzte Kapazität in Bytes"
 
 msgid "Levels on write capacity"
-msgstr "Level für die Schreibkapazität"
+msgstr "Levels für die Schreibkapazität"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
-"Level über eine längere Zeitperiode für die CPU-Auslastung des einzelnen "
+"Levels über eine längere Zeitperiode für die CPU-Auslastung des einzelnen "
 "Kerns"
 
 msgid "Levels over an extended time period on replication lag"
-msgstr "Level über eine längere Zeitperiode bei Replikationsverzögerung"
+msgstr "Levels über eine längere Zeitperiode bei Replikationsverzögerung"
 
 msgid "Levels over an extended time period on total CPU utilization"
-msgstr "Level über eine längere Zeitperiode für die gesamte CPU-Auslastung"
+msgstr "Levels über eine längere Zeitperiode für die gesamte CPU-Auslastung"
 
 msgid "Levels performance"
-msgstr "Level für Leistung"
+msgstr "Levels für Leistung"
 
 msgid "Levels qps"
-msgstr "Level qps"
+msgstr "Levels qps"
 
 msgid "Levels replication"
-msgstr "Grenzwerte der Replikation"
+msgstr "Levels der Replikation"
 
 msgid "Levels requests"
-msgstr "Ebenen Anfragen"
+msgstr "Levels Anfragen"
 
 msgid "Levels services"
-msgstr "Level Services"
+msgstr "Levels Services"
 
 msgid "Levels storage"
-msgstr "Grenzwerte der Speicherung"
+msgstr "Levels der Speicherung"
 
 msgid "Libelle Business Shadow"
 msgstr "Libelle Business Shadow"
@@ -36373,9 +36349,8 @@ msgstr ""
 "Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die "
 "Aktivierung von Änderungen wieder freizuschalten."
 
-#, fuzzy
 msgid "License key list"
-msgstr "Lizenzdetails"
+msgstr "Liste der Lizenzschlüssel"
 
 msgid "License start"
 msgstr "Lizenzbeginn"
@@ -36522,7 +36497,7 @@ msgid "Limit of meta data"
 msgstr "Limitierung von Metadaten"
 
 msgid "Limit path levels for service names"
-msgstr "Begrenze die Pfad-Level für Service-Namen"
+msgstr "Begrenze die Pfad-Levels für Service-Namen"
 
 msgid "Limit per attempt"
 msgstr "Limit pro Versuch"
@@ -36572,7 +36547,7 @@ msgid "Limits"
 msgstr "Grenzen"
 
 msgid "Limits and levels"
-msgstr "Grenzwerte und Level"
+msgstr "Grenzwerte und Levels"
 
 msgid "Limits for the number of used states"
 msgstr "Grenzen für die Anzahl der benutzten Zustände"
@@ -37070,9 +37045,8 @@ msgstr "Lokale Dateien und MKPs"
 msgid "Local HTTP 503 Responses"
 msgstr "Lokale HTTP 503 Antworten"
 
-#, fuzzy
 msgid "Local IP"
-msgstr "Lokal"
+msgstr "Lokale IP"
 
 msgid "Local Only"
 msgstr "Nur lokal"
@@ -37253,7 +37227,7 @@ msgid "Log Entries"
 msgstr "Logeinträge"
 
 msgid "Log Entry"
-msgstr "Logeintrag"
+msgstr "Log-Eintrag"
 
 msgid "Log all messages into syslog-like logfiles"
 msgstr "Alle Meldungen im Syslogformat in Log-Dateien schreiben"
@@ -37453,7 +37427,7 @@ msgstr ""
 "(regex)"
 
 msgid "Logentry class"
-msgstr "Logeintrags-Klasse"
+msgstr "Log-Eintrag-Klasse"
 
 msgid "Logfile"
 msgstr "Log-Datei"
@@ -37898,7 +37872,7 @@ msgid "MESSAGE"
 msgstr "HINWEIS"
 
 msgid "MGRs epoch levels and average"
-msgstr "Level und Durchschnitt für Abschnitte bzgl. MGRs"
+msgstr "Levels und Durchschnitt für Abschnitte bzgl. MGRs"
 
 msgid "MHz"
 msgstr "MHz"
@@ -38161,9 +38135,8 @@ msgstr "E-Mailempfang"
 msgid "Mail sending"
 msgstr "E-Mailversand"
 
-#, fuzzy
 msgid "Mail transfer threads"
-msgstr "Maximale Anzahl von Threads"
+msgstr "Mail Transfer Threads"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Mailmain Mailinglisten-Schlangen (Linux)"
@@ -38364,7 +38337,6 @@ msgstr ""
 "Metadaten besser erkennbar. Hinweis: Benachrichtigungsregeln werden ohne "
 "\"Änderungen aktivieren\" sofort wirksam."
 
-#, fuzzy
 msgid "Makes the icon appear in the column instead of the drop-down menu."
 msgstr ""
 "Lässt das Symbol direkt in der Spalte erscheinen und nicht im Drop-down-Menü."
@@ -39231,7 +39203,7 @@ msgid "Maximum levels for voltage"
 msgstr "Obergrenzen für Spannung"
 
 msgid "Maximum levels if using magic factor"
-msgstr "Maximale Level bei Verwendung von Magic Factor"
+msgstr "Obergrenzen bei Verwendung von Magic Factor"
 
 msgid "Maximum livestatus response size"
 msgstr "Maximale Livestatus-Antwortgröße"
@@ -39614,14 +39586,14 @@ msgid "Memory fragmentation ratio lower levels"
 msgstr "Untergrenzen für den Fragmentierungsgrad des Speichers"
 
 msgid "Memory levels"
-msgstr "Speicherschwellen"
+msgstr "Speicher-Levels"
 
 msgid "Memory levels for Windows"
-msgstr "Speicher Levels bei Windows"
+msgstr "Speicher-Levels bei Windows"
 
 msgid "Memory levels for simple devices not running more complex OSs"
 msgstr ""
-"Speicher-Level für einfache Geräte, auf denen keine komplexeren "
+"Speicher-Levels für einfache Geräte, auf denen keine komplexeren "
 "Betriebssysteme laufen"
 
 msgid "Memory pages"
@@ -39894,7 +39866,7 @@ msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
 
 msgid "Metric levels"
-msgstr "Metrik-Level"
+msgstr "Metrik-Levels"
 
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
@@ -40052,7 +40024,7 @@ msgid "Minimum levels for voltage"
 msgstr "Untergrenzen für die Spannung"
 
 msgid "Minimum levels if using magic factor"
-msgstr "Minimale Level bei Verwendung von Magic Factor"
+msgstr "Untergrenzen bei Verwendung von Magic Factor"
 
 msgid "Minimum number of connections"
 msgstr "Minimale Verbidungsanzahl"
@@ -40195,7 +40167,7 @@ msgid "Missing job ID."
 msgstr "Fehlende Job-ID."
 
 msgid "Missing levels from the PDU or rule"
-msgstr ""
+msgstr "Fehlende Levels von der PDU oder Regel"
 
 #, python-format
 msgid "Missing needed %s parameter."
@@ -40427,9 +40399,8 @@ msgstr ""
 "Verwaltung von Services (Inventarisierung) gibt es eine eigene Berechtigung "
 "(siehe unten)"
 
-#, fuzzy
 msgid "Modify: Check VM Status (off: ignore VM status)"
-msgstr "Ändern: VM-Zustand prüfen (aus: Standard beibehalten)"
+msgstr "Ändern: VM-Zustand prüfen (aus: VM-Zustand ignorieren)"
 
 msgid "Module"
 msgstr "Modul"
@@ -40614,9 +40585,8 @@ msgstr ""
 msgid "Monitor the performance of the Event Console"
 msgstr "Leistung der Event Console monitoren"
 
-#, fuzzy
 msgid "Monitor the usage of DB space"
-msgstr "Namespaces überwachen"
+msgstr "Auslastung des DB-Platzes überwachen"
 
 msgid "Monitor undecided services"
 msgstr "Überwache unentschiedene Services"
@@ -40742,9 +40712,9 @@ msgstr "Monitoring-Zustand für Gerätezustand \"offline\""
 msgid "Monitoring state for device state \"online\""
 msgstr "Monitoring-Zustand für Gerätezustand \"online\""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Monitoring state if HAProxy server is '%s'"
-msgstr "Monitoring-Zustand, wenn der HAProxy Server %s ist"
+msgstr "Monitoring-Zustand, wenn der HAProxy Server '%s' ist"
 
 #, python-format
 msgid "Monitoring state if LED color is %s"
@@ -40823,7 +40793,7 @@ msgstr "Monitoring-Zustand im Fall von Swap-Fehlern"
 msgid "Monitoring state in case of version parsing failure"
 msgstr "Monitoring-Zustand im Falle eines Parsingfehlers der Version"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Monitoring state of HAProxy frontend is %s"
 msgstr "Monitoring-Zustand, wenn das HAProxy Frontend %s ist"
 
@@ -40833,29 +40803,23 @@ msgstr "Monitoring-Zustandsanforderung"
 msgid "Monitoring status"
 msgstr "Monitoring-Zustand"
 
-#, fuzzy
 msgid "Monitoring status if memory available"
-msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
+msgstr "Monitoring-Zustand wenn der Speicher verfügbar ist"
 
-#, fuzzy
 msgid "Monitoring status if memory full"
-msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
+msgstr "Monitoring-Zustand wenn der Speicher voll ist"
 
-#, fuzzy
 msgid "Monitoring status if memory is available"
-msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
+msgstr "Monitoring-Zustand wenn der Speicher verfügbar ist"
 
-#, fuzzy
 msgid "Monitoring status if memory is full"
-msgstr "Monitoring-Zustand falls der Service fehlgeschlagen ist"
+msgstr "Monitoring-Zustand wenn der Speicher voll ist"
 
-#, fuzzy
 msgid "Monitoring status if memory shortage"
-msgstr "Monitoring-Zustand, falls VM-Zustand '%s' ist"
+msgstr "Monitoring-Zustand bei Speicher-Knappheit"
 
-#, fuzzy
 msgid "Monitoring status in case of memory shortage"
-msgstr "Monitoring-Zustand im Fall von Swap-Fehlern"
+msgstr "Monitoring-Zustand im Fall von Speicher-Knappheit"
 
 msgid ""
 "Monitoring via an IAM role is recommended, however it requires the "
@@ -41667,24 +41631,22 @@ msgstr ""
 "RobotFrameworkUserGuide.html#argument-files\" target=\"_blank\">About "
 "argument files</a>)"
 
-#, fuzzy
 msgid ""
 "Names of IPMI sensors that should be ignored during discovery. The pattern "
 "specified here must match exactly the beginning of the actual sensor name "
 "(case sensitive)."
 msgstr ""
 "Namen von IPMI-Sensoren, die bei der Erkennung ignoriert werden sollen. Das "
-"hier angegebene Pattern muss genau mit dem Anfang des tatsächlichen "
-"Sensornamens übereinstimmen (Groß- und Kleinschreibung beachten)."
+"hier angegebene Pattern muss genau mit dem Anfang des aktuellen Sensornamens "
+"übereinstimmen (Groß- und Kleinschreibung beachten)."
 
-#, fuzzy
 msgid ""
 "Names of IPMI sensors that should be ignored when summarizing. The pattern "
 "specified here must match exactly the beginning of the actual sensor name "
 "(case sensitive)."
 msgstr ""
 "Namen der IPMI-Sensoren, die bei der Zusammenfassung ignoriert werden "
-"sollen. Das hier angegebene Pattern muss exakt mit dem Anfang des "
+"sollen. Das hier angegebene Pattern muss exakt mit dem Anfang des aktuellen "
 "Sensornamens übereinstimmen (Groß-/Kleinschreibung beachten)."
 
 msgid "Namespace"
@@ -41853,9 +41815,8 @@ msgstr "Netzwerk-ID"
 msgid "Network IO"
 msgstr "Netzwerk-E/A"
 
-#, fuzzy
 msgid "Network Inbound"
-msgstr "Netzwerk ausgehend"
+msgstr "Netzwerk eingehend"
 
 msgid "Network Interfaces 1"
 msgstr "Netzwerkschnittstellen 1"
@@ -41872,13 +41833,11 @@ msgstr "Zielgruppen des Netzwerk-Load Balancers"
 msgid "Network Load balancers"
 msgstr "Netzwerk-Load Balancer"
 
-#, fuzzy
 msgid "Network Outbound"
 msgstr "Netzwerk ausgehend"
 
-#, fuzzy
 msgid "Network Throughput"
-msgstr "Netzwerk ausgehend"
+msgstr "Netzwerk-Durchsatz"
 
 msgid "Network adapters"
 msgstr "Netzwerkadapter"
@@ -42134,7 +42093,7 @@ msgid "Nice"
 msgstr "Schön"
 
 msgid "Nimble IO levels"
-msgstr "Level für Nimble-E/A"
+msgstr "Levels für Nimble-E/A"
 
 msgid "No"
 msgstr "Nein"
@@ -42183,7 +42142,7 @@ msgid "No IP range configured"
 msgstr "Kein IP-Bereich definiert"
 
 msgid "No Levels"
-msgstr "Keine Level"
+msgstr "Keine Levels"
 
 msgid "No PNP templates using the deprecated API"
 msgstr "Keine PNP-Vorlagen, welche die veraltete API verwenden"
@@ -42386,10 +42345,10 @@ msgid "No legacy GUI extensions using the deprecated API"
 msgstr "Keine Legacy GUI-Erweiterungen, welche die veraltete API verwenden"
 
 msgid "No levels"
-msgstr "Keine Level"
+msgstr "Keine Levels"
 
 msgid "No levels on inodes"
-msgstr "Keine Level auf Inodes"
+msgstr "Keine Levels auf Inodes"
 
 msgid "No license verification performed yet"
 msgstr "Noch keine Lizenzverifizierung durchgeführt"
@@ -42666,9 +42625,8 @@ msgstr "Übereinstimmung des Knoten-Pfads"
 msgid "Node Stats"
 msgstr "Knoten-Statistiken"
 
-#, fuzzy
 msgid "Node Status (off: ignore node status)"
-msgstr "Check aktivieren (aus: Zustand der Knoten ignorieren)"
+msgstr "Knoten-Status (aus: Knoten-Status ignorieren)"
 
 msgid "Node index"
 msgstr "Index des Knotens"
@@ -42731,18 +42689,15 @@ msgstr "Nominelle Frequenzen"
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
 msgstr "Im Attribut \"%s\" sind nur ASCII-Zeichen erlaubt."
 
-#, fuzzy
 msgid "Non-Critical Event Rate"
-msgstr "Rate nicht kritischer Ereignisse"
+msgstr "Rate nicht-kritischer Ereignisse"
 
-#, fuzzy
 msgid "Non-Critical Events"
-msgstr "Nicht kritische Ereignisse"
+msgstr "Nicht-kritische Ereignisse"
 
 msgid "Non-Multicast"
 msgstr "Non-Multicast"
 
-#, fuzzy
 msgid "Non-Unicast packet rates"
 msgstr "Raten der Non-Unicast-Pakete"
 
@@ -42943,8 +42898,8 @@ msgid ""
 "always reports this information"
 msgstr ""
 "Normalerweise zeigt der Check die Zeit bis Vollwerden der Platte nur dann "
-"an, wenn die Level gerissen wurden. Wenn Sie diese Option aktivieren, meldet "
-"die Prüfung diese Information immer"
+"an, wenn die Levels gerissen wurden. Wenn Sie diese Option aktivieren, "
+"meldet die Prüfung diese Information immer"
 
 msgid "Not"
 msgstr "Nicht"
@@ -44368,7 +44323,7 @@ msgid "OSD Latency"
 msgstr "OSD-Latenz"
 
 msgid "OSDs epoch levels and average"
-msgstr "Level und Durchschnitt für Abschnitte bzgl. OSDs"
+msgstr "Levels und Durchschnitt für Abschnitte bzgl. OSDs"
 
 msgid "OSN Laser attenuation"
 msgstr "OSN Laser Dämpfung"
@@ -44472,9 +44427,8 @@ msgstr ""
 msgid "Older events"
 msgstr "Ältere Ereignisse"
 
-#, fuzzy
 msgid "Oldest Message Age"
-msgstr "Älteste Nachricht Alter"
+msgstr "Alter der ältesten Nachricht"
 
 msgid "Oldest age"
 msgstr "Ältestes Alter"
@@ -44944,7 +44898,7 @@ msgid "Only upper case letters are allowed"
 msgstr "Es sind nur Großbuchstaben erlaubt"
 
 msgid "Only use device's levels, ignore yours"
-msgstr "Nur die Level des Geräts verwenden, die eigenen ignorieren"
+msgstr "Nur die Levels des Geräts verwenden, die eigenen ignorieren"
 
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr "Nur gültig in Jenkins-Versionen <= 1.622."
@@ -44976,9 +44930,8 @@ msgstr "Offene Dateideskriptoren"
 msgid "Open files"
 msgstr "Offenen Dateien"
 
-#, fuzzy
 msgid "Open files and sockets"
-msgstr "Offene Dateideskriptoren"
+msgstr "Offene Dateien und Anschlüsse"
 
 msgid "Open in"
 msgstr "Öffnen in"
@@ -45095,9 +45048,8 @@ msgstr "Betriebssysteme"
 msgid "Operation"
 msgstr "Betrieb"
 
-#, fuzzy
 msgid "Operation Errors"
-msgstr "Fehler"
+msgstr "Betriebsfehler"
 
 msgid "Operation on selected metrics"
 msgstr "Operation auf den gewählten Metriken"
@@ -46188,9 +46140,8 @@ msgstr ""
 msgid "Out"
 msgstr "Ausgehend"
 
-#, fuzzy
 msgid "Out Throughput"
-msgstr "Durchsatz"
+msgstr "Durchsatz ausgehend"
 
 msgid "Out of Notification Period"
 msgstr "Nicht in Benachrichtigungsperiode"
@@ -46213,9 +46164,8 @@ msgstr "Bedingung für Anzahl der Ausfälle"
 msgid "Outage statistics"
 msgstr "Ausfall-Statistiken"
 
-#, fuzzy
 msgid "Outbound levels (per second)"
-msgstr "Ereignisse pro Sekunde"
+msgstr "Ausgangslevels (pro Sekunde)"
 
 msgid "Outbound messages"
 msgstr "Ausgehende Nachrichten"
@@ -46354,9 +46304,8 @@ msgstr "Ausgaben"
 msgid "Outside unique MACs"
 msgstr "Eindeutige MACs Aussenbereich"
 
-#, fuzzy
 msgid "Outstanding DNS requests"
-msgstr "Ausstehende Anfragen"
+msgstr "Ausstehende DNS-Anfragen"
 
 msgid "Overall current events"
 msgstr "Gesamtzahl aktueller Ereignisse"
@@ -46807,7 +46756,7 @@ msgid "PSU (Chassis/Bay)"
 msgstr "Netzteil (Chassis/Schacht)"
 
 msgid "PSU capacity levels"
-msgstr "PSU Kapazitätslevel"
+msgstr "PSU Kapazitätslevels"
 
 msgid "PUBLISH messages received"
 msgstr "PUBLISH-Nachrichten empfangen"
@@ -46934,7 +46883,7 @@ msgid "Page"
 msgstr "Seite"
 
 msgid "Page Activity Levels"
-msgstr "Level für Seitenaktivität"
+msgstr "Levels für Seitenaktivität"
 
 msgid "Page Life Expectancy"
 msgstr "Lebensdauer der Seite"
@@ -47436,9 +47385,8 @@ msgstr "Ausstehend"
 msgid "Pending DHCP leases"
 msgstr "Ausstehende DHCP-Leases"
 
-#, fuzzy
 msgid "Pending DNS requests"
-msgstr "Ausstehende Anfragen"
+msgstr "Ausstehende DNS-Anfragen"
 
 msgid "Pending changes"
 msgstr "Ausstehende Änderungen"
@@ -47746,7 +47694,7 @@ msgid "Percentual levels for free %s"
 msgstr "Prozentuale Schwellen für freien %s"
 
 msgid "Percentual levels for logged-in users"
-msgstr "Prozentuale Level für angemeldete Benutzer"
+msgstr "Prozentuale Schwellen für angemeldete Benutzer"
 
 msgid "Percentual levels for unused licenses"
 msgstr "Prozentuale Schwellen für unbenutzte Lizenzen"
@@ -47759,13 +47707,13 @@ msgid "Percentual levels for used RAM"
 msgstr "Prozentuale Schwellen für benutzen RAM"
 
 msgid "Percentual levels for used file descriptors"
-msgstr "Prozentuale Level für benutze Filedeskriptoren"
+msgstr "Prozentuale Schwellen für benutzte Dateideskriptoren"
 
 msgid "Percentual levels for used memory"
-msgstr "Prozentuale Schwellen für benutzen Speicher"
+msgstr "Prozentuale Schwellen für benutzten Speicher"
 
 msgid "Percentual levels for used processes"
-msgstr "Prozentuale Level für unbenutzte Prozesse"
+msgstr "Prozentuale Schwellen für benutzte Prozesse"
 
 msgid "Percentual levels for used sockets"
 msgstr "Prozentuale Schwellen für genutzte Sockets"
@@ -48378,16 +48326,16 @@ msgstr "Bitte wenden Sie sich an Ihren Administrator."
 msgid "Please define at least one aggregation group"
 msgstr "Bitte mindestens ein Merkmal angeben"
 
-#, fuzzy
 msgid ""
 "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. "
 "Example: <tt>VM abcsrv123</tt>. Also note, that we match the <i>beginning</"
 "i> of the name. This rule cannot be applied to templates as those are always "
 "in state OK."
 msgstr ""
-"Hier müssen Sie entweder eine <tt>VM</tt> oder ein <tt>Host-System</tt> "
-"(oder mehrere) spezifizieren. Beispiel: <tt>VM abcsrv123</tt>. Beachten Sie "
-"auch, dass wir den <i>Anfang</i> des Namens abgleichen."
+"Vergessen Sie bitte nicht, entweder <tt>VM</tt> oder <tt>HostSystem</tt> zu "
+"spezifizieren. Beispiel: <tt>VM abcsrv123</tt>. Beachten Sie auch, dass wir "
+"den <i>Anfang</i> des Namens abgleichen. Diese Regel kann nicht auf Vorlagen "
+"angewandt werden, da sich diese immer im Zustand OK befinden."
 
 msgid "Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."
 msgstr ""
@@ -48512,7 +48460,7 @@ msgid ""
 "change is activated only during an inventory. Saving this rule is not "
 "enough. This is due to the nature of inventory rules."
 msgstr ""
-"Bitte beachten Sie, dass, wenn Sie hier Level festlegen oder ändern, die "
+"Bitte beachten Sie, dass, wenn Sie hier Levels festlegen oder ändern, die "
 "Änderung nur während einer Inventur aktiviert wird. Das Speichern dieser "
 "Regel ist nicht ausreichend. Dies liegt in der Natur von Inventurregeln "
 "begründet."
@@ -48872,7 +48820,7 @@ msgid "Please specify at least one time."
 msgstr "Bitte mindestens eine Uhrzeit angeben."
 
 msgid "Please specify at least one type of levels"
-msgstr "Bitte geben Sie mindestens einen Typ von Leveln an"
+msgstr "Bitte geben Sie mindestens einen Typ von Levels an"
 
 msgid "Please specify at least one value"
 msgstr "Bitte mindestens einen Wert angeben"
@@ -49319,7 +49267,7 @@ msgid "Prediction of "
 msgstr "Vorhersage von "
 
 msgid "Predictive levels (only on CMC)"
-msgstr "Vorhersage-Level (nur mit CMC)"
+msgstr "Vorhersage-Levels (nur mit CMC)"
 
 msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr ""
@@ -49497,7 +49445,7 @@ msgid "Printer Output Units"
 msgstr "Drucker-Ausgabefächer"
 
 msgid "Printer cartridge levels"
-msgstr "Druckerpatronen-Level"
+msgstr "Druckerpatronen-Levels"
 
 msgid "Printer queue length"
 msgstr "Länge der Druckerschlange"
@@ -49852,10 +49800,14 @@ msgid "Provisioning Levels"
 msgstr "Schwellen für Provisionierung"
 
 msgid "Provisioning levels"
-msgstr "Level für Provisionierung"
+msgstr "Levels für Provisionierung"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
+
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "CPU-Auslastung"
 
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Knoten-Info"
@@ -49872,16 +49824,14 @@ msgstr "Proxmox VE VM Snapshot Alter"
 msgid "Proxmox VE disk percentage used"
 msgstr "Prozentsatz der verwendeten Proxmox VE-Platte"
 
-#, fuzzy
 msgid "Proxmox VE disk throughput"
-msgstr "Plattendurchsatz"
+msgstr "Proxmox VE Plattendurchsatz"
 
 msgid "Proxmox VE memory percentage used"
 msgstr "Proxmox VE Speicher in Prozent verwendet"
 
-#, fuzzy
 msgid "Proxmox VE network throughput"
-msgstr "FCP-Schreibdurchsatz"
+msgstr "Proxmox VE Netzwerkdurchsatz"
 
 msgid "Proxmox cluster"
 msgstr "Proxmox-Cluster"
@@ -50121,9 +50071,8 @@ msgstr "Warteschlange"
 msgid "Queue Latency"
 msgstr "Durchschnittliche Warteschlangenlatenz"
 
-#, fuzzy
 msgid "Queue Length"
-msgstr "Länge der Warteschlange"
+msgstr "Warteschlangenlänge"
 
 msgid "Queue Name"
 msgstr "Name der Schlange"
@@ -50659,9 +50608,8 @@ msgstr "Leselatenz 50-100 ms"
 msgid "Read latency 500+ ms"
 msgstr "Leselatenz 500+ ms"
 
-#, fuzzy
 msgid "Read levels (per second)"
-msgstr "Gelesende Blocks pro Sekunde"
+msgstr "Lese-Levels (pro Sekunde)"
 
 msgid ""
 "Read more about [regexes|regular expression matching in Checkmk] in our user "
@@ -51318,7 +51266,7 @@ msgid "Relative humidity"
 msgstr "Relative Luftfeuchtigkeit"
 
 msgid "Relative levels"
-msgstr "Relative Level"
+msgstr "Relative Levels"
 
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen."
@@ -51411,9 +51359,8 @@ msgstr "Remote-kontaktierte Ports (als Client)"
 msgid "Remote Desktop Licenses (Windows)"
 msgstr "Remote Desktop Lizenzen (Windows)"
 
-#, fuzzy
 msgid "Remote IP"
-msgstr "Nur Remote"
+msgstr "Remote-IP"
 
 msgid "Remote IP address"
 msgstr "Remote IP-Adresse"
@@ -52024,7 +51971,6 @@ msgstr "Erf. Version"
 msgid "Request Method"
 msgstr "Requestmethode"
 
-#, fuzzy
 msgid "Request Rate"
 msgstr "Anfragerate"
 
@@ -52347,17 +52293,14 @@ msgstr "Resident-Größe"
 msgid "Resident size (average)"
 msgstr "Resident-Größe (Durchschnitt)"
 
-#, fuzzy
 msgid "Residual current"
-msgstr "Elektrische Stromstärke"
+msgstr "Fehlerstrom"
 
-#, fuzzy
 msgid "Residual current (percentage)"
-msgstr "Elektrische Stromstärke (Ampere)"
+msgstr "Fehlerstrom (Prozent)"
 
-#, fuzzy
 msgid "Residual current levels"
-msgstr "Gesamtzahl aktueller Ereignisse"
+msgstr "Fehlerstrom-Levels"
 
 msgid "Residual current of the PDU"
 msgstr ""
@@ -52365,9 +52308,8 @@ msgstr ""
 msgid "Residual current parameters for PDUs"
 msgstr ""
 
-#, fuzzy
 msgid "Residual current phase name"
-msgstr "Momentaner Host-Name"
+msgstr "Name der Fehlerstromphase"
 
 msgid "Resolution notes for host cases"
 msgstr "Lösungshinweise für Host-Fälle"
@@ -52586,9 +52528,8 @@ msgstr "Auf Benachrichtigungsnummer einschränken"
 msgid "Restricted address mismatch"
 msgstr "Fehlende Übereinstimmung der Adressbeschränkung"
 
-#, fuzzy
 msgid "Restriction tags enabled but no tags defined."
-msgstr "Merkmale aktiviert, aber keine Merkmale definiert."
+msgstr "Einschränkungsmerkmale aktiviert, aber keine Merkmale definiert."
 
 msgid "Result"
 msgstr "Ergebnis"
@@ -53537,9 +53478,8 @@ msgstr "SIP - Lokale 503 Antworten"
 msgid "SIP - Sends timed out"
 msgstr "SIP - Sende-Timeouts"
 
-#, fuzzy
 msgid "SIP Interfaces"
-msgstr "IPMI-Schnittstelle"
+msgstr "SIP-Schnittstellen"
 
 msgid "SKIP PACK"
 msgstr "Paket überspringen"
@@ -54295,9 +54235,8 @@ msgstr "Suche<nobr> </nobr>in"
 msgid "Sec."
 msgstr "Sek."
 
-#, fuzzy
 msgid "Secondary"
-msgstr "Sekunden"
+msgstr "Sekundär"
 
 msgid "Secondary - Attaching"
 msgstr "Secondary - Attaching"
@@ -55716,9 +55655,10 @@ msgid ""
 msgstr ""
 "Services, die schon länger als erwartet nicht mehr aktualisiert wurden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Services: %d total (%d added, %d changed, %d removed, %d kept)"
-msgstr "Services: %d gesamt (%d hinzugefügt, %d entfernt, %d behalten)"
+msgstr ""
+"Services: %d gesamt (%d hinzugefügt, %d geändert, %d entfernt, %d behalten)"
 
 msgid "Session idle timeout"
 msgstr "Sitzungstimeout bei Inaktivität"
@@ -55750,7 +55690,7 @@ msgstr ""
 "festgelegt, wird 'Monitoring' verwendet.<br><br>%s"
 
 msgid "Set absolute levels"
-msgstr "Setze absolute Level"
+msgstr "Setze absolute Levels"
 
 msgid "Set an individual idle timeout"
 msgstr "Einen individuellen Timeout festlegen"
@@ -55809,9 +55749,8 @@ msgstr "Setze Ausführungsmodus für Plugins und lokale Checks"
 msgid "Set expected router mode"
 msgstr "Setze erwarteten Mode des Routers"
 
-#, fuzzy
 msgid "Set explicit failover mode"
-msgstr "Setze erwarteten Mode des Routers"
+msgstr "Expliziten Failover-Modus setzen"
 
 #, python-format
 msgid "Set fake check result to ‘%s’?"
@@ -55837,51 +55776,52 @@ msgid "Set height"
 msgstr "Höhe setzen"
 
 msgid "Set levels"
-msgstr "Level einstellen"
+msgstr "Levels einstellen"
 
 msgid "Set levels for the Checkmk helper usage"
-msgstr "Level für die Auslastung der Checkmk-Helper festlegen"
+msgstr "Levels für die Auslastung der Checkmk-Helper festlegen"
 
 msgid "Set levels for the Checkmk livestatus overflows"
-msgstr "Level für Überläufe von Checkmk Livestatus festlegen"
+msgstr "Levels für Überläufe von Checkmk Livestatus festlegen"
 
 msgid "Set levels for the Checkmk livestatus usage"
-msgstr "Level für die Auslastung von Checkmk Livestatus festlegen"
+msgstr "Levels für die Auslastung von Checkmk Livestatus festlegen"
 
 msgid "Set levels for the check helper usage"
-msgstr "Level für die Auslastung der Check-Helper festlegen"
+msgstr "Levels für die Auslastung der Check-Helper festlegen"
 
 msgid "Set levels for the check latency time"
-msgstr "Level für die Check-Latenzzeit einstellen"
+msgstr "Levels für die Check-Latenzzeit einstellen"
 
 msgid "Set levels for the checker helper usage"
-msgstr "Level für die Auslastung der Checker-Helper festlegen"
+msgstr "Levels für die Auslastung der Checker-Helper festlegen"
 
 msgid "Set levels for the checker latency time"
-msgstr "Level für die Checker-Latenzzeit einstellen"
+msgstr "Levels für die Checker-Latenzzeit einstellen"
 
 msgid "Set levels for the fetcher helper usage"
-msgstr "Level für die Auslastung der Fetcher Helper festlegen"
+msgstr "Levels für die Auslastung der Fetcher Helper festlegen"
 
 msgid "Set levels for the fetcher latency time"
-msgstr "Level für die Latenzzeit der Fetcher festlegen"
+msgstr "Levels für die Latenzzeit der Fetcher festlegen"
 
 msgid "Set levels for the number of hosts"
-msgstr "Level für die Host-Anzahl festlegen"
+msgstr "Levels für die Host-Anzahl festlegen"
 
 msgid "Set levels for the number of services"
-msgstr "Level für die Service-Anzahl festlegen"
+msgstr "Levels für die Service-Anzahl festlegen"
 
 #, python-format
 msgid "Set limit and levels for %s"
-msgstr "Grenzwert und Pegel für %s festlegen"
+msgstr "Grenzwert und Schwellen für %s festlegen"
 
 msgid "Set limits and levels for running on-demand instances"
 msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 
 msgid "Set limits and levels for running on-demand vCPUs on instance families"
 msgstr ""
-"Grenzen und Level für laufende on-demand vCPUs auf Instanzfamilien festlegen"
+"Grenzen und Schwellen für laufende on-demand vCPUs auf Instanzfamilien "
+"festlegen"
 
 msgid "Set lower and upper levels for numerical sensors"
 msgstr "Setze Unter- und Obergrenzen für numerische Sensoren"
@@ -55918,7 +55858,7 @@ msgstr ""
 "behandelt werden"
 
 msgid "Set relative levels"
-msgstr "Setze relative Level"
+msgstr "Setze relative Levels"
 
 msgid "Set resolution"
 msgstr "Auflösung festlegen"
@@ -56235,18 +56175,18 @@ msgstr ""
 
 msgid "Sets levels on total critical events since last counter reset."
 msgstr ""
-"Legt die Level für die Summe der kritischen Ereignisse seit dem letzten "
+"Legt die Levels für die Summe der kritischen Ereignisse seit dem letzten "
 "Zurücksetzen des Zählers fest."
 
 msgid "Sets levels on total noncritical events since last counter reset."
 msgstr ""
-"Legt die Level für die Summe der unkritischen Ereignisse seit dem letzten "
+"Legt die Levels für die Summe der unkritischen Ereignisse seit dem letzten "
 "Zurücksetzen des Zählers fest."
 
 msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
-"Legt die Level für die gesamten Betriebsfehler seit dem letzten Zurücksetzen "
-"des Zählers fest."
+"Legt die Levels für die gesamten Betriebsfehler seit dem letzten "
+"Zurücksetzen des Zählers fest."
 
 msgid ""
 "Sets the thresholds for the runtime of a test. Note that runtime monitoring "
@@ -56282,14 +56222,14 @@ msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
 "detect broadcast storms and other unwanted traffic."
 msgstr ""
-"Level auf Non-Unicast-Paketen sind optional. Mit Ihnen können Sie "
+"Levels auf Non-Unicast-Paketen sind optional. Mit Ihnen können Sie "
 "Broadcaststürme und anderen unerwünschten Verkehr erkennen."
 
 msgid ""
 "Setting levels on the used bandwidth is optional. If you do set levels you "
 "might also consider using averaging."
 msgstr ""
-"Level für die verbrauchte Bandbreite sind optional. Wenn Sie Level "
+"Levels für die verbrauchte Bandbreite sind optional. Wenn Sie Levels "
 "einrichten dann sollten Sie auch einen Durchschnittswert verwenden."
 
 #, python-format
@@ -56331,7 +56271,7 @@ msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
 "might also consider using averaging."
 msgstr ""
-"Level für die verbrauchte Bandbreite sind optional. Wenn Sie Level "
+"Levels für die verbrauchte Bandbreite sind optional. Wenn Sie Levels "
 "einrichten dann sollten Sie auch einen Durchschnittswert verwenden."
 
 msgid "Setup"
@@ -57645,7 +57585,7 @@ msgid "Smoke Detection"
 msgstr "Rauchmelder"
 
 msgid "Smoke Levels"
-msgstr "Rauch-Level"
+msgstr "Rauch-Levels"
 
 msgid "Smoke handling"
 msgstr "Behandlung von Rauch"
@@ -57677,9 +57617,8 @@ msgstr "Software"
 msgid "Software packages"
 msgstr "Softwarepakete"
 
-#, fuzzy
 msgid "Software version"
-msgstr "Controller-Version"
+msgstr "Software-Version"
 
 msgid "Solaris"
 msgstr "Solaris"
@@ -57781,7 +57720,7 @@ msgstr ""
 "langsame Ansichten</b> einen Schwellenwert (in Sekunden) festlegen.</li></"
 "ul> Die Protokollierung ist standardmäßig deaktiviert. Der "
 "Standardschwellenwert ist auf 60 Sekunden eingestellt. Wenn die "
-"Protokollierung aktiviert ist, wird ein Logeintrag pro Darstellung einer "
+"Protokollierung aktiviert ist, wird ein Log-Eintrag pro Darstellung einer "
 "Tabellenansicht, die den konfigurierten Schwellenwert überschreitet, in "
 "<b>var/log/web.log</b> protokolliert."
 
@@ -58339,7 +58278,7 @@ msgid ""
 "voltage levels are to apply. The list is sorted automatically when saving."
 msgstr ""
 "Gegen Sie Frequenzbereiche anhand der oberen Grenze des Bereichs an, für den "
-"die Spannungslevel gelten sollen. Die Liste wird beim Speichern automatisch "
+"die Spannungslevels gelten sollen. Die Liste wird beim Speichern automatisch "
 "sortiert."
 
 msgid ""
@@ -58409,7 +58348,7 @@ msgid "Specify input state evaluation"
 msgstr "Legen Sie die Auswertung des Eingangszustands fest"
 
 msgid "Specify levels"
-msgstr "Level einstellen"
+msgstr "Levels einstellen"
 
 #, python-format
 msgid ""
@@ -58430,51 +58369,51 @@ msgid ""
 "Specify levels for datafiles of a database. Please note that relative levels "
 "will only work if there is a max_size set for the file on the database side."
 msgstr ""
-"Legt die Level für Datendateien einer Datenbank fest. Bitte beachten Sie "
-"dass prozentuelle Level nur funktionieren wenn auf Seiten der Datenbank ein "
-"Limit für die Größe der Dateien festgelegt ist."
+"Legt die Levels für Datendateien einer Datenbank fest. Bitte beachten Sie, "
+"dass prozentuelle Levels nur funktionieren, wenn auf Seiten der Datenbank "
+"ein Limit für die Größe der Dateien festgelegt ist."
 
 msgid ""
 "Specify levels for transactionlogs of a database. Please note that relative "
 "levels will only work if there is a max_size set for the file on the "
 "database side."
 msgstr ""
-"Legt die Level für Transaktionslogs einer Datenbank fest. Bitte beachten Sie "
-"dass prozentuelle Level nur funktionieren wenn auf Seiten der Datenbank ein "
-"Limit für die Größe der Dateien festgelegt ist."
+"Legt die Levels für Transaktionslogs einer Datenbank fest. Bitte beachten "
+"Sie, dass prozentuelle Level nur funktionieren, wenn auf Seiten der "
+"Datenbank ein Limit für die Größe der Dateien festgelegt ist."
 
 msgid "Specify levels if percentage of CPU ready state"
-msgstr "Legen Sie Level in Prozent des CPU-Bereit-Zustands fest"
+msgstr "Legen Sie Levels in Prozent des CPU-Bereit-Zustands fest"
 
 msgid "Specify levels in absolute usage"
-msgstr "Legen Sie Level in absoluter Auslastung fest"
+msgstr "Legen Sie Levels in absoluter Auslastung fest"
 
 msgid "Specify levels in absolute usage values"
-msgstr "Legen Sie Level in absoluten Auslastungswerten fest"
+msgstr "Legen Sie Levels in absoluten Auslastungswerten fest"
 
 msgid "Specify levels in absolute values"
-msgstr "Legen Sie Level in absoluten Werten fest"
+msgstr "Legen Sie Levels in absoluten Werten fest"
 
 msgid "Specify levels in percentage of CPU usage"
-msgstr "Legen Sie Level in Prozent der CPU-Nutzung fest"
+msgstr "Legen Sie Levels in Prozent der CPU-Nutzung fest"
 
 msgid "Specify levels in percentage of storage processor usage"
-msgstr "Legen Sie Level in Prozent für die Nutzung des Storageprozessors fest"
+msgstr "Legen Sie Levels in Prozent für die Nutzung des Storageprozessors fest"
 
 msgid "Specify levels in percentage of total RAM"
-msgstr "Legen Sie Level in Prozent des vorhandenen RAM fest"
+msgstr "Legen Sie Levels in Prozent des vorhandenen RAM fest"
 
 msgid "Specify levels in percentage of total flash"
-msgstr "Geben Sie die Werte in Prozent des Gesamt-Flash an"
+msgstr "Geben Sie die Levels in Prozent des Gesamt-Flash an"
 
 msgid "Specify levels in percentage of total memory usage"
-msgstr "Prozentuale Level für die gesamte Speicherauslastung"
+msgstr "Prozentuale Levels für die gesamte Speicherauslastung"
 
 msgid "Specify levels in percentage of total space"
-msgstr "Legen Sie Level in Prozent des verfügbaren Speichers fest"
+msgstr "Legen Sie Levels in Prozent des verfügbaren Speichers fest"
 
 msgid "Specify levels on the minimum and maximum number of tasks."
-msgstr "Legen Sie Level für die minimale und maximale Anzahl von Tasks fest."
+msgstr "Legen Sie Levels für die minimale und maximale Anzahl von Tasks fest."
 
 msgid "Specify manually"
 msgstr "Manuell festlegen"
@@ -58811,13 +58750,13 @@ msgstr ""
 "Namens, wo der reguläre Ausdruck es erlaubt, mehrere Services auf einmal "
 "anzusprechen. Geben Sie den regulären Ausdruck in der Sektion \"Bedingungen"
 "\" unten an. Ein Service kann aus mehreren Metriken bestehen und Sie können "
-"zu jedem abgefragten Metrikwert Level hinzufügen. Für den jeweiligen Service "
-"werden die Level für den Metrikwert nur dann angewendet, wenn die "
+"zu jedem abgefragten Metrikwert Levels hinzufügen. Für den jeweiligen "
+"Service werden die Levels für den Metrikwert nur dann angewendet, wenn die "
 "Metrikbezeichnung mit der in der benutzerdefinierten Prometheus-Service-"
-"Definition angegebenen Bezeichnung übereinstimmt. Level für den "
+"Definition angegebenen Bezeichnung übereinstimmt. Levels für den "
 "benutzerdefinierten Prometheus-Check können an zwei Stellen definiert "
 "werden: in der Prometheus Datenquellregel und hier. Der Regelsatz hier hat "
-"immer Vorrang vor den in der Datenquellregel definierten Level."
+"immer Vorrang vor den in der Datenquellregel definierten Levels."
 
 msgid ""
 "Specify upper and/or lower levels for the queried PromQL value. This option "
@@ -58828,7 +58767,7 @@ msgid ""
 "overlap."
 msgstr ""
 "Legen Sie Ober- und/oder Untergrenzen für den abgefragten PromQL-Wert fest. "
-"Diese Option sollte für einfache Fälle verwendet werden, in denen die Level "
+"Diese Option sollte für einfache Fälle verwendet werden, in denen die Levels "
 "nur einmal benötigt werden. Sie sollten die Regel zum Monitoring von "
 "benutzerdefinierten Prometheus-Services verwenden, wenn Sie eine Regel "
 "angeben möchten, die für mehrere benutzerdefinierte Prometheus-Services "
@@ -59963,7 +59902,7 @@ msgid "Status encryption"
 msgstr "Zustandsverschlüsselung"
 
 msgid "Status epoch levels and average"
-msgstr "Level und Durchschnitt für Abschnitte bzgl. des Zustands"
+msgstr "Levels und Durchschnitt für Abschnitte bzgl. des Zustands"
 
 msgid "Status flapping"
 msgstr "Unstetiger Zustand"
@@ -60390,9 +60329,8 @@ msgstr "Subskription"
 msgid "Subscription ID"
 msgstr "Subskriptions-ID"
 
-#, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
-msgstr "Check aktivieren (aus: Subskriptionszustand ignorieren)"
+msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -60824,9 +60762,8 @@ msgstr "Systeminformation"
 msgid "System Information for Inventory via dmidecode (Windows)"
 msgstr "Systeminformationen für Inventur via dmidecode (Windows)"
 
-#, fuzzy
 msgid "System Interface"
-msgstr "Systeminformation"
+msgstr "Systemschnittstelle"
 
 msgid "System MIBs"
 msgstr "System-MIBs"
@@ -61328,53 +61265,44 @@ msgstr ""
 msgid "Tel2IP"
 msgstr "Tel2IP"
 
-#, fuzzy
 msgid "Tel2IP Number of Attempted SIP/H323 calls"
-msgstr "Anzahl der versuchten SIP/H323 Anrufe"
+msgstr "Tel2IP Anzahl der versuchten SIP/H323 Anrufe"
 
-#, fuzzy
 msgid "Tel2IP Number of Attempted SIP/H323 fax calls"
-msgstr "Anzahl der versuchten SIP/H323 Faxanrufe"
+msgstr "Tel2IP Anzahl der versuchten SIP/H323 Faxanrufe"
 
-#, fuzzy
 msgid "Tel2IP Number of Destination Busy SIP/H323 calls"
-msgstr "Anzahl der besetzten SIP/H323-Anrufe"
+msgstr "Tel2IP Anzahl der besetzten SIP/H323-Anrufe"
 
-#, fuzzy
 msgid "Tel2IP Number of No Answer SIP/H323 calls"
-msgstr "Anzahl nicht angenommener SIP/H323-Anrufe"
+msgstr "Tel2IP Anzahl nicht angenommener SIP/H323-Anrufe"
 
-#, fuzzy
 msgid ""
 "Tel2IP Number of No Route SIP/H323 calls. Most likely to be due to wrong "
 "number"
 msgstr ""
-"Anzahl der nicht weitergeleiteten SIP/H323-Anrufe. Höchstwahrscheinlich "
-"aufgrund einer falschen Nummer"
+"Tel2IP Anzahl der nicht weitergeleiteten SIP/H323-Anrufe. "
+"Höchstwahrscheinlich aufgrund einer falschen Nummer"
 
-#, fuzzy
 msgid "Tel2IP Number of No capability match between peers on SIP/H323 calls"
 msgstr ""
-"Anzahl der nicht übereinstimmenden Fähigkeiten zwischen Peers bei SIP/H323-"
-"Anrufen"
+"Tel2IP Anzahl der nicht übereinstimmenden Fähigkeiten zwischen Peers bei SIP/"
+"H323-Anrufen"
 
-#, fuzzy
 msgid "Tel2IP Number of SIP/H323 fax success calls"
-msgstr "Anzahl erfolgreicher SIP/H323 Faxanrufe"
+msgstr "Tel2IP Anzahl erfolgreicher SIP/H323 Faxanrufe"
 
-#, fuzzy
 msgid ""
 "Tel2IP Number of established (connected and voice activated) SIP/H323 calls"
 msgstr ""
-"Anzahl der aufgebauten (verbundenen und sprachaktivierten) SIP/H323-Anrufe"
+"Tel2IP Anzahl der aufgebauten (verbundenen und sprachaktivierten) SIP/H323-"
+"Anrufe"
 
-#, fuzzy
 msgid "Tel2IP Number of failed SIP/H323 calls"
-msgstr "Anzahl fehlgeschlagener SIP/H323 Anrufe"
+msgstr "Tel2IP Anzahl fehlgeschlagener SIP/H323 Anrufe"
 
-#, fuzzy
 msgid "Tel2IP Total duration of SIP/H323 calls"
-msgstr "Gesamtdauer der SIP/H323 Anrufe"
+msgstr "Tel2IP Gesamtdauer der SIP/H323 Anrufe"
 
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
@@ -61434,10 +61362,10 @@ msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatur/Luftfeuchtigkeit für Eaton UPS"
 
 msgid "Temperature sensors with built-in levels"
-msgstr "Temperatursensoren mit mitgelieferten Leveln"
+msgstr "Temperatursensoren mit mitgelieferten Levels"
 
 msgid "Temperature trends for devices with built-in levels"
-msgstr "Temperaturtrends für Geräte mit mitgelieferten Leveln"
+msgstr "Temperaturtrends für Geräte mit mitgelieferten Levels"
 
 msgid "Temperature unit"
 msgstr "Temperatureinheit"
@@ -61772,10 +61700,11 @@ msgstr ""
 "Die CPU-Last eines Systems ist die Anzahl der Prozesse, die sich gerade im "
 "Zustand <u>running</u> befinden, d. h. entweder eine CPU belegen oder auf "
 "eine warten. Die <u>Durchschnittslast</u> ist die gemittelte CPU-Last der "
-"letzten 1, 5 oder 15 Minuten. Die folgenden Level werden auf die "
-"durchschnittliche Last angewendet. Die konfigurierten Level werden mit der "
-"Anzahl der CPUs multipliziert, daher sollten Sie die Level auf der Grundlage "
-"des Wertes konfigurieren, vor dem Sie „pro CPU“ gewarnt werden möchten."
+"letzten 1, 5 oder 15 Minuten. Die folgenden Levels werden auf die "
+"durchschnittliche Last angewendet. Die konfigurierten Levels werden mit der "
+"Anzahl der CPUs multipliziert, daher sollten Sie die Levels auf der "
+"Grundlage des Wertes konfigurieren, vor dem Sie „pro CPU“ gewarnt werden "
+"möchten."
 
 #, no-python-format
 msgid ""
@@ -63429,7 +63358,7 @@ msgid ""
 "The defined levels will only apply if the metric label matches the one "
 "specified in the custom Prometheus service."
 msgstr ""
-"Die festgelegten Level werden nur angewandt, wenn das Metriklabel dem im "
+"Die festgelegten Levels werden nur angewandt, wenn das Metriklabel dem im "
 "benutzerdefinierten Prometheus Service entspricht."
 
 msgid ""
@@ -63528,17 +63457,16 @@ msgstr ""
 "Die Engine-ID muss als Hex-Text, wie z.B. <tt>8000000001020304</tt>, "
 "angegeben werden."
 
-#, fuzzy
 msgid ""
 "The entire cache is searched in the interval configured here for old values "
 "which shall be written to disk. This only concerns RRD files to which "
 "updates have stopped, so setting this to a high value is acceptable in most "
 "cases."
 msgstr ""
-"Der Cache wird in dem hier konfigurierten Intervall nach Werten durchsucht, "
-"die auf die Festplatte geschrieben werden sollen. Diese Option betrifft nur "
-"Werte, die nicht aktualisiert werden. Es ist also im Normalfall gut dies "
-"selten zu machen."
+"Der gesamte Cache wird in dem hier eingestellten Intervall nach alten Werten "
+"durchsucht, die auf die Festplatte geschrieben werden sollen. Dies betrifft "
+"nur RRD-Dateien, bei denen die Aktualisierungen gestoppt wurden, so dass ein "
+"hoher Wert in den meisten Fällen akzeptabel ist."
 
 #, python-format
 msgid "The entry %s is missing"
@@ -63662,7 +63590,7 @@ msgid ""
 "The filesystem levels will never fall below these values, when using the "
 "magic factor and the filesystem is very small."
 msgstr ""
-"Die Level für das Dateisystem werden niemals unter diese Werte fallen, wenn "
+"Die Levels für das Dateisystem werden niemals unter diese Werte fallen, wenn "
 "Sie den Magic Factor benutzen und das Dateisystem sehr klein ist."
 
 msgid "The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"
@@ -65892,7 +65820,6 @@ msgstr ""
 "Einzeldatei-Aggregation zu verwenden, fügen Sie <tt>%s</tt> an den "
 "Abschnittsnamen an."
 
-#, fuzzy
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
@@ -65903,10 +65830,9 @@ msgstr ""
 "Der ausgewählte Automationsbenutzer benötigt Rechte für die "
 "Agentenregistrierung und den Download. Wenn kein Benutzer ausgewählt ist, "
 "versucht die Agentenbäckerei, einen Automationsbenutzer namens \"automation"
-"\" zu finden.<br>Dies ist nur erforderlich, wenn die Version der "
-"Zentralinstanz 2.3.0 ist. Ab 2.4.0 ist für den Verbindungsmodus kein "
-"Automatisierungsbenutzer mehr erforderlich. Diese Einstellung wird daher in "
-"einer zukünftigen Version entfernt werden."
+"\" zu finden.<br>Diese Einstellung ist nur erforderlich, wenn die Version "
+"der Zentralinstanz 2.3.0 ist. Diese Einstellung wird in einer zukünftigen "
+"Version entfernt werden."
 
 msgid ""
 "The selected automation user needs rights for registering new agents. I.e., "
@@ -66258,7 +66184,7 @@ msgid ""
 "magic factor and the tablespace is very small."
 msgstr ""
 "Wenn der Magic Factor benutzt wird und der Tablespace sehr klein ist, "
-"steigen die Tablespace-Level trotzdem nie über diesen Wert."
+"steigen die Tablespace-Levels trotzdem nie über diesen Wert."
 
 msgid ""
 "The tactical overview snap-in is reporting about notifications that could "
@@ -66353,7 +66279,7 @@ msgid ""
 "the message of the log."
 msgstr ""
 "Der Text des Ereignisses kann aus dem <a href='https://docs.datadoghq.com/"
-"api/latest/logs/#search-logs'>Attribute-Abschnitt eines Logeintrags</a> "
+"api/latest/logs/#search-logs'>Attribute-Abschnitt eines Log-Eintrags</a> "
 "erstellt werden. Die Textelemente werden als 'Name:str(attributes[Key])', "
 "getrennt durch ein Komma, dargestellt. Um auf verschachtelte Felder "
 "zuzugreifen, verwenden Sie 'key.subkey'. Standardmäßig wird die Nachricht "
@@ -66555,7 +66481,7 @@ msgid ""
 "currently swapped out. For systems without Swap space you should choose "
 "levels below 100%."
 msgstr ""
-"Die verwendeten und freien Level für den Speicher auf Unix-Systemen "
+"Die verwendeten und freien Levels für den Speicher auf Unix-Systemen "
 "berücksichtigen den aktuell von allen Prozessen genutzten Speicher (RAM oder "
 "Swap) und setzen diesen ins Verhältnis zum gesamten RAM des Systems. Das "
 "bedeutet, dass die Speicherauslastung 100 % überschreiten kann. Eine "
@@ -67020,7 +66946,7 @@ msgid ""
 "is computed by the formula <b>(discards / (unicast + non-unicast + "
 "discards))*100</b> "
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"Diese Levels bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Verwerfrate</b> oder die <b>absolute Verwerfrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Verwerfrate wird nach der Formel <b>(Verwerfungen / (Unicast + Non-Unicast + "
@@ -67033,7 +66959,7 @@ msgid ""
 "computed by the formula <b>(errors / (unicast + non-unicast + errors))*100</"
 "b> "
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"Diese Levels bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-Unicast + "
@@ -67045,7 +66971,7 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"Diese Levels bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Paketrate wird nach der Formel <b>(Broadcast / (Unicast + Non-Unicast))*100</"
@@ -67057,7 +66983,7 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(multicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"Diese Levels bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Paketrate wird nach der Formel <b>(Multicast / (Unicast + Nicht-"
@@ -67069,7 +66995,7 @@ msgid ""
 "monitored interface reaches the given bounds. The percentual packet rate is "
 "computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
 msgstr ""
-"Diese Level bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
+"Diese Levels bewirken, dass der Check auf WARNING oder CRITICAL geht, wenn "
 "die <b>prozentuale Paketrate</b> oder die <b>absolute Paketrate</b> der "
 "überwachten Schnittstelle die angegebenen Grenzen erreicht. Die prozentuale "
 "Paketrate wird nach der Formel <b>(Unicast / (Unicast + Non-Unicast))*100</"
@@ -67080,7 +67006,7 @@ msgid ""
 "registered to the load balancer which is the sum of healthy and unhealthy "
 "instances."
 msgstr ""
-"Diese Level beziehen sich auf die Gesamtzahl der Instanzen oder Hosts, die "
+"Diese Levels beziehen sich auf die Gesamtzahl der Instanzen oder Hosts, die "
 "am Load Balancer registriert sind, was die Summe der gesunden und ungesunden "
 "Instanzen ist."
 
@@ -67799,7 +67725,7 @@ msgid ""
 "bounds."
 msgstr ""
 "Dieser Check überwacht die Anzahl von Log Switches von Oracle "
-"Datenbankinstanzen innerhalb der letzten 60 Minuten. Sie können Level für "
+"Datenbankinstanzen innerhalb der letzten 60 Minuten. Sie können Levels für "
 "Ober- und Untergrenzen setzen."
 
 msgid ""
@@ -68311,7 +68237,7 @@ msgid "This is not a valid Nagios time period day specification."
 msgstr "Dies ist keine gültige Nagios-Zeitperioden-Tagesangabe."
 
 msgid "This is only be used in case of percentual levels"
-msgstr "Sie können diese Option nur im Falle von prozentualen Leveln verwenden"
+msgstr "Sie können diese Option nur im Falle von prozentualen Levels verwenden"
 
 msgid ""
 "This is only relevant when agent updates are globally enabled. Otherwise, "
@@ -69769,7 +69695,7 @@ msgstr ""
 
 msgid "This rule allows to override alert levels for the given sensor names."
 msgstr ""
-"Diese Regel erlaubt das Überschreiben von Alert-Leveln für die angegebenen "
+"Diese Regel erlaubt das Überschreiben von Alert-Levels für die angegebenen "
 "Sensornamen."
 
 msgid ""
@@ -69783,22 +69709,23 @@ msgid ""
 "This rule allows to set the warn and crit levels of the heap / non-heap and "
 "total memory area usage on web application servers."
 msgstr ""
-"Mit dieser Regel können Sie die Warn- und Crit-Level für die Heap-/Non-Heap- "
-"und Gesamtspeicherbereichsauslastung auf Webanwendungsservern festlegen."
+"Mit dieser Regel können Sie die WARN- und CRIT-Levels für die Heap-/Non-"
+"Heap- und Gesamtspeicherbereichsauslastung auf Webanwendungsservern "
+"festlegen."
 
 msgid ""
 "This rule allows to set the warn and crit levels of the memory metrics of "
 "the DotNet (.Net) Runtime"
 msgstr ""
-"Dieser Regelsatz erlaubt das Setzen von WARN- und CRIT-Schwellen auf "
+"Dieser Regelsatz erlaubt das Setzen von WARN- und CRIT-Levels auf "
 "Speichermetriken einer DotNet- (.Net)-Runtime"
 
 msgid ""
 "This rule allows to set the warn and crit levels of the memory pools on web "
 "application servers."
 msgstr ""
-"Mit dieser Regel können Sie die Warn- und Kritikalitätsstufen der "
-"Speicherpools auf Webanwendungsservern festlegen."
+"Mit dieser Regel können Sie die WARN- und CRIT-Levels der Speicherpools auf "
+"Webanwendungsservern festlegen."
 
 #, python-format
 msgid ""
@@ -69913,9 +69840,9 @@ msgid ""
 "Inotify plug-in. So it might be a good idea to cross check these levels here "
 "with the configuration rule in the Agent Bakery. "
 msgstr ""
-"Diese Regel erlaubt, Level für spezifische Inotify-Änderungen zu setzen. Es "
+"Diese Regel erlaubt, Levels für spezifische Inotify-Änderungen zu setzen. Es "
 "können jedoch nur Operationen überwacht werden, die aktuell auch im Inotify-"
-"Plugin aktiviert sind. Es wird empfohlen, diese Level mit der "
+"Plugin aktiviert sind. Es wird empfohlen, diese Levels mit der "
 "Konfigurationsregel in der Agentenbäckerei abzugleichen. "
 
 msgid ""
@@ -69944,8 +69871,8 @@ msgid ""
 "and apparent power of your device. The levels will only be applied if the "
 "device actually supplies values for these parameters."
 msgstr ""
-"Mit dieser Regel können Sie die Level für Spannung, Strom, Last, Leistung "
-"und Scheinleistung Ihres Geräts festlegen. Die Level greifen nur, wenn das "
+"Mit dieser Regel können Sie die Levels für Spannung, Strom, Last, Leistung "
+"und Scheinleistung Ihres Geräts festlegen. Die Levels greifen nur, wenn das "
 "Gerät auch Messwerte für diese Parameter zur Verfügung stellt."
 
 msgid ""
@@ -69953,9 +69880,9 @@ msgid ""
 "apparent power of your device. The levels will only be applied if the device "
 "actually supplies values for these parameters."
 msgstr ""
-"Mit dieser Regel können Sie die Level für Spannung, Strom, Leistung und "
-"Scheinleistung Ihres Geräts festlegen. Die Level greifen nur, wenn das Gerät "
-"auch Messwerte für diese Parameter zur Verfügung stellt."
+"Mit dieser Regel können Sie die Levels für Spannung, Strom, Leistung und "
+"Scheinleistung Ihres Geräts festlegen. Die Levels greifen nur, wenn das "
+"Gerät auch Messwerte für diese Parameter zur Verfügung stellt."
 
 #, python-format
 msgid "This rule attaches contact group(s) to the events: %s"
@@ -70040,8 +69967,8 @@ msgid ""
 "CPUs. Note that not all parameters you can configure here are applicable to "
 "all checks."
 msgstr ""
-"Diese Regel konfiguriert Level für die CPU-Auslastung (nicht Last) für Linux/"
-"Unix und Windows sowie für Geräte, welche die Host-Ressourcen MIB "
+"Diese Regel konfiguriert Levels für die CPU-Auslastung (nicht Last) für "
+"Linux/Unix und Windows sowie für Geräte, welche die Host-Ressourcen MIB "
 "implementieren. Die prozentuale Auslastung wird in Bezug auf die Gesamtzahl "
 "der CPUs berechnet. Beachten Sie, dass nicht alle Parameter, die Sie hier "
 "konfigurieren können, für alle Checks gelten."
@@ -70050,7 +69977,7 @@ msgid ""
 "This rule configures levels for the CPU utilization (not load) for Nutanix "
 "cluster systems. The utilization percentage is shown for the whole cluster."
 msgstr ""
-"Diese Regel konfiguriert Level für die CPU-Auslastung (nicht die Last) von "
+"Diese Regel konfiguriert Levels für die CPU-Auslastung (nicht die Last) von "
 "Nutanix Cluster-Systemen. Der Prozentsatz der Auslastung wird für das "
 "gesamte Cluster angezeigt."
 
@@ -70059,7 +69986,7 @@ msgid ""
 "host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
 msgstr ""
-"Diese Regel konfiguriert Stufen für die CPU-Auslastung (nicht die Last) für "
+"Diese Regel konfiguriert Levels für die CPU-Auslastung (nicht die Last) für "
 "Nutanix-Host-Systeme. Der Prozentsatz der Auslastung wird in Bezug auf die "
 "Gesamtzahl der CPUs berechnet. "
 
@@ -70068,9 +69995,9 @@ msgid ""
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
 msgstr ""
-"Diese Regel konfiguriert Grenzwerte für die CPU-Auslastung (nicht die Last) "
-"für VMware ESX-Host-Systeme. Der Prozentsatz der Auslastung wird in Bezug "
-"auf die Gesamtzahl der CPUs berechnet. "
+"Diese Regel konfiguriert Levels für die CPU-Auslastung (nicht die Last) für "
+"VMware ESX-Host-Systeme. Der Prozentsatz der Auslastung wird in Bezug auf "
+"die Gesamtzahl der CPUs berechnet. "
 
 msgid "This rule configures the OpenTelemetry special agent."
 msgstr "Diese Regel konfiguriert den Spezialagenten für OpenTelemetry."
@@ -70465,7 +70392,7 @@ msgstr ""
 
 msgid "This rule set is for configuring levels for global packet counters."
 msgstr ""
-"Mit diesem Regelsatz können Sie Level für globale Paketzähler konfigurieren."
+"Mit diesem Regelsatz können Sie Levels für globale Paketzähler konfigurieren."
 
 msgid ""
 "This rule set is useful if you send your monitoring notifications into the "
@@ -70547,7 +70474,7 @@ msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
-"Diese Regel setzt die WARN- und CRIT-Level für die Laufzeit einer JVM. "
+"Diese Regel setzt die WARN- und CRIT-Levels für die Laufzeit einer JVM. "
 "Andere Stichwörter für diese Regel: Tomcat, Jolokia, JMX. "
 
 msgid ""
@@ -70642,34 +70569,31 @@ msgstr ""
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
 
-#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Level für die CPU-Nutzung der "
-"Datenbank zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherdatenflüsse zu "
+"konfigurieren"
 
-#, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for the Storage latency and "
 "availability"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für den genutzten Speicherplatz "
-"in Prozent zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherlatenz und -"
+"verfügbarkeit zu konfigurieren"
 
-#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage usage"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Level für die CPU-Nutzung der "
-"Datenbank zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherauslastung zu "
+"konfigurieren"
 
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Level für die CPU-Nutzung der "
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die CPU-Nutzung der "
 "Datenbank zu konfigurieren"
 
 msgid "This ruleset allows you to configure levels for the database throughput"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Level für den Datenbankdurchsatz zu "
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für den Datenbankdurchsatz zu "
 "konfigurieren"
 
 msgid ""
@@ -70766,13 +70690,13 @@ msgstr ""
 "Dieser Regelsatz gilt für mehrere ähnliche Prüfungen, die verschiedene "
 "Kernel-Ereignisse wie Kontextwechsel, Prozesserzeugung und größere "
 "Seitenfehler messen. Bitte erstellen Sie separate Regeln für jede Art von "
-"Kernel-Zähler, für die Sie Level festlegen möchten."
+"Kernel-Zähler, für die Sie Levels festlegen möchten."
 
 msgid ""
 "This ruleset can be used to change MTR's (Matt's traceroute) warning and "
 "crit levels for packet loss, average roundtrip and standard deviation."
 msgstr ""
-"Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Level von MTR "
+"Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Levels von MTR "
 "(Matt's Traceroute) für Paketverluste, durchschnittlichen Umlauf und "
 "Standardabweichung zu ändern."
 
@@ -71817,7 +71741,8 @@ msgstr "Schwellwerte für die Benachrichtigungen pro Kontakt"
 msgid "Thresholds for quality of time"
 msgstr "Schwellwerte für die Zeitqualität"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Grenzen für Nachrichtenanzahl"
 
 #, fuzzy
@@ -71827,6 +71752,10 @@ msgstr "Grenzen für Nachrichtenanzahl"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Application ausstehende Anfragen"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Grenzen für Nachrichtenanzahl"
 
 msgid "Throttle periodic notifications"
 msgstr "Periodische Benachrichtigungen drosseln"
@@ -71847,7 +71776,7 @@ msgid "Throughput"
 msgstr "Durchsatz"
 
 msgid "Throughput levels"
-msgstr "Level für den Durchsatz"
+msgstr "Levels für den Durchsatz"
 
 msgid "Throughput optimized HDD space"
 msgstr "Durchsatzoptimierter HDD-Speicherplatz"
@@ -71994,7 +71923,7 @@ msgid "Time of last occurrence"
 msgstr "Zeitpunkt des letzten Auftretens"
 
 msgid "Time of log entry"
-msgstr "Zeitstempel des Logeintrags"
+msgstr "Zeitstempel des Log-Eintrags"
 
 msgid "Time of registration"
 msgstr "Zeitpunkt der Registrierung"
@@ -76869,7 +76798,7 @@ msgid "Usage Details"
 msgstr "Details zur Verwendung"
 
 msgid "Usage levels"
-msgstr "Auslastungslevel"
+msgstr "Auslastungslevels"
 
 msgid "Use \"CERT\" as service name prefix"
 msgstr "\"CERT\" als Service-Namens-Präfix verwenden"
@@ -77140,7 +77069,7 @@ msgstr "Nutze Gerätezustand und überschreibe erwarteten Zustand"
 
 msgid "Use device's levels if present, otherwise yours"
 msgstr ""
-"Geräte-Level verwenden, falls vorhanden - andernfalls die Benutzer-Level"
+"Geräte-Levels verwenden, falls vorhanden - andernfalls die des Benutzers"
 
 msgid "Use double quotes, escape contained quotes with backslash"
 msgstr ""
@@ -77400,7 +77329,7 @@ msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
 msgid "Use the following levels"
-msgstr "Die folgenden Level benutzen"
+msgstr "Die folgenden Levels benutzen"
 
 msgid "Use the following status host"
 msgstr "Den folgenden Status-Host verwenden"
@@ -77786,7 +77715,7 @@ msgid "Use volume name as mountpoint"
 msgstr "Volume-Name als Mount-Punkt verwenden"
 
 msgid "Use your own levels if present, otherwise the device's"
-msgstr "Eigene Level verwenden, falls vorhanden - ansonsten die vom Gerät"
+msgstr "Eigene Levels verwenden, falls vorhanden - ansonsten die vom Gerät"
 
 msgid "Used"
 msgstr "Benutzt"
@@ -79318,10 +79247,10 @@ msgid "Vista API"
 msgstr "Vista-API"
 
 msgid "Visual levels for the availability"
-msgstr "Visuelle Level für die Verfügbarkeit"
+msgstr "Visuelle Levels für die Verfügbarkeit"
 
 msgid "Visual levels for the availability (OK percentage)"
-msgstr "Optische Schwellen (OK-Prozentwert)"
+msgstr "Visuelle Levels für die Verfügbarkeit (OK-Prozentwert)"
 
 msgid "Visualization"
 msgstr "Visualisierung"
@@ -79363,7 +79292,7 @@ msgid "Voltage levels"
 msgstr "Spannungspegel"
 
 msgid "Voltage levels (UPS / PDU / Other Devices)"
-msgstr "Spannungslevel (USV / Stromverteiler / andere Geräte)"
+msgstr "Spannungspegel (USV / Stromverteiler / andere Geräte)"
 
 msgid ""
 "Voltage levels for devices like UPS or PDUs. Several phases may be addressed "
@@ -79628,9 +79557,8 @@ msgstr "Warnung wenn kein Subskriptionszustand vorhanden"
 msgid "Warn on missing Residual current"
 msgstr ""
 
-#, fuzzy
 msgid "Warn on missing levels"
-msgstr "Level für Provisionierung"
+msgstr "Warnung bei fehlenden Levels"
 
 msgid "Warn on unexpected active interface"
 msgstr "Warnung bei unerwarteter aktiver Schnittstelle"
@@ -79653,7 +79581,7 @@ msgid ""
 "Warn/Crit levels for various Skype for Business (formerly known as Lync) "
 "metrics"
 msgstr ""
-"warn/crit Level für diverse Skype for Business (vormals Lync) Messwerte"
+"WARN/CRIT-Levels für diverse Skype for Business (vormals Lync) Messwerte"
 
 msgid "Warning"
 msgstr "Warnung"
@@ -79762,10 +79690,10 @@ msgid "Warning level is at most"
 msgstr "Warn-Level ist höchstens"
 
 msgid "Warning levels for Stratum"
-msgstr "Warn-Level für das Stratum"
+msgstr "WARN-Levels für das Stratum"
 
 msgid "Warning levels for Time Offset"
-msgstr "Warnungschwellen für die Zeitversatz"
+msgstr "WARN-Levels für den Zeitversatz"
 
 #, python-format
 msgid "Warning of %s"
@@ -80679,7 +80607,7 @@ msgid ""
 "deactivate averaging."
 msgstr ""
 "Wenn diese Option aktiviert ist, wird ein Durchschnitt über die Paketraten "
-"berechnet <b>bevor</b> die Level angewendet werden. Wird diese auf Null "
+"berechnet <b>bevor</b> die Levels angewendet werden. Wird diese auf Null "
 "gesetzt, wird die Durchschnittsbildung deaktiviert."
 
 msgid ""
@@ -81769,9 +81697,8 @@ msgstr "Schreiblatenz 50-100 ms"
 msgid "Write latency 500+ ms"
 msgstr "Schreiblatenz 500+ ms"
 
-#, fuzzy
 msgid "Write levels (per second)"
-msgstr "Schreibeblöcke pro Sekunde"
+msgstr "Schreib-Levels (pro Sekunde)"
 
 msgid "Write long output of hosts to monitoring history"
 msgstr "Mehrzeiligen Ausgabe von Hosts in die Monitoring-Historie schreiben"
@@ -82676,7 +82603,7 @@ msgstr ""
 "auf die Anzahl an Operationen als prozentualer Anteil der gesamten Lese oder "
 "Schreibe I/O Operationen der letzten Latenzzeit (z.B. 0-0.1ms, 0.1-0.2ms, "
 "etc.) angezeigt. Um effektiv Limits für diese Volumen festzulegen, sollten "
-"WARN/CRIT Levels abhängig vom prozentualen Anteil der gesamten Anzahl an "
+"WARN/CRIT-Levels abhängig vom prozentualen Anteil der gesamten Anzahl an "
 "Operationen gesetzt werden. Um eine große Anzahl an Nimble Speichergeräten "
 "und deren verschiedenen Funktionalitäten (all-flash, hybrid, tape, etc.) "
 "unterzubringen ist es möglich einen Startpunkt, ab dem die Werte eingebunden "

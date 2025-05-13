@@ -7657,6 +7657,10 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "平均値"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
 
@@ -10319,6 +10323,14 @@ msgstr "CPGメンバー名"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "電力使用量"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "CPUクレジット"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10336,6 +10348,10 @@ msgid "CPU Time"
 msgstr "CPU時間"
 
 msgid "CPU Utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "CPU使用率"
 
 msgid "CPU Utilization of Clusters"
@@ -23765,6 +23781,10 @@ msgstr "親スキャンの開始に失敗しました: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "ジョブの開始に失敗しました: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Pythonリクエストの解析に失敗しました: '%s':%s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -49635,6 +49655,10 @@ msgstr "プロビジョニングレベル"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "CPU使用率"
+
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VEノード情報"
 
@@ -70797,7 +70821,8 @@ msgstr "連絡先ごとの通知のしきい値"
 msgid "Thresholds for quality of time"
 msgstr "時間のクオリティに対するしきい値"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "メッセージ数のしきい値"
 
 #, fuzzy
@@ -70807,6 +70832,10 @@ msgstr "メッセージ数のしきい値"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "アプリケーション保留中のリクエスト"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "メッセージ数のしきい値"
 
 msgid "Throttle periodic notifications"
 msgstr "スロットル定期通知"

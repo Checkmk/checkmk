@@ -8134,6 +8134,10 @@ msgstr "Disponible hasta"
 msgid "Average"
 msgstr "Media"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Valor medio"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Retraso medio de la cola de salida"
 
@@ -10955,6 +10959,14 @@ msgstr "Nombre del miembro del CPG"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Uso de la energía"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "Créditos CPU"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10972,6 +10984,10 @@ msgid "CPU Time"
 msgstr "Tiempo de la CPU"
 
 msgid "CPU Utilization"
+msgstr "Utilización de la CPU"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "Utilización de la CPU"
 
 msgid "CPU Utilization of Clusters"
@@ -25118,6 +25134,10 @@ msgstr "Fallo al iniciar el escaneo de los padres: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Fallo al iniciar el trabajo: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Fallo al analizar la petición de Python: '%s': %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -52309,6 +52329,10 @@ msgstr "Niveles de aprovisionamiento"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "Utilización de la CPU"
+
 msgid "Proxmox VE Node Info"
 msgstr "Información sobre el nodo Proxmox VE"
 
@@ -74688,7 +74712,8 @@ msgstr "Umbrales de notificaciones por contacto"
 msgid "Thresholds for quality of time"
 msgstr "Umbrales de calidad del tiempo"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Umbrales en el recuento de mensajes"
 
 #, fuzzy
@@ -74698,6 +74723,10 @@ msgstr "Umbrales en el recuento de mensajes"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Solicitudes pendientes"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Umbrales en el recuento de mensajes"
 
 msgid "Throttle periodic notifications"
 msgstr "Acelerar las notificaciones periódicas"

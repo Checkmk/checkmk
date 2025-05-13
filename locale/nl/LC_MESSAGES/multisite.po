@@ -8066,6 +8066,10 @@ msgstr "Beschikbaar tot"
 msgid "Average"
 msgstr "Gemiddeld"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Gemiddelde waarde"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Gemiddelde Uitgaande wachtrijvertraging"
 
@@ -10883,6 +10887,14 @@ msgstr "Naam CPG-lid"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Stroomverbruik"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "CPU credits"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10900,6 +10912,10 @@ msgid "CPU Time"
 msgstr "CPU Tijd"
 
 msgid "CPU Utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "CPU-gebruik"
 
 msgid "CPU Utilization of Clusters"
@@ -24919,6 +24935,10 @@ msgstr "Niet gelukt om ouder scan te starten: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Het starten van de opdracht is mislukt: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Faalde om Python verzoek te parsen: '%s': %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -51893,6 +51913,10 @@ msgstr "Provisioning Niveaus"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "CPU-gebruik"
+
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Knooppunt Info"
 
@@ -74060,7 +74084,8 @@ msgstr "Drempels voor Kennisgevingen per Contact"
 msgid "Thresholds for quality of time"
 msgstr "Drempels voor de kwaliteit van de tijd"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Drempels voor aantal berichten"
 
 #, fuzzy
@@ -74070,6 +74095,10 @@ msgstr "Drempels voor aantal berichten"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Aanvraag in behandeling"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Drempels voor aantal berichten"
 
 msgid "Throttle periodic notifications"
 msgstr "Periodieke meldingen"

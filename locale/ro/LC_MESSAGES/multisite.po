@@ -8066,6 +8066,10 @@ msgstr "Disponibil până la"
 msgid "Average"
 msgstr "Media"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Valoarea medie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Întârziere medie a cozii de așteptare de ieșire"
 
@@ -10909,6 +10913,14 @@ msgstr "Numele membrului CPG"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Utilizarea energiei"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "Credite CPU"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10926,6 +10938,10 @@ msgid "CPU Time"
 msgstr "Timp CPU"
 
 msgid "CPU Utilization"
+msgstr "Utilizare CPU"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "Utilizare CPU"
 
 msgid "CPU Utilization of Clusters"
@@ -24989,6 +25005,10 @@ msgstr "Nu a reușit să pornească scanarea părinților: %s."
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Nu a reușit să pornească lucrarea: %s."
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Nu a reușit să analizeze cererea Python: '%s': %s."
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -51980,6 +52000,10 @@ msgstr "Niveluri de provizionare"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "Utilizare CPU"
+
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Node Info"
 
@@ -74330,7 +74354,8 @@ msgstr "Praguri pentru notificări per contact"
 msgid "Thresholds for quality of time"
 msgstr "Praguri pentru calitatea timpului"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Praguri privind numărul de mesaje"
 
 #, fuzzy
@@ -74340,6 +74365,10 @@ msgstr "Praguri privind numărul de mesaje"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Cereri în așteptare"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Praguri privind numărul de mesaje"
 
 msgid "Throttle periodic notifications"
 msgstr "Notificări periodice ale accelerației"

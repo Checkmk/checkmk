@@ -8111,6 +8111,10 @@ msgstr "Disponible jusqu'à"
 msgid "Average"
 msgstr "Moyenne"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Valeur moyenne"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Retard moyen des files d'attente sortantes"
 
@@ -10935,6 +10939,14 @@ msgstr "Nom du membre du CPG"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Utilisation de l'énergie"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "Crédits de l'unité centrale"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10952,6 +10964,10 @@ msgid "CPU Time"
 msgstr "Temps CPU"
 
 msgid "CPU Utilization"
+msgstr "Utilisation du CPU"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "Utilisation du CPU"
 
 msgid "CPU Utilization of Clusters"
@@ -25109,6 +25125,10 @@ msgstr "Échec du lancement de l'analyse parentale : %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Échec du lancement de la tâche : %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Échec de l'analyse de la requête Python : '%s' : %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -52305,6 +52325,10 @@ msgstr "Niveaux d'approvisionnement"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "Utilisation du CPU"
+
 msgid "Proxmox VE Node Info"
 msgstr "Informations sur le nœud VE de Proxmox"
 
@@ -74729,7 +74753,8 @@ msgstr "Seuils de notification par contact"
 msgid "Thresholds for quality of time"
 msgstr "Seuils pour la qualité du temps"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Seuils sur le nombre de messages"
 
 #, fuzzy
@@ -74739,6 +74764,10 @@ msgstr "Seuils sur le nombre de messages"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Demandes en attente d'application"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Seuils sur le nombre de messages"
 
 msgid "Throttle periodic notifications"
 msgstr "Notifications périodiques de l'accélérateur"

@@ -8076,6 +8076,10 @@ msgstr "Disponível até"
 msgid "Average"
 msgstr "Média"
 
+#, fuzzy
+msgid "Average CPU Value over"
+msgstr "Valor médio"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Atraso Médio na Fila de Saída"
 
@@ -10884,6 +10888,14 @@ msgstr "CPG nome do membro"
 msgid "CPU"
 msgstr "CPU"
 
+#, fuzzy
+msgid "CPU Core Usage"
+msgstr "Uso de energia"
+
+#, fuzzy
+msgid "CPU Cores"
+msgstr "Créditos de CPU"
+
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
@@ -10901,6 +10913,10 @@ msgid "CPU Time"
 msgstr "Tempo de CPU"
 
 msgid "CPU Utilization"
+msgstr "utilização da CPU"
+
+#, fuzzy
+msgid "CPU Utilization levels"
 msgstr "utilização da CPU"
 
 msgid "CPU Utilization of Clusters"
@@ -24913,6 +24929,10 @@ msgstr "Falha em iniciar a varredura dos pais: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Falha em iniciar o trabalho: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Falha no pedido Python parse: '%s': %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -51863,6 +51883,10 @@ msgstr "Níveis de provisionamento"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE CPU Utilization"
+msgstr "utilização da CPU"
+
 msgid "Proxmox VE Node Info"
 msgstr "Informação do nó Proxmox VE"
 
@@ -74017,7 +74041,8 @@ msgstr "Limiares para Notificações por Contato"
 msgid "Thresholds for quality of time"
 msgstr "Limiares para a qualidade do tempo"
 
-msgid "Thresholds on message count"
+#, fuzzy
+msgid "Thresholds on lower message count"
 msgstr "Limiares na contagem de mensagens"
 
 #, fuzzy
@@ -74027,6 +74052,10 @@ msgstr "Limiares na contagem de mensagens"
 #, fuzzy
 msgid "Thresholds on pending DNS requests"
 msgstr "Pedidos pendentes"
+
+#, fuzzy
+msgid "Thresholds on upper message count"
+msgstr "Limiares na contagem de mensagens"
 
 msgid "Throttle periodic notifications"
 msgstr "Acelerar as notificações periódicas"

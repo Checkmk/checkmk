@@ -9,7 +9,7 @@ use crate::platform::Block;
 #[cfg(windows)]
 use crate::platform::odbc;
 
-use crate::types::{ComputerName, InstanceName};
+use crate::types::{ComputerName, Edition, InstanceName};
 
 use super::sqls::find_known_query;
 use super::{client::UniClient, sqls};
@@ -229,19 +229,41 @@ pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<Compu
     Ok(result.map(ComputerName::from))
 }
 
-pub async fn obtain_instance_name(client: &mut UniClient) -> Result<Option<InstanceName>> {
-    let answers = run_custom_query(client, "select @@ServiceName").await?;
-
-    let result = match answers.first() {
+fn get_first_row(answers: &[UniAnswer]) -> Option<String> {
+    match answers.first() {
         Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
         Some(UniAnswer::Block(block)) => block.get_first_row_column(0),
         None => None,
+    }
+}
+
+pub async fn obtain_server_edition(client: &mut UniClient) -> Result<Edition> {
+    let answers =
+        run_custom_query(client, "SELECT CAST(SERVERPROPERTY('Edition') AS NVARCHAR)").await?;
+    let result = get_first_row(&answers);
+    if &result.unwrap_or_default() == "SQL Azure" {
+        log::info!("Azure detected");
+        Ok(Edition::Azure)
+    } else {
+        Ok(Edition::Normal)
+    }
+}
+
+pub async fn obtain_instance_signature(client: &mut UniClient) -> Result<(InstanceName, Edition)> {
+    let edition = obtain_server_edition(client).await?;
+    let answers = match edition {
+        Edition::Azure => run_custom_query(client,
+        "SELECT CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR)"
+        ).await?,
+        Edition::Normal => run_custom_query(client, "select @@ServiceName").await?,
     };
 
-    if result.is_none() {
-        log::warn!("Instance name not found with query");
-    };
-    Ok(result.map(InstanceName::from))
+    let name = get_first_row(&answers).unwrap_or("???".to_string());
+    if &name == "???" {
+        log::error!("Instance name is unknown");
+    }
+
+    Ok((InstanceName::from(name), edition))
 }
 
 pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>> {

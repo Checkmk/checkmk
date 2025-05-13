@@ -18,7 +18,7 @@ use crate::config::{
 };
 use crate::emit;
 use crate::ms_sql::query::{
-    obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
+    obtain_computer_name, obtain_instance_signature, obtain_system_user, run_custom_query,
     run_known_query, Column, UniAnswer,
 };
 use crate::ms_sql::sqls;
@@ -26,7 +26,7 @@ use crate::ms_sql::sqls;
 use crate::platform::odbc;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
+    ComputerName, Edition, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils::{self, prepare_error};
@@ -374,11 +374,10 @@ impl SqlInstance {
         log::trace!("{:?} @ {:?}", self, self.endpoint);
         let body = match self.create_client(&self.endpoint, None).await {
             Ok(mut client) => {
-                let real_name = obtain_instance_name(&mut client)
+                let (real_name, _edition) = obtain_instance_signature(&mut client)
                     .await
                     .ok()
-                    .unwrap_or_default()
-                    .unwrap_or(InstanceName::from("???".to_string()));
+                    .unwrap_or((InstanceName::from("???"), Edition::Normal));
                 log::info!(
                     "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
                     self.full_name(),
@@ -2483,8 +2482,8 @@ async fn _obtain_instance_builders(
     if builders.is_empty() {
         log::warn!("No instances found in registry, this means you have problem with permissions");
         log::warn!("Trying to add current instance");
-        match obtain_instance_name(client).await {
-            Ok(Some(name)) => {
+        match obtain_instance_signature(client).await {
+            Ok((name, _)) => {
                 let mut builder = SqlInstanceBuilder::new()
                     .name(name)
                     .port(Some(endpoint.conn().port()));
@@ -2494,11 +2493,6 @@ async fn _obtain_instance_builders(
                         .edition(&properties.edition);
                 }
                 builders = vec![builder];
-            }
-            Ok(None) => {
-                log::warn!(
-                    "No instance found in registry, this means you have problem with permissions"
-                );
             }
             Err(err) => {
                 log::error!("Can't confirm current instance: {err}");

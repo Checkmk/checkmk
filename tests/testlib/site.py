@@ -1931,6 +1931,24 @@ class SiteFactory:
         """Update the test-site with the given target-package, if supported.
 
         Such update process is performed interactively via Pexpect.
+
+        Args:
+            test_site:          The cmk site to be updated.
+            target_package:     The target cmk package to update to.
+            min_version:        The minimum cmk version supported for the update.
+            conflict_mode:      The conflict mode for the update.
+            logfile_path:       The path to the logfile.
+            timeout:            The timeout for the expected dialog to appear during the update
+                                process.
+            abort:              If True, the abort dialog is expected to appear and the update
+                                process will be aborted.
+            disable_extensions: If True, installed cmk extensions (MKPs) will be disabled if the
+                                corresponding dialog appears during the update process.
+            n_extensions:       The expected number of extensions to be disabled during the update
+                                process.
+
+        Returns:
+            Site:              The updated site object.
         """
         base_package: CMKPackageInfo = test_site.package
         self._package = target_package

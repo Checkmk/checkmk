@@ -263,6 +263,7 @@ def _perform_tests_for_site(
     request_: Request,
     site_id: SiteId,
     categories: Sequence[str] | None,
+    debug: bool,
 ) -> _TestResult:
     # Executes the tests on the site. This method is executed in a dedicated
     # thread (One per site)
@@ -277,7 +278,7 @@ def _perform_tests_for_site(
                 "check-analyze-config",
                 [("categories", json.dumps(categories))],
                 timeout=request_.request_timeout - 10,
-                debug=active_config.debug,
+                debug=debug,
             )
             assert isinstance(raw_ac_test_results, list)
             ac_test_results = [ACTestResult.from_repr(r) for r in raw_ac_test_results]

@@ -349,7 +349,7 @@ def ajax_inv_render_tree() -> None:
     else:
         raw_status_data_tree = inventory.get_raw_status_data_via_livestatus(site_id, host_name)
         try:
-            tree = inventory.load_filtered_and_merged_tree(
+            tree = inventory.load_tree(
                 host_name=host_name,
                 raw_status_data_tree=raw_status_data_tree,
             )

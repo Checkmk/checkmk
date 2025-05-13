@@ -28,8 +28,8 @@ from cmk.gui.inventory._tree import (
     get_history,
     InventoryPath,
     load_delta_tree,
-    load_filtered_and_merged_tree,
     load_latest_delta_tree,
+    load_tree,
     make_filter_choices_from_api_request_paths,
     parse_inventory_path,
     TreeSource,
@@ -321,7 +321,7 @@ def test__make_filter_choices_from_api_request_paths(
         ),
     ],
 )
-def test_load_filtered_and_merged_tree(
+def test_load_tree(
     monkeypatch: MonkeyPatch,
     host_name: HostName | None,
     raw_status_data_tree: bytes,
@@ -340,7 +340,7 @@ def test_load_filtered_and_merged_tree(
         ),
     )
     assert (
-        load_filtered_and_merged_tree(
+        load_tree(
             host_name=host_name,
             raw_status_data_tree=raw_status_data_tree,
         )

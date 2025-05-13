@@ -44,8 +44,8 @@ from ._tree import (
     get_short_inventory_filepath,
     InventoryPath,
     load_delta_tree,
-    load_filtered_and_merged_tree,
     load_latest_delta_tree,
+    load_tree,
     make_filter_choices_from_api_request_paths,
     parse_inventory_path,
     TreeSource,
@@ -60,7 +60,7 @@ __all__ = [
     "get_history",
     "get_short_inventory_filepath",
     "load_delta_tree",
-    "load_filtered_and_merged_tree",
+    "load_tree",
     "load_latest_delta_tree",
     "parse_inventory_path",
     "vs_element_inventory_visible_raw_path",
@@ -175,7 +175,7 @@ def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRa
     site = SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
 
-    tree = load_filtered_and_merged_tree(
+    tree = load_tree(
         host_name=host_name,
         raw_status_data_tree=get_raw_status_data_via_livestatus(site, host_name),
     )

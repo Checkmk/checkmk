@@ -14,7 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory import get_short_inventory_filepath, load_filtered_and_merged_tree
+from cmk.gui.inventory import get_short_inventory_filepath, load_tree
 from cmk.gui.painter.v0 import Cell, JoinCell
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
@@ -78,7 +78,7 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = load_filtered_and_merged_tree(
+            row["host_inventory"] = load_tree(
                 host_name=row["host_name"],
                 raw_status_data_tree=row.get("host_structured_status", b""),
             )

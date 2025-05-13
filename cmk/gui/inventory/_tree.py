@@ -207,9 +207,7 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     return permitted_paths
 
 
-def load_filtered_and_merged_tree(
-    *, host_name: HostName | None, raw_status_data_tree: bytes
-) -> ImmutableTree:
+def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)

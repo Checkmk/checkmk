@@ -21,11 +21,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory import (
-    get_raw_status_data_via_livestatus,
-    load_filtered_and_merged_tree,
-    load_latest_delta_tree,
-)
+from cmk.gui.inventory import get_raw_status_data_via_livestatus, load_latest_delta_tree, load_tree
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import (
     HTTPVariables,
@@ -173,7 +169,7 @@ def _get_inventory_tree(
     tree: ImmutableTree | ImmutableDeltaTree = (
         load_latest_delta_tree(InventoryStore(cmk.utils.paths.omd_root), host_name)
         if is_history
-        else load_filtered_and_merged_tree(
+        else load_tree(
             host_name=host_name,
             raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
         )

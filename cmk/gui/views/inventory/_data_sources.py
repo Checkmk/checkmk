@@ -20,7 +20,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory._tree import get_history, InventoryPath, load_filtered_and_merged_tree
+from cmk.gui.inventory._tree import get_history, InventoryPath, load_tree
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
@@ -118,7 +118,7 @@ class RowTableInventory(ABCRowTable):
         host_name = hostrow.get("host_name")
         try:
             table_rows = (
-                load_filtered_and_merged_tree(
+                load_tree(
                     host_name=host_name,
                     raw_status_data_tree=hostrow.get("host_structured_status", b""),
                 )

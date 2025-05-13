@@ -803,7 +803,7 @@ class MgmtApiClient(BaseApiClient):
 
     def resource_health_view(self):
         path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
-        return self._get(path, params={"api-version": "2022-05-01"})
+        return self._get(path, key="value", params={"api-version": "2022-05-01"})
 
     def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1883,7 +1883,7 @@ def process_resource_health(
 
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
-    for health in resource_health_view.get("value", []):
+    for health in resource_health_view:
         health_id = health.get("id")
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])

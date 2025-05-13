@@ -9,6 +9,7 @@ import type { ValidationMessages } from '@/form/components/utils/validation'
 import FormEditDispatcher from './FormEditDispatcher.vue'
 import { dispatcherKey } from '@/form/private'
 import { provide } from 'vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 defineProps<{
   spec: FormSpec
@@ -18,8 +19,13 @@ defineProps<{
 const data = defineModel<unknown>('data', { required: true })
 
 provide(dispatcherKey, FormEditDispatcher)
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
-  <FormEditDispatcher v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+  <ErrorBoundary>
+    <FormEditDispatcher v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+  </ErrorBoundary>
 </template>

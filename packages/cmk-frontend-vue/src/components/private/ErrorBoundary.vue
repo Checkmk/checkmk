@@ -43,9 +43,9 @@ const props = defineProps<{ error: Ref<Error | null> }>()
       </CmkIndent>
     </CmkCollapsible>
   </CmkAlertBox>
-  <div v-else style="height: 100%">
-    <slot></slot>
-  </div>
+  <template v-else>
+    <slot> </slot>
+  </template>
 </template>
 
 <style scoped>

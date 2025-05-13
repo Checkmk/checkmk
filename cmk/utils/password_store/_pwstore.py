@@ -108,21 +108,29 @@ def ad_hoc_password_id() -> str:
     return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
 
 
-def extract(password_id: PasswordId) -> str | None:
+def extract(password_id: PasswordId) -> str:
     """Translate the password store reference to the actual password"""
     staging_path = pending_password_store_path()
-    if not isinstance(password_id, tuple):
-        return load(staging_path).get(password_id)
-
-    # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
-    pw_type, pw_id = password_id
-    if pw_type == "password":
-        return pw_id
-    if pw_type == "store":
-        # TODO: Is this None really intended? Shouldn't we better raise an exception?
-        return load(staging_path).get(pw_id)
-
-    raise MKGeneralException("Unknown password type.")
+    match password_id:
+        case str():
+            if (pw := load(staging_path).get(password_id)) is None:
+                raise MKGeneralException(
+                    f"Password '{password_id}' not found in '{staging_path}'. "
+                    "Please check the password store."
+                )
+            return pw
+        # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
+        case ("password", pw):
+            return pw
+        case ("store", pw_id):
+            if (pw := load(staging_path).get(pw_id)) is None:
+                raise MKGeneralException(
+                    f"Password '{pw_id}' not found in '{staging_path}'. "
+                    "Please check the password store."
+                )
+            return pw
+        case _:
+            raise MKGeneralException("Unknown password type.")
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

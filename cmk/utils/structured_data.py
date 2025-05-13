@@ -1699,10 +1699,11 @@ class TreeStore:
         raw_tree = tree.serialize()
         store.save_object_to_file(tree_file, raw_tree, pretty=pretty)
 
-        buf = io.BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
-        store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
+        if self._tree_dir.name == "inventory":
+            buf = io.BytesIO()
+            with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+                f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
+            store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update
         self._last_filepath.touch()

@@ -117,6 +117,7 @@ build_python_module(
             module_name = MODULE_PYMSSQL,
             pip_add_opts = get_pip_options(MODULE_PYMSSQL),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = MODULE_PYMSSQL_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
@@ -124,6 +125,7 @@ build_python_module(
             module_name = MODULE_PYMSSQL,
             pip_add_opts = get_pip_options(MODULE_PYMSSQL),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = MODULE_PYMSSQL_SOURCE,
         ),
     }),

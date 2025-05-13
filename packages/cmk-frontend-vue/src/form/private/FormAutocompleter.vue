@@ -31,7 +31,8 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
   }
 
   let result: Array<Suggestion> = newValue.choices.filter(
-    (element: Suggestion) => element.name.length > 0 && element.title.length > 0
+    (element: Suggestion) =>
+      element.name === null || (element.name.length > 0 && element.title.length > 0)
   )
 
   if (props.filter !== undefined) {

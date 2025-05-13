@@ -5,7 +5,7 @@
  */
 
 export interface Suggestion {
-  name: string
+  name: string | null /* name is null for unselectable suggestions */
   title: string
 }
 

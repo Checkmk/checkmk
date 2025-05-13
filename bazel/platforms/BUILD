@@ -10,8 +10,6 @@ constraint_value(
     visibility = ["//visibility:public"],
 )
 
-# Default linker for anyone not setting the linker to `musl`.
-# You shouldn't ever need to set this value manually.
 constraint_value(
     name = "unknown",
     constraint_setting = ":linker",

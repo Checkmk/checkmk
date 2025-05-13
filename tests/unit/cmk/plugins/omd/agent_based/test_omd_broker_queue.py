@@ -100,8 +100,8 @@ def test_discover_broker_queue() -> None:
         (
             "heute piggyback-hub",
             [
-                Result(state=State.OK, summary="Queued messages: 7"),
-                Metric("messages", 7),
+                Result(state=State.OK, summary="Queued application messages: 7"),
+                Metric("omd_application_messages", 7),
                 Result(state=State.OK, summary="Messages in queue 'payload': 3"),
                 Result(state=State.OK, summary="Messages in queue 'config': 4"),
             ],
@@ -113,8 +113,8 @@ def test_discover_broker_queue() -> None:
         (
             "heute_remote_1 piggyback-hub",
             [
-                Result(state=State.OK, summary="Queued messages: 0"),
-                Metric("messages", 0),
+                Result(state=State.OK, summary="Queued application messages: 0"),
+                Metric("omd_application_messages", 0),
                 Result(state=State.OK, summary="Messages in queue 'payload': 0"),
                 Result(state=State.OK, summary="Messages in queue 'config': 0"),
             ],

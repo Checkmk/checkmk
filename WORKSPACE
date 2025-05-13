@@ -118,10 +118,6 @@ load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
 
 httplib_workspace()
 
-load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
-
-jaeger_workspace()
-
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()

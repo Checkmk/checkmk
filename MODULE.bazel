@@ -270,6 +270,15 @@ http_archive(
     ],
 )
 
+http_file(
+    name = "jaeger",
+    sha256 = "7120929235daf1a0a79c7ffb0c2835d119ec83c5f8b3df99c8a57ccdd25b0184",
+    urls = [
+        "https://github.com/jaegertracing/jaeger/releases/download/v1.66.0/jaeger-2.3.0-linux-amd64.tar.gz",
+        UPSTREAM_MIRROR_URL + "jaeger-2.3.0-linux-amd64.tar.gz",
+    ],
+)
+
 http_archive(
     name = "shellcheck",
     build_file_content = """

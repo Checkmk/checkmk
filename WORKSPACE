@@ -45,10 +45,6 @@ load("//omd/packages/msitools:msitools_http.bzl", "msitools_workspace")
 
 msitools_workspace()
 
-load("//omd/packages/snap7:snap7_http.bzl", "snap7_workspace")
-
-snap7_workspace()
-
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()

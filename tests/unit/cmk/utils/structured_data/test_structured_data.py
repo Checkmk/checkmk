@@ -940,6 +940,7 @@ def test_save_inventory_tree(tmp_path: Path, do_archive: bool) -> None:
         meta=make_meta(do_archive=do_archive),
     )
 
+    assert (tmp_path / "var/check_mk/inventory/heute").exists()
     with (tmp_path / "var/check_mk/inventory/heute.gz").open("rb") as f:
         content = f.read()
 
@@ -954,38 +955,17 @@ def test_save_inventory_tree(tmp_path: Path, do_archive: bool) -> None:
     assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
 
 
-@pytest.mark.parametrize(
-    "do_archive",
-    [
-        pytest.param(True, id="do-archive"),
-        pytest.param(False, id="do-not-archive"),
-    ],
-)
-def test_save_status_data_tree(tmp_path: Path, do_archive: bool) -> None:
+def test_save_status_data_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
     tree = MutableTree()
     tree.add(
         path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
     )
     inv_store = InventoryStore(tmp_path)
-    inv_store.save_status_data_tree(
-        host_name=host_name,
-        tree=tree,
-        meta=make_meta(do_archive=do_archive),
-    )
+    inv_store.save_status_data_tree(host_name=host_name, tree=tree)
 
-    with (tmp_path / "tmp/check_mk/status_data/heute.gz").open("rb") as f:
-        content = f.read()
-
-    # Similiar to InventoryUpdater:
-    meta_and_raw_tree = parse_from_gzipped(content)
-    assert meta_and_raw_tree["meta"]["version"] == "1"
-    assert meta_and_raw_tree["meta"]["do_archive"] is do_archive
-
-    expected_raw_tree = serialize_tree(tree)
-    assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
-    assert meta_and_raw_tree["raw_tree"]["Table"] == expected_raw_tree["Table"]
-    assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
+    assert (tmp_path / "tmp/check_mk/status_data/heute").exists()
+    assert not (tmp_path / "tmp/check_mk/status_data/heute.gz").exists()
 
 
 @pytest.mark.parametrize(

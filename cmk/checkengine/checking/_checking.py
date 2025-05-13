@@ -21,7 +21,6 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import (
     InventoryStore,
-    make_meta,
 )
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
@@ -167,11 +166,7 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree:
-        inv_store.save_status_data_tree(
-            host_name=host_name,
-            tree=status_data_tree,
-            meta=make_meta(do_archive=False),
-        )
+        inv_store.save_status_data_tree(host_name=host_name, tree=status_data_tree)
 
 
 class PluginState(NamedTuple):

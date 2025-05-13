@@ -163,7 +163,7 @@ const defaultEmpty5 = ref<string | null>(null)
     required-text="required"
     label="some label"
   />
-  <h2>element namess that are very very long</h2>
+  <h2>element names that are very long</h2>
   <CmkDropdown
     v-model:selected-option="defaultEmpty5"
     :options="{
@@ -173,7 +173,7 @@ const defaultEmpty5 = ref<string | null>(null)
           .fill(0)
           .map((_, i) => ({
             name: i.toString(),
-            title: `some very very very very very very very very very long title number ${i.toString()}`
+            title: `some ${'very '.repeat(i)} long title`
           }))
       ]
     }"

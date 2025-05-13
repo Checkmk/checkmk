@@ -46,7 +46,7 @@ const {
 const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
-const dropdownButtonLabel = ref<string>(inputHint)
+const buttonLabel = ref<string>(inputHint)
 
 immediateWatch(
   () => ({ newOptions: options, newSelectedOption: selectedOption }),
@@ -78,7 +78,7 @@ immediateWatch(
         return newSelectedOption.value
       }
     }
-    dropdownButtonLabel.value = await getDropdownButtonLabel()
+    buttonLabel.value = await getDropdownButtonLabel()
   },
   { deep: 2 }
 )
@@ -127,6 +127,13 @@ function selectOption(option: Suggestion): void {
   selectedOption.value = option.name
   hideSuggestions()
 }
+
+const maxLabelLength = 60
+const truncatedButtonLabel = computed(() =>
+  buttonLabel.value.length > maxLabelLength
+    ? `${buttonLabel.value.slice(0, maxLabelLength / 2 - 5)}...${buttonLabel.value.slice(-maxLabelLength / 2 + 5)}`
+    : buttonLabel.value
+)
 </script>
 
 <template>
@@ -143,6 +150,7 @@ function selectOption(option: Suggestion): void {
       ref="comboboxButtonRef"
       :aria-label="label"
       :aria-expanded="suggestionsShown"
+      :title="buttonLabel.length > maxLabelLength ? buttonLabel : ''"
       :disabled="disabled"
       :multiple-choices-available="multipleChoicesAvailable"
       :value-is-selected="selectedOption !== null"
@@ -152,11 +160,11 @@ function selectOption(option: Suggestion): void {
       @click.prevent="showSuggestions"
     >
       <span class="cmk-dropdown--text"
-        >{{ dropdownButtonLabel
+        >{{ truncatedButtonLabel
         }}<template v-if="requiredText !== '' && selectedOption === null">
           {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
         /></template>
-        <template v-if="!dropdownButtonLabel">&nbsp;</template>
+        <template v-if="!buttonLabel">&nbsp;</template>
       </span>
       <ArrowDown
         class="cmk-dropdown--arrow"

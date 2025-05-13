@@ -33,6 +33,29 @@ test('dropdown shows options', async () => {
   await screen.findByText('Option 1')
 })
 
+test('dropdown truncates center of very long label', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'fixed',
+        suggestions: [
+          {
+            title: 'AaaaaaaaaaaaaaaaaaaaaaaaAbbbbbbbbbbbbCcccccccccccccccccccccccC',
+            name: 'option1'
+          }
+        ]
+      },
+      selectedOption: 'option1',
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+
+  expect(
+    await screen.findByText('AaaaaaaaaaaaaaaaaaaaaaaaA...CcccccccccccccccccccccccC')
+  ).toBeInTheDocument()
+})
+
 test('dropdown updates selecedOption', async () => {
   let selectedOption: string | null = ''
   const props = {

@@ -121,7 +121,7 @@ def backup_lock_dir_fixture(site_for_mkbackup_tests: Site, request: pytest.Fixtu
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        run(["omd", "status"], sudo=True)
+        site_for_mkbackup_tests.omd("status", check=True)
 
     assert mkbackup_lock_dir.exists()
     backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]

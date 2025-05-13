@@ -656,16 +656,24 @@ class Site:
         helper_file = caller_file.parent / name
         return PythonHelper(self, helper_file)
 
-    def omd(self, mode: str, *args: str) -> int:
+    def omd(self, mode: str, *args: str, check: bool = False) -> subprocess.CompletedProcess:
+        """run the "omd" command with the given mode and arguments.
+
+        Args:
+            mode (str): The mode of the "omd" command. e.g. "status", "restart", "start", "stop"
+            args (str): More (optional) arguments to the "omd" command.
+            check (bool, optional): Run cmd as check/strict - raise Exception on rc!=0.
+
+        raises:
+            subprocess.CalledProcessError: If check is True and the return code is not 0.
+                Will also contain the output of the command in the exception message.
+
+        Returns:
+            CompletedProcess: the process object resulted from the "omd" command
+        """
         cmd = ["omd", mode] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = self.run(
-            cmd,
-            capture_output=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
+        completed_process = self.run(cmd, check=check)
         logger.info("Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
             logger.debug("Stdout:")
@@ -687,7 +695,7 @@ class Site:
                 }.get(completed_process.returncode, "unknown meaning"),
             )
 
-        return completed_process.returncode
+        return completed_process
 
     def path(self, rel_path: str | Path) -> Path:
         return self.root / rel_path
@@ -1108,7 +1116,8 @@ class Site:
     def start(self) -> None:
         if not self.is_running():
             logger.info("Starting site")
-            assert self.omd("start") == 0
+            # start the site and ensure it's fully running (including all services)
+            assert self.omd("start", check=True).returncode == 0
             # print("= BEGIN PROCESSES AFTER START ==============================")
             # self.execute(["ps", "aux"]).wait()
             # print("= END PROCESSES AFTER START ==============================")
@@ -1116,7 +1125,7 @@ class Site:
             while not self.is_running():
                 i += 1
                 if i > 10:
-                    self.run(["omd", "status"])
+                    self.omd("status")
                     # print("= BEGIN PROCESSES FAIL ==============================")
                     # self.execute(["ps", "aux"]).wait()
                     # print("= END PROCESSES FAIL ==============================")
@@ -1144,7 +1153,7 @@ class Site:
         logger.debug(check_output(["ps", "-fwwu", str(self.id)]))
         logger.debug("= END PROCESSES BEFORE =======================================")
 
-        stop_exit_code = self.omd("stop")
+        stop_exit_code = self.omd("stop").returncode
         if stop_exit_code != 0:
             logger.error("omd stop exit code: %d", stop_exit_code)
 
@@ -1199,7 +1208,7 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return self.omd("status") == 0
+        return self.omd("status").returncode == 0
 
     def get_omd_service_names_and_statuses(site: Site, service: str = "") -> dict[str, int]:
         """
@@ -1228,7 +1237,7 @@ class Site:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return self.omd("status") == 1
+        return self.omd("status").returncode == 1
 
     @contextmanager
     def omd_stopped(self) -> Iterator[None]:
@@ -1238,17 +1247,17 @@ class Site:
         Fails if the site is partially running to begin with.
         """
         # fail for partially running sites.
-        assert (omd_status := self.omd("status")) in (0, 1)
+        assert (omd_status := self.omd("status").returncode) in (0, 1)
 
         if omd_status == 1:  # stopped anyway
             yield
             return
 
-        assert self.omd("stop") == 0
+        assert self.omd("stop").returncode == 0
         try:
             yield
         finally:
-            assert self.omd("start") == 0
+            assert self.omd("start").returncode == 0
 
     @contextmanager
     def omd_config(self, setting: str, value: str) -> Iterator[None]:
@@ -1262,13 +1271,13 @@ class Site:
             return
 
         with self.omd_stopped():
-            assert self.omd("config", "set", setting, value) == 0
+            assert self.omd("config", "set", setting, value).returncode == 0
 
         try:
             yield
         finally:
             with self.omd_stopped():
-                assert self.omd("config", "set", setting, current_value) == 0
+                assert self.omd("config", "set", setting, current_value).returncode == 0
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -1280,14 +1289,14 @@ class Site:
             self.stop()
 
         logger.info("omd config: Set %s to %r", key, val)
-        assert self.omd("config", "set", key, val) == 0
+        assert self.omd("config", "set", key, val).returncode == 0
 
         if with_restart:
             self.start()
             logger.debug("Started site")
 
     def get_config(self, key: str, default: str = "") -> str:
-        process = self.run(["omd", "config", "show", key])
+        process = self.omd("config", "show", key, check=True)
         logger.debug("omd config: %s is set to %r", key, stdout := process.stdout.strip())
         if stderr := process.stderr:
             logger.error(stderr)

@@ -147,16 +147,16 @@ def assert_message_exchange_not_working(site1: Site, site2: Site) -> None:
 @contextmanager
 def broker_stopped(site: Site) -> Iterator[None]:
     """Disable the broker on the site"""
-    if site.omd("status", "rabbitmq") != 0:
+    if site.omd("status", "rabbitmq").returncode != 0:
         # broker is not running anyway
         yield
         return
 
-    assert site.omd("stop", "rabbitmq") == 0
+    assert site.omd("stop", "rabbitmq").returncode == 0
     try:
         yield
     finally:
-        assert site.omd("start", "rabbitmq") == 0
+        assert site.omd("start", "rabbitmq").returncode == 0
         await_broker_ready(site)
 
 
@@ -167,7 +167,7 @@ def await_broker_ready(*sites: Site) -> None:
 
 
 def _await_port_ready(site: Site) -> None:
-    port = int(site.run(["omd", "config", "show", "RABBITMQ_PORT"]).stdout)
+    port = int(site.omd("config", "show", "RABBITMQ_PORT", check=True).stdout)
     for _ in range(180):
         if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
             return

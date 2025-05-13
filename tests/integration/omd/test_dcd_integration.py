@@ -31,7 +31,7 @@ def test_dcd_version(site: Site) -> None:
 
 @pytest.mark.skip_if_edition("raw")
 def test_dcd_daemon(site: Site) -> None:
-    p = site.run(["omd", "status", "--bare", "dcd"])
+    p = site.omd("status", "--bare", "dcd", check=True)
     assert p.stdout == "dcd 0\nOVERALL 0\n" if p.stdout else False
 
 

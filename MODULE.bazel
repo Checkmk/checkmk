@@ -287,8 +287,6 @@ exports_files([
 
 repo_license(name = "repo_license")
 
-register_toolchains("//bazel/toolchains/cc/gcc/local:linux_x86_64")
-
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 llvm.toolchain(llvm_version = "19.1.7")
 use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
@@ -350,11 +348,14 @@ crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 inject_repo(crate, "openssl")
 
-register_toolchains("@rust_toolchains//:all")
-
 toolchains_musl = use_extension("@toolchains_musl//:toolchains_musl.bzl", "toolchains_musl")
 toolchains_musl.config(
     extra_target_compatible_with = ["//bazel/platforms:musl"],
+)
+
+register_toolchains(
+    "@rust_toolchains//:all",
+    "//bazel/toolchains/cc/gcc/local:linux_x86_64",
 )
 
 types = use_extension("@rules_mypy//mypy:types.bzl", "types")

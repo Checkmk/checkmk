@@ -334,6 +334,16 @@ if inpath timeout; then
     }
 fi
 
+sudo_or_su() {
+    target_user="${1}"
+    shift 1
+    if inpath sudo; then
+        sudo --non-interactive --user="${target_user}" "$@"
+    else
+        su "${target_user}" -c "$*"
+    fi
+}
+
 #
 # CHECK SECTIONS
 #
@@ -928,7 +938,7 @@ section_omd() {
         site_version="$(basename "$(realpath "${sitedir}/version")")"
         site=${sitedir#/omd/sites/}
         for topic in "broker" "mknotifyd" "apache" "diskusage"; do
-            sudo --non-interactive --user="${site}" "/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
+            sudo_or_su "${site}" "/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
         done
     done
 

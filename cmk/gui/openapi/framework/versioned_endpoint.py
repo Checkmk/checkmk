@@ -7,6 +7,8 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework._types import DataclassInstance
 from cmk.gui.openapi.framework.api_config import APIVersion
@@ -145,6 +147,9 @@ class EndpointDoc:
 
     sort_index: int = 0
     """The index used to sort the endpoint within the endpoint family"""
+
+    supported_editions: set[Edition] = field(default_factory=set)
+    """The editions in which this endpoint is available. If empty, the endpoint is available in all"""
 
     exclude_in_targets: set[EndpointTarget] = field(default_factory=set)
     """A set of endpoint documentation targets to exclude this endpoint from."""

@@ -24,6 +24,7 @@ from marshmallow import Schema, ValidationError
 from werkzeug.http import parse_options_header
 
 from cmk.ccc import store
+from cmk.ccc.version import Edition
 
 from cmk.utils.paths import configuration_lockfile
 
@@ -225,6 +226,10 @@ class Endpoint:
             OpenAPI spec. If not set, the endpoint will infer the spec information based on the
             endpoint's module (legacy).
 
+        supported_editions:
+            The list of editions this endpoint is supported for. If not set, the endpoint will be
+            available for all editions. This is used to filter endpoints in the OpenAPI spec.
+
         removed_in_version:
             The starting (inclusive) version from which the endpoint will be no longer available
             in the REST-API. All subsequent REST API versions will also not include this
@@ -262,6 +267,7 @@ class Endpoint:
         accept: AcceptFieldType = "application/json",
         internal_user_only: bool = False,
         family_name: str | None = None,
+        supported_editions: set[Edition] | None = None,
         removed_in_version: APIVersion | None = None,
     ):
         self.path = path
@@ -288,6 +294,7 @@ class Endpoint:
         self.accept = accept if isinstance(accept, list) else [accept]
         self.internal_user_only = internal_user_only
         self.family_name = family_name
+        self.supported_editions = supported_editions
         self.removed_in_version = removed_in_version
 
         if deprecated_urls is not None:

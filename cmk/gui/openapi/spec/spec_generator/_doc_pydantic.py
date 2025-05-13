@@ -116,7 +116,7 @@ def pydantic_endpoint_to_doc_endpoint(
         permissions_description=endpoint.permissions_description,
         status_descriptions=endpoint.status_descriptions or {},
         does_redirects=bool(expected_status_codes & {201, 301, 302, 303}),
-        supported_editions=None,
+        supported_editions=endpoint.doc_supported_editions,
     )
     return DocEndpoint(
         path=endpoint.path,

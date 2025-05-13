@@ -176,7 +176,7 @@ def _marshmallow_endpoint_to_doc_endpoint(
         permissions_description=endpoint.permissions_description,
         status_descriptions=endpoint.status_descriptions,
         does_redirects=endpoint.does_redirects,
-        supported_editions=None,
+        supported_editions=endpoint.supported_editions,
     )
     return DocEndpoint(
         path=endpoint.path,

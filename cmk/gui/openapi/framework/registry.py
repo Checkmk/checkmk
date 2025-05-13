@@ -5,6 +5,8 @@
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
@@ -53,6 +55,7 @@ class VersionedSpecEndpoint:
     family: str
     doc_group: TagGroup
     doc_sort_index: int
+    doc_supported_editions: set[Edition] | None
     deprecated_werk_id: int | None
     handler: Callable
     error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None
@@ -112,6 +115,7 @@ class EndpointDefinition:
             family=self.doc.family,
             doc_group=self.doc_group,
             doc_sort_index=self.doc.sort_index,
+            doc_supported_editions=self.doc.supported_editions,
             deprecated_werk_id=self.doc.sort_index,
             handler=self.handler.handler,
             error_schemas=self.handler.error_schemas,

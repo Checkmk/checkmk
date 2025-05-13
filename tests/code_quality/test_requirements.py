@@ -424,3 +424,15 @@ def test_runtime_requirements_are_a_strict_subset_of_all_requirements() -> None:
     assert runtime.issubset(reqs), (
         f"The following dependencies are incorrectly pinned: {dict(runtime - reqs)}"
     )
+
+
+def test_constraints() -> None:
+    """Make sure all constraints have a ticket to be removed"""
+    offenses = []
+    with (repo_path() / "constraints.txt").open() as constraint_file:
+        req = requirements.parse(constraint_file)
+        for r in req:
+            if re.search(r"\bCMK-\d{5}\b", r.line):
+                continue
+            offenses.append(f"Constraint for {r.name} has no ticket to be removed")
+    assert not offenses, "\n".join(offenses)

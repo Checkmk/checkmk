@@ -507,6 +507,16 @@ export_utility_functions() {
     export -f run_cached
 }
 
+sudo_or_su() {
+    target_user="${1}"
+    shift 1
+    if inpath sudo; then
+        sudo --non-interactive --user="${target_user}" "$@"
+    else
+        su "${target_user}" -c "$*"
+    fi
+}
+
 section_checkmk() {
     echo "<<<check_mk>>>"
     echo "Version: 2.4.0p2"
@@ -1226,7 +1236,7 @@ section_omd() {
             site=${sitedir#/omd/sites/}
             for topic in "broker" "mknotifyd" "apache" "diskusage"; do
                 script="/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
-                [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
+                [ -x "${script}" ] && sudo_or_su "${site}" "${script}"
             done
         done
 
@@ -1297,7 +1307,7 @@ section_omd_core() {
         site_version="$(basename "$(realpath "${sitedir}/version")")"
         site=${sitedir#/omd/sites/}
         script="/omd/versions/${site_version}/bin/cmk-monitor-core"
-        [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
+        [ -x "${script}" ] && sudo_or_su "${site}" "${script}"
     done
 }
 
@@ -1306,7 +1316,7 @@ section_mkbackup() {
         site_version="$(basename "$(realpath "${sitedir}/version")")"
         site=${sitedir#/omd/sites/}
         script="/omd/versions/${site_version}/bin/cmk-monitor-mkbackup"
-        [ -x "${script}" ] && sudo --non-interactive --user="${site}" "${script}"
+        [ -x "${script}" ] && sudo_or_su "${site}" "${script}"
     done
 
     # Collect states of configured CMA backup jobs
@@ -1921,7 +1931,17 @@ run_runas_executor() {
 
     _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
         prefix=""
-        [ "${user}" != "-" ] && [ "$(whoami)" != "${user}" ] && prefix="sudo --non-interactive --user ${user}"
+        find_prefix=""
+        [ "${user}" != "-" ] && [ "$(whoami)" != "${user}" ] && {
+            # Refraining from reusing the sudo_or_su function here because the situation
+            # is a bit more complex, and it's easier to understand like this.
+            if [ "$(whoami)" = "root" ]; then
+                prefix="su ${user} -c"
+            else
+                prefix="sudo --non-interactive --user=${user}"
+                find_prefix="${prefix}"
+            fi
+        }
 
         # mrpe includes
         if [ "${type}" = "mrpe" ]; then
@@ -1934,7 +1954,7 @@ run_runas_executor() {
                     echo "<<<local:sep(0)>>>"
                 fi
 
-                ${prefix} find "${configfile}" -executable -type f |
+                ${find_prefix} find "${configfile}" -executable -type f |
                     while read -r filename; do
                         if [ -n "${prefix}" ]; then
                             # SC2086: We don't want to quote since prefix should not be treated as a

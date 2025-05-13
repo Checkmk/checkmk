@@ -46,7 +46,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \
-		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver|netapp-ontap)' > requirements-dist.txt ; \
+		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver|netapp-ontap|pymssql)' > requirements-dist.txt ; \
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
@@ -79,6 +79,16 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
 		git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		git+https://github.com/TimotheusBachinger/pymssql@2a02c839c59c2b87e2acdfad8bc0187b2b6c4fe9 ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

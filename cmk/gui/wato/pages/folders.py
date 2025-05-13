@@ -1205,7 +1205,13 @@ class ModeFolder(WatoMode):
                 delete_host_options: dict[str, str | dict[str, str]] = (
                     confirmed_form_submit_options(
                         title=_("Delete host"),
-                        confirm_text=_("Remove"),
+                        message=_(
+                            "This change must be activated via <a href='https://docs.checkmk.com"
+                            "/latest/en/wato.html#activate_changes' target='_blank'>Activate cha"
+                            "nges</a> before it becomes effective in monitoring."
+                        ),
+                        confirm_text=_("Yes, delete host"),
+                        cancel_text=_("No, keep host"),
                         suffix=host.name(),
                     )
                 )

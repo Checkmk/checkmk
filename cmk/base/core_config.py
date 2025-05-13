@@ -35,6 +35,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 
 from cmk.base import config
+from cmk.base.cee.bakery.errorhandling import handle_bakery_exception, handle_plugin_exception
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
@@ -345,18 +346,25 @@ def _bake_on_restart(
             config_cache, all_hosts=all_hosts, selected_hosts=None
         )
 
-    agent_bakery.bake_agents(
-        target_configs,
-        plugin_executor=agent_bakery.PluginExecutor(
-            v1_bakery_plugins=load_v1_plugins(),
-            core_bakelets=load_core_plugins(),
-        ),
-        bake_revision_mode=(
-            BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
-        ),
-        logging_level=config.agent_bakery_logging,
-        call_site="config creation",
-    )
+    try:
+        agent_bakery.bake_agents(
+            target_configs,
+            plugin_executor=agent_bakery.PluginExecutor(
+                v1_bakery_plugins=load_v1_plugins(),
+                core_bakelets=load_core_plugins(),
+                exception_handler=handle_plugin_exception,
+            ),
+            bake_revision_mode=(
+                BakeRevisionMode.INACTIVE
+                if config.apply_bake_revision
+                else BakeRevisionMode.DISABLED
+            ),
+            logging_level=config.agent_bakery_logging,
+            call_site="config creation",
+        )
+    except Exception as e:
+        # TODO: check how much of this functionality is actually needed *here*.
+        handle_bakery_exception(e)
 
 
 @contextmanager

@@ -12,6 +12,7 @@ from pytest import MonkeyPatch
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.prism_hosts import (
     check_prism_hosts,
+    CheckParamsPrimsHosts,
     discovery_prism_hosts,
 )
 
@@ -92,19 +93,26 @@ def test_discovery_prism_hosts(
     [
         pytest.param(
             "SRV-AHV-01",
-            {"system_state": "NORMAL"},
+            {
+                "system_state": "NORMAL",
+                "acropolis_connection_state": True,
+            },
             SECTION,
             [
                 Result(state=State.OK, summary="has state NORMAL"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 13:40:02"),
+                Result(state=State.OK, summary="Acropolis state is kConnected"),
             ],
             id="If the host is connected and in the wanted state, the check is OK.",
         ),
         pytest.param(
             "SRV-AHV-01",
-            {"system_state": "OFFLINE"},
+            {
+                "system_state": "OFFLINE",
+                "acropolis_connection_state": True,
+            },
             SECTION,
             [
                 Result(
@@ -114,23 +122,47 @@ def test_discovery_prism_hosts(
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 13:40:02"),
+                Result(state=State.OK, summary="Acropolis state is kConnected"),
             ],
             id="If the host has not the expected state, the check is WARN.",
         ),
         pytest.param(
             "SRV-AHV-02",
-            {"system_state": "ONLINE"},
+            {
+                "system_state": "ONLINE",
+                "acropolis_connection_state": True,
+            },
             SECTION,
             [
+                Result(state=State.WARN, summary="has state NORMAL(!) expected state ONLINE"),
+                Result(state=State.OK, summary="Number of VMs 4"),
+                Result(state=State.OK, summary="Memory 376 GiB"),
+                Result(state=State.OK, summary="Boottime 2022-08-11 14:10:36"),
                 Result(state=State.CRIT, summary="Acropolis state is kDisconnected"),
             ],
             id="If the host not connected to the management, the check is CRIT.",
+        ),
+        pytest.param(
+            "SRV-AHV-02",
+            {
+                "system_state": "ONLINE",
+                "acropolis_connection_state": False,
+            },
+            SECTION,
+            [
+                Result(state=State.WARN, summary="has state NORMAL(!) expected state ONLINE"),
+                Result(state=State.OK, summary="Number of VMs 4"),
+                Result(state=State.OK, summary="Memory 376 GiB"),
+                Result(state=State.OK, summary="Boottime 2022-08-11 14:10:36"),
+                Result(state=State.OK, summary="Acropolis state is kDisconnected"),
+            ],
+            id="Turn off alerting.",
         ),
     ],
 )
 def test_check_prism_hosts(
     item: str,
-    params: Mapping[str, Any],
+    params: CheckParamsPrimsHosts,
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
     monkeypatch: MonkeyPatch,

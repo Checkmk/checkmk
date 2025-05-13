@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
 from cmk.plugins.lib.prism import load_json
 
@@ -33,15 +33,22 @@ def discovery_prism_hosts(section: Section) -> DiscoveryResult:
         yield Service(item=item)
 
 
-def check_prism_hosts(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+class CheckParamsPrimsHosts(TypedDict, total=False):
+    system_state: str
+    acropolis_connection_state: bool
+
+
+DEFAULT: CheckParamsPrimsHosts = {
+    "system_state": "NORMAL",
+    "acropolis_connection_state": True,
+}
+
+
+def check_prism_hosts(item: str, params: CheckParamsPrimsHosts, section: Section) -> CheckResult:
     data = section.get(item)
     if not data:
         return
-    wanted_state = params.get("system_state", "NORMAL")
-    acropolis_state = data.get("acropolis_connection_state", "")
-    if acropolis_state == "kDisconnected":
-        yield Result(state=State.CRIT, summary=f"Acropolis state is {acropolis_state}")
-        return
+    wanted_state = params["system_state"]
     state = 0
     state_text = data["state"]
     num_vms = data["num_vms"]
@@ -56,13 +63,22 @@ def check_prism_hosts(item: str, params: Mapping[str, Any], section: Section) ->
     yield Result(state=State.OK, summary=f"Number of VMs {num_vms}")
     yield Result(state=State.OK, summary=f"Memory {memory}")
     yield Result(state=State.OK, summary=f"Boottime {render.datetime(boottime)}")
+    acropolis_state = data.get("acropolis_connection_state", "")
+    yield Result(
+        state=(
+            State.CRIT
+            if acropolis_state == "kDisconnected" and params["acropolis_connection_state"]
+            else State.OK
+        ),
+        summary=f"Acropolis state is {acropolis_state}",
+    )
 
 
 register.check_plugin(
     name="prism_hosts",
     service_name="NTNX Host %s",
     sections=["prism_hosts"],
-    check_default_parameters={},
+    check_default_parameters=DEFAULT,
     discovery_function=discovery_prism_hosts,
     check_function=check_prism_hosts,
     check_ruleset_name="prism_hosts",

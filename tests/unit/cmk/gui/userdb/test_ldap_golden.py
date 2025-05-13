@@ -9,7 +9,6 @@
 
 import datetime
 from collections.abc import Sequence
-from unittest import mock
 from unittest.mock import ANY, MagicMock
 
 import ldap  # type: ignore[import-untyped]
@@ -92,9 +91,7 @@ def test_init_connector(config: LDAPUserConnectionConfig) -> None:
 def test_connect(mock_ldap: MagicMock) -> None:
     cfg = _test_config
     connector = LDAPUserConnector(cfg)
-
-    with mock.patch("cmk.utils.password_store.extract", return_value=None):
-        connector.connect()
+    connector.connect()
 
     assert connector._ldap_obj == mock_ldap.return_value, "Connector connects to mock"
     assert connector._ldap_obj_config == cfg, "Connector sets config for mock"
@@ -148,8 +145,7 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
 
     cfg = _test_config
     connector = LDAPUserConnector(cfg)
-    with mock.patch("cmk.utils.password_store.extract", return_value=None):
-        connector.connect()
+    connector.connect()
     assert connector._ldap_obj
 
     _mock_needed_attributes(mocker, connector)
@@ -215,33 +211,29 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
 
 def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
-    with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
-        connector.connect()
-        assert connector._ldap_obj
+    connector.connect()
+    assert connector._ldap_obj
 
-        _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
+    result = connector.check_credentials(UserId("carol"), Password("hunter2"))
 
-        result = connector.check_credentials(UserId("carol"), Password("hunter2"))
-
-        connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
-        assert result == UserId("carol_id")
+    connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
+    assert result == UserId("carol_id")
 
 
 def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
-    with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
-        connector.connect()
-        assert connector._ldap_obj
+    connector.connect()
+    assert connector._ldap_obj
 
-        _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
-        _mock_simple_bind_s(mocker, connector)
-        assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
+    _mock_simple_bind_s(mocker, connector)
+    assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
 
 
 def test_check_credentials_not_found(mocker: MockerFixture) -> None:
     connector = LDAPUserConnector(_test_config)
-    with mock.patch("cmk.utils.password_store.extract", return_value=None):
-        connector.connect()
+    connector.connect()
     assert connector._ldap_obj
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
@@ -282,7 +274,6 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
     )
 
     connector = LDAPUserConnector(cfg)
-    with mock.patch("cmk.utils.password_store.extract", return_value=None):
-        connector.connect()
+    connector.connect()
 
     mock_ldap.assert_called_with("ldap://lolcathorst")

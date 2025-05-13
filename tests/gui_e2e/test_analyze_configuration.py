@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import os
 from collections.abc import Iterator
 
 import pytest
@@ -69,8 +70,9 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
         test_site.makedirs(path)
         test_site.write_text_file(f"{path}/fake.py", "print('Fake')")
     yield
-    for path in paths:
-        test_site.delete_file(f"{path}/fake.py")
+    if os.getenv("CLEANUP", "1") == "1":
+        for path in paths:
+            test_site.delete_file(f"{path}/fake.py")
 
 
 def test_analyze_configuration_page(dashboard_page: Dashboard, simulate_deprecations: None) -> None:

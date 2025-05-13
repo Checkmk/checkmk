@@ -39,7 +39,13 @@ class AnalyzeConfiguration(CmkPage):
     def validate_page(self) -> None:
         logger.info(f"Validate that current page is '{self.page_title}' page")
         self.main_area.check_page_title(self.page_title)
-        expect(self.analyse_config_table).to_have_count(4)
+        expect(
+            self.analyse_config_table,
+            message=(
+                "Expected presence of 'Deprecations', 'Performance', 'Reliability' & 'Security' "
+                "tables on the page!"
+            ),
+        ).to_have_count(4)
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:

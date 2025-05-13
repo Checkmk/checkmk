@@ -6,7 +6,7 @@ import dataclasses
 import inspect
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, get_args, get_origin
+from typing import Annotated, cast, get_args, get_origin
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.api_config import APIVersion
@@ -230,25 +230,31 @@ def _type_contains_api_omitted(type_: type) -> bool:
 
 
 def _validate_defaults(
-    operation_id: str, path: str, schema: type, other_defaults_allowed: bool
+    operation_id: str,
+    path: str,
+    schema: type,
+    other_defaults_allowed: bool,
 ) -> None:
     """Validate the model defaults"""
     if not dataclasses.is_dataclass(schema):
         raise ValueError(f"Endpoint {operation_id}: expected a dataclass annotation for `{path}`.")
 
     for field in dataclasses.fields(schema):
-        if not isinstance(field.type, type):
+        if isinstance(field.type, str):
             raise ValueError(
                 f"Endpoint {operation_id} uses a string annotation for `{path}.{field.name}`."
             )
 
-        if dataclasses.is_dataclass(field.type):
+        # without the cast we would have to check for GenericAlias, UnionType, DataclassInstance
+        # and Literal. The dataclass instance check also has no proper return type
+        type_ = cast(type, field.type)
+        if dataclasses.is_dataclass(type_):
             _validate_defaults(
                 operation_id, f"{path}.{field.name}", field.type, other_defaults_allowed
             )
             continue
 
-        if _type_contains_api_omitted(field.type):
+        if _type_contains_api_omitted(type_):
             if field.default is not dataclasses.MISSING:
                 raise ValueError(
                     f"Endpoint {operation_id} uses `default` for `{path}.{field.name}`. Use `default_factory=ApiOmitted` instead."

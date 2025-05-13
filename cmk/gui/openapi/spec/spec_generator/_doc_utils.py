@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from apispec import APISpec
 from apispec.utils import dedent
 from werkzeug.utils import import_string
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
+    EditionLabel,
     OpenAPITag,
     TagGroup,
 )
@@ -37,6 +40,28 @@ class DefaultStatusCodeDescription(enum.Enum):
     Code428 = "The required If-Match header is missing."
     Code200 = "The operation was done successfully."
     Code204 = "Operation done successfully. No further output."
+
+
+def format_endpoint_supported_editions(editions: set[Edition]) -> Sequence[EditionLabel]:
+    colors: Mapping[Edition, str] = {
+        Edition.CEE: "#74ebdd",
+        Edition.CRE: "#afb9c2",
+        Edition.CCE: "#586aa2",
+        Edition.CSE: "#7e96f3",
+        Edition.CME: "#70a8db",
+    }
+    ordered_editions = (Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME, Edition.CSE)
+    edition_labels: list[EditionLabel] = []
+    for edition in ordered_editions:
+        if edition in editions:
+            edition_labels.append(
+                {
+                    "name": edition.short.upper(),
+                    "position": "after",
+                    "color": colors[edition],
+                }
+            )
+    return edition_labels
 
 
 def endpoint_title_and_description_from_docstring(

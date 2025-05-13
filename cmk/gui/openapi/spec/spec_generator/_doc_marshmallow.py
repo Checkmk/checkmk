@@ -50,6 +50,7 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
     build_tag_obj_from_family,
     DefaultStatusCodeDescription,
     endpoint_title_and_description_from_docstring,
+    format_endpoint_supported_editions,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import (
     DocEndpoint,
@@ -175,6 +176,7 @@ def _marshmallow_endpoint_to_doc_endpoint(
         permissions_description=endpoint.permissions_description,
         status_descriptions=endpoint.status_descriptions,
         does_redirects=endpoint.does_redirects,
+        supported_editions=None,
     )
     return DocEndpoint(
         path=endpoint.path,
@@ -239,6 +241,11 @@ def _to_operation_dict(
         ),
         "summary": spec_endpoint.title,
     }
+    if spec_endpoint.supported_editions:
+        operation_spec["x-badges"] = format_endpoint_supported_editions(
+            spec_endpoint.supported_editions
+        )
+
     if werk_id:
         operation_spec["deprecated"] = True
         # ReDoc uses operationIds to build its URLs, so it needs a unique operationId,

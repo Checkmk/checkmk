@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from marshmallow import Schema
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.type_defs import (
@@ -46,6 +48,7 @@ class SpecEndpoint:
     permissions_required: permissions.BasePerm | None
     permissions_description: Mapping[str, str] | None
     does_redirects: bool
+    supported_editions: set[Edition] | None
 
 
 @dataclass

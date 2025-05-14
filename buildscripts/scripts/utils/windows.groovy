@@ -6,8 +6,6 @@ def build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
 
-    print("jenkins_base_folder: ${jenkins_base_folder}");
-
     dir(artifacts_dir) {
         stage("Download  artifacts") {
             if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {

@@ -44,6 +44,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
         || INFO =            |${INFO}|
         ||==========================================================================================
         """.stripMargin());
+
     stage("Download from shared storage (${INFO})") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh("mkdir -p ${DOWNLOAD_DEST}");
@@ -68,6 +69,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
         || EXCLUDE_PATTERN  = |${EXCLUDE_PATTERN}|
         ||==========================================================================================
         """.stripMargin());
+
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
             sh("""

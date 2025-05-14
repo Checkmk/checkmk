@@ -194,10 +194,6 @@ def main() {
         def node_version_dir = "${WORKSPACE}/versions";
         def FINAL_SOURCE_PACKAGE_PATH = "${node_version_dir}/${cmk_version_rc_aware}/${SOURCE_PACKAGE_NAME}";
 
-        print("SOURCE_PACKAGE_NAME ${SOURCE_PACKAGE_NAME}");
-        print("BUILD_SOURCE_PACKAGE_PATH ${BUILD_SOURCE_PACKAGE_PATH}");
-        print("FINAL_SOURCE_PACKAGE_PATH ${FINAL_SOURCE_PACKAGE_PATH}");
-
         stage('Copy source package') {
             copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH);
         }

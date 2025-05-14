@@ -10,7 +10,6 @@ def log_stage_duration(last_stage_date) {
         this_stage_date,
         last_stage_date,
     );
-    println("+ Stage duration: ${duration}");
     return this_stage_date;
 }
 

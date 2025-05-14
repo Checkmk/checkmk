@@ -39,7 +39,6 @@ def main(job_definition_file) {
             ].get(it, it)
         };
     }
-    print("job_params_from_comments: ${job_params_from_comments}");
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {

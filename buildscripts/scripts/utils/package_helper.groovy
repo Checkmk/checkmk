@@ -117,10 +117,6 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
         if ( ! details.get("condition", true) ) {
             return;
         }
-        println("Build ${job_name}");
-        details.collect { key, value ->
-            println("  ${key}: ${value}");
-        }
         upstream_build(
             relative_job_name: details.relative_job_name,
             build_params: [

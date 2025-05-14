@@ -36,6 +36,7 @@ PYTHON3_PATHS=(
     special_agents
     update_config
     utils
+    inventory
 )
 
 echo "Copy check files (checks from the CRE are special: remove vanished files)..."

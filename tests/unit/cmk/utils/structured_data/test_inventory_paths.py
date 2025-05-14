@@ -43,18 +43,23 @@ def test_tree_paths(tmp_path: Path, raw_host_name: str) -> None:
 @pytest.mark.parametrize(
     "raw_host_name", ["hostname", "hostname.", "hostname.domain", "hostname.json"]
 )
-def test_tree_path_from_archive_file_path(tmp_path: Path, raw_host_name: str) -> None:
-    assert TreePath.from_archive_file_path(
-        tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123.json"
+@pytest.mark.parametrize(
+    "directory, file_name", [("inventory_archive", "123"), ("inventory_delta_cache", "123_456")]
+)
+def test_tree_path_from_archive_or_delta_cache_file_path(
+    tmp_path: Path, raw_host_name: str, directory: str, file_name: str
+) -> None:
+    assert TreePath.from_archive_or_delta_cache_file_path(
+        tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json"
     ) == TreePath(
-        path=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
-        legacy=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123",
+        path=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json",
+        legacy=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}",
     )
-    assert TreePath.from_archive_file_path(
-        tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123"
+    assert TreePath.from_archive_or_delta_cache_file_path(
+        tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}"
     ) == TreePath(
-        path=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123.json",
-        legacy=tmp_path / f"var/check_mk/inventory_archive/{raw_host_name}/123",
+        path=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}.json",
+        legacy=tmp_path / f"var/check_mk/{directory}/{raw_host_name}/{file_name}",
     )
 
 

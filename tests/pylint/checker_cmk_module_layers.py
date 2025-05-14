@@ -724,6 +724,7 @@ _COMPONENTS = (
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
     (Component("cmk.diskspace"), _is_allowed_for_diskspace),
     (Component("cmk.rrd"), _is_allowed_for_rrd),
+    (Component("cmk.inventory"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -738,6 +739,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
+    ModulePath("bin/cmk-transform-inventory-trees"): Component("cmk.inventory"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),

@@ -1664,10 +1664,12 @@ class TreePath:
             raise ValueError((self.path, self.legacy))
 
     @classmethod
-    def from_archive_file_path(cls, file_path: Path) -> TreePath:
+    def from_archive_or_delta_cache_file_path(cls, file_path: Path) -> TreePath:
         # 'file_path' is of the form
         # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>.json
         # - <OMD_ROOT>/var/check_mk/inventory_archive/<HOST>/<TS>
+        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>.json
+        # - <OMD_ROOT>/var/check_mk/inventory_delta_cache/<HOST>/<TS>_<TS>
         return (
             cls(path=file_path, legacy=file_path.with_suffix(""))
             if file_path.suffix == ".json"
@@ -1695,6 +1697,13 @@ class TreePath:
             self.path.relative_to(path) if path.suffix == ".json" else self.legacy.relative_to(path)
         )
 
+    def transform(self, mtime: float) -> None:
+        with store.locked(self.path), store.locked(self.legacy):
+            if raw_tree := store.load_object_from_file(self.legacy, default=None):
+                _save_raw_tree(self, raw_tree)
+                os.utime(self.path, (mtime, mtime))
+        self.legacy.unlink(missing_ok=True)
+
 
 # TODO CMK-23408
 @dataclass(frozen=True, kw_only=True)
@@ -1716,6 +1725,13 @@ class TreePathGz:
 
     def unlink(self, missing_ok: bool) -> None:
         self.path.unlink(missing_ok=missing_ok)
+
+    def transform(self, mtime: float) -> None:
+        with store.locked(self.path), store.locked(self.legacy):
+            if gzipped := store.load_bytes_from_file(self.legacy, default=b""):
+                _save_raw_tree_gz(self, parse_from_gzipped(gzipped))
+                os.utime(self.path, (mtime, mtime))
+        self.legacy.unlink(missing_ok=True)
 
 
 class InventoryPaths:
@@ -2032,7 +2048,9 @@ class InventoryStore:
         except (FileNotFoundError, ValueError):
             return ImmutableTree()
 
-        return _load_tree_from_tree_path(TreePath.from_archive_file_path(latest_archive_file_path))
+        return _load_tree_from_tree_path(
+            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path)
+        )
 
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         _archive_inventory_tree(self.inv_paths, host_name)
@@ -2049,7 +2067,7 @@ class InventoryStore:
             try:
                 paths.append(
                     HistoryPath(
-                        tree_path=TreePath.from_archive_file_path(file_path),
+                        tree_path=TreePath.from_archive_or_delta_cache_file_path(file_path),
                         timestamp=int(file_path.with_suffix("").name),
                     )
                 )

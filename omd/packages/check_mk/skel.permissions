@@ -4,6 +4,7 @@ etc/check_mk/conf.d/wato 0770
 etc/check_mk/multisite.d 0770
 etc/check_mk/multisite.d/wato 0770
 etc/cron.d/cmk_inventory 0640
+etc/cron.d/cmk_transform_inventory_trees 0640
 etc/cron.d/cmk_update_license_usage 0640
 etc/cron.d/cmk_cleanup_pdf_tmp_files 0640
 etc/init.d/agent-receiver 0770

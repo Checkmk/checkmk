@@ -27,6 +27,7 @@ sudo install -m 755 \
     cmk-update-license-usage \
     cmk-validate-config \
     cmk-validate-plugins \
+    cmk-transform-inventory-trees \
     init-redis \
     livedump \
     mkbackup \

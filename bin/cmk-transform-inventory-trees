@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import subprocess
+import sys
+from argparse import ArgumentParser, Namespace
+from collections.abc import Sequence
+
+import cmk.utils.paths
+
+from cmk.inventory import transform_inventory_trees
+
+
+def _parse_arguments(argv: Sequence[str]) -> Namespace:
+    parser = ArgumentParser(prog=argv[0])
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Catch Python exceptions",
+    )
+    parser.add_argument(
+        "--show-results",
+        action="store_true",
+        default=False,
+        help="Show results",
+    )
+    parser.add_argument(
+        "--bundle-length",
+        type=int,
+        default=0,
+        help="Specify the bundle length. Only applies if no host names are given.",
+    )
+    parser.add_argument(
+        "--host-name",
+        nargs="*",
+        default=[],
+        help="Transform inventory trees of host names",
+    )
+    return parser.parse_args(args=argv[1:])
+
+
+def _collect_hosts() -> Sequence[str]:
+    try:
+        return list(
+            set(
+                subprocess.check_output(
+                    ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                    encoding="utf-8",
+                ).splitlines()
+            )
+        )
+    except subprocess.CalledProcessError as e:
+        sys.stderr.write(f"Failed to collect all host names: {e}\n")
+        return []
+
+
+def main() -> int:
+    args = _parse_arguments(sys.argv)
+    try:
+        return transform_inventory_trees(
+            omd_root=cmk.utils.paths.omd_root,
+            show_results=args.show_results,
+            bundle_length=args.bundle_length,
+            filter_host_names=args.host_name,
+            all_host_names=_collect_hosts(),
+        )
+    except Exception as e:
+        sys.stderr.write(f"Failed to transform inventory trees: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

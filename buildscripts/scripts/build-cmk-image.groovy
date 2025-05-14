@@ -28,8 +28,6 @@ def main() {
         "NODE_NAME",
     ]);
 
-    shout("load libaries");
-
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
@@ -66,8 +64,6 @@ def main() {
         """
         |Building the CMK docker image
         """.stripMargin());
-
-    shout("build image");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {

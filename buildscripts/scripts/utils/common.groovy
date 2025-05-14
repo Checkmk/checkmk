@@ -36,10 +36,6 @@ on_dry_run_omit = { level, title, fn ->
         """.stripMargin());
 }
 
-shout = { msg ->
-    sh("figlet -w 150 ${msg}");
-}
-
 check_job_parameters = { param_list ->
     print("""
         ||== REQUIRED JOB PARAMETERS ===============================================================

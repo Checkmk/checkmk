@@ -38,8 +38,6 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
-    shout("configure");
-
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=4096:4096";
@@ -122,7 +120,6 @@ def main() {
         return;
     }
 
-    shout("cleanup");
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
@@ -143,15 +140,11 @@ def main() {
     ///       https://review.lan.tribe29.com/c/check_mk/+/34634
     ///       Anyway this whole upload/download mayhem hopfully evaporates with
     ///       bazel..
-    shout("pull packages");
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         distros.each { distro ->
              docker.image("${distro}:${docker_tag}").pull();
         }
     }
-
-
-    shout("agents");
 
     // TODO iterate over all agent variants and put the condition per edition
     //      in the conditional_stage
@@ -189,12 +182,9 @@ def main() {
     }
     parallel agent_builds;
 
-    shout("create_and_upload_bom");
-
     // TODO creates stages - put them on top level
     create_and_upload_bom(WORKSPACE, branch_version, VERSION);
 
-    shout("create_source_package");
     docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
@@ -229,7 +219,6 @@ def main() {
         }
     }
 
-    shout("packages");
     def package_builds = distros.collectEntries { distro ->
         [("distro ${distro}") : {
                 // The following node call allocates a new workspace for each

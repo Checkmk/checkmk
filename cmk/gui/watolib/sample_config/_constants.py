@@ -2,6 +2,7 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 
@@ -21,7 +22,7 @@ _SHIPPED_RULE_OPTIONS = RuleOptionsSpec(
 
 _PS_COMMON_OPTS = {"user": False, "default_params": {"cpu_rescale_max": True}}
 
-PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
+PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
     {
         "id": id_,
         "value": {"descr": f"%u {ps_name}", "match": match, **_PS_COMMON_OPTS},
@@ -110,7 +111,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[object]] = [  # sorted by descr
         (
             "65a3dca4-8d71-45d8-8887-53ef0c63d06f",
             "rabbitmq",
-            "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)",
+            "~(?:.*bin/rabbitmq-server)",
         ),
         (
             "b0d6dc83-fd0e-4382-921b-94415b353eaf",

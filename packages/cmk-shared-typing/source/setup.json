@@ -1,0 +1,53 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "title": "Dialog with Slidein Type Defs",
+    "properties": {
+        "agent_download": {
+            "type": "object",
+            "$ref": "#/$defs/agent_download"
+        }
+    },
+    "$defs": {
+        "agent_download": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                },
+                "i18n": {
+                    "type": "object",
+                    "$ref": "#/$defs/agent_download_i18n"
+                }
+            },
+            "required": ["url", "i18n"]
+        },
+        "agent_download_i18n": {
+            "type": "object",
+            "properties": {
+                "dialog_title": {
+                    "type": "string"
+                },
+                "dialog_message": {
+                    "type": "string"
+                },
+                "slide_in_title": {
+                    "type": "string"
+                },
+                "slide_in_button_title": {
+                    "type": "string"
+                },
+                "docs_button_title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dialog_title",
+                "dialog_message",
+                "slide_in_title",
+                "slide_in_button_title",
+                "docs_button_title"
+            ]
+        }
+    }
+}

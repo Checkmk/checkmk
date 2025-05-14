@@ -97,6 +97,8 @@ from cmk.gui.watolib.services import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
+from cmk.shared_typing.setup import AgentDownload, AgentDownloadI18n
+
 from ._status_links import make_host_status_link
 
 
@@ -198,6 +200,7 @@ class ModeDiscovery(WatoMode):
         self._container("fixall", True)
         self._async_progress_msg_container()
         self._container("service", True)
+
         html.javascript(
             "cmk.service_discovery.start(%s, %s, %s)"
             % (
@@ -625,6 +628,28 @@ class DiscoveryPageRenderer:
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
 
+    def _render_agent_download_tooltip(self) -> None:
+        html.vue_app(
+            app_name="agent_download",
+            data=asdict(
+                AgentDownload(
+                    url=folder_preserving_link(
+                        [("mode", "agent_of_host"), ("host", self._host.name())]
+                    ),
+                    i18n=AgentDownloadI18n(
+                        dialog_title=_("Already installed the agent?"),
+                        dialog_message=_(
+                            "This problem might be caused by a missing agent or "
+                            "the firewall settings."
+                        ),
+                        slide_in_title=_("Agent Download"),
+                        slide_in_button_title=_("Download & install agent"),
+                        docs_button_title=_("Read Checkmk user guide"),
+                    ),
+                ),
+            ),
+        )
+
     def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str | None:
         if not sources:
             return None
@@ -672,8 +697,12 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output.split("\n", 1)[0].replace(" ", ": ", 1),
                         request=request,
-                    )
+                    ),
                 )
+                if "[agent]" in output and state == 2:
+                    html.open_td()
+                    self._render_agent_download_tooltip()
+                    html.close_td()
                 html.close_tr()
             html.close_table()
 

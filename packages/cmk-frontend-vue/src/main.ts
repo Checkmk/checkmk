@@ -9,6 +9,7 @@
 
 import { createApp } from 'vue'
 
+import AgentDownload from './setup/AgentDownloadApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
@@ -66,6 +67,13 @@ function setupVue() {
             core_stats: appData.core_stats,
             rule_sections: appData.rule_sections,
             user_id: appData.user_id
+          })
+          break
+        }
+        case 'agent_download': {
+          app = createApp(AgentDownload, {
+            url: appData.url,
+            i18n: appData.i18n
           })
           break
         }

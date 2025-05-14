@@ -14,6 +14,7 @@ from cmk.utils.http_proxy_config import NoProxyConfig
 
 from cmk.special_agents.agent_azure import (
     _AuthorityURLs,
+    _write_resource_health_section,
     ApiError,
     Args,
     AzureResource,
@@ -26,6 +27,7 @@ from cmk.special_agents.agent_azure import (
     process_resource,
     process_resource_health,
     process_vm,
+    ResourceHealth,
     Section,
     TagsImportPatternOption,
     usage_details,
@@ -832,17 +834,15 @@ def test_usage_details(
         ),
     ],
 )
-def test_process_resource_health(
+def test_write_resource_health_section(
     capsys: pytest.CaptureFixture[str],
     monitored_resources: Sequence[AzureResource],
-    resource_health: object,
+    resource_health: list[ResourceHealth],
     expected_output: str,
 ) -> None:
-    mgmt_client = MockMgmtApiClient([], {}, 0, resource_health=resource_health)
-
     sections = list(
-        process_resource_health(
-            mgmt_client,
+        _write_resource_health_section(
+            resource_health,
             monitored_resources,
             Args(debug=True, services=["Microsoft.Compute/virtualMachines"]),
         )

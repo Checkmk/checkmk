@@ -25,7 +25,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypeVar
+from typing import Any, Literal, NamedTuple, Required, TypedDict, TypeVar
 
 import msal
 import requests
@@ -1883,10 +1883,23 @@ def process_resource_health(
         write_exception_to_agent_info_section(exc, "Management client")
         return
 
+    yield from _write_resource_health_section(resource_health_view, monitored_resources, args)
+
+
+class ResourceHealth(TypedDict, total=False):
+    id: Required[str]
+    properties: Required[Mapping[str, str]]
+
+
+def _write_resource_health_section(
+    resource_health_view: list[ResourceHealth],
+    monitored_resources: Sequence[AzureResource],
+    args: Args,
+) -> Iterator[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
     for health in resource_health_view:
-        health_id = health.get("id")
+        health_id = health["id"]
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])
 

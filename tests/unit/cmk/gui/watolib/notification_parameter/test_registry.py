@@ -63,6 +63,7 @@ def test_register_legacy_notification_parameters(
     )
 
     cls = _registry.notification_parameter_registry["xyz"]
+    assert isinstance(cls, type)
     assert isinstance(cls.spec, Dictionary)
     assert cls.spec.help() == "slosh"
 

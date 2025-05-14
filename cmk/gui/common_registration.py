@@ -35,6 +35,7 @@ from cmk.gui import (
     pagetypes,
     painter_options,
     prediction,
+    rulespec,
     user_message,
     valuespec,
     weblib,
@@ -291,3 +292,4 @@ def register(
     user_config.register(config_file_registry)
     configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)
+    rulespec.register()

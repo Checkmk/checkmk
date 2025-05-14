@@ -48,7 +48,6 @@ from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
@@ -131,6 +130,7 @@ from cmk.gui.valuespec import (
     TimePicker,
     Tuple,
     UUID,
+    ValueSpec,
 )
 from cmk.gui.wato._group_selection import ContactGroupSelection
 from cmk.gui.wato.pages.events import ABCEventsMode
@@ -171,6 +171,7 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.shared_typing.notifications import (
     CoreStats,
     CoreStatsI18n,
@@ -3016,7 +3017,15 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         choices = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name]().spec
+                plugin = notification_parameter_registry[script_name]
+                if isinstance(plugin, NotificationParameters):
+                    from cmk.gui.utils.rule_specs.legacy_converter import (
+                        convert_to_legacy_valuespec,
+                    )
+
+                    vs = convert_to_legacy_valuespec(plugin.parameter_form(), _)
+                else:
+                    vs = plugin().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -3449,18 +3458,24 @@ class ABCNotificationParameterMode(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
-    def _spec(self) -> Dictionary | LegacyValueSpec:
+    def _spec(self) -> ValueSpec:
         try:
-            return notification_parameter_registry[self._method()]().spec
+            plugin = notification_parameter_registry[self._method()]
         except KeyError:
             if any(
                 self._method() == script_name
                 for script_name, _title in notification_script_choices()
             ):
-                return recompose(notification_parameter_registry.parameter_called())
+                return recompose(notification_parameter_registry.parameter_called()).valuespec
             raise MKUserError(
                 None, _("No notification parameters for method '%s' found") % self._method()
             )
+
+        if isinstance(plugin, NotificationParameters):
+            from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
+
+            return convert_to_legacy_valuespec(plugin.parameter_form(), _)
+        return plugin().spec
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -3701,9 +3716,6 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     title=title,
                     indent=False,
                 ):
-                    if isinstance(spec, LegacyValueSpec):
-                        spec = spec.valuespec  # type: ignore[assignment]  # expects ValueSpec[Any]
-
                     assert hasattr(spec, "value_to_html")
                     html.write_text_permissive(
                         spec.value_to_html(parameter["parameter_properties"])

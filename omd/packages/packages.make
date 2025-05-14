@@ -33,9 +33,8 @@ $(DEPS_INSTALL_BAZEL):
 	#       resulting in different builds
 	# IMPORTANT: Keep the executio log file name in sync with what bazel_logs.groovy cleans-up.
 	# TODO: Find a better way to sync the generation and its clean up.
-	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) \
+	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) --cmk_distro=$(shell echo $(DISTRO_NAME)-$(DISTRO_VERSION) | tr A-Z a-z) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    $(if $(filter sles15%,$(DISTRO_CODE)),--define omd-libgsf=true) \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION_SHORT)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)

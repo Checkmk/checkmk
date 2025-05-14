@@ -11,11 +11,6 @@ exports_files([
     "requirements.txt",
 ])
 
-config_setting(
-    name = "omd_libgsf",
-    values = {"define": "omd-libgsf=true"},
-)
-
 pip_compile(
     name = "requirements_lock",
     requirements_in = ":requirements.txt",
@@ -75,13 +70,20 @@ create_venv(
                "//packages/cmk-werks:pkg_tar",
                "//packages/unixcat:unixcat_tar",
                ":license_info",
-           ] + edition_deps[edition] +
-           select(
-               {
-                   ":omd_libgsf": ["//omd/packages/libgsf"],
-                   "//conditions:default": [],
-               },
-           ),
+           ] + select({
+               "//:almalinux_8": [],
+               "//:almalinux_9": [],
+               "//:cma_4": [],
+               "//:debian_11": [],
+               "//:debian_12": [],
+               "//:sles_15sp3": ["//omd/packages/libgsf"],
+               "//:sles_15sp4": ["//omd/packages/libgsf"],
+               "//:sles_15sp5": ["//omd/packages/libgsf"],
+               "//:sles_15sp6": ["//omd/packages/libgsf"],
+               "//:ubuntu_22.04": [],
+               "//:ubuntu_24.04": [],
+           }) +
+           edition_deps[edition],
 ) for edition in [
     "cre",
     "cce",

@@ -10,9 +10,7 @@ $(MSITOOLS_BUILD):
 	# NOTE: this might result in unexpected build behavior, when dependencies of @$(MSITOOLS)//:$(MSITOOLS)
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	bazel build \
-	    $(if $(filter sles15%,$(DISTRO_CODE)),--define omd-libgsf=true) \
-	    @$(MSITOOLS)//:$(MSITOOLS)
+	bazel build --cmk_distro=$(shell echo $(DISTRO_NAME)-$(DISTRO_VERSION) | tr A-Z a-z) @$(MSITOOLS)//:$(MSITOOLS)
 
 .PHONY: $(MSITOOLS_INSTALL)
 $(MSITOOLS_INSTALL): $(MSITOOLS_BUILD)

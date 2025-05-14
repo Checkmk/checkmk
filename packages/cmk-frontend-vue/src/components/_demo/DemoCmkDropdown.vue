@@ -26,7 +26,23 @@ const defaultEmpty4 = ref<string | null>(null)
     :options="{ type: 'fixed', suggestions: [{ name: 'init', title: 'single element' }] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    component-id="some component id"
+    required-text="required"
+    label="some label"
+  />
+  <h2>Labeled dropdown</h2>
+  <label for="labeled-dropdown">some label</label>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty1"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: '1', title: 'one' },
+        { name: '2', title: 'two' }
+      ]
+    }"
+    component-id="labeled-dropdown"
+    input-hint="some input hint"
+    no-results-hint="no results hint"
     required-text="required"
     label="some label"
   />
@@ -42,7 +58,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    component-id="some component id"
     required-text="required"
     label="some label"
   />
@@ -58,7 +73,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    component-id="some component id"
     label="some label"
   />
   <h2>two elements, empty selection, disabled</h2>
@@ -74,7 +88,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    component-id="some component id"
     label="some label"
   />
   <h2>no elements, empty selection</h2>
@@ -83,7 +96,6 @@ const defaultEmpty4 = ref<string | null>(null)
     :options="{ type: 'filtered', suggestions: [] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
-    component-id="some component id"
     required-text="required"
     label="some label"
   />
@@ -101,7 +113,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    component-id="some component id"
     required-text="required"
     label="some label"
   />
@@ -129,7 +140,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    component-id="some component id"
     required-text="required"
     label="some label"
   />
@@ -149,7 +159,6 @@ const defaultEmpty4 = ref<string | null>(null)
     }"
     input-hint="long dropdown"
     no-results-hint="no results hint"
-    component-id="some component id"
     required-text="required"
     label="some label"
   />

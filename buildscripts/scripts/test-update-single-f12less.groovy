@@ -21,6 +21,8 @@ def build_make_target(edition, cross_edition_target="") {
             return prefix + "cce" + suffix;
         case 'saas':
             return prefix + "cse" + suffix;
+        case 'managed':
+            return prefix + "cme" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }

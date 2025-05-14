@@ -44,7 +44,12 @@ def _new_migrated_rules(
     skip_count = 0
     for folder, rule_index, rule_v1 in select(ruleset_v1, search):
         rule_count += 1
-        if _migrated_rule(rule_v1.id, ruleset_v2) is None:
+        if rule_v1.rule_options.disabled:
+            rule_str = _render_rule(folder.title(), rule_index, rule_v1.value["name"])
+            sys.stdout.write(f"{rule_str}\n")
+            sys.stdout.write("Rule is disabled, skipping.\n")
+            skip_count += 1
+        elif _migrated_rule(rule_v1.id, ruleset_v2) is None:
             for_migration = detect_conflicts(config, rule_v1.value)
             rule_str = _render_rule(folder.title(), rule_index, rule_v1.value["name"])
             sys.stdout.write(f"{rule_str}\n")

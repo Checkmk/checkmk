@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
+import ssl
 import uuid
+import warnings
 from http import HTTPStatus
 from pathlib import Path
 from typing import NamedTuple
@@ -67,6 +70,13 @@ def agent_receiver_port_fixture(site: Site) -> int:
 @pytest.fixture(scope="session", name="agent_receiver_url")
 def agent_receiver_url_fixture(site: Site, agent_receiver_port: int) -> str:
     return f"https://{site.http_address}:{agent_receiver_port}/{site.id}/agent-receiver"
+
+
+@pytest.fixture(scope="session", name="site_ca")
+def site_ca_fixture(site: Site, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    path = tmp_path_factory.mktemp("ca") / "site.pem"
+    path.write_bytes(site.read_file("etc/ssl/ca.pem", encoding=None))
+    return path
 
 
 def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
@@ -223,3 +233,55 @@ def test_register_with_hostname_non_existing(
         verify=False,
     )
     assert response.status_code == 400
+
+
+UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3, ssl.TLSVersion.TLSv1, ssl.TLSVersion.TLSv1_1)
+SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
+
+
+@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
+def test_unsupported_tls_versions(
+    site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
+) -> None:
+    """Test that the receiver rejects old TLS versions."""
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.load_verify_locations(site_ca)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        context.maximum_version = tls_version
+
+    with pytest.raises(ssl.SSLError, match=".*no protocols available.*"):
+        with socket.create_connection((site.http_address, agent_receiver_port)) as sock:
+            with context.wrap_socket(sock) as ssock:
+                print(ssock.version())
+
+
+@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
+def test_supported_tls_versions(
+    site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
+) -> None:
+    """Test that the receiver accepts supported TLS versions."""
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.load_verify_locations(site_ca)
+
+    context.maximum_version = tls_version
+
+    with socket.create_connection((site.http_address, agent_receiver_port)) as sock:
+        with context.wrap_socket(sock) as ssock:
+            assert ssock.version() == str(tls_version.name).replace("_", ".")
+
+
+def test_all_TLS_versions_tested(site: Site, agent_receiver_port: int, site_ca: Path) -> None:
+    """Ensure the above tests cover all TLS versions."""
+    all_versions = {
+        version
+        for name, version in ssl.TLSVersion.__members__.items()
+        if name.startswith(("SSL", "TLS"))
+    }
+
+    assert set(UNSUPPORTED_VERSIONS + SUPPORTED_VERSIONS) == all_versions

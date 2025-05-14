@@ -16,10 +16,6 @@ cleanup_directory = { directory ->
     sh("mkdir -p '${directory}'");
 }
 
-shout = { msg ->
-    sh("figlet -w 150 ${msg}");
-}
-
 check_job_parameters = { param_list ->
     print("""
         ||== REQUIRED JOB PARAMETERS ===============================================================

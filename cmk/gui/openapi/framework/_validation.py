@@ -11,18 +11,66 @@ from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, Status
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
-from .endpoint_model import EndpointModel, SignatureParametersProcessor
+from ._types import HeaderParam, QueryParam
+from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
 from .registry import EndpointDefinition, RequestEndpoint
 from .versioned_endpoint import HandlerFunction
 
 
+def validate_parsed_parameters(parsed_params: Mapping[str, ParameterInfo]) -> None:
+    header_names = set()
+    query_names = set()
+    header_aliases = set()
+    query_aliases = set()
+
+    for name, param_info in parsed_params.items():
+        if param_info.annotation is inspect.Parameter.empty:
+            raise ValueError(f"Missing parameter annotation for parameter '{name}'")
+
+        if param_info.kind not in (
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.KEYWORD_ONLY,
+        ):
+            raise ValueError(f"Invalid parameter kind for parameter '{name}'")
+
+        if not param_info.sources:
+            raise ValueError(f"Parameter '{name}' is missing a source annotation")
+
+        if len(param_info.sources) > 1:
+            raise ValueError(f"Multiple sources for parameter '{name}'")
+
+        source = param_info.sources[0]
+
+        if isinstance(source, HeaderParam):
+            # headers are case-insensitive, so we need to normalize the name and alias
+            header_name = name.casefold()
+            if header_name in header_names:
+                raise ValueError(f"Duplicate header parameter (case-insensitive): {header_name}")
+            header_names.add(header_name)
+
+            if source.alias:
+                header_aliases.add(source.alias.casefold())
+
+        elif isinstance(source, QueryParam):
+            query_names.add(name)
+
+            if source.alias:
+                query_aliases.add(source.alias)
+
+    if duplicate := query_names & query_aliases:
+        raise ValueError(f"Alias conflict in query parameters: {', '.join(duplicate)}")
+
+    if duplicate := header_names & header_aliases:
+        raise ValueError(f"Alias conflict in header parameters: {', '.join(duplicate)}")
+
+
 def _validate_endpoint_parameters(handler: HandlerFunction) -> None:
     """Validate the parameters of the endpoint handler function"""
     signature = inspect.signature(handler, eval_str=True)
     annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
-    SignatureParametersProcessor.validate_parameters(annotated_parameters)
+    validate_parsed_parameters(annotated_parameters)
 
     if "body" in signature.parameters:
         body = signature.parameters["body"]

@@ -89,7 +89,7 @@ def test_no_inventory_tree(tmp_path: Path) -> None:
         delta_cache_tree_3_100,
     ]:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.touch()
+        file_path.legacy.touch()
 
     InventoryHousekeeping(tmp_path)()
     assert not inventory_tree.exists()
@@ -122,8 +122,8 @@ def test_no_archive_tree_1(tmp_path: Path) -> None:
         delta_cache_tree_3_100,
     ]:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.touch()
-    os.utime(inventory_tree, (100, 100))
+        file_path.legacy.touch()
+    os.utime(inventory_tree.legacy, (100, 100))
 
     InventoryHousekeeping(tmp_path)()
     assert inventory_tree.exists()
@@ -156,8 +156,8 @@ def test_no_archive_tree_2(tmp_path: Path) -> None:
         delta_cache_tree_3_100,
     ]:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.touch()
-    os.utime(inventory_tree, (100, 100))
+        file_path.legacy.touch()
+    os.utime(inventory_tree.legacy, (100, 100))
 
     InventoryHousekeeping(tmp_path)()
     assert inventory_tree.exists()
@@ -190,8 +190,8 @@ def test_no_archive_tree_3(tmp_path: Path) -> None:
         delta_cache_tree_3_100,
     ]:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.touch()
-    os.utime(inventory_tree, (100, 100))
+        file_path.legacy.touch()
+    os.utime(inventory_tree.legacy, (100, 100))
 
     InventoryHousekeeping(tmp_path)()
     assert inventory_tree.exists()

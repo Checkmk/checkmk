@@ -431,11 +431,11 @@ def test_get_history(tmp_path: Path, request_context: None) -> None:
         ),
         sorted(
             [
-                "0_1",
-                "1_2",
-                "2_3",
-                "3_100",
-                "None_0",
+                "0_1.json",
+                "1_2.json",
+                "2_3.json",
+                "3_100.json",
+                "None_0.json",
             ]
         ),
     ):

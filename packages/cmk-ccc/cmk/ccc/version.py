@@ -680,6 +680,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     _BaseVersion(2, 5, 0): max(
         (
             Version.from_str("2.4.0p2"),  # copy acknowledged werks from version to site
+            Version.from_str("2.4.0p3"),  # inventory tree transformation: repr -> json
         ),
     ),
 }

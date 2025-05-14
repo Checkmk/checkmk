@@ -940,8 +940,12 @@ def test_save_inventory_tree(tmp_path: Path, do_archive: bool) -> None:
         meta=make_meta(do_archive=do_archive),
     )
 
-    assert (tmp_path / "var/check_mk/inventory/heute").exists()
-    with (tmp_path / "var/check_mk/inventory/heute.gz").open("rb") as f:
+    assert (tmp_path / "var/check_mk/inventory/heute.json").exists()
+    assert not (tmp_path / "var/check_mk/inventory/heute").exists()
+    assert (tmp_path / "var/check_mk/inventory/heute.json.gz").exists()
+    assert not (tmp_path / "var/check_mk/inventory/heute.gz").exists()
+
+    with (tmp_path / "var/check_mk/inventory/heute.json.gz").open("rb") as f:
         content = f.read()
 
     # Similiar to InventoryUpdater:
@@ -964,7 +968,9 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
     inv_store = InventoryStore(tmp_path)
     inv_store.save_status_data_tree(host_name=host_name, tree=tree)
 
-    assert (tmp_path / "tmp/check_mk/status_data/heute").exists()
+    assert (tmp_path / "tmp/check_mk/status_data/heute.json").exists()
+    assert not (tmp_path / "tmp/check_mk/status_data/heute").exists()
+    assert not (tmp_path / "tmp/check_mk/status_data/heute.json.gz").exists()
     assert not (tmp_path / "tmp/check_mk/status_data/heute.gz").exists()
 
 

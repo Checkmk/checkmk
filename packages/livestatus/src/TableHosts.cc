@@ -648,31 +648,47 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets,
         [&core](const row_type &row) { return core.isPnpGraphPresent(row); }));
+
+    // TODO CMK-23408
+    const auto add_extension = [](std::filesystem::path p,
+                                  const std::string &ext) {
+        return p.replace_extension(p.extension().string() + ext);
+    };
+    const auto try_json = [&add_extension](const std::filesystem::path &p,
+                                           const std::string &ext) {
+        const auto json = add_extension(p, ".json" + ext);
+        return std::filesystem::exists(json) ? json : add_extension(p, ext);
+    };
+
     table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present",
-        offsets, [&core](const row_type &row) {
-            return mk_inventory_last(core.paths()->inventory_directory() /
-                                     row.name());
+        offsets, [&core, &try_json](const row_type &row) {
+            return mk_inventory_last(
+                try_json(core.paths()->inventory_directory() / row.name(), ""));
         }));
 
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW Inventory", offsets,
-        BlobFileReader<row_type>{[&core](const row_type &row) {
-            return core.paths()->inventory_directory() / row.name();
+        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
+            return try_json(core.paths()->inventory_directory() / row.name(),
+                            "");
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW Inventory", offsets,
-        BlobFileReader<row_type>{[&core](const row_type &row) {
-            return core.paths()->inventory_directory() / (row.name() + ".gz");
+        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
+            return try_json(core.paths()->inventory_directory() / row.name(),
+                            ".gz");
         }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW Inventory",
-        offsets, BlobFileReader<row_type>{[&core](const row_type &row) {
-            return core.paths()->structured_status_directory() / row.name();
+        offsets,
+        BlobFileReader<row_type>{[&core, &try_json](const row_type &row) {
+            return try_json(
+                core.paths()->structured_status_directory() / row.name(), "");
         }}));
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "mk_logwatch_files",

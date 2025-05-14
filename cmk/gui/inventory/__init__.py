@@ -281,10 +281,15 @@ class InventoryHousekeeping:
 
     def _get_timestamps_for_host(self, host_name: HostName) -> set[str]:
         timestamps = {"None"}  # 'None' refers to the histories start
+        tree_path = self.inv_paths.inventory_tree(host_name)
         try:
-            timestamps.add(str(int(self.inv_paths.inventory_tree(host_name).stat().st_mtime)))
-        except OSError:
-            pass
+            timestamps.add(str(int(tree_path.stat().st_mtime)))
+        except FileNotFoundError:
+            # TODO CMK-23408
+            try:
+                timestamps.add(str(int(tree_path.legacy.stat().st_mtime)))
+            except FileNotFoundError:
+                pass
 
         for filename in [
             x for x in self.inv_paths.archive_host(host_name).iterdir() if not x.is_dir()

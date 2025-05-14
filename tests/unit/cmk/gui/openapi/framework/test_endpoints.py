@@ -9,7 +9,7 @@ import pytest
 from tests.unit.cmk.gui.openapi.framework.factories import EndpointDefinitionFactory
 
 from cmk.gui.openapi import versioned_endpoint_registry
-from cmk.gui.openapi.framework.registry import validate_endpoint_definition
+from cmk.gui.openapi.framework import validate_endpoint_definition
 from cmk.gui.openapi.framework.versioned_endpoint import HandlerFunction
 
 

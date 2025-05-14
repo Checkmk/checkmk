@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ATTENTION. Template file from which config builds host check.
+# ATTENTION. Relative imports are strictly _forbidden_.
 
 import sys
 from contextlib import suppress
@@ -21,12 +23,12 @@ from cmk.checkengine.plugin_backend import (
 
 import cmk.base.utils
 from cmk.base import config
-from cmk.base.core_nagios._host_check_config import HostCheckConfig
+from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 
 from cmk.discover_plugins import PluginLocation
 
-# This will be replaced by the config generation, when the template is instanciated.
+# This will be replaced by the config generation, when the template is instantiated.
 CONFIG = HostCheckConfig(
     delay_precompile=False,
     src="",

@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._create_config import create_config, NagiosCore
+from ._host_check_config import HostCheckConfig
 
 __all__ = [
     "create_config",
+    "HostCheckConfig",
     "NagiosCore",
 ]

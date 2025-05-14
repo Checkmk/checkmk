@@ -7311,6 +7311,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Ascendant"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Agent Checkmk"
+
 msgid "Ask for an optional comment"
 msgstr "Cereți un comentariu opțional"
 
@@ -22013,6 +22017,9 @@ msgstr ""
 "sau nu aceste noi permisiuni în funcție de setările implicite ale rolului "
 "încorporat pe care se bazează."
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "Editați"
 
@@ -36277,6 +36284,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Jolokia Server"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "Vârsta locului de muncă"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Regula limită"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Dimensiunea totală"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Limita de timp de interogare"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Utilizarea portului"
 
 msgid "July"
 msgstr "Iulie"
@@ -78928,6 +78955,10 @@ msgstr "Conexiuni neoptimizate"
 msgid "Unpackaged files"
 msgstr "Fișiere neambalate"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Ștergerea mesajelor procesate"
+
 msgid "Unreachable"
 msgstr "De neatins"
 
@@ -79547,6 +79578,10 @@ msgstr "Niveluri superioare pentru dimensiunea fișierului de date"
 
 msgid "Upper levels for dead letter errors"
 msgstr "Niveluri superioare pentru erori de literă moartă"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Niveluri superioare pentru utilizarea discului"
 
 msgid "Upper levels for disk usage"
 msgstr "Niveluri superioare pentru utilizarea discului"

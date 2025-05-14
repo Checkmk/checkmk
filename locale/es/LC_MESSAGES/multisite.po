@@ -7361,6 +7361,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Ascendente"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Agente Checkmk"
+
 msgid "Ask for an optional comment"
 msgstr "Pedir un comentario opcional"
 
@@ -22143,6 +22147,9 @@ msgstr ""
 "basándose en la configuración por defecto del rol incorporado en el que se "
 "basa."
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "Editar"
 
@@ -36448,6 +36455,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Servidor Jolokia"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "Edad del trabajo"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Límite de la regla"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Tamaño total"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Límite de tiempo de la consulta"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Uso de los puertos"
 
 msgid "July"
 msgstr "Julio"
@@ -79374,6 +79401,10 @@ msgstr "Conexiones no optimizadas"
 msgid "Unpackaged files"
 msgstr "Archivos sin empaquetar"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Borrar los mensajes procesados"
+
 msgid "Unreachable"
 msgstr "Inalcanzable"
 
@@ -80003,6 +80034,10 @@ msgstr "Niveles superiores para el tamaño del archivo de datos"
 
 msgid "Upper levels for dead letter errors"
 msgstr "Niveles superiores para errores de letra muerta"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Niveles superiores de uso del disco"
 
 msgid "Upper levels for disk usage"
 msgstr "Niveles superiores de uso del disco"

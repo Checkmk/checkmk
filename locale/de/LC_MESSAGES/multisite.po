@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-13 00:51+0000\n"
+"PO-Revision-Date: 2025-05-14 00:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -231,7 +231,7 @@ msgstr " wartend auf "
 
 #, python-brace-format
 msgid " {iofile.name} {size_text} {io_text}"
-msgstr ""
+msgstr " {iofile.name} {size_text} {io_text}"
 
 #, python-format
 msgid "\"%s\" is not a valid host name"
@@ -5393,6 +5393,8 @@ msgstr "Alert Handler behandeln Zustandsänderungen."
 
 msgid "Alert if failover mode is different from the value configured here."
 msgstr ""
+"Warnung, wenn sich der Failover-Modus von dem hier konfigurierten Wert "
+"unterscheidet."
 
 msgid "Alert if value has increased since discovery"
 msgstr "Alert, wenn der Wert seit der Erkennung gestiegen ist"
@@ -7120,6 +7122,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Aufsteigend"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Checkmk-Agent"
+
 msgid "Ask for an optional comment"
 msgstr "Nach einem optionalen Kommentar fragen"
 
@@ -7656,6 +7662,8 @@ msgid ""
 "Automatic space management in Informix allows storage space to grow. Use "
 "this rule to monitor the growth."
 msgstr ""
+"Die automatische Speicherplatzverwaltung in Informix lässt den Speicherplatz "
+"wachsen. Verwenden Sie diese Regel, um das Wachstum zu überwachen."
 
 msgid "Automatic takeover"
 msgstr "Automatische Übernahme"
@@ -7861,9 +7869,8 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
-#, fuzzy
 msgid "Average CPU Value over"
-msgstr "Durchschnittswert"
+msgstr "Durchschnittlicher CPU-Wert über"
 
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
@@ -10499,6 +10506,7 @@ msgstr "CPU Credits"
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
 msgstr ""
+"CPU-Last - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU-Kerne"
 
 msgid "CPU Load via WMI"
 msgstr "CPU-Last via WMI"
@@ -12876,16 +12884,16 @@ msgid "Cisco SMA DNS requests"
 msgstr "Cisco SMA DNS Anfragen"
 
 msgid "Cisco SMA files and sockets"
-msgstr ""
+msgstr "Cisco SMA Dateien und Anschlüsse"
 
 msgid "Cisco SMA mail transfer memory"
-msgstr ""
+msgstr "Cisco SMA Mail-Transfer-Speicher"
 
 msgid "Cisco SMA mail transfer threads"
-msgstr ""
+msgstr "Cisco SMA Mail Transfer Threads"
 
 msgid "Cisco SMA queue"
-msgstr ""
+msgstr "Cisco SMA Warteschlange"
 
 msgid "Cisco Stack Switch Status"
 msgstr "Cisco Stack-Switch-Zustand"
@@ -13701,6 +13709,10 @@ msgid ""
 "detect and alert on failovers. Note that using this option might require a "
 "service re-discovery. You will be informed if this is the case."
 msgstr ""
+"Vergleichen Sie den aktuellen Failover-Modus mit dem zur Erkennungszeit, um "
+"Failover zu erkennen und zu melden. Beachten Sie, dass die Verwendung dieser "
+"Option möglicherweise eine erneute Service-Erkennung erfordert. Sie werden "
+"darüber informiert, wenn dies der Fall ist."
 
 msgid "Compare the current state of the VM against the discovered state"
 msgstr "Vergleiche den momentanen VM-Zustand mit dem erkannten Zustand"
@@ -15022,6 +15034,8 @@ msgid ""
 "Control whether VM templates should be monitored. Check this box to create "
 "services for VM templates."
 msgstr ""
+"Legen Sie fest, ob VM-Vorlagen überwacht werden sollen. Markieren Sie dieses "
+"Feld, um Services für VM-Vorlagen zu erstellen."
 
 msgid "Controller"
 msgstr "Controller"
@@ -16645,7 +16659,7 @@ msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - gedrosselte Serververbindungen"
 
 msgid "DB CPU"
-msgstr ""
+msgstr "DB CPU"
 
 msgid "DB Connections"
 msgstr "DB-Verbindungen"
@@ -21220,6 +21234,10 @@ msgstr ""
 "neue Berechtigungen hinzukommen, erhält die Benutzerrolle diese neuen "
 "Berechtigungen oder erhält sie nicht, je nach den Standardeinstellungen der "
 "mitgelieferten Rolle, auf der sie beruht."
+
+#, fuzzy
+msgid "Earliest entry in journal"
+msgstr "Erster Eintrag mit Einheit"
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -34848,6 +34866,26 @@ msgstr "Jolokia"
 msgid "Jolokia Server"
 msgstr "Jolokia-Server"
 
+#, fuzzy
+msgid "Journal age"
+msgstr "Auftragsalter"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Regel-Limit"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Gesamtgröße"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Zeitbegrenzung für Abfrage"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Port-Auslastung"
+
 msgid "July"
 msgstr "Juli"
 
@@ -37839,10 +37877,10 @@ msgid "Lower limit of expected interfaces"
 msgstr "Untergrenze der erwarteten Schnittstellen"
 
 msgid "Lower threshold on open files and sockets"
-msgstr ""
+msgstr "Untergrenzen für offene Dateien und Anschlüsse"
 
 msgid "Lower thresholds on mail transfer threads"
-msgstr ""
+msgstr "Untergrenzen für Mail Transfer Threads"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Am niedrigsten: keine Benachrichtigung, Badge-Nummer aktualisieren"
@@ -40136,7 +40174,7 @@ msgid "Misscheduled replicas"
 msgstr "Fehlgeplante Repliken"
 
 msgid "Missing Residual current on the PDUs"
-msgstr ""
+msgstr "Fehlender Fehlerstrom an den Stromverteilern (PDUs)"
 
 #, python-format
 msgid "Missing config file for agent %s%s"
@@ -52303,10 +52341,10 @@ msgid "Residual current levels"
 msgstr "Fehlerstrom-Levels"
 
 msgid "Residual current of the PDU"
-msgstr ""
+msgstr "Fehlerstrom des Stromverteilers (PDU)"
 
 msgid "Residual current parameters for PDUs"
-msgstr ""
+msgstr "Parameter des Fehlerstroms der Stromverteiler (PDUs)"
 
 msgid "Residual current phase name"
 msgstr "Name der Fehlerstromphase"
@@ -53671,7 +53709,7 @@ msgid "SNMP v2 or v3"
 msgstr "SNMP v2 oder v3"
 
 msgid "SNMP walk download timeout"
-msgstr ""
+msgstr "SNMP Walk Download Timeout"
 
 #, python-format
 msgid "SNMP-Retries (<a href=\"%s\">Rules</a>)"
@@ -67829,6 +67867,8 @@ msgid ""
 "This configuration option sets the timeout used when downloading SNMP walks "
 "via the user interface."
 msgstr ""
+"Diese Konfigurationsoption legt den Timeout fest, der beim Herunterladen von "
+"SNMP Walks über die Benutzeroberfläche verwendet wird."
 
 msgid "This connection"
 msgstr "Diese Verbindung"
@@ -75813,6 +75853,10 @@ msgstr "Nicht optimierte Verbindungen"
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Verarbeitete Nachrichten löschen"
+
 msgid "Unreachable"
 msgstr "Nicht erreichbar"
 
@@ -76413,6 +76457,10 @@ msgstr "Obergrenzen für die Datendateigröße"
 msgid "Upper levels for dead letter errors"
 msgstr "Obergrenzen für Dead Letter Errors"
 
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Obergrenzen für die Festplattennutzung"
+
 msgid "Upper levels for disk usage"
 msgstr "Obergrenzen für die Festplattennutzung"
 
@@ -76771,7 +76819,7 @@ msgid "Upper thresholds"
 msgstr "Schwellwert überschritten"
 
 msgid "Upper thresholds on mail transfer threads"
-msgstr ""
+msgstr "Obergrenzen für Mail Transfer Threads"
 
 msgid "Uptime"
 msgstr "Laufzeit"
@@ -79555,7 +79603,7 @@ msgid "Warn if subscription status value is not"
 msgstr "Warnung wenn kein Subskriptionszustand vorhanden"
 
 msgid "Warn on missing Residual current"
-msgstr ""
+msgstr "Warnung bei fehlendem Fehlerstrom"
 
 msgid "Warn on missing levels"
 msgstr "Warnung bei fehlenden Levels"
@@ -81965,6 +82013,8 @@ msgid ""
 "You are not permitted to perform this action. Only an admin is permitted to "
 "delete a bundle which was created by an admin."
 msgstr ""
+"Sie sind nicht berechtigt, diese Aktion durchzuführen. Nur ein Administrator "
+"darf ein Bundle löschen, das von einem Administrator erstellt wurde."
 
 msgid "You are not permitted to view this page"
 msgstr "Sie sind nicht berechtigt, diese Seite zu sehen"

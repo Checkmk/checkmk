@@ -6924,6 +6924,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "上昇"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Checkmkエージェント"
+
 msgid "Ask for an optional comment"
 msgstr "オプションのコメントを求める"
 
@@ -20888,6 +20892,9 @@ msgstr ""
 "ンロールのデフォルト設定に基づいて、それらの新しい権限を取得したりしなかった"
 "りします。"
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "編集"
 
@@ -34577,6 +34584,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Jolokiaサーバー"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "ジョブ経過時間"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "ルール制限"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "全体の大きさ"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "クエリの時間制限"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "ポートの使用状況"
 
 msgid "July"
 msgstr "7月"
@@ -74871,6 +74898,10 @@ msgstr "最適化されていない接続"
 msgid "Unpackaged files"
 msgstr "パッケージ化されていないファイル"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "処理されたメッセージを削除する"
+
 msgid "Unreachable"
 msgstr "到達不能"
 
@@ -75476,6 +75507,10 @@ msgstr "データファイルサイズの上位レベル"
 
 msgid "Upper levels for dead letter errors"
 msgstr "デッドレターエラーの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "ディスク使用量の上位レベル"
 
 msgid "Upper levels for disk usage"
 msgstr "ディスク使用量の上位レベル"

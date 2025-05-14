@@ -7300,6 +7300,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Oplopend"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Checkmk agent"
+
 msgid "Ask for an optional comment"
 msgstr "Vraag om een optionele opmerking"
 
@@ -21976,6 +21980,9 @@ msgstr ""
 "rechten al dan niet krijgen, gebaseerd op de standaardinstellingen van de "
 "ingebouwde rol waarop hij gebaseerd is."
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "Bewerken"
 
@@ -36177,6 +36184,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Jolokia Server"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "Job leeftijd"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Regel limiet"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Totale omvang"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Beperking van de zoektijd"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Poortgebruik"
 
 msgid "July"
 msgstr "Juli"
@@ -78739,6 +78766,10 @@ msgstr "Niet-geoptimaliseerde verbindingen"
 msgid "Unpackaged files"
 msgstr "Uitgepakte bestanden"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Verwerkte berichten verwijderen"
+
 msgid "Unreachable"
 msgstr "Onbereikbaar"
 
@@ -79361,6 +79392,10 @@ msgstr "Bovenste niveaus voor bestandsgrootte"
 
 msgid "Upper levels for dead letter errors"
 msgstr "Bovenste niveaus voor dode letterfouten"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Bovenste niveaus voor schijfgebruik"
 
 msgid "Upper levels for disk usage"
 msgstr "Bovenste niveaus voor schijfgebruik"

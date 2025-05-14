@@ -19,11 +19,7 @@ from tests.unit.cmk.gui.openapi.framework.factories import (
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
-from cmk.gui.openapi.framework.handler import (
-    _dump_response,
-    _strip_annotated,
-    handle_endpoint_request,
-)
+from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.utils import (
@@ -33,22 +29,6 @@ from cmk.gui.openapi.utils import (
     RestAPIWatoDisabledException,
 )
 from cmk.gui.utils.permission_verification import AllPerm, Perm
-
-
-@pytest.mark.parametrize(
-    "annotated, expected",
-    [
-        pytest.param(Annotated[int, "foo"], int, id="simple"),
-        pytest.param(Annotated[Annotated[int, "foo"], "bar"], int, id="nested"),
-        pytest.param(
-            Annotated[dict[str, Annotated[int, "foo"]], "bar"],
-            dict[str, Annotated[int, "foo"]],
-            id="only_outer",
-        ),
-    ],
-)
-def test_strip_annotated(annotated: type, expected: type) -> None:
-    assert _strip_annotated(annotated) == expected
 
 
 @dataclass

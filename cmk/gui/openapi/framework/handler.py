@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import json
-from typing import Annotated, get_args, get_origin
 
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
@@ -15,6 +14,7 @@ from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.framework._types import DataclassInstance, RawRequestData
+from cmk.gui.openapi.framework._utils import get_stripped_origin
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
@@ -45,12 +45,6 @@ type ApiResponseModel[T: DataclassInstance] = T
 """Some dataclass that was returned from the endpoint."""
 
 
-def _strip_annotated(t: type) -> type:
-    while get_origin(t) is Annotated:
-        t = get_args(t)[0]
-    return t
-
-
 def _dump_response[T: DataclassInstance](
     response_body: T | None, response_body_type: type[T] | None
 ) -> dict | None:
@@ -63,7 +57,7 @@ def _dump_response[T: DataclassInstance](
     if response_body_type is None:
         raise ValueError(f"Response body is of type: {type(response_body)}, but should be None")
 
-    if not isinstance(response_body, _strip_annotated(response_body_type)):
+    if not isinstance(response_body, get_stripped_origin(response_body_type)):
         raise ValueError(
             f"Response body is of type: {type(response_body)}, but should be {response_body_type}"
         )
@@ -187,6 +181,7 @@ def handle_endpoint_request(
             _validate_direct_response(raw_response)
             response = raw_response
         else:
+            # TODO: add a debug round trip validation via pydantic?
             response = _create_response(
                 raw_response,
                 model.response_body_type,

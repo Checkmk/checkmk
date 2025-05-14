@@ -178,8 +178,8 @@ def test_check_smart_ata_stat() -> None:
     ) == [
         Result(state=State.OK, summary="Reallocated sectors: 0"),
         Metric("harddrive_reallocated_sectors", 0.0),
-        Result(state=State.OK, summary="Powered on: 48 minutes 21 seconds"),
-        Metric("uptime", 2901.0),
+        Result(state=State.OK, summary="Powered on: 120 days 21 hours"),
+        Metric("uptime", 10443600.0),
         Result(state=State.OK, summary="Spin retries: 0"),
         Metric("harddrive_spin_retries", 0.0),
         Result(state=State.OK, summary="Power cycles: 669"),
@@ -297,8 +297,8 @@ def test_check_smart_ata_configured() -> None:
     assert check_results == [
         Result(state=State.WARN, summary="Reallocated sectors: 0 (warn/crit at 0/1)"),
         Metric("harddrive_reallocated_sectors", 0.0, levels=(0.0, 1.0)),
-        Result(state=State.OK, summary="Powered on: 48 minutes 21 seconds"),
-        Metric("uptime", 2901.0),
+        Result(state=State.OK, summary="Powered on: 120 days 21 hours"),
+        Metric("uptime", 10443600.0),
         Result(state=State.WARN, summary="Spin retries: 0 (warn/crit at 0/1)"),
         Metric("harddrive_spin_retries", 0.0, levels=(0.0, 1.0)),
         Result(state=State.OK, summary="Power cycles: 669"),

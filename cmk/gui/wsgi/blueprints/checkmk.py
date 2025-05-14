@@ -20,7 +20,6 @@ from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.wsgi.applications import CheckmkApp
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
-from cmk.gui.wsgi.middleware import PatchJsonMiddleware
 
 ResponseTypes = flask.Response | werkzeug.Response
 
@@ -84,9 +83,7 @@ def page(site: str, path: str) -> WSGIApplication:
 
 @functools.lru_cache
 def app_instance(debug: bool, testing: bool) -> WSGIApplication:
-    app = CheckmkApp(debug=debug, testing=testing)
-    app.wsgi_app = PatchJsonMiddleware(app.wsgi_app).wsgi_app  # type: ignore[method-assign]
-    return app
+    return CheckmkApp(debug=debug, testing=testing)
 
 
 __all__ = ["checkmk"]

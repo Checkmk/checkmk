@@ -185,7 +185,7 @@ def _render_graph_html(
     return HTMLWriter.render_javascript(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
-            json.dumps(html_code),
+            json.dumps(str(html_code)),
             json.dumps(graph_artwork.model_dump()),
             json.dumps(graph_render_config.model_dump()),
             json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_config)),

@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
+from cmk.gui.utils.json import CustomObjectJSONEncoder
 
 PageHandlerFunc = Callable[[], None]
 PageResult = object
@@ -111,7 +112,7 @@ class AjaxPage(Page, abc.ABC):
             )
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
-        response.set_data(json.dumps(resp))
+        response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
 
 
 class PageRegistry(cmk.ccc.plugin_registry.Registry[type[Page]]):

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
+from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -16,4 +17,4 @@ def test_lazystring() -> None:
 
 def test_lazystring_to_json() -> None:
     s = LazyString(lambda a: "xxx" + a, "yyy")
-    assert json.dumps(s) == '"xxxyyy"'
+    assert json.dumps(s, cls=CustomObjectJSONEncoder) == '"xxxyyy"'

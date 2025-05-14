@@ -114,7 +114,7 @@ def command_confirm_dialog(
             json.dumps(
                 {
                     "title": command_title,
-                    "html": command_html,
+                    "html": str(command_html),
                     "confirmButtonText": str(confirm_button),
                     "cancelButtonText": str(cancel_button),
                     "icon": icon_class,

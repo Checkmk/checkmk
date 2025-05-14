@@ -5,11 +5,9 @@
 from __future__ import annotations
 
 import abc
-import json
 from typing import final
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
-from cmk.gui.utils.json import patch_json
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
@@ -47,14 +45,3 @@ class OverrideRequestMethod(AbstractWSGIMiddleware):
 class AuthenticationMiddleware(AbstractWSGIMiddleware):
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.app(environ, start_response)
-
-
-class PatchJsonMiddleware(AbstractWSGIMiddleware):
-    """A middleware to patch the stdlib `json` module to do 'things'.
-
-    For what it does, have a look at `cmk.gui.utils.json`.
-    """
-
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        with patch_json(json):
-            return self.app(environ, start_response)

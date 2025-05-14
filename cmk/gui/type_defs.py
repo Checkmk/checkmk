@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
 
@@ -120,12 +120,6 @@ class SessionInfo:
 
     logged_out: bool = field(default=False)
     auth_type: AuthType | None = None
-
-    def to_json(self) -> dict:
-        # We assume here that asdict() does the right thing for the
-        # webauthn_action_state field. This can be the case, but it's not very
-        # obvious.
-        return asdict(self)
 
     def invalidate(self) -> None:
         """Called when a user logged out"""

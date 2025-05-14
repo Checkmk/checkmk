@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import json
 import threading
 import typing
 from collections.abc import Iterator
@@ -59,7 +58,6 @@ from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
-from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -199,12 +197,6 @@ def load_plugins() -> None:
 def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
     """Some helper fixture to provide a initialized UI context to tests outside of tests/unit/cmk/gui"""
     yield
-
-
-@pytest.fixture(name="patch_json", autouse=True)
-def fixture_patch_json() -> Iterator[None]:
-    with patch_json(json):
-        yield
 
 
 @pytest.fixture()

@@ -8,42 +8,34 @@ import json
 import pytest
 
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.utils.json import patch_json
-
-
-# Override the GUI unit test global fixture to test the context manager
-@pytest.fixture(scope="function", name="patch_json")
-def fixture_patch_json():
-    yield
+from cmk.gui.utils.json import CustomObjectJSONEncoder
 
 
 def test_json_dumps_prevent_close_tag_attack_via_onclick_attribute() -> None:
-    with patch_json(json):
-        assert str(
-            HTMLWriter.render_a(
-                "abc",
-                href="javascript:void(0);",
-                target="_self",
-                onclick=f"js_func({json.dumps({'1': '</a><script>alert(1)</script>'})})",
-            )
-        ) == (
-            '<a href="javascript:void(0);" target="_self" '
-            r'onclick="js_func({&quot;1&quot;: &quot;&lt;/a&gt;&lt;script&gt;alert(1)&lt;/script&gt;&quot;})">abc</a>'
+    assert str(
+        HTMLWriter.render_a(
+            "abc",
+            href="javascript:void(0);",
+            target="_self",
+            onclick=f"js_func({json.dumps({'1': '</a><script>alert(1)</script>'})})",
         )
+    ) == (
+        '<a href="javascript:void(0);" target="_self" '
+        r'onclick="js_func({&quot;1&quot;: &quot;&lt;/a&gt;&lt;script&gt;alert(1)&lt;/script&gt;&quot;})">abc</a>'
+    )
 
 
 def test_json_dumps_prevent_close_tag_attack_via_script_tag() -> None:
-    with patch_json(json):
-        assert str(
-            HTMLWriter.render_javascript(
-                f"js_func({json.dumps({'1': '</script><script>alert(1)</script>'})})",
-            )
-        ) == (
-            r'<script>js_func({"1": "\u003c/script\u003e\u003cscript\u003ealert(1)\u003c/script\u003e"})</script>'
+    assert str(
+        HTMLWriter.render_javascript(
+            f"js_func({json.dumps({'1': '</script><script>alert(1)</script>'})})",
         )
+    ) == (
+        r'<script>js_func({"1": "\u003c/script\u003e\u003cscript\u003ealert(1)\u003c/script\u003e"})</script>'
+    )
 
 
-def test_patch_json_to_json_method() -> None:
+def test_custom_object_json_encoder() -> None:
     class Ding:
         def __init__(self) -> None:
             self._a = 1
@@ -51,11 +43,20 @@ def test_patch_json_to_json_method() -> None:
         def to_json(self):
             return self.__dict__
 
-    with pytest.raises(TypeError, match="is not JSON serializable"):
-        assert json.dumps(Ding()) == ""
+    assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'
 
-    with patch_json(json):
-        assert json.dumps(Ding()) == '{"_a": 1}'
 
-    with pytest.raises(TypeError, match="is not JSON serializable"):
-        assert json.dumps(Ding()) == ""
+def test_custom_object_json_encoder_no_to_json_method() -> None:
+    class Ding:
+        pass
+
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'
+
+
+def test_custom_object_json_encoder_non_callable() -> None:
+    class Ding:
+        to_json = "x"
+
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'

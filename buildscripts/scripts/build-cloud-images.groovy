@@ -35,8 +35,6 @@ def main() {
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +
             "tested to be OK.");
     }
-    shout("Building cloud images for version: ${cmk_version}");
-
     def ami_image_name = build_cloud_images_names(cmk_version)[0];
     def azure_image_name = build_cloud_images_names(cmk_version)[1];
     def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name)

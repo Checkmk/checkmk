@@ -116,7 +116,6 @@ def main() {
 
     stage(params.CIPARAM_NAME) {
         dir("${checkout_dir}") {
-            sh(script: "figlet -w 150 '${params.CIPARAM_NAME}'", returnStatus: true);
             println("Execute: ${extended_cmd} in ${params.CIPARAM_DIR}");
 
             inside_container(privileged: true, set_docker_group_id: true) {

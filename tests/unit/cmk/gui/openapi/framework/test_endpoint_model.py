@@ -21,6 +21,7 @@ from cmk.gui.openapi.framework.endpoint_model import (
     Parameters,
     SignatureParametersProcessor,
 )
+from cmk.gui.openapi.framework.model.response import TypedResponse
 
 
 @dataclasses.dataclass
@@ -549,3 +550,11 @@ def test_header_parameter_case() -> None:
     request_data = _request_data(headers={"header": "test"})
     bound = model._validate_request_parameters(request_data, None)
     assert bound.arguments["Header"] == "test"
+
+
+def test_typed_response() -> None:
+    def _handler() -> TypedResponse[_TestBody]:
+        raise NotImplementedError
+
+    model = EndpointModel.build(_handler)
+    assert model.response_body_type is _TestBody

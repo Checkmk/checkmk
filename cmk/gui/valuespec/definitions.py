@@ -4814,6 +4814,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         self,
         allow_24_00: bool = False,
         allow_empty: bool = True,
+        placeholder_value: TimeofdayValue = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -4823,6 +4824,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_24_00 = allow_24_00
         self._allow_empty = allow_empty
+        self._placeholder = ("%02d:%02d" % placeholder_value) if placeholder_value else None
 
     def allow_empty(self) -> bool:
         return self._allow_empty
@@ -4834,7 +4836,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
 
     def render_input(self, varprefix: str, value: TimeofdayValue) -> None:
         text = ("%02d:%02d" % value) if value else ""
-        html.text_input(varprefix, text, size=5)
+        html.text_input(varprefix, text, size=5, placeholder=self._placeholder)
 
     def mask(self, value: TimeofdayValue) -> TimeofdayValue:
         return value
@@ -4929,8 +4931,8 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
         self._bounds = (
-            Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
-            Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
+            Timeofday(allow_empty=self._allow_empty, allow_24_00=True, placeholder_value=(0, 0)),
+            Timeofday(allow_empty=self._allow_empty, allow_24_00=True, placeholder_value=(24, 0)),
         )
 
     def allow_empty(self) -> bool:

@@ -524,8 +524,7 @@ class ModeEditTimeperiod(WatoMode):
 
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
-                # initialize with 24x7 config
-                self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
+                self._timeperiod = {}
         else:
             self._timeperiod = self._get_timeperiod(self._name)
 

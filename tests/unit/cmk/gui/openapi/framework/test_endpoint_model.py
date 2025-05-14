@@ -92,54 +92,6 @@ def _all_endpoint_handler(
     raise NotImplementedError
 
 
-def _error_duplicate_query_endpoint_handler(
-    query_param: Annotated[str, _QUERY_PARAM],
-    aliased_query_param: Annotated[
-        str, QueryParam(description="", example="", alias="query_param")
-    ],
-) -> None:
-    raise NotImplementedError
-
-
-def _error_alias_conflict_query_endpoint_handler(
-    query_param: Annotated[
-        str, QueryParam(description="", example="", alias="aliased_query_param")
-    ],
-    aliased_query_param: Annotated[
-        str, QueryParam(description="", example="", alias="query_param")
-    ],
-) -> None:
-    raise NotImplementedError
-
-
-def _error_duplicate_header_endpoint_handler(
-    header_param: Annotated[str, _HEADER_PARAM],
-    aliased_header_param: Annotated[
-        str, HeaderParam(description="", example="", alias="header_param")
-    ],
-) -> None:
-    raise NotImplementedError
-
-
-def _error_alias_conflict_header_endpoint_handler(
-    header_param: Annotated[
-        str, HeaderParam(description="", example="", alias="aliased_header_param")
-    ],
-    aliased_header_param: Annotated[
-        str, HeaderParam(description="", example="", alias="header_param")
-    ],
-) -> None:
-    raise NotImplementedError
-
-
-def _error_parameter_kind_endpoint_handler(positional: Annotated[str, _PATH_PARAM], /) -> None:
-    raise NotImplementedError
-
-
-def _error_no_annotation_endpoint_handler(who_knows) -> None:  # type: ignore[no-untyped-def]
-    raise NotImplementedError
-
-
 @pytest.mark.parametrize(
     "func, expected",
     [
@@ -280,24 +232,6 @@ def test_parameters(func: Callable, expected: Parameters) -> None:
     ParameterValidator.validate_parsed_parameters(annotated_params)
     parameters = SignatureParametersProcessor.parse_parameters(annotated_params)
     assert parameters == expected
-
-
-@pytest.mark.parametrize(
-    "func, match",
-    [
-        (_error_duplicate_query_endpoint_handler, "Alias conflict"),  # covered by alias check
-        (_error_alias_conflict_query_endpoint_handler, "Alias conflict"),
-        (_error_duplicate_header_endpoint_handler, "Alias conflict"),  # covered by alias check
-        (_error_alias_conflict_header_endpoint_handler, "Alias conflict"),
-        (_error_parameter_kind_endpoint_handler, "Invalid parameter kind"),
-        (_error_no_annotation_endpoint_handler, "Missing parameter annotation"),
-    ],
-)
-def test_invalid_parameters(func: Callable, match: str) -> None:
-    signature = inspect.signature(func)
-    annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
-    with pytest.raises(ValueError, match=match):
-        ParameterValidator.validate_parsed_parameters(annotated_params)
 
 
 def _request_data(

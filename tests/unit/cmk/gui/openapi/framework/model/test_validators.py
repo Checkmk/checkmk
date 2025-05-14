@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator
+from typing import get_args
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
+from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validators import (
     HostAddressValidator,
@@ -121,3 +123,11 @@ class TestUserValidator:
     def test_not_present(self, user_is_not_present: str) -> None:
         with pytest.raises(ValueError, match="User .* does not exist"):
             UserValidator.active(user_is_not_present)
+
+
+# TODO: test all validators
+
+
+@pytest.mark.parametrize("group_type", get_args(GroupType))
+class TestGroupValidator:
+    pass

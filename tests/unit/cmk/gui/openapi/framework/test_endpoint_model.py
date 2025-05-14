@@ -14,7 +14,7 @@ from pydantic import AfterValidator, ValidationError
 from werkzeug.datastructures import Headers
 
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam, RawRequestData
-from cmk.gui.openapi.framework._validation import validate_parsed_parameters
+from cmk.gui.openapi.framework._validation import ParameterValidator
 from cmk.gui.openapi.framework.endpoint_model import (
     _QueryParameter,
     EndpointModel,
@@ -277,7 +277,7 @@ def _error_no_annotation_endpoint_handler(who_knows) -> None:  # type: ignore[no
 def test_parameters(func: Callable, expected: Parameters) -> None:
     signature = inspect.signature(func)
     annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
-    validate_parsed_parameters(annotated_params)
+    ParameterValidator.validate_parsed_parameters(annotated_params)
     parameters = SignatureParametersProcessor.parse_parameters(annotated_params)
     assert parameters == expected
 
@@ -297,7 +297,7 @@ def test_invalid_parameters(func: Callable, match: str) -> None:
     signature = inspect.signature(func)
     annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
     with pytest.raises(ValueError, match=match):
-        validate_parsed_parameters(annotated_params)
+        ParameterValidator.validate_parsed_parameters(annotated_params)
 
 
 def _request_data(

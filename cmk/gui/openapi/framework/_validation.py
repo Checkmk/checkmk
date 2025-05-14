@@ -2,9 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import dataclasses
 import inspect
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from typing import Annotated, cast, get_args, get_origin
 
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
@@ -12,6 +13,7 @@ from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
 from ._types import HeaderParam, QueryParam
+from ._utils import get_stripped_origin
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
@@ -19,13 +21,115 @@ from .registry import EndpointDefinition, RequestEndpoint
 from .versioned_endpoint import HandlerFunction
 
 
-def validate_parsed_parameters(parsed_params: Mapping[str, ParameterInfo]) -> None:
-    header_names = set()
-    query_names = set()
-    header_aliases = set()
-    query_aliases = set()
+@contextlib.contextmanager
+def _with_endpoint_context(operation_id: str) -> Iterator[None]:
+    try:
+        yield
+    except ValueError as e:
+        raise ValueError(f"Endpoint {operation_id}: {e}") from None
 
-    for name, param_info in parsed_params.items():
+
+def _type_contains_api_omitted(type_: type) -> bool:
+    """Check if the type contains ApiOmitted"""
+    if type_ is ApiOmitted:
+        return True
+
+    for arg in get_args(type_):
+        if _type_contains_api_omitted(arg):
+            return True
+
+    return False
+
+
+def _validate_defaults_parameter(
+    path: str,
+    field_type: type,
+    field_default: object,
+) -> None:
+    """Validate the default values for parameters.
+
+    If no default is set, `field_default` should be `dataclasses.MISSING`."""
+    if dataclasses.is_dataclass(field_type):
+        _validate_defaults_model(f"{path}", field_type, other_defaults_allowed=True)
+        return
+
+    if _type_contains_api_omitted(field_type):
+        if field_default is dataclasses.MISSING:
+            raise ValueError(f"Missing `ApiOmitted()` default value for `{path}`.")
+        if field_default is not ApiOmitted:
+            raise ValueError(f"Invalid default value for `{path}`. Use `ApiOmitted()` instead.")
+        return
+
+
+def _validate_defaults_model(
+    path: str,
+    schema: type,
+    *,
+    other_defaults_allowed: bool,
+) -> None:
+    """Validate the model defaults"""
+    if not dataclasses.is_dataclass(schema):
+        raise ValueError(f"Expected a dataclass annotation for `{path}`.")
+
+    for field in dataclasses.fields(schema):
+        if isinstance(field.type, str):
+            raise ValueError(f"String annotation for `{path}.{field.name}` is not allowed.")
+
+        # without the cast we would have to check for GenericAlias, UnionType, DataclassInstance
+        # and Literal. The dataclass instance check also has no proper return type
+        type_ = cast(type, field.type)
+        if dataclasses.is_dataclass(type_):
+            _validate_defaults_model(
+                f"{path}.{field.name}", field.type, other_defaults_allowed=other_defaults_allowed
+            )
+            continue
+
+        if _type_contains_api_omitted(type_):
+            if field.default is not dataclasses.MISSING:
+                raise ValueError(
+                    f"Invalid `default` for `{path}.{field.name}`. Use `default_factory=ApiOmitted` instead."
+                )
+            if field.default_factory is dataclasses.MISSING:
+                raise ValueError(f"Missing `default_factory=ApiOmitted` for `{path}.{field.name}`.")
+            if field.default_factory is not ApiOmitted:
+                raise ValueError(
+                    f"Invalid `default_factory` for `{path}.{field.name}`. Use `default=ApiOmitted` instead."
+                )
+            continue
+
+        if other_defaults_allowed:
+            continue
+
+        if field.default is not dataclasses.MISSING:
+            raise ValueError(f"Forbidden `default` for `{path}.{field.name}`.")
+        if field.default_factory is not dataclasses.MISSING:
+            raise ValueError(f"Forbidden `default_factory` for `{path}.{field.name}`.")
+
+
+class ParameterValidator:
+    @dataclasses.dataclass(slots=True)
+    class Data:
+        header_names: set[str] = dataclasses.field(default_factory=set)
+        query_names: set[str] = dataclasses.field(default_factory=set)
+        header_aliases: list[str] = dataclasses.field(default_factory=list)
+        query_aliases: list[str] = dataclasses.field(default_factory=list)
+
+    @staticmethod
+    def validate_parsed_parameters(parsed_params: Mapping[str, ParameterInfo]) -> None:
+        data = ParameterValidator.Data()
+
+        for name, param_info in parsed_params.items():
+            ParameterValidator._validate_kind_and_require_annotation(name, param_info)
+            _validate_defaults_parameter(
+                f"parameter.{name}", param_info.annotation, param_info.default
+            )
+            ParameterValidator._validate_source(data, name, param_info)
+
+        ParameterValidator._validate_aliasing("query", data.query_names, data.query_aliases)
+        ParameterValidator._validate_aliasing("header", data.header_names, data.header_aliases)
+
+    @staticmethod
+    def _validate_kind_and_require_annotation(name: str, param_info: ParameterInfo) -> None:
         if param_info.annotation is inspect.Parameter.empty:
             raise ValueError(f"Missing parameter annotation for parameter '{name}'")
 
@@ -35,6 +139,8 @@ def validate_parsed_parameters(parsed_params: Mapping[str, ParameterInfo]) -> No
         ):
             raise ValueError(f"Invalid parameter kind for parameter '{name}'")
 
+    @staticmethod
+    def _validate_source(data: Data, name: str, param_info: ParameterInfo) -> None:
         if not param_info.sources:
             raise ValueError(f"Parameter '{name}' is missing a source annotation")
 
@@ -44,34 +150,53 @@ def validate_parsed_parameters(parsed_params: Mapping[str, ParameterInfo]) -> No
         source = param_info.sources[0]
 
         if isinstance(source, HeaderParam):
-            # headers are case-insensitive, so we need to normalize the name and alias
-            header_name = name.casefold()
-            if header_name in header_names:
-                raise ValueError(f"Duplicate header parameter (case-insensitive): {header_name}")
-            header_names.add(header_name)
-
-            if source.alias:
-                header_aliases.add(source.alias.casefold())
+            ParameterValidator._validate_header_param(data, name, source)
 
         elif isinstance(source, QueryParam):
-            query_names.add(name)
+            ParameterValidator._validate_query_param(data, name, param_info, source)
 
-            if source.alias:
-                query_aliases.add(source.alias)
+    @staticmethod
+    def _validate_header_param(data: Data, name: str, source: HeaderParam) -> None:
+        # headers are case-insensitive, so we need to normalize the name and alias
+        header_name = name.casefold()
+        if header_name in data.header_names:
+            raise ValueError(f"Duplicate header parameter (case-insensitive): {header_name}")
+        data.header_names.add(header_name)
 
-    if duplicate := query_names & query_aliases:
-        raise ValueError(f"Alias conflict in query parameters: {', '.join(duplicate)}")
+        if source.alias:
+            data.header_aliases.append(source.alias.casefold())
 
-    if duplicate := header_names & header_aliases:
-        raise ValueError(f"Alias conflict in header parameters: {', '.join(duplicate)}")
+    @staticmethod
+    def _validate_query_param(
+        data: Data, name: str, param_info: ParameterInfo, source: QueryParam
+    ) -> None:
+        data.query_names.add(name)
+
+        if source.alias:
+            data.query_aliases.append(source.alias)
+
+        if source.is_list:
+            if not issubclass(get_stripped_origin(param_info.annotation), list):
+                raise ValueError(
+                    f"Query parameter '{name}' is marked as list, but its type is not a list"
+                )
+
+    @staticmethod
+    def _validate_aliasing(source: str, names: set[str], aliases: list[str]) -> None:
+        aliases_set = set(aliases)
+        if len(aliases_set) != len(aliases):
+            duplicates = {name for name in aliases if aliases.count(name) > 1}
+            raise ValueError(f"Duplicate alias in {source} parameters: {', '.join(duplicates)}")
+
+        if duplicate := names & aliases_set:
+            raise ValueError(f"Alias conflict in {source} parameters: {', '.join(duplicate)}")
 
 
 def _validate_endpoint_parameters(handler: HandlerFunction) -> None:
     """Validate the parameters of the endpoint handler function"""
     signature = inspect.signature(handler, eval_str=True)
     annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
-    validate_parsed_parameters(annotated_parameters)
-
+    ParameterValidator.validate_parsed_parameters(annotated_parameters)
     if "body" in signature.parameters:
         body = signature.parameters["body"]
         if body.kind not in (
@@ -91,71 +216,6 @@ def _validate_endpoint_parameters(handler: HandlerFunction) -> None:
             raise ValueError("Request body annotation must be a dataclass")
 
 
-def _type_contains_api_omitted(type_: type) -> bool:
-    """Check if the type contains ApiOmitted"""
-    if type_ is ApiOmitted:
-        return True
-
-    for arg in get_args(type_):
-        if _type_contains_api_omitted(arg):
-            return True
-
-    return False
-
-
-def _validate_defaults(
-    operation_id: str,
-    path: str,
-    schema: type,
-    other_defaults_allowed: bool,
-) -> None:
-    """Validate the model defaults"""
-    if not dataclasses.is_dataclass(schema):
-        raise ValueError(f"Endpoint {operation_id}: expected a dataclass annotation for `{path}`.")
-
-    for field in dataclasses.fields(schema):
-        if isinstance(field.type, str):
-            raise ValueError(
-                f"Endpoint {operation_id} uses a string annotation for `{path}.{field.name}`."
-            )
-
-        # without the cast we would have to check for GenericAlias, UnionType, DataclassInstance
-        # and Literal. The dataclass instance check also has no proper return type
-        type_ = cast(type, field.type)
-        if dataclasses.is_dataclass(type_):
-            _validate_defaults(
-                operation_id, f"{path}.{field.name}", field.type, other_defaults_allowed
-            )
-            continue
-
-        if _type_contains_api_omitted(type_):
-            if field.default is not dataclasses.MISSING:
-                raise ValueError(
-                    f"Endpoint {operation_id} uses `default` for `{path}.{field.name}`. Use `default_factory=ApiOmitted` instead."
-                )
-            if field.default_factory is dataclasses.MISSING:
-                raise ValueError(
-                    f"Endpoint {operation_id} must set `default_factory=ApiOmitted` for `{path}.{field.name}`."
-                )
-            if field.default_factory is not ApiOmitted:
-                raise ValueError(
-                    f"Endpoint {operation_id} uses incorrect `default_factory` for `{path}.{field.name}`. Use `default=ApiOmitted` instead."
-                )
-            continue
-
-        if other_defaults_allowed:
-            continue
-
-        if field.default is not dataclasses.MISSING:
-            raise ValueError(
-                f"Endpoint {operation_id} uses forbidden `default` for `{path}.{field.name}`."
-            )
-        if field.default_factory is not dataclasses.MISSING:
-            raise ValueError(
-                f"Endpoint {operation_id} uses forbidden `default_factory` for `{path}.{field.name}`."
-            )
-
-
 def _validate_endpoint_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
     """Validate the response of the endpoint"""
     if model.response_body_type is None:
@@ -172,9 +232,8 @@ def _validate_endpoint_response_schema(endpoint: RequestEndpoint, model: Endpoin
             f"should not have a response schema."
         )
 
-    _validate_defaults(
-        endpoint.operation_id, "response", model.response_body_type, other_defaults_allowed=False
-    )
+    with _with_endpoint_context(endpoint.operation_id):
+        _validate_defaults_model("response", model.response_body_type, other_defaults_allowed=False)
 
 
 def _validate_endpoint_request_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
@@ -189,9 +248,8 @@ def _validate_endpoint_request_schema(endpoint: RequestEndpoint, model: Endpoint
             f"should not have a request schema according to RFC"
         )
 
-    _validate_defaults(
-        endpoint.operation_id, "body", model.request_body_type, other_defaults_allowed=True
-    )
+    with _with_endpoint_context(endpoint.operation_id):
+        _validate_defaults_model("body", model.request_body_type, other_defaults_allowed=True)
 
 
 def _validate_endpoint_error_schemas(
@@ -241,10 +299,8 @@ def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> Non
     """Validate a versioned endpoint configuration"""
     # TODO: this function should be invoked for custom endpoints
     endpoint = endpoint_definition.request_endpoint()
-    try:
+    with _with_endpoint_context(endpoint.operation_id):
         _validate_endpoint_parameters(endpoint.handler)
-    except ValueError as e:
-        raise ValueError(f"Invalid handler for endpoint {endpoint.operation_id}: {e}") from None
 
     model = EndpointModel.build(endpoint.handler)
     _validate_endpoint_response_schema(endpoint, model)

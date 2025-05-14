@@ -28,7 +28,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import build_opener, HTTPSHandler, install_opener, Request, urlopen
 
-__version__ = "2.4.0p1"
+__version__ = "2.4.0p2"
 
 USER_AGENT = "checkmk-agent-apache_status-" + __version__
 

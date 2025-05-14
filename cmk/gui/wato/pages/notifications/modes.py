@@ -91,6 +91,7 @@ from cmk.gui.utils.notifications import (
     OPTIMIZE_NOTIFICATIONS_ENTRIES,
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -171,6 +172,7 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.shared_typing.notifications import (
     CoreStats,
     CoreStatsI18n,
@@ -3036,7 +3038,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         choices = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name].spec()
+                plugin = notification_parameter_registry[script_name]
+                if isinstance(plugin, NotificationParameters):
+                    vs = convert_to_legacy_valuespec(plugin.parameter_form(), _)
+                else:
+                    vs = plugin.spec()
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -3501,6 +3507,8 @@ class ABCNotificationParameterMode(WatoMode):
                 None, _("No notification parameters for method '%s' found") % self._method()
             )
 
+        if isinstance(plugin, NotificationParameters):
+            return convert_to_legacy_valuespec(plugin.parameter_form(), _)
         return plugin.spec()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

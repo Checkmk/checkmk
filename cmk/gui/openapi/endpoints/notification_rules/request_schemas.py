@@ -10,6 +10,8 @@ from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 from urllib3.util import parse_url
 
+from cmk.ccc.i18n import _
+
 from cmk.utils.notify_types import (
     CaseStateStr,
     EmailBodyElementsType,
@@ -49,11 +51,13 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 
 from cmk import fields
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 
 class Checkbox(BaseSchema):
@@ -2258,7 +2262,11 @@ class CustomPlugin(BaseSchema):
             raise ValidationError(f"{plugin_name} does not exist")
 
         if plugin_name in notification_parameter_registry:
-            vs = notification_parameter_registry[data["plugin_name"]].spec()
+            instance = notification_parameter_registry[data["plugin_name"]]
+            if isinstance(instance, NotificationParameters):
+                vs = convert_to_legacy_valuespec(instance.parameter_form(), _)
+            else:
+                vs = instance.spec()
             try:
                 vs.validate_datatype(dif, "plugin_params")
             except MKUserError as exc:

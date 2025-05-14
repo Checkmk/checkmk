@@ -12,6 +12,7 @@ from cmk.gui.watolib import rulespecs
 from cmk.gui.watolib.notification_parameter import (
     _registry,
     notification_parameter_registry,
+    NotificationParameter,
     register_notification_parameters,
 )
 
@@ -62,8 +63,9 @@ def test_register_legacy_notification_parameters(
         ),
     )
 
-    instance = _registry.notification_parameter_registry["xyz"]
-    assert isinstance(instance.spec(), Dictionary)
-    assert instance.spec().help() == "slosh"
+    cls = _registry.notification_parameter_registry["xyz"]
+    assert isinstance(cls, NotificationParameter)
+    assert isinstance(cls.spec(), Dictionary)
+    assert cls.spec().help() == "slosh"
 
     assert RuleGroup.NotificationParameters("xyz") in rulespecs.rulespec_registry

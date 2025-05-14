@@ -11,6 +11,9 @@ from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.utils.rule_specs.registering import register_plugin
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
+
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 
 def register() -> None:
@@ -37,4 +40,7 @@ def load_plugins() -> None:
 
 def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
     for loaded_rule_spec in loaded_rule_specs:
+        if isinstance(loaded_rule_spec.rule_spec, NotificationParameters):
+            notification_parameter_registry.register(loaded_rule_spec.rule_spec)
+
         register_plugin(loaded_rule_spec)

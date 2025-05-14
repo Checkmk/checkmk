@@ -39,12 +39,16 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, Strin
 from cmk.rulesets.v1.rule_specs import NotificationParameters, Topic
 
 
-class NotificationParameterRegistry(Registry[NotificationParameter]):
-    def plugin_name(self, instance: NotificationParameter) -> str:
-        return instance.ident
+class NotificationParameterRegistry(Registry[NotificationParameter | NotificationParameters]):
+    def plugin_name(self, instance: NotificationParameter | NotificationParameters) -> str:
+        return instance.ident if isinstance(instance, NotificationParameter) else instance.name
 
-    def registration_hook(self, instance: NotificationParameter) -> None:
+    def registration_hook(self, instance: NotificationParameter | NotificationParameters) -> None:
         plugin = instance
+        if isinstance(plugin, NotificationParameters):
+            # Ruleset API v1
+            # _rulespecs registration occurs in cmk.gui.rulespec.register_plugins
+            return
 
         if plugin.form_spec is None:
             # old ValueSpec
@@ -98,6 +102,8 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
             if any(method == script_name for script_name, _title in notification_script_choices()):
                 return self.parameter_called()
             raise MKUserError(None, _("No notification parameters for method '%s' found") % method)
+        if isinstance(instance, NotificationParameters):
+            return instance.parameter_form()
         if instance.form_spec:
             return instance.form_spec()
         try:

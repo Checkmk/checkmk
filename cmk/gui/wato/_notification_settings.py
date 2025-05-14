@@ -7,6 +7,7 @@
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -21,8 +22,12 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupNotifications
-from cmk.gui.watolib.notification_parameter import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import (
+    notification_parameter_registry,
+)
 from cmk.gui.watolib.utils import site_neutral_path
+
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 
 def register(config_variable_registry: ConfigVariableRegistry) -> None:
@@ -57,7 +62,10 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
 
 def _get_valuespec(plugin_name: str) -> ValueSpec:
     plugin = notification_parameter_registry[plugin_name]
-    return plugin.spec()
+    if isinstance(plugin, NotificationParameters):
+        return convert_to_legacy_valuespec(plugin.parameter_form(), _)
+    else:
+        return plugin.spec()
 
 
 ConfigVariableNotificationFallbackFormat = ConfigVariable(

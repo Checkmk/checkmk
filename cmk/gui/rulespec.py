@@ -15,6 +15,12 @@ from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSp
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
+def register() -> None:
+    # This is only a placeholder to call to ensure that the module is loaded and recognized as a
+    # main module
+    pass
+
+
 def load_plugins() -> None:
     errors, loaded_rule_specs = load_api_v1_rule_specs(debug_enabled())
     if errors:

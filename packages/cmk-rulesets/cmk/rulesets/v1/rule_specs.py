@@ -353,7 +353,7 @@ class NotificationParameters:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        name: Identifier of the rule spec
+        name: Identifier of the rule spec. Has to match the name of the notifications script
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
     """

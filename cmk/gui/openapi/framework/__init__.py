@@ -9,7 +9,7 @@ Once all endpoints are migrated to the new framework, the old marshmallow-based 
 """
 
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
-from ._validation import validate_endpoint_definition
+from ._validation import EndpointValidator
 from .api_config import APIConfig, APIVersion, DeprecationDetails
 from .content_types import ContentTypeConverter
 from .registry import VersionedEndpointRegistry
@@ -22,6 +22,8 @@ from .versioned_endpoint import (
     HandlerFunction,
     VersionedEndpoint,
 )
+
+validate_endpoint_definition = EndpointValidator.validate_endpoint_definition
 
 __all__ = [
     "APIConfig",

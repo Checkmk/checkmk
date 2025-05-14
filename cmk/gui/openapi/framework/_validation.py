@@ -192,123 +192,129 @@ class ParameterValidator:
             raise ValueError(f"Alias conflict in {source} parameters: {', '.join(duplicate)}")
 
 
-def _validate_endpoint_parameters(handler: HandlerFunction) -> None:
-    """Validate the parameters of the endpoint handler function"""
-    signature = inspect.signature(handler, eval_str=True)
-    annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
-    ParameterValidator.validate_parsed_parameters(annotated_parameters)
-    if "body" in signature.parameters:
-        body = signature.parameters["body"]
-        if body.kind not in (
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            inspect.Parameter.KEYWORD_ONLY,
-        ):
-            raise ValueError("Invalid parameter kind for request body")
+class EndpointValidator:
+    @staticmethod
+    def _validate_parameters(handler: HandlerFunction) -> None:
+        """Validate the parameters of the endpoint handler function"""
+        signature = inspect.signature(handler, eval_str=True)
+        annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
+        ParameterValidator.validate_parsed_parameters(annotated_parameters)
+        if "body" in signature.parameters:
+            body = signature.parameters["body"]
+            if body.kind not in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            ):
+                raise ValueError("Invalid parameter kind for request body")
 
-        if body.annotation is inspect.Parameter.empty:
-            raise ValueError("Missing annotation for request body")
+            if body.annotation is inspect.Parameter.empty:
+                raise ValueError("Missing annotation for request body")
 
-        body_type = body.annotation
-        while get_origin(body_type) is Annotated:
-            body_type = get_args(body_type)[0]
+            body_type = body.annotation
+            while get_origin(body_type) is Annotated:
+                body_type = get_args(body_type)[0]
 
-        if not dataclasses.is_dataclass(body_type):
-            raise ValueError("Request body annotation must be a dataclass")
+            if not dataclasses.is_dataclass(body_type):
+                raise ValueError("Request body annotation must be a dataclass")
 
+    @staticmethod
+    def _validate_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
+        """Validate the response of the endpoint"""
+        if model.response_body_type is None:
+            if endpoint.content_type == "application/json":
+                raise ValueError(
+                    f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
+                    f"requires a response schema."
+                )
+            return
 
-def _validate_endpoint_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
-    """Validate the response of the endpoint"""
-    if model.response_body_type is None:
-        if endpoint.content_type == "application/json":
+        if endpoint.content_type != "application/json":
             raise ValueError(
                 f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
-                f"requires a response schema."
+                f"should not have a response schema."
             )
-        return
 
-    if endpoint.content_type != "application/json":
-        raise ValueError(
-            f"Endpoint {endpoint.operation_id} with content type {endpoint.content_type} "
-            f"should not have a response schema."
+        with _with_endpoint_context(endpoint.operation_id):
+            _validate_defaults_model(
+                "response", model.response_body_type, other_defaults_allowed=False
+            )
+
+    @staticmethod
+    def _validate_request_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
+        if model.request_body_type is None:
+            return
+
+        if endpoint.method in ("delete", "get"):
+            # add an exception list if necessary but this should serve as double check that this is
+            # intended
+            raise ValueError(
+                f"Endpoint {endpoint.operation_id} with method {endpoint.method} "
+                f"should not have a request schema according to RFC"
+            )
+
+        with _with_endpoint_context(endpoint.operation_id):
+            _validate_defaults_model("body", model.request_body_type, other_defaults_allowed=True)
+
+    @staticmethod
+    def _validate_error_schemas(
+        endpoint: RequestEndpoint,
+        error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None,
+    ) -> None:
+        if not error_schemas:
+            return
+
+        for error_status_code in error_schemas:
+            if error_status_code < 400:
+                raise ValueError(
+                    f"Endpoint {endpoint.operation_id} has error schema for status code "
+                    f"{error_status_code} but this is not allowed."
+                )
+
+    @staticmethod
+    def _validate_status_descriptions(
+        endpoint: RequestEndpoint,
+        model: EndpointModel,
+        status_descriptions: Mapping[StatusCodeInt, str] | None,
+    ) -> None:
+        if not status_descriptions:
+            return
+
+        allowed_status_codes = identify_expected_status_codes(
+            endpoint.method,
+            endpoint.doc_group,
+            endpoint.content_type,
+            endpoint.etag,
+            has_response=model.has_response_schema,
+            has_path_params=model.has_path_parameters,
+            has_query_params=model.has_query_parameters,
+            has_request_schema=model.has_request_schema,
+            additional_status_codes=endpoint.additional_status_codes,
         )
 
-    with _with_endpoint_context(endpoint.operation_id):
-        _validate_defaults_model("response", model.response_body_type, other_defaults_allowed=False)
+        for status_code in status_descriptions:
+            if status_code not in allowed_status_codes:
+                raise ValueError(
+                    f"Endpoint {endpoint.operation_id} has custom status description for status code "
+                    f"{status_code}, which is not used/declared."
+                )
 
+    @staticmethod
+    def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
+        """Validate a versioned endpoint configuration"""
+        # TODO: this function should be invoked for custom endpoints
+        endpoint = endpoint_definition.request_endpoint()
+        with _with_endpoint_context(endpoint.operation_id):
+            EndpointValidator._validate_parameters(endpoint.handler)
 
-def _validate_endpoint_request_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:
-    if model.request_body_type is None:
-        return
-
-    if endpoint.method in ("delete", "get"):
-        # add an exception list if necessary but this should serve as double check that this is
-        # intended
-        raise ValueError(
-            f"Endpoint {endpoint.operation_id} with method {endpoint.method} "
-            f"should not have a request schema according to RFC"
+        model = EndpointModel.build(endpoint.handler)
+        EndpointValidator._validate_response_schema(endpoint, model)
+        EndpointValidator._validate_request_schema(endpoint, model)
+        EndpointValidator._validate_error_schemas(
+            endpoint, endpoint_definition.handler.error_schemas
         )
-
-    with _with_endpoint_context(endpoint.operation_id):
-        _validate_defaults_model("body", model.request_body_type, other_defaults_allowed=True)
-
-
-def _validate_endpoint_error_schemas(
-    endpoint: RequestEndpoint,
-    error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None,
-) -> None:
-    if not error_schemas:
-        return
-
-    for error_status_code in error_schemas:
-        if error_status_code < 400:
-            raise ValueError(
-                f"Endpoint {endpoint.operation_id} has error schema for status code "
-                f"{error_status_code} but this is not allowed."
-            )
-
-
-def _validate_endpoint_status_descriptions(
-    endpoint: RequestEndpoint,
-    model: EndpointModel,
-    status_descriptions: Mapping[StatusCodeInt, str] | None,
-) -> None:
-    if not status_descriptions:
-        return
-
-    allowed_status_codes = identify_expected_status_codes(
-        endpoint.method,
-        endpoint.doc_group,
-        endpoint.content_type,
-        endpoint.etag,
-        has_response=model.has_response_schema,
-        has_path_params=model.has_path_parameters,
-        has_query_params=model.has_query_parameters,
-        has_request_schema=model.has_request_schema,
-        additional_status_codes=endpoint.additional_status_codes,
-    )
-
-    for status_code in status_descriptions:
-        if status_code not in allowed_status_codes:
-            raise ValueError(
-                f"Endpoint {endpoint.operation_id} has custom status description for status code "
-                f"{status_code}, which is not used/declared."
-            )
-
-
-def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
-    """Validate a versioned endpoint configuration"""
-    # TODO: this function should be invoked for custom endpoints
-    endpoint = endpoint_definition.request_endpoint()
-    with _with_endpoint_context(endpoint.operation_id):
-        _validate_endpoint_parameters(endpoint.handler)
-
-    model = EndpointModel.build(endpoint.handler)
-    _validate_endpoint_response_schema(endpoint, model)
-    _validate_endpoint_request_schema(endpoint, model)
-    _validate_endpoint_error_schemas(endpoint, endpoint_definition.handler.error_schemas)
-    _validate_endpoint_status_descriptions(
-        endpoint, model, endpoint_definition.handler.status_descriptions
-    )
-    PathParamsValidator.verify_path_params_presence(
-        endpoint_definition.metadata.path, set(model.path_parameters)
-    )
+        EndpointValidator._validate_status_descriptions(
+            endpoint, model, endpoint_definition.handler.status_descriptions
+        )
+        PathParamsValidator.verify_path_params_presence(
+            endpoint_definition.metadata.path, set(model.path_parameters)
+        )

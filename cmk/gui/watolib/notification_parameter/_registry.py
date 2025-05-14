@@ -13,7 +13,6 @@ from cmk.ccc.version import edition
 from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.definition import RuleGroup
 
-import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
@@ -24,29 +23,27 @@ from cmk.gui.form_specs.private import (
     LegacyValueSpec,
     ListOfStrings,
     not_empty,
-    Topic,
 )
+from cmk.gui.form_specs.private import Topic as TopicExtended
 from cmk.gui.form_specs.private.catalog import TopicElement
 from cmk.gui.form_specs.vue.visitors import DefaultValue
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.valuespec import Migrate as ValueSpecMigrate
+from cmk.gui.watolib.notification_parameter._base import NotificationParameter
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_choices, notification_script_title
 
-from cmk.rulesets.v1 import Help, rule_specs, Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String
-
-from ._base import NotificationParameter
+from cmk.rulesets.v1.rule_specs import NotificationParameters, Topic
 
 
 class NotificationParameterRegistry(Registry[NotificationParameter]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: NotificationParameter) -> str:
         return instance.ident
 
-    # TODO: Make this registration_hook actually take an instance. Atm it takes a class and
-    #       instantiates it
-    def registration_hook(self, instance):
+    def registration_hook(self, instance: NotificationParameter) -> None:
         plugin = instance
 
         if plugin.form_spec is None:
@@ -61,14 +58,21 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
                 )
             )
         else:
-            loaded_rulespec = rule_specs.NotificationParameters(
+            from cmk.gui.utils.rule_specs.registering import register_plugin
+
+            # legacy NotificationParameter with new FormSpec
+            # We create a v1 RuleSpec around the FormSpec that gets converted to a legacy RuleSpec
+            # for registration into the rulespec_registry.
+            # Directly creating a legacy rulespec here would necessitate calling the
+            # plugin._form_spec -> "RuntimeError: Working outside of request context."
+            loaded_rulespec = NotificationParameters(
                 title=Title("%s") % notification_script_title(plugin.ident),
                 name=plugin.ident,
-                topic=rule_specs.Topic.NOTIFICATIONS,
+                topic=Topic.NOTIFICATIONS,
                 parameter_form=plugin.form_spec,
             )
-            _rulespec.register_plugins(
-                [LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))]
+            register_plugin(
+                LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))
             )
 
     def parameter_called(self) -> Dictionary:
@@ -88,28 +92,23 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
             },
         )
 
-    def form_spec(self, method: str) -> TransformDataForLegacyFormatOrRecomposeFunction:
-        param_form_spec: Dictionary | DictionaryExtended
+    def _parameter_form_spec(self, method: str) -> Dictionary | DictionaryExtended:
         instance = self._entries.get(method)
         if not instance:
             if any(method == script_name for script_name, _title in notification_script_choices()):
-                param_form_spec = self.parameter_called()
-            else:
-                raise MKUserError(
-                    None, _("No notification parameters for method '%s' found") % method
-                )
-        elif instance.form_spec:
-            param_form_spec = instance.form_spec()
-        else:
-            try:
-                param_form_spec = self._construct_form_spec_from_valuespec(method)
-            except Exception as e:
-                raise MKUserError(
-                    None,
-                    _("Error on creating FormSpec from old ValueSpec for method %s: %s")
-                    % (method, e),
-                )
+                return self.parameter_called()
+            raise MKUserError(None, _("No notification parameters for method '%s' found") % method)
+        if instance.form_spec:
+            return instance.form_spec()
+        try:
+            return self._construct_form_spec_from_valuespec(instance)
+        except Exception as e:
+            raise MKUserError(
+                None,
+                _("Error on creating FormSpec from old ValueSpec for method %s: %s") % (method, e),
+            )
 
+    def form_spec(self, method: str) -> TransformDataForLegacyFormatOrRecomposeFunction:
         def _add_method_key(value: object) -> object:
             if not isinstance(value, dict):
                 return value
@@ -132,12 +131,14 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
                     value["parameter_properties"] = parameter_properties["method_parameters"]
             return value
 
+        param_form_spec = self._parameter_form_spec(method)
+
         return TransformDataForLegacyFormatOrRecomposeFunction(
             from_disk=_add_method_key,
             to_disk=_remove_method_key,
             wrapped_form_spec=Catalog(
                 elements={
-                    "general": Topic(
+                    "general": TopicExtended(
                         title=Title("General properties"),
                         elements={
                             "description": TopicElement(
@@ -169,7 +170,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
                             ),
                         },
                     ),
-                    "parameter_properties": Topic(
+                    "parameter_properties": TopicExtended(
                         title=Title("Parameter properties"),
                         elements={
                             "method_parameters": TopicElement(
@@ -182,7 +183,9 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
             ),
         )
 
-    def _construct_form_spec_from_valuespec(self, method: str) -> Dictionary:
+    def _construct_form_spec_from_valuespec(
+        self, notification_parameter: NotificationParameter
+    ) -> Dictionary:
         """
         In case we have an old ValueSpec (e.g. custom notification), try
         to convert it to a FormSpec. We assume that nearly all customizations
@@ -190,7 +193,7 @@ class NotificationParameterRegistry(Registry[NotificationParameter]):
         least one built-in parameter that uses a Migrate, handle also this case.
         """
         migrate: Callable | None = None
-        if isinstance((valuespec := self._entries[method].spec()), ValueSpecMigrate):
+        if isinstance((valuespec := notification_parameter.spec()), ValueSpecMigrate):
             if isinstance(valuespec._valuespec, ValueSpecDictionary):
                 valuespec_elements = valuespec._valuespec._elements()
                 required_keys = valuespec._valuespec._required_keys

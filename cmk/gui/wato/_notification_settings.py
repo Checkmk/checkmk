@@ -13,6 +13,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     EmailAddress,
     Integer,
+    ValueSpec,
 )
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
@@ -53,6 +54,12 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
     ),
 )
 
+
+def _get_valuespec(plugin_name: str) -> ValueSpec:
+    plugin = notification_parameter_registry[plugin_name]
+    return plugin.spec()
+
+
 ConfigVariableNotificationFallbackFormat = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     domain=ConfigDomainCore,
@@ -63,12 +70,12 @@ ConfigVariableNotificationFallbackFormat = ConfigVariable(
             (
                 "asciimail",
                 _("ASCII email"),
-                notification_parameter_registry["asciimail"].spec(),
+                _get_valuespec("asciimail"),
             ),
             (
                 "mail",
                 _("HTML email"),
-                notification_parameter_registry["mail"].spec(),
+                _get_valuespec("mail"),
             ),
         ],
     ),

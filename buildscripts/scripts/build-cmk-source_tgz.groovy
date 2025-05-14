@@ -107,8 +107,6 @@ def main() {
             }
         }();
 
-        print("source_package_name: ${source_package_name}");
-
         stage("Test source package") {
             sh("""
                 ${checkout_dir}/buildscripts/scripts/cleanup-source-archives.sh \

@@ -214,7 +214,6 @@ def main() {
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);
-        println("completed parallel with: ${results_of_parallel.values()}");
         currentBuild.result = results_of_parallel.values().every { it } ? "SUCCESS" : "FAILURE";
     }
 

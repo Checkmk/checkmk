@@ -318,12 +318,10 @@ def update_custom_parser(Map config = [:]) {
     );
 
     if (parser_config.contains(defaultDict.id)) {
-        print("${defaultDict.id} already defined, updating parser");
         existing_parsers[existing_parsers.indexOf(newParser)] = newParser;
         parser_config.setParsers(existing_parsers);
     }
     else {
-        print("${defaultDict.id} undefined, adding parser");
         parser_config.setParsers(existing_parsers.plus(newParser)); // groovylint-disable ExplicitCallToPlusMethod
     }
 }

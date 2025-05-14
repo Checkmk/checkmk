@@ -26,8 +26,6 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    print("Triggering GitLab job with Docker tag '${cmk_version}'");
-
     // Jobs in saas use the version tag to read images and parse version information
     withCredentials([
         string(

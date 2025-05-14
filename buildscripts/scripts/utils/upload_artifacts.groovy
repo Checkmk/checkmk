@@ -44,6 +44,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
         || INFO =            |${INFO}|
         ||==========================================================================================
         """.stripMargin());
+
     stage("Download from shared storage (${INFO})") {
         withCredentials([
             sshUserPrivateKey(
@@ -75,6 +76,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="", ADDIT
         || ADDITONAL_ARGS   = |${ADDITONAL_ARGS}|
         ||==========================================================================================
         """.stripMargin());
+
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
         sh("""
             rsync -av \
@@ -162,7 +164,6 @@ def deploy_to_website(CMK_VERS) {
 }
 
 def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
-
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
 
     inside_container(set_docker_group_id: true,
@@ -181,7 +182,6 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                         """,
                         returnStdout: true)
                 );
-                println("Updating branch latest BOM symlinks");
                 bom_mapping_branch_latest.each { symlink, target ->
                     execute_cmd_on_archive_server(
                         "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
@@ -201,7 +201,6 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                         """,
                         returnStdout: true)
                 );
-                println("Updating latest BOM symlinks");
                 bom_mapping_latest.each { symlink, target ->
                     execute_cmd_on_archive_server(
                         "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"

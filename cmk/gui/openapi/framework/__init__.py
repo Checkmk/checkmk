@@ -9,10 +9,34 @@ Once all endpoints are migrated to the new framework, the old marshmallow-based 
 """
 
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
+from .api_config import APIConfig, APIVersion, DeprecationDetails
+from .content_types import ContentTypeConverter
+from .registry import VersionedEndpointRegistry
+from .versioned_endpoint import (
+    EndpointBehavior,
+    EndpointDoc,
+    EndpointHandler,
+    EndpointMetadata,
+    EndpointPermissions,
+    HandlerFunction,
+    VersionedEndpoint,
+)
 
 __all__ = [
+    "APIConfig",
+    "APIVersion",
+    "ContentTypeConverter",
+    "DeprecationDetails",
+    "EndpointBehavior",
+    "EndpointDoc",
+    "EndpointHandler",
+    "EndpointMetadata",
+    "EndpointPermissions",
+    "HandlerFunction",
     "HeaderParam",
     "PathParam",
     "QueryParam",
     "RawRequestData",
+    "VersionedEndpoint",
+    "VersionedEndpointRegistry",
 ]

@@ -118,24 +118,6 @@ def main() {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
-    stage("Upload artifacts") {
-        for (edition in all_editions) {
-            def package_name = versioning.get_package_name("${checkout_dir}/${download_dir}", distro_package_type(distro), edition, cmk_version);
-            def upload_path = "${INTERNAL_DEPLOY_DEST}/testbuild/${cmk_version_rc_aware}/${edition}/${incremented_counter}-${effective_git_ref}/";
-
-            println("package name is: ${package_name}");
-            println("upload_path: ${upload_path}");
-
-            artifacts_helper.upload_version_dir(
-                "${checkout_dir}/${download_dir}/${package_name}",
-                "${upload_path}",
-                INTERNAL_DEPLOY_PORT,
-                "",
-                "--mkpath",
-            );
-        }
-    }
-
     smart_stage(
         name: "Trigger trigger-post-submit-test-cascade-heavy",
         condition: trigger_post_submit_heavy_chain,

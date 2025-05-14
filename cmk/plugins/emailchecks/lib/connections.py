@@ -304,7 +304,7 @@ class SMTP(_Connection):
     def _send_mail(
         self, subject: str, mail_from: str, mail_to: str, now: int, key: int
     ) -> tuple[str, MailID]:
-        mail = email.mime.text.MIMEText("")
+        mail = email.mime.text.MIMEText("Automatically sent by checkmk")
         mail["From"] = mail_from
         mail["To"] = mail_to
         mail["Subject"] = f"{subject} {now} {key}"

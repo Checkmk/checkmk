@@ -181,7 +181,7 @@ def _check_smart_ata(
 
     if (power_on_hours := disk.by_id(9)) is not None:
         yield from check_levels(
-            value=power_on_hours.raw.value,
+            value=power_on_hours.raw.value * 3600,
             label="Powered on",
             render_func=render.timespan,
             metric_name="uptime",

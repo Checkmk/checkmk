@@ -7305,6 +7305,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Oplopend"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Checkmk agent"
+
 msgid "Ask for an optional comment"
 msgstr "Vraag om een optionele opmerking"
 
@@ -21884,6 +21888,9 @@ msgstr ""
 "rechten al dan niet krijgen, gebaseerd op de standaardinstellingen van de "
 "ingebouwde rol waarop hij gebaseerd is."
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "Bewerken"
 
@@ -24828,6 +24835,10 @@ msgstr "Niet gelukt om ouder scan te starten: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Het starten van de opdracht is mislukt: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Faalde om Python verzoek te parsen: '%s': %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -35993,6 +36004,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Jolokia Server"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "Job leeftijd"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Regel limiet"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Totale omvang"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Beperking van de zoektijd"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Poortgebruik"
 
 msgid "July"
 msgstr "Juli"
@@ -78284,6 +78315,10 @@ msgstr "Niet-geoptimaliseerde verbindingen"
 msgid "Unpackaged files"
 msgstr "Uitgepakte bestanden"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Verwerkte berichten verwijderen"
+
 msgid "Unreachable"
 msgstr "Onbereikbaar"
 
@@ -78901,6 +78936,10 @@ msgstr "Bovenste niveaus voor bestandsgrootte"
 
 msgid "Upper levels for dead letter errors"
 msgstr "Bovenste niveaus voor dode letterfouten"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Bovenste niveaus voor schijfgebruik"
 
 msgid "Upper levels for disk usage"
 msgstr "Bovenste niveaus voor schijfgebruik"
@@ -84670,6 +84709,11 @@ msgstr "Het is niet toegestaan deze globale instelling te bewerken."
 
 msgid "You are not permitted to perform this action."
 msgstr "Het is u niet toegestaan deze actie uit te voeren."
+
+msgid ""
+"You are not permitted to perform this action. Only an admin is permitted to "
+"delete a bundle which was created by an admin."
+msgstr ""
 
 msgid "You are not permitted to view this page"
 msgstr "U heeft geen toestemming om deze pagina te bekijken"

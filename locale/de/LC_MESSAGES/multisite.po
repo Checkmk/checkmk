@@ -7205,6 +7205,10 @@ msgstr ""
 msgid "Ascending"
 msgstr "Aufsteigend"
 
+#, fuzzy
+msgid "Ask Checkmk AI"
+msgstr "Checkmk-Agent"
+
 msgid "Ask for an optional comment"
 msgstr "Nach einem optionalen Kommentar fragen"
 
@@ -21484,6 +21488,9 @@ msgstr ""
 "Berechtigungen oder erhält sie nicht, je nach den Standardeinstellungen der "
 "mitgelieferten Rolle, auf der sie beruht."
 
+msgid "Earliest entry in journal"
+msgstr ""
+
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -24398,6 +24405,10 @@ msgstr "Parent-Scan konnte nicht gestartet werden: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Fehler beim Starten des Jobs: %s"
+
+#, fuzzy, python-format
+msgid "Failed to start the stage action on remote site %s: %s"
+msgstr "Python-Anfrage konnte nicht verarbeitet werden: '%s': %s"
 
 #, fuzzy, python-format
 msgid "Failed to stop job: %s"
@@ -35401,6 +35412,26 @@ msgstr "Jolokia"
 
 msgid "Jolokia Server"
 msgstr "Jolokia-Server"
+
+#, fuzzy
+msgid "Journal age"
+msgstr "Auftragsalter"
+
+#, fuzzy
+msgid "Journal age limit"
+msgstr "Regel-Limit"
+
+#, fuzzy
+msgid "Journal size"
+msgstr "Gesamtgröße"
+
+#, fuzzy
+msgid "Journal size limit"
+msgstr "Zeitbegrenzung für Abfrage"
+
+#, fuzzy
+msgid "Journal usage"
+msgstr "Port-Auslastung"
 
 msgid "July"
 msgstr "Juli"
@@ -76625,6 +76656,10 @@ msgstr "Nicht optimierte Verbindungen"
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
 
+#, fuzzy
+msgid "Unprocessed messages in journal"
+msgstr "Verarbeitete Nachrichten löschen"
+
 msgid "Unreachable"
 msgstr "Nicht erreichbar"
 
@@ -77231,6 +77266,10 @@ msgstr "Obergrenzen für die Datendateigröße"
 
 msgid "Upper levels for dead letter errors"
 msgstr "Obergrenzen für Dead Letter Errors"
+
+#, fuzzy
+msgid "Upper levels for disk journal usage"
+msgstr "Obergrenzen für die Festplattennutzung"
 
 msgid "Upper levels for disk usage"
 msgstr "Obergrenzen für die Festplattennutzung"
@@ -82945,6 +82984,11 @@ msgstr "Sie sind nicht berechtigt, diese globale Einstellung zu editieren."
 
 msgid "You are not permitted to perform this action."
 msgstr "Sie sind für diese Aktion nicht berechtigt."
+
+msgid ""
+"You are not permitted to perform this action. Only an admin is permitted to "
+"delete a bundle which was created by an admin."
+msgstr ""
 
 msgid "You are not permitted to view this page"
 msgstr "Sie sind nicht berechtigt, diese Seite zu sehen"

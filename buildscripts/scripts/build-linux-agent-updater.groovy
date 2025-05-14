@@ -16,8 +16,6 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    shout("configure");
-
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     def safe_branch_name = versioning.safe_branch_name();

@@ -40,8 +40,6 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
-    shout("configure");
-
     def bazel_log_prefix = "bazel_log_";
 
     def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
@@ -123,7 +121,6 @@ def main() {
         return;
     }
 
-    shout("cleanup");
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
@@ -143,14 +140,11 @@ def main() {
     ///       https://review.lan.tribe29.com/c/check_mk/+/34634
     ///       Anyway this whole upload/download mayhem hopfully evaporates with
     ///       bazel..
-    shout("pull packages");
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         distros.each { distro ->
             docker.image("${distro}:${docker_tag}").pull();
         }
     }
-
-    shout("agents");
 
     def win_project_name_id = -1;
     def win_py_project_name_id = -1;
@@ -209,13 +203,10 @@ def main() {
     // With the current bazelization this job regularly breaks. Lets be tolerant...
     // This should be mandatory as soon as we enter the beta phase!
     catchError(buildResult: "SUCCESS", stageResult: "FAILURE") {
-        shout("create_and_upload_bom");
-
         // TODO creates stages - put them on top level
         create_and_upload_bom(WORKSPACE, branch_version, VERSION);
     }
 
-    shout("create_source_package");
     inside_container(ulimit_nofile: 2048) {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
@@ -250,7 +241,6 @@ def main() {
         }
     }
 
-    shout("packages");
     def package_builds = distros.collectEntries { distro ->
         [("distro ${distro}") : {
             // The following node call allocates a new workspace for each

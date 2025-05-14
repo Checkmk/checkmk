@@ -111,7 +111,6 @@ def main() {
     }
 
     stage("Pull distro image") {
-        shout("Pull distro image");
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image("${distro}:${docker_tag}").pull();
         }

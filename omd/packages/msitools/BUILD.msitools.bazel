@@ -1,3 +1,4 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -6,6 +7,16 @@ filegroup(
         ["**/*"],
         exclude = ["bazel-*"],
     ),
+)
+
+selects.config_setting_group(
+    name = "sles",
+    match_any = [
+        "@//:sles_15sp3",
+        "@//:sles_15sp4",
+        "@//:sles_15sp5",
+        "@//:sles_15sp6",
+    ],
 )
 
 configure_make(
@@ -26,19 +37,7 @@ configure_make(
         ]),
     } | select(
         {
-            "@//:sles_15sp3": {
-                "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
-                "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
-            },
-            "@//:sles_15sp4": {
-                "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
-                "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
-            },
-            "@//:sles_15sp5": {
-                "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
-                "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
-            },
-            "@//:sles_15sp6": {
+            ":sles": {
                 "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
                 "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
             },
@@ -70,10 +69,7 @@ configure_make(
     visibility = ["//visibility:public"],
     deps = select(
         {
-            "@//:sles_15sp3": ["@libgsf"],
-            "@//:sles_15sp4": ["@libgsf"],
-            "@//:sles_15sp5": ["@libgsf"],
-            "@//:sles_15sp6": ["@libgsf"],
+            "sles": ["@libgsf"],
             "//conditions:default": [],
         },
     ),

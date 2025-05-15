@@ -9,10 +9,6 @@ load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
 re2_workspace()
 
-load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx_workspace")
-
-heirloommailx_workspace()
-
 load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins_workspace")
 
 monitoring_plugins_workspace()

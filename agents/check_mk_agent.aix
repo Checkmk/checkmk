@@ -138,6 +138,13 @@ set_default_paths() {
     : "${MK_BIN:="/usr/bin"}"
 }
 
+set_up_disabled_sections() {
+    if [ -f "${MK_CONFDIR}/exclude_sections_aix.cfg" ]; then
+        # shellcheck source=agents/cfg_examples/exclude_sections_aix.cfg
+        . "${MK_CONFDIR}/exclude_sections_aix.cfg"
+    fi
+}
+
 preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
@@ -1098,6 +1105,7 @@ main_setup() {
     detect_python
 
     set_up_profiling
+    set_up_disabled_sections
 }
 
 main_sync_parts() {

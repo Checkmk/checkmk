@@ -67,7 +67,11 @@ def _validate_defaults_model(
     *,
     other_defaults_allowed: bool,
 ) -> None:
-    """Validate the model defaults"""
+    """Validate the model defaults.
+
+    If `other_defaults_allowed` is true, `default` and `default_factory` are allowed to be set to
+    any value, for types *not* containing `ApiOmitted`. This should be used only for request models.
+    """
     if not dataclasses.is_dataclass(schema):
         raise ValueError(f"Expected a dataclass annotation for `{path}`.")
 

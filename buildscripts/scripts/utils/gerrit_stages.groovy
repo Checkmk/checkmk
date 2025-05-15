@@ -4,15 +4,6 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def log_stage_duration(last_stage_date) {
-    def this_stage_date = new Date();   // groovylint-disable NoJavaUtilDate
-    def duration = groovy.time.TimeCategory.minus(
-        this_stage_date,
-        last_stage_date,
-    );
-    return this_stage_date;
-}
-
 def desc_init() {
     // add new content to next line, but do not overwrite existing content
     currentBuild.description += "<br>";

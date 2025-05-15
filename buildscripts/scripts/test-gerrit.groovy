@@ -39,8 +39,6 @@ def main() {
         sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
     }
 
-    time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
-
     /// Add description to the build
     test_gerrit_helper.desc_init();
     test_gerrit_helper.desc_add_line("${GERRIT_CHANGE_SUBJECT}");
@@ -50,7 +48,6 @@ def main() {
         dir("${checkout_dir}") {
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
         }
-        time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 
     stage("Create stages") {
@@ -65,9 +62,9 @@ def main() {
                       buildscripts/scripts/stages.yml
                 """);
             }
-            time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
         }
 
+        time_stage_started = new Date();
         analyse_mapping["Preparation"] = [
             stepName: "Preparation",
             duration: groovy.time.TimeCategory.minus(new Date(), time_job_started),

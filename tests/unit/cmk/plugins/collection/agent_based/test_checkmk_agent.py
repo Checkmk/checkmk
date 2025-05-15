@@ -327,6 +327,49 @@ def test_check_no_check_yet_pydantic() -> None:
 
 
 @pytest.mark.parametrize(
+    "cmk_hostname,agent_updater_hostname,expected_result",
+    (
+        (
+            "some_hostname",
+            "some_hostname",
+            [Result(state=State.OK, notice="Hostname used by cmk-update-agent: some_hostname")],
+        ),
+        (
+            "some_other_hostname",
+            "some_hostname",
+            [
+                Result(state=State.OK, notice="Hostname used by cmk-update-agent: some_hostname"),
+                Result(
+                    state=State.CRIT,
+                    notice="Hostname defined in Checkmk (some_other_hostname) and cmk-update-agent configuration (some_hostname) do not match",
+                ),
+            ],
+        ),
+    ),
+)
+def test_check_cmk_agent_update(
+    cmk_hostname: str,
+    agent_updater_hostname: str,
+    expected_result: list[Result],
+) -> None:
+    assert [
+        *_check_cmk_agent_update(
+            {"host_name": cmk_hostname},
+            None,
+            CMKAgentUpdateSection(
+                aghash=None,
+                last_update=None,
+                pending_hash=None,
+                update_url=None,
+                last_check=None,
+                error=None,
+                host_name=agent_updater_hostname,
+            ),
+        )
+    ] == [Result(state=State.WARN, summary="No successful connect to server yet"), *expected_result]
+
+
+@pytest.mark.parametrize(
     "trusted_certs,results",
     (
         (None, []),  # no cert details, pre 2.2 updater

@@ -62,8 +62,9 @@ def _migrate_version_spec(
 def _parameter_valuespec_checkmk_agent():
     return Dictionary(
         ignored_keys=[
-            # this key is set as a default, and postprocessed by the backend.
+            # this keys are set as a default, and postprocessed by the backend.
             "only_from",
+            "host_name",
         ],
         elements=[
             (

@@ -61,7 +61,7 @@ def main() {
     job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
+    assert edition in ["cloud", "enterprise", "managed", "raw", "saas"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = true;
@@ -69,7 +69,7 @@ def main() {
     def run_fips_tests = edition == "enterprise";
     def run_comp_tests = !(edition in ["saas"]);
     def run_image_tests = !(edition in ["saas", "managed"]);
-    def run_update_tests = (edition in ["enterprise", "cloud", "saas"]);
+    def run_update_tests = (edition in ["cloud", "enterprise", "managed", "raw", "saas"]);
 
     print(
         """

@@ -17,7 +17,7 @@ CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
 
 CHECK_MK_TAROPTS := \
 	--owner=root --group=root --exclude=.svn --exclude=*~ \
-	--exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+	--exclude=.gitignore --exclude=.editorconfig --exclude=*.swp --exclude=.f12 \
 	--exclude=__pycache__ --exclude=*.pyc
 
 CHECK_MK_WERKS_PATH := $(CHECK_MK_WORK_DIR)/werks

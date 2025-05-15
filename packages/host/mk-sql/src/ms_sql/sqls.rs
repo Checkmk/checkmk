@@ -340,7 +340,7 @@ FROM sys.dm_hadr_availability_group_states Groups
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
     pub const INSTANCE_PROPERTIES: &str = r"SELECT
-    CAST(SERVERPROPERTY( 'InstanceName' ) AS NVARCHAR(MAX)) AS InstanceName,
+    CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR(MAX)) AS InstanceName,
     CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
     CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
     CAST(SERVERPROPERTY( 'Edition' ) AS NVARCHAR(MAX)) AS Edition,

@@ -20,13 +20,27 @@ def generate_links(
     if self_link is not None:
         links = [self_link]
     else:
-        links = [LinkModel(rel="self", href=uri, method="GET", type="application/json")]
+        links = [
+            LinkModel(
+                rel="self", href=uri, domainType="link", method="GET", type="application/json"
+            )
+        ]
 
     if editable:
-        links.append(LinkModel(rel=".../update", href=uri, method="PUT", type="application/json"))
+        links.append(
+            LinkModel(
+                rel=".../update", domainType="link", href=uri, method="PUT", type="application/json"
+            )
+        )
     if deletable:
         links.append(
-            LinkModel(rel=".../delete", href=uri, method="DELETE", type="application/json")
+            LinkModel(
+                rel=".../delete",
+                href=uri,
+                domainType="link",
+                method="DELETE",
+                type="application/json",
+            )
         )
     if extra_links:
         links.extend(extra_links)

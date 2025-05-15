@@ -14,7 +14,7 @@ from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
+from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
     EndpointHandler,
@@ -23,6 +23,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects import constructors
+from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -44,7 +45,7 @@ class HostConfigCollectionModel(DomainObjectCollectionModel):
 
 
 def list_hosts_v1() -> HostConfigCollectionModel:
-    """Show all hosts Prototype"""
+    """Show all hosts"""
     root_folder = folder_tree().root_folder()
     if user.may("wato.see_all_folders"):
         # allowed to see all hosts, no need for individual permission checks
@@ -75,8 +76,7 @@ def list_hosts_v1() -> HostConfigCollectionModel:
                 )
                 for host in hosts
             ],
-            # TODO: introduce link model
-            links=[],
+            links=[LinkModel.create("self", collection_href("host_config"))],
         )
 
 

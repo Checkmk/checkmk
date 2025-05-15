@@ -231,7 +231,7 @@ class LinkType(TypedDict):
     href: str
     type: str
     method: str
-    domainType: str
+    domainType: Literal["link"]
     title: NotRequired[str]
     body_params: NotRequired[dict[str, str | None]]
 

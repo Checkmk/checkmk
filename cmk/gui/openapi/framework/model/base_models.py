@@ -6,8 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.framework.model.api_field import api_field
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
+from cmk.gui.openapi.restful_objects.constructors import link_rel
+from cmk.gui.openapi.restful_objects.type_defs import LinkRelation
 
 
 @dataclass(kw_only=True, slots=True)
@@ -33,7 +36,7 @@ class LinkModel:
         example="application/json",
     )
     domainType: Literal["link"] = api_field(
-        default="link", title="Domain Type", description="The domain type of the linked resource"
+        title="Domain Type", description="The domain type of the linked resource"
     )
     title: str | ApiOmitted = api_field(
         default_factory=ApiOmitted,
@@ -47,6 +50,45 @@ class LinkModel:
         description="A map of values that shall be sent in the request body. If this is present, the request has to be sent with a content-type of 'application/json'.",
         example={"key": "value"},
     )
+
+    @classmethod
+    def create(
+        cls,
+        rel: LinkRelation,
+        href: str,
+        method: HTTPMethod = "get",
+        content_type: str = "application/json",
+        profile: str | None = None,
+        title: str | None = None,
+        # these might have to be changed to a dataclass but let's see
+        parameters: dict[str, str] | None = None,
+        body_params: dict[str, str | None] | None = None,
+    ) -> "LinkModel":
+        link_obj = link_rel(
+            rel=rel,
+            href=href,
+            content_type=content_type,
+            profile=profile,
+            title=title,
+            parameters=parameters,
+            body_params=body_params,
+        )
+        # make mypy happy
+        methods: Mapping[str, Literal["GET", "POST", "PUT", "DELETE"]] = {
+            "get": "GET",
+            "post": "POST",
+            "put": "PUT",
+            "delete": "DELETE",
+        }
+        return cls(
+            rel=link_obj["rel"],
+            href=link_obj["href"],
+            method=methods[method],
+            type=link_obj["type"],
+            domainType=link_obj["domainType"],
+            title=link_obj["title"],
+            body_params=link_obj["body_params"],
+        )
 
 
 @dataclass(kw_only=True, slots=True)

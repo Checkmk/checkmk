@@ -26,7 +26,9 @@ def test_generate_links_no_deletable() -> None:
 
 
 def test_generate_links_extra_links() -> None:
-    extra = LinkModel(rel=".../extra", href="/extra", method="GET", type="application/json")
+    extra = LinkModel(
+        rel=".../extra", href="/extra", domainType="link", method="GET", type="application/json"
+    )
     links = generate_links("host", "example-host", extra_links=[extra])
     extra_links = [link for link in links if link.rel == ".../extra"]
     assert len(extra_links) == 1
@@ -34,8 +36,12 @@ def test_generate_links_extra_links() -> None:
 
 
 def test_generate_links_extra_links_multiple() -> None:
-    extra_1 = LinkModel(rel=".../extra", href="/extra_1", method="GET", type="application/json")
-    extra_2 = LinkModel(rel=".../extra", href="/extra_2", method="GET", type="application/json")
+    extra_1 = LinkModel(
+        rel=".../extra", href="/extra_1", domainType="link", method="GET", type="application/json"
+    )
+    extra_2 = LinkModel(
+        rel=".../extra", href="/extra_2", domainType="link", method="GET", type="application/json"
+    )
     links = generate_links("host", "example-host", extra_links=[extra_1, extra_2])
     extra_links = [link for link in links if link.rel == ".../extra"]
     assert len(extra_links) == 2
@@ -45,7 +51,7 @@ def test_generate_links_extra_links_multiple() -> None:
 
 
 def test_generate_links_custom_self() -> None:
-    self = LinkModel(rel="self", href=".", method="GET", type="application/json")
+    self = LinkModel(rel="self", href=".", domainType="link", method="GET", type="application/json")
     links = generate_links(
         "host",
         "example-host",

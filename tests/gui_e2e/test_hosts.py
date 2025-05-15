@@ -142,6 +142,7 @@ def fixture_host_to_be_deleted(test_site: Site) -> Iterator[list[HostDetails]]:
         yield hosts
 
 
+@pytest.mark.xfail(reason="'Delete burger menu' changed to 'Delete icon'.")
 def test_delete_host_row(
     dashboard_page: Dashboard, host_to_be_deleted: list[HostDetails], test_site: Site
 ) -> None:

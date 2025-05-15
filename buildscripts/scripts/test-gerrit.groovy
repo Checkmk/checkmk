@@ -30,8 +30,6 @@ def main() {
         sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
     }
 
-    time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
-
     /// Add description to the build
     test_gerrit_helper.desc_init();
     test_gerrit_helper.desc_add_line("${GERRIT_CHANGE_SUBJECT}");
@@ -46,7 +44,6 @@ def main() {
             }
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
         }
-        time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
     try {
 
@@ -62,7 +59,7 @@ def main() {
                           buildscripts/scripts/stages.yml
                     """);
                 }
-                time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
+                time_stage_started = new Date();
             }
             test_gerrit_helper.desc_add_status_row("Preparation",
                 groovy.time.TimeCategory.minus(new Date(), time_job_started), 0, '--');
@@ -89,7 +86,7 @@ def main() {
                             }
                         }
                     }
-                    time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
+                    time_stage_started = new Date();
                 }
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
@@ -113,7 +110,6 @@ def main() {
                 }
             }
         }
-        time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 }
 

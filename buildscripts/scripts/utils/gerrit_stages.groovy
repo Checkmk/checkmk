@@ -4,15 +4,6 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def log_stage_duration(last_stage_date) {
-    def this_stage_date = new Date();   // groovylint-disable NoJavaUtilDate
-    def duration = groovy.time.TimeCategory.minus(
-        this_stage_date,
-        last_stage_date,
-    );
-    return this_stage_date;
-}
-
 // Creates a stage with provided properties. The created stage will be marked as
 // successful or failed if its command returns with non-zero and can thus be used
 // to implement tests.

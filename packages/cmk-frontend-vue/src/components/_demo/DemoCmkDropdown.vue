@@ -11,13 +11,16 @@ import { Response } from '@/components/suggestions'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const defaultSelected = ref<string>('init')
+const defaultSelected1 = ref<string>('init')
 const defaultSelected2 = ref<string>('init')
 const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)
 const defaultEmpty3 = ref<string | null>(null)
 const defaultEmpty4 = ref<string | null>(null)
 const defaultEmpty5 = ref<string | null>(null)
+const defaultEmpty6 = ref<string | null>(null)
+const defaultEmpty7 = ref<string | null>(null)
+const defaultEmpty8 = ref<string | null>(null)
 </script>
 
 <template>
@@ -49,7 +52,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>two elements, selected</h2>
   <CmkDropdown
-    v-model:selected-option="defaultSelected"
+    v-model:selected-option="defaultSelected1"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -65,7 +68,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>two elements, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty1"
+    v-model:selected-option="defaultEmpty2"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -79,7 +82,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>two elements, empty selection, disabled</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty1"
+    v-model:selected-option="defaultEmpty3"
     :disabled="true"
     :options="{
       type: 'fixed',
@@ -94,7 +97,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>no elements, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty2"
+    v-model:selected-option="defaultEmpty4"
     :options="{ type: 'filtered', suggestions: [] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
@@ -103,7 +106,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>many elements, filtered, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty3"
+    v-model:selected-option="defaultEmpty5"
     :options="{
       type: 'filtered',
       suggestions: [
@@ -120,7 +123,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>callback, filtered, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty4"
+    v-model:selected-option="defaultEmpty6"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async (query) => {
@@ -147,7 +150,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>Queried dropdown with unselectable</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty3"
+    v-model:selected-option="defaultEmpty7"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async (_) => {
@@ -166,7 +169,7 @@ const defaultEmpty5 = ref<string | null>(null)
   />
   <h2>element names that are very long</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty5"
+    v-model:selected-option="defaultEmpty8"
     :options="{
       type: 'filtered',
       suggestions: [

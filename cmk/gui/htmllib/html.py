@@ -300,7 +300,7 @@ class HTMLGenerator(HTMLWriter):
                 const currentUrl = window.location.pathname + window.location.search;
                 document.addEventListener(
                     'DOMContentLoaded',
-                    () => {{
+                    function() {{
                         activate_tracking(currentUrl, startTime, generationDuration);
                     }}
                 );

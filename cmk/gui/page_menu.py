@@ -135,7 +135,7 @@ def show_success_dialog(
     }
 
     html.javascript(
-        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;})"
+        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;})"
         % (
             json.dumps(dialog_options),
             json.dumps(confirm_url),
@@ -164,11 +164,11 @@ def show_confirm_cancel_dialog(
     }
 
     html.javascript(
-        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
+        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;}, %s)"
         % (
             json.dumps(dialog_options),
             json.dumps(confirm_url),
-            f"()=>{{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
+            f"function() {{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
         )
     )
 

@@ -17,7 +17,7 @@ $(XMLSEC1_BUILD): $(XMLSEC1_UNPACK) $(OPENSSL_CACHE_PKG_PROCESS)
 
 .PHONY: $(XMLSEC1_INSTALL)
 $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
-	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
+	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/_main~_repo_rules~xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
 	patchelf --set-rpath "\$$ORIGIN/../lib" \
 	    "$(DESTDIR)$(OMD_ROOT)/bin/xmlsec1" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1.so" \

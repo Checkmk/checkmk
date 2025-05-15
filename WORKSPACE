@@ -9,10 +9,6 @@ load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
 re2_workspace()
 
-load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec_workspace")
-
-xmlsec_workspace()
-
 load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx_workspace")
 
 heirloommailx_workspace()

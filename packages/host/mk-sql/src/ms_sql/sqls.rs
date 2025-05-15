@@ -284,8 +284,14 @@ FROM master.dbo.sysdatabases";
 
     pub const IS_CLUSTERED: &str =
         "SELECT CAST( SERVERPROPERTY('IsClustered') AS NVARCHAR(MAX)) AS is_clustered";
-    pub const CLUSTER_NODES: &str =
+
+    pub const CLUSTER_NODES_NORMAL: &str =
         "SELECT CAST(nodename AS NVARCHAR(MAX)) AS nodename FROM sys.dm_os_cluster_nodes";
+
+    pub const CLUSTER_NODES_AZURE: &str = r"
+        IF OBJECT_ID('sys.dm_os_cluster_nodes') IS NOT NULL
+            SELECT CAST(nodename AS NVARCHAR(MAX)) AS nodename FROM sys.dm_os_cluster_nodes
+        ";
 
     pub const CLUSTER_ACTIVE_NODES: &str =
         "SELECT CAST(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS NVARCHAR(MAX)) AS active_node";
@@ -444,7 +450,8 @@ impl<'a> QueryMap<'a> {
 lazy_static::lazy_static! {
     static ref BLOCKING_SESSIONS: String = format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string();
     static ref COUNTERS: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES  ).to_string();
-    static ref CLUSTERS: String = format!("{};{};", query::CLUSTER_NODES, query::CLUSTER_ACTIVE_NODES  ).to_string();
+    static ref CLUSTERS_NORMAL: String = format!("{};{};", query::CLUSTER_NODES_NORMAL, query::CLUSTER_ACTIVE_NODES  ).to_string();
+    static ref CLUSTERS_AZURE: String = format!("{};{};", query::CLUSTER_NODES_AZURE, query::CLUSTER_ACTIVE_NODES  ).to_string();
     static ref QUERY_MAP: HashMap<Id, QueryMap<'static>> = HashMap::from([
         (Id::ComputerName, QueryMap::new(query::COMPUTER_NAME, None)),
         (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
@@ -453,7 +460,7 @@ lazy_static::lazy_static! {
         (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
         (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),
         (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
-        (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES, None)),
+        (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES_NORMAL, Some(query::CLUSTER_NODES_AZURE))),
         (Id::IsClustered, QueryMap::new(query::IS_CLUSTERED, None)),
         (Id::DatabaseNames, QueryMap::new(query::DATABASE_NAMES, None)),
         (Id::Databases, QueryMap::new(query::DATABASES, None)),
@@ -467,7 +474,7 @@ lazy_static::lazy_static! {
         (Id::WaitingTasks, QueryMap::new(query::WAITING_TASKS, None)), // used only in tests no None))w
         (Id::BlockedSessions, QueryMap::new(BLOCKING_SESSIONS.as_str(), None)),
         (Id::Counters, QueryMap::new(COUNTERS.as_str(), None)),
-        (Id::Clusters, QueryMap::new(CLUSTERS.as_str(), None)),
+        (Id::Clusters, QueryMap::new(CLUSTERS_NORMAL.as_str(), Some(CLUSTERS_AZURE.as_str()))),
     ]);
 }
 

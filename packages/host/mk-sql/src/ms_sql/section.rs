@@ -348,9 +348,11 @@ mod tests {
     #[test]
     fn test_section_select_query_azure() {
         let customized_for_azure = [
+            sqls::Id::ClusterNodes,
             sqls::Id::Jobs,
             sqls::Id::Mirroring,
             sqls::Id::AvailabilityGroups,
+            sqls::Id::Clusters,
         ];
         for id in customized_for_azure {
             assert_ne!(

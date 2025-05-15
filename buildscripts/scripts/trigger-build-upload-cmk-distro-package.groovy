@@ -102,7 +102,7 @@ def main() {
             }
 
             if ("${build_instance.result}" != "SUCCESS") {
-                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}", edition, "${build_instance.absoluteUrl}")
+                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}")
             }
 
             smart_stage(

@@ -2,7 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import dataclasses
+from collections.abc import Iterable
 from typing import Annotated, get_args, get_origin
+
+from cmk.gui.openapi.framework._types import DataclassInstance
 
 
 def strip_annotated(t: type) -> type:
@@ -34,3 +38,10 @@ def get_stripped_origin(t: type) -> type:
     """
     stripped = strip_annotated(t)
     return get_origin(stripped) or stripped
+
+
+def iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:
+    """Iterate over the fields of a dataclass."""
+    for field in dataclasses.fields(dataclass):
+        value = getattr(dataclass, field.name)
+        yield field.name, value

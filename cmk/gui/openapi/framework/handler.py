@@ -16,8 +16,8 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.framework._types import DataclassInstance, RawRequestData
-from cmk.gui.openapi.framework._utils import get_stripped_origin
-from cmk.gui.openapi.framework.endpoint_model import EndpointModel, iter_dataclass_fields
+from cmk.gui.openapi.framework._utils import get_stripped_origin, iter_dataclass_fields
+from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.framework.registry import RequestEndpoint

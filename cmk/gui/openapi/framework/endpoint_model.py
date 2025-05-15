@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import inspect
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import (
     Annotated,
     cast,
@@ -24,6 +24,7 @@ from cmk.gui.openapi.framework._types import (
     QueryParam,
     RawRequestData,
 )
+from cmk.gui.openapi.framework._utils import iter_dataclass_fields
 from cmk.gui.openapi.framework.content_types import convert_request_body
 from cmk.gui.openapi.framework.model.api_field import api_field
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
@@ -264,13 +265,6 @@ class _PreparedRequestData(TypedDict):
     path: dict[str, str]
     query: dict[str, str | list[str]]
     headers: dict[str, str]
-
-
-def iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:
-    """Iterate over the fields of a dataclass."""
-    for field in dataclasses.fields(dataclass):
-        value = getattr(dataclass, field.name)
-        yield field.name, value
 
 
 class EndpointModel[**P, T]:

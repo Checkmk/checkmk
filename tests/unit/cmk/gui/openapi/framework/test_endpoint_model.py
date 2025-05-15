@@ -22,6 +22,7 @@ from cmk.gui.openapi.framework.endpoint_model import (
     Parameters,
     SignatureParametersProcessor,
 )
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.response import TypedResponse
 
 
@@ -450,6 +451,25 @@ class TestAnnotatedValidators:
         request_data = _request_data(body={"field": "one"})
         with pytest.raises(ValidationError, match="Value must be 'one'"):
             model._validate_request_parameters(request_data, "application/json")
+
+    def test_annotated_validator_ignores_other_union_types(self) -> None:
+        def handler(
+            _arg: Annotated[
+                Annotated[str, AfterValidator(TestAnnotatedValidators.validate_one)] | ApiOmitted,
+                QueryParam(description="...", example="..."),
+            ] = ApiOmitted(),
+        ) -> None:
+            return None
+
+        model = EndpointModel.build(handler)
+
+        request_data = _request_data(query={"_arg": ["one"]})
+        bound = model._validate_request_parameters(request_data, None)
+        assert bound.arguments["_arg"] == "one"
+
+        request_data = _request_data()
+        bound = model._validate_request_parameters(request_data, None)
+        assert isinstance(bound.arguments["_arg"], ApiOmitted)
 
 
 def test_query_parameter_list() -> None:

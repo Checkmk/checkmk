@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.openapi.framework.model.base_models import LinkModel
-from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.openapi.restful_objects.constructors import expand_rel, object_href
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 
 
@@ -29,13 +29,17 @@ def generate_links(
     if editable:
         links.append(
             LinkModel(
-                rel=".../update", domainType="link", href=uri, method="PUT", type="application/json"
+                rel=expand_rel(".../update", {}),
+                domainType="link",
+                href=uri,
+                method="PUT",
+                type="application/json",
             )
         )
     if deletable:
         links.append(
             LinkModel(
-                rel=".../delete",
+                rel=expand_rel(".../delete", {}),
                 href=uri,
                 domainType="link",
                 method="DELETE",

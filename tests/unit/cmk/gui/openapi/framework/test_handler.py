@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Annotated, cast, override
 
 import pytest
-from pydantic import PlainSerializer, PlainValidator
+from pydantic import PlainSerializer
 from werkzeug.datastructures import Headers
 
 from tests.unit.cmk.gui.openapi.framework.factories import (
@@ -17,11 +17,11 @@ from tests.unit.cmk.gui.openapi.framework.factories import (
     RequestEndpointFactory,
 )
 
-from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
 from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.utils import (
     RestAPIHeaderValidationException,
@@ -442,11 +442,7 @@ def test_handle_endpoint_with_fields_filter(permission_validator: PermissionVali
 
     def _handler(
         body: _Schema,
-        fields: Annotated[
-            FieldsFilter,
-            QueryParam(description="", example=""),
-            PlainValidator(parse_fields_filter),
-        ],
+        fields: FieldsFilterType,
     ) -> _Schema:
         return body
 

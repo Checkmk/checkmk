@@ -114,20 +114,30 @@ impl Section {
 
     /// try to find the section's query in the sql directory for instance with the given version
     /// or in the known queries if custom sql query is not provided
-    pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+    pub fn select_query(
+        &self,
+        sql_dir: Option<PathBuf>,
+        instance_version: u32,
+        edition: &Edition,
+    ) -> Option<String> {
         match self.name.as_ref() {
-            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
+            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties, edition)
                 .map(str::to_string)
                 .ok(),
-            _ => self.find_query(sql_dir, instance_version),
+            _ => self.find_query(sql_dir, instance_version, edition),
         }
     }
 
-    fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+    fn find_query(
+        &self,
+        sql_dir: Option<PathBuf>,
+        instance_version: u32,
+        edition: &Edition,
+    ) -> Option<String> {
         self.find_provided_query(sql_dir, instance_version)
             .or_else(|| {
                 get_sql_id(&self.name)
-                    .and_then(Self::find_known_query)
+                    .and_then(|x| Self::find_known_query(x, edition))
                     .map(|s| s.to_owned())
             })
     }
@@ -154,8 +164,8 @@ impl Section {
         }
         None
     }
-    fn find_known_query(id: sqls::Id) -> Option<&'static str> {
-        sqls::find_known_query(id)
+    fn find_known_query(id: sqls::Id, edition: &Edition) -> Option<&'static str> {
+        sqls::find_known_query(id, edition)
             .map_err(|e| {
                 log::error!("{e}");
                 e
@@ -322,16 +332,28 @@ mod tests {
         ];
         for (name, ids) in test_set {
             assert_eq!(
-                make_section(name)
-                    .select_query(custom::get_sql_dir(), 0)
-                    .unwrap(),
-                find_known_query(ids).unwrap()
+                make_section(name).select_query(custom::get_sql_dir(), 0, &Edition::Normal),
+                Some(find_known_query(ids, &Edition::Normal).unwrap().to_string()),
+                "failed case {} {:?}",
+                name,
+                ids
             );
         }
         assert_eq!(
-            make_section("no_name").select_query(custom::get_sql_dir(), 0),
+            make_section("no_name").select_query(custom::get_sql_dir(), 0, &Edition::Normal),
             None
         )
+    }
+
+    #[test]
+    fn test_section_select_query_azure() {
+        let customized_for_azure = [sqls::Id::Mirroring, sqls::Id::AvailabilityGroups];
+        for id in customized_for_azure {
+            assert_ne!(
+                find_known_query(id, &Edition::Azure).unwrap(),
+                find_known_query(id, &Edition::Normal).unwrap()
+            );
+        }
     }
 
     #[test]

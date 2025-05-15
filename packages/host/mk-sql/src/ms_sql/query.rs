@@ -183,7 +183,7 @@ async fn _run_known_query<T: Borrow<sqls::Id>>(
     id: T,
 ) -> Result<Vec<UniAnswer>> {
     log::debug!("Query name: `{:?}`", id.borrow());
-    let query = find_known_query(id)?;
+    let query = find_known_query(id, &client.get_edition())?;
     exec_sql(client, query).await
 }
 

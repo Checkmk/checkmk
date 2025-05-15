@@ -519,7 +519,7 @@ impl SqlInstance {
         databases: &[String],
     ) -> String {
         let edition = client.get_edition();
-        if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
+        if let Some(query) = section.select_query(get_sql_dir(), self.version_major(), &edition) {
             let sep = section.sep();
             match section.name() {
                 names::INSTANCE => {
@@ -1091,7 +1091,7 @@ impl SqlInstance {
             Ok(mut c) => {
                 let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
                     section
-                        .select_query(get_sql_dir(), self.version_major())
+                        .select_query(get_sql_dir(), self.version_major(), &c.get_edition())
                         .unwrap_or_default()
                 });
                 run_custom_query(&mut c, q)

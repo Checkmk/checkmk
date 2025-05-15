@@ -6,6 +6,8 @@ use anyhow::Result;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 
+use crate::types::Edition;
+
 pub const UTC_DATE_FIELD: &str = "utc_date";
 
 #[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
@@ -314,7 +316,7 @@ ORDER BY job_name,
          next_run_time ASC
 ";
 
-    pub const MIRRORING: &str = r"SELECT @@SERVERNAME AS server_name,
+    pub const MIRRORING_NORMAL: &str = r"SELECT @@SERVERNAME AS server_name,
   DB_NAME(database_id) AS [database_name],
   mirroring_state,
   mirroring_state_desc,
@@ -330,7 +332,26 @@ ORDER BY job_name,
 FROM sys.database_mirroring
 WHERE mirroring_state IS NOT NULL";
 
-    pub const AVAILABILITY_GROUP: &str = r"SELECT
+    pub const MIRRORING_AZURE: &str = r"
+IF OBJECT_ID('sys.database_mirroring') IS NOT NULL
+    SELECT @@SERVERNAME AS server_name,
+      DB_NAME(database_id) AS [database_name],
+      mirroring_state,
+      mirroring_state_desc,
+      mirroring_role,
+      mirroring_role_desc,
+      mirroring_safety_level,
+      mirroring_safety_level_desc,
+      mirroring_partner_name,
+      mirroring_partner_instance,
+      mirroring_witness_name,
+      mirroring_witness_state,
+      mirroring_witness_state_desc
+    FROM sys.database_mirroring
+    WHERE mirroring_state IS NOT NULL
+";
+
+    pub const AVAILABILITY_GROUP_NORMAL: &str = r"SELECT
   GroupsName.name,
   Groups.primary_replica,
   Groups.synchronization_health,
@@ -338,6 +359,17 @@ WHERE mirroring_state IS NOT NULL";
   Groups.primary_recovery_health_desc
 FROM sys.dm_hadr_availability_group_states Groups
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
+
+    pub const AVAILABILITY_GROUP_AZURE: &str = r"
+IF OBJECT_ID('sys.dm_hadr_availability_group_states') IS NOT NULL   
+    SELECT
+      GroupsName.name,
+      Groups.primary_replica,
+      Groups.synchronization_health,
+      Groups.synchronization_health_desc,
+      Groups.primary_recovery_health_desc
+    FROM sys.dm_hadr_availability_group_states Groups
+    INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
     pub const INSTANCE_PROPERTIES: &str = r"SELECT
     CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR(MAX)) AS InstanceName,
@@ -364,40 +396,60 @@ pub fn _get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string()
 }
 
+#[derive(Debug, Clone, Copy)]
+struct QueryMap<'a> {
+    normal: &'a str,
+    azure: Option<&'a str>,
+}
+
+impl<'a> QueryMap<'a> {
+    pub fn new(normal: &'a str, azure: Option<&'a str>) -> Self {
+        QueryMap { normal, azure }
+    }
+    fn get_query(&self, edition: &Edition) -> &'a str {
+        if edition == &Edition::Azure {
+            self.azure.unwrap_or(self.normal)
+        } else {
+            self.normal
+        }
+    }
+}
+
 lazy_static::lazy_static! {
     static ref BLOCKING_SESSIONS: String = format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string();
     static ref COUNTERS: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES  ).to_string();
     static ref CLUSTERS: String = format!("{};{};", query::CLUSTER_NODES, query::CLUSTER_ACTIVE_NODES  ).to_string();
-    static ref QUERY_MAP: HashMap<Id, &'static str> = HashMap::from([
-        (Id::ComputerName, query::COMPUTER_NAME),
-        (Id::Mirroring, query::MIRRORING),
-        (Id::Jobs, query::JOBS),
-        (Id::AvailabilityGroups, query::AVAILABILITY_GROUP),
-        (Id::InstanceProperties, query::INSTANCE_PROPERTIES),
-        (Id::UtcEntry, query::UTC_ENTRY),
-        (Id::ClusterActiveNodes, query::CLUSTER_ACTIVE_NODES),
-        (Id::ClusterNodes, query::CLUSTER_NODES),
-        (Id::IsClustered, query::IS_CLUSTERED),
-        (Id::DatabaseNames, query::DATABASE_NAMES),
-        (Id::Databases, query::DATABASES),
-        (Id::Datafiles, query::DATAFILES),
-        (Id::Backup, query::BACKUP),
-        (Id::TableSpaces, query::SPACE_USED),
-        (Id::CounterEntries, query::COUNTERS_ENTRIES),
-        (Id::Connections, query::CONNECTIONS),
-        (Id::TransactionLogs, query::TRANSACTION_LOGS),
-        (Id::BadQuery, query::BAD_QUERY),
-        (Id::WaitingTasks, query::WAITING_TASKS), // used only in tests now
-        (Id::BlockedSessions, BLOCKING_SESSIONS.as_str()),
-        (Id::Counters, COUNTERS.as_str()),
-        (Id::Clusters, CLUSTERS.as_str()),
+    static ref QUERY_MAP: HashMap<Id, QueryMap<'static>> = HashMap::from([
+        (Id::ComputerName, QueryMap::new(query::COMPUTER_NAME, None)),
+        (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
+        (Id::Jobs, QueryMap::new(query::JOBS, None)),
+        (Id::AvailabilityGroups, QueryMap::new(query::AVAILABILITY_GROUP_NORMAL, Some(query::AVAILABILITY_GROUP_AZURE))),
+        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
+        (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),
+        (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
+        (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES, None)),
+        (Id::IsClustered, QueryMap::new(query::IS_CLUSTERED, None)),
+        (Id::DatabaseNames, QueryMap::new(query::DATABASE_NAMES, None)),
+        (Id::Databases, QueryMap::new(query::DATABASES, None)),
+        (Id::Datafiles, QueryMap::new(query::DATAFILES, None)),
+        (Id::Backup, QueryMap::new(query::BACKUP, None)),
+        (Id::TableSpaces, QueryMap::new(query::SPACE_USED, None)),
+        (Id::CounterEntries, QueryMap::new(query::COUNTERS_ENTRIES, None)),
+        (Id::Connections, QueryMap::new(query::CONNECTIONS, None)),
+        (Id::TransactionLogs, QueryMap::new(query::TRANSACTION_LOGS, None)),
+        (Id::BadQuery, QueryMap::new(query::BAD_QUERY, None)),
+        (Id::WaitingTasks, QueryMap::new(query::WAITING_TASKS, None)), // used only in tests no None))w
+        (Id::BlockedSessions, QueryMap::new(BLOCKING_SESSIONS.as_str(), None)),
+        (Id::Counters, QueryMap::new(COUNTERS.as_str(), None)),
+        (Id::Clusters, QueryMap::new(CLUSTERS.as_str(), None)),
     ]);
 }
 
-pub fn find_known_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
+pub fn find_known_query<T: Borrow<Id>>(query_id: T, edition: &Edition) -> Result<&'static str> {
     QUERY_MAP
         .get(query_id.borrow())
         .copied()
+        .map(|x| x.get_query(edition))
         .ok_or(anyhow::anyhow!(
             "Query for {:?} not found",
             query_id.borrow()

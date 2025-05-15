@@ -14,8 +14,9 @@ import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from tests.testlib.package_manager import ABCPackageManager, code_name
+from tests.testlib.version import CMKEdition
 
-from cmk.ccc.version import Edition, Version
+from cmk.ccc.version import Version
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 from buildscripts.scripts.lib.registry import (
@@ -35,7 +36,8 @@ def hash_file(artifact_name: str) -> str:
 def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
         file_name = (
-            f"check-mk-{edition}-{args.version}.{Edition.from_long_edition(edition).short}.tar.gz"
+            f"check-mk-{edition}-{args.version}.{CMKEdition.from_long_edition(edition).short}"
+            ".tar.gz"
         )
         internal_only = edition in loaded_yaml["internal_editions"]
         yield file_name, internal_only
@@ -78,7 +80,7 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
     for edition in loaded_yaml["editions"]:
         for distro in flatten(loaded_yaml["editions"][edition][args.use_case]):
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
-                Edition.from_long_edition(edition), version=args.version
+                CMKEdition(CMKEdition.from_long_edition(edition)), version=args.version
             )
             internal_only = (
                 distro in loaded_yaml.get("internal_distros", [])

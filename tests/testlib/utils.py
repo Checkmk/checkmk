@@ -28,8 +28,6 @@ import yaml
 
 from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
 
-from cmk.ccc.version import Edition
-
 from cmk import trace
 
 logger = logging.getLogger(__name__)
@@ -111,10 +109,6 @@ def site_id() -> str:
 
     os.putenv("OMD_SITE", _site_id)
     return _site_id
-
-
-def package_hash_path(version: str, edition: Edition) -> Path:
-    return Path(f"/tmp/cmk_package_hash_{version}_{edition.long}")
 
 
 def version_spec_from_env(fallback: str | None = None) -> str:

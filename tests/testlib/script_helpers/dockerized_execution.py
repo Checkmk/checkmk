@@ -31,8 +31,8 @@ from docker.models.images import Image  # type: ignore[import-untyped]
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.package_manager import DISTRO_CODES
-from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
-from tests.testlib.version import CMKPackageInfo, CMKVersion
+from tests.testlib.utils import get_cmk_download_credentials
+from tests.testlib.version import CMKPackageInfo, CMKVersion, package_hash_path
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
@@ -381,7 +381,7 @@ def _create_cmk_image(
         _exit_code, output = container.exec_run(
             [
                 "cat",
-                str(package_hash_path(package_info.version.version, package_info.edition.edition)),
+                str(package_hash_path(package_info.version.version, package_info.edition)),
             ],
         )
         hash_entry = output.decode("ascii").strip()

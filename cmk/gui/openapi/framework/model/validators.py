@@ -15,8 +15,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.gui import sites, userdb
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.watolib import tags
-from cmk.gui.watolib.groups_io import load_group_information
+from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
 
 
@@ -52,57 +51,58 @@ class GroupValidator:
     def exists(
         self,
         group: GroupName,
-    ) -> None:
+    ) -> GroupName:
         if not GroupValidator._verify_group_exists(self.group_type, group):
             raise ValueError(f"Group missing: {group!r}")
+        return group
 
     def not_exists(
         self,
         group: GroupName,
-    ) -> None:
+    ) -> GroupName:
         if GroupValidator._verify_group_exists(self.group_type, group):
             raise ValueError(f"Group {group!r} already exists.")
+        return group
 
     def monitored(
         self,
         group: GroupName,
-    ) -> None:
+    ) -> GroupName:
         if not GroupValidator._group_is_monitored(self.group_type, group):
             raise ValueError(
                 f"Group {group!r} exists, but is not monitored. Activate the configuration?"
             )
+        return group
 
     def not_monitored(
         self,
         group: GroupName,
-    ) -> None:
+    ) -> GroupName:
         if GroupValidator._group_is_monitored(self.group_type, group):
             raise ValueError(
                 f"Group {group!r} exists, but should not be monitored. Activate the configuration?"
             )
+        return group
 
     @staticmethod
     def _verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
-        specific_existing_groups = load_group_information()[group_type]
+        specific_existing_groups = groups_io.load_group_information()[group_type]
         return name in specific_existing_groups
 
     @staticmethod
     def _group_is_monitored(group_type: GroupType, group_name: GroupName) -> bool:
-        # Danke mypy
-        rv: bool
         if group_type == "service":
-            rv = bool(
+            return bool(
                 Query([Servicegroups.name], Servicegroups.name == group_name).first_value(
                     sites.live()
                 )
             )
-        elif group_type == "host":
-            rv = bool(
+        if group_type == "host":
+            return bool(
                 Query([Hostgroups.name], Hostgroups.name == group_name).first_value(sites.live())
             )
-        else:
-            raise ValueError("Unknown group type.")
-        return rv
+
+        raise ValueError("Unsupported group type.")
 
 
 class UserValidator:

@@ -8,11 +8,13 @@ from typing import get_args
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validators import (
+    GroupValidator,
     HostAddressValidator,
     TagValidator,
     UserValidator,
@@ -120,14 +122,130 @@ class TestUserValidator:
     def test_present(self, user_is_present: str) -> None:
         assert user_is_present == UserValidator.active(user_is_present)
 
-    def test_not_present(self, user_is_not_present: str) -> None:
+    def test_not_present(self, user_is_not_present: None) -> None:
         with pytest.raises(ValueError, match="User .* does not exist"):
-            UserValidator.active(user_is_not_present)
+            UserValidator.active("non_existent_user")
 
 
-# TODO: test all validators
-
-
-@pytest.mark.parametrize("group_type", get_args(GroupType))
 class TestGroupValidator:
-    pass
+    @pytest.fixture(name="group_is_present")
+    def fixture_group_is_present(
+        self, mocker: MockerFixture, group_type: GroupType
+    ) -> Iterator[str]:
+        group_name = "test_group"
+        mocker.patch(
+            "cmk.gui.watolib.groups_io.load_group_information",
+            return_value={group_type: {group_name: {}}},
+        )
+        yield group_name
+
+    @pytest.fixture(name="group_is_not_present")
+    def fixture_group_is_not_present(
+        self, mocker: MockerFixture, group_type: GroupType
+    ) -> Iterator[None]:
+        mocker.patch(
+            "cmk.gui.watolib.groups_io.load_group_information", return_value={group_type: {}}
+        )
+        yield None
+
+    @pytest.mark.parametrize("group_type", get_args(GroupType))
+    def test_exists(self, group_type: GroupType, group_is_present: str) -> None:
+        assert group_is_present == GroupValidator(group_type).exists(group_is_present)
+
+    @pytest.mark.parametrize("group_type", get_args(GroupType))
+    def test_exists_fails(self, group_type: GroupType, group_is_not_present: None) -> None:
+        with pytest.raises(ValueError, match="Group missing"):
+            GroupValidator(group_type).exists("non_existent_group")
+
+    @pytest.mark.parametrize("group_type", get_args(GroupType))
+    def test_not_exists(self, group_type: GroupType, group_is_not_present: None) -> None:
+        group_name = "non_existent_group"
+        assert group_name == GroupValidator(group_type).not_exists(group_name)
+
+    @pytest.mark.parametrize("group_type", get_args(GroupType))
+    def test_not_exists_fails(self, group_type: GroupType, group_is_present: str) -> None:
+        with pytest.raises(ValueError, match="Group .* exists"):
+            GroupValidator(group_type).not_exists(group_is_present)
+
+    @staticmethod
+    def _groups_except_contact() -> list[GroupType]:
+        """Get all group types except 'contact'.
+
+        The monitored checks don't support contact groups.
+        """
+        return [group for group in get_args(GroupType) if group != "contact"]
+
+    @pytest.fixture(name="group_is_monitored")
+    def fixture_group_is_monitored(
+        self,
+        group_type: GroupType,
+        mock_livestatus: MockLiveStatusConnection,
+        group_is_not_monitored: str,
+    ) -> Iterator[str]:
+        """Set up the livestatus mock for testing monitored groups. Yields the group name."""
+        mock_livestatus.add_table(f"{group_type}groups", [{"name": group_is_not_monitored}])
+        yield group_is_not_monitored
+
+    @pytest.fixture(name="group_is_not_monitored")
+    def fixture_group_is_not_monitored(
+        self, group_type: GroupType, mock_livestatus: MockLiveStatusConnection
+    ) -> Iterator[str]:
+        """Set up the livestatus mock for testing unmonitored groups. Yields the group name."""
+        group_name = "test_group"
+        table = f"{group_type}groups"
+        mock_livestatus.expect_query(f"GET {table}\nColumns: name\nFilter: name = {group_name}")
+        yield group_name
+
+    @pytest.mark.parametrize("group_type", _groups_except_contact())
+    @pytest.mark.usefixtures("request_context")
+    def test_monitored(
+        self,
+        group_type: GroupType,
+        mock_livestatus: MockLiveStatusConnection,
+        group_is_monitored: str,
+    ) -> None:
+        with mock_livestatus:
+            assert group_is_monitored == GroupValidator(group_type).monitored(group_is_monitored)
+
+    @pytest.mark.parametrize("group_type", _groups_except_contact())
+    @pytest.mark.usefixtures("request_context")
+    def test_monitored_fails(
+        self,
+        group_type: GroupType,
+        mock_livestatus: MockLiveStatusConnection,
+        group_is_not_monitored: str,
+    ) -> None:
+        with mock_livestatus, pytest.raises(ValueError, match="is not monitored"):
+            GroupValidator(group_type).monitored(group_is_not_monitored)
+
+    @pytest.mark.parametrize("group_type", _groups_except_contact())
+    @pytest.mark.usefixtures("request_context")
+    def test_not_monitored(
+        self,
+        group_type: GroupType,
+        mock_livestatus: MockLiveStatusConnection,
+        group_is_not_monitored: str,
+    ) -> None:
+        with mock_livestatus:
+            assert group_is_not_monitored == GroupValidator(group_type).not_monitored(
+                group_is_not_monitored
+            )
+
+    @pytest.mark.parametrize("group_type", _groups_except_contact())
+    @pytest.mark.usefixtures("request_context")
+    def test_not_monitored_fails(
+        self,
+        group_type: GroupType,
+        mock_livestatus: MockLiveStatusConnection,
+        group_is_monitored: str,
+    ) -> None:
+        with mock_livestatus, pytest.raises(ValueError, match="should not be monitored"):
+            GroupValidator(group_type).not_monitored(group_is_monitored)
+
+    def test_monitored_fails_contact(self) -> None:
+        with pytest.raises(ValueError, match="Unsupported group type"):
+            GroupValidator("contact").monitored("some_group")
+
+    def test_not_monitored_fails_contact(self) -> None:
+        with pytest.raises(ValueError, match="Unsupported group type"):
+            GroupValidator("contact").not_monitored("some_group")

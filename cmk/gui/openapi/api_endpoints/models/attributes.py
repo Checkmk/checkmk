@@ -63,13 +63,15 @@ class HostContactGroupModel:
 
 @dataclass(kw_only=True, slots=True)
 class SNMPCommunityModel:
-    type: Literal["v1_v2_community"]
+    type: Literal["v1_v2_community"] = api_field(description="SNMP v1 or v2 with community")
     community: str = api_field(description="SNMP community (SNMP Versions 1 and 2c)")
 
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3NoAuthNoPrivacyModel:
-    type: Literal["noAuthNoPriv"]
+    type: Literal["noAuthNoPriv"] = api_field(
+        description="SNMPv3 without authentication or privacy"
+    )
     security_name: str = api_field(description="Security name")
 
     @classmethod
@@ -85,7 +87,9 @@ class SNMPv3NoAuthNoPrivacyModel:
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3AuthNoPrivacyModel:
-    type: Literal["authNoPriv"]
+    type: Literal["authNoPriv"] = api_field(
+        description="SNMPv3 with authentication, but without privacy"
+    )
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
     auth_password: Annotated[str, MinLen(8)] = api_field(
@@ -112,7 +116,7 @@ class SNMPv3AuthNoPrivacyModel:
 
 @dataclass(kw_only=True, slots=True)
 class SNMPv3AuthPrivacyModel:
-    type: Literal["authPriv"]
+    type: Literal["authPriv"] = api_field(description="SNMPv3 with authentication and privacy")
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
     auth_password: Annotated[str, MinLen(8)] = api_field(
@@ -191,7 +195,7 @@ class SNMPCredentialsConverter:
 
 @dataclass(kw_only=True, slots=True)
 class IPAddressRangeModel:
-    type: Literal["ip_range"] = "ip_range"
+    type: Literal["ip_range"] = api_field(description="Select a range of IP addresses")
     from_address: IPv4String = api_field(description="The first IPv4 address of this range.")
     to_address: IPv4String = api_field(description="The last IPv4 address of this range.")
 
@@ -203,13 +207,13 @@ class IPAddressRangeModel:
             to_address=IPv4String(value[1][1]),
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["ip_range"], tuple[str, str]]:
+    def to_internal(self) -> tuple[Literal["ip_range"], tuple[str, str]]:
         return self.type, (str(self.from_address), str(self.to_address))
 
 
 @dataclass(kw_only=True, slots=True)
 class IPNetworkModel:
-    type: Literal["ip_network"] = "ip_network"
+    type: Literal["ip_network"] = api_field(description="Select an entire network")
     network: IPv4NetworkString = api_field(
         description="A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, maximum prefix length is 30 bit.\n\nValid examples:\n\n * `192.168.0.0/24`\n * `192.168.0.0/255.255.255.0`"
     )
@@ -221,13 +225,13 @@ class IPNetworkModel:
             network=value[1],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["ip_network"], str]:
+    def to_internal(self) -> tuple[Literal["ip_network"], str]:
         return self.type, self.network
 
 
 @dataclass(kw_only=True, slots=True)
 class IPAddressesModel:
-    type: Literal["ip_list"] = "ip_list"
+    type: Literal["ip_list"] = api_field(description="Select multiple explicit IP addresses")
     addresses: list[IPv4String] = api_field(description="List of IPv4 addresses")
 
     @classmethod
@@ -237,13 +241,13 @@ class IPAddressesModel:
             addresses=[IPv4String(x) for x in value[1]],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["ip_list"], list[str]]:
+    def to_internal(self) -> tuple[Literal["ip_list"], list[str]]:
         return self.type, [str(x) for x in self.addresses]
 
 
 @dataclass(kw_only=True, slots=True)
 class IPRegexpModel:
-    type: Literal["ip_regex_list"] = "ip_regex_list"
+    type: Literal["ip_regex_list"] = api_field(description="Deselect IP addresses with regexes")
     regexp_list: list[RegexString] = api_field(
         description="A list of regular expressions which are matched against the found IP addresses. The matches will be excluded from the result."
     )
@@ -255,7 +259,7 @@ class IPRegexpModel:
             regexp_list=[RegexString(x) for x in value[1]],
         )
 
-    def to_checkmk_tuple(self) -> tuple[Literal["ip_regex_list"], list[str]]:
+    def to_internal(self) -> tuple[Literal["ip_regex_list"], list[str]]:
         return self.type, [str(x) for x in self.regexp_list]
 
 
@@ -303,7 +307,7 @@ class TimeAllowedRangeModel:
             end=cls._from_checkmk_time(value[1]),
         )
 
-    def to_checkmk_tuple(self) -> tuple[_CheckmkTime, _CheckmkTime]:
+    def to_internal(self) -> tuple[_CheckmkTime, _CheckmkTime]:
         return (self.start.hour, self.start.minute), (self.end.hour, self.end.minute)
 
 
@@ -342,13 +346,12 @@ class RegexpRewritesModel:
             replace_with=value[1],
         )
 
-    def to_checkmk_tuple(self) -> tuple[str, str]:
+    def to_internal(self) -> tuple[str, str]:
         return str(self.search), self.replace_with
 
 
 @dataclass(kw_only=True, slots=True)
 class DirectMappingModel:
-    # TODO: CheckmkTuple
     hostname: str = api_field(description="The host name to be replaced.")
     replace_with: str = api_field(description="The replacement string.")
 
@@ -359,7 +362,7 @@ class DirectMappingModel:
             replace_with=value[1],
         )
 
-    def to_checkmk_tuple(self) -> tuple[str, str]:
+    def to_internal(self) -> tuple[str, str]:
         return self.hostname, self.replace_with
 
 
@@ -368,7 +371,7 @@ class TranslateNamesModel:
     case: Literal["nop", "lower", "upper"] = api_field(
         alias="convert_case",
         description="Convert all detected host names to upper- or lower-case.\n\n * `nop` - Do not convert anything\n * `lower` - Convert all host names to lowercase.\n * `upper` - Convert all host names to uppercase.",
-        default="nop",
+        # default="nop",
     )
     drop_domain: bool | ApiOmitted = api_field(
         description=(
@@ -577,7 +580,7 @@ class LockedByModel:
 
     @classmethod
     def from_internal(cls, value: tuple[SiteId, str, str] | Sequence[str]) -> Self:
-        # see `to_checkmk_tuple` - we allow tuples and lists...
+        # see `to_internal` - we allow tuples and lists...
         assert len(value) == 3, f"Expected 3 values, got {len(value)}"
         return cls(
             site_id=value[0],
@@ -585,7 +588,7 @@ class LockedByModel:
             instance_id=value[2],
         )
 
-    def to_checkmk_tuple(self) -> Sequence[str]:
+    def to_internal(self) -> Sequence[str]:
         # for some godforsaken reason, the locked_by attribute is a list and not a tuple
         return [self.site_id, self.program_id, self.instance_id]
 
@@ -609,6 +612,22 @@ class _LabelValidator:
     kind: Literal["key", "value"]
 
     def __call__(self, value: str) -> str:
+        """Validate a label key or value.
+
+        Examples:
+            >>> _LabelValidator(kind="key")("my_label")
+            'my_label'
+            >>> _LabelValidator(kind="value")("my_value")
+            'my_value'
+            >>> _LabelValidator(kind="key")("error:")
+            Traceback (most recent call last):
+                ...
+            ValueError: Invalid label key: 'error:'
+            >>> _LabelValidator(kind="value")("error:")
+            Traceback (most recent call last):
+                ...
+            ValueError: Invalid label value: 'error:'
+        """
         if ":" in value:
             raise ValueError(f"Invalid label {self.kind}: {value!r}")
 

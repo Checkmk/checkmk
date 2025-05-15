@@ -348,6 +348,17 @@ http_archive(
 )
 
 http_archive(
+    name = "stunnel",
+    build_file = "//omd/packages/stunnel:BUILD.stunnel.bazel",
+    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+    strip_prefix = "stunnel-5.63",
+    urls = [
+        "https://ftp.nluug.nl/pub/networking/stunnel/archive/5.x/stunnel-5.63.tar.gz",
+        UPSTREAM_MIRROR_URL + "stunnel-5.63.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

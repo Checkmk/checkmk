@@ -13,10 +13,6 @@ load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitorin
 
 monitoring_plugins_workspace()
 
-load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel_workspace")
-
-stunnel_workspace()
-
 load("//omd/packages/freetds:freetds_http.bzl", "freetds_workspace")
 
 freetds_workspace()

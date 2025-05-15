@@ -43,15 +43,11 @@ def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleIn
 
 
 def parse_netapp_ontap_fan(string_table: StringTable) -> Section:
-    """
-    It should be parsed/discoverd evaluating with "installed"/"not installed" but the API is not
-    responding with this information
-    """
-
     return {
         fan.item_name(): fan
         for line in string_table
-        for fan in [models.ShelfFanModel.model_validate_json(line[0])]
+        if (fan := models.ShelfFanModel.model_validate_json(line[0])) is not None
+        and fan.consider_installed()
     }
 
 

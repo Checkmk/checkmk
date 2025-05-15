@@ -26,15 +26,11 @@ def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleIn
 
 
 def parse_netapp_ontap_psu(string_table: StringTable) -> Section:
-    """
-    It should be parsed/discoverd evaluating with "installed"/"not installed" but the API is not
-    responding with this information
-    """
-
     return {
         psu.item_name(): psu
         for line in string_table
-        for psu in [models.ShelfPsuModel.model_validate_json(line[0])]
+        if (psu := models.ShelfPsuModel.model_validate_json(line[0])) is not None
+        and psu.consider_installed()
     }
 
 

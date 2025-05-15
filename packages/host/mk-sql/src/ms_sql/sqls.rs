@@ -151,12 +151,12 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
     pub const DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
 
     /// Executes `sp_spaceused` for each database parsing output as resuult set
-    /// Requires nvarchar support
+    /// Requires NVARCHAR support
     pub const SPACE_USED: &str = "EXEC sp_spaceused \
         WITH RESULT SETS \
         ( \
-        (database_name nvarchar(128),database_size nvarchar(128), \"unallocated space\" nvarchar(128)), \
-        (reserved nvarchar(128),data nvarchar(128), index_size nvarchar(128), unused nvarchar(128)) \
+        (database_name NVARCHAR(128),database_size NVARCHAR(128), \"unallocated space\" NVARCHAR(128)), \
+        (reserved NVARCHAR(128),data NVARCHAR(128), index_size NVARCHAR(128), unused NVARCHAR(128)) \
         )";
 
     pub const SPACE_USED_SIMPLE: &str = "EXEC sp_spaceused";

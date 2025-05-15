@@ -24,7 +24,10 @@ check_info = {}
 
 def inventory_emerson_temp(info):
     # Device appears to mark missing sensors by temperature value -999999
-    yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
+    try:
+        yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
+    except ValueError:
+        pass
 
 
 def check_emerson_temp(item, params, info):

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-14 00:50+0000\n"
+"PO-Revision-Date: 2025-05-14 22:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -7122,9 +7122,8 @@ msgstr ""
 msgid "Ascending"
 msgstr "Aufsteigend"
 
-#, fuzzy
 msgid "Ask Checkmk AI"
-msgstr "Checkmk-Agent"
+msgstr "Frag Checkmk AI"
 
 msgid "Ask for an optional comment"
 msgstr "Nach einem optionalen Kommentar fragen"
@@ -9270,7 +9269,7 @@ msgid "Brocade SFPs"
 msgstr "Brocade SFPs"
 
 msgid "Brocade port discovery"
-msgstr "Service-Erkennung für Brocade-Ports"
+msgstr "Erkennung für Brocade-Port"
 
 msgid "Broken"
 msgstr "Gebrochen"
@@ -10495,13 +10494,11 @@ msgstr "CPG Mitglieds Name"
 msgid "CPU"
 msgstr "CPU"
 
-#, fuzzy
 msgid "CPU Core Usage"
-msgstr "Energie Verbrauch"
+msgstr "CPU Kern-Auslastung"
 
-#, fuzzy
 msgid "CPU Cores"
-msgstr "CPU Credits"
+msgstr "CPU Kerne"
 
 msgid ""
 "CPU Load - _EXPRESSION:{\"metric\":\"load1\",\"scalar\":\"max\"} CPU Cores"
@@ -10523,9 +10520,8 @@ msgstr "CPU-Zeit"
 msgid "CPU Utilization"
 msgstr "CPU-Auslastung"
 
-#, fuzzy
 msgid "CPU Utilization levels"
-msgstr "CPU-Auslastung"
+msgstr "CPU-Auslastungslevels"
 
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-Auslastung von Clustern"
@@ -11419,6 +11415,10 @@ msgstr "Zertifikatsdetails"
 msgid "Certificate for encrypted authentication request responses (PEM)"
 msgstr ""
 "Zertifikat für verschlüsselte Antworten auf Authentifizierungsanfragen (PEM)"
+
+#, fuzzy
+msgid "Certificate has no subject alternative name"
+msgstr "Alternativer Name des Zertifikatsgegenstands"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "Zertifikat ist nicht von der \"Trusted authority\" unterzeichnet"
@@ -12842,7 +12842,7 @@ msgid "Cisco CPU Memory"
 msgstr "Cisco CPU Speicher"
 
 msgid "Cisco DOM discovery"
-msgstr "Cisco DOM Service-Erkennung"
+msgstr "Cisco DOM Erkennung"
 
 msgid "Cisco IP SLA"
 msgstr "Cisco IP SLA"
@@ -15319,7 +15319,7 @@ msgid "Could not find an entry matching %r in choices"
 msgstr ""
 "Es konnte kein Eintrag gefunden werden, der %r in den Optionen entspricht"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
 "services of your nodes shall be added to the cluster. This is done using the "
@@ -16025,11 +16025,9 @@ msgstr "Krit/Unten"
 msgid "Critical"
 msgstr "Kritisch"
 
-#, fuzzy
 msgid "Critical Event Rate"
 msgstr "Rate kritischer Ereignisse"
 
-#, fuzzy
 msgid "Critical Events"
 msgstr "Kritische Ereignisse"
 
@@ -16679,9 +16677,8 @@ msgstr "DB-Cluster"
 msgid "DB instances"
 msgstr "DB-Instanzen"
 
-#, fuzzy
 msgid "DB non-idle wait"
-msgstr "Oracle DB Nicht-Leerlaufzeit"
+msgstr "DB Nicht-Leerlaufzeit"
 
 msgid "DB parameter groups"
 msgstr "DB-Parametergruppen"
@@ -16692,9 +16689,8 @@ msgstr "DB-Sicherheitsgruppen"
 msgid "DB subnet groups"
 msgstr "DB-Subnetzgruppen"
 
-#, fuzzy
 msgid "DB time"
-msgstr "% Zeit"
+msgstr "DB-Zeit"
 
 msgid "DB usage"
 msgstr "DB-Nutzung"
@@ -16788,7 +16784,7 @@ msgid "DHCP"
 msgstr "DHCP"
 
 msgid "DHCP Discovery messages"
-msgstr "DHCP Discovery Nachrichten"
+msgstr "Nachrichten der DHCP Erkennung"
 
 msgid "DHCP Pools for Windows and Linux"
 msgstr "DHCP"
@@ -19340,16 +19336,14 @@ msgstr "Erkennen von Services während der Erstellung"
 msgid "Discover single interfaces"
 msgstr "Einzelne Schnittstellen erkennen"
 
-#, fuzzy
 msgid "Discover templates"
-msgstr "Erkennungs-Zustand"
+msgstr "Vorlagen ermitteln"
 
 msgid "Discovered changes"
 msgstr "Erkannte Änderungen"
 
-#, fuzzy
 msgid "Discovered failover mode"
-msgstr "Erkennung fehlgeschlagen"
+msgstr "Erkannter Failover-Modus"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -19365,7 +19359,7 @@ msgid "Discovery Output"
 msgstr "Ausgabe der Erkennung"
 
 msgid "Discovery Outputs"
-msgstr "Ausgaben der Erkennungen"
+msgstr "Ausgaben der Erkennung"
 
 msgid "Discovery and Checkmk settings"
 msgstr "Erkennungs- und Checkmk-Einstellungen"
@@ -19388,23 +19382,23 @@ msgstr "Erkennung von leeren DHCP-Pools"
 msgid "Discovery of individual services"
 msgstr "Erkennung von einzelnen Services"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d "
 "kept) and %d host labels (%d added, %d changed, %d removed, %d kept)"
 msgstr ""
-"Service-Erkennung auf Host %s durchgeführt: %d hinzugefügt, %d entfernt, %d "
-"behalten, %d services insgesamt und %d Host Labels hinzugefügt, %d Host "
-"Labels insgesamt"
+"Erkennung auf Host %s: %d Services (%d hinzugefügt, %d geändert, %d "
+"entfernt, %d behalten) und %d Host-Labels (%d hinzugefügt, %d geändert, %d "
+"entfernt, %d behalten)"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d "
 "kept)and %d host labels (%d added, %d changed, %d removed, %d kept)"
 msgstr ""
-"Service-Erkennung auf Host %s durchgeführt: %d hinzugefügt, %d entfernt, %d "
-"behalten, %d services insgesamt und %d Host Labels hinzugefügt, %d Host "
-"Labels insgesamt"
+"Erkennung auf Host %s: %d Services (%d hinzugefügt, %d geändert, %d "
+"entfernt, %d behalten) und %d Host-Labels (%d hinzugefügt, %d geändert, %d "
+"entfernt, %d behalten)"
 
 msgid "Discovery rules"
 msgstr "Erkennungsregeln"
@@ -19416,7 +19410,7 @@ msgid "Discovery settings for physical ports"
 msgstr "Erkennungseinstellungen für physikalische Ports"
 
 msgid "Discovery state"
-msgstr "Erkennungs-Zustand"
+msgstr "Erkennungszustand"
 
 msgid "Disk"
 msgstr "Platte"
@@ -20299,9 +20293,8 @@ msgstr "Phasen gleichen Zustands nicht zusammenfassen"
 msgid "Do not monitor"
 msgstr "Nicht überwachen"
 
-#, fuzzy
 msgid "Do not monitor failovers"
-msgstr "Grenzwerte nicht überwachen"
+msgstr "Failovers nicht überwachen"
 
 msgid "Do not monitor hosts without discovered services"
 msgstr "Hosts ohne erkannte Services nicht überwachen"
@@ -21036,9 +21029,8 @@ msgstr "ESX-Multipath-Anzahl"
 msgid "ESX VM memory usage"
 msgstr "ESX VM-Speicherauslastung"
 
-#, fuzzy
 msgid "ESX VM template discovery"
-msgstr "Diskrepanz von SDM-Templates"
+msgstr "ESX VM Vorlagenerkennung"
 
 msgid "ESX Vsphere host system CPU utilization"
 msgstr "CPU-Auslastung des ESX vSphere-Host-Systems"
@@ -21235,9 +21227,8 @@ msgstr ""
 "Berechtigungen oder erhält sie nicht, je nach den Standardeinstellungen der "
 "mitgelieferten Rolle, auf der sie beruht."
 
-#, fuzzy
 msgid "Earliest entry in journal"
-msgstr "Erster Eintrag mit Einheit"
+msgstr "Frühester Eintrag im Journal"
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -22677,7 +22668,6 @@ msgstr "Entspricht"
 msgid "Error"
 msgstr "Fehler"
 
-#, fuzzy
 msgid "Error Rate"
 msgstr "Fehlerrate"
 
@@ -24158,9 +24148,9 @@ msgstr "Parent-Scan konnte nicht gestartet werden: %s"
 msgid "Failed to start the job: %s"
 msgstr "Fehler beim Starten des Jobs: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed to start the stage action on remote site %s: %s"
-msgstr "Python-Anfrage konnte nicht verarbeitet werden: '%s': %s"
+msgstr ""
 
 #, python-format
 msgid "Failed to stop job: %s"
@@ -24220,9 +24210,8 @@ msgstr "Failover Zustand: FAILOVER_PENDING"
 msgid "Failover State: NONE"
 msgstr "Failover Zustand: NONE"
 
-#, fuzzy
 msgid "Failover monitoring"
-msgstr "Rauch-Monitoring"
+msgstr "Failover Monitoring"
 
 msgid "Failover servers"
 msgstr "Failover-Server"
@@ -24704,9 +24693,8 @@ msgstr "Auswahl nach Host-Name filtern:"
 msgid "Filter selection by service:"
 msgstr "Auswahl nach Service filtern:"
 
-#, fuzzy
 msgid "Filter tags"
-msgstr "Filter"
+msgstr "Merkmale filtern"
 
 msgid "Filter tags imported as host/service labels"
 msgstr "Filter-Merkmale wurden als Host-/Service-Labels importiert"
@@ -24723,9 +24711,9 @@ msgstr "Filter Ansicht"
 msgid "Filtering and computation options"
 msgstr "Filter- und Berechnungsoptionen"
 
-#, fuzzy
 msgid "Filtering tags enabled but no tags defined."
-msgstr "Merkmale aktiviert, aber keine Merkmale definiert."
+msgstr ""
+"Filtern von Merkmalen ist aktiviert, aber es wurden keine Merkmale definiert."
 
 msgid "Filters"
 msgstr "Filter"
@@ -26182,9 +26170,9 @@ msgstr "Globale Dienste zur Überwachung"
 msgid "Global setting"
 msgstr "Globale Einstellung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Global setting '%s'"
-msgstr "Globale Einstellungen"
+msgstr "Globale Einstellung '%s'"
 
 msgid "Global settings"
 msgstr "Globale Einstellungen"
@@ -26653,9 +26641,8 @@ msgstr "H.Unten"
 msgid "HA"
 msgstr "HA"
 
-#, fuzzy
 msgid "HA status"
-msgstr "Host-Zustand"
+msgstr "HA-Zustand"
 
 msgid "HARD"
 msgstr "HART"
@@ -27079,7 +27066,7 @@ msgid "Heap memory usage"
 msgstr "Heap-Speicherauslastung"
 
 msgid "Heartbeat CRM discovery"
-msgstr "Heartbeat CRM-Service-Erkennung"
+msgstr "Heartbeat CRM-Erkennung"
 
 msgid "Heartbeat CRM general status"
 msgstr "Heartbeat CRM Gesamtzustand"
@@ -29327,9 +29314,11 @@ msgstr "Host-Label"
 msgid "Host labels"
 msgstr "Host-Labels"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Host labels: %d total (%d added, %d changed, %d removed, %d kept)"
-msgstr "Services: %d gesamt (%d hinzugefügt, %d entfernt, %d behalten)"
+msgstr ""
+"Host-Merkmale: %d gesamt (%d hinzugefügt, %d geändert, %d entfernt, %d "
+"behalten)"
 
 msgid "Host limit"
 msgstr "Host-Limit"
@@ -32297,7 +32286,7 @@ msgid "Ignore notification period"
 msgstr "Ignoriere Benachrichtigungsperiode"
 
 msgid "Ignore port types during discovery"
-msgstr "Ignoriere Port-Typen während der Service-Erkennung"
+msgstr "Ignoriere Port-Typen während der Erkennung"
 
 msgid "Ignore proxies configured on the target system"
 msgstr "Auf dem Zielsystem konfigurierte Proxys ignorieren"
@@ -41375,9 +41364,9 @@ msgid ""
 "Nails down the DC to the node which is the DC during discovery. The check "
 "will report CRITICAL when another node becomes the DC during later checks."
 msgstr ""
-"Den DC festnageln auf den Knoten, welcher während der Service-Erkennung der "
-"DC ist. Der Check wird dann kritisch, sobald ein anderen Knoten später die "
-"Rolle des DC übernimmt."
+"Den DC festnageln auf den Knoten, welcher während der Erkennung der DC ist. "
+"Der Check wird dann kritisch, sobald ein anderen Knoten später die Rolle des "
+"DC übernimmt."
 
 msgid ""
 "Nails down the resources to the node which is holding them during discovery. "
@@ -42641,6 +42630,10 @@ msgstr "Nein, nicht klonen"
 
 msgid "No, keep current name"
 msgstr "Nein, aktuellen Namen beibehalten"
+
+#, fuzzy
+msgid "No, keep host"
+msgstr "Ntop Host"
 
 msgid "No-TxCredits errors"
 msgstr "No-TXCredits Fehler"
@@ -44822,11 +44815,10 @@ msgstr "Nur in der Referenz"
 
 msgid "Only include hosts that failed on previous discovery"
 msgstr ""
-"Fügen Sie nur Hosts ein, bei denen die vorherige Service-Erkennung "
-"fehlgeschlagen ist"
+"Fügen Sie nur Hosts ein, bei denen die vorherige Erkennung fehlgeschlagen ist"
 
 msgid "Only include hosts with a failed discovery check"
-msgstr "Nur Hosts mit einem gescheiterten Service-Erkennungs-Check"
+msgstr "Nur Hosts mit einem gescheiterten Discovery Check"
 
 msgid "Only interface with these item names are put into this group."
 msgstr "Nur Schnittstellen mit diesen Namen werden in die Gruppe aufgenommen."
@@ -47788,13 +47780,13 @@ msgid "Perform network parent scan"
 msgstr "Netzwerk-Parent Scan ausführen"
 
 msgid "Perform periodic service discovery check"
-msgstr "Periodische Service-Erkennungs-Checks ausführen"
+msgstr "Periodische Service Discovery Checks ausführen"
 
 msgid "Perform requests from the Checkmk server"
 msgstr "Anfragen vom Checkmk-Server ausführen"
 
 msgid "Perform service discovery check every"
-msgstr "Check für Service-Erkennung jede(n)"
+msgstr "Ausführung von Service Discovery Checks jede(n)"
 
 msgid "Perform service discovery every"
 msgstr "Service-Erkennung ausführen alle"
@@ -48716,36 +48708,38 @@ msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that labels of services have changed."
 msgstr ""
-"Bitte wählen Sie aus, welchen Alarmzustand die Check-Services der Service-"
-"Erkennung annehmen sollen, wenn sich die Service-Labels geändert haben."
+"Bitte wählen Sie aus, welchen Alarmzustand die Services des Service "
+"Discovery Checks annehmen sollen, wenn sich die Service-Labels geändert "
+"haben."
 
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that non-existing services are being monitored."
 msgstr ""
-"Legen Sie den Zustand fest, den der Service-Erkennungs-Check annehmen soll "
-"wenn nicht existierende Services gefunden werden."
+"Legen Sie den Zustand fest, den die Services des Service Discovery Checks "
+"annehmen sollen wenn nicht existierende Services gefunden werden."
 
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that parameters of services have changed."
 msgstr ""
-"Bitte wählen Sie aus, welchen Alarmzustand die Check-Services der Service-"
-"Erkennung annehmen sollen, wenn sich Parameter der Services geändert haben."
+"Bitte wählen Sie aus, welchen Alarmzustand die Services des Service "
+"Discovery Checks annehmen sollen, wenn sich Parameter der Services geändert "
+"haben."
 
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that un-monitored services are found."
 msgstr ""
-"Legen Sie den Alarm-Zustand fest, den der Service-Discovery Check ausgeben "
-"soll wenn nicht überwachte Services gefunden werden."
+"Legen Sie den Alarm-Zustand fest, den die Services des Service Discovery "
+"Checks ausgeben sollen wenn nicht überwachte Services gefunden werden."
 
 msgid ""
 "Please select which state the service discovery check services shall assume "
 "in case that new host labels are found."
 msgstr ""
-"Bitte wählen Sie aus, welchen Zustand die Service-Discovery Check Services "
-"annehmen sollen, falls neue Host-Labels gefunden werden."
+"Bitte wählen Sie aus, welchen Zustand die Services des Service Discovery "
+"Checks annehmen sollen, falls neue Host-Labels gefunden werden."
 
 msgid "Please set a host name for host state reclassification"
 msgstr ""
@@ -50931,7 +50925,7 @@ msgid "Redfish Ethernet Interface discovery"
 msgstr "Redfish Ethernet Interface Erkennung"
 
 msgid "Redfish outlet discovery"
-msgstr "Erkennung der Redfish Stromanschlüsse"
+msgstr "Erkennung der Redfish Ausgänge"
 
 msgid "Redfish physical port discovery"
 msgstr "Physikalische Port-Erkennung für Redfish"
@@ -61908,8 +61902,8 @@ msgid ""
 "The Checkmk discovery will automatically find and configure services to be "
 "checked on your hosts and may also discover host labels."
 msgstr ""
-"Die Service-Erkennung von Checkmk findet und konfiguriert automatisch alle "
-"zu überwachenden Services eines Hosts. Sie kann auch Host-Labels erkennen."
+"Die Erkennung von Checkmk findet und konfiguriert automatisch alle zu "
+"überwachenden Services eines Hosts. Sie kann auch Host-Labels erkennen."
 
 msgid ""
 "The Checkmk server URL should be the FQDN (see inline help for details)."
@@ -67212,10 +67206,11 @@ msgid ""
 "permanently disable them. If you are sure that they are just transitional, "
 "just leave them until they vanish."
 msgstr ""
-"Diese Services wurden automatisch erkannt aber noch nicht zum Monitoring "
-"hinzugefügt. Sie sollten diese entweder in die Überwachung aufnehmen oder "
-"sie dauerhaft deaktivieren. Wenn Sie sicher sind, dass sie nur vorübergehend "
-"sind, lassen Sie sie einfach, bis sie von selbst wieder verschwinden."
+"Diese Services wurden durch die Service-Erkennung gefunden, aber noch nicht "
+"zum Monitoring hinzugefügt. Sie sollten diese entweder in die Überwachung "
+"aufnehmen oder sie dauerhaft deaktivieren. Wenn Sie sicher sind, dass sie "
+"nur vorübergehend sind, lassen Sie sie einfach, bis sie von selbst wieder "
+"verschwinden."
 
 msgid ""
 "These services have been found on this host and have been mapped to a "
@@ -67664,6 +67659,12 @@ msgstr "Diese Änderung wurde von einem anderen Benutzer gemacht"
 
 msgid "This change is already activated"
 msgstr "Diese Änderung wurde bereits aktiviert"
+
+msgid ""
+"This change must be activated via <a href='https://docs.checkmk.com/latest/"
+"en/wato.html#activate_changes' target='_blank'>Activate changes</a> before "
+"it becomes effective in monitoring."
+msgstr ""
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -69952,8 +69953,7 @@ msgstr ""
 
 msgid ""
 "This rule can be used to control the discovery for Heartbeat CRM checks."
-msgstr ""
-"Dieser Regelsatz steuert die Service-Erkennung von Heartbeat-CRM Checks."
+msgstr "Dieser Regelsatz steuert die Erkennung von Heartbeat-CRM Checks."
 
 msgid ""
 "This rule can be used to control the service discovery for brocade ports. "
@@ -70255,7 +70255,7 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Dieses Regelpaket wird über das MKP %s bereitgestellt."
 
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
 "This rule provides a simple way to add files to agent bakery packages "
 "without the need to write a bakery plugin.<br><i>Custom files</i> are "
@@ -70268,29 +70268,36 @@ msgid ""
 "structure is organized in <i>logical paths</i> that map to certain target "
 "folders in the final agent installation.<br>Files placed under a <i>logical "
 "path</i> will also apply the ownership and permissions based on the agent "
-"installation.<br>Ownership and permissions on the Checkmk site's file "
-"structure don't matter, with one exception: Executable flags on files will "
-"be preserved.<br><br>Overview of <i>logical paths</i> and their targets:"
-"<ul><li><tt>lib</tt>: Internal agent files (<tt>MK_LIBDIR</tt> on the host)</"
-"li><li><tt>bin</tt>: Executables (<tt>MK_BIN</tt> on the host)</"
-"li><li><tt>var</tt>: Runtime data (<tt>MK_VARDIR</tt> on the host)</"
-"li><li><tt>config</tt>: Configuration files (<tt>MK_CONFDIR</tt> on the "
-"host)</li><li><tt>lib/plugins</tt>: Agent plugins</li><li><tt>lib/local</"
-"tt>: Local checks</li></ul><b>Example</b>: Let's say you place the following "
-"files:<br><tt>{omd_root}/local/share/check_mk/agents/custom/myset/bin/"
-"some_executable</tt><br><tt>{omd_root}/local/share/check_mk/agents/custom/"
-"myset/lib/local/my_local_check</tt><br><tt>{omd_root}/local/share/check_mk/"
-"agents/custom/myset/some_file</tt><br>and activate <i>myset</i> in this rule."
-"<br>Then, the following files will be deployed to target hosts when not "
-"further configuring agent paths:<br><tt>/usr/bin/some_executable</"
-"tt><br><tt>/usr/lib/check_mk_agent/local/my_local_check</tt><br><tt>/usr/lib/"
-"check_mk_agent/some_file</tt><br>When activating the single directory "
-"deployment in the <i>Customize agent package</i> ruleset:<br><tt>/opt/"
-"checkmk/agent/default/package/bin/some_executable</tt><br><tt>/opt/checkmk/"
-"agent/default/package/local/my_local_check</tt><br><tt>/opt/checkmk/agent/"
-"default/package/some_file</tt><br><br><b>Note</b>: When using the windows "
-"agent, all logical paths point to the same location - the agent installation "
-"dir."
+"installation.<br><br><h2>Mapping under Linux/UNIX:</h2><br>Ownership and "
+"permissions on the Checkmk site's file structure don't matter, with one "
+"exception: Executable flags on files will be preserved.<br><br>Overview of "
+"<i>logical paths</i> and their targets:<ul><li><tt>lib</tt>: Internal agent "
+"files (<tt>MK_LIBDIR</tt> on the host)</li><li><tt>bin</tt>: Executables "
+"(<tt>MK_BIN</tt> on the host)</li><li><tt>var</tt>: Runtime data "
+"(<tt>MK_VARDIR</tt> on the host)</li><li><tt>config</tt>: Configuration "
+"files (<tt>MK_CONFDIR</tt> on the host)</li><li><tt>lib/plugins</tt>: Agent "
+"plugins</li><li><tt>lib/local</tt>: Local checks</li></ul><b>Example</b>: "
+"Let's say you place the following files:<br><tt>{omd_root}/local/share/"
+"check_mk/agents/custom/myset/bin/some_executable</tt><br><tt>{omd_root}/"
+"local/share/check_mk/agents/custom/myset/lib/local/my_local_check</"
+"tt><br><tt>{omd_root}/local/share/check_mk/agents/custom/myset/some_file</"
+"tt><br>and activate <i>myset</i> in this rule.<br>Then, the following files "
+"will be deployed to target hosts when not further configuring agent paths:"
+"<br><tt>/usr/bin/some_executable</tt><br><tt>/usr/lib/check_mk_agent/local/"
+"my_local_check</tt><br><tt>/usr/lib/check_mk_agent/some_file</tt><br>When "
+"activating the single directory deployment in the <i>Customize agent "
+"package</i> ruleset:<br><tt>/opt/checkmk/agent/default/package/bin/"
+"some_executable</tt><br><tt>/opt/checkmk/agent/default/package/local/"
+"my_local_check</tt><br><tt>/opt/checkmk/agent/default/package/some_file</"
+"tt><br><br><h2>Mapping under Windows:</h2><br>Other than the Linux/UNIX "
+"agent installation, the Windows agent installation uses fixed paths, so "
+"there is also a fixed mapping from logical path to folders on the host."
+"<br>Like other agent plugins, custom files install to the working directory "
+"under <tt>C:\\ProgramData\\checkmk\\agent</tt>:<ul><li><tt>lib</tt>: <tt>.."
+"\\agent</tt></li><li><tt>bin</tt>: <tt>..\\agent\\bin</tt></li><li><tt>var</"
+"tt>: <tt>..\\agent</tt></li><li><tt>config</tt>: <tt>..\\agent\\config</tt></"
+"li><li><tt>lib/plugins</tt>: <tt>..\\agent\\plugins</tt></li><li><tt>lib/"
+"local</tt>: <tt>..\\agent\\local</tt></li></ul>"
 msgstr ""
 "Diese Regel bietet eine einfache Möglichkeit, Dateien zu Paketen der "
 "Agentenbäckerei hinzuzufügen, ohne ein Bäckerei-Plugin schreiben zu müssen."
@@ -80717,8 +80724,8 @@ msgid ""
 msgstr ""
 "Wenn diese Option aktiviert ist, wird nach jeder Änderung der Service-"
 "Konfiguration eines Hosts über Setup – sei es durch manuelle Änderungen oder "
-"eine Bulk-Erkennung – der Check der Service-Erkennung automatisch neu "
-"geplant, um den neuen Service-Zustand sofort korrekt wiederzugeben."
+"eine Bulk-Erkennung – der Service Discovery Check automatisch neu geplant, "
+"um den neuen Service-Zustand sofort korrekt wiederzugeben."
 
 msgid ""
 "When this option is enabled then all performance data (check metrics) will "
@@ -81858,6 +81865,10 @@ msgstr "Ja, quittieren"
 
 msgid "Yes, clone & edit"
 msgstr "Ja, klonen & bearbeiten"
+
+#, fuzzy
+msgid "Yes, delete host"
+msgstr "Host löschen"
 
 msgid "Yes, rename"
 msgstr "Ja, umbenennen"

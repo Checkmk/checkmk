@@ -62,8 +62,8 @@ class SetupHost(CmkPage):
         """Perform an action on a host using the 'actions menu' / 'burger menu'.
 
         Example of such an action,
-        + 'Delete host'
         + 'Clone host'
+        + 'Detect network parents'
         """
         host_row = self._host_row(host_name)
         self.action_menu_button(host_name).click()
@@ -104,6 +104,15 @@ class SetupHost(CmkPage):
 
     def folder_icon(self, folder_id: str) -> Locator:
         return self.main_area.locator(f"#folder_{folder_id}")
+
+    def action_icon_for_host(self, host_name: str, icon_name: str) -> Locator:
+        """Return web-element corresponding to an actionable icon present in the host's row.
+
+        Args:
+            host_name (str): Name of the host.
+            icon_name (str): Name of the icon, which perfoms an action on the host.
+        """
+        return self._host_row(host_name).get_by_role("link", name=icon_name)
 
     def delete_folder(self, folder_id: str) -> None:
         """Delete a folder by its id.

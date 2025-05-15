@@ -142,7 +142,6 @@ def fixture_host_to_be_deleted(test_site: Site) -> Iterator[list[HostDetails]]:
         yield hosts
 
 
-@pytest.mark.xfail(reason="'Delete burger menu' changed to 'Delete icon'.")
 def test_delete_host_row(
     dashboard_page: Dashboard, host_to_be_deleted: list[HostDetails], test_site: Site
 ) -> None:
@@ -153,13 +152,13 @@ def test_delete_host_row(
     host_details = host_to_be_deleted.pop()
 
     # action
-    setup_host.perform_action_on_host(host_details.name, "Delete host")
+    setup_host.action_icon_for_host(host_details.name, "Delete host").click()
     # validation
     expect(
         main_area.get_by_role("dialog", name=re.compile(f"Delete host.*{host_details.name}")),
         message=f"Missing message to confirm deletion of host: {host_details.name}!",
     ).to_be_visible()
-    main_area.get_by_role("button", name="Remove").click()
+    setup_host.main_area.get_confirmation_popup_button("Delete host").click()
     expect(
         main_area.get_by_text(host_details.name),
         message=f"Deleted host: '{host_details.name}' is still visible!",

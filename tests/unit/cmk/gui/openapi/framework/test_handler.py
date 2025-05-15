@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Annotated, cast, override
 
 import pytest
-from pydantic import PlainSerializer
+from pydantic import PlainSerializer, PlainValidator
 from werkzeug.datastructures import Headers
 
 from tests.unit.cmk.gui.openapi.framework.factories import (
@@ -17,6 +17,7 @@ from tests.unit.cmk.gui.openapi.framework.factories import (
     RequestEndpointFactory,
 )
 
+from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
 from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
@@ -431,3 +432,40 @@ def test_handle_endpoint_request_permissions_not_checked() -> None:
             wato_use_git=False,
             is_testing=False,
         )
+
+
+def test_handle_endpoint_with_fields_filter(permission_validator: PermissionValidator) -> None:
+    @dataclass
+    class _Schema:
+        id: str
+        field: str
+
+    def _handler(
+        body: _Schema,
+        fields: Annotated[
+            FieldsFilter,
+            QueryParam(description="", example=""),
+            PlainValidator(parse_fields_filter),
+        ],
+    ) -> _Schema:
+        return body
+
+    request_endpoint = RequestEndpointFactory.build(
+        handler=_handler, content_type="application/json", accept="application/json"
+    )
+    request_data = RawRequestDataFactory.build(
+        body=b'{"id": "123", "field": "value"}',
+        query={"fields": ["(id)"]},
+        headers=Headers(
+            {"Accept": request_endpoint.content_type, "Content-Type": request_endpoint.accept}
+        ),
+    )
+    response = handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        permission_validator,
+        wato_enabled=True,
+        wato_use_git=False,
+        is_testing=False,
+    )
+    assert response.get_data() == b'{"id": "123"}'

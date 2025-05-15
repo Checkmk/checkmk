@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import json
+from inspect import BoundArguments
 
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
@@ -12,10 +13,11 @@ from cmk.ccc import store
 
 from cmk.utils.paths import configuration_lockfile
 
+from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
 from cmk.gui.openapi.framework._types import DataclassInstance, RawRequestData
 from cmk.gui.openapi.framework._utils import get_stripped_origin
-from cmk.gui.openapi.framework.endpoint_model import EndpointModel
+from cmk.gui.openapi.framework.endpoint_model import EndpointModel, iter_dataclass_fields
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.framework.registry import RequestEndpoint
@@ -75,6 +77,7 @@ def _create_response(
     response_body_type: ApiResponseModel | None,
     content_type: str,
     add_etag: bool,
+    fields_filter: FieldsFilter | None,
 ) -> Response:
     """Create a Flask response from the endpoint response."""
     if isinstance(endpoint_response, ApiResponse):
@@ -85,6 +88,9 @@ def _create_response(
         response_dict = _dump_response(endpoint_response, response_body_type)
         status_code = 204 if response_dict is None else 200
         headers = {}
+
+    if fields_filter is not None and response_dict is not None:
+        response_dict = fields_filter.apply(response_dict)
 
     if add_etag and response_dict is not None:
         headers["ETag"] = etag_of_dict(response_dict).to_header()
@@ -134,6 +140,23 @@ def _optional_config_lock(
     return store.lock_checkmk_configuration(configuration_lockfile)
 
 
+def _identify_fields_filter(
+    bound_arguments: BoundArguments, has_request_schema: bool
+) -> FieldsFilter | None:
+    for name, value in bound_arguments.arguments.items():
+        if name == "body":
+            continue
+        if isinstance(value, FieldsFilter):
+            return value
+
+    if has_request_schema:
+        # for request body we only check on the first level
+        for _, value in iter_dataclass_fields(bound_arguments.arguments["body"]):
+            if isinstance(value, FieldsFilter):
+                return value
+    return None
+
+
 @tracer.instrument("handle_endpoint_request")
 def handle_endpoint_request(
     endpoint: RequestEndpoint,
@@ -174,7 +197,9 @@ def handle_endpoint_request(
         permission_validator.track_permissions(),
         _optional_config_lock(endpoint.skip_locking, endpoint.method),
     ):
-        raw_response = model.validate_request_and_call_handler(request_data, content_type)
+        bound_arguments = model.validate_request_and_identify_args(request_data, content_type)
+        with tracer.span("endpoint-body-call"):
+            raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
 
     with tracer.span("create-response"):
         if isinstance(raw_response, Response):
@@ -187,6 +212,7 @@ def handle_endpoint_request(
                 model.response_body_type,
                 endpoint.content_type,
                 add_etag=endpoint.etag in ("output", "both"),
+                fields_filter=_identify_fields_filter(bound_arguments, model.has_request_schema),
             )
 
     # Step 5: Check permissions

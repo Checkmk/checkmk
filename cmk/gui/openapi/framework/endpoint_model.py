@@ -266,7 +266,7 @@ class _PreparedRequestData(TypedDict):
     headers: dict[str, str]
 
 
-def _iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:
+def iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:
     """Iterate over the fields of a dataclass."""
     for field in dataclasses.fields(dataclass):
         value = getattr(dataclass, field.name)
@@ -275,7 +275,6 @@ def _iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple
 
 class EndpointModel[**P, T]:
     __slots__ = (
-        "_handler",
         "_signature",
         "_parameters",
         "_input_model",
@@ -285,14 +284,12 @@ class EndpointModel[**P, T]:
 
     def __init__(
         self,
-        handler: Callable[P, T],
         signature: inspect.Signature,
         parameters: Parameters,
         input_model: ApiInputModel,
         request_body_type: type | None,
         response_body_type: type[T] | None,
     ) -> None:
-        self._handler = handler
         self._signature = signature
         self._parameters = parameters
         self._input_model = input_model
@@ -310,7 +307,6 @@ class EndpointModel[**P, T]:
         request_body_type = _request_body_type(signature)
         input_model = _build_input_model(parameters, request_body_type)
         return cls(
-            handler,
             signature,
             parameters,
             input_model,
@@ -396,28 +392,26 @@ class EndpointModel[**P, T]:
             out["body"] = input_data.body
 
         if self.has_path_parameters:
-            out.update(_iter_dataclass_fields(input_data.path))
+            out.update(iter_dataclass_fields(input_data.path))
         if self.has_query_parameters:
-            out.update(_iter_dataclass_fields(input_data.query))
+            out.update(iter_dataclass_fields(input_data.query))
         if self._parameters.headers:
-            out.update(_iter_dataclass_fields(input_data.headers))
+            out.update(iter_dataclass_fields(input_data.headers))
 
         # this also guarantees that all required parameters to call the handler are present
         return self._signature.bind(**out)
 
-    def validate_request_and_call_handler(
+    def validate_request_and_identify_args(
         self, request_data: RawRequestData, content_type: str | None
-    ) -> T:
-        """Validate the request parameters and call the handler function.
+    ) -> inspect.BoundArguments:
+        """Validate the request parameters.
 
         This function will handle the aliasing of query parameters and headers, so the request data
         should be with the original keys."""
         try:
-            bound_arguments = self._validate_request_parameters(request_data, content_type)
+            return self._validate_request_parameters(request_data, content_type)
         except ValidationError as e:
             RequestDataValidator.raise_formatted_pydantic_error(e)
-        with tracer.span("endpoint-body-call"):
-            return self._handler(*bound_arguments.args, **bound_arguments.kwargs)
 
     def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:
         for field_instance in dataclasses.fields(self._input_model):

@@ -347,7 +347,11 @@ mod tests {
 
     #[test]
     fn test_section_select_query_azure() {
-        let customized_for_azure = [sqls::Id::Mirroring, sqls::Id::AvailabilityGroups];
+        let customized_for_azure = [
+            sqls::Id::Jobs,
+            sqls::Id::Mirroring,
+            sqls::Id::AvailabilityGroups,
+        ];
         for id in customized_for_azure {
             assert_ne!(
                 find_known_query(id, &Edition::Azure).unwrap(),

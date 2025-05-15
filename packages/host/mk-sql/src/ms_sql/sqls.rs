@@ -294,9 +294,10 @@ FROM master.dbo.sysdatabases";
       CAST((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) AS bigint) AS NumberOfConnections 
 FROM sys.databases";
 
-    pub const JOBS: &str = r"SELECT
+    pub const JOBS_NORMAL: &str = r"
+SELECT
   sj.job_id AS job_id,
-  CAST(sj.name  AS NVARCHAR(MAX)) AS job_name,
+  CAST(sj.name AS NVARCHAR(MAX)) AS job_name,
   sj.enabled AS job_enabled,
   CAST(sjs.next_run_date AS NVARCHAR(8)) AS next_run_date,
   CAST(sjs.next_run_time AS NVARCHAR(6)) AS next_run_time,
@@ -314,6 +315,31 @@ LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id
 ORDER BY job_name,
          next_run_date ASC,
          next_run_time ASC
+";
+
+    // uses msdb.dbo instead of dbo
+    pub const JOBS_AZURE: &str = r"
+EXECUTE (
+'SELECT
+    sj.job_id AS job_id,
+    CAST(sj.name AS NVARCHAR(MAX)) AS job_name,
+    sj.enabled AS job_enabled,
+    CAST(sjs.next_run_date AS NVARCHAR(8)) AS next_run_date,
+    CAST(sjs.next_run_time AS NVARCHAR(6)) AS next_run_time,
+    sjserver.last_run_outcome,
+    CAST(sjserver.last_outcome_message as NVARCHAR(128)) AS last_outcome_message,
+    CAST(sjserver.last_run_date AS NVARCHAR(8)) AS last_run_date,
+    CAST(sjserver.last_run_time AS NVARCHAR(6)) AS last_run_time,
+    sjserver.last_run_duration,
+    ss.enabled AS schedule_enabled,
+    CONVERT(NVARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time
+FROM msdb.dbo.sysjobs sj
+LEFT JOIN msdb.dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id
+LEFT JOIN msdb.dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id
+LEFT JOIN msdb.dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id
+ORDER BY job_name,
+         next_run_date ASC,
+         next_run_time ASC')
 ";
 
     pub const MIRRORING_NORMAL: &str = r"SELECT @@SERVERNAME AS server_name,
@@ -422,7 +448,7 @@ lazy_static::lazy_static! {
     static ref QUERY_MAP: HashMap<Id, QueryMap<'static>> = HashMap::from([
         (Id::ComputerName, QueryMap::new(query::COMPUTER_NAME, None)),
         (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
-        (Id::Jobs, QueryMap::new(query::JOBS, None)),
+        (Id::Jobs, QueryMap::new(query::JOBS_NORMAL, Some(query::JOBS_AZURE))),
         (Id::AvailabilityGroups, QueryMap::new(query::AVAILABILITY_GROUP_NORMAL, Some(query::AVAILABILITY_GROUP_AZURE))),
         (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
         (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),

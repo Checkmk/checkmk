@@ -2,16 +2,16 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import get_type_hints, Literal
+from typing import Annotated, get_type_hints, Literal
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
     HostConfigModel,
-    HostExtensionsModel,
 )
-from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
+from cmk.gui.openapi.api_endpoints.host_config.utils import serialize_host
+from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
@@ -44,9 +44,62 @@ class HostConfigCollectionModel(DomainObjectCollectionModel):
     value: list[HostConfigModel] = api_field(description="A list of host objects", example="")
 
 
-def list_hosts_v1(fields: FieldsFilterType = ApiOmitted()) -> HostConfigCollectionModel:
+class SearchFilter:
+    def __init__(
+        self,
+        hostnames: Sequence[str] | None,
+        site: str | None,
+    ) -> None:
+        self._hostnames = set(hostnames) if hostnames else None
+        self._site = site
+
+    def __call__(self, host: Host) -> bool:
+        return self.filter_by_hostnames(host) and self.filter_by_site(host)
+
+    def filter_by_hostnames(self, host: Host) -> bool:
+        return host.name() in self._hostnames if self._hostnames else True
+
+    def filter_by_site(self, host: Host) -> bool:
+        return host.site_id() == self._site if self._site else True
+
+
+def list_hosts_v1(
+    fields: FieldsFilterType = ApiOmitted(),
+    effective_attributes: Annotated[
+        bool,
+        QueryParam(
+            description="Show all effective attributes on hosts, not just the attributes which were set on "
+            "this host specifically. This includes all attributes of all of this host's parent "
+            "folders.",
+            example="False",
+        ),
+    ] = False,
+    include_links: Annotated[
+        bool,
+        QueryParam(
+            description="Flag which toggles whether the links field of the individual values should be populated.",
+            example="False",
+        ),
+    ] = False,
+    hostnames: Annotated[
+        list[str] | ApiOmitted,
+        QueryParam(
+            description="A list of host names to filter the result by.",
+            example="host1",
+            is_list=True,
+        ),
+    ] = ApiOmitted(),
+    site: Annotated[
+        str | ApiOmitted,
+        QueryParam(description="Filter the result by a specific site.", example="site1"),
+    ] = ApiOmitted(),
+) -> HostConfigCollectionModel:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
+    hosts_filter = SearchFilter(
+        hostnames=None if isinstance(hostnames, ApiOmitted) else hostnames,
+        site=None if isinstance(site, ApiOmitted) else site,
+    )
     if user.may("wato.see_all_folders"):
         # allowed to see all hosts, no need for individual permission checks
         hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
@@ -59,24 +112,13 @@ def list_hosts_v1(fields: FieldsFilterType = ApiOmitted()) -> HostConfigCollecti
             id="host",
             extensions=ApiOmitted(),
             value=[
-                HostConfigModel(
-                    domainType="host_config",
-                    title=host.alias() or host.name(),
-                    # TODO: enable with filter build
-                    links=[],
-                    members=None,
-                    extensions=HostExtensionsModel(
-                        folder=host.folder(),
-                        attributes=HostViewAttributeModel.from_internal(
-                            host.attributes, static_attribute_names
-                        ),
-                        # TODO: enable with filter
-                        effective_attributes=ApiOmitted(),
-                        is_cluster=host.is_cluster(),
-                        cluster_nodes=host.cluster_nodes(),
-                    ),
+                serialize_host(
+                    host=host,
+                    static_attribute_names=static_attribute_names,
+                    compute_links=include_links,
+                    compute_effective_attributes=effective_attributes,
                 )
-                for host in hosts
+                for host in filter(hosts_filter, hosts)
             ],
             links=[LinkModel.create("self", collection_href("host_config"))],
         )

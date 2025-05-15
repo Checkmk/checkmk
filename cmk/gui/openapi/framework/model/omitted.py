@@ -17,16 +17,10 @@ to remove the `ApiOmitted` values from the response body.
 """
 
 import json
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import GetCoreSchemaHandler, TypeAdapter
 from pydantic_core import core_schema, CoreSchema
-
-from cmk import trace
-
-tracer = trace.get_tracer()
-
-OMITTED_PLACEHOLDER = "<ApiOmitted_PLACEHOLDER>"
 
 
 class ApiOmitted:
@@ -40,21 +34,13 @@ class ApiOmitted:
     """
 
     __slots__ = ()
-    _instance = None
+    _instance: ClassVar["ApiOmitted | None"] = None
 
-    # TODO: remove method and associating functions and tests
     @classmethod
     def __get_pydantic_core_schema__(
         cls, _source_type: type[Any], _handler: GetCoreSchemaHandler
     ) -> CoreSchema:
-        return core_schema.is_instance_schema(
-            cls,
-            # This type isn't supposed to be returned in the response,
-            # it's just to support the serialization in `json_dump_without_omitted`...
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda _: OMITTED_PLACEHOLDER
-            ),
-        )
+        return core_schema.is_instance_schema(cls)
 
     def __new__(cls, *args: object, **kwargs: object) -> "ApiOmitted":
         # Singleton pattern to ensure only one instance of ApiOmitted exists
@@ -69,22 +55,13 @@ class ApiOmitted:
         return False
 
 
-def _remove_omitted(json_object: object) -> object:
-    """Remove omitted values from the JSON object."""
-    if isinstance(json_object, dict):
-        return {k: _remove_omitted(v) for k, v in json_object.items() if v != OMITTED_PLACEHOLDER}
-    elif isinstance(json_object, list):
-        return [_remove_omitted(v) for v in json_object if v != OMITTED_PLACEHOLDER]
-    elif json_object == OMITTED_PLACEHOLDER:
-        raise ValueError("Cannot remove omitted value if it's the only value")
-    elif isinstance(json_object, str | int | float | bool | type(None)):
-        return json_object
-    else:
-        raise TypeError("Unsupported type for JSON serialization")
-
-
 def json_dump_without_omitted[T](instance_type: type[T], instance: T) -> object:
-    """Serialize the given dataclass instance to JSON, removing omitted fields."""
+    """Serialize the given dataclass instance to JSON, removing omitted fields.
+
+    Notes:
+        - This function relies on the `instance_type` using defaults for *all* omittable fields.
+          Other fields *must not* use defaults. This is checked for API models in a test.
+    """
     # This will be called at most once per REST-API request
     adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
     json_bytes = adapter.dump_json(

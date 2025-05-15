@@ -11,6 +11,7 @@ use crate::platform::odbc;
 
 use crate::types::{ComputerName, Edition, InstanceName};
 
+use super::client::ManageEdition;
 use super::sqls::find_known_query;
 use super::{client::UniClient, sqls};
 use std::borrow::Borrow;
@@ -191,7 +192,7 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
     log::trace!("Query to run: `{}`", query);
     match client {
         UniClient::Std(client) => {
-            let stream = Query::new(query).query(client).await?;
+            let stream = Query::new(query).query(client.client()).await?;
             let tiberius_rows: Vec<Vec<Row>> = stream.into_results().await?;
             let answers: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
             Ok(answers)
@@ -249,13 +250,13 @@ pub async fn obtain_server_edition(client: &mut UniClient) -> Result<Edition> {
     }
 }
 
-pub async fn obtain_instance_signature(client: &mut UniClient) -> Result<(InstanceName, Edition)> {
-    let edition = obtain_server_edition(client).await?;
-    let answers = match edition {
+pub async fn obtain_instance_name(client: &mut UniClient) -> Result<InstanceName> {
+    let answers = match client.get_edition() {
         Edition::Azure => run_custom_query(client,
         "SELECT CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR)"
         ).await?,
         Edition::Normal => run_custom_query(client, "select @@ServiceName").await?,
+        Edition::Undefined => { anyhow::bail!("Edition is not defined") }
     };
 
     let name = get_first_row(&answers).unwrap_or("???".to_string());
@@ -263,7 +264,7 @@ pub async fn obtain_instance_signature(client: &mut UniClient) -> Result<(Instan
         log::error!("Instance name is unknown");
     }
 
-    Ok((InstanceName::from(name), edition))
+    Ok(InstanceName::from(name))
 }
 
 pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>> {

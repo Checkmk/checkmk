@@ -9,6 +9,7 @@ mod common;
 extern crate common;
 
 use mk_sql::config::ms_sql::Discovery;
+use mk_sql::ms_sql::client::ManageEdition;
 use mk_sql::platform;
 #[cfg(windows)]
 use mk_sql::platform::odbc;
@@ -332,6 +333,7 @@ fn make_section<S: Into<String>>(name: S) -> Section {
 }
 
 async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
+    assert_eq!(c.get_edition(), Edition::Normal);
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
@@ -1571,16 +1573,25 @@ fn test_odbc_timeout() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_odbc_high_level() {
-    use mk_sql::{ms_sql::instance::SqlInstanceProperties, types::HostName};
+    use mk_sql::{
+        ms_sql::{client::ManageEdition, instance::SqlInstanceProperties},
+        types::HostName,
+    };
 
-    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+    async fn create_client(name: &str) -> UniClient {
         let instance_name = InstanceName::from(name);
-        let mut client = create_odbc_client(
+        create_odbc_client(
             &HostName::from("localhost".to_string()),
             &instance_name,
             None,
         )
-        .unwrap();
+        .await
+        .unwrap()
+    }
+
+    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+        let instance_name = InstanceName::from(name);
+        let mut client = create_client(name).await;
         obtain_properties(&mut client, &instance_name).await
     }
 
@@ -1590,4 +1601,9 @@ async fn test_odbc_high_level() {
     assert!(odbc_wow.is_some());
     let odbc_main = get("MSSQLSERVER").await;
     assert!(odbc_main.is_some());
+
+    assert_eq!(
+        create_client("MSSQLSERVER").await.get_edition(),
+        Edition::Normal
+    );
 }

@@ -17,8 +17,11 @@ use crate::config::{
     CheckConfig,
 };
 use crate::emit;
+#[cfg(windows)]
+use crate::ms_sql::client::update_edition;
+use crate::ms_sql::client::ManageEdition;
 use crate::ms_sql::query::{
-    obtain_computer_name, obtain_instance_signature, obtain_system_user, run_custom_query,
+    obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
     run_known_query, Column, UniAnswer,
 };
 use crate::ms_sql::sqls;
@@ -374,10 +377,10 @@ impl SqlInstance {
         log::trace!("{:?} @ {:?}", self, self.endpoint);
         let body = match self.create_client(&self.endpoint, None).await {
             Ok(mut client) => {
-                let (real_name, edition) = obtain_instance_signature(&mut client)
+                let real_name = obtain_instance_name(&mut client)
                     .await
                     .ok()
-                    .unwrap_or((InstanceName::from("???"), Edition::Normal));
+                    .unwrap_or(InstanceName::from("???"));
                 log::info!(
                     "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
                     self.full_name(),
@@ -398,7 +401,7 @@ impl SqlInstance {
                     instance_section.to_plain_header()
                         + &self.generate_bad_state_entry(instance_section.sep(), &error_text)
                 } else {
-                    self._generate_sections(&mut client, &self.endpoint, sections, &edition)
+                    self._generate_sections(&mut client, &self.endpoint, sections)
                         .await
                 }
             }
@@ -435,13 +438,12 @@ impl SqlInstance {
         client: &mut UniClient,
         endpoint: &Endpoint,
         sections: &[Section],
-        edition: &Edition,
     ) -> String {
         let mut data: Vec<String> = Vec::new();
         let databases = self.gather_databases(client, sections).await;
         for section in sections.iter() {
             data.push(
-                self.generate_section(client, endpoint, section, &databases, edition)
+                self.generate_section(client, endpoint, section, &databases)
                     .await,
             );
         }
@@ -464,7 +466,7 @@ impl SqlInstance {
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
-            create_odbc_client(&endpoint.conn().hostname(), &self.name, database)
+            create_odbc_client(&endpoint.conn().hostname(), &self.name, database).await
         }
     }
 
@@ -493,13 +495,12 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
-        edition: &Edition,
     ) -> String {
         let body = match self.read_data_from_cache(section.name(), section.cache_age() as u64) {
             Some(from_cache) => from_cache,
             None => {
                 let from_sql = self
-                    .generate_section_body(client, endpoint, section, databases, edition)
+                    .generate_section_body(client, endpoint, section, databases)
                     .await;
                 if section.kind() == &SectionKind::Async {
                     self.write_data_in_cache(section.name(), &from_sql);
@@ -516,8 +517,8 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         databases: &[String],
-        edition: &Edition,
     ) -> String {
+        let edition = client.get_edition();
         if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
             let sep = section.sep();
             match section.name() {
@@ -542,7 +543,7 @@ impl SqlInstance {
                     databases, endpoint, section, &query, sep,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                    self.generate_unified_section(endpoint, section, None, edition)
+                    self.generate_unified_section(endpoint, section, None, &edition)
                         .await
                 }
                 _ => self
@@ -1336,7 +1337,7 @@ pub async fn create_tcp_client(
     client.build().await
 }
 
-pub fn create_odbc_client(
+pub async fn create_odbc_client(
     hostname: &HostName,
     instance_name: &InstanceName,
     database: Option<String>,
@@ -1352,7 +1353,9 @@ pub fn create_odbc_client(
     {
         let connection_string =
             odbc::make_connection_string(Some(hostname), instance_name, database.as_deref(), None);
-        Ok(UniClient::Odbc(OdbcClient::new(connection_string)))
+        let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
+        update_edition(&mut client).await;
+        Ok(client)
     }
 }
 
@@ -2165,7 +2168,7 @@ async fn get_custom_instance_builder(
     let auth = endpoint.auth();
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
-        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None) {
+        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None).await {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -2487,8 +2490,8 @@ async fn _obtain_instance_builders(
     if builders.is_empty() {
         log::warn!("No instances found in registry, this means you have problem with permissions");
         log::warn!("Trying to add current instance");
-        match obtain_instance_signature(client).await {
-            Ok((name, _)) => {
+        match obtain_instance_name(client).await {
+            Ok(name) => {
                 let mut builder = SqlInstanceBuilder::new()
                     .name(name)
                     .port(Some(endpoint.conn().port()));

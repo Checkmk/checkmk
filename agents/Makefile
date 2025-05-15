@@ -94,7 +94,7 @@ setversion:
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 
 $(AGENT_CTL):
-	bazel build //packages/host/cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/host/cmk-agent-ctl:cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
 	strip $(AGENT_CTL)
@@ -103,7 +103,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 	gzip --best --keep --force $(AGENT_CTL)
 
 $(MK_SQL):
-	bazel build //packages/host/mk-sql-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/host/mk-sql:mk-sql-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/mk-sql/mk-sql-musl $(MK_SQL)
 	strip $(MK_SQL)

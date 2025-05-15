@@ -12,6 +12,8 @@ is not fully documented and specified yet.
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.autocomplete.request_schemas import RequestSchema
 from cmk.gui.openapi.endpoints.autocomplete.response_schemas import ResponseSchema
@@ -40,6 +42,7 @@ AUTOCOMPLETE_ID = {
     request_schema=RequestSchema,
     response_schema=ResponseSchema,
     update_config_generation=False,
+    supported_editions={Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME},
 )
 def show(params: Mapping[str, Any]) -> Response:
     """

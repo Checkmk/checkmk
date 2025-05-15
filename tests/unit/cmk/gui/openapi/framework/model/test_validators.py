@@ -3,22 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator
-from typing import get_args
+from dataclasses import dataclass
+from typing import Annotated, get_args
 
 import pytest
+from pydantic import AfterValidator
 from pytest_mock import MockerFixture
+
+from tests.unit.cmk.gui.users import create_and_destroy_user
+
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.user import UserId
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
+from cmk.automations.results import DeleteHostsResult
+
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupType
-from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.validators import (
     GroupValidator,
     HostAddressValidator,
+    HostValidator,
     TagValidator,
     UserValidator,
 )
+from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.watolib.groups import HostAttributeContactGroups
+from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+
+def test_validators_dont_run_on_json_dump() -> None:
+    def validator(_: str) -> str:
+        raise ValueError("Should not run")
+
+    @dataclass(slots=True)
+    class Model:
+        field: Annotated[str, AfterValidator(validator)]
+
+    instance = Model(field="test")
+    json_dump_without_omitted(Model, instance)
 
 
 class TestHostAddressValidator:
@@ -249,3 +276,82 @@ class TestGroupValidator:
     def test_not_monitored_fails_contact(self) -> None:
         with pytest.raises(ValueError, match="Unsupported group type"):
             GroupValidator("contact").not_monitored("some_group")
+
+
+class TestHostValidator:
+    @staticmethod
+    def _permission_types(*, except_monitor: bool = False) -> list[HostValidator.PermissionType]:
+        permission_types: list[HostValidator.PermissionType] = [
+            "monitor",
+            "setup_read",
+            "setup_write",
+        ]
+        if except_monitor:
+            return [perm for perm in permission_types if perm != "monitor"]
+
+        return permission_types
+
+    @pytest.fixture(name="sample_host")
+    def fixture_sample_host(self, request_context: None) -> Iterator[str]:
+        host_name = "test_host"
+        root_folder = folder_tree().root_folder()
+
+        # for test_exists_setup_write_edit_hosts
+        contact_groups = HostAttributeContactGroups().default_value()
+        contact_groups["groups"] = ["all"]
+
+        with SuperUserContext():
+            root_folder.create_hosts(
+                [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
+                pprint_value=False,
+            )
+        try:
+            yield host_name
+        finally:
+            with SuperUserContext():
+                root_folder.delete_hosts(
+                    [HostName(host_name)],
+                    automation=lambda _site, _hosts: DeleteHostsResult(),
+                    pprint_value=False,
+                )
+
+    @pytest.mark.parametrize("permission_type", _permission_types())
+    def test_exists_fails_not_found(
+        self,
+        with_admin_login: UserId,
+        permission_type: HostValidator.PermissionType,
+    ) -> None:
+        with pytest.raises(ValueError, match="Host not found"):
+            HostValidator(permission_type=permission_type).exists("non_existent_host")
+
+    def test_exists_monitor_without_permissions(self, sample_host: str) -> None:
+        with UserContext(UserId("made-up")):
+            assert sample_host == HostValidator(permission_type="monitor").exists(sample_host)
+
+    @pytest.mark.parametrize("permission_type", _permission_types(except_monitor=True))
+    def test_exists_fails_no_permission(
+        self, sample_host: str, permission_type: HostValidator.PermissionType
+    ) -> None:
+        with UserContext(UserId("made-up")), pytest.raises(MKAuthException):
+            HostValidator(permission_type=permission_type).exists(sample_host)
+
+    def test_exists_setup_read_all_folders(self, sample_host: str) -> None:
+        with UserContext(UserId("made-up"), explicit_permissions={"wato.see_all_folders"}):
+            assert sample_host == HostValidator(permission_type="setup_read").exists(sample_host)
+
+    def test_exists_setup_write_all_folders(self, sample_host: str) -> None:
+        # write also requires read permissions, could be changed in the future
+        with UserContext(
+            UserId("made-up"), explicit_permissions={"wato.see_all_folders", "wato.all_folders"}
+        ):
+            assert sample_host == HostValidator(permission_type="setup_write").exists(sample_host)
+
+    def test_exists_setup_write_edit_hosts(self, sample_host: str) -> None:
+        # write also requires read permissions, could be changed in the future
+        with create_and_destroy_user() as (user_id, _password):
+            with UserContext(
+                user_id, explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"}
+            ):
+                assert sample_host == HostValidator(permission_type="setup_write").exists(
+                    sample_host
+                )

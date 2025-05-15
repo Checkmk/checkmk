@@ -21,27 +21,25 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 @dataclass(slots=True)
 class HostValidator:
-    # TODO: skip_validation_on_view?
-    permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor"
+    type PermissionType = Literal["setup_write", "setup_read", "monitor"]
+
+    permission_type: PermissionType = "monitor"
 
     def exists(self, value: str) -> str:
-        host = Host.host(HostName(value))
-        self._verify_user_permissions(host)
-
-        if host is None:
+        if host := Host.host(HostName(value)):
+            self._verify_user_permissions(host)
+        else:
             raise ValueError(f"Host not found: {value!r}")
+
         return value
 
-    def _verify_user_permissions(self, host: Host | None) -> None:
+    def _verify_user_permissions(self, host: Host) -> None:
         if self.permission_type == "monitor":
             return
 
-        if not host:
-            return
-
-        host._user_needs_permission("read")
+        host.permissions.need_permission("read")
         if self.permission_type == "setup_write":
-            host._user_needs_permission("write")
+            host.permissions.need_permission("write")
 
 
 @dataclass(slots=True)

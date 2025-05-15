@@ -53,6 +53,7 @@ const defaultEmpty5 = ref<string | null>(null)
     :options="{
       type: 'fixed',
       suggestions: [
+        { name: '0', title: 'zero' },
         { name: 'init', title: 'selected by default' },
         { name: '2', title: 'two' }
       ]

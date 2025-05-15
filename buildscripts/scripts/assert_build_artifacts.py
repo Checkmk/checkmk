@@ -159,7 +159,8 @@ def assert_presence_on_download_server(
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
-    registries = get_default_registries()
+    if not args.skip_docker:
+        registries = get_default_registries()
 
     results = []
     for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
@@ -182,16 +183,17 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
 
-    for image_name, edition, registry in build_docker_image_name_and_registry(
-        args, loaded_yaml, registries
-    ):
-        image_exists = registry.image_exists(image_name, edition)
-        results.append(
-            AssertResult(
-                assertion_ok=image_exists,
-                message=f"{image_name} not found!" if not image_exists else "",
+    if not args.skip_docker:
+        for image_name, edition, registry in build_docker_image_name_and_registry(
+            args, loaded_yaml, registries
+        ):
+            image_exists = registry.image_exists(image_name, edition)
+            results.append(
+                AssertResult(
+                    assertion_ok=image_exists,
+                    message=f"{image_name} not found!" if not image_exists else "",
+                )
             )
-        )
 
     errors = [r.message for r in results if not r.assertion_ok]
 
@@ -217,6 +219,9 @@ def parse_arguments() -> Args:
     parser = ArgumentParser()
 
     parser.add_argument("--editions_file", required=True)
+    parser.add_argument(
+        "--skip_docker", action="store_true", default=False, help="Skip docker image check"
+    )
 
     subparsers = parser.add_subparsers(required=True, dest="command")
 

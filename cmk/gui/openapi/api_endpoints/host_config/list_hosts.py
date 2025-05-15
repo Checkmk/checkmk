@@ -15,6 +15,7 @@ from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewA
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
+from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
     EndpointHandler,
@@ -43,7 +44,7 @@ class HostConfigCollectionModel(DomainObjectCollectionModel):
     value: list[HostConfigModel] = api_field(description="A list of host objects", example="")
 
 
-def list_hosts_v1() -> HostConfigCollectionModel:
+def list_hosts_v1(fields: FieldsFilterType = ApiOmitted()) -> HostConfigCollectionModel:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
     if user.may("wato.see_all_folders"):

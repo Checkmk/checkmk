@@ -26,6 +26,8 @@ def main() {
         "test-plugins-piggyback",
         "test-plugins-siteless",
         "test-update-single-f12less",
+        "test-update-single-f12less-cme"
+        "test-update-single-f12less-cre"
         "trigger-test-gui-e2e",
     ];
 

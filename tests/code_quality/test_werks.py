@@ -7,7 +7,10 @@ import functools
 import re
 import subprocess
 from collections import defaultdict
+from collections.abc import Callable
+from functools import partial
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -18,6 +21,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.werks
 
 import cmk.werks.utils
+from cmk.werks.models import Werk
 
 CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
@@ -27,16 +31,51 @@ CVSS_REGEX_V40 = re.compile(
 )
 
 
-@pytest.fixture(scope="function", name="precompiled_werks")
-def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+class WerksLoader(NamedTuple):
+    base_dir: Path
+    load: Callable[[], dict[int, Werk]]
+
+
+@pytest.fixture(scope="function", name="werks_loader_empty")
+def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
+    """
+    provide a function to load precompiled werks from base_dir
+    """
+    base_dir = tmp_path / "ut_werks_base_dir"
+    base_dir.mkdir()
+    unacknowledged_werks_json = tmp_path / "ut_unacknowledged_werks_json"
+    acknowledged_werks_mk = tmp_path / "ut_acknowledged_werks_mk"
+    return WerksLoader(
+        base_dir=base_dir,
+        load=partial(
+            cmk.utils.werks.load,
+            base_dir=base_dir,
+            unacknowledged_werks_json=unacknowledged_werks_json,
+            acknowledged_werks_mk=acknowledged_werks_mk,
+        ),
+    )
+
+
+@pytest.fixture(scope="function", name="werks_loaded")
+def fixture_werks_loader(tmp_path: Path) -> dict[int, Werk]:
+    """
+    provide all werks available in the git repository
+    """
+    base_dir = tmp_path / "werks_base_dir_precompiled"
+    base_dir.mkdir()
     all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
-    cmk.werks.utils.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
-    monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
+    cmk.werks.utils.write_precompiled_werks(base_dir / "werks", {w.id: w for w in all_werks})
+
+    unacknowledged_werks_json = tmp_path / "ut_unacknowledged_werks_json"
+    acknowledged_werks_mk = tmp_path / "ut_acknowledged_werks_mk"
+    return cmk.utils.werks.load(
+        base_dir=base_dir,
+        unacknowledged_werks_json=unacknowledged_werks_json,
+        acknowledged_werks_mk=acknowledged_werks_mk,
+    )
 
 
-def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    tmp_dir = str(tmp_path)
-
+def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
     all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
     cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
     cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
@@ -49,23 +88,26 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
     assert len(cre_werks) > 9847
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
-    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
+    cmk.werks.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks", cre_werks)
 
     assert len(cee_werks) > 1358
-    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
+    cmk.werks.utils.write_precompiled_werks(
+        werks_loader_empty.base_dir / "werks-enterprise", cee_werks
+    )
 
     assert len(cme_werks) > 50
-    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
+    cmk.werks.utils.write_precompiled_werks(
+        werks_loader_empty.base_dir / "werks-managed", cme_werks
+    )
 
     assert len(cce_werks) > 10
-    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
+    cmk.werks.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks-cloud", cce_werks)
 
     # We currently don't have cse werks (yet)
     assert len(cse_werks) == 0
-    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
+    cmk.werks.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks-saas", cse_werks)
 
-    monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
-    werks_loaded = cmk.utils.werks.load()
+    werks_loaded = werks_loader_empty.load()
 
     merged_werks = cre_werks
     merged_werks.update(cee_werks)
@@ -81,10 +123,10 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
         assert werk.description == raw_werk.description
 
 
-def test_werk_versions(precompiled_werks: None) -> None:
+def test_werk_versions(werks_loaded: dict[int, Werk]) -> None:
     parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
-    for werk_id, werk in cmk.utils.werks.load().items():
+    for werk_id, werk in werks_loaded.items():
         parsed_werk_version = cmk_version.Version.from_str(werk.version)
 
         assert parsed_werk_version <= parsed_version, (
@@ -92,10 +134,10 @@ def test_werk_versions(precompiled_werks: None) -> None:
         )
 
 
-def test_secwerk_has_cvss(precompiled_werks: None) -> None:
+def test_secwerk_has_cvss(werks_loaded: dict[int, Werk]) -> None:
     # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
     skip_lower = 14485
-    for werk_id, werk in cmk.utils.werks.load().items():
+    for werk_id, werk in werks_loaded.items():
         if werk_id < skip_lower:
             continue
         if werk.class_.value != "security":
@@ -106,11 +148,11 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
         ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
-def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
+def test_werk_versions_after_tagged(werks_loaded: dict[int, Werk]) -> None:
     _assert_git_tags_available()
 
     list_of_offenders = []
-    for werk_id, werk in cmk.utils.werks.load().items():
+    for werk_id, werk in werks_loaded.items():
         if werk_id < 8800:
             continue  # Do not care about older versions for the moment
 

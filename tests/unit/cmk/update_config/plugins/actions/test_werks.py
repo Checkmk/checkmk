@@ -79,41 +79,34 @@ def test_version_of_werk_keeps_first_incompatible_version(
     compiled_werks_dir = Path(tmp_path, "ut_compiled")
     compiled_werks_dir.mkdir()
 
-    monkeypatch.setattr(
-        cmk.utils.werks,
-        "_compiled_werks_dir",
-        lambda: compiled_werks_dir,
-    )
-    monkeypatch.setattr(
-        cmk.utils.werks.acknowledgement,
-        "UNACKNOWLEDGED_WERKS_JSON",
-        unacknowledged_werks_file,
-    )
-    monkeypatch.setattr(
-        cmk.utils.werks,
-        "UNACKNOWLEDGED_WERKS_JSON",
-        unacknowledged_werks_file,
-    )
-    monkeypatch.setattr(
-        cmk.utils.werks.acknowledgement,
-        "ACKNOWLEDGEMENT_PATH",
-        acknowledge_werks_file,
-    )
-
     def save_werks_to_site(werks: dict[int, Werk]) -> None:
         adapter = TypeAdapter(dict[int, Werk])  # nosemgrep: type-adapter-detected
         (compiled_werks_dir / "werks").write_bytes(adapter.dump_json(werks, by_alias=True))
 
     def update_config() -> None:
-        UnacknowledgedWerks(name="name", title="title", sort_index=2)(Logger(__name__))
+        UnacknowledgedWerks(name="name", title="title", sort_index=2)(
+            Logger(__name__),
+            acknowledged_werks_mk=acknowledge_werks_file,
+            unacknowledged_werks_json=unacknowledged_werks_file,
+            compiled_werks_folder=compiled_werks_dir,
+        )
+
+    def werks_load() -> dict[int, Werk]:
+        return cmk.utils.werks.load(
+            base_dir=compiled_werks_dir,
+            unacknowledged_werks_json=unacknowledged_werks_file,
+            acknowledged_werks_mk=acknowledge_werks_file,
+        )
 
     # we start with a 2.4.0:
     save_werks_to_site(WERKS_240)
-    cmk.utils.werks.acknowledgement.save_acknowledgements([11, 40])
+    cmk.utils.werks.acknowledgement.save_acknowledgements(
+        [11, 40], acknowledged_werks_mk=acknowledge_werks_file
+    )
     # we updated to this 2.4.0 so somewhen this update action was executed
     update_config()
 
-    werks = cmk.utils.werks.load()
+    werks = werks_load()
     # we only see all werks from 2.4.0:
     assert set(werks) == set([30, 35, 40])
 
@@ -122,7 +115,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
     update_config()
     # update done :-)
 
-    werks = cmk.utils.werks.load()
+    werks = werks_load()
     # we see werks from 2.5.0 and one from 2.4.0:
     assert set(werks) == set([30, 50, 55, 60])
     # werk 30 is available in both: 2.5.0 and 2.4.0, but we want to see the 2.4.0 version here,
@@ -130,16 +123,22 @@ def test_version_of_werk_keeps_first_incompatible_version(
     assert werks[30].version == "2.4.0p3"
 
     # acknowledge the werk in 2.5.0
-    cmk.utils.werks.acknowledgement.save_acknowledgements([30])
+    cmk.utils.werks.acknowledgement.save_acknowledgements(
+        [30], acknowledged_werks_mk=acknowledge_werks_file
+    )
     # let's update to 2.6.0:
     save_werks_to_site(WERKS_260)
     update_config()
-    cmk.utils.werks.acknowledgement.save_acknowledgements([50])
-    werks = cmk.utils.werks.load()
+    cmk.utils.werks.acknowledgement.save_acknowledgements(
+        [50], acknowledged_werks_mk=acknowledge_werks_file
+    )
+    werks = werks_load()
     assert set(werks) == set([60])
 
     # the user acknowledges the last 2.5.0 werk, and updates again
     # we expect that the site werks file is now empty
-    cmk.utils.werks.acknowledgement.save_acknowledgements([50, 60])
+    cmk.utils.werks.acknowledgement.save_acknowledgements(
+        [50, 60], acknowledged_werks_mk=acknowledge_werks_file
+    )
     update_config()
     assert unacknowledged_werks_file.read_text().strip() == "{}"

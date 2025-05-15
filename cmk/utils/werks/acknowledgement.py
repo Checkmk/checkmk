@@ -12,7 +12,7 @@ import cmk.utils.paths
 from cmk.werks.models import Werk
 from cmk.werks.utils import write_precompiled_werks
 
-ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
+ACKNOWLEDGEMENT_PATH = Path(cmk.utils.paths.var_dir, "acknowledged_werks.mk")
 UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.json")
 
 
@@ -20,17 +20,32 @@ def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
     return werk.id in acknowledged_werk_ids or version_is_pre_127(werk.version)
 
 
-def load_acknowledgements() -> set[int]:
-    return set(store.load_object_from_file(ACKNOWLEDGEMENT_PATH, default=[]))
+def load_acknowledgements(
+    *,
+    acknowledged_werks_mk: Path | None = None,
+) -> set[int]:
+    if acknowledged_werks_mk is None:
+        acknowledged_werks_mk = ACKNOWLEDGEMENT_PATH
+    return set(store.load_object_from_file(acknowledged_werks_mk, default=[]))
 
 
-def save_acknowledgements(acknowledged_werks: list[int]) -> None:
-    store.save_object_to_file(ACKNOWLEDGEMENT_PATH, acknowledged_werks)
+def save_acknowledgements(
+    acknowledged_werks: list[int],
+    *,
+    acknowledged_werks_mk: Path = ACKNOWLEDGEMENT_PATH,
+) -> None:
+    store.save_object_to_file(acknowledged_werks_mk, acknowledged_werks)
 
 
 def version_is_pre_127(version: str) -> bool:
     return version.startswith("1.2.5") or version.startswith("1.2.6")
 
 
-def write_unacknowledged_werks(werks: dict[int, Werk]) -> None:
-    write_precompiled_werks(UNACKNOWLEDGED_WERKS_JSON, werks)
+def write_unacknowledged_werks(
+    werks: dict[int, Werk],
+    *,
+    unacknowledged_werks_json: Path | None = None,
+) -> None:
+    if unacknowledged_werks_json is None:
+        unacknowledged_werks_json = UNACKNOWLEDGED_WERKS_JSON
+    write_precompiled_werks(unacknowledged_werks_json, werks)

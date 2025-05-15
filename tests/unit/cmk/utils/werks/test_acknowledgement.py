@@ -38,10 +38,17 @@ WERK_V1 = {
 
 
 def test_load(tmp_path: Path) -> None:
-    with (tmp_path / "werks").open("w") as fo:
+    werks_folder = tmp_path / "werks_folder"
+    werks_folder.mkdir()
+    not_existing = tmp_path / "asdasd_not_existing"
+    with (werks_folder / "werks").open("w") as fo:
         json.dump(WERK_V1, fo)
 
-    result = load(tmp_path)
+    result = load(
+        base_dir=werks_folder,
+        unacknowledged_werks_json=not_existing,
+        acknowledged_werks_mk=not_existing,
+    )
 
     assert result == {
         15374: Werk(

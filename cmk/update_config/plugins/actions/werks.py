@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from pathlib import Path
 from typing import override
 
 from cmk.utils.werks import load as load_werks
@@ -56,9 +57,28 @@ def load_unacknowledged_werks(acknowledged_werks: set[int], werks: Werks) -> Wer
 
 class UnacknowledgedWerks(UpdateAction):
     @override
-    def __call__(self, logger: Logger) -> None:
-        unacknowledged_werks = load_unacknowledged_werks(load_acknowledgements(), load_werks())
-        write_unacknowledged_werks(unacknowledged_werks)
+    def __call__(
+        self,
+        logger: Logger,
+        *,
+        acknowledged_werks_mk: Path | None = None,
+        unacknowledged_werks_json: Path | None = None,
+        compiled_werks_folder: Path | None = None,
+    ) -> None:
+        unacknowledged_werks = load_unacknowledged_werks(
+            load_acknowledgements(
+                acknowledged_werks_mk=acknowledged_werks_mk,
+            ),
+            load_werks(
+                base_dir=compiled_werks_folder,
+                unacknowledged_werks_json=unacknowledged_werks_json,
+                acknowledged_werks_mk=acknowledged_werks_mk,
+            ),
+        )
+        write_unacknowledged_werks(
+            unacknowledged_werks,
+            unacknowledged_werks_json=unacknowledged_werks_json,
+        )
 
 
 update_action_registry.register(

@@ -33,23 +33,28 @@ from cmk.werks.utils import (
 
 from .acknowledgement import is_acknowledged, load_acknowledgements, UNACKNOWLEDGED_WERKS_JSON
 
-
-def _compiled_werks_dir() -> Path:
-    return Path(cmk.utils.paths.share_dir, "werks")
+COMPILED_WERKS_DIR = Path(cmk.utils.paths.share_dir, "werks")
 
 
-def load(base_dir: Path | None = None) -> dict[int, Werk]:
+def load(
+    *,
+    base_dir: Path | None = None,
+    unacknowledged_werks_json: Path | None = None,
+    acknowledged_werks_mk: Path | None = None,
+) -> dict[int, Werk]:
     if base_dir is None:
-        base_dir = _compiled_werks_dir()
+        base_dir = COMPILED_WERKS_DIR
+    if unacknowledged_werks_json is None:
+        unacknowledged_werks_json = UNACKNOWLEDGED_WERKS_JSON
 
     werks: dict[int, Werk] = {}
 
     unacknowledged_werks = {}
-    if UNACKNOWLEDGED_WERKS_JSON.exists():
+    if unacknowledged_werks_json.exists():
         # load unacknowledged werks that are part of the configuration
         # and still not acknowledged by the user
-        unacknowledged_werks = load_precompiled_werks_file(UNACKNOWLEDGED_WERKS_JSON)
-        acknowledged_werks = load_acknowledgements()
+        unacknowledged_werks = load_precompiled_werks_file(unacknowledged_werks_json)
+        acknowledged_werks = load_acknowledgements(acknowledged_werks_mk=acknowledged_werks_mk)
         unacknowledged_werks = {
             id: werk for id, werk in unacknowledged_werks.items() if id not in acknowledged_werks
         }

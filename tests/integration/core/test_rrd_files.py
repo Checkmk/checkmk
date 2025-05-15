@@ -6,12 +6,12 @@
 import re
 from datetime import datetime
 
-import pytest
-
+from tests.testlib.common.utils import wait_until
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
 
 
-@pytest.mark.skip("CMK-23515: Investigate the failure of this test")
+@skip_if_raw_edition
 def test_rrd_files_creation(site: Site) -> None:
     """Test that RRD files are created for a hosts.
 
@@ -40,7 +40,11 @@ def test_rrd_files_creation(site: Site) -> None:
 
     # Check that the rrd file for PING is created
     file_path = "var/check_mk/rrd/test_host/PING.rrd"
-    assert site.file_exists(file_path), "RRD file for PING not created"
+    wait_until(
+        lambda: site.file_exists(file_path),
+        timeout=10,
+        condition_name="RRD file for PING service creation",
+    )
 
     # Get the information of the RRD file
     rrd_info = site.check_output(["rrdtool", "info", str(site.path(file_path))])

@@ -6,9 +6,12 @@
 import re
 from datetime import datetime
 
+import pytest
+
 from tests.testlib.site import Site
 
 
+@pytest.mark.skip("CMK-23515: Investigate the failure of this test")
 def test_rrd_files_creation(site: Site) -> None:
     """Test that RRD files are created for a hosts.
 

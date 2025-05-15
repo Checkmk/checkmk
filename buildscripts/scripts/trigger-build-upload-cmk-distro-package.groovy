@@ -18,6 +18,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
 
     def docker_args = "${mount_reference_repo_dir}";
     def distro = params.DISTRO;
@@ -98,6 +99,10 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
+            }
+
+            if ("${build_instance.result}" != "SUCCESS") {
+                notify.notify_maintainer_of_package("${TEAM_CI_MAIL}", edition, "${build_instance.absoluteUrl}")
             }
 
             smart_stage(

@@ -464,10 +464,15 @@ class ShelfObjectModel(BaseModel):
     list_id: str  # shelf id
     id: int
     state: str  # "ok" or "error"
-    installed: bool | None = None  # TODO remove non when query fixed
+    # some api versions do not return the installed field
+    installed: bool | None = None
 
     def item_name(self) -> str:
         return f"{self.list_id}/{self.id}"
+
+    def consider_installed(self) -> bool:
+        # None means that the field is not present in the API response
+        return self.installed is None or self.installed
 
 
 class ShelfFanModel(ShelfObjectModel):

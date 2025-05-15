@@ -489,7 +489,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
         "fans.id",
         "fans.state",
         # "fans.rpm",        # Can be missing, currently unused
-        # "fans.installed",  # ! NOT WORKING
+        "fans.installed",
     )
 
     for element in NetAppResource.Shelf.get_collection(
@@ -504,6 +504,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
                 list_id=list_id,
                 id=fan["id"],
                 state=fan["state"],
+                installed=fan.get("installed"),
             )
 
 
@@ -512,7 +513,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
         "id",
         "frus.id",
         "frus.state",
-        # "fans.installed",  # ! NOT WORKING
+        "frus.installed",
     )
 
     for element in NetAppResource.Shelf.get_collection(
@@ -522,11 +523,12 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
         list_id = element_data["id"]
         frus = element_data.get("frus", [])
 
-        for fan in frus:
+        for fru in frus:
             yield models.ShelfPsuModel(
                 list_id=list_id,
-                id=fan["id"],
-                state=fan["state"],
+                id=fru["id"],
+                state=fru["state"],
+                installed=fru.get("installed"),
             )
 
 
@@ -537,7 +539,7 @@ def fetch_temperatures(
         "id",
         "temperature_sensors.id",
         "temperature_sensors.state",
-        # "fans.installed",  # ! NOT WORKING
+        "temperature_sensors.installed",
         "temperature_sensors.temperature",
         "temperature_sensors.ambient",
         "temperature_sensors.threshold.low.warning",
@@ -557,7 +559,7 @@ def fetch_temperatures(
             yield models.ShelfTemperatureModel(
                 list_id=list_id,
                 id=temp["id"],
-                # installed=temp["installed"],
+                installed=temp.get("installed"),
                 state=temp["state"],
                 temperature=temp.get("temperature"),
                 ambient=temp["ambient"],

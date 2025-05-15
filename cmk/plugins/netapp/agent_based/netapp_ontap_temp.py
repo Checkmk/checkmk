@@ -131,6 +131,8 @@ def parse_netapp_ontap_temp(string_table: StringTable) -> Section:
 
     for line in string_table:
         sensor = models.ShelfTemperatureModel.model_validate_json(line[0])
+        if not sensor.consider_installed():
+            continue
         section[f"{'Ambient' if sensor.ambient else 'Internal'} Shelf {sensor.list_id}"].append(
             sensor
         )

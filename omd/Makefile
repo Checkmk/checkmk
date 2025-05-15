@@ -26,6 +26,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     erlang \
+    libgsf \
     cpp-libs \
     msitools \
     apache-omd \

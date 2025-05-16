@@ -28,6 +28,18 @@ STRING_TABLE: Final = [
     ["size=17G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw"],
     ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
     ["|", "|-", "5:0:0:77", "sdew", "129:128", "active", "undef", "running"],
+    # broken paths:
+    [
+        "BROKEN_PATH",
+        "(broken_paths)",
+        "dm-67",
+        "DGC,RAID",
+        "5",
+    ],
+    ["size=17G", "features='1", "queue_if_no_path'", "hwhandler='1", "alua'", "wp=rw"],
+    ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
+    ["|-", "5:0:0:54", "sdbd", "67:112", "broken", "undef", "running"],
+    ["`-", "3:0:0:54", "sdhf", "133:80", "broken", "undef", "running"],
 ]
 
 
@@ -39,6 +51,7 @@ def _get_section() -> Section:
 def test_discovery(section: Section) -> None:
     assert sorted(discover_multipath({"use_alias": False}, section)) == [
         Service(item="3600601604d40310047cf93ce66f7e111", parameters={"levels": 4}),
+        Service(item="broken_paths", parameters={"levels": 2}),
         Service(item="prefix.3600601604d403100912ab0b365f7e111", parameters={"levels": 1}),
     ]
 
@@ -80,3 +93,16 @@ def test_check_count_levels(section: Section) -> None:
             summary="4 of 4 (expected: 3)",
         ),
     ]
+
+
+def test_check_broken_paths(section: Section) -> None:
+    assert list(
+        check_multipath(
+            "broken_paths",
+            {},
+            section,
+        )
+    )[-1] == Result(
+        state=State.CRIT,
+        summary="Broken paths: 5:0:0:54(sdbd),3:0:0:54(sdhf)",
+    )

@@ -203,6 +203,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             "*.aix",
             "*.linux",
             "*.solaris",
+            "*robotmk*",
         ]
 
     def _exclude_paths(self):

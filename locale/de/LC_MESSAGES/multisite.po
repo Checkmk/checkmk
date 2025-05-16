@@ -50142,6 +50142,14 @@ msgstr "In Warteschlange"
 msgid "Queued alerts"
 msgstr "Alerts in Warteschlange"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Benachrichtigungen in Warteschlange"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Senden von Nutzernachrichten"
+
 msgid "Queued for update"
 msgstr "Warteschlange für Update"
 

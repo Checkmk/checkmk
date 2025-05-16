@@ -52354,6 +52354,14 @@ msgstr "Coadă de așteptare"
 msgid "Queued alerts"
 msgstr "Alerte în coadă"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notificări în coadă de așteptare"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Trimiteți mesaje de utilizator"
+
 msgid "Queued for update"
 msgstr "În așteptare pentru actualizare"
 

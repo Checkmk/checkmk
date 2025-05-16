@@ -52677,6 +52677,14 @@ msgstr "En attente"
 msgid "Queued alerts"
 msgstr "Alertes en attente"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notifications en attente"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Envoyer des messages aux utilisateurs"
+
 msgid "Queued for update"
 msgstr "En attente de mise à jour"
 

@@ -52682,6 +52682,14 @@ msgstr "En cola"
 msgid "Queued alerts"
 msgstr "Alertas en cola"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notificaciones en cola"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Enviar mensajes de usuario"
+
 msgid "Queued for update"
 msgstr "En cola de espera para la actualización"
 

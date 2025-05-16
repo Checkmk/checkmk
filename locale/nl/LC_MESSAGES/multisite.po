@@ -52263,6 +52263,14 @@ msgstr "In wachtrij"
 msgid "Queued alerts"
 msgstr "Waarschuwingen in wachtrij"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Kennisgevingen in wachtrij"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Gebruikersberichten verzenden"
+
 msgid "Queued for update"
 msgstr "In wacht voor update"
 

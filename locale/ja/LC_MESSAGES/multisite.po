@@ -50002,6 +50002,14 @@ msgstr "待機中"
 msgid "Queued alerts"
 msgstr "キューに入れられたアラート"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "キューにある通知"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "ユーザーメッセージを送信する"
+
 msgid "Queued for update"
 msgstr "更新のためにキューに入れられました"
 

@@ -51832,6 +51832,14 @@ msgstr "In coda"
 msgid "Queued alerts"
 msgstr "Avvisi in coda"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notifiche in coda"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Inviare messaggi agli utenti"
+
 msgid "Queued for update"
 msgstr "In coda per l'aggiornamento"
 

@@ -52231,6 +52231,14 @@ msgstr "Enfileirado"
 msgid "Queued alerts"
 msgstr "Alertas enfileirados"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notificações enfileiradas"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Enviar mensagens do utilizador"
+
 msgid "Queued for update"
 msgstr "Enfileirado para atualização"
 

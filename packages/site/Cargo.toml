@@ -24,7 +24,10 @@ httpdate = "*"
 log = "*"
 mime = "*"
 regex = "*"
-reqwest = "*"
+reqwest = { version = "0.12.15", features = ["rustls-tls"]}
+rustls = { version = "0.23.4", features = ["aws-lc-rs"] }
+rustls-native-certs = "*"
+webpki-roots = "*"
 openssl = { version = "0.10.57" }
 openssl-probe = "0.1.5"
 scrypt = { version = "*", default-features = false}

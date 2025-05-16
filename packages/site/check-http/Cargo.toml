@@ -26,12 +26,13 @@ regex.workspace = true
 # supported by rustls.
 # Since we only know that at runtime we need to pull in both TLS backends.
 reqwest = { workspace = true, features = [
-  "json",
-  "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
-  "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
-  "native-tls-alpn",
-  "socks",
+    "json",
+    "native-tls-alpn",
+    "socks",
 ] }
+rustls = { workspace = true, features = ["aws-lc-rs"] }
+rustls-native-certs = { workspace = true }
+webpki-roots = { workspace = true }
 scrypt = { workspace = true, features = ["std"] }
 tokio = { workspace = true, features = ["rt", "macros", "rt-multi-thread"] }
 tracing.workspace = true

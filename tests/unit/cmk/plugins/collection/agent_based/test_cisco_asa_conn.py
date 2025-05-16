@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cisco_asa_conn import (
     check_cisco_asa_conn,
     inventory_cisco_asa_conn,
+    NetworkInterfaceData,
     parse_cisco_asa_conn,
+    Section,
 )
 
 string_table: Sequence[StringTable] = [
@@ -26,11 +28,15 @@ string_table: Sequence[StringTable] = [
     [["2", "1", "1"], ["14", "1", "1"], ["29", "1", "1"]],
 ]
 
-parsed_section: Mapping[str, Sequence[str]] = {
-    "2": ["GigabitEthernet1/1", "1", "1"],
-    "14": ["management", "1", "1", "172.21.212.23"],
-    "38": ["38", "1", "N/A", "172.21.213.99"],
-    "29": ["INSIDE-115", "1", "1", "172.21.212.243"],
+parsed_section: Section = {
+    "2": NetworkInterfaceData(if_name="GigabitEthernet1/1", admin_status="1", oper_status="1"),
+    "14": NetworkInterfaceData(
+        if_name="management", admin_status="1", oper_status="1", ip_address="172.21.212.23"
+    ),
+    "38": NetworkInterfaceData(ip_address="172.21.213.99", admin_status="1"),
+    "29": NetworkInterfaceData(
+        if_name="INSIDE-115", admin_status="1", oper_status="1", ip_address="172.21.212.243"
+    ),
 }
 
 

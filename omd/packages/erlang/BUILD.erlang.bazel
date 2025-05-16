@@ -1,3 +1,4 @@
+load("@@//omd/packages/erlang:vars.bzl", "PLACE_HOLDER")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -7,10 +8,6 @@ filegroup(
         exclude = ["*.bazel"],
     ),
 )
-
-# The build process with erlang has a strange handling of DESTDIR/INSTALL_PREFIX
-# That's why we're installing it with a well-defined prefix which will be later patched to $OMD_ROOT in the Makefile
-PLACE_HOLDER = "/replace-me-erlang"
 
 configure_make(
     name = "erlang",
@@ -85,4 +82,11 @@ configure_make(
             $$INSTALLDIR$${place_holder}/lib/erlang/lib/crypto-5.4.2.1/priv/lib/otp_test_engine.so \
     """.format(place_holder = PLACE_HOLDER),
     deps = ["@openssl"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":erlang"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

@@ -648,12 +648,9 @@ def _command_template(
     You can pipe the output of this command into a file, and edit it.
     When you're happy with the manifest, you can use the `mkp package <path-to-file>` command to create the package.
     """
-    if path_config is None:
-        path_config = read_path_config()
-
     if site_context:
         installer = Installer(site_context.installed_packages_dir)
-        unpackaged = get_unpackaged_files(installer, path_config)
+        unpackaged = get_unpackaged_files(installer, path_config or read_path_config())
         files = {part: files_ for part in PackagePart if (files_ := unpackaged.get(part))}
     else:
         # for now: lets not look for files without a site context

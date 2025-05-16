@@ -2358,7 +2358,7 @@ fn determine_reconnect(
 
     customizations
         .iter()
-        .filter(|(&k, _)| !found.contains(k))
+        .filter(|&(&k, _)| !found.contains(k))
         .map(|(&name, customization)| {
             log::info!("Add custom instance {} ", name);
             let builder = SqlInstanceBuilder::new().name(name.clone());

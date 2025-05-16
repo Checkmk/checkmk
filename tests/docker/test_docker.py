@@ -12,7 +12,6 @@ from random import randint, sample
 import docker  # type: ignore[import-untyped]
 import pytest
 import requests
-import requests.exceptions
 from pytest import LogCaptureFixture
 
 from tests.testlib.docker import (
@@ -29,8 +28,6 @@ from tests.testlib.version import (
     get_min_version,
     version_from_env,
 )
-
-from cmk.ccc.version import Version, versions_compatible
 
 # Apply the skipif marker to all tests in this file for SaaS edition
 pytestmark = [
@@ -341,10 +338,7 @@ def test_update(client: docker.DockerClient) -> None:
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())
     container_name = f"checkmk-{update_package.version.branch}_{randint(10000000, 99999999)}"
 
-    update_compatibility = versions_compatible(
-        Version.from_str(base_package.version.version),
-        Version.from_str(update_package.version.version),
-    )
+    update_compatibility = base_package.version.is_update_compatible(update_package.version)
     assert update_compatibility.is_compatible, (
         f"Version '{base_package.version.version}' & '{update_package.version.version}' are incompatible,"
         f"reason: {update_compatibility}"

@@ -5,15 +5,12 @@
 """Consolidate methods which relate to processing version and edition of a Checkmk package."""
 
 import logging
-import operator
 import os
 import re
 import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final, Self
-
-from packaging.version import Version
 
 from tests.testlib.common.repo import (
     branch_from_env,
@@ -22,7 +19,13 @@ from tests.testlib.common.repo import (
 )
 from tests.testlib.utils import version_spec_from_env
 
-from cmk.ccc.version import Edition
+from cmk.ccc.version import (
+    Edition,
+    Version,
+    versions_compatible,
+    VersionsCompatible,
+    VersionsIncompatible,
+)
 
 logger = logging.getLogger()
 
@@ -133,32 +136,14 @@ CMKEdition: Final = CMKEditionType()
 
 # It's ok to make it currently only work on debian based distros
 class CMKVersion:
-    """
-    Compare versions without timestamps.
-    >>> CMKVersion("2.0.0p12") < CMKVersion("2.1.0p12")
-    True
-    >>> CMKVersion("2.3.0p3") > CMKVersion("2.3.0")
-    True
-    >>> CMKVersion("2.3.0") >= CMKVersion("2.3.0")
-    True
-    >>> CMKVersion("2.2.0p11") <= CMKVersion("2.2.0p11")
-    True
+    """Holds an instance of `cmk.ccc.version::Version`.
 
-    Only one of the versions has a timestamp (only daily builds have a timestamp)
-    >>> CMKVersion("2.2.0-2024.05.05") > CMKVersion("2.2.0p26")
-    True
-    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.3.0p3")
-    True
-    >>> CMKVersion("2.1.0-2024.05.05") != CMKVersion("2.1.0p18")
-    True
-
-    Both the versions have a timestamp (patch versions are always `0`)
-    >>> CMKVersion("2.3.0-2024.05.05") > CMKVersion("2.2.0-2024.05.05")
-    True
-    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.2.0-2024.05.10")
-    True
+    This object acts as an interface to `cmk.ccc.version::Version`. Additionally,
+    `CMKVersion` encapsualtes version-centric actions within this object. Like,
+    + `versions_compatible`
     """
 
+    # pre-defined version specs
     DEFAULT = "default"
     DAILY = "daily"
     TIMESTAMP_FORMAT = r"%Y.%m.%d"
@@ -169,10 +154,42 @@ class CMKVersion:
         branch: str = current_base_branch_name(),
         branch_version: str = current_branch_version(),
     ) -> None:
-        self.version_spec: Final = version_spec
-        self.version_rc_aware: Final = self._version(version_spec, branch, branch_version)
-        self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
-        self.semantic: Final = (
+        """
+        Compare versions without timestamps.
+        >>> CMKVersion("2.0.0p12") < CMKVersion("2.1.0p12")
+        True
+        >>> CMKVersion("2.3.0p3") > CMKVersion("2.3.0")
+        True
+        >>> CMKVersion("2.3.0") >= CMKVersion("2.3.0")
+        True
+        >>> CMKVersion("2.2.0p11") <= CMKVersion("2.2.0p11")
+        True
+
+        Only one of the versions has a timestamp (only daily builds have a timestamp)
+        >>> CMKVersion("2.2.0-2024.05.05") > CMKVersion("2.2.0p26")
+        True
+        >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.3.0p3")
+        True
+        >>> CMKVersion("2.1.0-2024.05.05") != CMKVersion("2.1.0p18")
+        True
+
+        Both the versions have a timestamp (patch versions are always `0`)
+        >>> CMKVersion("2.3.0-2024.05.05") > CMKVersion("2.2.0-2024.05.05")
+        True
+        >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.2.0-2024.05.10")
+        True
+        """
+
+        self.version_spec: Final[str] = version_spec
+        self._version_raw: Final[str] = self._convert_spec_to_version(
+            version_spec, branch, branch_version
+        )
+
+        self.version_data: Final = Version.from_str(self._version_raw)
+        self.version_rc_aware: Final[str] = self.version_data.version_rc_aware
+
+        self.version: Final[str] = self.version_data.version_without_rc
+        self.semantic: Final[str] = (
             _semantic_match.group(0)
             if (_semantic_match := re.match(r"\d+\.\d+\.\d+", self.version))
             else branch_version
@@ -188,7 +205,7 @@ class CMKVersion:
             path = os.readlink("/omd/versions/default")
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
-    def _version(self, version_spec: str, branch: str, branch_version: str) -> str:
+    def _convert_spec_to_version(self, version_spec: str, branch: str, branch_version: str) -> str:
         if version_spec == self.DAILY:
             date_part = time.strftime(CMKVersion.TIMESTAMP_FORMAT)
             if branch.startswith("sandbox"):
@@ -210,88 +227,50 @@ class CMKVersion:
         return version_spec
 
     def is_release_candidate(self) -> bool:
-        return self.version != self.version_rc_aware
+        return bool(self.version_data.release_candidate.value)
 
     def __repr__(self) -> str:
-        return f"CMKVersion([{self.version}][{self.branch}])"
+        return f"{self.__class__.__name__}([{self.version}][{self.branch}])"
 
-    @staticmethod
-    def _checkmk_compare_versions_logic(
-        primary: object, other: object, compare_operator: Callable[..., bool]
-    ) -> bool:
-        if isinstance(primary, CMKVersion) and isinstance(other, CMKVersion):
-            primary_version, primary_timestamp = CMKVersion._sanitize_version_spec(primary.version)
-            other_version, other_timestamp = CMKVersion._sanitize_version_spec(other.version)
-            # if only one of the versions has a timestamp and other does not
-            if bool(primary_timestamp) ^ bool(other_timestamp):
-                # `==` operation
-                if compare_operator is operator.eq:
-                    return False
-                # `>` and `<` operations
-                # disregard patch versions for comparison
-                # to avoid `2.2.0p26 > 2.2.0-<timestamp>` resulting in false positive
-                primary_version = CMKVersion._disregard_patch_version(primary_version)
-                other_version = CMKVersion._disregard_patch_version(other_version)
-                if primary_version == other_version:
-                    # timestamped builds are the latest versions
-                    return (
-                        bool(primary_timestamp)
-                        if compare_operator is operator.gt
-                        else not bool(primary_timestamp)
-                    )
-                return compare_operator(primary_version, other_version)
-            # both versions have timestamps and versions are equal
-            if (bool(primary_timestamp) and bool(other_timestamp)) and (
-                primary_version == other_version
-            ):
-                return compare_operator(primary_timestamp, other_timestamp)
-            # (timestamps do not exist) or (timestamps exist but versions are unequal)
-            return compare_operator(primary_version, other_version)
-        raise TypeError(
-            f"Invalid comparison, mismatching types! {type(primary)} != '{type(other)}'."
-        )
-
-    @staticmethod
-    def _sanitize_version_spec(version: str) -> tuple[Version, time.struct_time | None]:
-        """Sanitize `version_spec` and segregate it into version and timestamp.
-
-        Uses `packaging.version.Version` to wrap Checkmk version.
-        """
-        _timestamp = None
-
-        # treat `patch-version` as `micro-version`.
-        _version = version.replace("0p", "")
-
-        # detect daily builds
-        if match := re.search(
-            r"([1-9]?\d\.[1-9]?\d\.[1-9]?\d)-([1-9]\d{3}\.[0-1]\d\.[0-3]\d)", _version
-        ):
-            _version = match.groups()[0]
-            _timestamp = time.strptime(match.groups()[1], CMKVersion.TIMESTAMP_FORMAT)
-        return Version(_version), _timestamp
-
-    @staticmethod
-    def _disregard_patch_version(version: Version) -> Version:
-        if version.micro > 0:
-            # parse only major.minor version and create a new Version object
-            _version = f"{version.major}.{version.minor}.0"
-            return Version(_version)
-        return version
+    def _check_instance(self, other: object) -> None:
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError(
+                f"Expected comparison with another '{self.__class__.__name__}' object!"
+            )
 
     def __eq__(self, other: object) -> bool:
-        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.eq)
+        self._check_instance(other)
+        return self.version_data.__eq__(getattr(other, "version_data"))
 
     def __gt__(self, other: Self) -> bool:
-        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.gt)
+        self._check_instance(other)
+        return self.version_data.__gt__(other.version_data)
 
     def __lt__(self, other: Self) -> bool:
-        return CMKVersion._checkmk_compare_versions_logic(self, other, operator.lt)
+        self._check_instance(other)
+        return self.version_data.__lt__(other.version_data)
 
     def __ge__(self, other: Self) -> bool:
-        return self > other or self == other
+        self._check_instance(other)
+        return self.version_data.__ge__(other.version_data)
 
     def __le__(self, other: Self) -> bool:
-        return self < other or self == other
+        self._check_instance(other)
+        return self.version_data.__le__(other.version_data)
+
+    def is_update_compatible(
+        self, target_version: "CMKVersion"
+    ) -> VersionsCompatible | VersionsIncompatible:
+        """Validate whether present version can be updated to target version.
+
+        Args:
+            target_version (CMKVersion): Object corresponding to the target version.
+
+        Returns:
+            VersionsCompatible | VersionsIncompatible:
+                Object which collects compatibility status and corresponding reason.
+        """
+        return versions_compatible(self.version_data, target_version.version_data)
 
 
 class CMKPackageInfo:

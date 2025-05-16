@@ -73,8 +73,6 @@ from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
-from cmk.ccc.version import Version
-
 from cmk import trace
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
@@ -2369,14 +2367,13 @@ class PythonHelper:
             yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
 
 
-def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
+def _assert_tmpfs(site: Site, from_version: CMKVersion) -> None:
     # restoring the tmpfs was broken and has been fixed with
     # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
-    from_version = Version.from_str(version.version)
     if (
-        (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
-        or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))
-        or Version.from_str("2.3.0b1") <= from_version
+        (CMKVersion("2.1.0p36") <= from_version < CMKVersion("2.2.0"))
+        or (CMKVersion("2.2.0p13") <= from_version < CMKVersion("2.3.0"))
+        or CMKVersion("2.3.0b1") <= from_version
     ):
         # tmpfs should have been restored:
         tmp_dirs = site.listdir("tmp/check_mk")

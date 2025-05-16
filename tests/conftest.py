@@ -32,6 +32,7 @@ from tests.testlib.utils import (  # noqa: E402
     run,
     verbose_called_process_error,
 )
+from tests.testlib.version import edition_from_env, TypeCMKEdition  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -257,6 +258,15 @@ def pytest_configure(config: pytest.Config) -> None:
     global collect_ignore
     collect_ignore = ["schemathesis_openapi"]
 
+    config.addinivalue_line(
+        "markers",
+        "skip_if_edition(edition): skips the tests for the given edition(s)",
+    )
+    config.addinivalue_line(
+        "markers",
+        "skip_if_not_edition(edition): skips the tests for anything but the given edition(s)",
+    )
+
 
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
@@ -270,3 +280,22 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     """Skip tests of unwanted types"""
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")
+    current_edition = edition_from_env()
+    skip_editions: list[TypeCMKEdition] = []
+    for mark in item.iter_markers(name="skip_if_edition"):
+        skip_editions += [
+            edition if isinstance(edition, TypeCMKEdition) else TypeCMKEdition(edition)
+            for edition in mark.args
+        ]
+    if skip_editions and current_edition in skip_editions:
+        pytest.skip(
+            f'Test skipped because edition "{current_edition.edition_data.long}" is skipped explicitly!'
+        )
+
+    unskip_editions: list[TypeCMKEdition] = []
+    for mark in item.iter_markers(name="skip_if_not_edition"):
+        unskip_editions += mark.args
+    if unskip_editions and current_edition not in unskip_editions:
+        pytest.skip(
+            f'Test skipped because edition "{current_edition.edition_data.long}" is skipped implicitly!'
+        )

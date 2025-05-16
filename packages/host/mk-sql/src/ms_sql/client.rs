@@ -79,9 +79,10 @@ impl ManageEdition for OdbcClient {
     }
 }
 
+// TODO: remove this and use dynamic dispatch
 #[derive(Debug)]
 pub enum UniClient {
-    Std(StdClient),
+    Std(Box<StdClient>),
     Odbc(OdbcClient),
 }
 
@@ -472,7 +473,7 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClien
     let mut client = TiberiusClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
-        .map(|c| UniClient::Std(StdClient::new(c)))?;
+        .map(|c| UniClient::Std(Box::new(StdClient::new(c))))?;
     update_edition(&mut client).await;
     Ok(client)
 }
@@ -502,10 +503,10 @@ async fn connect_via_tcp(config: Config) -> Result<UniClient> {
         log::warn!("Connection success failed");
     }
     let mut client = result.map(|x| {
-        UniClient::Std(StdClient {
+        UniClient::Std(Box::new(StdClient {
             client: x,
             edition: Edition::Normal,
-        })
+        }))
     })?;
     update_edition(&mut client).await;
     Ok(client)

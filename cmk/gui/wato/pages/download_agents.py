@@ -260,6 +260,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
             "*.openwrt",
             "*.openvms",
             "hpux_*",
+            "*robotmk/windows*",
         ]
 
     def _exclude_paths(self):

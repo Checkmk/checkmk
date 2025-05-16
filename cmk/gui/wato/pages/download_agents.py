@@ -7,7 +7,7 @@
 import abc
 import fnmatch
 import os
-from collections.abc import Callable, Collection, Iterator
+from collections.abc import Callable, Collection, Generator, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -36,6 +36,19 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ABCModeDownloadAgents(WatoMode):
+    _TITLES = {
+        "": _("Agents"),
+        "/plugins": _("Plug-ins"),
+        "/cfg_examples": _("Example Configurations"),
+        "/cfg_examples/systemd": _("Example configuration for systemd"),
+        "/windows": _("Windows Agent"),
+        "/windows/plugins": _("Plug-ins"),
+        "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
+        "/windows/cfg_examples": _("Example Configurations"),
+        "/z_os": _("z/OS"),
+        "/sap": _("SAP R/3"),
+    }
+
     related_page_menu_hook: Callable[[], Iterator[PageMenuEntry]] = lambda: iter([])
 
     @staticmethod
@@ -90,7 +103,7 @@ class ABCModeDownloadAgents(WatoMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _walk_base_dir(self):
+    def _walk_base_dir(self) -> str:
         raise NotImplementedError()
 
     def _exclude_file_glob_patterns(self):
@@ -107,33 +120,26 @@ class ABCModeDownloadAgents(WatoMode):
     def page(self) -> None:
         html.open_div(class_="rulesets")
 
-        packed = self._packed_agents()
-        if packed:
+        if packed := self._packed_agents():
             self._download_table(_("Packaged Agents"), packed)
 
-        titles = {
-            "": _("Agents"),
-            "/plugins": _("Plug-ins"),
-            "/cfg_examples": _("Example Configurations"),
-            "/cfg_examples/systemd": _("Example configuration for systemd"),
-            "/windows": _("Windows Agent"),
-            "/windows/plugins": _("Plug-ins"),
-            "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
-            "/windows/cfg_examples": _("Example Configurations"),
-            "/z_os": _("z/OS"),
-            "/sap": _("SAP R/3"),
-        }
+        for title, file_paths in sorted(self._walk_dir(self._walk_base_dir())):
+            useful_file_paths = [p for p in file_paths if not p.endswith("/CONTENTS")]
+            if useful_file_paths:
+                self._download_table(title, sorted(useful_file_paths))
+        html.close_div()
 
+    def _walk_dir(self, dir_path: str) -> Generator[tuple[str, list[str]]]:
         banned_paths = self._exclude_paths()
+        packed = self._packed_agents()
 
-        other_sections = []
-        for root, _dirs, files in os.walk(self._walk_base_dir()):
+        for root, _dirs, files in os.walk(dir_path):
             file_paths = []
             relpath = root.split("agents")[1]
             if relpath in banned_paths:
                 continue
 
-            title = titles.get(relpath, relpath)
+            title = self._TITLES.get(relpath, relpath)
             for filename in files:
                 rel_file_path = relpath + "/" + filename
                 if rel_file_path in banned_paths:
@@ -146,13 +152,7 @@ class ABCModeDownloadAgents(WatoMode):
                 if path not in packed and "deprecated" not in path:
                     file_paths.append(path)
 
-            other_sections.append((title, file_paths))
-
-        for title, file_paths in sorted(other_sections):
-            useful_file_paths = [p for p in file_paths if not p.endswith("/CONTENTS")]
-            if useful_file_paths:
-                self._download_table(title, sorted(useful_file_paths))
-        html.close_div()
+            yield (title, file_paths)
 
     def _exclude_by_pattern(self, rel_file_path):
         for exclude_pattern in self._exclude_file_glob_patterns():

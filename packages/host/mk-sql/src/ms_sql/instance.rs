@@ -773,11 +773,11 @@ impl SqlInstance {
         sep: char,
     ) -> String {
         let chunks = if databases.len() >= 64 {
-            let max_chunk = (databases.len() + 3usize) / 4usize;
+            let max_chunk = databases.len().div_ceil(4usize);
             let min_chunk = 16usize;
             databases.chunks(std::cmp::max(min_chunk, max_chunk))
         } else if databases.len() >= 8 {
-            let max_chunk = (databases.len() + 1usize) / 2usize;
+            let max_chunk = databases.len().div_ceil(2usize);
             let min_chunk = 4usize;
             databases.chunks(std::cmp::max(min_chunk, max_chunk))
         } else {

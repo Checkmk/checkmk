@@ -997,12 +997,25 @@ def _execute_autodiscovery(
             cache_manager.clear_all()
             config_cache.initialize()
             hosts_config = config.make_hosts_config(loading_result.loaded_config)
+            bakery_config = config.BakeryConfig.make(
+                ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+                is_tcp=loading_result.config_cache.is_tcp,
+                default_address_family=loading_result.config_cache.default_address_family,
+                labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+                folder_attributes=loading_result.loaded_config.folder_attributes,
+                agent_config=loading_result.loaded_config.agent_config,
+                agent_ports=loading_result.loaded_config.agent_ports,
+                agent_encryption=loading_result.loaded_config.agent_encryption,
+                agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+                cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+            )
 
             # reset these to their original value to create a correct config
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     config_cache,
                     hosts_config,
+                    bakery_config,
                     service_name_config,
                     ip_address_of,
                     core,
@@ -1025,6 +1038,7 @@ def _execute_autodiscovery(
                 cmk.base.core.do_restart(
                     config_cache,
                     hosts_config,
+                    bakery_config,
                     service_name_config,
                     ip_address_of,
                     core,
@@ -1242,8 +1256,22 @@ class AutomationRenameHosts(Automation):
                 ip_address_of = config.ConfiguredIPLookup(
                     config_cache, error_handler=ip_lookup.CollectFailedHosts()
                 )
+                bakery_config = config.BakeryConfig.make(
+                    ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+                    is_tcp=loading_result.config_cache.is_tcp,
+                    default_address_family=loading_result.config_cache.default_address_family,
+                    labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+                    folder_attributes=loading_result.loaded_config.folder_attributes,
+                    agent_config=loading_result.loaded_config.agent_config,
+                    agent_ports=loading_result.loaded_config.agent_ports,
+                    agent_encryption=loading_result.loaded_config.agent_encryption,
+                    agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+                    cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+                )
+
                 _execute_silently(
                     config_cache,
+                    bakery_config,
                     service_name_config,
                     CoreAction.START,
                     ip_address_of,
@@ -2196,8 +2224,22 @@ class AutomationRestart(Automation):
         ip_address_of = config.ConfiguredIPLookup(
             loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
         )
+        bakery_config = config.BakeryConfig.make(
+            ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+            is_tcp=loading_result.config_cache.is_tcp,
+            default_address_family=loading_result.config_cache.default_address_family,
+            labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+            folder_attributes=loading_result.loaded_config.folder_attributes,
+            agent_config=loading_result.loaded_config.agent_config,
+            agent_ports=loading_result.loaded_config.agent_ports,
+            agent_encryption=loading_result.loaded_config.agent_encryption,
+            agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+            cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+        )
+
         return _execute_silently(
             loading_result.config_cache,
+            bakery_config,
             service_name_config,
             self._mode(),
             ip_address_of,
@@ -2269,6 +2311,7 @@ automations.register(AutomationReload())
 
 def _execute_silently(
     config_cache: ConfigCache,
+    bakery_config: config.BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     action: CoreAction,
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
@@ -2286,6 +2329,7 @@ def _execute_silently(
             do_restart(
                 config_cache,
                 hosts_config,
+                bakery_config,
                 service_name_config,
                 ip_address_of,
                 create_core(config.monitoring_core),

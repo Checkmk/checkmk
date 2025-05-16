@@ -12,6 +12,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 
@@ -75,6 +77,15 @@ def test_do_create_config_nagios(
         create_core("nagios"),
         core_scenario,
         core_scenario.hosts_config,
+        config.BakeryConfig(
+            ruleset_matcher=core_scenario.ruleset_matcher,
+            is_tcp=core_scenario.is_tcp,
+            default_address_family=core_scenario.default_address_family,
+            labels_of_host=core_scenario.label_manager.labels_of_host,
+            folders_to_bake_for=(),
+            agent_rulesets=(),
+            cmc_real_time_checks=None,
+        ),
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
@@ -107,6 +118,18 @@ def test_do_create_config_nagios_collects_passwords(
         create_core("nagios"),
         core_scenario,
         core_scenario.hosts_config,
+        config.BakeryConfig.make(
+            ruleset_matcher=core_scenario.ruleset_matcher,
+            is_tcp=core_scenario.is_tcp,
+            default_address_family=core_scenario.default_address_family,
+            labels_of_host=core_scenario.label_manager.labels_of_host,
+            folder_attributes=EMPTYCONFIG.folder_attributes,
+            agent_config=EMPTYCONFIG.agent_config,
+            agent_ports=EMPTYCONFIG.agent_ports,
+            agent_encryption=EMPTYCONFIG.agent_encryption,
+            agent_exclude_sections=EMPTYCONFIG.agent_exclude_sections,
+            cmc_real_time_checks=EMPTYCONFIG.cmc_real_time_checks,
+        ),
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},

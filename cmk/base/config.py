@@ -20,7 +20,7 @@ import pickle
 import socket
 import sys
 import time
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
 from typing import (
@@ -32,6 +32,7 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
+    Self,
     TypeGuard,
     TypeVar,
 )
@@ -53,7 +54,11 @@ from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
+from cmk.utils.host_storage import (
+    apply_hosts_file_to_object,
+    FolderAttributesForBase,
+    get_host_storage_loaders,
+)
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
@@ -593,6 +598,7 @@ class LoadedConfigFragment:
     (compare cmk/base/default_config/base ...)
     """
 
+    folder_attributes: Mapping[str, FolderAttributesForBase]
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     service_rule_groups: set[str]
@@ -607,6 +613,11 @@ class LoadedConfigFragment:
     clusters: Mapping[HostAddress, Sequence[HostAddress]]
     shadow_hosts: ShadowHosts
     service_dependencies: Sequence[tuple]
+    agent_config: Mapping[str, Sequence[RuleSpec]]
+    agent_ports: Sequence[RuleSpec[int]]
+    agent_encryption: Sequence[RuleSpec[str | None]]
+    agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
+    cmc_real_time_checks: RealTimeChecks | None
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -693,6 +704,7 @@ def _perform_post_config_loading_actions(
     _drop_invalid_ssc_rules(global_dict)
 
     loaded_config = LoadedConfigFragment(
+        folder_attributes=folder_attributes,
         discovery_rules=discovery_settings,
         checkgroup_parameters=checkgroup_parameters,
         service_rule_groups=service_rule_groups,
@@ -705,6 +717,11 @@ def _perform_post_config_loading_actions(
         clusters=clusters,
         shadow_hosts=shadow_hosts,
         service_dependencies=service_dependencies,
+        agent_config=agent_config,
+        agent_ports=agent_ports,
+        agent_encryption=agent_encryption,
+        agent_exclude_sections=agent_exclude_sections,
+        cmc_real_time_checks=cmc_real_time_checks,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -3960,8 +3977,6 @@ def boil_down_agent_rules(
 ) -> Mapping[str, Any]:
     boiled_down = {**defaults}
 
-    # TODO: Better move whole computation to cmk.base.config for making
-    # ruleset matching transparent
     for varname, entries in rulesets.items():
         if not entries:
             continue
@@ -4407,10 +4422,6 @@ class CEEConfigCache(ConfigCache):
 
         return self.__rtc_secret.setdefault(host_name, _impl())
 
-    @staticmethod
-    def cmc_real_time_checks() -> object:
-        return cmc_real_time_checks  # type: ignore[name-defined,unused-ignore]
-
     def rrd_config_of_service(
         self, host_name: HostName, service_name: ServiceName
     ) -> RRDObjectConfig | None:
@@ -4528,13 +4539,58 @@ class CEEConfigCache(ConfigCache):
         )
         return out[0] if out else None
 
-    @staticmethod
-    def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:
-        return list(agent_config.items()) + [
+
+@dataclasses.dataclass(frozen=True)
+class BakeryConfig:
+    ruleset_matcher: RulesetMatcher
+    is_tcp: Callable[[HostName], bool]
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ]
+    labels_of_host: Callable[[HostName], Labels]
+    folders_to_bake_for: Collection[str]
+    agent_rulesets: Sequence[tuple[str, Sequence[RuleSpec[object]]]]
+    cmc_real_time_checks: object
+
+    __agent_config: dict[HostName, Mapping[str, Any]] = dataclasses.field(default_factory=dict)
+
+    @classmethod
+    def make(
+        cls,
+        ruleset_matcher: RulesetMatcher,
+        folder_attributes: Mapping[str, FolderAttributesForBase],
+        is_tcp: Callable[[HostName], bool],
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
+        labels_of_host: Callable[[HostName], Labels],
+        agent_config: Mapping[str, Sequence[RuleSpec[object]]],
+        agent_ports: Sequence[RuleSpec[int]],
+        agent_encryption: Sequence[RuleSpec[str | None]],
+        agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]],
+        cmc_real_time_checks: object,
+    ) -> Self:
+        # we can't even type RuleSpec[object] here, because RuleSpec is invariant.
+        # To fix this, RuleSpec should be covariant in the value type (-> "read only", which is all we need.).
+        agent_rulesets: Sequence[tuple[str, Sequence[RuleSpec[Any]]]] = [
+            *agent_config.items(),
             ("agent_port", agent_ports),
             ("agent_encryption", agent_encryption),
             ("agent_exclude_sections", agent_exclude_sections),
         ]
+        return cls(
+            ruleset_matcher=ruleset_matcher,
+            is_tcp=is_tcp,
+            default_address_family=default_address_family,
+            labels_of_host=labels_of_host,
+            folders_to_bake_for={
+                match_path
+                for match_path, attrs in folder_attributes.items()
+                if attrs.get("bake_agent_package")
+            },
+            agent_rulesets=agent_rulesets,
+            cmc_real_time_checks=cmc_real_time_checks,
+        )
 
     def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
         def _impl() -> Mapping[str, Any]:
@@ -4543,7 +4599,7 @@ class CEEConfigCache(ConfigCache):
                     defaults=default,
                     rulesets=self.matched_agent_config_entries(host_name),
                 ),
-                "is_ipv6_primary": (self.default_address_family(host_name) is socket.AF_INET6),
+                "is_ipv6_primary": self.default_address_family(host_name) is socket.AF_INET6,
             }
 
         with contextlib.suppress(KeyError):
@@ -4553,10 +4609,8 @@ class CEEConfigCache(ConfigCache):
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {
-            varname: self.ruleset_matcher.get_host_values(
-                hostname, ruleset, self.label_manager.labels_of_host
-            )
-            for varname, ruleset in self._agent_config_rulesets()
+            varname: self.ruleset_matcher.get_host_values(hostname, ruleset, self.labels_of_host)
+            for varname, ruleset in self.agent_rulesets
         }
 
     def generic_agent_config_entries(
@@ -4569,25 +4623,24 @@ class CEEConfigCache(ConfigCache):
                     defaults=defaults,
                     rulesets={
                         varname: self._get_values_for_generic_agent(ruleset, match_path)
-                        for varname, ruleset in self._agent_config_rulesets()
+                        for varname, ruleset in self.agent_rulesets
                     },
                 ),
             )
-            for match_path, attributes in folder_attributes.items()
-            if attributes.get("bake_agent_package", False)
+            for match_path in self.folders_to_bake_for
         )
 
     @staticmethod
     def _get_values_for_generic_agent(
-        ruleset: Iterable[RuleSpec[tuple[str, Any]]], path_for_rule_matching: str
-    ) -> Sequence[tuple[str, Any]]:
+        ruleset: Iterable[RuleSpec[object]], path_for_rule_matching: str
+    ) -> Sequence[object]:
         """Compute rulesets for "generic" hosts
 
         This fictious host has no name and no tags.
         It matches all rules that do not require specific hosts or tags.
         It matches rules that e.g. except specific hosts or tags (is not, has not set).
         """
-        entries: list[tuple[str, Any]] = []
+        entries: list[object] = []
         for rule in ruleset:
             if ruleset_matcher.is_disabled(rule):
                 continue

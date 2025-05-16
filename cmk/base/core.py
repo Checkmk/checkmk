@@ -26,7 +26,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import core_config
-from cmk.base.config import ConfigCache, ConfiguredIPLookup
+from cmk.base.config import BakeryConfig, ConfigCache, ConfiguredIPLookup
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
 
@@ -59,6 +59,7 @@ class CoreAction(enum.Enum):
 def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    bakery_config: BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
@@ -74,6 +75,7 @@ def do_reload(
     do_restart(
         config_cache,
         hosts_config,
+        bakery_config,
         service_name_config,
         ip_address_of,
         core,
@@ -91,6 +93,7 @@ def do_reload(
 def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
+    bakery_config: BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
@@ -110,6 +113,7 @@ def do_restart(
                 core=core,
                 config_cache=config_cache,
                 hosts_config=host_config,
+                bakery_config=bakery_config,
                 service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,

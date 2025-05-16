@@ -19,4 +19,10 @@ EMPTYCONFIG = LoadedConfigFragment(
     clusters={},
     shadow_hosts={},
     service_dependencies=(),
+    folder_attributes={},
+    agent_config={},
+    agent_ports=(),
+    agent_encryption=(),
+    agent_exclude_sections=(),
+    cmc_real_time_checks=None,
 )

@@ -1447,12 +1447,25 @@ def mode_update() -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
+    bakery_config = config.BakeryConfig.make(
+        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+        is_tcp=loading_result.config_cache.is_tcp,
+        default_address_family=loading_result.config_cache.default_address_family,
+        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+        folder_attributes=loading_result.loaded_config.folder_attributes,
+        agent_config=loading_result.loaded_config.agent_config,
+        agent_ports=loading_result.loaded_config.agent_ports,
+        agent_encryption=loading_result.loaded_config.agent_encryption,
+        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+    )
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
+                bakery_config=bakery_config,
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
@@ -1515,9 +1528,22 @@ def mode_restart(args: Sequence[HostName]) -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
+    bakery_config = config.BakeryConfig.make(
+        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+        is_tcp=loading_result.config_cache.is_tcp,
+        default_address_family=loading_result.config_cache.default_address_family,
+        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+        folder_attributes=loading_result.loaded_config.folder_attributes,
+        agent_config=loading_result.loaded_config.agent_config,
+        agent_ports=loading_result.loaded_config.agent_ports,
+        agent_encryption=loading_result.loaded_config.agent_encryption,
+        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+    )
     cmk.base.core.do_restart(
         loading_result.config_cache,
         hosts_config,
+        bakery_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
@@ -1576,9 +1602,22 @@ def mode_reload(args: Sequence[HostName]) -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
+    bakery_config = config.BakeryConfig.make(
+        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
+        is_tcp=loading_result.config_cache.is_tcp,
+        default_address_family=loading_result.config_cache.default_address_family,
+        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
+        folder_attributes=loading_result.loaded_config.folder_attributes,
+        agent_config=loading_result.loaded_config.agent_config,
+        agent_ports=loading_result.loaded_config.agent_ports,
+        agent_encryption=loading_result.loaded_config.agent_encryption,
+        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
+        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+    )
     cmk.base.core.do_reload(
         loading_result.config_cache,
         hosts_config,
+        bakery_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),

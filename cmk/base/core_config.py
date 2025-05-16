@@ -269,6 +269,7 @@ def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    bakery_config: config.BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -317,10 +318,10 @@ def do_create_config(
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
         with tracer.span("bake_on_restart"):
-            _bake_on_restart(config_cache, all_hosts)
+            _bake_on_restart(bakery_config, all_hosts)
 
 
-def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostName]) -> None:
+def _bake_on_restart(bakery_config: config.BakeryConfig, all_hosts: Iterable[HostName]) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
@@ -342,10 +343,8 @@ def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostN
     except ImportError:
         return
 
-    assert isinstance(config_cache, config.CEEConfigCache)
-
     target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
-        config_cache, all_hosts=all_hosts, selected_hosts=None
+        bakery_config, all_hosts=all_hosts, selected_hosts=None
     )
 
     try:

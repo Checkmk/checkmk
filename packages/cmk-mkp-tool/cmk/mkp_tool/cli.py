@@ -149,7 +149,7 @@ def _to_text(manifest: Manifest) -> str:
     return (
         f"Name:                          {manifest.name}\n"
         f"Version:                       {manifest.version}\n"
-        f"Packaged on Checkmk Version:   {manifest.version_packaged}\n"
+        f"Packaged on:                   {manifest.version_packaged}\n"
         f"Required Checkmk Version:      {manifest.version_min_required}\n"
         f"Valid until Checkmk version:   {valid_until_text}\n"
         f"Title:                         {manifest.title}\n"

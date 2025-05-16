@@ -73,6 +73,8 @@ exclude_from_filegroup(
         "Install",
         "examples",
         "misc",
+        "include",
+        "src",
     ] + OMD_ROOT_AWARE + LIB_OSMON_PRIV_BIN + LIB_ERTS_BIN + BIN_SYMLINKS,
 )
 

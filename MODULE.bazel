@@ -393,6 +393,33 @@ http_archive(
 )
 
 http_archive(
+    name = "heirloom-pkgtools",
+    build_file = "//omd/packages/heirloom-pkgtools:BUILD.heirloom-pkgtools.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/heirloom-pkgtools/patches:0000-set-linux-paths.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0001-fix-invalid-open-call.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0002-scriptvfy.l.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0003-binpath.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0004-compute_checksum-64bit.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0005-compute_checksum-64bit.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0006-sbinpath.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0007-stropts.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0008-fix-comilation-with-openssl-1.1.0.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0008-libfl.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0010-fix-missing-makedev.dif",
+        "//omd/packages/heirloom-pkgtools/patches:0011-add-fcommon.dif",
+    ],
+    sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+    strip_prefix = "heirloom-pkgtools-070227",
+    urls = [
+        UPSTREAM_MIRROR_URL + "heirloom-pkgtools-070227.tar.bz2",
+        "https://sourceforge.net/projects/heirloom/files/heirloom-pkgtools/070227/heirloom-pkgtools-070227.tar.bz2",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

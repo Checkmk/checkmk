@@ -9,10 +9,6 @@ load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
 re2_workspace()
 
-load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools_workspace")
-
-heirloom_pkgtools_workspace()
-
 load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf_workspace")
 
 libgsf_workspace()

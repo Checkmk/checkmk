@@ -382,6 +382,17 @@ http_archive(
 )
 
 http_archive(
+    name = "freetds",
+    build_file = "//omd/packages/freetds:BUILD.freetds.bazel",
+    sha256 = "6acb9086350425f5178e544bbe2d54a001097e8e20277a2b766ad0799a2e7d87",
+    strip_prefix = "freetds-1.4.22",
+    urls = [
+        "https://www.freetds.org/files/stable/freetds-1.4.22.tar.gz",
+        UPSTREAM_MIRROR_URL + "freetds-1.4.22.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

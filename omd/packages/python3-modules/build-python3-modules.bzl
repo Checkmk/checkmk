@@ -21,10 +21,12 @@ def create_requirements_file(name, outs):
     )
 
 def build_python_module(name, srcs, outs, requirements = "", **kwargs):
+    # buildifier: disable=function-docstring-args
     """This macro is creating an empty file.
     """
     requirements = requirements if requirements else "-r $$HOME/$(execpath %s_requirements.txt)" % name
     openssl_dir = Label("@openssl").repo_name
+    freetds_dir = Label("@freetds").repo_name
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -35,12 +37,14 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 openssl_dir = openssl_dir,
+                freetds_dir = freetds_dir,
             ),
             ":git_ssl_no_verify": build_cmd.format(
                 git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 openssl_dir = openssl_dir,
+                freetds_dir = freetds_dir,
             ),
         }),
         **kwargs
@@ -74,7 +78,7 @@ build_cmd = """
     # Build directory
     mkdir -p $$HOME/$$MODULE_NAME
 
-    export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
+    export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
     # Keep in sync with scripts/run-uvenv
@@ -98,8 +102,8 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
-    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freetds/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
+    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
+    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\

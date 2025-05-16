@@ -291,17 +291,16 @@ def test_save_text_to_file_bytes(
     assert "content argument must be Text, not bytes" in "%s" % e
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
 @pytest.mark.parametrize(
     "data",
     [
         b"foob\xc3\xa4r",
     ],
 )
-def test_save_bytes_to_file(tmp_path: Path, path_type: type[str] | type[Path], data: bytes) -> None:
-    path = path_type(tmp_path / "lala")
+def test_save_bytes_to_file(tmp_path: Path, data: bytes) -> None:
+    path = tmp_path / "lala"
     store.save_bytes_to_file(path, data)
-    assert store.load_bytes_from_file(path) == data
+    assert store.load_bytes_from_file(path, default=b"") == data
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

@@ -231,13 +231,10 @@ def load_text_from_file(path: Path | str, default: str = "", lock: bool = False)
         return ObjectStore(Path(path), serializer=TextSerializer()).read_obj(default=default)
 
 
-def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = False) -> bytes:
-    with (
-        tracer.span(
-            f"load_bytes_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        _leave_locked_unless_exception(path) if lock else nullcontext(),
+def load_bytes_from_file(path: Path, *, default: bytes) -> bytes:
+    with tracer.span(
+        f"load_bytes_from_file[{path}]",
+        attributes={"cmk.file.path": str(path)},
     ):
         return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 

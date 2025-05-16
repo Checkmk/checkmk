@@ -11,6 +11,9 @@ ROBOTMK_BAZEL_OUT := $(BAZEL_BIN_EXT)/$(ROBOTMK)
 $(ROBOTMK_BUILD):
 	$(BAZEL_CMD) build @$(ROBOTMK)//:build
 
+# Keep the paths below in sync with what is displayed in the file download pages.
+# For example, after moving the Windows files to a different folder, we would have to adjust the
+# download pages accordingly.
 .PHONY: $(ROBOTMK_INTERMEDIATE_INSTALL)
 $(ROBOTMK_INTERMEDIATE_INSTALL): $(ROBOTMK_BUILD)
 	$(MKDIR) $(ROBOTMK_INSTALL_DIR)/share/check_mk/agents/robotmk/linux

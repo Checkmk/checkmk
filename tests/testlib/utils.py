@@ -209,9 +209,7 @@ def spawn_expect_process(
                         break
                     else:
                         logger.error(
-                            "Required message not found. "
-                            "The following has been found instead:\n"
-                            "%s",
+                            "Required message not found. The following has been found instead:\n%s",
                             p.before,
                         )
                         break

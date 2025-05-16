@@ -10,12 +10,15 @@ import logging
 import os
 import subprocess
 from collections.abc import Generator, Iterator
+from enum import StrEnum
 from pathlib import Path
 
 import pytest
 import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+from cmk.ccc.version import Edition
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
@@ -29,6 +32,7 @@ from tests.testlib.common.repo import (  # noqa: E402
 )
 from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 from tests.testlib.utils import (  # noqa: E402
+    edition_from_env,
     is_containerized,
     run,
     verbose_called_process_error,
@@ -42,6 +46,11 @@ pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
 # when pytest based tests are being run from inside the IDE
 # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+
+class EditionMarker(StrEnum):
+    skip_if = "skip_if_edition"
+    skip_if_not = "skip_if_not_edition"
 
 
 def get_test_type(test_path: Path) -> str:
@@ -62,7 +71,6 @@ def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(scope="function", autouse=True)
 def fail_on_log_exception(
     caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
 ) -> Iterator[None]:
@@ -258,6 +266,16 @@ def pytest_configure(config: pytest.Config) -> None:
     global collect_ignore
     collect_ignore = ["schemathesis_openapi"]
 
+    config.addinivalue_line(
+        "markers",
+        f"{EditionMarker.skip_if}(edition): skips the tests for the given edition(s)",
+    )
+    config.addinivalue_line(
+        "markers",
+        f"{EditionMarker.skip_if_not}(edition): "
+        "skips the tests for anything but the given edition(s)",
+    )
+
 
 def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
@@ -267,8 +285,40 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
+def _edition_from_text(value: str) -> Edition:
+    """Parse Checkmk edition from short or long form of Checkmk edition texts."""
+    try:
+        edition = getattr(Edition, value.upper(), Edition.from_long_edition(value))
+    except RuntimeError as excp:
+        excp.add_note(f"String: '{value}' neither matches 'short' nor 'long' edition formats!")
+        raise ValueError(excp)
+    return edition
+
+
+def _editions_from_markers(item: pytest.Item, marker_name: str) -> list[Edition]:
+    editions: list[Edition] = []
+    for mark in item.iter_markers(name=marker_name):
+        editions += [
+            edition_arg
+            if isinstance(edition_arg, Edition)
+            else _edition_from_text(str(edition_arg))
+            for edition_arg in mark.args
+        ]
+    return editions
+
+
 def pytest_runtest_setup(item: pytest.Item) -> None:
-    """Modify the setup phase for a test item"""
+    """Skip tests of unwanted types"""
+    current_edition = edition_from_env(Edition.CEE)
+
+    skip_editions = _editions_from_markers(item, "skip_if_edition")
+    if skip_editions and current_edition in skip_editions:
+        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped explicitly!')
+
+    unskip_editions = _editions_from_markers(item, "skip_if_not_edition")
+    if unskip_editions and current_edition not in unskip_editions:
+        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped implicitly!')
+
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")
 

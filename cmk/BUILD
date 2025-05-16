@@ -1,7 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("//:bazel_variables.bzl", "edition_deps")
+load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 exports_files(["requirements.in"])
@@ -206,7 +206,7 @@ py_library(
     visibility = ["//tests:__subpackages__"],
     deps = CMC_PROTO_DEPS + [
         "lib_cmk",
-    ] + edition_deps[edition],
+    ] + edition_python_deps[edition],
 ) for edition, srcs in [
     ("cce", CCE_PY),
     ("cee", CEE_PY),

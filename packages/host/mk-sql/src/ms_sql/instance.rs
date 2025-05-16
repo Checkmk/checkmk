@@ -549,8 +549,12 @@ impl SqlInstance {
                     databases, endpoint, section, &query, sep,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                    self.generate_unified_section(endpoint, section, None, &edition)
-                        .await
+                    if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
+                        String::default()
+                    } else {
+                        self.generate_unified_section(endpoint, section, None, &edition)
+                            .await
+                    }
                 }
                 _ => self
                     .generate_custom_section(endpoint, section)

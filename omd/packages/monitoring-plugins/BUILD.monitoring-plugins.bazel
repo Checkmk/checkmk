@@ -13,7 +13,7 @@ ARGS = ["-j6"]
 
 # In contrast to "sources", @build_data is a list of files we need
 # to build stuff, lol
-BUILD_DATA = ["@omd_packages//omd/packages/monitoring-plugins:cmk_password_store.h"]
+BUILD_DATA = ["@@//omd/packages/monitoring-plugins:cmk_password_store.h"]
 
 CONFIGURE_COMMAND = "configure"
 

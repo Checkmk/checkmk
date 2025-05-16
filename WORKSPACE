@@ -9,10 +9,6 @@ load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
 re2_workspace()
 
-load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins_workspace")
-
-monitoring_plugins_workspace()
-
 load("//omd/packages/freetds:freetds_http.bzl", "freetds_workspace")
 
 freetds_workspace()

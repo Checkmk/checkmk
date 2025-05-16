@@ -17,11 +17,11 @@ $(MONITORING_PLUGINS_INSTALL):
 	# copy over all the plugins we built
 	mkdir -p "$(TMP_DIR)/lib/nagios"
 	$(RSYNC) -r --chmod=u+w \
-	    "$(BAZEL_BIN_EXT)/$(MONITORING_PLUGINS)/$(MONITORING_PLUGINS)/libexec/" \
+	    "$(BAZEL_BIN_EXT)/_main~_repo_rules~monitoring-plugins/monitoring-plugins/libexec/" \
 	    "$(TMP_DIR)/lib/nagios/plugins/"
 	# copy locales and 'documentation'
 	$(RSYNC) -r --chmod=u+w \
-	    "$(BAZEL_BIN_EXT)/$(MONITORING_PLUGINS)/$(MONITORING_PLUGINS)/share/" \
+	    "$(BAZEL_BIN_EXT)/_main~_repo_rules~monitoring-plugins/monitoring-plugins/share/" \
 	    "$(TMP_DIR)/share/"
 	# set RPATH for all ELF binaries we find
 	find "$(TMP_DIR)/lib/nagios/plugins/" -exec file {} \; \

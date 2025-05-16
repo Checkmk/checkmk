@@ -359,6 +359,29 @@ http_archive(
 )
 
 http_archive(
+    name = "monitoring-plugins",
+    build_file = "//omd/packages/monitoring-plugins:BUILD.monitoring-plugins.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/monitoring-plugins:patches/0001-check-icmp-allows-pl-of-101.dif",
+        "//omd/packages/monitoring-plugins:patches/0003-cmk-password-store.dif",
+        "//omd/packages/monitoring-plugins:patches/0006-check_mysql-define-own-mysql-port.dif",
+        "//omd/packages/monitoring-plugins:patches/0009-check_dns-case-insensitive.dif",
+        "//omd/packages/monitoring-plugins:patches/0010-get_omd_root_in_checks.dif",
+        "//omd/packages/monitoring-plugins:patches/0011-check_http-sanitise-http-response-body.dif",
+        "//omd/packages/monitoring-plugins:patches/0012-fixup-ssl-linking.diff",
+        "//omd/packages/monitoring-plugins:patches/0013-link-root-plugins-statically.diff",
+    ],
+    sha256 = "e5dfd4ad8fde0a40da50aab3aff6d9a27020b8f283e332bc4da6ef9914f4028c",
+    strip_prefix = "monitoring-plugins-2.4.0",
+    urls = [
+        "https://www.monitoring-plugins.org/download/monitoring-plugins-2.4.0.tar.gz",
+        UPSTREAM_MIRROR_URL + "monitoring-plugins-2.4.0.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

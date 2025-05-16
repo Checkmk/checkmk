@@ -227,7 +227,7 @@ def check_multipath(  # pylint: disable=too-many-branches
     yield Result(state=state, summary=infotext)
 
     if num_broken > 0:
-        yield Result(state=State.OK, summary="Broken paths: %s" % ",".join(broken_paths))
+        yield Result(state=State.CRIT, summary="Broken paths: %s" % ",".join(broken_paths))
 
 
 register.check_plugin(

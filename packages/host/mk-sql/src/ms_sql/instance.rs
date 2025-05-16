@@ -527,7 +527,13 @@ impl SqlInstance {
                         + &self.generate_details_entry(client, sep).await
                 }
                 names::COUNTERS => self.generate_counters_section(client, &query, sep).await,
-                names::BACKUP => self.generate_backup_section(client, &query, sep).await,
+                names::BACKUP => {
+                    if client.get_edition() == Edition::Azure {
+                        String::new()
+                    } else {
+                        self.generate_backup_section(client, &query, sep).await
+                    }
+                }
                 names::BLOCKED_SESSIONS => {
                     self.generate_sessions_section(client, &query, sep).await
                 }

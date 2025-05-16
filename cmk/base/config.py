@@ -4568,12 +4568,11 @@ class CEEConfigCache(ConfigCache):
             varname: self.ruleset_matcher.get_host_values(
                 hostname, ruleset, self.label_manager.labels_of_host
             )
-            for varname, ruleset in CEEConfigCache._agent_config_rulesets()
+            for varname, ruleset in self._agent_config_rulesets()
         }
 
-    @staticmethod
     def generic_agent_config_entries(
-        *, defaults: Mapping[str, object]
+        self, *, defaults: Mapping[str, object]
     ) -> Iterable[tuple[str, Mapping[str, object]]]:
         yield from (
             (
@@ -4581,8 +4580,8 @@ class CEEConfigCache(ConfigCache):
                 boil_down_agent_rules(
                     defaults=defaults,
                     rulesets={
-                        varname: CEEConfigCache._get_values_for_generic_agent(ruleset, match_path)
-                        for varname, ruleset in CEEConfigCache._agent_config_rulesets()
+                        varname: self._get_values_for_generic_agent(ruleset, match_path)
+                        for varname, ruleset in self._agent_config_rulesets()
                     },
                 ),
             )

@@ -11,7 +11,9 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.users import create_and_destroy_user
+from cmk.ccc.user import UserId
+
+from cmk.utils.local_secrets import AutomationUserSecret
 
 from cmk.plugins.checkmk.special_agents.agent_bi import (
     AgentBiAutomationUserAuthentication,
@@ -23,7 +25,6 @@ from cmk.plugins.checkmk.special_agents.agent_bi import (
 
 
 class TestAggregationRawdataGeneratorLocal:
-    @pytest.mark.usefixtures("ui_context")
     @pytest.mark.parametrize(
         [
             "config",
@@ -54,19 +55,25 @@ class TestAggregationRawdataGeneratorLocal:
                 "the_dude_secret": "white_russian",
             },
         )
-        with create_and_destroy_user(
-            automation=True,
-            role="admin",
-            username=expected_username,
-        ):
-            agg_gen = AggregationRawdataGenerator(config)
-            assert "InternalToken" in agg_gen._get_authentication_token()
+        mocker.patch("cmk.ccc.site.get_apache_port", return_value=5002)
+
+        secret = AutomationUserSecret(UserId(expected_username))
+        secret.path.parent.mkdir(parents=True, exist_ok=True)
+        secret.save("lala")
+
+        agg_gen = AggregationRawdataGenerator(config)
+        assert "InternalToken" in agg_gen._get_authentication_token()
         assert agg_gen._config == config
         assert agg_gen._site_url == expected_site_url
 
 
+def _create_automation_user_secret(username: UserId) -> None:
+    secret = AutomationUserSecret(username)
+    secret.path.parent.mkdir(parents=True, exist_ok=True)
+    secret.save("lala")
+
+
 class TestAggregationRawdataGenerator:
-    @pytest.mark.usefixtures("ui_context")
     @pytest.mark.parametrize(
         [
             "config",
@@ -117,16 +124,16 @@ class TestAggregationRawdataGenerator:
                 "the_dude_secret": "white_russian",
             },
         )
-        with create_and_destroy_user(
-            automation=True,
-            role="admin",
-            username=expected_username,
-        ):
-            agg_gen = AggregationRawdataGenerator(config)
-            assert (
-                agg_gen._get_authentication_token()
-                == f"Bearer {expected_username} {expected_password}"
-            )
+
+        if expected_username == "automation":
+            secret = AutomationUserSecret(UserId(expected_username))
+            secret.path.parent.mkdir(parents=True, exist_ok=True)
+            secret.save("Ischbinwischtisch")
+
+        agg_gen = AggregationRawdataGenerator(config)
+        assert (
+            agg_gen._get_authentication_token() == f"Bearer {expected_username} {expected_password}"
+        )
         assert agg_gen._config == config
         assert agg_gen._site_url == expected_site_url
 

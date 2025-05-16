@@ -4419,21 +4419,6 @@ class CEEConfigCache(ConfigCache):
     def cmc_real_time_checks() -> object:
         return cmc_real_time_checks  # type: ignore[name-defined,unused-ignore]
 
-    def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
-        def _impl() -> Mapping[str, Any]:
-            return {
-                **boil_down_agent_rules(
-                    defaults=default,
-                    rulesets=self.matched_agent_config_entries(host_name),
-                ),
-                "is_ipv6_primary": (self.default_address_family(host_name) is socket.AF_INET6),
-            }
-
-        with contextlib.suppress(KeyError):
-            return self.__agent_config[host_name]
-
-        return self.__agent_config.setdefault(host_name, _impl())
-
     def rrd_config_of_service(
         self, host_name: HostName, service_name: ServiceName
     ) -> RRDObjectConfig | None:
@@ -4551,6 +4536,29 @@ class CEEConfigCache(ConfigCache):
         )
         return out[0] if out else None
 
+    @staticmethod
+    def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:
+        return list(agent_config.items()) + [
+            ("agent_port", agent_ports),
+            ("agent_encryption", agent_encryption),
+            ("agent_exclude_sections", agent_exclude_sections),
+        ]
+
+    def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
+        def _impl() -> Mapping[str, Any]:
+            return {
+                **boil_down_agent_rules(
+                    defaults=default,
+                    rulesets=self.matched_agent_config_entries(host_name),
+                ),
+                "is_ipv6_primary": (self.default_address_family(host_name) is socket.AF_INET6),
+            }
+
+        with contextlib.suppress(KeyError):
+            return self.__agent_config[host_name]
+
+        return self.__agent_config.setdefault(host_name, _impl())
+
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {
             varname: self.ruleset_matcher.get_host_values(
@@ -4613,14 +4621,6 @@ class CEEConfigCache(ConfigCache):
             entries.append(rule["value"])
 
         return entries
-
-    @staticmethod
-    def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:
-        return list(agent_config.items()) + [
-            ("agent_port", agent_ports),
-            ("agent_encryption", agent_encryption),
-            ("agent_exclude_sections", agent_exclude_sections),
-        ]
 
 
 class CMEConfigCache(CEEConfigCache):

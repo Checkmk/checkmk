@@ -55,8 +55,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
-import cmk.ccc.store as _store
-from cmk.ccc.exceptions import MKFetcherError, MKGeneralException, MKTimeout
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKFetcherError, MKGeneralException
 
 from cmk.utils.log import VERBOSE
 
@@ -191,19 +191,18 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
         return raw_data
 
-    @staticmethod
-    def _make_path(template: str, *, mode: Mode) -> Path:
+    def _make_path(self, mode: Mode) -> Path:
         # This is a kind of arbitrary mini-language but explicit in the
         # caller and easy to extend in the future.  If somebody has a
         # better idea to allow a serializable and parametrizable path
         # creation, that's fine with me.
-        return Path(template.format(mode=mode.name.lower()))
+        return Path(self.path_template.format(mode=mode.name.lower()))
 
     def _read(self, mode: Mode) -> _TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
-        path = self._make_path(self.path_template, mode=mode)
+        path = self._make_path(mode)
         try:
             cachefile_age = time.time() - path.stat().st_mtime
         except FileNotFoundError:
@@ -236,20 +235,11 @@ class FileCache(Generic[_TRawData], abc.ABC):
     def write(self, raw_data: _TRawData, mode: Mode) -> None:
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
-
-        path = self._make_path(self.path_template, mode=mode)
-        try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-        except MKTimeout:
-            raise
-        except Exception as e:
-            raise MKGeneralException(f"Cannot create directory {path.parent!r}: {e}")
-
+        path = self._make_path(mode)
         self._logger.debug("Write data to cache file %s", path)
         try:
-            _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
-        except MKTimeout:
-            raise
+            path.parent.mkdir(parents=True, exist_ok=True)
+            store.RealIo(path).write(self._to_cache_file(raw_data))
         except Exception as e:
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 

@@ -99,12 +99,10 @@ class ABCModeDownloadAgents(WatoMode):
             )
 
     @abc.abstractmethod
-    def _packed_agents(self) -> list[str]:
-        raise NotImplementedError()
+    def _packed_agents(self) -> list[str]: ...
 
     @abc.abstractmethod
-    def _walk_base_dir(self) -> str:
-        raise NotImplementedError()
+    def _walk_base_dirs(self) -> list[str]: ...
 
     def _exclude_file_glob_patterns(self):
         return []
@@ -123,7 +121,9 @@ class ABCModeDownloadAgents(WatoMode):
         if packed := self._packed_agents():
             self._download_table(_("Packaged Agents"), packed)
 
-        for title, file_paths in sorted(self._walk_dir(self._walk_base_dir())):
+        for title, file_paths in sorted(
+            entry for base_dir in self._walk_base_dirs() for entry in self._walk_dir(base_dir)
+        ):
             useful_file_paths = [p for p in file_paths if not p.endswith("/CONTENTS")]
             if useful_file_paths:
                 self._download_table(title, sorted(useful_file_paths))
@@ -193,8 +193,8 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     def _packed_agents(self) -> list[str]:
         return []
 
-    def _walk_base_dir(self):
-        return cmk.utils.paths.agents_dir
+    def _walk_base_dirs(self) -> list[str]:
+        return [cmk.utils.paths.agents_dir]
 
     def _exclude_file_glob_patterns(self):
         return [
@@ -232,8 +232,11 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_windows_msi())]
 
-    def _walk_base_dir(self):
-        return cmk.utils.paths.agents_dir + "/windows"
+    def _walk_base_dirs(self) -> list[str]:
+        return [
+            cmk.utils.paths.agents_dir + "/windows",
+            cmk.utils.paths.agents_dir + "/robotmk/windows",
+        ]
 
 
 class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
@@ -247,8 +250,8 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
 
-    def _walk_base_dir(self):
-        return cmk.utils.paths.agents_dir
+    def _walk_base_dirs(self) -> list[str]:
+        return [cmk.utils.paths.agents_dir]
 
     def _exclude_file_glob_patterns(self):
         return [

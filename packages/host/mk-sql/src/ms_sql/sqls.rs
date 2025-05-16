@@ -40,99 +40,103 @@ pub mod query {
     pub const COMPUTER_NAME: &str =
         "SELECT Upper(Cast(SERVERPROPERTY( 'MachineName' ) AS varchar)) AS MachineName";
     /// Script to be run in SQL instance
-    pub const WINDOWS_REGISTRY_INSTANCES_BASE: &str = r"DECLARE @GetInstances TABLE
-( Value NVARCHAR(100),
- InstanceNames NVARCHAR(100),
- Data NVARCHAR(100))
-
-DECLARE @GetAll TABLE
-( Value NVARCHAR(100),
- InstanceNames NVARCHAR(100),
- InstanceIds NVARCHAR(100),
- EditionNames NVARCHAR(100),
- VersionNames NVARCHAR(100),
- ClusterNames NVARCHAR(100),
- Ports NVARCHAR(100),
- DynamicPorts NVARCHAR(100),
- Data NVARCHAR(100))
-
-Insert into @GetInstances
-EXECUTE xp_regread
-  @rootkey = 'HKEY_LOCAL_MACHINE',
-  @key = 'SOFTWARE\Microsoft\Microsoft SQL Server',
-  @value_name = 'InstalledInstances'
-
-DECLARE @InstanceName NVARCHAR(100);
-
--- Cursor to iterate through the instance names
-DECLARE instance_cursor CURSOR FOR
-SELECT InstanceNames FROM @GetInstances;
-
-OPEN instance_cursor;
-
--- Loop through all instances
-FETCH NEXT FROM instance_cursor INTO @InstanceName;
-
-WHILE @@FETCH_STATUS = 0
+    pub const WINDOWS_REGISTRY_INSTANCES_BASE: &str = r#"
+IF OBJECT_ID('xp_regread', 'X') IS NOT NULL
 BEGIN
-    DECLARE @InstanceId NVARCHAR(100);
-    DECLARE @main_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL';
+    DECLARE @GetInstances TABLE
+    ( Value NVARCHAR(100),
+    InstanceNames NVARCHAR(100),
+    Data NVARCHAR(100))
+
+    DECLARE @GetAll TABLE
+    ( Value NVARCHAR(100),
+    InstanceNames NVARCHAR(100),
+    InstanceIds NVARCHAR(100),
+    EditionNames NVARCHAR(100),
+    VersionNames NVARCHAR(100),
+    ClusterNames NVARCHAR(100),
+    Ports NVARCHAR(100),
+    DynamicPorts NVARCHAR(100),
+    Data NVARCHAR(100))
+
+    Insert into @GetInstances
     EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @main_key,
-        @value_name = @InstanceName,
-        @value = @InstanceId OUTPUT;
+    @rootkey = 'HKEY_LOCAL_MACHINE',
+    @key = 'SOFTWARE\Microsoft\Microsoft SQL Server',
+    @value_name = 'InstalledInstances'
 
-    -- You'll need to construct the key path using the instance name
-    DECLARE @setup_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\Setup';
-    DECLARE @cluster_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\Cluster';
-    DECLARE @port_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\MSSQLServer\SuperSocketNetLib\TCP\IPAll';
+    DECLARE @InstanceName NVARCHAR(100);
 
-    DECLARE @Edition NVARCHAR(100);
-    EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @setup_key,
-        @value_name = 'Edition',
-        @value = @Edition OUTPUT;
+    -- Cursor to iterate through the instance names
+    DECLARE instance_cursor CURSOR FOR
+    SELECT InstanceNames FROM @GetInstances;
 
-    DECLARE @Version NVARCHAR(100);
-    EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @setup_key,
-        @value_name = 'Version',
-        @value = @Version OUTPUT;
+    OPEN instance_cursor;
 
-    DECLARE @ClusterName NVARCHAR(100);
-    EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @cluster_key,
-        @value_name = 'ClusterName',
-        @value = @ClusterName OUTPUT;
-
-    DECLARE @Port NVARCHAR(100);
-    EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @port_key,
-        @value_name = 'tcpPort',
-        @value = @Port OUTPUT;
-
-    DECLARE @DynamicPort NVARCHAR(100);
-    EXECUTE xp_regread
-        @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @port_key,
-        @value_name = 'TcpDynamicPorts',
-        @value = @DynamicPort OUTPUT;
-
-    insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports, DynamicPorts) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port, @DynamicPort )
-
-    -- Get the next instance
+    -- Loop through all instances
     FETCH NEXT FROM instance_cursor INTO @InstanceName;
-END
 
-CLOSE instance_cursor;
-DEALLOCATE instance_cursor;
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        DECLARE @InstanceId NVARCHAR(100);
+        DECLARE @main_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL';
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @main_key,
+            @value_name = @InstanceName,
+            @value = @InstanceId OUTPUT;
 
-SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
+        -- You'll need to construct the key path using the instance name
+        DECLARE @setup_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\Setup';
+        DECLARE @cluster_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\Cluster';
+        DECLARE @port_key NVARCHAR(200) = 'SOFTWARE\Microsoft\Microsoft SQL Server\' + @InstanceId + '\MSSQLServer\SuperSocketNetLib\TCP\IPAll';
+
+        DECLARE @Edition NVARCHAR(100);
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @setup_key,
+            @value_name = 'Edition',
+            @value = @Edition OUTPUT;
+
+        DECLARE @Version NVARCHAR(100);
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @setup_key,
+            @value_name = 'Version',
+            @value = @Version OUTPUT;
+
+        DECLARE @ClusterName NVARCHAR(100);
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @cluster_key,
+            @value_name = 'ClusterName',
+            @value = @ClusterName OUTPUT;
+
+        DECLARE @Port NVARCHAR(100);
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @port_key,
+            @value_name = 'tcpPort',
+            @value = @Port OUTPUT;
+
+        DECLARE @DynamicPort NVARCHAR(100);
+        EXECUTE xp_regread
+            @rootkey = 'HKEY_LOCAL_MACHINE',
+            @key = @port_key,
+            @value_name = 'TcpDynamicPorts',
+            @value = @DynamicPort OUTPUT;
+
+        insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports, DynamicPorts) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port, @DynamicPort )
+
+        -- Get the next instance
+        FETCH NEXT FROM instance_cursor INTO @InstanceName;
+    END
+
+    CLOSE instance_cursor;
+    DEALLOCATE instance_cursor;
+
+    SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll
+END"#;
 
     pub const UTC_ENTRY: &str = "SELECT CONVERT(NVARCHAR, GETUTCDATE(), 20) AS utc_date";
 

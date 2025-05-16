@@ -32,14 +32,6 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line("markers", "cre: marks tests using a raw-edition site")
-    config.addinivalue_line("markers", "cee: marks tests using an enterprise-edition site")
-    config.addinivalue_line("markers", "cce: marks tests using a cloud-edition site")
-    config.addinivalue_line("markers", "cse: marks tests using a saas-edition site")
-    config.addinivalue_line("markers", "cme: marks tests using a managed-edition site")
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--disable-interactive-mode",

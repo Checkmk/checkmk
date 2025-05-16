@@ -5,7 +5,6 @@
 
 # This file initializes the pytest environment
 
-
 import logging
 import os
 import subprocess

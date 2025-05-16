@@ -296,39 +296,35 @@ test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cre:
-	EDITION=cre $(PYTEST) $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
-	--session-timeout 5400
+	EDITION=cre $(PYTEST) $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cee:
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee \
-	--session-timeout 5400
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cce:
-	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
-	--session-timeout 5400
+	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cme:
-	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
-	--session-timeout 5400
+	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cse:
-	EDITION=cse $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode \
+	EDITION=cse $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
 test-update-cross-edition-cee-to-cce: # from CEE to CCE
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cee-to-cme: # from CEE to CME
-	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cee: # from CRE to CEE
-	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
+	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-cre-to-cce: # from CRE to CCE
-	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) -m cre \
+	EDITION=cre $(PYTEST) $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:

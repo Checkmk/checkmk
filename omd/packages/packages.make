@@ -181,6 +181,7 @@ debug:
 
 # Include rules to make packages
 include \
+    packages/erlang/erlang.make \
     packages/apache-omd/apache-omd.make \
     packages/xinetd/xinetd.make \
     packages/cpp-libs/cpp-libs.make \

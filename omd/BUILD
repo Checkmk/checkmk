@@ -34,7 +34,6 @@ create_venv(
     deps = [
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
-               "//omd/packages/erlang",
                "//omd/packages/heirloom-pkgtools",
                "//omd/packages/lcab",
                "//omd/packages/maintenance",

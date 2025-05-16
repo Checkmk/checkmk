@@ -643,8 +643,11 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        Hostname().validate_value(hostname, "host")
+        try:
+            hostname = request.get_validated_type_input_mandatory(HostName, "host")
+        except MKUserError:
+            Hostname().validate_value(request.get_ascii_input_mandatory("host"), "host")
+            return redirect(mode_url("folder"))
 
         folder = folder_from_request(request.var("folder"), hostname)
         if transactions.check_transaction():
@@ -705,7 +708,12 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
-        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+        try:
+            host_name = request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            )
+        except MKUserError:
+            host_name = HostName("")
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,
@@ -738,7 +746,12 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
-        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+        try:
+            host_name = request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            )
+        except MKUserError:
+            host_name = HostName("")
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,

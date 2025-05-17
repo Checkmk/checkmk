@@ -21,6 +21,7 @@ import {CmkGraphTimeseriesFigure} from "./timeseries/cmk_graph_timeseries_figure
 import {TimeseriesFigure} from "./timeseries/cmk_timeseries";
 import {SingleMetricFigure} from "./timeseries/single_metric_figure";
 import {PieChartFigure} from "@/modules/figures/cmk_pie_chart";
+import {HorizontalBarFigure} from "@/modules/figures/cmk_horizontal_bar";
 
 export function register() {
     figure_registry.register(TableFigure);
@@ -29,6 +30,7 @@ export function register() {
     figure_registry.register(EventStats);
     figure_registry.register(AlertOverview);
     figure_registry.register(BarplotFigure);
+    figure_registry.register(HorizontalBarFigure);
     figure_registry.register(DCTableFigure);
     figure_registry.register(GaugeFigure);
     figure_registry.register(PieChartFigure);

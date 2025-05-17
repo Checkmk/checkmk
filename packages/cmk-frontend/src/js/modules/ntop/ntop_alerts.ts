@@ -4,37 +4,24 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import crossfilter from "crossfilter2";
-import type {BaseType, Selection} from "d3";
-import {
-    scaleLinear,
-    scaleTime,
-    select,
-    selectAll,
-    timeDay,
-    timeDays,
-    timeFormat,
-} from "d3";
-import type {DataTableWidget} from "dc";
-import {barChart, redrawAll} from "dc";
+import crossfilter, {Crossfilter, type Dimension} from "crossfilter2";
+import {BaseType, D3BrushEvent, select as d3select, Selection} from "d3";
+import {select, selectAll} from "d3";
+import * as d3 from "d3";
 import $ from "jquery";
 
-import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import {Tab, TabsBar} from "@/modules/figures/cmk_tabs";
 import type {FigureData} from "@/modules/figures/figure_types";
-import {
-    fmt_number_with_precision,
-    SIUnitPrefixes,
-} from "@/modules/number_format";
 
-import type {FlowDashletDataChoice, NtopColumn} from "./ntop_flows";
+import {FlowDashletDataChoice, FlowData, NtopColumn} from "./ntop_flows";
 import {
     add_classes_to_trs,
     add_columns_classes_to_nodes,
     ifid_dep,
     seconds_to_time,
 } from "./ntop_utils";
+import {MultiDataFetcher} from "@/modules/figures/multi_data_fetcher";
 
 export class NtopAlertsTabBar extends TabsBar {
     constructor(div_selector: string) {
@@ -73,52 +60,117 @@ interface ABCAlertsPageData extends FigureData {
     number_of_alerts: number;
 }
 
+interface CrossfilterRecord {
+    date: Date;
+    count: number;
+}
+
 // Base class for all alert tables
 abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _filter_choices: ABCAlertsFilteredChoices[];
-    _crossfilter_time!: crossfilter.Crossfilter<any>;
-    _date_dimension!: crossfilter.Dimension<any, any>;
-    _hour_dimension!: crossfilter.Dimension<any, any>;
-    _table_details!: DCTableFigure<ABCAlertsPageData>;
     _ifid!: string | null;
     _vlanid!: string | null;
     _fetch_filters!: Record<string, string>;
     current_ntophost: any;
-    _filtered_date!: null | any[];
-    _filtered_hours!: null | any[];
     url_param!: string;
+    _multi_data_fetcher: MultiDataFetcher;
+    _table_div!: Selection<HTMLDivElement, any, BaseType, any>;
+    _pagination!: Selection<HTMLDivElement, any, BaseType, any>;
+    _indexDim!: Dimension<any, any>;
+    _msgDim!: Dimension<any, any>;
+    _crossfilterTime!: crossfilter.Crossfilter<CrossfilterRecord>;
+    _dateDimension!: crossfilter.Dimension<CrossfilterRecord, Date>;
+    _hourDimension!: crossfilter.Dimension<CrossfilterRecord, number>;
+    _dateGroup!: crossfilter.Group<CrossfilterRecord, Date, number>;
+    _hourGroup!: crossfilter.Group<CrossfilterRecord, number, number>;
+    _filteredDate: null | any[] = null;
+    _filteredHours: null | any[] = null;
+    _scaleDate_x!: d3.ScaleTime<Date, number>;
+    _scaleDate_y!: d3.ScaleLinear<number, number>;
+    _scaleHour_x!: d3.ScaleLinear<number, number>;
+    _scaleHour_y!: d3.ScaleLinear<number, number>;
+
+    _dateFilterContext!: Selection<SVGGElement, unknown, BaseType, unknown>;
+    _hourFilterContext!: Selection<SVGGElement, unknown, BaseType, unknown>;
     constructor(div_selector: string) {
         super(div_selector);
         this._filter_choices = [];
+        this._multi_data_fetcher = new MultiDataFetcher();
+        this._indexDim = this._crossfilter.dimension(d => d.index);
+        this._msgDim = this._crossfilter.dimension(d => d.msg);
+        this._crossfilterTime = crossfilter();
+        this._dateDimension = this._crossfilterTime.dimension<Date>(
+            d => d.date,
+        );
+        this._hourDimension = this._crossfilterTime.dimension<number>(d => {
+            return d.date.getHours() + d.date.getMinutes() / 60;
+        });
+        this._dateGroup = this._dateDimension
+            .group<Date, number>(d => {
+                return d3.timeDay.floor(d);
+            })
+            .reduceSum(d => d.count);
+        this._hourGroup = this._hourDimension
+            .group<number, number>(d => {
+                return Math.floor(d);
+            })
+            .reduceSum(d => d.count);
+    }
+
+    _update_details_table() {
+        const parameters = this.get_url_search_parameters();
+        parameters.append("details_only", "1");
+        parameters.append(
+            "offset",
+            this._pagination.select("td.pagination_info").attr("offset"),
+        );
+
+        this._multi_data_fetcher.reset();
+        this._multi_data_fetcher.add_fetch_operation(
+            this._post_url,
+            parameters.toString(),
+            600,
+        );
+        this._multi_data_fetcher.subscribe_hook(
+            this._post_url,
+            parameters.toString(),
+            data => this._update_details_data(data),
+        );
+        this.show_loading_image();
+    }
+
+    _update_details_data(data: ABCAlertsPageData) {
+        if (data === undefined) return;
+        this._crossfilter.remove(() => true);
+        data.alerts.forEach(function (d, i) {
+            d.index = i;
+            // @ts-ignore
+            d.date = new Date(1000 * d.date);
+        });
+        this._crossfilter.add(data.alerts);
+        this._render_table();
     }
 
     override initialize(_with_debugging?: boolean) {
-        this._crossfilter_time = crossfilter();
-
         // Date and hour filters
-        this._date_dimension = this._crossfilter_time.dimension(d => d.date);
-        this._hour_dimension = this._crossfilter_time.dimension(d => {
-            return d.date.getHours() + d.date.getMinutes() / 60;
-        });
-        this._setup_time_based_filters(
+        this._initialize_time_filters(
             this._div_selection
                 .append("div")
                 .classed("time_filters " + this.page_id(), true),
         );
 
-        // Fetch filters
-        this._setup_fetch_filters(
+        this._initialize_fetch_filters(
             this._div_selection
                 .append("div")
                 .classed("fetch_filters " + this.page_id(), true),
         );
 
-        const div_description = this._div_selection
-            .append("div")
-            .classed("description_filter " + this.page_id(), true);
-        const div_status = this._div_selection
-            .append("div")
-            .classed("status " + this.page_id(), true);
+        this._initialize_description_filter(
+            this._div_selection
+                .append("div")
+                .classed("description_filter " + this.page_id(), true),
+        );
+
         this._div_selection
             .append("div")
             .classed("warning " + this.page_id(), true)
@@ -130,39 +182,6 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .append("div")
             .classed("details " + this.page_id(), true);
 
-        // Table with details
-        this._table_details = new DCTableFigure(
-            "div.details." + this.page_id(),
-            null,
-        );
-        this._table_details.subscribe_data_pre_processor_hook(data =>
-            this._convert_alert_details_to_dc_table_format(data),
-        );
-
-        this._table_details.subscribe_post_render_hook(() => {
-            this._div_selection
-                .selectAll("div.status")
-                .classed("loading_img_icon", false)
-                .select("label");
-        });
-
-        this._table_details.activate_dynamic_paging();
-        this._table_details.crossfilter(crossfilter());
-        this._table_details.columns(this._get_columns());
-        this._table_details.initialize();
-
-        // Description filter
-        this._setup_description_filter(div_description);
-        this._setup_status_text(div_status);
-
-        // CSS adjustments, TODO: check usage
-        this._table_details
-            .get_dc_chart()
-            .on("postRedraw", chart => this._update_cells(chart));
-        this._table_details
-            .get_dc_chart()
-            .on("renderlet", chart => this._update_css_classes(chart));
-
         // Parameters used for url generation
         this._ifid = null;
         this._vlanid = null;
@@ -170,6 +189,16 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
 
         this._div_selection = this._div_selection.classed(ifid_dep, true);
         this._div_selection.datum(this);
+
+        this._multi_data_fetcher.scheduler.enable();
+        // Table
+        this._pagination = this._div_selection
+            .append("div")
+            .attr("id", "table_pagination");
+        this._table_div = this._div_selection
+            .append("div")
+            .attr("id", "details_table");
+        this._render_table_pagination();
     }
 
     getEmptyData() {
@@ -181,18 +210,6 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             filter_choices: [],
             time_series: [],
             number_of_alerts: 0,
-        };
-    }
-
-    _convert_alert_details_to_dc_table_format(data: ABCAlertsPageData) {
-        data.alerts.forEach(function (d, i) {
-            d.index = i;
-            // @ts-ignore
-            d.date = new Date(1000 * d.date);
-        });
-        return {
-            data: data.alerts,
-            length: data.number_of_alerts,
         };
     }
 
@@ -230,35 +247,198 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         this.scheduler.force_update();
     }
 
-    _setup_time_based_filters(
+    _initialize_time_filters(
         selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
-        // These parameters -may- include activated filters
-        this._filtered_date = null;
-        this._filtered_hours = null;
-        const table = selection
-            // @ts-ignore
-            .append("table", "div.paging")
-            .classed("filter_graphs", true);
-        table
+        const datetime_filter = selection
+            .append("table")
+            .style("margin-top", "20px");
+        datetime_filter
             .append("tr")
             .selectAll("td")
             .data(["day", "hour"])
             .join("td")
             .text(d => "Filter by " + d);
-        const graphs_row = table.append("tr");
-        this._setup_date_filter(graphs_row.append("td"));
-        this._setup_hour_filter(graphs_row.append("td"));
+        const filter_row = datetime_filter.append("tr");
+
+        // Day filter
+        const now = new Date();
+        this._scaleDate_x = d3.scaleTime<Date, number>();
+        this._scaleDate_y = d3.scaleLinear<number, number>();
+        this._scaleDate_y.range([0, 130]);
+        this._dateFilterContext = this._initialize_time_filter(
+            filter_row.append("td").append("svg"),
+            [new Date((now.getTime() / 1000 - 31 * 86400) * 1000), now],
+            this._scaleDate_x,
+            5,
+            (selection: [Date, Date], scale: d3.ScaleTime<any, any>) => {
+                let [x0, x1] = scale.domain();
+                this._filteredDate = null;
+                this._dateDimension.filterRange([x0, x1]);
+                if (selection !== null) {
+                    [x0, x1] = selection.map(d => scale.invert(d));
+                    this._filteredDate = [x0, x1];
+                    this._dateDimension.filterRange([x0, x1]);
+                }
+                this._update_time_filters();
+                this._update_details_table();
+            },
+        );
+
+        // Hours filter
+        this._scaleHour_x = d3.scaleLinear<number, number>();
+        this._scaleHour_y = d3.scaleLinear<number, number>();
+        this._scaleHour_y.range([0, 130]);
+        this._hourFilterContext = this._initialize_time_filter(
+            filter_row.append("td").append("svg"),
+            [0, 24],
+            this._scaleHour_x,
+            12,
+            (
+                selection: [number, number],
+                scale: d3.ScaleLinear<number, number>,
+            ) => {
+                let [x0, x1] = scale.domain();
+                this._filteredHours = null;
+                this._hourDimension.filterRange([x0, x1]);
+                if (selection !== null) {
+                    [x0, x1] = selection.map(d => scale.invert(d));
+                    this._filteredHours = [x0, x1];
+                    this._hourDimension.filterRange([x0, x1]);
+                }
+                this._update_time_filters();
+                this._update_details_table();
+            },
+        );
+    }
+
+    _initialize_time_filter(
+        svg: Selection<SVGSVGElement, unknown, BaseType, unknown>,
+        use_domain: [number, number] | [Date, Date],
+        use_scale: d3.ScaleTime<Date, number> | d3.ScaleLinear<number, number>,
+        ticks: number,
+        changed_callback: any = null,
+    ) {
+        const margin = {top: 20, right: 30, bottom: 50, left: 40};
+        svg.attr("height", 200).attr("width", 500);
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+        const x_time = use_scale.range([0, width]);
+
+        // @ts-ignore
+        const fixedAxis = d3.axisBottom(use_scale).ticks(ticks);
+        const brush = d3
+            .brushX()
+            .extent([
+                [0, 0],
+                [width, height],
+            ])
+            .on("end", (event: D3BrushEvent<any>) => {
+                changed_callback(event.selection, use_scale);
+            });
+
+        const context = svg
+            .append("g")
+            .attr("class", "context")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // @ts-ignore
+        x_time.domain(use_domain);
+
+        context
+            .append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(fixedAxis);
+
+        context.append("g").attr("class", "brush").call(brush);
+        return context;
+    }
+
+    _update_time_filters() {
+        // Update date
+        let max_y_date = d3.max(this._dateGroup.all(), d => d.value)!;
+        max_y_date = Math.max(max_y_date, 1);
+        this._scaleDate_y.domain([max_y_date, 0]);
+        this._dateFilterContext
+            .selectAll("g.axis_left")
+            .data([null])
+            .join("g")
+            .classed("axis_left", true)
+            .transition()
+            // @ts-ignore
+            .call(d3.axisLeft(this._scaleDate_y).ticks(4));
+
+        this._dateFilterContext
+            .selectAll<SVGRectElement, {key: number; value: number}>(
+                "rect.data",
+            )
+            .data(this._dateGroup.all())
+            .join("rect")
+            .classed("data", true)
+            .style("pointer-events", "none")
+            .style("fill", "lightblue")
+            .attr("width", 10)
+            .attr("x", (d: {key: Date; value: number}): number => {
+                return this._scaleDate_x(d.key);
+            })
+            .transition()
+            .attr(
+                "y",
+                d =>
+                    this._scaleDate_y(0) -
+                    this._scaleDate_y(max_y_date - d.value),
+            )
+            .attr("height", d => {
+                return this._scaleDate_y(max_y_date - d.value);
+            });
+
+        // Update hours
+        let max_y_hour = d3.max(this._hourGroup.all(), d => d.value)!;
+        max_y_hour = Math.max(max_y_hour, 1);
+        this._scaleHour_y.domain([max_y_hour, 0]);
+        this._hourFilterContext
+            .selectAll("g.axis_left")
+            .data([null])
+            .join("g")
+            .classed("axis_left", true)
+            .transition()
+            // @ts-ignore
+            .call(d3.axisLeft(this._scaleHour_y).ticks(4));
+
+        this._hourFilterContext
+            .selectAll<SVGRectElement, {key: number; value: number}>(
+                "rect.data",
+            )
+            .data(this._hourGroup.all())
+            .join("rect")
+            .classed("data", true)
+            .style("pointer-events", "none")
+            .style("fill", "lightblue")
+            .attr("width", 10)
+            .attr("x", d => {
+                return this._scaleHour_x(d.key);
+            })
+            .transition()
+            .attr("height", d => {
+                return this._scaleHour_y(max_y_hour - d.value);
+            })
+            .attr(
+                "y",
+                d =>
+                    this._scaleHour_y(0) -
+                    this._scaleHour_y(max_y_hour - d.value),
+            );
     }
 
     _update_filter_choices(filter_choices: FlowDashletDataChoice[]) {
         this._filter_choices = filter_choices;
-        this._setup_fetch_filters(
+        this._initialize_fetch_filters(
             this._div_selection.select("div.fetch_filters." + this.page_id()),
         );
     }
 
-    _setup_fetch_filters(
+    _initialize_fetch_filters(
         selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         const dropdowns = selection
@@ -315,94 +495,141 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .property("selected", false);
         selectTarget.selectedIndex = selected_index;
         this.show_loading_image();
-        this._table_details.reset();
         this.scheduler.force_update();
     }
 
-    _setup_date_filter(
-        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>,
-    ) {
-        const div_id = this.page_id() + "_date_filter";
-        selection
-            .append("div")
-            .attr("id", div_id)
-            .classed("date_filter", true)
-            .style("display", "inline");
-        const date_group = this._date_dimension
-            .group(d => {
-                return timeDay.floor(d);
-            })
-            .reduceSum(d => d.count);
-        const date_chart = barChart("#" + div_id, this.page_id());
-        const now = new Date();
-        const chart_x_domain = [
-            new Date((now.getTime() / 1000 - 31 * 86400) * 1000),
-            now,
-        ];
-        date_chart
-            .width(500)
-            .height(120)
-            .dimension(this._date_dimension)
-            .group(date_group)
-            .margins({left: 30, top: 5, right: 20, bottom: 20})
-            .x(scaleTime().domain(chart_x_domain))
-            // @ts-ignore
-            .xUnits(timeDays)
-            // @ts-ignore
-            .colors(() => {
-                return "#767d84c2";
-            })
-            .elasticY(true)
-            .on("postRedraw", () => {
-                const filter_params = this._get_time_filter_params();
-                this._div_selection
-                    .select("div.status")
-                    .classed("loading_img_icon", true)
-                    .select("label")
-                    .text(this._compute_status_text(filter_params));
+    _render_table_pagination() {
+        const entries = 20;
 
-                if (
-                    filter_params.hour_start != undefined &&
-                    filter_params.date_start != undefined
-                ) {
-                    this._div_selection
-                        .select("div.warning")
-                        .style("display", "block");
-                } else {
-                    this._div_selection
-                        .select("div.warning")
-                        .style("display", "none");
-                }
-                const parameters = this.get_url_search_parameters();
-                parameters.append("details_only", "1");
-                parameters.append("offset", "0");
-                this._table_details.set_post_url_and_body(
-                    this._post_url,
-                    parameters.toString(),
-                );
-                this._table_details.scheduler.force_update();
-            });
-        date_chart
-            .yAxis()
-            .ticks(5)
-            .tickFormat(d => {
-                return fmt_number_with_precision(d, SIUnitPrefixes, 0);
-            });
+        const new_row = this._pagination
+            .selectAll("table")
+            .data([null])
+            .enter()
+            .append("table")
+            .style("width", "260px")
+            .style("margin", "10px")
+            .style("margin-left", "auto")
+            .style("margin-right", "0px")
+            .append("tr");
+        const current_pagination = new_row
+            .append("td")
+            .classed("pagination_info", true)
+            .style("width", "160px")
+            .style("text-align", "right")
+            .attr("offset", 0);
+        [
+            ["<<", 0],
+            ["<", -entries],
+            [">", entries],
+            [">>", Infinity],
+        ].forEach(entry => {
+            const [text, offset] = entry;
+            new_row
+                .append("td")
+                .classed("navigation noselect", true)
+                .style("cursor", "pointer")
+                .on("mouseover", (event: MouseEvent) => {
+                    d3.select(event.target! as HTMLElement).style(
+                        "background",
+                        "#9c9c9c",
+                    );
+                })
+                .on("mouseout", (event: MouseEvent) => {
+                    d3select(event.target! as HTMLElement).style(
+                        "background",
+                        null,
+                    );
+                })
+                .text(text)
+                .attr("offset", offset)
+                .on("click", (event: MouseEvent) => {
+                    const old_offset = parseInt(
+                        current_pagination.attr("offset"),
+                    );
+                    const delta = d3select(event.target! as HTMLElement).attr(
+                        "offset",
+                    );
+                    var from = 0;
 
-        date_chart.on("filtered", (date_chart, _filter) => {
-            this._filtered_date = date_chart.filters();
+                    const total_entries = this._data.number_of_alerts;
+
+                    if (delta == "Infinity") {
+                        from = Math.floor(total_entries / entries) * entries;
+                    } else {
+                        const num_delta = parseInt(delta);
+                        if (num_delta == 0) {
+                            from = 0;
+                        } else {
+                            from = old_offset + num_delta;
+                            if (from < 0) from = 0;
+                            if (from > total_entries) from = old_offset;
+                        }
+                    }
+
+                    current_pagination.attr("offset", from);
+                    this._update_pagination_text();
+                    this._update_details_table();
+                });
         });
-        date_chart
-            .xAxis()
-            .ticks(5)
-            .tickFormat(d => {
-                if (d.getMonth() === 0 && d.getDate() === 1)
-                    return timeFormat("%Y")(d);
-                else if (d.getHours() === 0 && d.getMinutes() === 0)
-                    return timeFormat("%m-%d")(d);
-                return timeFormat("%H:%M")(d);
-            });
-        date_chart.render();
+        this._update_pagination_text();
+    }
+
+    _update_pagination_text() {
+        const offset = parseInt(
+            this._pagination.select("td.pagination_info").attr("offset"),
+        );
+        const total_entries = this._data.number_of_alerts;
+        const to = Math.min(offset + 20, total_entries);
+        this._pagination
+            .select("td.pagination_info")
+            .text(`${offset} - ${to} of ${total_entries}`);
+    }
+
+    _render_table() {
+        const columns = this._get_columns();
+        this.remove_loading_image();
+        this._render_table_pagination();
+        const table = this._table_div
+            .selectAll("table")
+            .data([this._crossfilter.allFiltered()])
+            .join("table");
+
+        // Headers, only once
+        table
+            .selectAll("thead")
+            .data([columns])
+            .enter()
+            .append("thead")
+            .append("tr")
+            .selectAll("th")
+            .data(d => d)
+            .join("th")
+            .text(d => d.label);
+
+        // Rows
+        const rows = table
+            .selectAll("tbody")
+            .data(d => [d])
+            .join("tbody")
+            .selectAll("tr")
+            .data(d => d)
+            .join("tr")
+            .attr("class", "table_row");
+
+        columns.forEach(entry => {
+            const cell = rows
+                .selectAll<HTMLTableCellElement, FlowData>(
+                    `td.${entry.label.replace(" ", "_")}`,
+                )
+                .data(d => [d])
+                .join("td")
+                .classed(entry.label.replace(" ", "_"), true);
+            cell.html(d => entry.format(d));
+            cell.classed(entry.classes.join(" "), true);
+        });
+
+        add_classes_to_trs(this._table_div);
+        this._update_severity(this._table_div);
     }
 
     _compute_status_text(filter_params: Record<string, number>) {
@@ -467,80 +694,30 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
 
     _get_time_filter_params() {
         const filter_params: Record<string, number> = {};
-        const hour_filter = this._filtered_hours;
+        const hour_filter = this._filteredHours;
         const timezoneOffset = new Date().getTimezoneOffset() / 60;
-        if (hour_filter && hour_filter.length == 1) {
-            filter_params["hour_start"] = hour_filter[0][0] + timezoneOffset;
-            filter_params["hour_end"] = hour_filter[0][1] + timezoneOffset;
+        if (hour_filter) {
+            filter_params["hour_start"] = hour_filter[0] + timezoneOffset;
+            filter_params["hour_end"] = hour_filter[1] + timezoneOffset;
         }
 
-        const date_filter: Date[][] = this._filtered_date!;
+        const date_filter = this._filteredDate!;
 
-        if (Array.isArray(date_filter) && date_filter.length === 1) {
+        if (date_filter) {
             filter_params["date_start"] = Math.trunc(
-                date_filter[0][0].getTime() / 1000,
+                date_filter[0].getTime() / 1000,
             );
             filter_params["date_end"] = Math.trunc(
-                date_filter[0][1].getTime() / 1000,
+                date_filter[1].getTime() / 1000,
             );
         }
         return filter_params;
     }
 
-    _setup_hour_filter(
-        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>,
-    ) {
-        const div_id = this.page_id() + "_time_filter";
-        selection
-            .append("div")
-            .attr("id", div_id)
-            .classed("date_filter", true)
-            .style("display", "inline");
-        const hour_group = this._hour_dimension
-            .group(d => {
-                return Math.floor(d);
-            })
-            .reduceSum(d => d.count);
-        const hour_chart = barChart("#" + div_id, this.page_id())
-            .width(500)
-            .height(120)
-            .centerBar(true)
-            .dimension(this._hour_dimension)
-            .group(hour_group)
-            .margins({left: 30, top: 5, right: 20, bottom: 20})
-            .x(
-                scaleLinear()
-                    .domain([0, 24])
-                    .rangeRound([0, 10 * 24]),
-            )
-            // @ts-ignore
-            .colors(() => {
-                return "#767d84c2";
-            })
-            .elasticY(true);
-        hour_chart.on("filtered", (hour_chart, _filter) => {
-            this._filtered_hours = hour_chart.filters();
-        });
-        hour_chart
-            .yAxis()
-            .ticks(5)
-            .tickFormat(d => {
-                return fmt_number_with_precision(d, SIUnitPrefixes, 0);
-            });
-        hour_chart.render();
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    _setup_details_table(_selector: string) {}
-
-    _setup_description_filter(
+    _initialize_description_filter(
         selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         selection.append("label").text("Filter details by description");
-        const msg_dimension = this._table_details
-            // @ts-ignore
-            .crossfilter()!
-            .dimension(d => d.msg);
         selection
             .append("input")
             .attr("type", "text")
@@ -548,11 +725,11 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .on("input", (event: Event) => {
                 const target = select(event.target as HTMLInputElement);
                 const filter = target.property("value");
-                msg_dimension.filter(d => {
+                this._msgDim.filter(d => {
                     //@ts-ignore
                     return d.toLowerCase().includes(filter.toLowerCase());
                 });
-                this._table_details.update_gui();
+                this._render_table();
             });
     }
 
@@ -562,19 +739,10 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         selection.classed("status", true).append("label");
     }
 
-    _update_css_classes(chart: DataTableWidget) {
-        add_classes_to_trs(chart);
-    }
-
-    _update_cells(chart: DataTableWidget) {
-        this._update_severity(chart);
-        // TODO: deactivated for now
-        // make sure to reactivate if this feature gets implemented properly
-        //this._update_actions(chart);
-    }
-
-    _update_severity(chart: DataTableWidget) {
-        add_columns_classes_to_nodes(chart, this._get_columns());
+    _update_severity(
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
+    ) {
+        add_columns_classes_to_nodes(selection, this._get_columns());
 
         const state_mapping = new Map<string, string>([
             ["error", "state2"],
@@ -587,17 +755,19 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             ["none", "state3"],
         ]);
         // Add state class to severity
-        chart.selectAll("td.severity").each((d, idx, nodes) => {
-            const label = select(nodes[idx]).select("label");
-            label.classed("badge", true);
-            const state = state_mapping.get(d.severity.toLowerCase());
-            if (state) label.classed(state, true);
-        });
+        selection
+            .selectAll<HTMLTableCellElement, Alert>("td.severity")
+            .each((d, idx, nodes) => {
+                const label = select(nodes[idx]).select("label");
+                label.classed("badge", true);
+                const state = state_mapping.get(d.severity.toLowerCase());
+                if (state) label.classed(state, true);
+            });
     }
 
     override update_data(data: ABCAlertsPageData) {
         FigureBase.prototype.update_data.call(this, data);
-        const time: {date: Date; count: number}[] = [];
+        const time: CrossfilterRecord[] = [];
         data.time_series.forEach(entry => {
             time.push({
                 //@ts-ignore
@@ -606,17 +776,15 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             });
         });
 
-        // Update filters
+        this._crossfilterTime.remove(() => true);
+        this._crossfilterTime.add(time);
         this._update_filter_choices(data.filter_choices);
-        this._crossfilter_time.remove(() => true);
-        this._crossfilter_time.add(time);
-        this._table_details.set_paging_maximum(data.number_of_alerts);
-        this._table_details.update_gui();
+        this._update_pagination_text();
+        this._update_details_table();
+        this._update_time_filters();
     }
 
-    override update_gui() {
-        redrawAll(this.page_id());
-    }
+    override update_gui() {}
 
     abstract _get_columns(): NtopColumn[];
 }
@@ -762,25 +930,11 @@ class EngagedAlertsPage extends ABCAlertsPage {
                 format: (d: Alert) => d.type,
                 classes: ["alert_type"],
             },
-            // TODO: deactivated for now
-            // make sure to reactivate if this feature gets implemented properly
-            //{
-            //    label: "Drilldown",
-            //    format: ()=>{return "Drilldown Link";},
-            //    classes: ["drilldown"]
-            //},
             {
                 label: "Description",
                 format: (d: Alert) => d.msg,
                 classes: ["description"],
             },
-            // TODO: deactivated for now
-            // make sure to reactivate if this feature gets implemented properly
-            //{
-            //    label: "Actions",
-            //    format: ()=>"",
-            //    classes: ["actions"]
-            //},
         ];
     }
 }
@@ -852,27 +1006,11 @@ class PastAlertsPage extends ABCAlertsPage {
                 format: (d: Alert) => d.type,
                 classes: ["alert_type"],
             },
-            // TODO: deactivated for now
-            // make sure to reactivate if this feature gets implemented properly
-            //{
-            //    label: "Drilldown",
-            //    format: ()=>{
-            //        return "<img src=themes/facelift/images/icon_zoom.png>";
-            //    },
-            //    classes: ["drilldown"]
-            //},
             {
                 label: "Description",
                 format: (d: Alert) => d.msg,
                 classes: ["description"],
             },
-            // TODO: deactivated for now
-            // make sure to reactivate if this feature gets implemented properly
-            //{
-            //    label: "Actions",
-            //    format: ()=>"",
-            //    classes: ["actions"]
-            //},
         ];
     }
 }
@@ -948,13 +1086,6 @@ class FlowAlertsPage extends ABCAlertsPage {
                 format: (d: Alert) => d.msg,
                 classes: ["description"],
             },
-            // TODO: deactivated for now
-            // make sure to reactivate if this feature gets implemented properly
-            //{
-            //    label: "Actions",
-            //    format: ()=>"",
-            //    classes: ["actions"]
-            //},
         ];
     }
 }

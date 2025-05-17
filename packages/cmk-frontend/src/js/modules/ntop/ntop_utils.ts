@@ -6,9 +6,8 @@
 
 /* eslint-disable indent */
 
-import type {Selection} from "d3";
+import type {BaseType, Selection} from "d3";
 import {select as d3select, selectAll} from "d3";
-import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
 import {TableFigure} from "@/modules/figures/cmk_table";
@@ -147,10 +146,10 @@ export function seconds_to_time(seconds: number) {
 }
 
 export function add_columns_classes_to_nodes(
-    chart: DataTableWidget,
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     columns: NtopColumn[],
 ) {
-    chart
+    selection
         .selectAll("tr")
         .selectAll("td")
         .each((_d, idx, nodes) => {
@@ -163,11 +162,13 @@ export function add_columns_classes_to_nodes(
         });
 }
 
-export function add_classes_to_trs(chart: DataTableWidget) {
-    chart
+export function add_classes_to_trs(
+    selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
+) {
+    selection
         .selectAll("tr")
         .selectAll("a")
         .classed("ntop_link", true)
         .attr("target", "_blank");
-    chart.select("thead tr").classed("header", true);
+    selection.select("thead tr").classed("header", true);
 }

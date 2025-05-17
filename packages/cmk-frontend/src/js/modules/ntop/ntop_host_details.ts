@@ -8,8 +8,6 @@
 import crossfilter from "crossfilter2";
 import type {Selection} from "d3";
 import {select, selectAll} from "d3";
-import type {DataTableWidget} from "dc";
-import {redrawAll} from "dc";
 
 import type {FigureBase} from "@/modules/figures/cmk_figures";
 import {figure_registry} from "@/modules/figures/cmk_figures";
@@ -30,11 +28,7 @@ import type {
     TopPeerProtocol,
     TrafficTabData,
 } from "./ntop_types";
-import {
-    add_classes_to_trs,
-    add_columns_classes_to_nodes,
-    ifid_dep,
-} from "./ntop_utils";
+import {ifid_dep} from "./ntop_utils";
 import {PieData} from "@/modules/figures/cmk_pie_chart";
 import {
     BarplotData,
@@ -66,27 +60,27 @@ export class HostTabs extends TabsBar {
         | (new (tabs_bar: TabsBar) => Tab)
     )[] {
         return [
-            // HostTab,
+            HostTab,
             TrafficTab,
-            // PacketsTab,
+            PacketsTab,
             PortsTab,
             PeersTab,
-            // ApplicationsTab,
-            // NtophostFlowsTab,
-            // NtophostEngagedAlertsTab,
-            // NtophostPastAlertsTab,
-            // NtophostFlowAlertsTab,
+            ApplicationsTab,
+            NtophostFlowsTab,
+            NtophostEngagedAlertsTab,
+            NtophostPastAlertsTab,
+            NtophostFlowAlertsTab,
         ];
     }
 
     override initialize(tab: string, ifid: string, vlanid: string) {
         TabsBar.prototype.initialize.call(this);
-        // ["engaged_alerts_tab", "past_alerts_tab", "flow_alerts_tab"].forEach(
-        //     tab_id =>
-        //         ((
-        //             this.get_tab_by_id(tab_id) as ABCAlertsTab
-        //         )._alerts_page.current_ntophost = this.current_ntophost),
-        // );
+        ["engaged_alerts_tab", "past_alerts_tab", "flow_alerts_tab"].forEach(
+            tab_id =>
+                ((
+                    this.get_tab_by_id(tab_id) as ABCAlertsTab
+                )._alerts_page.current_ntophost = this.current_ntophost),
+        );
         selectAll("." + ifid_dep)
             .data()
             // @ts-ignore
@@ -110,7 +104,6 @@ export class HostTabs extends TabsBar {
 abstract class NtopTab extends Tab<HostTabs> {
     _multi_data_fetcher: MultiDataFetcher;
     _figures: Record<string, FigureBase<FigureData>>;
-    _dc_figures: Record<string, any>;
     _ifid: string;
     _vlanid!: string;
     post_url!: string;
@@ -119,7 +112,6 @@ abstract class NtopTab extends Tab<HostTabs> {
         super(tabs_bar);
         this._multi_data_fetcher = new MultiDataFetcher();
         this._figures = {}; // figures from cmk
-        this._dc_figures = {}; // figures from dc_library
         this._tab_selection.classed("ntop ntop_host " + ifid_dep, true);
         //@ts-ignore
         this._ifid = tabs_bar.current_ifid;
@@ -275,10 +267,6 @@ class TrafficTab extends NtopTab {
     override _update_data(data: TrafficTabData) {
         this._table_figures.process_data(data["table_overview"]);
         this._table_stats.process_data(data["table_breakdown"]);
-
-        //_update_dc_graphs_in_selection(this._table_figures._div_selection, this.tab_id());
-        redrawAll(this.tab_id());
-
         update_item_link(this, data["ntop_link"]);
     }
 }
@@ -316,8 +304,6 @@ class PacketsTab extends NtopTab {
     override _update_data(data?: PacketsTabData) {
         if (data == undefined) return;
         this._figures["table_packets"].process_data(data["table_packets"]);
-
-        redrawAll(this.tab_id());
         update_item_link(this, data["ntop_link"]);
     }
 }
@@ -355,7 +341,6 @@ class PortsTab extends NtopTab {
 
     override _update_data(data: PortsTabData) {
         this._table_ports.process_data(data["table_ports"]);
-        redrawAll(this.tab_id());
         update_item_link(this, data["ntop_link"]);
     }
 }
@@ -607,11 +592,6 @@ class PeersTab extends NtopTab {
         this._pie_chart_figure.update_gui();
     }
 
-    _update_css_classes(chart: DataTableWidget) {
-        add_classes_to_trs(chart);
-        add_columns_classes_to_nodes(chart, this._get_columns());
-    }
-
     _get_columns() {
         return [
             {
@@ -750,8 +730,6 @@ class ApplicationsTab extends NtopTab {
         this._table.process_data(data["table_apps_overview"]);
         this._table_applications.process_data(data["table_apps_applications"]);
         this._table_categories.process_data(data["table_apps_categories"]);
-        redrawAll(this.tab_id());
-
         update_item_link(this, data["ntop_link"]);
     }
 
@@ -849,10 +827,7 @@ class NtophostFlowAlertsTab extends FlowAlertsTab {
 }
 
 function _initialize_alerts_tab(instance: ABCAlertsTab) {
-    const dimension = instance._alerts_page._table_details
-        // @ts-ignore
-        .crossfilter()!
-        .dimension(d => d);
+    const dimension = instance._alerts_page._crossfilter.dimension(d => d);
     dimension.filter(d => {
         return (
             (d as unknown as Alert).msg.indexOf(

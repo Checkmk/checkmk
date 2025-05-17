@@ -184,13 +184,13 @@ export class MultiDataFetcher {
             headers: {
                 "Content-type": "application/x-www-form-urlencoded",
             },
-        }).then(response =>
+        }).then(response => {
             this._fetch_callback(
                 post_url,
                 post_body,
                 response as CMKAjaxReponse<{figure_response: any}>,
-            ),
-        );
+            );
+        });
     }
 
     _fetch_callback(

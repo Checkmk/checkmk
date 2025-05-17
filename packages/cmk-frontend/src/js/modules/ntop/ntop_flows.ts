@@ -6,20 +6,14 @@
 
 import type {Dimension} from "crossfilter2";
 import crossfilter from "crossfilter2";
-import type {BaseType, Selection} from "d3";
+import {BaseType, Selection} from "d3";
 import {select as d3select} from "d3";
-import type {DataTableWidget} from "dc";
 import $ from "jquery";
 
-import {DCTableFigure} from "@/modules/figures/cmk_dc_table";
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import type {FigureData} from "@/modules/figures/figure_types";
 
-import {
-    add_classes_to_trs,
-    add_columns_classes_to_nodes,
-    ifid_dep,
-} from "./ntop_utils";
+import {ifid_dep} from "./ntop_utils";
 
 interface FilterChoices {
     applications: any[];
@@ -71,7 +65,9 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
     url_param = "";
     _ifid!: string;
     _vlanid!: string;
-    _dc_table!: DCTableFigure<FlowDashletData>;
+    _pagination!: Selection<HTMLDivElement, any, BaseType, any>;
+    _table_div!: Selection<HTMLDivElement, any, BaseType, any>;
+    _indexDim!: Dimension<any, any>;
     constructor(div_selector: string) {
         super(div_selector);
         this._post_url = "ajax_ntop_flows.py";
@@ -82,6 +78,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         this._div_selection.classed("ntop_flows", true);
         this._crossfilter = crossfilter();
         this._dimension = this._crossfilter.dimension(d => d);
+        this._indexDim = this._crossfilter.dimension(d => d.index);
 
         const url_params = new URLSearchParams(this._default_params_dict);
         this._post_body = url_params.toString();
@@ -90,9 +87,15 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
             categories: [],
             protocols: [],
         };
-        this._setup_dc_table(this._div_selection);
+        this._setup_fetch_filters();
         this._setup_data_update();
         this._div_selection.classed(ifid_dep, true);
+        this._pagination = this._div_selection
+            .append("div")
+            .attr("id", "table_pagination");
+        this._table_div = this._div_selection
+            .append("div")
+            .attr("id", "table_div");
     }
 
     getEmptyData() {
@@ -105,49 +108,25 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         this._update_post_body_and_force_update();
     }
 
-    _setup_dc_table(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
-    ) {
-        const div_id = "flows_dashlet";
-        selection.append("div").attr("id", div_id);
-
-        this._dc_table = new DCTableFigure("#" + div_id, "flows");
-
-        // WIP: add as first element before paging
-        this._setup_fetch_filters();
-        this._dc_table.crossfilter(this._crossfilter);
-        this._dc_table.dimension(this._dimension);
-        this._dc_table.columns(this._get_columns());
-        this._dc_table.sort_by(d => d.date);
-        this._dc_table.initialize();
-        this._dc_table
-            .get_dc_chart()
-            .on("renderlet", chart => this._update_css_classes(chart));
-        this._dc_table.subscribe_post_render_hook(() => {
-            this.remove_loading_image();
-        });
-    }
-
-    _update_css_classes(chart: DataTableWidget) {
-        add_classes_to_trs(chart);
-
-        const div_bar = chart
+    _update_css_classes() {
+        // Update CSS classes for the table
+        // Reason: The backend provides some prerendered HTML and we need to modify it further
+        this._div_selection.selectAll("a").classed("ntop_link", true);
+        const progress_bar = this._div_selection
             .selectAll("tr")
             .selectAll("div.progress")
             .classed("progress", false)
             .classed("breakdown_bar", true);
-        div_bar
+        progress_bar
             .select("div.bg-warning")
             .classed("progress-bar", false)
             .classed("bg-warning", false)
             .classed("bytes_sent", true);
-        div_bar
+        progress_bar
             .select("div.bg-info")
             .classed("progress-bar", false)
             .classed("bg-info", false)
             .classed("bytes_rcvd", true);
-
-        add_columns_classes_to_nodes(chart, this._get_columns());
     }
 
     _setup_data_update() {
@@ -162,10 +141,11 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
     }
 
     _setup_fetch_filters() {
-        const filter_divs = this._dc_table._div_options
+        const filter_divs = this._div_selection
             .selectAll("div.filters")
             .data([null])
             .join("div")
+            .style("padding-top", "10px")
             .classed("filters", true);
 
         const filter_div = filter_divs
@@ -213,61 +193,6 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         });
     }
 
-    _get_columns(): NtopColumn[] {
-        return [
-            {
-                label: "",
-                format: (d: FlowData) => d.url_key,
-                classes: ["key"],
-            },
-            {
-                label: "Application",
-                format: (d: FlowData) => d.url_ndpi,
-                classes: ["application"],
-            },
-            {
-                label: "Protocol",
-                format: (d: FlowData) => d.protocol,
-                classes: ["protocol"],
-            },
-            {
-                label: "Client",
-                format: (d: FlowData) => d.url_client,
-                classes: ["client"],
-            },
-            {
-                label: "Server",
-                format: (d: FlowData) => d.url_server,
-                classes: ["server"],
-            },
-            {
-                label: "Duration",
-                format: (d: FlowData) => d.duration,
-                classes: ["duration", "number"],
-            },
-            {
-                label: "Score",
-                format: (d: FlowData) => d.score,
-                classes: ["score", "number"],
-            },
-            {
-                label: "Breakdown",
-                format: (d: FlowData) => d.breakdown,
-                classes: ["breakdown"],
-            },
-            {
-                label: "Actual Thpt",
-                format: (d: FlowData) => d.throughput,
-                classes: ["throughput", "number"],
-            },
-            {
-                label: "Total Bytes",
-                format: (d: FlowData) => d.bytes,
-                classes: ["bytes", "number"],
-            },
-        ];
-    }
-
     _update_post_body_and_force_update() {
         // add default parameters
         let params = Object.assign({}, this._default_params_dict, {
@@ -299,7 +224,8 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
 
         // Add new data
         // @ts-ignore
-        this._crossfilter.add(data.flows);
+        const data_with_index = data.flows.map((d, i) => ({...d, index: i}));
+        this._crossfilter.add(data_with_index);
 
         // Update filters
         this._update_filter_choices(data.filter_choices);
@@ -308,6 +234,216 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         //TODO: this is a data typing problem see cmk_figures.ts
         // this type is unexpected which might lead to typing errors
         //@ts-ignore
-        this._dc_table.process_data(data.flows);
+        this._render_table();
+    }
+
+    _render_table_pagination() {
+        const entries = 20;
+
+        const new_row = this._pagination
+            .selectAll("table")
+            .data([null])
+            .enter()
+            .append("table")
+            .style("width", "260px")
+            .style("margin", "10px")
+            .style("margin-left", "auto")
+            .style("margin-right", "0px")
+            .append("tr");
+        const current_pagination = new_row
+            .append("td")
+            .classed("pagination_info", true)
+            .style("width", "160px")
+            .style("text-align", "right")
+            .attr("offset", 0);
+        [
+            ["<<", 0],
+            ["<", -entries],
+            [">", entries],
+            [">>", Infinity],
+        ].forEach(entry => {
+            const [text, offset] = entry;
+            new_row
+                .append("td")
+                .classed("navigation noselect", true)
+                .style("cursor", "pointer")
+                .on("mouseover", (event: MouseEvent) => {
+                    d3select(event.target! as HTMLElement).style(
+                        "background",
+                        "#9c9c9c",
+                    );
+                })
+                .on("mouseout", (event: MouseEvent) => {
+                    d3select(event.target! as HTMLElement).style(
+                        "background",
+                        null,
+                    );
+                })
+                .text(text)
+                .attr("offset", offset)
+                .on("click", (event: MouseEvent) => {
+                    const old_offset = parseInt(
+                        current_pagination.attr("offset"),
+                    );
+                    const delta = d3select(event.target! as HTMLElement).attr(
+                        "offset",
+                    );
+                    var [from, to] = [0, 0];
+
+                    const total_entries = this._crossfilter.all().length;
+
+                    if (delta == "Infinity") {
+                        from = Math.floor(total_entries / entries) * entries;
+                        to = total_entries;
+                    } else {
+                        const num_delta = parseInt(delta);
+                        if (num_delta == 0) {
+                            from = 0;
+                            to = entries;
+                        } else {
+                            from = old_offset + num_delta;
+                            if (from < 0) from = 0;
+                            if (from > total_entries) from = old_offset;
+                            to = from + entries;
+                        }
+                    }
+                    if (to > total_entries) {
+                        to = total_entries;
+                    }
+
+                    this._indexDim.filterRange([from, to]);
+                    current_pagination.attr("offset", from);
+                    this._update_pagination_text(current_pagination);
+                    this._render_table();
+                });
+        });
+        this._update_pagination_text(current_pagination);
+    }
+
+    _update_pagination_text(
+        current_pagination: Selection<HTMLTableCellElement, any, BaseType, any>,
+    ) {
+        if (current_pagination.empty()) return;
+        const offset = parseInt(current_pagination.attr("offset"));
+        const total_entries = this._crossfilter.all().length;
+        const to = Math.min(offset + 20, total_entries);
+        current_pagination.text(`${offset} - ${to} of ${total_entries}`);
+    }
+
+    _render_table() {
+        this._render_table_pagination();
+        const table = this._table_div
+            .selectAll("table")
+            .data([this._crossfilter.allFiltered()])
+            .join("table");
+
+        interface Entry {
+            header: string;
+            ident: string;
+            html_field: keyof FlowData | null;
+            field_name: keyof FlowData | null;
+        }
+
+        const entries: Entry[] = [
+            {
+                header: "",
+                ident: "info",
+                html_field: "url_key",
+                field_name: null,
+            },
+            {
+                header: "Application",
+                ident: "application",
+                html_field: "url_ndpi",
+                field_name: null,
+            },
+            {
+                header: "Protocol",
+                ident: "protocol",
+                html_field: null,
+                field_name: "protocol",
+            },
+            {
+                header: "Client",
+                ident: "url_client",
+                html_field: "url_client",
+                field_name: null,
+            },
+            {
+                header: "Server",
+                ident: "url_server",
+                html_field: "url_server",
+                field_name: null,
+            },
+            {
+                header: "Duration",
+                ident: "duration",
+                html_field: null,
+                field_name: "duration",
+            },
+            {
+                header: "Score",
+                ident: "score",
+                html_field: null,
+                field_name: "score",
+            },
+            {
+                header: "Breakdown",
+                ident: "breakdown",
+                html_field: "breakdown",
+                field_name: null,
+            },
+            {
+                header: "Actual Thpt",
+                ident: "throughput",
+                html_field: null,
+                field_name: "throughput",
+            },
+            {
+                header: "Total Bytes",
+                ident: "bytes",
+                html_field: null,
+                field_name: "bytes",
+            },
+        ];
+
+        // Headers, only once
+        table
+            .selectAll("thead")
+            .data([entries])
+            .enter()
+            .append("thead")
+            .append("tr")
+            .selectAll("th")
+            .data(d => d)
+            .join("th")
+            .text(d => d.header);
+
+        // Rows
+        const rows = table
+            .selectAll("tbody")
+            .data(d => [d])
+            .join("tbody")
+            .selectAll("tr")
+            .data(d => d)
+            .join("tr")
+            .attr("class", "table_row");
+
+        entries.forEach(entry => {
+            const cell = rows
+                .selectAll<HTMLTableCellElement, FlowData>(`td.${entry.ident}`)
+                .data(d => [d])
+                .join("td")
+                .classed(entry.ident, true);
+            const html_field = entry.html_field;
+            if (html_field !== null) {
+                cell.html(d => d[html_field]);
+            }
+
+            const field_name = entry.field_name;
+            if (field_name !== null) cell.text(d => d[field_name]);
+        });
+
+        this._update_css_classes();
     }
 }

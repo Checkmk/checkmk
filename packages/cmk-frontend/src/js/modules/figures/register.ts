@@ -6,7 +6,6 @@
 
 import {AlertOverview} from "./cmk_alert_overview";
 import {BarplotFigure} from "./cmk_barplot";
-import {DCTableFigure} from "./cmk_dc_table";
 import {figure_registry} from "./cmk_figures";
 import {GaugeFigure} from "./cmk_gauge";
 import {InventoryFigure} from "./cmk_inventory";
@@ -31,7 +30,6 @@ export function register() {
     figure_registry.register(AlertOverview);
     figure_registry.register(BarplotFigure);
     figure_registry.register(HorizontalBarFigure);
-    figure_registry.register(DCTableFigure);
     figure_registry.register(GaugeFigure);
     figure_registry.register(PieChartFigure);
     figure_registry.register(InventoryFigure);

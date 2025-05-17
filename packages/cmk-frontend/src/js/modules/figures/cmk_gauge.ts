@@ -33,7 +33,6 @@ import type {
 
 // Used for rapid protoyping, bypassing webpack
 // var cmk_figures = cmk.figures; /* eslint-disable-line no-undef */
-// var dc = dc; /* eslint-disable-line no-undef */
 // var d3 = d3; /* eslint-disable-line no-undef */
 // var crossfilter = crossfilter; /* eslint-disable-line no-undef */
 

@@ -13,7 +13,6 @@ import "./cmk_barplot";
 import "./cmk_site_overview";
 import "./cmk_alert_overview";
 import "./cmk_state_summary";
-import "./cmk_dc_table";
 import "./timeseries/average_scatterplot_figure";
 import "./timeseries/cmk_graph_shifter";
 import "./timeseries/cmk_graph_timeseries_figure";

@@ -10,19 +10,19 @@ import {FigureBase} from "@/modules/figures/cmk_figures";
 import {add_scheduler_debugging} from "@/modules/figures/cmk_figures_utils";
 import {FigureData} from "@/modules/figures/figure_types";
 
-export interface PieData {
+export interface PieChartData {
     index: number;
     ident: string;
     label: string;
     value: number;
 }
 
-export interface PieChartData extends FigureData<PieData> {
+export interface PieChartConfig extends FigureData<PieChartData> {
     title: string;
     title_url: string;
 }
 
-export class PieChartFigure extends FigureBase<PieChartData> {
+export class PieChartFigure extends FigureBase<PieChartConfig> {
     _radius!: number;
     _hide_percentile_smaller_than: number;
 
@@ -100,9 +100,9 @@ export class PieChartFigure extends FigureBase<PieChartData> {
             );
 
         const arcs = svg
-            .selectAll<SVGGElement, PieArcDatum<PieData>>("g.arc")
+            .selectAll<SVGGElement, PieArcDatum<PieChartData>>("g.arc")
             .data(
-                data => pie<PieData>().value(d => d.value)(data),
+                data => pie<PieChartData>().value(d => d.value)(data),
                 d => d.data.ident,
             )
             .join("g")
@@ -115,7 +115,7 @@ export class PieChartFigure extends FigureBase<PieChartData> {
             .transition()
             .attr(
                 "d",
-                arc<PieArcDatum<PieData>>()
+                arc<PieArcDatum<PieChartData>>()
                     .innerRadius(radius - 50)
                     .outerRadius(radius),
             )

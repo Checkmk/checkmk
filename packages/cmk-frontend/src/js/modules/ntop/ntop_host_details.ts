@@ -29,7 +29,7 @@ import type {
     TrafficTabData,
 } from "./ntop_types";
 import {ifid_dep} from "./ntop_utils";
-import {PieData} from "@/modules/figures/cmk_pie_chart";
+import {PieChartData} from "@/modules/figures/cmk_pie_chart";
 import {
     BarplotData,
     BarplotFigureData,
@@ -573,7 +573,7 @@ class PeersTab extends NtopTab {
         });
 
         // Convert aggregatedData to array of objects with human readable bytes
-        const pieData: PieData[] = [];
+        const pieData: PieChartData[] = [];
         Object.keys(aggregatedData).forEach(key => {
             pieData.push({
                 index: pieData.length,

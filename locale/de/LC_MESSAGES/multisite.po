@@ -53715,6 +53715,12 @@ msgstr "Erkennung Festplatten-E/A"
 msgid "Robotmk KPI monitoring"
 msgstr "Rauch-Monitoring"
 
+#, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Der Loglevel für die Behandlung von Benachrichtigungen im Checkmk Micro Core"
+
 msgid "Robotmk logs"
 msgstr "Robotmk-Protokolle"
 

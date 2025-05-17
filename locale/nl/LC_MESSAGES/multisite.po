@@ -54711,6 +54711,12 @@ msgid "Robotmk KPI monitoring"
 msgstr "Netwerkbewaking"
 
 #, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Het logniveau voor de afhandeling van meldingen binnen de Checkmk Micro Core"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "RobotMK logboeken"
 

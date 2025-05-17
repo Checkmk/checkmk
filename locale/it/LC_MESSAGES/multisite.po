@@ -54259,6 +54259,13 @@ msgstr "Scoperta dell'IO del disco"
 msgid "Robotmk KPI monitoring"
 msgstr "Monitoraggio dei fumi"
 
+#, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Il livello di log per la gestione delle notifiche all'interno di Checkmk "
+"Micro Core"
+
 msgid "Robotmk logs"
 msgstr "Registri di Robotmk"
 

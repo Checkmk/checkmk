@@ -55199,6 +55199,13 @@ msgid "Robotmk KPI monitoring"
 msgstr "Surveillance du réseau"
 
 #, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Le niveau de journal pour le traitement des notifications dans le Checkmk "
+"Micro Core"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "Journaux de RobotMK"
 

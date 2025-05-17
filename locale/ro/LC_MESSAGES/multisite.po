@@ -54776,6 +54776,13 @@ msgstr "Descoperirea IO disc"
 msgid "Robotmk KPI monitoring"
 msgstr "Monitorizarea fumului"
 
+#, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Nivelul de jurnal pentru gestionarea notificărilor în cadrul Checkmk Micro "
+"Core"
+
 msgid "Robotmk logs"
 msgstr "Jurnalele Robotmk"
 

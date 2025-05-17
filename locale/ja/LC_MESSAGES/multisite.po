@@ -52540,6 +52540,11 @@ msgstr "ディスクIOの検出"
 msgid "Robotmk KPI monitoring"
 msgstr "煙の監視"
 
+#, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr "Checkmk Micro Core内で通知を処理するためのログレベル"
+
 msgid "Robotmk logs"
 msgstr "RobotMKログ"
 

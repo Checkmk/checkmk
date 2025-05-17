@@ -54699,6 +54699,12 @@ msgid "Robotmk KPI monitoring"
 msgstr "Monitorização do fumo"
 
 #, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"O nível de log para o tratamento de notificações dentro do Checkmk Micro Core"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "Registos do RobotMK"
 

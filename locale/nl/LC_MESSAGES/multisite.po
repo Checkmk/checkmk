@@ -5526,6 +5526,9 @@ msgstr "Waarschuwings handlers in te zetten"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 msgid "Alert if failover mode is different from the value configured here."
 msgstr ""
 
@@ -42029,6 +42032,10 @@ msgstr "Monitor & Grafiek Lanen"
 msgid "Monitor (min. 1)"
 msgstr "Toezicht"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Controle staat"
+
 msgid "Monitor Android devices"
 msgstr "Monitor Android-apparaten"
 
@@ -55064,6 +55071,12 @@ msgid "Robotmk KPI monitoring"
 msgstr "Netwerkbewaking"
 
 #, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"Het logniveau voor de afhandeling van meldingen binnen de Checkmk Micro Core"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "RobotMK logboeken"
 
@@ -62324,6 +62337,10 @@ msgstr "Verklaring"
 
 msgid "States"
 msgstr "Staten"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Staat van een host"
 
 msgid "States other than the above"
 msgstr "Andere staten dan de bovengenoemde"
@@ -82743,9 +82760,6 @@ msgstr "Wachtsloten"
 #, fuzzy
 msgid "Wanted Host State"
 msgstr "Gastland"
-
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr ""
 
 #, fuzzy
 msgid "Wanted VM State"

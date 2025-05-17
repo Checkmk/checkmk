@@ -5559,6 +5559,9 @@ msgstr "Manejadores de alerta para desplegar"
 msgid "Alert handlers will handle state changes."
 msgstr "Los manejadores de alertas manejarán los cambios de estado."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 msgid "Alert if failover mode is different from the value configured here."
 msgstr ""
 
@@ -42359,6 +42362,10 @@ msgstr "Monitorizar y graficar carriles"
 msgid "Monitor (min. 1)"
 msgstr "Monitorización"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Estado de la supervisión"
+
 msgid "Monitor Android devices"
 msgstr "Supervisar dispositivos Android"
 
@@ -55526,6 +55533,13 @@ msgid "Robotmk KPI monitoring"
 msgstr "Supervisión de la red"
 
 #, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr ""
+"El nivel de registro para el manejo de las notificaciones dentro del Checkmk "
+"Micro Core"
+
+#, fuzzy
 msgid "Robotmk logs"
 msgstr "Registros de RobotMK"
 
@@ -62871,6 +62885,10 @@ msgstr "Declaración"
 
 msgid "States"
 msgstr "Estados"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Estado de un host"
 
 msgid "States other than the above"
 msgstr "Estados distintos de los anteriores"
@@ -83423,9 +83441,6 @@ msgstr "Bloqueos de espera"
 msgid "Wanted Host State"
 msgstr "Estado anfitrión"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "Estado de host deseado para el host Nutanix definido"
-
 #, fuzzy
 msgid "Wanted VM State"
 msgstr "Actualizar el Estado"
@@ -90261,6 +90276,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "Estado de host deseado para el host Nutanix definido"
 
 #~ msgid "%/m"
 #~ msgstr "%/m"

@@ -5244,6 +5244,9 @@ msgstr "デプロイするアラートハンドラー"
 msgid "Alert handlers will handle state changes."
 msgstr "アラートハンドラーは状態の変化を処理します。"
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 msgid "Alert if failover mode is different from the value configured here."
 msgstr ""
 
@@ -40188,6 +40191,10 @@ msgstr "レーンの監視とグラフ化"
 msgid "Monitor (min. 1)"
 msgstr "監視（最小1）"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "モニター状態"
+
 msgid "Monitor Android devices"
 msgstr "Android端末の監視"
 
@@ -52717,6 +52724,11 @@ msgstr "ディスクIOの検出"
 msgid "Robotmk KPI monitoring"
 msgstr "煙の監視"
 
+#, fuzzy
+msgid ""
+"Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
+msgstr "Checkmk Micro Core内で通知を処理するためのログレベル"
+
 msgid "Robotmk logs"
 msgstr "RobotMKログ"
 
@@ -59668,6 +59680,10 @@ msgstr "ステートメント"
 
 msgid "States"
 msgstr "状態"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "ホストの状態"
 
 msgid "States other than the above"
 msgstr "上記以外の状態"
@@ -78728,9 +78744,6 @@ msgstr "ウェイトロック"
 msgid "Wanted Host State"
 msgstr "ホストの状態取得"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "定義されたNutanixの希望のホスト状態"
-
 msgid "Wanted VM State"
 msgstr "VM状態取得"
 
@@ -85278,6 +85291,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "定義されたNutanixの希望のホスト状態"
 
 #~ msgid "%/m"
 #~ msgstr "%/m"

@@ -18,6 +18,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.render
+from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
@@ -612,7 +613,7 @@ class AjaxGraph(cmk.gui.pages.Page):
 def _render_ajax_graph(
     context: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
-) -> dict[str, Any]:
+) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -678,7 +679,7 @@ def _render_ajax_graph(
         html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
-        "html": html_code,
+        "html": str(html_code),
         "graph": graph_artwork.model_dump(),
         "context": {
             "graph_id": context["graph_id"],

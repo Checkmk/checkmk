@@ -41,6 +41,7 @@ def serialize_host(
 
     return HostConfigModel(
         domainType="host_config",
+        id=host.id(),
         title=host.alias() or host.name(),
         links=links,
         members=None,
@@ -55,6 +56,7 @@ def serialize_host(
             if compute_effective_attributes
             else ApiOmitted(),
             is_cluster=host.is_cluster(),
+            is_offline=host.is_offline(),
             cluster_nodes=host.cluster_nodes(),
         ),
     )

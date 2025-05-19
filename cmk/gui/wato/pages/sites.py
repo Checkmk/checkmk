@@ -1030,7 +1030,7 @@ class ModeDistributedMonitoring(WatoMode):
 
             except Exception as e:
                 logger.exception("error logging in")
-                if active_config.debug:
+                if debug:
                     raise
                 error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace(
                     "\n", "\n<br>"

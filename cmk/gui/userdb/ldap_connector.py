@@ -1699,6 +1699,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 self._logger,
                 sync_users_result.profiles_to_synchronize,
                 sync_users_result.changes,
+                active_config.debug,
             )
         except AttributeError:
             # The hooks can fail if a user is created on login via the REST-API and is then

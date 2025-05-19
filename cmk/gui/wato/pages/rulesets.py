@@ -1180,7 +1180,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset)
+        self._rule_listing(ruleset, debug=active_config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -1211,7 +1211,7 @@ class ModeEditRuleset(WatoMode):
 
         html.close_div()
 
-    def _rule_listing(self, ruleset: Ruleset) -> None:
+    def _rule_listing(self, ruleset: Ruleset, *, debug: bool) -> None:
         rules: list[tuple[Folder, int, Rule]] = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
@@ -1238,6 +1238,7 @@ class ModeEditRuleset(WatoMode):
                 self._service,
                 ruleset.rulespec,
                 [e[2] for e in rules],
+                debug=debug,
             )
             if self._hostname and self._host
             else {}
@@ -1382,6 +1383,8 @@ class ModeEditRuleset(WatoMode):
         service_name: ServiceName | None,
         rulespec: Rulespec,
         rules: Sequence[Rule],
+        *,
+        debug: bool,
     ) -> dict[str, RuleMatchResult]:
         with tracer.span(
             "ModeEditRuleset_analyze_rule_matching",
@@ -1402,7 +1405,7 @@ class ModeEditRuleset(WatoMode):
                 else {}
             )
             span.set_attribute("cmk.service_labels", repr(service_labels))
-            self._get_host_labels_from_remote_site()
+            self._get_host_labels_from_remote_site(debug=debug)
 
             if rulespec.is_for_services:
                 rule_matches = {
@@ -1496,7 +1499,7 @@ class ModeEditRuleset(WatoMode):
             "checkmark",
         )
 
-    def _get_host_labels_from_remote_site(self) -> None:
+    def _get_host_labels_from_remote_site(self, *, debug: bool) -> None:
         """To be able to execute the match simulation we need the discovered host labels to be
         present in the central site. Fetch and store them."""
         if not self._hostname:
@@ -1518,7 +1521,7 @@ class ModeEditRuleset(WatoMode):
         cache_id = f"{site_id}:{self._hostname}"
         if cache_id in g.get("host_label_sync", {}):
             return
-        execute_host_label_sync(self._hostname, site_id, debug=active_config.debug)
+        execute_host_label_sync(self._hostname, site_id, debug=debug)
         g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:
@@ -2279,7 +2282,7 @@ class ABCEditRuleMode(WatoMode):
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
-            self._page_form()
+            self._page_form(debug=active_config.debug)
 
     def _get_rule_value_and_origin(self) -> tuple[Any, DataOrigin]:
         if request.has_var(self._vue_field_id()):
@@ -2307,7 +2310,7 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _page_form(self) -> None:
+    def _page_form(self, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
         # Additional rule options
@@ -2353,7 +2356,7 @@ class ABCEditRuleMode(WatoMode):
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
         except Exception as e:
-            if active_config.debug:
+            if debug:
                 raise
             html.show_warning(
                 _(

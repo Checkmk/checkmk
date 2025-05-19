@@ -176,9 +176,12 @@ def _sychronize_profile_worker(
 
 # TODO: Why is the logger handed over here? The sync job could simply gather it's own
 def handle_ldap_sync_finished(
-    logger: Logger, profiles_to_synchronize: dict[UserId, UserSpec], changes: Sequence[str]
+    logger: Logger,
+    profiles_to_synchronize: dict[UserId, UserSpec],
+    changes: Sequence[str],
+    debug: bool,
 ) -> None:
-    _synchronize_profiles_to_sites(logger, profiles_to_synchronize, debug=active_config.debug)
+    _synchronize_profiles_to_sites(logger, profiles_to_synchronize, debug=debug)
 
     if changes and active_config.wato_enabled and not is_wato_slave_site():
         add_change(
@@ -202,7 +205,7 @@ def push_user_profiles_to_site_transitional_wrapper(
         if "Invalid automation command: push-profiles" in "%s" % e:
             failed_info = []
             for user_id, user in user_profiles.items():
-                result = _legacy_push_user_profile_to_site(site, user_id, user)
+                result = _legacy_push_user_profile_to_site(site, user_id, user, debug=debug)
                 if result is not True:
                     failed_info.append(result)
 
@@ -212,7 +215,9 @@ def push_user_profiles_to_site_transitional_wrapper(
         raise
 
 
-def _legacy_push_user_profile_to_site(site, user_id, profile):
+def _legacy_push_user_profile_to_site(
+    site: SiteConfiguration, user_id: UserId, profile: UserSpec, *, debug: bool
+) -> Literal[True] | str:
     url = (
         site["multisiteurl"]
         + "automation.py?"
@@ -221,7 +226,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
                 ("command", "push-profile"),
                 ("secret", site["secret"]),
                 ("siteid", site["id"]),
-                ("debug", active_config.debug and "1" or ""),
+                ("debug", "1" if debug else ""),
             ]
         )
     )

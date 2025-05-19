@@ -21,22 +21,23 @@ DATA = [
     ["active slave"],
 ]
 
+SECTION = {
+    "bond1": {
+        "active": "eth1",
+        "interfaces": {
+            "eth1": {"status": "up"},
+            "eth5": {"status": "up"},
+        },
+        "mode": "active-backup",
+        "status": "up",
+    },
+}
+
 
 def test_parse_failover() -> None:
-    assert ovs_bonding.parse_ovs_bonding(DATA) == {
-        "bond1": {
-            "active": "eth1",
-            "interfaces": {
-                "eth1": {"status": "up"},
-                "eth5": {"status": "up"},
-            },
-            "mode": "active-backup",
-            "status": "up",
-        },
-    }
+    assert ovs_bonding.parse_ovs_bonding(DATA) == SECTION
 
 
-@pytest.mark.xfail(strict=True)
 def test_parse_handle_header() -> None:
     """`ovs-appctl bond/show` may print `---- bond0 ----` etc."""
     assert ovs_bonding.parse_ovs_bonding(
@@ -81,14 +82,12 @@ def test_parse_missing_header() -> None:
 
 def test_parse_missing_slave_interface_with_active() -> None:
     string_table = [["[bond1]"], ["active slave"]]
-    with pytest.raises(ovs_bonding.InvalidOvsBondingStringTable):
-        assert ovs_bonding.parse_ovs_bonding(string_table)
+    assert ovs_bonding.parse_ovs_bonding(string_table) == {}
 
 
 def test_parse_missing_slave_interface_in_second_bond() -> None:
     string_table = [*DATA, ["[bond2]"], ["active slave"]]
-    with pytest.raises(ovs_bonding.InvalidOvsBondingStringTable):
-        assert ovs_bonding.parse_ovs_bonding(string_table)
+    assert ovs_bonding.parse_ovs_bonding(string_table) == SECTION
 
 
 def test_parse_missing_bond_mode() -> None:

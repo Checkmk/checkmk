@@ -5,6 +5,7 @@
 import contextlib
 import dataclasses
 import inspect
+import types
 from collections.abc import Iterator, Mapping
 from typing import Annotated, cast, get_args, get_origin
 
@@ -13,7 +14,7 @@ from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
 from ._types import HeaderParam, QueryParam
-from ._utils import get_stripped_origin
+from ._utils import get_stripped_origin, strip_annotated
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
@@ -180,7 +181,14 @@ class ParameterValidator:
             data.query_aliases.append(source.alias)
 
         if source.is_list:
-            if not issubclass(get_stripped_origin(param_info.annotation), list):
+            origin = get_stripped_origin(param_info.annotation)
+            if not issubclass(origin, list):
+                if origin is types.UnionType:
+                    if any(
+                        issubclass(get_stripped_origin(arg), list)
+                        for arg in get_args(strip_annotated(param_info.annotation))
+                    ):
+                        return
                 raise ValueError(
                     f"Query parameter '{name}' is marked as list, but its type is not a list"
                 )

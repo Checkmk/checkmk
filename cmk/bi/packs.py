@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, NamedTuple, NotRequired, TypedDict
@@ -330,16 +329,16 @@ class BIAggregationPacks:
             )
         )
 
-        store.makedirs(self._num_enabled_aggregations_dir())
+        self._num_enabled_aggregations_dir().mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_text_to_file(self._num_enabled_aggregations_path(), enabled_aggregations)
 
     @classmethod
-    def _num_enabled_aggregations_dir(cls):
-        return os.path.join(var_dir, "wato")
+    def _num_enabled_aggregations_dir(cls) -> Path:
+        return Path(var_dir, "wato")
 
     @classmethod
-    def _num_enabled_aggregations_path(cls):
-        return os.path.join(cls._num_enabled_aggregations_dir(), "num_enabled_aggregations")
+    def _num_enabled_aggregations_path(cls) -> Path:
+        return cls._num_enabled_aggregations_dir() / "num_enabled_aggregations"
 
     @classmethod
     def get_num_enabled_aggregations(cls) -> int:

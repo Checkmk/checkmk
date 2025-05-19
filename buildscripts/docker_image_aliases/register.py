@@ -128,7 +128,7 @@ def main() -> None:
     new_digests = [d for d in repulled.attrs["RepoDigests"] if d.startswith(REGISTRY)]
     assert remote_image_name in new_digests
 
-    alias_dir = Path(os.path.dirname(__file__)) / alias_name
+    alias_dir = Path(__file__).parent / alias_name
     alias_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"create new alias at {alias_dir.absolute()}")

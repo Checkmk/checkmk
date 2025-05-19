@@ -6,8 +6,6 @@
 import os
 from collections.abc import Collection
 
-from cmk.ccc import store
-
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
 
@@ -111,7 +109,7 @@ class ModeIcons(WatoMode):
 
     def _upload_icon(self, icon_info):
         dest_dir = cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"
-        store.makedirs(dest_dir)
+        dest_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
         try:
             image = CMKImage(icon_info["icon"][2], ImageType.PNG)
             image.add_metadata("Comment", icon_info["category"])

@@ -102,7 +102,7 @@ def parse_args() -> argparse.Namespace:
         "input",
         type=Path,
         help="A YAML encoded file containing information about stages to generate",
-        default=Path(os.path.dirname(__file__)) / "stages.yml",
+        default=Path(__file__).parent / "stages.yml",
         nargs="?",
     )
     return parser.parse_args()

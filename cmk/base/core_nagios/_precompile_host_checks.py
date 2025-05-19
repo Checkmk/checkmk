@@ -96,8 +96,7 @@ class HostCheckStore:
         compiled_filename = self.host_check_file_path(config_path, hostname)
         source_filename = self.host_check_source_file_path(config_path, hostname)
 
-        store.makedirs(compiled_filename.parent)
-
+        compiled_filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_text_to_file(source_filename, host_check)
 
         # compile python (either now or delayed - see host_check code for delay_precompile handling)

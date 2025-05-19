@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.common.repo import (
-    repo_path,
-)
+from pathlib import Path
+
+from tests.testlib.common.repo import repo_path
 
 import cmk.ccc.debug
-from cmk.ccc import store
 
 import cmk.utils.caching
 import cmk.utils.paths
@@ -31,7 +30,7 @@ class FixPluginLegacy:
             find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
             FileLoader(
                 precomile_path=cmk.utils.paths.precompiled_checks_dir,
-                makedirs=store.makedirs,
+                makedirs=lambda path: Path(path).mkdir(mode=0o770, exist_ok=True, parents=True),
             ),
             raise_errors=True,
         )

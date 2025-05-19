@@ -567,13 +567,13 @@ def _confdir_for_user_id(user_id: UserId | None) -> str | None:
         return None
 
     confdir = cmk.utils.paths.profile_dir / user_id
-    store.mkdir(confdir)
+    confdir.mkdir(mode=0o770, exist_ok=True)
     return str(confdir)
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:
-    path = cmk.utils.paths.profile_dir.joinpath(user_id, name + ".mk")
-    store.mkdir(path.parent)
+    path = cmk.utils.paths.profile_dir / user_id / (name + ".mk")
+    path.parent.mkdir(mode=0o770, exist_ok=True)
     store.save_object_to_file(path, data)
 
 

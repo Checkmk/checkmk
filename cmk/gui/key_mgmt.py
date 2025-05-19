@@ -53,10 +53,10 @@ from cmk.crypto.pem import PEMDecodingError
 
 
 class KeypairStore:
-    def __init__(self, path: str, attr: str) -> None:
-        self._path = Path(path)
-        self._attr = attr
+    def __init__(self, path: Path, attr: str) -> None:
         super().__init__()
+        self._path = path
+        self._attr = attr
 
     def load(self) -> dict[int, Key]:
         if not self._path.exists():
@@ -68,7 +68,7 @@ class KeypairStore:
         return self._parse(variables[self._attr])
 
     def save(self, keys: Mapping[int, Key]) -> None:
-        store.makedirs(self._path.parent)
+        self._path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         with store.locked(self._path):
             store.save_mk_file(
                 self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"

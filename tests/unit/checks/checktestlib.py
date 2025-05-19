@@ -8,14 +8,13 @@ import copy
 import os
 import types
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest
 
 from tests.testlib.common.repo import repo_path
-
-from cmk.ccc import store
 
 import cmk.utils.paths
 
@@ -36,7 +35,7 @@ class Check:
             find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
             FileLoader(
                 precomile_path=cmk.utils.paths.precompiled_checks_dir,
-                makedirs=store.makedirs,
+                makedirs=lambda path: Path(path).mkdir(mode=0o770, exist_ok=True, parents=True),
             ),
             raise_errors=True,
         ).sane_check_info:

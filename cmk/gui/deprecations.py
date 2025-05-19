@@ -55,7 +55,7 @@ class _MarkerFileStore:
         self, site_id: SiteId, site_version: str, ac_test_results: Sequence[ACTestResult]
     ) -> None:
         marker_file = self._folder / str(site_id) / site_version
-        store.makedirs(marker_file.parent)
+        marker_file.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_text_to_file(marker_file, json.dumps([repr(r) for r in ac_test_results]))
 
     def cleanup_site_dir(self, site_id: SiteId) -> None:

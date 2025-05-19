@@ -38,7 +38,6 @@ from typing import (
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import omd_site, SiteId
@@ -1298,7 +1297,7 @@ def load_and_convert_legacy_checks(
         filelist,
         FileLoader(
             precomile_path=cmk.utils.paths.precompiled_checks_dir,
-            makedirs=store.makedirs,
+            makedirs=lambda path: Path(path).mkdir(mode=0o770, parents=True, exist_ok=True),
         ),
         raise_errors=cmk.ccc.debug.enabled(),
     )

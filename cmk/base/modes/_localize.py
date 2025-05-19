@@ -9,7 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 
 import cmk.utils.paths
@@ -291,9 +290,7 @@ def _localize_compile(lang: LanguageName) -> None:
 def _initialize_local_po_file(lang: LanguageName) -> None:
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
-
-    store.makedirs(Path(po_file).parent)
-
+    po_file.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
     builtin_po_file = _builtin_po_file(lang)
     if not po_file.exists() and builtin_po_file.exists():
         po_file.write_text(

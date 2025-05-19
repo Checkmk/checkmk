@@ -43,7 +43,7 @@ _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionGeneral,
+        section=PermissionSectionGeneral(),
         name="agent_pairing",
         title=_l("Agent pairing"),
         description=_l(

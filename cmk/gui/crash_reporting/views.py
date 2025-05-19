@@ -325,7 +325,7 @@ SorterCrashTime = Sorter(
 
 PermissionActionDeleteCrashReport = permission_registry.register(
     Permission(
-        section=PermissionSectionAction,
+        section=PermissionSectionAction(),
         name="delete_crash_report",
         title=_l("Delete crash reports"),
         description=_l("Delete crash reports created by Checkmk"),

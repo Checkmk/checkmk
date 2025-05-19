@@ -18,7 +18,7 @@ class PermissionSectionBI(PermissionSection):
 
 
 PermissionBISeeAll = Permission(
-    section=PermissionSectionBI,
+    section=PermissionSectionBI(),
     name="see_all",
     title=_l("See all hosts and services"),
     description=_l(

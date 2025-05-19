@@ -49,7 +49,7 @@ def register(
     painter_registry: PainterRegistry,
     permission_section_registry: PermissionSectionRegistry,
 ) -> None:
-    permission_section_registry.register(PermissionSectionIconsAndActions)
+    permission_section_registry.register(PermissionSectionIconsAndActions())
     painter_registry.register(PainterHostIcons)
     painter_registry.register(PainterServiceIcons)
     icon_registry.register(ShowParentChildTopology)

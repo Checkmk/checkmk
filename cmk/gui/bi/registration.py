@@ -94,7 +94,7 @@ def register(
     painter_option_registry.register(PainterOptionAggrTreeType())
     painter_option_registry.register(PainterOptionAggrWrap())
 
-    permission_section_registry.register(PermissionSectionBI)
+    permission_section_registry.register(PermissionSectionBI())
     permission_registry.register(PermissionBISeeAll)
 
     command_group_registry.register(CommandGroupAggregations)

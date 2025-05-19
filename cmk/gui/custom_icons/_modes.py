@@ -168,7 +168,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO,
+            section=PermissionSectionWATO(),
             name="icons",
             title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),

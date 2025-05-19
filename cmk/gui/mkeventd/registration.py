@@ -94,7 +94,7 @@ def register(
         notification_parameter_registry,
         replication_path_registry,
     )
-    permission_section_registry.register(PermissionSectionEventConsole)
+    permission_section_registry.register(PermissionSectionEventConsole())
     autocompleter_registry.register_autocompleter(
         "syslog_facilities", syslog_facilities_autocompleter
     )

@@ -219,7 +219,7 @@ def _messaging_methods() -> dict[MessageMethod, dict[str, Any]]:
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionGeneral,
+        section=PermissionSectionGeneral(),
         name="message",
         title=_l("Send user message"),
         description=_l(

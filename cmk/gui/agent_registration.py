@@ -23,7 +23,7 @@ CONNECTION_MODE_FIELD = fields.String(
 
 
 def register(permission_section_registry: PermissionSectionRegistry) -> None:
-    permission_section_registry.register(PermissionSectionAgentRegistration)
+    permission_section_registry.register(PermissionSectionAgentRegistration())
 
 
 class PermissionSectionAgentRegistration(PermissionSection):

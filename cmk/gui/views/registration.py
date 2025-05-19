@@ -43,7 +43,7 @@ def register(
 ) -> None:
     multisite_builtin_views.update(builtin_views)
 
-    permission_section_registry.register(PermissionSectionViews)
+    permission_section_registry.register(PermissionSectionViews())
 
     page_registry.register_page("ajax_cascading_render_painer_parameters")(
         PageAjaxCascadingRenderPainterParameters

@@ -100,7 +100,7 @@ def register(
     page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
         PageAjaxSidebarGetUnackIncompWerks
     )
-    permission_section_registry.register(PermissionSectionSidebarSnapins)
+    permission_section_registry.register(PermissionSectionSidebarSnapins())
     _snapin.register(
         snapin_registry_,
         page_registry,

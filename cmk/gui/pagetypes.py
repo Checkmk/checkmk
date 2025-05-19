@@ -713,7 +713,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="edit_" + cls.type_name(),
                 title=_l("Customize and use %s") % title_lower,
                 description=_l("Allows to create own %s, customize built-in %s and use them.")
@@ -724,7 +724,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="publish_" + cls.type_name(),
                 title=_l("Publish %s") % title_lower,
                 description=_l("Make %s visible and usable for all users.") % title_lower,
@@ -734,7 +734,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="publish_to_groups_" + cls.type_name(),
                 title=_l("Publish %s to allowed contact groups") % title_lower,
                 description=_l(
@@ -747,7 +747,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="publish_to_foreign_groups_" + cls.type_name(),
                 title=_l("Publish %s to foreign contact groups") % title_lower,
                 description=_l(
@@ -760,7 +760,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="publish_to_sites_" + cls.type_name(),
                 title=_l("Publish %s to users of selected sites") % title_lower,
                 description=_l(
@@ -775,7 +775,7 @@ class Overridable(Base[_T_OverridableConfig]):
         # TODO: Bug: This permission does not seem to be used
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="see_user_" + cls.type_name(),
                 title=_l("See user %s") % title_lower,
                 description=_l("Is needed for seeing %s that other users have created.")
@@ -786,7 +786,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="force_" + cls.type_name(),
                 title=_l("Modify built-in %s") % title_lower,
                 description=_l("Make own published %s override built-in %s for all users.")
@@ -797,7 +797,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="edit_foreign_" + cls.type_name(),
                 title=_l("Edit foreign %s") % title_lower,
                 description=_("Allows to view and edit %s created by other users.") % title_lower,
@@ -807,7 +807,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=PermissionSectionGeneral,
+                section=PermissionSectionGeneral(),
                 name="delete_foreign_" + cls.type_name(),
                 title=_l("Delete foreign %s") % title_lower,
                 description=_l("Allows to delete %s created by other users.") % title_lower,

@@ -35,7 +35,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
         permission_registry.register(
             Permission(
-                section=PermissionSectionSidebarSnapins,
+                section=PermissionSectionSidebarSnapins(),
                 name=self.plugin_name(instance),
                 title=instance.title(),
                 description=instance.description(),

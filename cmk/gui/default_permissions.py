@@ -18,7 +18,7 @@ from cmk.gui.permissions import (
 def register(
     permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
 ) -> None:
-    permission_section_registry.register(PermissionSectionGeneral)
+    permission_section_registry.register(PermissionSectionGeneral())
     permission_registry.register(PermissionGeneralUse)
     permission_registry.register(PermissionServerSideRequests)
     permission_registry.register(PermissionSeeAll)
@@ -65,7 +65,7 @@ class PermissionSectionGeneral(PermissionSection):
 
 
 PermissionGeneralUse = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="use",
     title=_l("Use the GUI at all"),
     description=_l("Users without this permission are not let in at all"),
@@ -73,7 +73,7 @@ PermissionGeneralUse = Permission(
 )
 
 PermissionServerSideRequests = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="server_side_requests",
     title=_l("Perform requests from the Checkmk server"),
     description=_l(
@@ -86,7 +86,7 @@ PermissionServerSideRequests = Permission(
 )
 
 PermissionSeeAll = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_all",
     title=_l("See all host and services"),
     description=_l(
@@ -97,7 +97,7 @@ PermissionSeeAll = Permission(
 )
 
 PermissionViewOptionColumns = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="view_option_columns",
     title=_l("Change view display columns"),
     description=_l(
@@ -107,7 +107,7 @@ PermissionViewOptionColumns = Permission(
 )
 
 PermissionViewOptionRefresh = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="view_option_refresh",
     title=_l("Change view display refresh"),
     description=_l(
@@ -117,7 +117,7 @@ PermissionViewOptionRefresh = Permission(
 )
 
 PermissionPainterOptions = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="painter_options",
     title=_l("Change column display options"),
     description=_l(
@@ -129,7 +129,7 @@ PermissionPainterOptions = Permission(
 )
 
 PermissionAct = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="act",
     title=_l("Perform commands in views"),
     description=_l(
@@ -140,7 +140,7 @@ PermissionAct = Permission(
 )
 
 PermissionSeeSidebar = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_sidebar",
     title=_l("Use Checkmk sidebar"),
     description=_l("Without this permission the Checkmk sidebar will be invisible"),
@@ -148,7 +148,7 @@ PermissionSeeSidebar = Permission(
 )
 
 PermissionConfigureSidebar = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="configure_sidebar",
     title=_l("Configure sidebar"),
     description=_l("This allows the user to add, move and remove sidebar snap-ins."),
@@ -156,7 +156,7 @@ PermissionConfigureSidebar = Permission(
 )
 
 PermissionEditProfile = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="edit_profile",
     title=_l("Edit the user profile"),
     description=_l("Permits the user to change the user profile settings."),
@@ -164,7 +164,7 @@ PermissionEditProfile = Permission(
 )
 
 PermissionSeeAvailability = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_availability",
     title=_l("See the availability"),
     description=_l("See the availability views of hosts and services"),
@@ -172,7 +172,7 @@ PermissionSeeAvailability = Permission(
 )
 
 PermissionCsvExport = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="csv_export",
     title=_l("Use CSV export"),
     description=_l("Export data of views using the CSV export"),
@@ -180,7 +180,7 @@ PermissionCsvExport = Permission(
 )
 
 PermissionEditNotifications = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="edit_notifications",
     title=_l("Edit personal notification settings"),
     description=_l(
@@ -191,7 +191,7 @@ PermissionEditNotifications = Permission(
 )
 
 PermissionDisableNotifications = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="disable_notifications",
     title=_l("Disable all personal notifications"),
     description=_l(
@@ -202,7 +202,7 @@ PermissionDisableNotifications = Permission(
 )
 
 PermissionEditUserAttributes = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="edit_user_attributes",
     title=_l("Edit personal user attributes"),
     description=_l(
@@ -213,7 +213,7 @@ PermissionEditUserAttributes = Permission(
 )
 
 PermissionChangePassword = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="change_password",
     title=_l("Edit the user password"),
     description=_l("Permits the user to change the password."),
@@ -221,7 +221,7 @@ PermissionChangePassword = Permission(
 )
 
 PermissionManage2Fa = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="manage_2fa",
     title=_l("Edit the user two-factor authentication"),
     description=_l("Permits the user to edit two-factor authentication (Webauthn credentials)."),
@@ -229,7 +229,7 @@ PermissionManage2Fa = Permission(
 )
 
 PermissionLogout = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="logout",
     title=_l("Logout"),
     description=_l("Permits the user to logout."),
@@ -237,7 +237,7 @@ PermissionLogout = Permission(
 )
 
 PermissionIgnoreSoftLimit = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="ignore_soft_limit",
     title=_l("Ignore soft query limit"),
     description=_l(
@@ -247,7 +247,7 @@ PermissionIgnoreSoftLimit = Permission(
 )
 
 PermissionIgnoreHardLimit = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="ignore_hard_limit",
     title=_l("Ignore hard query limit"),
     description=_l(
@@ -257,7 +257,7 @@ PermissionIgnoreHardLimit = Permission(
 )
 
 PermissionAcknowledgeWerks = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="acknowledge_werks",
     title=_l("Acknowledge incompatible Werks"),
     description=_l(
@@ -269,7 +269,7 @@ PermissionAcknowledgeWerks = Permission(
 )
 
 PermissionSeeFailedNotifications24H = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_failed_notifications_24h",
     title=_l("See failed notifications (last 24 hours)"),
     description=_l(
@@ -282,7 +282,7 @@ PermissionSeeFailedNotifications24H = Permission(
 )
 
 PermissionSeeFailedNotifications = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_failed_notifications",
     title=_l("See failed notifications (all)"),
     description=_l(
@@ -295,7 +295,7 @@ PermissionSeeFailedNotifications = Permission(
 )
 
 PermissionSeeStalesInTacticalOverview = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_stales_in_tactical_overview",
     title=_l("See stale objects in tactical overview"),
     description=_l(
@@ -305,7 +305,7 @@ PermissionSeeStalesInTacticalOverview = Permission(
 )
 
 PermissionSeeCrashReports = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="see_crash_reports",
     title=_l("See crash reports"),
     description=_l(
@@ -317,7 +317,7 @@ PermissionSeeCrashReports = Permission(
 )
 
 PermissionParentChildTopology = Permission(
-    section=PermissionSectionGeneral,
+    section=PermissionSectionGeneral(),
     name="parent_child_topology",
     title=_l("Network topology"),
     description=_l(

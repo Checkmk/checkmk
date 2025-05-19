@@ -141,7 +141,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO,
+            section=PermissionSectionWATO(),
             name="bi_rules",
             title=_l("Business Intelligence rules and aggregations"),
             description=_l(
@@ -154,7 +154,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO,
+            section=PermissionSectionWATO(),
             name="bi_admin",
             title=_l("Business Intelligence administration"),
             description=_l(

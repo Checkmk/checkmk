@@ -36,7 +36,7 @@ from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_
 def register(
     permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
 ) -> None:
-    permission_section_registry.register(PermissionSectionBackgroundJobs)
+    permission_section_registry.register(PermissionSectionBackgroundJobs())
     permission_registry.register(PermissionManageJobs)
     permission_registry.register(PermissionStopJobs)
     permission_registry.register(PermissionDeleteJobs)
@@ -58,7 +58,7 @@ class PermissionSectionBackgroundJobs(PermissionSection):
 
 
 PermissionManageJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="manage_jobs",
     title=_l("Manage background jobs"),
     description=_l("Allows you to see the job overview page."),
@@ -66,7 +66,7 @@ PermissionManageJobs = Permission(
 )
 
 PermissionStopJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="stop_jobs",
     title=_l("Stop background jobs"),
     description=_l(
@@ -76,7 +76,7 @@ PermissionStopJobs = Permission(
 )
 
 PermissionDeleteJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="delete_jobs",
     title=_l("Delete background jobs"),
     description=_l(
@@ -86,7 +86,7 @@ PermissionDeleteJobs = Permission(
 )
 
 PermissionSeeForeignJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="see_foreign_jobs",
     title=_l("See foreign background jobs"),
     description=_l("Allows you to see jobs of other users."),
@@ -94,7 +94,7 @@ PermissionSeeForeignJobs = Permission(
 )
 
 PermissionStopForeignJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="stop_foreign_jobs",
     title=_l("Stop foreign background jobs"),
     description=_l("Allows you to stop jobs of other users. Note: some jobs cannot be stopped."),
@@ -102,7 +102,7 @@ PermissionStopForeignJobs = Permission(
 )
 
 PermissionDeleteForeignJobs = Permission(
-    section=PermissionSectionBackgroundJobs,
+    section=PermissionSectionBackgroundJobs(),
     name="delete_foreign_jobs",
     title=_l("Delete foreign background jobs"),
     description=_l("Allows you to delete jobs of other users. Note: some jobs cannot be deleted"),

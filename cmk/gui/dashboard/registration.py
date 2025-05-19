@@ -37,7 +37,7 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
-    permission_section_registry.register(PermissionSectionDashboard)
+    permission_section_registry.register(PermissionSectionDashboard())
 
     page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
     page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)

@@ -3766,7 +3766,7 @@ def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
 #   '----------------------------------------------------------------------'
 
 ConfigureECPermission = Permission(
-    section=PermissionSectionEventConsole,
+    section=PermissionSectionEventConsole(),
     name="config",
     title=_l("Configuration of Event Console"),
     description=_l("This permission allows to configure the global settings of the event console."),
@@ -3775,7 +3775,7 @@ ConfigureECPermission = Permission(
 
 
 ConfigureECRulesPermission = Permission(
-    section=PermissionSectionEventConsole,
+    section=PermissionSectionEventConsole(),
     name="edit",
     title=_l("Configuration of event rules"),
     description=_l(
@@ -3786,7 +3786,7 @@ ConfigureECRulesPermission = Permission(
 
 
 ActivateECPermission = Permission(
-    section=PermissionSectionEventConsole,
+    section=PermissionSectionEventConsole(),
     name="activate",
     title=_l("Activate changes for event console"),
     description=_l(
@@ -3798,7 +3798,7 @@ ActivateECPermission = Permission(
 )
 
 SwitchSlaveReplicationPermission = Permission(
-    section=PermissionSectionEventConsole,
+    section=PermissionSectionEventConsole(),
     name="switchmode",
     title=_l("Switch slave replication mode"),
     description=_l(

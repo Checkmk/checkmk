@@ -40,7 +40,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionAgentRegistration,
+        section=PermissionSectionAgentRegistration(),
         name="register_any_existing_host",
         title=_l("Register any existing host"),
         description=_l("This permission allows the registration of any existing host."),
@@ -51,7 +51,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionAgentRegistration,
+        section=PermissionSectionAgentRegistration(),
         name="register_managed_existing_host",
         title=_l("Register managed existing host"),
         description=_l(

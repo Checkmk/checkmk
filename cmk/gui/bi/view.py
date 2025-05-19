@@ -1096,7 +1096,7 @@ def compute_output_message(effective_state, rule):
 
 PermissionFreezeAggregation = permission_registry.register(
     Permission(
-        section=PermissionSectionAction,
+        section=PermissionSectionAction(),
         name="aggregation_freeze",
         title=_l("Freeze aggregations"),
         description=_l("Freeze aggregations"),

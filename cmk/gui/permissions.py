@@ -40,13 +40,13 @@ class PermissionSection(abc.ABC):
         return False
 
 
-class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[type[PermissionSection]]):
+class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[PermissionSection]):
     @override
-    def plugin_name(self, instance: type[PermissionSection]) -> str:
-        return instance().name
+    def plugin_name(self, instance: PermissionSection) -> str:
+        return instance.name
 
     def get_sorted_sections(self) -> list[PermissionSection]:
-        return sorted([s() for s in self.values()], key=lambda s: (s.sort_index, s.title))
+        return sorted([s for s in self.values()], key=lambda s: (s.sort_index, s.title))
 
 
 permission_section_registry = PermissionSectionRegistry()
@@ -57,7 +57,7 @@ class Permission(abc.ABC):
 
     def __init__(
         self,
-        section: type[PermissionSection],
+        section: PermissionSection,
         name: str,
         title: str | LazyString,
         description: str | LazyString,
@@ -71,7 +71,7 @@ class Permission(abc.ABC):
         self._sort_index = 0
 
     @property
-    def section(self) -> type[PermissionSection]:
+    def section(self) -> PermissionSection:
         return self._section
 
     @property
@@ -98,7 +98,7 @@ class Permission(abc.ABC):
     @property
     def name(self) -> str:
         """The full identity of a permission (including the section identity)."""
-        return ".".join((self.section().name, self.permission_name))
+        return ".".join((self.section.name, self.permission_name))
 
     @property
     def sort_index(self) -> int:
@@ -129,7 +129,7 @@ class PermissionRegistry(cmk.ccc.plugin_registry.Registry[Permission]):
 
     def get_sorted_permissions(self, section: PermissionSection) -> list[Permission]:
         """Returns the sorted permissions of a section respecting the sorting config of the section"""
-        permissions = [p for p in self.values() if p.section == section.__class__]
+        permissions = [p for p in self.values() if p.section.name == section.name]
 
         if section.do_sort:
             return sorted(permissions, key=lambda p: (p.title, p.sort_index))
@@ -152,7 +152,7 @@ def declare_permission_section(
             "do_sort": do_sort,
         },
     )
-    permission_section_registry.register(cls)
+    permission_section_registry.register(cls())
 
 
 def declare_permission(

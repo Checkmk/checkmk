@@ -24,10 +24,7 @@ check_info = {}
 
 def inventory_emerson_temp(info):
     # Device appears to mark missing sensors by temperature value -999999
-    try:
-        yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
-    except ValueError:
-        pass
+    yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
 
 
 def check_emerson_temp(item, params, info):
@@ -43,7 +40,7 @@ def check_emerson_temp(item, params, info):
 
 
 def parse_emerson_temp(string_table: StringTable) -> StringTable:
-    return string_table
+    return [[x] for x in string_table[0]]
 
 
 check_info["emerson_temp"] = LegacyCheckDefinition(
@@ -52,7 +49,7 @@ check_info["emerson_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2",
-        oids=["7"],
+        oids=["7.1", "7.2"],
     ),
     service_name="Temperature %s",
     discovery_function=inventory_emerson_temp,

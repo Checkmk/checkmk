@@ -26,6 +26,7 @@ from cmk.ccc.version import (
     VersionsCompatible,
     VersionsIncompatible,
 )
+from cmk.ccc.version import edition as cmk_edition
 
 logger = logging.getLogger()
 
@@ -122,6 +123,18 @@ class CMKEditionType:
                 )
                 raise excp
         return edition
+
+    def edition_from_path(self, omd_root: Path) -> "CMKEditionType":
+        """Parse edition using the path of a site's home directory.
+
+        Args:
+            omd_root (Path): Path of a site's home directory; '/omd/sites/<sitename>',
+                as initialized within `OMD_ROOT` environment variable in a site.
+
+        Returns:
+            CMKEditionType: Object to interact with Checkmk editions.
+        """
+        return CMKEditionType(cmk_edition(omd_root))
 
     def from_long_edition(self, text: str) -> Edition:
         return self._edition.from_long_edition(text)

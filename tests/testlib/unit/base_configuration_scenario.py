@@ -10,7 +10,7 @@ ensuring a controlled environment for testing.
 
 import uuid
 from collections.abc import Mapping, Sequence
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +51,13 @@ class Scenario:
         # It seems that we are subjected to some dark edition magic here
         # that will make this sometimes return a CMEConfigCache instance
         return config._create_config_cache(
-            replace(EMPTYCONFIG, checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+            replace(
+                EMPTYCONFIG,
+                # This only works as long as the attribute names of LoadedConfigFragment
+                # are the same as the variabele names in config.py
+                # But it's probably less confusing if we stick to that pattern anyway.
+                **{k: v for k, v in self.config.items() if k in asdict(EMPTYCONFIG)},
+            ),
         )
 
     def __init__(self, site_id: str = "unit") -> None:
@@ -219,7 +225,13 @@ class CEEScenario(Scenario):
 
     def _get_config_cache(self) -> config.CEEConfigCache:
         return config.CEEConfigCache(
-            replace(EMPTYCONFIG, checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+            replace(
+                EMPTYCONFIG,
+                # This only works as long as the attribute names of LoadedConfigFragment
+                # are the same as the variabele names in config.py
+                # But it's probably less confusing if we stick to that pattern anyway.
+                **{k: v for k, v in self.config.items() if k in asdict(EMPTYCONFIG)},
+            )
         )
 
     def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:

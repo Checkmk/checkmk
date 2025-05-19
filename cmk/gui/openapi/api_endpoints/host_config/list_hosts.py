@@ -22,7 +22,6 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointPermissions,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
@@ -56,6 +55,8 @@ def list_hosts_v1() -> HostConfigCollectionModel:
     with tracer.span("list-hosts-build-response"):
         return HostConfigCollectionModel(
             domainType="host_config",
+            id="host",
+            extensions=ApiOmitted(),
             value=[
                 HostConfigModel(
                     domainType="host_config",
@@ -91,7 +92,7 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
 
 ENDPOINT_LIST_HOSTS = VersionedEndpoint(
     metadata=EndpointMetadata(
-        path=constructors.collection_href("host_config"),
+        path=collection_href("host_config"),
         link_relation=".../collection",
         method="get",
     ),

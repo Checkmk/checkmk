@@ -137,7 +137,10 @@ class DomainObjectCollectionModel(LinkableModel):
     value: list = api_field(
         description="The collection itself. Each entry in here is part of the collection."
     )
-    extensions: dict = api_field(description="Additional attributes alongside the collection.")
+    extensions: dict[str, object] | ApiOmitted = api_field(
+        description="Additional attributes alongside the collection.",
+        default_factory=ApiOmitted,
+    )
 
 
 @dataclass(kw_only=True, slots=True)

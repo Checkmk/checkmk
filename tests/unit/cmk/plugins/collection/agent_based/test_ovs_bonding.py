@@ -36,6 +36,38 @@ def test_parse_failover() -> None:
     }
 
 
+@pytest.mark.xfail(strict=True)
+def test_parse_handle_header() -> None:
+    """`ovs-appctl bond/show` may print `---- bond0 ----` etc."""
+    assert ovs_bonding.parse_ovs_bonding(
+        [
+            ["[bond1]"],
+            ["---- bond1 ----"],
+            ["bond_mode", " balance-slb"],
+            ["bond may use recirculation", " no, Recirc-ID ", " -1"],
+            ["bond-hash-basis", " 0"],
+            ["updelay", " 31000 ms"],
+            ["downdelay", " 200 ms"],
+            ["next rebalance", " 1322080 ms"],
+            ["lacp_status", " off"],
+            ["active slave mac", " 00", "00", "00", "00", "00", "00(eth0)"],  # modified
+            ["slave eth0", " enabled"],
+            ["active slave"],
+            ["may_enable", " true"],
+            ["hash 221", " 2679 kB load"],
+            ["slave eth1", " enabled"],
+            ["may_enable", " true"],
+        ]
+    ) == {
+        "bond1": {
+            "status": "up",
+            "active": "eth0",
+            "mode": "balance-slb",
+            "interfaces": {"eth0": {"status": "up"}, "eth1": {"status": "up"}},
+        }
+    }
+
+
 def test_parse_missing_slave_interfaces() -> None:
     string_table = [["[bond1]"], ["bond_mode", " active-backup"]]
     assert not ovs_bonding.parse_ovs_bonding(string_table)

@@ -11,7 +11,6 @@ import "./modules/figures/cmk_figures_plugins";
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
-import * as dc from "dc";
 import $ from "jquery";
 
 import * as activation from "./modules/activation";
@@ -89,7 +88,6 @@ $(() => {
 export const cmk_export = {
     crossfilter: crossfilter,
     d3: d3,
-    dc: dc,
     d3Sankey: d3Sankey,
     cmk: {
         activation: activation,

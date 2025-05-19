@@ -52,13 +52,6 @@ div.ntop_interface_quickstats {
 }
 
 div.ntop {
-  .dc-chart {
-    rect.bar,
-    rect.bar {
-      fill: $darkgrey;
-    }
-  }
-
   .brush {
     rect.selection {
       fill: $hostdown;
@@ -403,10 +396,6 @@ div.ntop {
   right: 0;
   height: 1rem;
   padding: 1rem;
-}
-
-.dc-chart .pie-slice.external {
-  fill: $font-color;
 }
 
 div#peers_table td {

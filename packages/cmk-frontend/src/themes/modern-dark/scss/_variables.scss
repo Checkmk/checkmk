@@ -43,7 +43,6 @@ $font-color-orange: $orange-1;
 // -----------------------------------------------------------------------------
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
-$button-background-hover: color.adjust($grey-6, $lightness: 10%);
 $default-button-border-color: $ux-theme-5;
 $default-submit-button-border-color: color.adjust($success, $lightness: -25%);
 

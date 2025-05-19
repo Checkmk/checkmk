@@ -109,14 +109,14 @@ def ad_hoc_password_id() -> str:
 
 
 def extract(password_id: PasswordId) -> str:
-    """Translate the password store reference to the actual password"""
+    """Translate the password store reference to the actual password. This function is likely
+    to be used by third party plugins and should not be moved / changed in behaviour."""
     staging_path = pending_password_store_path()
     match password_id:
         case str():
             if (pw := load(staging_path).get(password_id)) is None:
                 raise MKGeneralException(
-                    f"Password '{password_id}' not found in '{staging_path}'. "
-                    "Please check the password store."
+                    f"Password not found in '{staging_path}'. Please check the password store."
                 )
             return pw
         # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
@@ -125,8 +125,7 @@ def extract(password_id: PasswordId) -> str:
         case ("store", pw_id):
             if (pw := load(staging_path).get(pw_id)) is None:
                 raise MKGeneralException(
-                    f"Password '{pw_id}' not found in '{staging_path}'. "
-                    "Please check the password store."
+                    f"Password not found in '{staging_path}'. Please check the password store."
                 )
             return pw
         case _:

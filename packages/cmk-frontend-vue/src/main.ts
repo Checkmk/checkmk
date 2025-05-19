@@ -16,6 +16,7 @@ import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
+import AgentConnectionTestApp from '@/mode-host/AgentConnectionTestApp.vue'
 
 import '@/assets/variables.css'
 
@@ -96,6 +97,16 @@ function setupVue() {
           app = createApp(ModeHostApp, {
             formKeys: appData.form_keys,
             i18n: appData.i18n
+          })
+          break
+        }
+        case 'agent_connection_test': {
+          app = createApp(AgentConnectionTestApp, {
+            url: appData.url,
+            i18n: appData.i18n,
+            input_hostname: appData.input_hostname,
+            input_ipv4: appData.input_ipv4,
+            input_ipv6: appData.input_ipv6
           })
           break
         }

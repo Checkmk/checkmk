@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from dataclasses import asdict
 from typing import cast, Literal
 
 import cmk.ccc.version as cmk_version
@@ -31,7 +32,15 @@ from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,
     get_sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, Host, SearchFolder
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_from_request,
+    folder_preserving_link,
+    Host,
+    SearchFolder,
+)
+
+from cmk.shared_typing.agent_connection_test import AgentConnectionTest, I18n
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
@@ -314,6 +323,8 @@ def configure_attributes(
                     id_="attr_entry_%s" % attrname, style="display: none;" if not active else None
                 )
                 attr.render_input(varprefix, defvalue)
+                if defvalue == "cmk-agent":
+                    _render_connection_test()
                 html.close_div()
 
                 html.open_div(
@@ -364,6 +375,8 @@ def configure_attributes(
                     html.b(content)
 
             html.write_text_permissive(explanation)
+            if defvalue == "cmk-agent":
+                _render_connection_test()
             html.close_div()
 
         # if host is managed by a config bundle, show the source (which is not a real attribute)
@@ -403,6 +416,34 @@ def configure_attributes(
     html.javascript(
         "cmk.wato.prepare_edit_dialog(%s);"
         "cmk.wato.fix_visibility();" % json.dumps(dialog_properties)
+    )
+
+
+def _render_connection_test() -> None:
+    html.vue_app(
+        app_name="agent_connection_test",
+        data=asdict(
+            AgentConnectionTest(
+                url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),
+                i18n=I18n(
+                    dialog_message=_(
+                        "Already installed the agent? If so, please check your firewall settings"
+                    ),
+                    slide_in_title=_("Checkmk agent connection failed"),
+                    msg_start=_("Test Checkmk agent connection"),
+                    msg_success=_("Agent connection successful"),
+                    msg_loading=_("Agent connection test running"),
+                    msg_missing=_("Please enter a hostname to test Checkmk agent connection"),
+                    msg_error=_(
+                        "Connection failed, enter new hostname to check again "
+                        "or download and install the Checkmk agent."
+                    ),
+                ),
+                input_hostname="host",
+                input_ipv4="ipaddress",
+                input_ipv6="ipv6address",
+            ),
+        ),
     )
 
 

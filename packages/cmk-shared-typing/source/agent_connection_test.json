@@ -1,0 +1,50 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "agent_connection_test",
+    "properties": {
+        "url": { "type": "string" },
+        "i18n": { "$ref": "#/$defs/i18n" },
+        "input_hostname": { "type": "string" },
+        "input_ipv4": { "type": "string" },
+        "input_ipv6": { "type": "string" }
+    },
+    "required": ["url", "i18n"],
+    "$defs": {
+        "i18n": {
+            "type": "object",
+            "properties": {
+                "dialog_message": {
+                    "type": "string"
+                },
+                "slide_in_title": {
+                    "type": "string"
+                },
+                "msg_start": {
+                    "type": "string"
+                },
+                "msg_success": {
+                    "type": "string"
+                },
+                "msg_loading": {
+                    "type": "string"
+                },
+                "msg_missing": {
+                    "type": "string"
+                },
+                "msg_error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dialog_message",
+                "slide_in_title",
+                "msg_start",
+                "msg_success",
+                "msg_loading",
+                "msg_missing",
+                "msg_error"
+            ]
+        }
+    }
+}

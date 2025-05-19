@@ -67,6 +67,7 @@
   --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 
   --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
+  --icon-start: url('~cmk-frontend/src/themes/facelift/images/icon_backup_start.png');
 }
 
 @layer theme {

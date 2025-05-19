@@ -88,7 +88,7 @@ def main() {
     stage("Checkout repositories") {
         // this will checkout the repo at "${WORKSPACE}/${repo_name}"
         // but check again if you modify it here
-        provide_clone("check_mk", "ssh-git-gerrit-jenkins");
+        provide_clone("check_mk", "jenkins-gerrit-fips-compliant-ssh-key");
 
         // check_mk has to be on master
         dir("${WORKSPACE}/check_mk") {
@@ -99,7 +99,7 @@ def main() {
     stage("Send mails") {
         inside_container(args: docker_args) {
             withCredentials([
-                sshUserPrivateKey(credentialsId: "ssh-git-gerrit-jenkins", keyFileVariable: 'keyfile', usernameVariable: 'user')
+                sshUserPrivateKey(credentialsId: "jenkins-gerrit-fips-compliant-ssh-key", keyFileVariable: 'keyfile', usernameVariable: 'user')
             ]) {
                 withEnv(["GIT_SSH_COMMAND=ssh -o \"StrictHostKeyChecking no\" -i ${keyfile} -l ${user}"]) {
                     dir("${checkout_dir}") {

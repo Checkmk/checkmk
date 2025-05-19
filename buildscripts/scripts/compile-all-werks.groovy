@@ -24,9 +24,9 @@ def main() {
     stage("Checkout repositories") {
         // this will checkout the repo at "${WORKSPACE}/${repo_name}"
         // but check again if you modify it here
-        provide_clone("check_mk", "ssh-git-gerrit-jenkins");
-        provide_clone("checkmk_kube_agent", "ssh-git-gerrit-jenkins");
-        provide_clone("cma", "ssh-git-gerrit-jenkins");
+        provide_clone("check_mk", "jenkins-gerrit-fips-compliant-ssh-key");
+        provide_clone("checkmk_kube_agent", "jenkins-gerrit-fips-compliant-ssh-key");
+        provide_clone("cma", "jenkins-gerrit-fips-compliant-ssh-key");
 
         // check_mk has to be on master
         dir("${WORKSPACE}/check_mk") {

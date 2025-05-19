@@ -238,8 +238,10 @@ def main() {
     ) {
         dir("${deliverables_dir}") {
             /// BOM shall have a unique name, see CMK-16483
+            // TODO: We should really let bazel generate the correct file name - we're already passing edition and version to bazel build
             sh("""
                 cp omd/bill-of-materials.json check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.json
+                cp omd/Licenses.csv check-mk-${params.EDITION}-${cmk_version}-licenses.csv
             """);
         }
 
@@ -247,7 +249,7 @@ def main() {
         /// on our own..
         def files_to_upload = {
             dir("${deliverables_dir}") {
-                cmd_output("ls *.{deb,rpm,cma,tar.gz,json} || true").split().toList();
+                cmd_output("ls *.{deb,rpm,cma,tar.gz,json,csv} || true").split().toList();
             }
         }();
         print("Found files to upload: ${files_to_upload}");

@@ -62,11 +62,11 @@ from tests.testlib.utils import (
     write_file,
 )
 from tests.testlib.version import (
-    CMKEditionType,
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
     get_min_version,
+    TypeCMKEdition,
     version_from_env,
 )
 from tests.testlib.web_session import CMKWebSession
@@ -158,7 +158,7 @@ class Site:
         return self._package.version
 
     @property
-    def edition(self) -> CMKEditionType:
+    def edition(self) -> TypeCMKEdition:
         return self._package.edition
 
     @property
@@ -1768,7 +1768,7 @@ class SiteFactory:
         return self._package.version
 
     @property
-    def edition(self) -> CMKEditionType:
+    def edition(self) -> TypeCMKEdition:
         return self._package.edition
 
     def get_site(self, name: str) -> Site:

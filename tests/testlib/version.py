@@ -31,7 +31,7 @@ from cmk.ccc.version import edition as cmk_edition
 logger = logging.getLogger()
 
 
-class CMKEditionType:
+class TypeCMKEdition:
     """Wrap `cmk.ccc.version:Edition` and extend with test-framework functionality.
 
     This object acts as an interface and wrapper to `Edition` present within the source code.
@@ -40,10 +40,11 @@ class CMKEditionType:
 
     Usage:
     - `edition = CMKEdition.CCE/CEE/CME/CRE/CSE`
-    - `pkg_edition = CMKEdition(edition) / CMKEdition(CMKEdition.edition_from_text("cloud"))`
+    - `pkg_edition = CMKEdition(edition)`
+    - `pkg_edition = CMKEdition.edition_from_text("cloud")`
+    - `pkg_edition = CMKEdition.from_version_string("2.4.0.cee")`
     - `pkg_edition.short/long/title`
     - `pkg_edition.is_enterprise_edition()`
-    - `pkg_edition = CMKEdition(CMKEdition.from_version_string("2.4.0.cee"))`
 
     Note:
     Wrapping 'Edition' using inheritance would be easier but not possisble,
@@ -58,16 +59,16 @@ class CMKEditionType:
 
     def __init__(self, edition: Edition | None = None) -> None:
         self._edition: type[Edition] | Edition
-        self._edition = Edition if not edition else edition
+        self._edition_data = Edition if not edition else edition
 
-    def __call__(self, edition: Edition) -> "CMKEditionType":
+    def __call__(self, edition: Edition) -> "TypeCMKEdition":
         """Return a new instance, which is initialized with an 'Edition' value."""
-        return CMKEditionType(edition)
+        return TypeCMKEdition(edition)
 
     @property
-    def edition(self) -> Edition:
-        if isinstance(self._edition, Edition) and hasattr(self._edition, "value"):
-            return self._edition
+    def edition_data(self) -> Edition:
+        if isinstance(self._edition_data, Edition) and hasattr(self._edition_data, "value"):
+            return self._edition_data
         raise AttributeError(
             "An `edition` has not been assigned to the object!\n"
             "Use `CMKEdition(CMKEdition.CCE/CEE/...)` to initialize the object with an edition."
@@ -76,38 +77,47 @@ class CMKEditionType:
     @property
     def short(self) -> str:
         """Return short-form of Checkmk edition."""
-        return self.edition.short
+        return self.edition_data.short
 
     @property
     def long(self) -> str:
         """Return Checkmk edition as string."""
-        return self.edition.long
+        return self.edition_data.long
 
     @property
     def title(self) -> str:
         """Return edition as displayed on Checkmk UI."""
-        return self.edition.title
+        return self.edition_data.title
 
     def is_managed_edition(self) -> bool:
-        return self.edition is self.CME
+        return self.edition_data is self.CME
 
     def is_enterprise_edition(self) -> bool:
-        return self.edition is self.CEE
+        return self.edition_data is self.CEE
 
     def is_raw_edition(self) -> bool:
-        return self.edition is self.CRE
+        return self.edition_data is self.CRE
 
     def is_cloud_edition(self) -> bool:
-        return self.edition is self.CCE
+        return self.edition_data is self.CCE
 
     def is_saas_edition(self) -> bool:
-        return self.edition is self.CSE
+        return self.edition_data is self.CSE
 
-    def edition_from_text(self, value: str) -> Edition:
-        """Parse text and return an Edition.
+    def edition_from_text(self, value: str) -> "TypeCMKEdition":
+        """Parse Checkmk edition from short or long form of Checkmk edition texts.
 
-        'short' and 'long' forms of edition strings are accepted. Example,
-        'cee', 'enterprise', 'cloud'.
+        Wraps the method `Edition::from_long_edition`.
+
+        Args:
+            value (str): Text corresponding to short / long form of Checkmk editions.
+                Example: 'cee', 'enterprise', 'cloud'
+
+        Raises:
+            excp: `ValueError` when the text can not be parsed.
+
+        Returns:
+            TypeCMKEdition: Object specific to the parsed Checkmk edition.
         """
         excp = ValueError()
         try:
@@ -122,29 +132,43 @@ class CMKEditionType:
                     f"String: '{value}' neither matches 'short' nor 'long' edition formats!"
                 )
                 raise excp
-        return edition
+        return TypeCMKEdition(edition)
 
-    def edition_from_path(self, omd_root: Path) -> "CMKEditionType":
-        """Parse edition using the path of a site's home directory.
+    def edition_from_path(self, omd_root: Path) -> "TypeCMKEdition":
+        """Parse Checkmk edition using the path of a site's home directory.
 
         Args:
             omd_root (Path): Path of a site's home directory; '/omd/sites/<sitename>',
                 as initialized within `OMD_ROOT` environment variable in a site.
 
         Returns:
-            CMKEditionType: Object to interact with Checkmk editions.
+            TypeCMKEdition: Object specific to the parsed Checkmk edition.
         """
-        return CMKEditionType(cmk_edition(omd_root))
+        return TypeCMKEdition(cmk_edition(omd_root))
 
     def from_long_edition(self, text: str) -> Edition:
-        return self._edition.from_long_edition(text)
+        """Deprecated; use `CMKEdition.edition_from_text` instead.
 
-    def from_version_string(self, text: str) -> Edition:
-        return self._edition.from_version_string(text)
+        Parse edition from long-form of edition text and wrap it in an object.
+        Example of long-form of edition text: 'enterprise'.
+        """
+        return self._edition_data.from_long_edition(text)
+
+    def from_version_string(self, text: str) -> "TypeCMKEdition":
+        """Parse edition from a Checkmk version string.
+
+        Args:
+            text (str): Checkmk version string.
+                Example of cloud edition: '2.4.0-2025.05.15.cce'.
+
+        Returns:
+            TypeCMKEdition: Object specific to the parsed Checkmk edition.
+        """
+        return TypeCMKEdition(self._edition_data.from_version_string(text))
 
 
-# import this in other modules, rather than 'CMKEditionType'.
-CMKEdition: Final = CMKEditionType()
+# import this in other modules, rather than 'TypeCMKEdition'.
+CMKEdition: Final = TypeCMKEdition()
 
 
 # It's ok to make it currently only work on debian based distros
@@ -289,7 +313,7 @@ class CMKVersion:
 class CMKPackageInfo:
     """Consolidate information about a Checkmk package."""
 
-    def __init__(self, version: CMKVersion, edition: CMKEditionType) -> None:
+    def __init__(self, version: CMKVersion, edition: TypeCMKEdition) -> None:
         self._version = version
         self._edition = edition
 
@@ -307,7 +331,7 @@ class CMKPackageInfo:
         return self._version
 
     @property
-    def edition(self) -> CMKEditionType:
+    def edition(self) -> TypeCMKEdition:
         return self._edition
 
     def is_installed(self) -> bool:
@@ -323,7 +347,7 @@ class CMKPackageInfo:
         return f"{self._version.version}.{self._edition.short}"
 
 
-def package_hash_path(version: str, edition: CMKEditionType) -> Path:
+def package_hash_path(version: str, edition: TypeCMKEdition) -> Path:
     return Path(f"/tmp/cmk_package_hash_{version}_{edition.long}")
 
 
@@ -338,13 +362,13 @@ def version_from_env(
     )
 
 
-def edition_from_env(fallback: Edition = CMKEdition.CEE) -> CMKEditionType:
+def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.CEE)) -> TypeCMKEdition:
     value = os.getenv("EDITION", "")
     try:
         edition = CMKEdition.edition_from_text(value)
     except ValueError:
         edition = fallback
-    return CMKEdition(edition)
+    return edition
 
 
 def get_min_version() -> CMKVersion:

@@ -22,11 +22,11 @@ from tests.testlib.utils import (
 )
 from tests.testlib.version import (
     CMKEdition,
-    CMKEditionType,
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
     get_min_version,
+    TypeCMKEdition,
 )
 
 MODULE_PATH = Path(__file__).parent.resolve()
@@ -101,7 +101,7 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     return site
 
 
-def get_target_package(target_edition: CMKEditionType) -> CMKPackageInfo:
+def get_target_package(target_edition: TypeCMKEdition) -> CMKPackageInfo:
     return CMKPackageInfo(CMKVersion(version_spec_from_env(CMKVersion.DAILY)), target_edition)
 
 
@@ -154,7 +154,7 @@ def inject_rules(site: Site) -> None:
         _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
     ]
     for rules_file_name in rules_file_names:
-        if edition_from_env().edition == CMKEdition.CRE and rules_file_name.startswith("cmc_"):
+        if edition_from_env().is_raw_edition() and rules_file_name.startswith("cmc_"):
             continue
         rules_file_path = RULES_DIR / rules_file_name
         with open(rules_file_path, encoding="UTF-8") as ruleset_file:

@@ -14,8 +14,8 @@ from tests.testlib.agent_dumps import inject_dumps
 from tests.testlib.site import Site
 from tests.testlib.version import (
     CMKEdition,
-    CMKEditionType,
     edition_from_env,
+    TypeCMKEdition,
 )
 
 from tests.update.helpers import (
@@ -98,12 +98,12 @@ def _setup_host(site: Site, hostname: str, ip_address: str) -> Generator[None]:
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
 def _setup(
     request: pytest.FixtureRequest,
-) -> Generator[tuple[Site, CMKEditionType, bool, str]]:
+) -> Generator[tuple[Site, TypeCMKEdition, bool, str]]:
     """Install the test site with the base version."""
     base_package, interactive_mode = request.param
     target_edition_raw = request.config.getoption(name="--target-edition")
     target_edition = (
-        CMKEdition(CMKEdition.edition_from_text(target_edition_raw))
+        CMKEdition.edition_from_text(target_edition_raw)
         if target_edition_raw
         else edition_from_env()
     )

@@ -1500,9 +1500,9 @@ def make_hosts_config(loaded_config: LoadedConfigFragment) -> Hosts:
     )
 
 
-def _make_clusters_nodes_maps() -> tuple[
-    Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]
-]:
+def _make_clusters_nodes_maps(
+    clusters: Mapping[HostName, Sequence[HostName]],
+) -> tuple[Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]]:
     clusters_of_cache: dict[HostName, list[HostName]] = {}
     nodes_cache: dict[HostName, Sequence[HostName]] = {}
     for cluster, hosts in clusters.items():
@@ -1610,7 +1610,7 @@ class ConfigCache:
         (
             self._clusters_of_cache,
             self._nodes_cache,
-        ) = _make_clusters_nodes_maps()
+        ) = _make_clusters_nodes_maps(self._loaded_config.clusters)
 
         # TODO: remove this from the config cache. It is a completely
         # self-contained object that should be passed around (if it really

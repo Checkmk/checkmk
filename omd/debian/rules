@@ -113,7 +113,7 @@ binary-arch:
 	dh_link
 # Is done by "omd/strip_binaries" script for all package types just like dh_strip would do
 #	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus
-	dh_compress
+	dh_compress --exclude=README.md
 	dh_fixperms
 #	dh_perl
 #	dh_makeshlibs

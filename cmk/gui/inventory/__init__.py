@@ -43,7 +43,7 @@ from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec, _xml
-from ._icon import InventoryIcon
+from ._icon import InventoryHistoryIcon, InventoryIcon
 from ._rulespec import RulespecGroupInventory
 from ._tree import (
     get_history,
@@ -96,6 +96,7 @@ def register(
     filter_registry.register(FilterInvHasSoftwarePackage())
     _rulespec.register(rulespec_group_registry, rulespec_registry)
     icon_and_action_registry.register(InventoryIcon)
+    icon_and_action_registry.register(InventoryHistoryIcon)
 
 
 def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:

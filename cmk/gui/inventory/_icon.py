@@ -57,3 +57,45 @@ InventoryIcon = Icon(
     host_columns=["name"],
     render=_render_inventory_icon,
 )
+
+
+def _has_inventory_history(host_name: HostName) -> bool:
+    if not host_name:
+        return False
+    try:
+        return bool(
+            list(InventoryPaths(cmk.utils.paths.omd_root).archive_host(host_name).iterdir())
+        )
+    except FileNotFoundError:
+        return False
+
+
+def _render_inventory_history_icon(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+) -> None | tuple[str, str, str]:
+    if (
+        what == "host"
+        or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
+    ) and _has_inventory_history(row["host_name"]):
+        if not user.may("view.inv_host"):
+            return None
+
+        v = url_to_visual(row, VisualLinkSpec("views", "inv_host_history"), request=request)
+        assert v is not None
+        return (
+            "inventory",
+            _("Show HW/SW Inventory history of this host"),
+            v,
+        )
+    return None
+
+
+InventoryHistoryIcon = Icon(
+    ident="inventory_history",
+    title=_l("HW/SW Inventory history"),
+    host_columns=["name"],
+    render=_render_inventory_history_icon,
+)

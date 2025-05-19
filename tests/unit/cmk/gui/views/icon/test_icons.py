@@ -35,6 +35,7 @@ def test_builtin_icons_and_actions() -> None:
         "download_snmp_walk",
         "icon_image",
         "inventory",
+        "inventory_history",
         "logwatch",
         "mkeventd",
         "network_topology",

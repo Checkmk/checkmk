@@ -99,7 +99,6 @@ def do_restart(
     hosts_to_update: set[HostName] | None = None,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
-    skip_config_locking_for_bakery: bool = False,
 ) -> None:
     try:
         with activation_lock(mode=locking_mode):
@@ -114,7 +113,6 @@ def do_restart(
                 all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
-                skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
             do_core_action(action, monitoring_core=core.name())
 

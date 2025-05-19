@@ -9,14 +9,13 @@ import shutil
 import socket
 import sys
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, nullcontext, suppress
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.ccc.store import lock_checkmk_configuration
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -26,7 +25,6 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
-from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
@@ -277,7 +275,6 @@ def do_create_config(
     hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Collection[HostName],
-    skip_config_locking_for_bakery: bool = False,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -316,12 +313,10 @@ def do_create_config(
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
         with tracer.span("bake_on_restart"):
-            _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
+            _bake_on_restart(config_cache, all_hosts)
 
 
-def _bake_on_restart(
-    config_cache: config.ConfigCache, all_hosts: Iterable[HostName], skip_locking: bool
-) -> None:
+def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostName]) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
@@ -341,10 +336,9 @@ def _bake_on_restart(
 
     assert isinstance(config_cache, config.CEEConfigCache)
 
-    with nullcontext() if skip_locking else lock_checkmk_configuration(configuration_lockfile):
-        target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
-            config_cache, all_hosts=all_hosts, selected_hosts=None
-        )
+    target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
+        config_cache, all_hosts=all_hosts, selected_hosts=None
+    )
 
     try:
         agent_bakery.bake_agents(

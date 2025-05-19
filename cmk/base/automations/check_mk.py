@@ -1243,7 +1243,6 @@ class AutomationRenameHosts(Automation):
                     hosts_config,
                     loading_result.loaded_config,
                     plugins,
-                    skip_config_locking_for_bakery=True,
                 )
 
                 for hostname in ip_address_of.error_handler.failed_ip_lookups:
@@ -2261,7 +2260,6 @@ def _execute_silently(
     loaded_config: config.LoadedConfigFragment,
     plugins: AgentBasedPlugins,
     hosts_to_update: set[HostName] | None = None,
-    skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2285,7 +2283,6 @@ def _execute_silently(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                     )
                 ),
-                skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))

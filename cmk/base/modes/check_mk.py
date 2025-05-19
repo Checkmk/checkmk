@@ -46,6 +46,7 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import (
     ImmutableTree,
     InventoryPaths,
@@ -1364,6 +1365,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.base.core_nagios import create_config
 
     plugins = load_checks()
+    loading_result = load_config(plugins)
     config_cache = load_config(plugins).config_cache
 
     hostnames = args if args else None
@@ -1403,6 +1405,10 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         ),
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
+        service_depends_on=config.ServiceDependsOn(
+            tag_list=config_cache.tag_list,
+            service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
     )
 
@@ -1456,6 +1462,11 @@ def mode_update() -> None:
                 discovery_rules=loading_result.loaded_config.discovery_rules,
                 ip_address_of=ip_address_of,
                 all_hosts=hosts_config.hosts,
+                hosts_to_update=None,
+                service_depends_on=config.ServiceDependsOn(
+                    tag_list=loading_result.config_cache.tag_list,
+                    service_dependencies=loading_result.loaded_config.service_dependencies,
+                ),
                 duplicates=sorted(
                     hosts_config.duplicates(
                         lambda hn: loading_result.config_cache.is_active(hn)
@@ -1518,6 +1529,10 @@ def mode_restart(args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,
+        service_depends_on=config.ServiceDependsOn(
+            tag_list=loading_result.config_cache.tag_list,
+            service_dependencies=loading_result.loaded_config.service_dependencies,
+        ),
         discovery_rules=loading_result.loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
@@ -1575,6 +1590,10 @@ def mode_reload(args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,
+        service_depends_on=config.ServiceDependsOn(
+            tag_list=loading_result.config_cache.tag_list,
+            service_dependencies=loading_result.loaded_config.service_dependencies,
+        ),
         discovery_rules=loading_result.loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
@@ -2333,6 +2352,10 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
         plugins,
         loading_result.config_cache,
         config.make_hosts_config(loading_result.loaded_config),
+        config.ServiceDependsOn(
+            tag_list=loading_result.config_cache.tag_list,
+            service_dependencies=loading_result.loaded_config.service_dependencies,
+        ),
         options,
         args,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -2344,6 +2367,7 @@ def run_checking(
     plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     options: _CheckingOptions,
     args: list[str],
     *,
@@ -2455,7 +2479,11 @@ def run_checking(
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(
-                    hostname, plugins.check_plugins, service_configurer, service_name_config
+                    hostname,
+                    plugins.check_plugins,
+                    service_configurer,
+                    service_name_config,
+                    service_depends_on,
                 ),
                 run_plugin_names=run_plugin_names,
                 get_check_period=lambda service_name,

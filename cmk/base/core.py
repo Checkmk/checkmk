@@ -8,7 +8,7 @@ import enum
 import os
 import subprocess
 import sys
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Literal
 
@@ -21,6 +21,7 @@ import cmk.utils.paths
 from cmk.utils import ip_lookup, tty
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.plugins import AgentBasedPlugins
 
@@ -65,7 +66,8 @@ def do_reload(
     *,
     all_hosts: Iterable[HostName],
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    hosts_to_update: set[HostName] | None = None,
+    hosts_to_update: set[HostName] | None,
+    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
 ) -> None:
@@ -80,6 +82,7 @@ def do_reload(
         all_hosts=all_hosts,
         discovery_rules=discovery_rules,
         hosts_to_update=hosts_to_update,
+        service_depends_on=service_depends_on,
         locking_mode=locking_mode,
         duplicates=duplicates,
     )
@@ -97,6 +100,7 @@ def do_restart(
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
+    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
 ) -> None:
@@ -112,6 +116,7 @@ def do_restart(
                 ip_address_of=ip_address_of,
                 all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
+                service_depends_on=service_depends_on,
                 duplicates=duplicates,
             )
             do_core_action(action, monitoring_core=core.name())

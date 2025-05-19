@@ -82,6 +82,8 @@ def test_do_create_config_nagios(
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
+        hosts_to_update=None,
+        service_depends_on=lambda *a: (),
         duplicates=(),
     )
 
@@ -112,6 +114,8 @@ def test_do_create_config_nagios_collects_passwords(
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
+        hosts_to_update=None,
+        service_depends_on=lambda *a: (),
         duplicates=(),
     )
 

@@ -1012,6 +1012,11 @@ def _execute_autodiscovery(
                     locking_mode=config.restart_locking,
                     all_hosts=hosts_config.hosts,
                     discovery_rules=loading_result.loaded_config.discovery_rules,
+                    hosts_to_update=None,
+                    service_depends_on=config.ServiceDependsOn(
+                        tag_list=config_cache.tag_list,
+                        service_dependencies=loading_result.loaded_config.service_dependencies,
+                    ),
                     duplicates=sorted(
                         hosts_config.duplicates(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -1027,6 +1032,10 @@ def _execute_autodiscovery(
                     core,
                     ab_plugins,
                     all_hosts=hosts_config.hosts,
+                    service_depends_on=config.ServiceDependsOn(
+                        tag_list=config_cache.tag_list,
+                        service_dependencies=loading_result.loaded_config.service_dependencies,
+                    ),
                     locking_mode=config.restart_locking,
                     discovery_rules=loading_result.loaded_config.discovery_rules,
                     duplicates=sorted(
@@ -1243,6 +1252,11 @@ class AutomationRenameHosts(Automation):
                     hosts_config,
                     loading_result.loaded_config,
                     plugins,
+                    hosts_to_update=None,
+                    service_depends_on=config.ServiceDependsOn(
+                        tag_list=config_cache.tag_list,
+                        service_dependencies=loading_result.loaded_config.service_dependencies,
+                    ),
                 )
 
                 for hostname in ip_address_of.error_handler.failed_ip_lookups:
@@ -2193,6 +2207,10 @@ class AutomationRestart(Automation):
             loading_result.loaded_config,
             plugins,
             hosts_to_update=nodes,
+            service_depends_on=config.ServiceDependsOn(
+                tag_list=loading_result.config_cache.tag_list,
+                service_dependencies=loading_result.loaded_config.service_dependencies,
+            ),
         )
 
     def _check_plugins_have_changed(self) -> bool:
@@ -2259,7 +2277,8 @@ def _execute_silently(
     hosts_config: Hosts,
     loaded_config: config.LoadedConfigFragment,
     plugins: AgentBasedPlugins,
-    hosts_to_update: set[HostName] | None = None,
+    hosts_to_update: set[HostName] | None,
+    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2277,6 +2296,7 @@ def _execute_silently(
                 all_hosts=hosts_config.hosts,
                 discovery_rules=loaded_config.discovery_rules,
                 hosts_to_update=hosts_to_update,
+                service_depends_on=service_depends_on,
                 locking_mode=config.restart_locking,
                 duplicates=sorted(
                     hosts_config.duplicates(

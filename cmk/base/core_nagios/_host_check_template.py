@@ -104,6 +104,10 @@ def main() -> int:
             plugins,
             loading_result.config_cache,
             hosts_config,
+            config.ServiceDependsOn(
+                tag_list=loading_result.config_cache.tag_list,
+                service_dependencies=loading_result.loaded_config.service_dependencies,
+            ),
             {},
             [CONFIG.hostname],
             password_store_file=core_password_store_path(LATEST_CONFIG),

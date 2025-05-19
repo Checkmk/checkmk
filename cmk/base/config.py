@@ -607,6 +607,7 @@ class LoadedConfigFragment:
     all_hosts: Sequence[str]
     clusters: Mapping[HostAddress, Sequence[HostAddress]]
     shadow_hosts: ShadowHosts
+    service_dependencies: Sequence[tuple]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -704,6 +705,7 @@ def _perform_post_config_loading_actions(
         all_hosts=all_hosts,
         clusters=clusters,
         shadow_hosts=_get_shadow_hosts(),
+        service_dependencies=service_dependencies,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1166,37 +1168,38 @@ def _make_service_description_cb(
 # b) It only affects the Nagios core - CMC does not implement service dependencies
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
-def service_depends_on(
-    config_cache: ConfigCache, hostname: HostName, servicedesc: ServiceName
-) -> list[ServiceName]:
-    """Return a list of services this service depends upon"""
-    deps = []
-    for entry in service_dependencies:
-        entry, rule_options = tuple_rulesets.get_rule_options(entry)
-        if rule_options.get("disabled"):
-            continue
+@dataclasses.dataclass(frozen=True)
+class ServiceDependsOn:
+    tag_list: Callable[[HostName], Sequence[TagID]]
+    service_dependencies: Sequence[tuple]  # :-(
 
-        if len(entry) == 3:
-            depname, hostlist, patternlist = entry
-            tags: list[TagID] = []
-        elif len(entry) == 4:
-            depname, tags, hostlist, patternlist = entry
-        else:
-            raise MKGeneralException(
-                "Invalid entry '%r' in service dependencies: must have 3 or 4 entries" % entry
-            )
-
-        if tuple_rulesets.hosttags_match_taglist(
-            config_cache.tag_list(hostname), tags
-        ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
-            for pattern in patternlist:
-                if matchobject := regex(pattern).search(servicedesc):
-                    try:
-                        item = matchobject.groups()[-1]
-                        deps.append(depname % item)
-                    except (IndexError, TypeError):
-                        deps.append(depname)
-    return deps
+    def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
+        """Return a list of services this service depends on"""
+        deps = []
+        for entry in self.service_dependencies:
+            entry, rule_options = tuple_rulesets.get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+            if len(entry) == 3:
+                depname, hostlist, patternlist = entry
+                tags: list[TagID] = []
+            elif len(entry) == 4:
+                depname, tags, hostlist, patternlist = entry
+            else:
+                raise MKGeneralException(
+                    "Invalid entry '%r' in service dependencies: must have 3 or 4 entries" % entry
+                )
+            if tuple_rulesets.hosttags_match_taglist(
+                self.tag_list(hostname), tags
+            ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
+                for pattern in patternlist:
+                    if matchobject := regex(pattern).search(servicedesc):
+                        try:
+                            item = matchobject.groups()[-1]
+                            deps.append(depname % item)
+                        except (IndexError, TypeError):
+                            deps.append(depname)
+        return deps
 
 
 # .
@@ -1958,12 +1961,13 @@ class ConfigCache:
         plugins: Mapping[CheckPluginName, CheckPlugin],
         service_configurer: ServiceConfigurer,
         service_name_config: PassiveServiceNameConfig,
+        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> Sequence[ConfiguredService]:
         services = self._sorted_services(hostname, plugins, service_configurer, service_name_config)
         if is_cmc():
             return services
 
-        unresolved = [(s, set(service_depends_on(self, hostname, s.description))) for s in services]
+        unresolved = [(s, set(service_depends_on(hostname, s.description))) for s in services]
 
         resolved: list[ConfiguredService] = []
         while unresolved:

@@ -68,7 +68,8 @@ class MonitoringCore(abc.ABC):
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
-        hosts_to_update: set[HostName] | None = None,
+        hosts_to_update: set[HostName] | None,
+        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
@@ -82,7 +83,8 @@ class MonitoringCore(abc.ABC):
             plugins,
             discovery_rules,
             passwords,
-            hosts_to_update,
+            hosts_to_update=hosts_to_update,
+            service_depends_on=service_depends_on,
         )
 
     @abc.abstractmethod
@@ -97,7 +99,9 @@ class MonitoringCore(abc.ABC):
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, str],
+        *,
         hosts_to_update: set[HostName] | None = None,
+        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         raise NotImplementedError
 
@@ -270,7 +274,8 @@ def do_create_config(
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     all_hosts: Iterable[HostName],
-    hosts_to_update: set[HostName] | None = None,
+    hosts_to_update: set[HostName] | None,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
 ) -> None:
@@ -302,6 +307,7 @@ def do_create_config(
                 discovery_rules,
                 ip_address_of,
                 hosts_to_update=hosts_to_update,
+                service_depends_on=service_depends_on,
                 duplicates=duplicates,
             )
     except Exception as e:
@@ -402,7 +408,8 @@ def _create_core_config(
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    hosts_to_update: set[HostName] | None = None,
+    hosts_to_update: set[HostName] | None,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
 ) -> None:
@@ -425,6 +432,7 @@ def _create_core_config(
             discovery_rules,
             ip_address_of,
             hosts_to_update=hosts_to_update,
+            service_depends_on=service_depends_on,
             passwords=passwords,
         )
 

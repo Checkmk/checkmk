@@ -18,4 +18,5 @@ EMPTYCONFIG = LoadedConfigFragment(
     all_hosts=(),
     clusters={},
     shadow_hosts={},
+    service_dependencies=(),
 )

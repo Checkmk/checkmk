@@ -8,7 +8,7 @@ import base64
 import itertools
 import sys
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from io import StringIO
 from pathlib import Path
@@ -77,7 +77,9 @@ class NagiosCore(core_config.MonitoringCore):
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, str],
+        *,
         hosts_to_update: set[HostName] | None = None,
+        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
@@ -87,6 +89,7 @@ class NagiosCore(core_config.MonitoringCore):
             licensing_handler,
             passwords,
             ip_address_of,
+            service_depends_on,
         )
         store.save_text_to_file(
             plugin_index.make_index_file(Path(config_path)),
@@ -110,6 +113,7 @@ class NagiosCore(core_config.MonitoringCore):
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
         ip_address_of: config.IPLookup,
+        service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -138,6 +142,7 @@ class NagiosCore(core_config.MonitoringCore):
             licensing_handler=licensing_handler,
             passwords=passwords,
             ip_address_of=ip_address_of,
+            service_depends_on=service_depends_on,
         )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
@@ -219,6 +224,7 @@ def create_config(
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
     ip_address_of: config.IPLookup,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> None:
     cfg = NagiosConfig(outfile, hostnames)
 
@@ -236,6 +242,7 @@ def create_config(
             passwords,
             licensing_counter,
             ip_address_of,
+            service_depends_on,
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -275,6 +282,7 @@ def _create_nagios_config_host(
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
     ip_address_of: config.IPLookup,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> NotificationHostConfig:
     cfg.write_str("\n# ----------------------------------------------------\n")
     cfg.write_str("# %s\n" % hostname)
@@ -297,6 +305,7 @@ def _create_nagios_config_host(
             stored_passwords,
             license_counter,
             ip_address_of,
+            service_depends_on,
         ),
         tags=get_tags_with_groups_from_attributes(list(host_attrs.items())),
     )
@@ -437,6 +446,7 @@ def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     license_counter: Counter,
@@ -476,7 +486,7 @@ def _process_services_data(
         services_ids[service.description] = service.id()
 
         # Services Dependencies for autochecks
-        cfg.write_str(_get_dependencies(config_cache, hostname, service.description))
+        cfg.write_str(_get_dependencies(service_depends_on, hostname, service.description))
 
         plugin = get_check_plugin(service.check_plugin_name, plugins)
         passive_service_attributes = _to_nagios_core_attributes(
@@ -527,6 +537,7 @@ def create_nagios_servicedefs(
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
     ip_address_of: config.IPLookup,
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
@@ -534,7 +545,14 @@ def create_nagios_servicedefs(
     )
 
     services_ids, service_labels = _process_services_data(
-        cfg, config_cache, service_name_config, plugins, hostname, license_counter, check_mk_attrs
+        cfg,
+        config_cache,
+        service_name_config,
+        service_depends_on,
+        plugins,
+        hostname,
+        license_counter,
+        check_mk_attrs,
     )
 
     # Active check for Check_MK
@@ -626,7 +644,7 @@ def create_nagios_servicedefs(
         for service_spec in active_services:
             cfg.write_object("service", service_spec)
             cfg.write_str(
-                _get_dependencies(config_cache, hostname, service_spec["service_description"])
+                _get_dependencies(service_depends_on, hostname, service_spec["service_description"])
             )
 
     # Legacy checks via custom_checks
@@ -643,6 +661,7 @@ def create_nagios_servicedefs(
                 license_counter,
                 services_ids,
                 service_labels,
+                service_depends_on,
             )
     service_discovery_name = ConfigCache.service_discovery_name()
 
@@ -710,6 +729,7 @@ def _create_custom_check(
     license_counter: Counter,
     services_ids: dict[ServiceName, AbstractServiceID],
     service_labels: dict[ServiceName, Labels],
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> None:
     # entries are dicts with the following keys:
     # "service_description"        Service name to use
@@ -793,7 +813,7 @@ def _create_custom_check(
     license_counter["services"] += 1
 
     # write service dependencies for custom checks
-    cfg.write_str(_get_dependencies(config_cache, hostname, description))
+    cfg.write_str(_get_dependencies(service_depends_on, hostname, description))
 
 
 def _get_service_labels(
@@ -816,7 +836,9 @@ def _skip_service(
 
 
 def _get_dependencies(
-    config_cache: ConfigCache, hostname: HostName, service_name: ServiceName
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+    hostname: HostName,
+    service_name: ServiceName,
 ) -> str:
     return "".join(
         _format_nagios_object(
@@ -829,7 +851,7 @@ def _get_dependencies(
                 "dependent_service_description": service_name,
             },
         )
-        for dep in config.service_depends_on(config_cache, hostname, service_name)
+        for dep in service_depends_on(hostname, service_name)
     )
 
 

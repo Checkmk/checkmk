@@ -55,8 +55,15 @@ class ApiOmitted:
         return False
 
 
-def json_dump_without_omitted[T](instance_type: type[T], instance: T) -> object:
+def json_dump_without_omitted[T](
+    instance_type: type[T], instance: T, *, is_testing: bool = False
+) -> object:
     """Serialize the given dataclass instance to JSON, removing omitted fields.
+
+    Args:
+        instance_type: The class of the `instance` - will be used to create a `TypeAdapter`.
+        instance: The data to be serialized, must be an instance of `instance_type`.
+        is_testing: Will perform round-trip validation to ensure proper serialization.
 
     Notes:
         - This function relies on the `instance_type` using defaults for *all* omittable fields.
@@ -65,6 +72,6 @@ def json_dump_without_omitted[T](instance_type: type[T], instance: T) -> object:
     # This will be called at most once per REST-API request
     adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
     json_bytes = adapter.dump_json(
-        instance, by_alias=True, exclude_defaults=True, context={"direction": "outbound"}
+        instance, by_alias=True, exclude_defaults=True, round_trip=is_testing
     )
     return json.loads(json_bytes)

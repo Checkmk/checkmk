@@ -48,7 +48,7 @@ type ApiResponseModel[T: DataclassInstance] = T
 
 
 def _dump_response[T: DataclassInstance](
-    response_body: T | None, response_body_type: type[T] | None
+    response_body: T | None, response_body_type: type[T] | None, *, is_testing: bool
 ) -> dict | None:
     if response_body is None and response_body_type is None:
         return None
@@ -64,7 +64,9 @@ def _dump_response[T: DataclassInstance](
             f"Response body is of type: {type(response_body)}, but should be {response_body_type}"
         )
 
-    json_object = json_dump_without_omitted(response_body_type, response_body)
+    json_object = json_dump_without_omitted(
+        response_body_type, response_body, is_testing=is_testing
+    )
     if not isinstance(json_object, dict):
         raise ValueError(
             f"Serialized response is of type: {type(json_object)}, but should be a dict"
@@ -74,18 +76,22 @@ def _dump_response[T: DataclassInstance](
 
 def _create_response(
     endpoint_response: TypedResponse[ApiResponseModel | None],
-    response_body_type: ApiResponseModel | None,
+    response_body_type: type[ApiResponseModel] | None,
     content_type: str,
-    add_etag: bool,
+    *,
     fields_filter: FieldsFilter | None,
+    add_etag: bool,
+    is_testing: bool,
 ) -> Response:
     """Create a Flask response from the endpoint response."""
     if isinstance(endpoint_response, ApiResponse):
-        response_dict = _dump_response(endpoint_response.body, response_body_type)
+        response_dict = _dump_response(
+            endpoint_response.body, response_body_type, is_testing=is_testing
+        )
         status_code = endpoint_response.status_code
         headers = endpoint_response.headers
     else:
-        response_dict = _dump_response(endpoint_response, response_body_type)
+        response_dict = _dump_response(endpoint_response, response_body_type, is_testing=is_testing)
         status_code = 204 if response_dict is None else 200
         headers = {}
 
@@ -206,13 +212,13 @@ def handle_endpoint_request(
             _validate_direct_response(raw_response)
             response = raw_response
         else:
-            # TODO: add a debug round trip validation via pydantic?
             response = _create_response(
                 raw_response,
                 model.response_body_type,
                 endpoint.content_type,
-                add_etag=endpoint.etag in ("output", "both"),
                 fields_filter=_identify_fields_filter(bound_arguments, model.has_request_schema),
+                add_etag=endpoint.etag in ("output", "both"),
+                is_testing=is_testing,
             )
 
     # Step 5: Check permissions

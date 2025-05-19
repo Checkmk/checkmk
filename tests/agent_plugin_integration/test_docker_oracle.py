@@ -26,7 +26,6 @@ from tests.testlib.docker import (
     get_container_ip,
     resolve_image_alias,
 )
-from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
 
 logger = logging.getLogger()
 
@@ -472,7 +471,7 @@ def _oracle(
         yield oracle_db
 
 
-@skip_if_not_enterprise_edition
+@pytest.mark.skip_if_not_edition("enterprise")
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(
     checkmk: CheckmkApp,

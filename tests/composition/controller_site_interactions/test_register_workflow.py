@@ -7,13 +7,14 @@ import logging
 from collections.abc import Mapping
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.agent import (
     register_controller,
     wait_until_host_has_services,
     wait_until_host_receives_data,
 )
 from tests.testlib.pytest_helpers.marks import (
-    skip_if_not_cloud_or_managed_edition,
     skip_if_not_containerized,
 )
 from tests.testlib.site import Site
@@ -69,7 +70,7 @@ def test_register_workflow_pull(
 
 
 @skip_if_not_containerized
-@skip_if_not_cloud_or_managed_edition
+@pytest.mark.skip_if_not_edition("cloud", "managed")
 def test_register_workflow_push(
     central_site: Site,
     agent_ctl: Path,

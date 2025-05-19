@@ -2,14 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from ast import literal_eval
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
+import pytest
+
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
-pytestmark = [skip_if_saas_edition]
+pytestmark = [pytest.mark.skip_if_edition("saas")]
 
 
 def _distributed_site_secret(site: Site) -> str:

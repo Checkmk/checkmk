@@ -11,13 +11,12 @@ from contextlib import contextmanager
 import pytest
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
 
-@skip_if_saas_edition
+@pytest.mark.skip_if_edition("saas")
 @pytest.mark.xfail(
     condition=os.getenv("DISTRO") == "almalinux-9",
     reason="May fail on EL* systems, investigating.",

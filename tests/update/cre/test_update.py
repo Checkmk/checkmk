@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )
+@pytest.mark.skip_if_not_edition("raw")
 def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
     base_site, target_edition, interactive_mode, hostname = test_setup
 

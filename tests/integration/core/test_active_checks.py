@@ -8,7 +8,6 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@skip_if_saas_edition  # active checks not supported in SaaS
+@pytest.mark.skip_if_edition("saas")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:
     rule_id = site.openapi.rules.create(
@@ -63,7 +62,7 @@ def test_active_check_execution(site: Site) -> None:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@skip_if_saas_edition  # active checks not supported in SaaS
+@pytest.mark.skip_if_edition("saas")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 @pytest.mark.usefixtures("test_cfg")
 def test_active_check_macros(site: Site) -> None:

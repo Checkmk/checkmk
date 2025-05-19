@@ -11,7 +11,6 @@ from playwright.sync_api import Page, Request, Route
 
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.timeouts import handle_playwright_timeouterror
-from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
 
 
 @dataclass
@@ -62,7 +61,7 @@ class HelpMenuButton:
         pytest.param(
             HelpMenuButton("help_saas_status_page", "status.checkmk.com"),
             id="saas_status_page",
-            marks=skip_if_not_saas_edition,
+            marks=pytest.mark.skip_if_not_edition("saas"),
         ),
         pytest.param(
             HelpMenuButton("help_suggest_product_improvement", "ideas.checkmk.com"),

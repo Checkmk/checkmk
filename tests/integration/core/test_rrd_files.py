@@ -6,12 +6,13 @@
 import re
 from datetime import datetime
 
+import pytest
+
 from tests.testlib.common.utils import wait_until
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
 
 
-@skip_if_raw_edition
+@pytest.mark.skip_if_edition("raw")
 def test_rrd_files_creation(site: Site) -> None:
     """Test that RRD files are created for a hosts.
 

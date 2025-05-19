@@ -968,3 +968,129 @@ def test_check_cisco_qos_zero_speed(
         )
         == expected_result
     )
+
+
+@pytest.fixture(name="section_with_max_if_speed")
+def fixture_section_with_max_if_speed() -> Section:
+    return parse_cisco_qos(
+        [
+            [
+                ["208", "13"],
+                ["210", "13"],
+                ["224", "14"],
+                ["226", "14"],
+                ["256", "16"],
+                ["258", "16"],
+                ["272", "17"],
+                ["274", "17"],
+                ["288", "18"],
+                ["290", "18"],
+                ["304", "19"],
+                ["306", "19"],
+            ],
+            [
+                ["57330033", "VLAN7"],
+                ["57330035", "VLAN5"],
+                ["57330036", "VLAN2"],
+                ["57330037", "VLAN3"],
+                ["57330046", "VLAN8"],
+                ["57330047", "VLAN9"],
+            ],
+            [
+                ["1593", "class-default"],
+            ],
+            [
+                ["208.1", "57330036"],
+                ["208.65536", "273238654"],
+                ["208.65537", "566253201"],
+                ["208.65538", "1619957463"],
+                ["208.131072", "273238651"],
+                ["208.131073", "623859479"],
+                ["208.131074", "637940170"],
+                ["208.131075", "1652674090"],
+                ["208.196608", "1593"],
+                ["208.196609", "1594"],
+            ],
+            [
+                ["208.65536", "762918646"],
+                ["208.131072", "1244206478"],
+                ["208.196608", "1700796308"],
+            ],
+            [
+                ["208.65536", "0"],
+                ["208.131072", "1125701203"],
+                ["208.196608", "0"],
+            ],
+            [
+                ["13", "TenGigabitEthernet0/0/1.2"],
+            ],
+            [
+                ["13", "4294967295"],
+            ],
+            [
+                ["208.1", "0"],
+                ["208.65536", "1"],
+                ["208.65537", "65536"],
+                ["208.65538", "65536"],
+                ["208.131072", "1"],
+                ["208.131073", "131072"],
+                ["208.131074", "131072"],
+                ["208.131075", "131072"],
+                ["208.196608", "1"],
+                ["208.196609", "196608"],
+            ],
+            [],
+            [],
+            [
+                ["208.1", "1"],
+                ["208.65536", "2"],
+                ["208.65537", "3"],
+                ["208.65538", "7"],
+                ["208.131072", "2"],
+                ["208.131073", "3"],
+                ["208.131074", "3"],
+                ["208.131075", "7"],
+                ["208.196608", "2"],
+                ["208.196609", "3"],
+            ],
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    ["params", "expected_result"],
+    [
+        pytest.param(
+            {},
+            [
+                Result(state=State.OK, summary="Outbound traffic: 340 MBit/s"),
+                Metric("qos_outbound_bits_rate", 340159261.6, boundaries=(0.0, 4294967295.0)),
+                Result(state=State.OK, summary="Dropped traffic: 0.00 Bit/s"),
+                Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 4294967295.0)),
+                Result(state=State.OK, summary="Policy map name: VLAN2"),
+                Result(state=State.OK, summary="Bandwidth: 4.29 GBit/s"),
+            ],
+            id="maximum if_speed => use high_speed instead",
+        ),
+    ],
+)
+def test_check_cisco_qos_max_if_speed(
+    section_with_max_if_speed: Section,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_cisco_qos_(
+                item="TenGigabitEthernet0/0/1.2: class-default",
+                params=params,
+                section=section_with_max_if_speed,
+                timestamp=100,
+                value_store={
+                    "qos_outbound_bits_rate": (60, 0),
+                    "qos_dropped_bits_rate": (60, 0),
+                },
+            )
+        )
+        == expected_result
+    )

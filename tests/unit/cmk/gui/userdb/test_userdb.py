@@ -27,13 +27,7 @@ from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import session
-from cmk.gui.type_defs import (
-    SessionId,
-    SessionInfo,
-    TotpCredential,
-    TwoFactorCredentials,
-    WebAuthnCredential,
-)
+from cmk.gui.type_defs import SessionInfo, TotpCredential, TwoFactorCredentials, WebAuthnCredential
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.htpasswd import hash_password
@@ -73,23 +67,6 @@ def _load_users_uncached(*, lock: bool) -> userdb.Users:
 
 
 TimedOutSession = Callable[[], tuple[UserId, SessionInfo]]
-
-
-def _make_valid_session(user_id: UserId, now: datetime) -> SessionId:
-    session_id = "sess2"
-    timestamp = int(now.timestamp()) - 5
-    userdb.session.save_session_infos(
-        user_id,
-        {
-            session_id: SessionInfo(
-                session_id,
-                started_at=timestamp,
-                last_activity=timestamp,
-                flashes=[],
-            )
-        },
-    )
-    return session_id
 
 
 def _load_failed_logins(user_id: UserId) -> int | None:

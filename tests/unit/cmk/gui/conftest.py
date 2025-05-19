@@ -352,7 +352,7 @@ def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) 
 
     def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
         wsgi_app.get(auth_request)
-        infos = load_session_infos(session.user.ident)
+        infos = load_session_infos(session.user.ident, lock=True)
 
         # When `in_the_past` is a positive integer, the resulting session will have happened
         # that many seconds in the past.

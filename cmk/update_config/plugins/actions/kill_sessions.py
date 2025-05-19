@@ -25,7 +25,7 @@ class TerminateUserSessions(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         for user_id in userdb.load_users(lock=False):
             session_infos = userdb.session.active_sessions(
-                userdb.session.load_session_infos(user_id, lock=False),
+                userdb.session.load_session_infos(user_id, lock=True),
                 datetime.now(),
             )
             for session_info in session_infos.values():

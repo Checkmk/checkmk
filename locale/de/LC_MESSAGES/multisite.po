@@ -5459,6 +5459,9 @@ msgstr "Alert Handler, die verteilt werden sollen"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 #, fuzzy
 msgid "Alert if value has increased since discovery"
 msgstr "Automatische Service-Erkennung durchführen"
@@ -41057,6 +41060,10 @@ msgstr "Überwachung & Graphen für einzelne Lanes"
 msgid "Monitor (min. 1)"
 msgstr "Monitor (min. 1)"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Monitoring-Zustand"
+
 msgid "Monitor Android devices"
 msgstr "Überwache Android-Geräte"
 
@@ -51001,6 +51008,14 @@ msgstr "In Warteschlange"
 msgid "Queued alerts"
 msgstr "Alerts in Warteschlange"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Benachrichtigungen in Warteschlange"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Senden von Nutzernachrichten"
+
 msgid "Queued for update"
 msgstr "Warteschlange für Update"
 
@@ -60858,6 +60873,10 @@ msgstr "Statement"
 
 msgid "States"
 msgstr "Zustände"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Zustand eines Hosts"
 
 msgid "States other than the above"
 msgstr "Andere States als die oben genannten"
@@ -80531,9 +80550,6 @@ msgstr "Waitlocks"
 msgid "Wanted Host State"
 msgstr "Gewünschter Host-Zustand"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "Gewünschter Host-Zustand für den definierten Nutanix Host"
-
 msgid "Wanted VM State"
 msgstr "Gewünschter VM-Zustand"
 
@@ -87381,6 +87397,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "Gewünschter Host-Zustand für den definierten Nutanix Host"
 
 #, python-format
 #~ msgid ""

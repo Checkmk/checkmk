@@ -5316,6 +5316,9 @@ msgstr "デプロイするアラートハンドラー"
 msgid "Alert handlers will handle state changes."
 msgstr "アラートハンドラーは状態の変化を処理します。"
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 #, fuzzy
 msgid "Alert if value has increased since discovery"
 msgstr "自動サービス検出を実行する"
@@ -40092,6 +40095,10 @@ msgstr "レーンの監視とグラフ化"
 msgid "Monitor (min. 1)"
 msgstr "監視（最小1）"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "モニター状態"
+
 msgid "Monitor Android devices"
 msgstr "Android端末の監視"
 
@@ -49848,6 +49855,14 @@ msgstr "待機中"
 msgid "Queued alerts"
 msgstr "キューに入れられたアラート"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "キューにある通知"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "ユーザーメッセージを送信する"
+
 msgid "Queued for update"
 msgstr "更新のためにキューに入れられました"
 
@@ -59502,6 +59517,10 @@ msgstr "ステートメント"
 
 msgid "States"
 msgstr "状態"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "ホストの状態"
 
 msgid "States other than the above"
 msgstr "上記以外の状態"
@@ -78443,9 +78462,6 @@ msgstr "ウェイトロック"
 msgid "Wanted Host State"
 msgstr "ホストの状態取得"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "定義されたNutanixの希望のホスト状態"
-
 msgid "Wanted VM State"
 msgstr "VM状態取得"
 
@@ -85008,6 +85024,9 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "RCC プロファイル設定 (%s Robotmk Core MKP がインストールされているため)"
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "定義されたNutanixの希望のホスト状態"
 
 #, python-format
 #~ msgid ""

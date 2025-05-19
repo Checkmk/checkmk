@@ -5547,6 +5547,9 @@ msgstr "Manipulatori de alertă care trebuie implementați"
 msgid "Alert handlers will handle state changes."
 msgstr "Gestionarii de alerte vor gestiona schimbările de stare."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 #, fuzzy
 msgid "Alert if value has increased since discovery"
 msgstr "Efectuați descoperirea automată a serviciilor"
@@ -41845,6 +41848,10 @@ msgstr "Monitor & Grafic benzi"
 msgid "Monitor (min. 1)"
 msgstr "Monitorizare"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Starea de monitorizare"
+
 msgid "Monitor Android devices"
 msgstr "Monitorizați dispozitivele Android"
 
@@ -52001,6 +52008,14 @@ msgstr "Coadă de așteptare"
 msgid "Queued alerts"
 msgstr "Alerte în coadă"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notificări în coadă de așteptare"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Trimiteți mesaje de utilizator"
+
 msgid "Queued for update"
 msgstr "În așteptare pentru actualizare"
 
@@ -62131,6 +62146,10 @@ msgstr "Declarație"
 
 msgid "States"
 msgstr "State"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Starea unei gazde"
 
 msgid "States other than the above"
 msgstr "Alte state decât cele de mai sus"
@@ -82436,9 +82455,6 @@ msgstr "Blocuri de așteptare"
 msgid "Wanted Host State"
 msgstr "Căutat Statul gazdă"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "Stare gazdă dorită pentru gazda Nutanix definită"
-
 msgid "Wanted VM State"
 msgstr "Căutat VM State"
 
@@ -89254,6 +89270,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "Stare gazdă dorită pentru gazda Nutanix definită"
 
 #, python-format
 #~ msgid ""

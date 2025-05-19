@@ -5573,6 +5573,9 @@ msgstr "Manejadores de alerta para desplegar"
 msgid "Alert handlers will handle state changes."
 msgstr "Los manejadores de alertas manejarán los cambios de estado."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 #, fuzzy
 msgid "Alert if value has increased since discovery"
 msgstr "Realizar la detección automática de servicios"
@@ -42117,6 +42120,10 @@ msgstr "Monitorizar y graficar carriles"
 msgid "Monitor (min. 1)"
 msgstr "Monitorización"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Estado de la supervisión"
+
 msgid "Monitor Android devices"
 msgstr "Supervisar dispositivos Android"
 
@@ -52341,6 +52348,14 @@ msgstr "En cola"
 msgid "Queued alerts"
 msgstr "Alertas en cola"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Notificaciones en cola"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Enviar mensajes de usuario"
+
 msgid "Queued for update"
 msgstr "En cola de espera para la actualización"
 
@@ -62502,6 +62517,10 @@ msgstr "Declaración"
 
 msgid "States"
 msgstr "Estados"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Estado de un host"
 
 msgid "States other than the above"
 msgstr "Estados distintos de los anteriores"
@@ -82929,9 +82948,6 @@ msgstr "Bloqueos de espera"
 msgid "Wanted Host State"
 msgstr "Estado anfitrión"
 
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr "Estado de host deseado para el host Nutanix definido"
-
 #, fuzzy
 msgid "Wanted VM State"
 msgstr "Actualizar el Estado"
@@ -89777,6 +89793,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#~ msgid "Wanted Host State for defined Nutanix Host"
+#~ msgstr "Estado de host deseado para el host Nutanix definido"
 
 #, python-format
 #~ msgid ""

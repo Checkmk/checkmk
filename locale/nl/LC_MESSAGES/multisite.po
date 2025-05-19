@@ -5539,6 +5539,9 @@ msgstr "Waarschuwings handlers in te zetten"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 
+msgid "Alert if Acropolis disconnects from hypervisor"
+msgstr ""
+
 #, fuzzy
 msgid "Alert if value has increased since discovery"
 msgstr "Voer automatische service ontdekking uit"
@@ -41796,6 +41799,10 @@ msgstr "Monitor & Grafiek Lanen"
 msgid "Monitor (min. 1)"
 msgstr "Toezicht"
 
+#, fuzzy
+msgid "Monitor Acropolis State"
+msgstr "Controle staat"
+
 msgid "Monitor Android devices"
 msgstr "Monitor Android-apparaten"
 
@@ -51932,6 +51939,14 @@ msgstr "In wachtrij"
 msgid "Queued alerts"
 msgstr "Waarschuwingen in wachtrij"
 
+#, fuzzy
+msgid "Queued application messages"
+msgstr "Kennisgevingen in wachtrij"
+
+#, fuzzy
+msgid "Queued broker messages"
+msgstr "Gebruikersberichten verzenden"
+
 msgid "Queued for update"
 msgstr "In wacht voor update"
 
@@ -61965,6 +61980,10 @@ msgstr "Verklaring"
 
 msgid "States"
 msgstr "Staten"
+
+#, fuzzy
+msgid "States of Nutanix Host"
+msgstr "Staat van een host"
 
 msgid "States other than the above"
 msgstr "Andere staten dan de bovengenoemde"
@@ -82258,9 +82277,6 @@ msgstr "Wachtsloten"
 #, fuzzy
 msgid "Wanted Host State"
 msgstr "Gastland"
-
-msgid "Wanted Host State for defined Nutanix Host"
-msgstr ""
 
 #, fuzzy
 msgid "Wanted VM State"

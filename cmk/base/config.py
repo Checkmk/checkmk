@@ -1194,7 +1194,7 @@ def service_depends_on(
                     try:
                         item = matchobject.groups()[-1]
                         deps.append(depname % item)
-                    except Exception:
+                    except (IndexError, TypeError):
                         deps.append(depname)
     return deps
 

@@ -56,7 +56,7 @@ def _validate_defaults_parameter(
     if _type_contains_api_omitted(field_type):
         if field_default is dataclasses.MISSING:
             raise ValueError(f"Missing `ApiOmitted()` default value for `{path}`.")
-        if field_default is not ApiOmitted:
+        if not isinstance(field_default, ApiOmitted):
             raise ValueError(f"Invalid default value for `{path}`. Use `ApiOmitted()` instead.")
         return
 

@@ -608,6 +608,25 @@ def fixture_section() -> Section:
                 ["4219966614.65537", "3"],
                 ["4219966614.65538", "7"],
             ],
+            [
+                ["10201", "10000"],
+                ["10202", "1000"],
+                ["10501", "8000"],
+                ["10502", "1000000000"],
+                ["20506", "7666"],
+                ["20509", "1000000000"],
+                ["20510", "1000000000"],
+                ["20511", "1000000000"],
+                ["20512", "1000000000"],
+                ["20513", "1000000000"],
+                ["20514", "1000000000"],
+                ["20516", "1000000000"],
+                ["20517", "1000000000"],
+                ["20518", "1000000000"],
+                ["20519", "1000000000"],
+                ["20582", "10000"],
+                ["20583", "10000"],
+            ],
         ]
     )
 
@@ -903,6 +922,11 @@ def fixture_section_zero_speed() -> Section:
                 ["7.0005", "1"],
                 ["999.9", "4"],
             ],
+            [
+                # high_speed
+                # [if_id, speed]
+                ["456", "10000"],
+            ],
         ]
     )
 
@@ -1053,6 +1077,9 @@ def fixture_section_with_max_if_speed() -> Section:
                 ["208.196608", "2"],
                 ["208.196609", "3"],
             ],
+            [
+                ["13", "10000"],
+            ],
         ]
     )
 
@@ -1064,11 +1091,11 @@ def fixture_section_with_max_if_speed() -> Section:
             {},
             [
                 Result(state=State.OK, summary="Outbound traffic: 340 MBit/s"),
-                Metric("qos_outbound_bits_rate", 340159261.6, boundaries=(0.0, 4294967295.0)),
+                Metric("qos_outbound_bits_rate", 340159261.6, boundaries=(0.0, 10000000000.0)),
                 Result(state=State.OK, summary="Dropped traffic: 0.00 Bit/s"),
-                Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 4294967295.0)),
+                Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 10000000000.0)),
                 Result(state=State.OK, summary="Policy map name: VLAN2"),
-                Result(state=State.OK, summary="Bandwidth: 4.29 GBit/s"),
+                Result(state=State.OK, summary="Bandwidth: 10 GBit/s"),
             ],
             id="maximum if_speed => use high_speed instead",
         ),

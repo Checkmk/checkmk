@@ -146,6 +146,8 @@ class QosData:
 
 Section = Mapping[tuple[InterfaceName, cbQosCMName], QosData]
 
+MAX_IF_SPEED = 4_294_967_295
+
 
 def parse_cisco_qos(
     string_table: Sequence[StringTable],
@@ -172,8 +174,19 @@ def parse_cisco_qos(
     interface_index_to_interface_name = {
         _InterfaceIndex(if_idx): InterfaceName(if_name) for if_idx, if_name in string_table[6]
     }
+
+    interface_high_speed = {
+        _InterfaceIndex(if_idx): _saveint(high_speed) for if_idx, high_speed in string_table[12]
+    }
+
     interface_index_to_interface_speed = {
-        _InterfaceIndex(if_idx): _saveint(if_speed) for if_idx, if_speed in string_table[7]
+        _InterfaceIndex(if_idx): (
+            interface_high_speed.get(_InterfaceIndex(if_idx), 0) * 1_000_000
+            # SUP-23679 - Reference https://oidref.com/1.3.6.1.2.1.2.2.1.5
+            if _saveint(if_speed) == MAX_IF_SPEED
+            else _saveint(if_speed)
+        )
+        for if_idx, if_speed in string_table[7]
     }
     policy_and_object_index_to_parent_index = {
         _oid_end_to_policy_and_object_index(oid_end): _cbQosObjectsIndex(parent_idx)
@@ -399,6 +412,10 @@ snmp_section_cisco_qos = SNMPSection(
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
             oids=[OIDEnd(), "3"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.31.1.1.1",
+            oids=[OIDEnd(), "15"],
         ),
     ],
 )

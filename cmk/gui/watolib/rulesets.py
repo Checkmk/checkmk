@@ -504,7 +504,7 @@ class AllRulesets(RulesetCollection):
             f"{folder.path()}/".lstrip("/")
         )
 
-        root_dir = wato_root_dir()[:-1]
+        root_dir = str(wato_root_dir())
         relevant_folders = []
         for folder_path in all_folders:
             if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
@@ -591,7 +591,7 @@ class SingleRulesetRecursively(RulesetCollection):
             f"{folder.path()}/".lstrip("/")
         )
 
-        root_dir = wato_root_dir()[:-1]
+        root_dir = str(wato_root_dir())
         relevant_folders = []
         for folder_path in all_folders:
             if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):

@@ -953,7 +953,7 @@ class FolderTree:
     """Folder tree for organizing hosts in Setup"""
 
     def __init__(self, root_dir: str | None = None) -> None:
-        self._root_dir = _ensure_trailing_slash(root_dir) if root_dir else wato_root_dir()
+        self._root_dir = _ensure_trailing_slash(root_dir if root_dir else str(wato_root_dir()))
         self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:

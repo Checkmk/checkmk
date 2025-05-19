@@ -66,7 +66,7 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
 
     def _save_base_config(self, cfg: TagConfigSpec, pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg, pprint_value)
+        store.save_to_mk_file(wato_root_dir() / "tags.mk", "tag_config", cfg, pprint_value)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

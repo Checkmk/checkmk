@@ -212,7 +212,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty=ReplicationPathType.DIR,
             ident="check_mk",
             site_path=os.path.relpath(
-                cmk.gui.watolib.utils.wato_root_dir(), cmk.utils.paths.omd_root
+                str(cmk.gui.watolib.utils.wato_root_dir()), cmk.utils.paths.omd_root
             ),
         ),
         ReplicationPath.make(

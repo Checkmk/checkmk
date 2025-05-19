@@ -5,7 +5,6 @@
 
 import subprocess
 from collections.abc import Mapping
-from pathlib import Path
 
 from cmk.ccc import store
 
@@ -24,7 +23,7 @@ from cmk.gui.watolib.utils import wato_root_dir
 class PasswordStore(WatoSimpleConfigFile[Password]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "passwords.mk",
+            config_file_path=wato_root_dir() / "passwords.mk",
             config_variable="stored_passwords",
             spec_class=Password,
         )

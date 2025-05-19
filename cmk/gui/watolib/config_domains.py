@@ -104,8 +104,8 @@ class ConfigDomainCore(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CORE
 
-    def config_dir(self):
-        return wato_root_dir()
+    def config_dir(self) -> str:
+        return str(wato_root_dir())
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         # Import cycle
@@ -148,7 +148,7 @@ class ConfigDomainGUI(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.GUI
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return multisite_dir()
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -325,7 +325,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CA_CERTIFICATES
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return multisite_dir()
 
     @staticmethod
@@ -610,7 +610,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             )
         )
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return self.omd_config_dir
 
     def default_globals(self) -> Mapping[str, Any]:

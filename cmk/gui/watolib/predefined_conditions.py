@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import TypedDict
 
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
@@ -27,7 +26,7 @@ class PredefinedConditionSpec(TypedDict):
 class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
+            config_file_path=wato_root_dir() / "predefined_conditions.mk",
             config_variable="predefined_conditions",
             spec_class=PredefinedConditionSpec,
         )

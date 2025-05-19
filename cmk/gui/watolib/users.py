@@ -382,7 +382,7 @@ class ContactsConfigFile(WatoSingleConfigFile[dict[AnnotatedUserId, UserContactD
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "contacts.mk",
+            config_file_path=wato_root_dir() / "contacts.mk",
             config_variable="contacts",
             spec_class=dict[AnnotatedUserId, UserContactDetails],
         )

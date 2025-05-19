@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from pathlib import Path
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
@@ -41,7 +40,7 @@ TimeperiodUsageFinder = Callable[[str], list[TimeperiodUsage]]
 class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir()) / "timeperiods.mk",
+            config_file_path=wato_root_dir() / "timeperiods.mk",
             config_variable="timeperiods",
             spec_class=TimeperiodSpec,
         )

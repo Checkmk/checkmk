@@ -228,8 +228,8 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 
-    def config_dir(self):
-        return cmk.utils.paths.diskspace_config_dir
+    def config_dir(self) -> str:
+        return str(cmk.utils.paths.diskspace_config_dir)
 
     def default_globals(self) -> Mapping[str, Any]:
         return {"diskspace_cleanup": diskspace_DEFAULT_CONFIG.model_dump(exclude_none=True)}
@@ -347,7 +347,7 @@ class ConfigDomainApache(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return "apache"
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -463,7 +463,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return "rrdcached"
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

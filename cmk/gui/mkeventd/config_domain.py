@@ -40,7 +40,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         super().__init__()
         self._save_active_config = save_active_config
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return str(ec.rule_pack_dir())
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

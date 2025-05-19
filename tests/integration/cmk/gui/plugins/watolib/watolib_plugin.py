@@ -21,7 +21,7 @@ class ConfigDomainTest(ABCConfigDomain):
     def ident(cls):
         return "test"
 
-    def config_dir(self):
+    def config_dir(self) -> str:
         return cmk.utils.paths.default_config_dir + "/test.d/wato/"
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

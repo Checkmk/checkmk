@@ -27,7 +27,6 @@ import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, cast, NotRequired, TypedDict
 
 from cmk.ccc import store
@@ -90,7 +89,7 @@ logger = logging.getLogger(__name__)
 class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir() + "notifications.mk"),
+            config_file_path=wato_root_dir() / "notifications.mk",
             config_variable="notification_rules",
             spec_class=EventRule,
         )
@@ -746,7 +745,7 @@ def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[t
 class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameterSpec]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(wato_root_dir() + "notification_parameter.mk"),
+            config_file_path=wato_root_dir() / "notification_parameter.mk",
             config_variable="notification_parameter",
             spec_class=NotificationParameterSpec,
         )

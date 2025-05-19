@@ -15,7 +15,7 @@ from typing import Literal
 import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, Hosts
 
 import cmk.utils.paths
 from cmk.utils import ip_lookup, tty
@@ -57,6 +57,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
@@ -70,6 +71,7 @@ def do_reload(
 ) -> None:
     do_restart(
         config_cache,
+        hosts_config,
         service_name_config,
         ip_address_of,
         core,
@@ -85,6 +87,7 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
+    host_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
@@ -103,6 +106,7 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
+                hosts_config=host_config,
                 service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,

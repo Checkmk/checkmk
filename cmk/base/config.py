@@ -604,6 +604,9 @@ class LoadedConfigFragment:
     use_new_descriptions_for: Container[str]
     nagios_illegal_chars: str
     cmc_illegal_chars: str
+    all_hosts: Sequence[str]
+    clusters: Mapping[HostAddress, Sequence[HostAddress]]
+    shadow_hosts: ShadowHosts
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -698,6 +701,9 @@ def _perform_post_config_loading_actions(
         use_new_descriptions_for=use_new_descriptions_for,
         nagios_illegal_chars=nagios_illegal_chars,
         cmc_illegal_chars=cmc_illegal_chars,
+        all_hosts=all_hosts,
+        clusters=clusters,
+        shadow_hosts=_get_shadow_hosts(),
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1486,11 +1492,11 @@ def get_ssc_host_config(
 #   +----------------------------------------------------------------------+
 
 
-def make_hosts_config() -> Hosts:
+def make_hosts_config(loaded_config: LoadedConfigFragment) -> Hosts:
     return Hosts(
-        hosts=strip_tags(all_hosts),
-        clusters=strip_tags(clusters),
-        shadow_hosts=list(_get_shadow_hosts()),
+        hosts=strip_tags(loaded_config.all_hosts),
+        clusters=strip_tags(loaded_config.clusters),
+        shadow_hosts=list(loaded_config.shadow_hosts),
     )
 
 
@@ -1616,7 +1622,7 @@ class ConfigCache:
         ] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
-        self.hosts_config = make_hosts_config()
+        self.hosts_config = make_hosts_config(self._loaded_config)
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)

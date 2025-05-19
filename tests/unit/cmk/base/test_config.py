@@ -17,8 +17,6 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
-from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -2786,9 +2784,7 @@ def test_get_config_file_paths_with_confd(
 
 
 def test_load_config_folder_paths(folder_path_test_config: config.LoadedConfigFragment) -> None:
-    # NOTE: there are still some globals at play here, otherwise we would have to use
-    # the folder_path_test_config somewhere.
-    config_cache = config.ConfigCache(EMPTYCONFIG)
+    config_cache = config.ConfigCache(folder_path_test_config)
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"

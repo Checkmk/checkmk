@@ -505,7 +505,7 @@ class AutomationDiscoveryPreview(Automation):
         ip_address_of = config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         )
-        hosts_config = config.make_hosts_config()
+        hosts_config = config.make_hosts_config(loading_result.loaded_config)
         ip_address = (
             None
             if host_name in hosts_config.clusters
@@ -688,7 +688,7 @@ def _execute_discovery(
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
-    hosts_config = config.make_hosts_config()
+    hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
@@ -998,12 +998,13 @@ def _execute_autodiscovery(
         try:
             cache_manager.clear_all()
             config_cache.initialize()
-            hosts_config = config.make_hosts_config()
+            hosts_config = config.make_hosts_config(loading_result.loaded_config)
 
             # reset these to their original value to create a correct config
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     config_cache,
+                    hosts_config,
                     service_name_config,
                     ip_address_of,
                     core,
@@ -1020,6 +1021,7 @@ def _execute_autodiscovery(
             else:
                 cmk.base.core.do_restart(
                     config_cache,
+                    hosts_config,
                     service_name_config,
                     ip_address_of,
                     core,
@@ -1228,7 +1230,7 @@ class AutomationRenameHosts(Automation):
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
                 config_cache = loading_result.config_cache
-                hosts_config = config.make_hosts_config()
+                hosts_config = config.make_hosts_config(loading_result.loaded_config)
                 service_name_config = config_cache.make_passive_service_name_config()
                 ip_address_of = config.ConfiguredIPLookup(
                     config_cache, error_handler=ip_lookup.CollectFailedHosts()
@@ -2178,7 +2180,7 @@ class AutomationRestart(Automation):
                 discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
-        hosts_config = config.make_hosts_config()
+        hosts_config = config.make_hosts_config(loading_result.loaded_config)
         service_name_config = loading_result.config_cache.make_passive_service_name_config()
         ip_address_of = config.ConfiguredIPLookup(
             loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
@@ -2268,6 +2270,7 @@ def _execute_silently(
         try:
             do_restart(
                 config_cache,
+                hosts_config,
                 service_name_config,
                 ip_address_of,
                 create_core(config.monitoring_core),
@@ -2441,7 +2444,7 @@ class AutomationScanParents(Automation):
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
 
-        hosts_config = config.make_hosts_config()
+        hosts_config = config.make_hosts_config(loading_result.loaded_config)
         monitoring_host = (
             HostName(config.monitoring_host) if config.monitoring_host is not None else None
         )
@@ -3248,7 +3251,7 @@ class AutomationGetAgentOutput(Automation):
             plugins.check_plugins, loading_result.config_cache.make_passive_service_name_config()
         )
         config_cache = loading_result.config_cache
-        hosts_config = config.make_hosts_config()
+        hosts_config = config.make_hosts_config(loading_result.loaded_config)
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()

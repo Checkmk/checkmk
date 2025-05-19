@@ -15,4 +15,7 @@ EMPTYCONFIG = LoadedConfigFragment(
     use_new_descriptions_for=(),
     nagios_illegal_chars="",
     cmc_illegal_chars="",
+    all_hosts=(),
+    clusters={},
+    shadow_hosts={},
 )

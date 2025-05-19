@@ -613,12 +613,13 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    config_cache = load_config(plugins).config_cache
+    loading_result = load_config(plugins)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config()
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
-        hosts_config = config.make_hosts_config()
+        hosts_config = config.make_hosts_config(loading_result.loaded_config)
         if hostname in hosts_config.clusters:
             raise MKBailOut("Can not be used with cluster hosts")
 
@@ -1448,6 +1449,7 @@ def mode_update() -> None:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
+                hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                 plugins=plugins,
@@ -1508,6 +1510,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
     )
     cmk.base.core.do_restart(
         loading_result.config_cache,
+        hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
@@ -1564,6 +1567,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
     )
     cmk.base.core.do_reload(
         loading_result.config_cache,
+        hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
@@ -2151,7 +2155,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
     )
-    hosts_config = config.make_hosts_config()
+    hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
 
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
@@ -2324,12 +2328,11 @@ _CheckingOptions = TypedDict(
 
 def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
-    config_cache = load_config(plugins).config_cache
-    hosts_config = config.make_hosts_config()
+    loading_result = load_config(plugins)
     return run_checking(
         plugins,
-        config_cache,
-        hosts_config,
+        loading_result.config_cache,
+        config.make_hosts_config(loading_result.loaded_config),
         options,
         args,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
@@ -2565,8 +2568,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    config_cache = load_config(plugins).config_cache
-    hosts_config = config.make_hosts_config()
+    loading_result = load_config(plugins)
+    config_cache = loading_result.config_cache
+    hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
 
     if args:

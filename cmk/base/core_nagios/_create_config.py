@@ -70,6 +70,7 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,

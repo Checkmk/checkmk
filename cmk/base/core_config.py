@@ -15,7 +15,7 @@ from typing import Literal
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import lock_checkmk_configuration
 
 import cmk.utils.config_path
@@ -65,6 +65,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -77,6 +78,7 @@ class MonitoringCore(abc.ABC):
         self._create_config(
             config_path,
             config_cache,
+            hosts_config,
             service_name_config,
             ip_address_of,
             licensing_handler,
@@ -91,6 +93,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
@@ -264,6 +267,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -296,6 +300,7 @@ def do_create_config(
             _create_core_config(
                 core,
                 config_cache,
+                hosts_config,
                 service_name_config,
                 plugins,
                 discovery_rules,
@@ -397,6 +402,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -418,6 +424,7 @@ def _create_core_config(
         core.create_config(
             config_path,
             config_cache,
+            hosts_config,
             service_name_config,
             plugins,
             discovery_rules,

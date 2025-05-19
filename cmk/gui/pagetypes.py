@@ -85,6 +85,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     TopicMenuItem,
     TopicMenuTopic,
+    TopicMenuTopicEntries,
     Visual,
 )
 from cmk.gui.user_sites import get_configured_site_choices
@@ -2303,10 +2304,10 @@ def _no_bi_aggregate_active() -> bool:
 
 
 def _customize_menu_topics() -> list[TopicMenuTopic]:
-    general_entries = []
-    monitoring_entries = []
-    graph_entries = []
-    business_reporting_entries = []
+    general_entries: TopicMenuTopicEntries = []
+    monitoring_entries: TopicMenuTopicEntries = []
+    graph_entries: TopicMenuTopicEntries = []
+    business_reporting_entries: TopicMenuTopicEntries = []
 
     if user.may("general.edit_views"):
         monitoring_entries.append(

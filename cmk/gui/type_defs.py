@@ -597,22 +597,40 @@ class _Icon(TypedDict):
 Icon = str | _Icon
 
 
-class TopicMenuItem(NamedTuple):
+# TODO: rename prefixes and names "MegaMenu" and "TopicMenu" to "MainMenu"
+#       https://jira.lan.tribe29.com/browse/CMK-23667
+@dataclass(kw_only=True, slots=True)
+class _TopicMenuEntry:
     name: str
     title: str
     sort_index: int
-    url: str
-    target: str = "main"
     is_show_more: bool = False
     icon: Icon | None = None
+
+
+@dataclass(kw_only=True, slots=True)
+class TopicMenuItem(_TopicMenuEntry):
+    url: str
+    target: str = "main"
     button_title: str | None = None
     megamenu_search_terms: Sequence[str] = ()
+
+
+@dataclass(kw_only=True, slots=True)
+class TopicMenuTopicSegment(_TopicMenuEntry):
+    mode: Literal["multilevel", "indented"]
+    entries: list[TopicMenuItem | TopicMenuTopicSegment]
+    max_entries: int = 10
+    hide: bool = False
+
+
+TopicMenuTopicEntries = list[TopicMenuItem | TopicMenuTopicSegment]
 
 
 class TopicMenuTopic(NamedTuple):
     name: str
     title: str
-    entries: list[TopicMenuItem]
+    entries: TopicMenuTopicEntries
     max_entries: int = 10
     icon: Icon | None = None
     hide: bool = False

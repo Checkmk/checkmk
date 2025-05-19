@@ -60,7 +60,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.type_defs import TopicMenuItem
+from cmk.gui.type_defs import TopicMenuTopicEntries
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
@@ -153,9 +153,9 @@ def register(
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
-    help_learning_items: Callable[[], list[TopicMenuItem]],
-    help_developer_items: Callable[[], list[TopicMenuItem]],
-    help_about_checkmk_items: Callable[[], list[TopicMenuItem]],
+    help_learning_items: Callable[[], TopicMenuTopicEntries],
+    help_developer_items: Callable[[], TopicMenuTopicEntries],
+    help_about_checkmk_items: Callable[[], TopicMenuTopicEntries],
 ) -> None:
     hooks.register_thread_cache_cleanup()
     pagetypes.register(mega_menu_registry)

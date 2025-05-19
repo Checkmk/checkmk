@@ -15,7 +15,7 @@ from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicEntries
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -69,7 +69,7 @@ def _sidebar_position_id(stored_value: str) -> str:
 def default_user_menu_topics(
     add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
 ) -> list[TopicMenuTopic]:
-    quick_items = [
+    quick_entries: TopicMenuTopicEntries = [
         TopicMenuItem(
             name="ui_theme",
             title=_("Color theme"),
@@ -90,7 +90,7 @@ def default_user_menu_topics(
         ),
     ]
 
-    items = (
+    entries: TopicMenuTopicEntries = (
         [
             TopicMenuItem(
                 name="user_profile",
@@ -105,7 +105,7 @@ def default_user_menu_topics(
     )
 
     if user.may("general.change_password") and add_change_password_menu_item:
-        items.append(
+        entries.append(
             TopicMenuItem(
                 name="change_password",
                 title=_("Change password"),
@@ -116,7 +116,7 @@ def default_user_menu_topics(
         )
 
     if user.may("general.manage_2fa") and add_two_factor_menu_item:
-        items.append(
+        entries.append(
             TopicMenuItem(
                 name="two_factor",
                 title=_("Two-factor authentication"),
@@ -126,7 +126,7 @@ def default_user_menu_topics(
             ),
         )
 
-    items.append(
+    entries.append(
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
@@ -138,7 +138,7 @@ def default_user_menu_topics(
     )
 
     if user.may("general.edit_notifications"):
-        items.insert(
+        entries.insert(
             1,
             TopicMenuItem(
                 name="notification_rules",
@@ -154,7 +154,7 @@ def default_user_menu_topics(
             name="user_interface",
             title=_("User interface"),
             icon="topic_user_interface",
-            entries=quick_items,
+            entries=quick_entries,
         ),
         TopicMenuTopic(
             name="user_messages",
@@ -174,7 +174,7 @@ def default_user_menu_topics(
             name="user_profile",
             title=_("User profile"),
             icon="topic_profile",
-            entries=items,
+            entries=entries,
         ),
     ]
 

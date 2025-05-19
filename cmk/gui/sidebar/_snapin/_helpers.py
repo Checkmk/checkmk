@@ -17,6 +17,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import filter_available_site_choices
 from cmk.gui.type_defs import Choices, Icon, TopicMenuItem, TopicMenuTopic, Visual
 from cmk.gui.utils.html import HTML
@@ -218,7 +219,7 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
         title=topic.title,
         indent=True,
     ):
-        for item in topic.entries:
+        for item in get_main_menu_items_prefixed_by_segment(topic):
             if show_item_icons:
                 html.open_li(class_=["sidebar"] + (["show_more_mode"] if item.is_show_more else []))
                 iconlink(item.title, item.url, item.icon or "icon_missing")

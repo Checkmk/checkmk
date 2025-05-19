@@ -15,7 +15,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MegaMenuRegistry
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicEntries
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
@@ -23,13 +23,13 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextl
 def register(
     mega_menu_registry: MegaMenuRegistry,
     info_line: Callable[[], str],
-    learning_items: Callable[[], list[TopicMenuItem]],
-    developer_items: Callable[[], list[TopicMenuItem]],
-    about_checkmk_items: Callable[[], list[TopicMenuItem]],
+    learning_items: Callable[[], TopicMenuTopicEntries],
+    developer_items: Callable[[], TopicMenuTopicEntries],
+    about_checkmk_items: Callable[[], TopicMenuTopicEntries],
 ) -> None:
     mega_menu_registry.register(
         MegaMenu(
-            name="help_links",
+            name="help",
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
@@ -43,7 +43,7 @@ def default_info_line() -> str:
     return f"{edition(paths.omd_root).title} {__version__}{_license_status()}"
 
 
-def default_learning_items() -> list[TopicMenuItem]:
+def default_learning_items() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="beginners_guide",
@@ -88,7 +88,7 @@ def default_learning_items() -> list[TopicMenuItem]:
     ]
 
 
-def default_developer_items() -> list[TopicMenuItem]:
+def default_developer_items() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="plugin_api_introduction",
@@ -148,7 +148,7 @@ def default_developer_items() -> list[TopicMenuItem]:
     ]
 
 
-def default_about_checkmk_items() -> list[TopicMenuItem]:
+def default_about_checkmk_items() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="change_log",
@@ -161,9 +161,9 @@ def default_about_checkmk_items() -> list[TopicMenuItem]:
 
 
 def _help_menu_topics(
-    learning_items: Callable[[], list[TopicMenuItem]],
-    developer_items: Callable[[], list[TopicMenuItem]],
-    about_checkmk_items: Callable[[], list[TopicMenuItem]],
+    learning_items: Callable[[], TopicMenuTopicEntries],
+    developer_items: Callable[[], TopicMenuTopicEntries],
+    about_checkmk_items: Callable[[], TopicMenuTopicEntries],
 ) -> Callable[[], list[TopicMenuTopic]]:
     def _fun() -> list[TopicMenuTopic]:
         return [

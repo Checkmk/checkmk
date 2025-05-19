@@ -8,15 +8,34 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+import copy
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicSegment
 
 
 def any_show_more_items(topics: list[TopicMenuTopic]) -> bool:
     return any(item.is_show_more for topic in topics for item in topic.entries)
+
+
+def get_main_menu_items_prefixed_by_segment(
+    entry_holder: TopicMenuTopic | TopicMenuTopicSegment,
+    prefix: str | None = None,
+) -> list[TopicMenuItem]:
+    collected_items: list[TopicMenuItem] = []
+    for entry in entry_holder.entries:
+        if isinstance(entry, TopicMenuTopicSegment):
+            collected_items.extend(
+                get_main_menu_items_prefixed_by_segment(entry, prefix=entry.title)
+            )
+        elif isinstance(entry, TopicMenuItem):
+            if prefix is not None:
+                entry = copy.deepcopy(entry)
+                entry.title = f"{prefix} | {entry.title}"
+            collected_items.append(entry)
+    return collected_items
 
 
 class MegaMenuRegistry(Registry[MegaMenu]):

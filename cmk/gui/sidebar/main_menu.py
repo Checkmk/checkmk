@@ -9,6 +9,8 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 
 from typing import NamedTuple, TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui import message
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
@@ -19,7 +21,8 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.theme.current_theme import theme
+from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicSegment
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
@@ -212,27 +215,50 @@ class MegaMenuRenderer:
         html.open_div(class_="content inner", id="content_inner_%s_search" % menu.name)
         html.close_div()
 
-    def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
-        show_more = all(i.is_show_more for i in topic.entries)
-        topic_id = "_".join(
+    def _get_topic_id(self, menu_id: str, topic_title: str) -> str:
+        return "_".join(
             [
                 menu_id,
                 "topic",
-                "".join(c.lower() for c in topic.title if not c.isspace()),
+                "".join(c.lower() for c in topic_title if not c.isspace()),
             ]
+        )
+
+    def _show_topic(
+        self,
+        topic: TopicMenuTopic | TopicMenuTopicSegment,
+        menu_id: str,
+    ) -> None:
+        show_more = all(i.is_show_more for i in topic.entries)
+        topic_id = self._get_topic_id(menu_id, topic.title)
+        is_multilevel: bool = (
+            isinstance(topic, TopicMenuTopicSegment) and topic.mode == "multilevel"
         )
 
         html.open_div(
             id_=topic_id,
-            class_=["topic"] + (["show_more_mode"] if show_more else []),
+            class_=["topic"]
+            + (["show_more_mode"] if show_more else [])
+            + (["multilevel_topic_segment"] if is_multilevel else []),
             **{"data-max-entries": "%d" % topic.max_entries},
         )
 
         self._show_topic_title(menu_id, topic_id, topic)
-        self._show_items(topic_id, topic)
+        multilevel_topics: list[TopicMenuTopicSegment] = self._show_items(menu_id, topic_id, topic)
         html.close_div()
 
-    def _show_topic_title(self, menu_id: str, topic_id: str, topic: TopicMenuTopic) -> None:
+        for multilevel_topic in multilevel_topics:
+            self._show_topic(multilevel_topic, menu_id)
+
+    def _show_topic_title(
+        self,
+        menu_id: str,
+        topic_id: str,
+        topic: TopicMenuTopic | TopicMenuTopicSegment,
+    ) -> None:
+        # TODO: Fix expansion/collaps mechanism of multilevel TopicMenuTopicSegment instances to
+        #       work with that of the "Show all" entry
+        #       https://jira.lan.tribe29.com/browse/CMK-23671
         html.open_h2()
         html.open_a(
             class_="show_all_topics",
@@ -246,10 +272,24 @@ class MegaMenuRenderer:
         html.span(topic.title)
         html.close_h2()
 
-    def _show_items(self, topic_id: str, topic: TopicMenuTopic) -> None:
+    def _show_items(
+        self, menu_id: str, topic_id: str, topic: TopicMenuTopic | TopicMenuTopicSegment
+    ) -> list[TopicMenuTopicSegment]:
         html.open_ul()
-        for item in sorted(topic.entries, key=lambda g: g.sort_index):
-            self._show_item(item)
+        multilevel_topics: list[TopicMenuTopicSegment] = []
+        for entry in sorted(topic.entries, key=lambda g: g.sort_index):
+            if isinstance(entry, TopicMenuTopicSegment):
+                if entry.mode == "multilevel":
+                    self._show_multilevel_item(entry, menu_id)
+                    multilevel_topics.append(entry)
+                elif entry.mode == "indented":
+                    self._show_indented_topic_segment(entry)
+                else:
+                    raise MKGeneralException(
+                        f"Main menu entry.mode '{entry.mode}' is not implemented"
+                    )
+            else:
+                self._show_item(entry)
         html.open_li(class_="show_all_items")
         html.open_a(
             href=None,
@@ -260,6 +300,39 @@ class MegaMenuRenderer:
         html.write_text_permissive(_("Show all"))
         html.close_a()
         html.close_li()
+        html.close_ul()
+
+        return multilevel_topics
+
+    def _show_multilevel_item(self, multilevel_topic: TopicMenuTopicSegment, menu_id: str) -> None:
+        multilevel_topic_id = self._get_topic_id(menu_id, multilevel_topic.title)
+        html.open_li(class_="multilevel_item")
+        html.open_a(
+            href="javascript:void(0);",
+            onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % multilevel_topic_id,
+            title=_("Show entries for %s") % multilevel_topic.title,
+        )
+        if user.get_attribute("icons_per_item"):
+            html.icon(multilevel_topic.icon or "dash")
+        html.open_span()
+        self._show_item_title(multilevel_topic)
+        html.close_span()
+        html.img(
+            src=theme.url("images/tree_closed.svg"),
+        )
+        html.close_a()
+        html.close_li()
+
+    def _show_indented_topic_segment(self, topic_segment: TopicMenuTopicSegment) -> None:
+        html.open_ul(
+            class_="indented_topic_segment"
+            + (" show_more_mode" if topic_segment.is_show_more else "")
+        )
+        html.span(topic_segment.title)
+        for item in sorted(topic_segment.entries, key=lambda g: g.sort_index):
+            # We only allow for one level of indentation so far
+            assert isinstance(item, TopicMenuItem)
+            self._show_item(item)
         html.close_ul()
 
     def _show_item(self, item: TopicMenuItem) -> None:
@@ -275,9 +348,9 @@ class MegaMenuRenderer:
         html.close_a()
         html.close_li()
 
-    def _show_item_title(self, item: TopicMenuItem) -> None:
+    def _show_item_title(self, item: TopicMenuItem | TopicMenuTopicSegment) -> None:
         item_title: HTML | str = item.title
-        if not item.button_title:
+        if isinstance(item, TopicMenuTopicSegment) or not item.button_title:
             html.write_text_permissive(item_title)
             return
         html.span(item.title)

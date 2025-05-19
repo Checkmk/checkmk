@@ -218,3 +218,5 @@ $scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $darkgrey;
 $inactive-opacity: 0.7;
+$svg-color-green-filter: invert(29%) sepia(70%) saturate(2002%) hue-rotate(138deg) brightness(95%)
+  contrast(90%);

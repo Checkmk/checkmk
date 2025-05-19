@@ -33,7 +33,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import (
     HTTPVariables,
@@ -1428,7 +1428,7 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
                 url=topic_menu_item.url,
             )
             for topic_menu_topic in mega_menu_registry["monitoring"].topics()
-            for topic_menu_item in topic_menu_topic.entries
+            for topic_menu_item in get_main_menu_items_prefixed_by_segment(topic_menu_topic)
             if any(
                 query.lower() in match_text.lower()
                 for match_text in [

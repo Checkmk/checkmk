@@ -19,7 +19,6 @@ from cmk.ccc.store import (
     acquire_lock,
     load_from_mk_file,
     load_text_from_file,
-    mkdir,
     release_lock,
     save_text_to_file,
     save_to_mk_file,
@@ -99,8 +98,8 @@ def custom_attr_path(userid: UserId, key: str) -> str:
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
     path = custom_attr_path(userid, key)
-    mkdir(os.path.dirname(path))
-    save_text_to_file(path, "%s\n" % val)
+    Path(path).parent.mkdir(mode=0o770, exist_ok=True)
+    save_text_to_file(path, f"{val}\n")
 
 
 def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentials) -> None:
@@ -111,12 +110,12 @@ def rewrite_users(now: datetime) -> None:
     save_users(load_users(lock=True), now)
 
 
-def _root_dir() -> str:
-    return cmk.utils.paths.check_mk_config_dir + "/wato/"
+def _root_dir() -> Path:
+    return Path(cmk.utils.paths.check_mk_config_dir, "wato")
 
 
-def _multisite_dir() -> str:
-    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+def _multisite_dir() -> Path:
+    return Path(cmk.utils.paths.default_config_dir, "multisite.d/wato")
 
 
 def get_authserials_lines() -> list[str]:
@@ -416,7 +415,7 @@ def _save_user_profiles(
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        mkdir(cmk.utils.paths.profile_dir / user_id)
+        (cmk.utils.paths.profile_dir / user_id).mkdir(mode=0o770, exist_ok=True)
 
         # authentication secret for local processes
         secret = AutomationUserSecret(user_id)
@@ -701,12 +700,12 @@ def load_contacts() -> dict[str, UserContactDetails]:
     return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
-def _contacts_filepath() -> str:
-    return _root_dir() + "contacts.mk"
+def _contacts_filepath() -> Path:
+    return _root_dir() / "contacts.mk"
 
 
 def load_multisite_users() -> dict[str, UserDetails]:
-    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+    return load_from_mk_file(_multisite_dir() / "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:

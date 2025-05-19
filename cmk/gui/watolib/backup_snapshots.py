@@ -18,7 +18,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 
@@ -123,7 +122,7 @@ def create_snapshot(
 ) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
-    store.makedirs(snapshot_dir)
+    Path(snapshot_dir).mkdir(mode=0o770, exist_ok=True, parents=True)
 
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime(
         "%Y-%m-%d-%H-%M-%S", time.localtime(time.time())

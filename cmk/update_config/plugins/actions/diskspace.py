@@ -10,7 +10,7 @@ from typing import override
 
 from pydantic import BaseModel
 
-from cmk.ccc.store import makedirs, save_text_to_file
+from cmk.ccc.store import save_text_to_file
 
 from cmk.utils.paths import diskspace_config_dir, omd_root
 
@@ -60,7 +60,7 @@ def migrate(old_config_file: Path, config_dir: Path, logger: Logger) -> None:
 
 diskspace_cleanup = {pprint.pformat(config.model_dump(exclude_none=True))}
 """
-        makedirs(config_dir)
+        config_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
         save_text_to_file(config_dir / "global.mk", output)
         old_config_file.unlink()
         logger.debug("Migrated etc/diskspace.conf to etc/check_mk/diskspace.d/wato/global.mk")

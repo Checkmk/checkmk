@@ -14,7 +14,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 
@@ -180,13 +179,13 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             source_path = cmk.utils.paths.omd_root / component.site_path
             target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
 
-            store.makedirs(target_path.parent)
+            target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
 
             if not source_path.exists():
                 # Not existing files things can simply be skipped, not existing files could also be
                 # skipped, but we create them here to be 1:1 compatible with the pre 1.7 sync.
                 if component.ty is ReplicationPathType.DIR:
-                    store.makedirs(target_path)
+                    target_path.mkdir(mode=0o770, exist_ok=True, parents=True)
 
                 continue
 

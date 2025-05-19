@@ -177,7 +177,7 @@ function permitted_maps($username) {{
 ?>
 """
 
-    store.makedirs(_auth_php().parent)
+    _auth_php().parent.mkdir(mode=0o770, exist_ok=True, parents=True)
     store.save_text_to_file(_auth_php(), content)
 
 

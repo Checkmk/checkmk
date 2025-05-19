@@ -188,7 +188,7 @@ def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None
     if user_id is None:
         user_id = user.ident
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
-    store.mkdir(path.parent)
+    path.parent.mkdir(mode=0o770, exist_ok=True)
     store.save_object_to_file(path, messages)
 
 

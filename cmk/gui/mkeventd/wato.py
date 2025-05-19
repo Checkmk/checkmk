@@ -3598,7 +3598,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
     def _validate_and_compile_mib(self, mibname: str, content_bytes: bytes) -> str:
         compiled_mibs_dir = _compiled_mibs_dir()
-        store.mkdir(compiled_mibs_dir)
+        compiled_mibs_dir.mkdir(mode=0o770, exist_ok=True)
 
         # This object manages the compilation of the uploaded SNMP mib
         # but also resolving dependencies and compiling dependents

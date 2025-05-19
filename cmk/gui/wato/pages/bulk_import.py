@@ -160,7 +160,7 @@ class ModeBulkImport(WatoMode):
     # for this request. It needs to be available during several potential "confirm"
     # steps and then through the upload step.
     def _upload_csv_file(self) -> None:
-        store.makedirs(self._upload_tmp_path)
+        self._upload_tmp_path.mkdir(mode=0o770, exist_ok=True, parents=True)
 
         self._cleanup_old_files()
 

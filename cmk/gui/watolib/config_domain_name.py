@@ -146,7 +146,7 @@ class ABCConfigDomain(abc.ABC):
         for varname, value in settings.items():
             output += f"{varname} = {pprint.pformat(value)}\n"
 
-        store.makedirs(os.path.dirname(filename))
+        Path(filename).parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_text_to_file(filename, output)
 
     def save_site_globals(

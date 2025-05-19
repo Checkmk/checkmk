@@ -6,12 +6,19 @@ import ipaddress
 import re
 from typing import Annotated
 
-from pydantic import AfterValidator, GetCoreSchemaHandler, GetJsonSchemaHandler, PlainValidator
+from pydantic import (
+    AfterValidator,
+    GetCoreSchemaHandler,
+    GetJsonSchemaHandler,
+    PlainSerializer,
+    PlainValidator,
+)
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
 
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.openapi.framework import QueryParam
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
 
 def _validate_regex(value: str) -> str:
@@ -98,4 +105,69 @@ Examples:
         example="(id)",
     ),
     PlainValidator(parse_fields_filter, json_schema_input_type=str),
+]
+
+
+class _FolderValidation:
+    @staticmethod
+    def _normalize_folder(folder_id: str) -> str:
+        r"""Normalizes a folder representation.
+
+        This means replacing the separators with slashes, and stripping extra ones.
+        The leading separator will also be removed!
+
+        Examples:
+
+            >>> _FolderValidation._normalize_folder("\\")
+            ''
+
+            >>> _FolderValidation._normalize_folder("~")
+            ''
+
+            >>> _FolderValidation._normalize_folder("/foo/bar")
+            'foo/bar'
+
+            >>> _FolderValidation._normalize_folder("\\foo\\bar")
+            'foo/bar'
+
+            >>> _FolderValidation._normalize_folder("~foo~bar")
+            'foo/bar'
+
+            >>> _FolderValidation._normalize_folder("/foo/bar/")
+            'foo/bar'
+        """
+        for sep in ("\\", "~"):
+            folder_id = folder_id.replace(sep, "/")
+
+        return folder_id.strip("/")
+
+    @staticmethod
+    def _is_hex(hex_string: str) -> bool:
+        try:
+            int(hex_string, 16)
+            return True
+        except ValueError:
+            return False
+
+    @classmethod
+    def validate(cls, value: str) -> Folder:
+        tree = folder_tree()
+        value = cls._normalize_folder(value)
+        if value == "":
+            return tree.root_folder()
+
+        if cls._is_hex(value):
+            return tree._by_id(value)
+
+        return tree.folder(value)
+
+    @staticmethod
+    def serialize(value: Folder) -> str:
+        return "/" + value.path()
+
+
+AnnotatedFolder = Annotated[
+    Folder,
+    PlainValidator(_FolderValidation.validate, json_schema_input_type=str),
+    PlainSerializer(_FolderValidation.serialize, return_type=str),
 ]

@@ -65,7 +65,7 @@ def list_hosts_v1() -> HostConfigCollectionModel:
                     links=[],
                     members=None,
                     extensions=HostExtensionsModel(
-                        folder=host.folder().name(),
+                        folder=host.folder(),
                         attributes=HostViewAttributeModel.from_internal(
                             host.attributes, static_attribute_names
                         ),

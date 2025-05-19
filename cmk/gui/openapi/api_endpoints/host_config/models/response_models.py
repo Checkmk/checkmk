@@ -18,13 +18,13 @@ from cmk.gui.openapi.framework.model.base_models import (
     ObjectActionMemberModel,
     ObjectCollectionMemberModel,
 )
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.validators import HostValidator
 
 
 @dataclass(kw_only=True, slots=True)
 class HostExtensionsModel:
-    # TODO: FolderField functionality
-    folder: str = api_field(description="The folder, in which this host resides.")
+    folder: AnnotatedFolder = api_field(description="The folder, in which this host resides.")
     attributes: HostViewAttributeModel = api_field(description="Attributes of this host.")
     effective_attributes: HostViewAttributeModel | ApiOmitted = api_field(
         description="All attributes of this host and all parent folders.",

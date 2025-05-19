@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
+import json
 from dataclasses import dataclass
 
 import pytest
@@ -90,5 +91,5 @@ class _DatetimeModel:
     ],
 )
 def test_json_dump_without_omitted(model: _TestModel | _NestedModel, expected: dict) -> None:
-    dumped = json_dump_without_omitted(model.__class__, model)
+    dumped = json.loads(json_dump_without_omitted(model.__class__, model))
     assert dumped == expected

@@ -47,7 +47,7 @@ def test_dynamic_field_serialization_without_omitted() -> None:
         },
     )
 
-    result = json_dump_without_omitted(_TestModel, model)
+    result = json.loads(json_dump_without_omitted(_TestModel, model))
     assert result == {
         "field": 123,
         "extra_field": "extra_value",
@@ -120,7 +120,7 @@ def test_dynamic_field_serialization_nested_without_omitted() -> None:
         ],
     )
 
-    result = json_dump_without_omitted(_NestedModel, model)
+    result = json.loads(json_dump_without_omitted(_NestedModel, model))
     assert result == {
         "nested": {"field": 123, "other_type": "2025-01-01T00:00:00Z"},
         "nested_list": [{"field": 456, "extra_field": "extra_value"}],

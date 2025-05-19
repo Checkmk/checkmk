@@ -50,16 +50,16 @@ def test_dump_response_empty() -> None:
 
 def test_dump_response_simple() -> None:
     result = _dump_response(_TestResponse(field=123), _TestResponse, is_testing=True)
-    assert result == {"field": 123}
+    assert result == b'{"field":123}'
 
 
 def test_dump_response_omitted() -> None:
     result = _dump_response(_TestResponseOmitted(field=123), _TestResponseOmitted, is_testing=True)
-    assert result == {"field": 123}
+    assert result == b'{"field":123}'
     result = _dump_response(
         _TestResponseOmitted(field=123, omitted="no"), _TestResponseOmitted, is_testing=True
     )
-    assert result == {"field": 123, "omitted": "no"}
+    assert result == b'{"field":123,"omitted":"no"}'
 
 
 def test_dump_response_annotated() -> None:
@@ -68,7 +68,7 @@ def test_dump_response_annotated() -> None:
         cast(type[_TestResponse], Annotated[_TestResponse, "foo"]),
         is_testing=True,
     )
-    assert result == {"field": 123}
+    assert result == b'{"field":123}'
 
 
 def test_dump_response_pydantic_annotated() -> None:
@@ -81,7 +81,7 @@ def test_dump_response_pydantic_annotated() -> None:
         cast(type[_TestResponse], Annotated[_TestResponse, PlainSerializer(_serializer)]),
         is_testing=True,
     )
-    assert result == {"custom_name": "246"}
+    assert result == b'{"custom_name":"246"}'
 
 
 class _DummyPermissionValidator(PermissionValidator):

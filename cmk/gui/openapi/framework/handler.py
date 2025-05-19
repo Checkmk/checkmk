@@ -49,7 +49,7 @@ type ApiResponseModel[T: DataclassInstance] = T
 
 def _dump_response[T: DataclassInstance](
     response_body: T | None, response_body_type: type[T] | None, *, is_testing: bool
-) -> dict | None:
+) -> bytes | None:
     if response_body is None and response_body_type is None:
         return None
 
@@ -64,14 +64,7 @@ def _dump_response[T: DataclassInstance](
             f"Response body is of type: {type(response_body)}, but should be {response_body_type}"
         )
 
-    json_object = json_dump_without_omitted(
-        response_body_type, response_body, is_testing=is_testing
-    )
-    if not isinstance(json_object, dict):
-        raise ValueError(
-            f"Serialized response is of type: {type(json_object)}, but should be a dict"
-        )
-    return json_object
+    return json_dump_without_omitted(response_body_type, response_body, is_testing=is_testing)
 
 
 def _create_response(
@@ -85,29 +78,28 @@ def _create_response(
 ) -> Response:
     """Create a Flask response from the endpoint response."""
     if isinstance(endpoint_response, ApiResponse):
-        response_dict = _dump_response(
+        json_text: str | bytes | None = _dump_response(
             endpoint_response.body, response_body_type, is_testing=is_testing
         )
         status_code = endpoint_response.status_code
         headers = endpoint_response.headers
     else:
-        response_dict = _dump_response(endpoint_response, response_body_type, is_testing=is_testing)
-        status_code = 204 if response_dict is None else 200
+        json_text = _dump_response(endpoint_response, response_body_type, is_testing=is_testing)
+        status_code = 204 if json_text is None else 200
         headers = {}
 
-    if fields_filter is not None and response_dict is not None:
-        response_dict = fields_filter.apply(response_dict)
+    if json_text is not None:
+        json_object = json.loads(json_text)
+        if fields_filter is not None:
+            json_object = fields_filter.apply(json_object)
 
-    if add_etag and response_dict is not None:
-        headers["ETag"] = etag_of_dict(response_dict).to_header()
+        if add_etag:
+            headers["ETag"] = etag_of_dict(json_object).to_header()
 
-    # TODO: improve the flow
-    if response_dict is None:
-        response_text = None
-    else:
-        response_text = json.dumps(response_dict)
+        json_text = json.dumps(json_object)
+
     return Response(
-        response=response_text,
+        response=json_text,
         status=status_code,
         headers=headers,
         content_type=content_type,

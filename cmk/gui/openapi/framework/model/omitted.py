@@ -16,7 +16,6 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-import json
 from typing import Any, ClassVar
 
 from pydantic import GetCoreSchemaHandler, TypeAdapter
@@ -57,7 +56,7 @@ class ApiOmitted:
 
 def json_dump_without_omitted[T](
     instance_type: type[T], instance: T, *, is_testing: bool = False
-) -> object:
+) -> bytes:
     """Serialize the given dataclass instance to JSON, removing omitted fields.
 
     Args:
@@ -71,7 +70,4 @@ def json_dump_without_omitted[T](
     """
     # This will be called at most once per REST-API request
     adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
-    json_bytes = adapter.dump_json(
-        instance, by_alias=True, exclude_defaults=True, round_trip=is_testing
-    )
-    return json.loads(json_bytes)
+    return adapter.dump_json(instance, by_alias=True, exclude_defaults=True, round_trip=is_testing)

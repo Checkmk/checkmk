@@ -252,14 +252,4 @@ def handle_endpoint_request(
         if wato_use_git:
             do_git_commit()
 
-    # Finalize response
-    # TODO: validate if this is required? would allow us to remove the 204 handling as well
-    # response.freeze()
-
-    # # Response code 204 needs special handling
-    # if response.status_code == 204:
-    #     for key in ["Content-Type", "Etag"]:
-    #         if key in response.headers:
-    #             del response.headers[key]
-
     return response

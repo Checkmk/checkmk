@@ -47,7 +47,7 @@ def register(
     page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
 ) -> None:
     page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
-    permission_section_registry.register(PermissionSectionNotificationPlugins())
+    permission_section_registry.register(permission_section_notification_plugins)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -64,22 +64,11 @@ g_columns: list[str] = [
     "comment",
 ]
 
-
-class PermissionSectionNotificationPlugins(PermissionSection):
-    @override
-    @property
-    def name(self) -> str:
-        return "notification_plugin"
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Notification plug-ins")
-
-    @override
-    @property
-    def do_sort(self) -> bool:
-        return True
+permission_section_notification_plugins = PermissionSection(
+    name="notification_plugin",
+    title=_("Notification plug-ins"),
+    do_sort=True,
+)
 
 
 def load_plugins() -> None:

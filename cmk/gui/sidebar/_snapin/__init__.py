@@ -31,7 +31,9 @@ from ._helpers import snapin_width as snapin_width
 from ._helpers import write_snapin_exception as write_snapin_exception
 from ._master_control import MasterControlSnapin
 from ._performance import Performance
-from ._permission_section import PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins
+from ._permission_section import (
+    permission_section_sidebar_snapins as permission_section_sidebar_snapins,
+)
 from ._registry import all_snapins as all_snapins
 from ._registry import CustomSnapins as CustomSnapins
 from ._registry import snapin_registry as snapin_registry

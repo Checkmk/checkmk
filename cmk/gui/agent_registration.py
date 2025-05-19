@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import override
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
@@ -23,16 +22,10 @@ CONNECTION_MODE_FIELD = fields.String(
 
 
 def register(permission_section_registry: PermissionSectionRegistry) -> None:
-    permission_section_registry.register(PermissionSectionAgentRegistration())
+    permission_section_registry.register(permission_section_agent_registration)
 
 
-class PermissionSectionAgentRegistration(PermissionSection):
-    @override
-    @property
-    def name(self) -> str:
-        return "agent_registration"
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Agent registration")
+permission_section_agent_registration = PermissionSection(
+    name="agent_registration",
+    title=_("Agent registration"),
+)

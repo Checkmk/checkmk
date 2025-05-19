@@ -14,11 +14,11 @@ from cmk.gui.permissions import (
 def register(
     permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
 ) -> None:
-    permission_section_registry.register(PermissionSectionWATO())
+    permission_section_registry.register(permission_section_wato)
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="use",
             title=_l("Use WATO"),
             description=_l(
@@ -33,7 +33,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="edit",
             title=_l("Make changes, perform actions"),
             description=_l(
@@ -49,7 +49,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="seeall",
             title=_l("Read access to all modules"),
             description=_l(
@@ -63,7 +63,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="activate",
             title=_l("Activate configuration"),
             description=_l(
@@ -77,7 +77,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="activateforeign",
             title=_l("Activate foreign changes"),
             description=_l(
@@ -93,7 +93,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="discard",
             title=_l("Revert changes"),
             description=_l(
@@ -106,7 +106,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="discardforeign",
             title=_l("Revert foreign changes"),
             description=_l(
@@ -120,7 +120,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="auditlog",
             title=_l("Audit log"),
             description=_l(
@@ -134,7 +134,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="clear_auditlog",
             title=_l("Archive audit log"),
             description=_l(
@@ -148,7 +148,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="hosts",
             title=_l("Host management"),
             description=_l(
@@ -161,7 +161,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="edit_hosts",
             title=_l("Modify existing hosts"),
             description=_l(
@@ -175,7 +175,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="parentscan",
             title=_l("Perform network parent scan"),
             description=_l(
@@ -191,7 +191,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="move_hosts",
             title=_l("Move existing hosts"),
             description=_l(
@@ -204,7 +204,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="manage_hosts",
             title=_l("Add & remove hosts"),
             description=_l(
@@ -218,7 +218,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="rename_hosts",
             title=_l("Rename existing hosts"),
             description=_l(
@@ -230,7 +230,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="diag_host",
             title=_l("Host diagnostic"),
             description=_l(
@@ -244,7 +244,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="clone_hosts",
             title=_l("Clone hosts"),
             description=_l(
@@ -257,7 +257,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="random_hosts",
             title=_l("Create random hosts"),
             description=_l(
@@ -271,7 +271,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="update_dns_cache",
             title=_l("Update site DNS Cache"),
             description=_l(
@@ -284,7 +284,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="services",
             title=_l("Manage services"),
             description=_l("Do inventory and service configuration on existing hosts."),
@@ -294,7 +294,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="edit_folders",
             title=_l("Modify existing folders"),
             description=_l("Modify the properties of existing folders."),
@@ -304,7 +304,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="manage_folders",
             title=_l("Add & remove folders"),
             description=_l(
@@ -317,7 +317,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="passwords",
             title=_l("Password management"),
             description=_l("This permission is needed for the module <i>Passwords</i>."),
@@ -327,7 +327,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="edit_all_passwords",
             title=_l("Write access to all passwords"),
             description=_l(
@@ -340,7 +340,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="edit_all_predefined_conditions",
             title=_l("Write access to all predefined conditions"),
             description=_l(
@@ -354,7 +354,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="see_all_folders",
             title=_l("Read access to all hosts and folders"),
             description=_l(
@@ -366,7 +366,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="all_folders",
             title=_l("Write access to all hosts and folders"),
             description=_l(
@@ -379,7 +379,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="hosttags",
             title=_l("Manage tags"),
             description=_l(
@@ -392,7 +392,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="global",
             title=_l("Global settings"),
             description=_l("Access to the module <i>Global settings</i>"),
@@ -402,7 +402,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="rulesets",
             title=_l("Rulesets"),
             description=_l(
@@ -415,7 +415,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="groups",
             title=_l("Host & service groups"),
             description=_l("Access to the modules for managing host and service groups."),
@@ -425,7 +425,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="timeperiods",
             title=_l("Time periods"),
             description=_l("Access to the module <i>Time periods</i>"),
@@ -435,7 +435,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="sites",
             title=_l("Site management"),
             description=_l(
@@ -447,7 +447,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="automation",
             title=_l("Site remote automation"),
             description=_l(
@@ -460,7 +460,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="users",
             title=_l("User management"),
             description=_l(
@@ -473,7 +473,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="user_migrate",
             title=_l("Migrate users to another connection"),
             description=_l(
@@ -485,7 +485,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="show_last_user_activity",
             title=_l("Show last user activity"),
             description=_l("Show the online state and last user activity on the users page"),
@@ -495,7 +495,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="notifications",
             title=_l("Notification configuration"),
             description=_l(
@@ -507,7 +507,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="snapshots",
             title=_l("Manage snapshots"),
             description=_l(
@@ -521,7 +521,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="backups",
             title=_l("Backup & restore"),
             description=_l(
@@ -535,7 +535,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="pattern_editor",
             title=_l("Logfile pattern analyzer"),
             description=_l("Access to the module for analyzing and validating logfile patterns."),
@@ -545,7 +545,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="icons",
             title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),
@@ -555,7 +555,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="custom_attributes",
             title=_l("Manage custom attributes"),
             description=_l("Manage custom host- and user attributes"),
@@ -565,7 +565,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="download_agents",
             title=_l("Monitoring Agents"),
             description=_l(
@@ -578,7 +578,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="download_agent_output",
             title=_l("Download agent output / SNMP walks"),
             description=_l(
@@ -590,7 +590,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="set_read_only",
             title=_l("Set Setup to read only mode for other users"),
             description=_l("Prevent other users from making modifications to Setup."),
@@ -600,7 +600,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="analyze_config",
             title=_l("Access analyze configuration"),
             description=_l(
@@ -612,7 +612,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="diagnostics",
             title=_l("Access the diagnostics mode"),
             description=_l("Collect information of Checkmk sites for diagnostic analysis."),
@@ -622,7 +622,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="add_or_modify_executables",
             title=_l("Add or modify executables"),
             description=_l(
@@ -645,7 +645,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="service_discovery_to_undecided",
             title=_l("Service discovery: Move to undecided services"),
             description=_l("Service discovery: Move to undecided services"),
@@ -655,7 +655,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="service_discovery_to_monitored",
             title=_l("Service discovery: Move to monitored services"),
             description=_l("Service discovery: Move to monitored services"),
@@ -665,7 +665,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="service_discovery_to_ignored",
             title=_l("Service discovery: Disabled services"),
             description=_l("Service discovery: Disabled services"),
@@ -675,7 +675,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="service_discovery_to_removed",
             title=_l("Service discovery: Remove services"),
             description=_l("Service discovery: Remove services"),
@@ -685,7 +685,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="check_plugins",
             title=_l("Catalog of check plug-ins"),
             description=_l("Use the catalog of check plug-ins."),
@@ -694,11 +694,7 @@ def register(
     )
 
 
-class PermissionSectionWATO(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "wato"
-
-    @property
-    def title(self) -> str:
-        return _("Setup")
+permission_section_wato = PermissionSection(
+    name="wato",
+    title=_("Setup"),
+)

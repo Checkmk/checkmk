@@ -21,7 +21,7 @@ from cmk.utils.log.security_event import log_security_event
 from cmk.utils.paths import omd_root
 
 from cmk.gui import config
-from cmk.gui.default_permissions import PermissionSectionGeneral
+from cmk.gui.default_permissions import permission_section_general
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
@@ -43,7 +43,7 @@ _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionGeneral(),
+        section=permission_section_general,
         name="agent_pairing",
         title=_l("Agent pairing"),
         description=_l(

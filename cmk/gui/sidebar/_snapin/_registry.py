@@ -18,7 +18,7 @@ from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 
 from ._base import CustomizableSidebarSnapin, SidebarSnapin
-from ._permission_section import PermissionSectionSidebarSnapins
+from ._permission_section import permission_section_sidebar_snapins
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
 # of cycles and untyped dependencies. So for now this is just a reminder.
@@ -35,7 +35,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
     def registration_hook(self, instance: type[SidebarSnapin]) -> None:
         permission_registry.register(
             Permission(
-                section=PermissionSectionSidebarSnapins(),
+                section=permission_section_sidebar_snapins,
                 name=self.plugin_name(instance),
                 title=instance.title(),
                 description=instance.description(),

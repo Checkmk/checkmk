@@ -6,12 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-
-class PermissionSectionEventConsole(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "mkeventd"
-
-    @property
-    def title(self) -> str:
-        return _("Event Console")
+permission_section_event_console = PermissionSection(
+    name="mkeventd",
+    title=_("Event Console"),
+)

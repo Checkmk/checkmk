@@ -6,6 +6,7 @@
 
 import abc
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from typing import override
 
 import cmk.ccc.plugin_registry
@@ -14,30 +15,18 @@ from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.speaklater import LazyString
 
 
-class PermissionSection(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """The identity of a permission section.
-        One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
+@dataclass(frozen=True, kw_only=True)
+class PermissionSection:
+    """The identity of a permission section.
+    One word, may contain alpha numeric characters"""
 
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        """Display name representing the section"""
-        raise NotImplementedError()
-
-    @property
-    def sort_index(self) -> int:
-        """Number to sort the sections with"""
-        return 50
-
-    # TODO: Is this still needed?
-    @property
-    def do_sort(self) -> bool:
-        """Whether or not to sort the permissions by title in this section"""
-        return False
+    name: str
+    """Display name representing the section"""
+    title: str
+    """Number to sort the sections with"""
+    sort_index: int = 50
+    """Whether or not to sort the permissions by title in this section"""
+    do_sort: bool = False
 
 
 class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[PermissionSection]):
@@ -142,17 +131,14 @@ permission_registry = PermissionRegistry()
 def declare_permission_section(
     name: str, title: str, prio: int = 50, do_sort: bool = False
 ) -> None:
-    cls = type(
-        "LegacyPermissionSection%s" % name.title(),
-        (PermissionSection,),
-        {
-            "name": name,
-            "title": title,
-            "sort_index": prio,
-            "do_sort": do_sort,
-        },
+    permission_section_registry.register(
+        PermissionSection(
+            name=name,
+            title=title,
+            sort_index=prio,
+            do_sort=do_sort,
+        )
     )
-    permission_section_registry.register(cls())
 
 
 def declare_permission(

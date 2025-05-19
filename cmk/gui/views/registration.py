@@ -15,7 +15,7 @@ from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import command, graph, icon, perfometer
 from ._join_service_rows import join_service_row_post_processor
-from ._permissions import PermissionSectionViews
+from ._permissions import permission_section_views
 from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
 from .datasource_selection import page_select_datasource
@@ -43,7 +43,7 @@ def register(
 ) -> None:
     multisite_builtin_views.update(builtin_views)
 
-    permission_section_registry.register(PermissionSectionViews())
+    permission_section_registry.register(permission_section_views)
 
     page_registry.register_page("ajax_cascading_render_painer_parameters")(
         PageAjaxCascadingRenderPainterParameters

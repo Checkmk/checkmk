@@ -62,7 +62,7 @@ from cmk.gui.watolib.notification_parameter import (
 from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
 from ._http_proxy import HTTPProxyInput, HTTPProxyReference
-from ._permissions import PermissionSectionWATO
+from ._permissions import permission_section_wato
 from ._rulespec_groups import (
     RulespecGroupActiveChecks,
     RulespecGroupDatasourcePrograms,
@@ -108,7 +108,7 @@ def register() -> None:
     CMK-12228
     """
     for name, value in [
-        ("PermissionSectionWATO", PermissionSectionWATO),
+        ("PermissionSectionWATO", permission_section_wato),
         ("register_modules", register_modules),
         ("WatoModule", WatoModule),
         ("register_notification_parameters", register_notification_parameters),

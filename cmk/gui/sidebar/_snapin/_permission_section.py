@@ -6,16 +6,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-
-class PermissionSectionSidebarSnapins(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "sidesnap"
-
-    @property
-    def title(self) -> str:
-        return _("Sidebar elements")
-
-    @property
-    def do_sort(self) -> bool:
-        return True
+permission_section_sidebar_snapins = PermissionSection(
+    name="sidesnap",
+    title=_("Sidebar elements"),
+    do_sort=True,
+)

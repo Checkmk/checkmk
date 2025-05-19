@@ -37,7 +37,7 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
-    permission_section_registry.register(PermissionSectionDashboard())
+    permission_section_registry.register(permission_section_dashboard)
 
     page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
     page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
@@ -60,15 +60,8 @@ def register(
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_dashboards)
 
 
-class PermissionSectionDashboard(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "dashboard"
-
-    @property
-    def title(self) -> str:
-        return _("Dashboards")
-
-    @property
-    def do_sort(self):
-        return True
+permission_section_dashboard = PermissionSection(
+    name="dashboard",
+    title=_("Dashboards"),
+    do_sort=True,
+)

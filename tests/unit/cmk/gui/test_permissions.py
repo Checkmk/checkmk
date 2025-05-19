@@ -68,25 +68,18 @@ def test_permission_sorting(do_sort: bool, result: Sequence[str]) -> None:
     sections = permissions.PermissionSectionRegistry()
     perms = permissions.PermissionRegistry()
 
-    class Sec1(permissions.PermissionSection):
-        @property
-        def name(self) -> str:
-            return "sec1"
+    sec1 = permissions.PermissionSection(
+        name="sec1",
+        title="SEC1",
+        do_sort=do_sort,
+    )
 
-        @property
-        def title(self) -> str:
-            return "SEC1"
-
-        @property
-        def do_sort(self):
-            return do_sort
-
-    sections.register(Sec1())
+    sections.register(sec1)
 
     for permission_name in ["Z", "z", "A", "b", "a", "1", "g"]:
         perms.register(
             permissions.Permission(
-                section=Sec1(),
+                section=sec1,
                 name=permission_name,
                 title=permission_name.title(),
                 description="bla",
@@ -94,5 +87,5 @@ def test_permission_sorting(do_sort: bool, result: Sequence[str]) -> None:
             )
         )
 
-    sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
+    sorted_perms = [p.name for p in perms.get_sorted_permissions(sec1)]
     assert sorted_perms == result

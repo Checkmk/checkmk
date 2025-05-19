@@ -45,7 +45,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.werks import may_acknowledge
 
 from . import _snapin
-from ._snapin import all_snapins, CustomSnapins, PermissionSectionSidebarSnapins
+from ._snapin import all_snapins, CustomSnapins, permission_section_sidebar_snapins
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
@@ -100,7 +100,7 @@ def register(
     page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
         PageAjaxSidebarGetUnackIncompWerks
     )
-    permission_section_registry.register(PermissionSectionSidebarSnapins())
+    permission_section_registry.register(permission_section_sidebar_snapins)
     _snapin.register(
         snapin_registry_,
         page_registry,

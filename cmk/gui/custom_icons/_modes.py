@@ -24,7 +24,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
-from cmk.gui.wato import PermissionSectionWATO
+from cmk.gui.wato import permission_section_wato
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
@@ -168,7 +168,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=PermissionSectionWATO(),
+            section=permission_section_wato,
             name="icons",
             title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),

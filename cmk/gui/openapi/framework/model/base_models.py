@@ -86,8 +86,8 @@ class LinkModel:
             method=methods[method],
             type=link_obj["type"],
             domainType=link_obj["domainType"],
-            title=link_obj["title"],
-            body_params=link_obj["body_params"],
+            title=link_obj.get("title", ApiOmitted()),
+            body_params=link_obj.get("body_params", ApiOmitted()),
         )
 
 

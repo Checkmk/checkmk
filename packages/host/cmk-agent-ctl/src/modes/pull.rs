@@ -192,10 +192,9 @@ pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
 }
 
 pub async fn async_pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
-    let guard = MaxConnectionsGuard::new(pull_config.max_connections);
     let agent_output_collector = AgentOutputCollectorImpl::from(&pull_config.agent_channel);
     let pull_state = PullState::try_from(pull_config)?;
-    _pull(pull_state, guard, agent_output_collector).await
+    _pull(pull_state, agent_output_collector).await
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -205,7 +204,6 @@ async fn pull_runtime_wrapper(pull_config: config::PullConfig) -> AnyhowResult<(
 
 async fn _pull(
     mut pull_state: PullState,
-    mut guard: MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
 ) -> AnyhowResult<()> {
     loop {
@@ -216,6 +214,7 @@ async fn _pull(
             pull_state.refresh()?;
             continue;
         }
+        let mut guard = MaxConnectionsGuard::new(pull_state.config.max_connections);
         info!("Start listening for incoming pull requests");
         _pull_loop(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
     }

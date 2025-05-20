@@ -158,33 +158,6 @@ impl MaxConnectionsGuard {
             active_connections: HashMap::new(),
         }
     }
-
-    pub fn try_make_task_for_addr(
-        &mut self,
-        addr: SocketAddr,
-        fut: impl Future<Output = AnyhowResult<()>>,
-    ) -> AnyhowResult<impl Future<Output = AnyhowResult<()>>> {
-        let ip_addr = addr.ip();
-        let sem = self
-            .active_connections
-            .entry(ip_addr)
-            .or_insert_with(|| Arc::new(Semaphore::new(self.max_connections)));
-        if let Ok(permit) = Arc::clone(sem).try_acquire_owned() {
-            let task_num = self.max_connections - sem.available_permits();
-            Ok(async move {
-                let res = fut.await;
-                drop(permit);
-                debug!(
-                    "processed task {} from ip {:?} result {:?}",
-                    task_num, ip_addr, res
-                );
-                res
-            })
-        } else {
-            debug!("Too many active connections at ip_addr {}", ip_addr);
-            bail!("Too many active connections")
-        }
-    }
 }
 
 pub fn fn_thread(pull_config: config::PullConfig) -> AnyhowResult<()> {
@@ -322,6 +295,7 @@ async fn _pull_loop(
 ) -> AnyhowResult<()> {
     let listener = TcpListener::from_std(tcp_listener(pull_state.listening_config())?)?;
     let mut guard = MaxConnectionsGuard::new(pull_state.config.max_connections);
+    let max_connections = guard.max_connections;
 
     loop {
         let Ok(connection_attempt) = timeout(
@@ -372,26 +346,41 @@ async fn _pull_loop(
             }
             ConnectionMode::Active(crypto_mode) => {
                 info!("{}: Handling pull request.", remote);
-                let request_handler_fut = handle_request(
+                // TODO(sk): refactor code below. This is mandatory intermediate control point
+                let request_handler_future = make_handle_request_future(
                     stream,
                     agent_output_collector.clone(),
                     remote.ip(),
                     crypto_mode,
                     pull_state.config.connection_timeout,
                 );
-                match guard.try_make_task_for_addr(remote, request_handler_fut) {
-                    Ok(connection_fut) => {
-                        tokio::spawn(async move {
-                            if let Err(err) = connection_fut.await {
-                                warn!("{}: Request failed. ({})", remote, err)
-                            };
-                        });
-                    }
-                    Err(error) => {
-                        warn!("{}: Request failed. ({})", remote, error);
-                    }
+                let ip_addr = remote.ip();
+                let sem = guard
+                    .active_connections
+                    .entry(ip_addr)
+                    .or_insert_with(|| Arc::new(Semaphore::new(guard.max_connections)));
+                // NOTE(sk). Below this point we should NOT use shared mutable `guard`
+                if let Ok(permit) = Arc::clone(sem).try_acquire_owned() {
+                    let task_num = max_connections - sem.available_permits();
+                    let request_handler_task = async move {
+                        let res = request_handler_future.await;
+                        drop(permit);
+                        debug!(
+                            "processed task {} from ip {:?} result {:?}",
+                            task_num, ip_addr, res
+                        );
+                        res
+                    };
+                    tokio::spawn(async move {
+                        if let Err(err) = request_handler_task.await {
+                            warn!("{}: Request failed. ({})", remote, err)
+                        };
+                    });
+                    debug!("{}: Handling pull request DONE (Task started).", remote);
+                } else {
+                    warn!("Too many active connections at ip_addr {}", ip_addr);
+                    continue;
                 }
-                debug!("{}: Handling pull request DONE (Task detached).", remote);
             }
         }
     }
@@ -438,7 +427,7 @@ fn to_canonical(ip_addr: IpAddr) -> IpAddr {
     }
 }
 
-async fn handle_request(
+async fn make_handle_request_future(
     mut stream: TcpStream,
     agent_output_collector: impl AgentOutputCollector,
     remote_ip: IpAddr,

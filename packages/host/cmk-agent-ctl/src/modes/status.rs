@@ -442,8 +442,8 @@ mod test_status {
                     remote: Remote::StatusResponse(Ok(
                         agent_receiver_api::RegistrationStatusV2Response::Registered(
                             agent_receiver_api::RegistrationStatusV2ResponseRegistered {
-                            connection_mode: config::ConnectionMode::Pull,
-                            hostname: String::from("my-host"),
+                                connection_mode: config::ConnectionMode::Pull,
+                                hostname: String::from("my-host"),
                             }
                         )
                     ))

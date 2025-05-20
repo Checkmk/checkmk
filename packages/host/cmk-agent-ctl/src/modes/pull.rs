@@ -187,19 +187,15 @@ impl MaxConnectionsGuard {
     }
 }
 
-pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
+pub fn fn_thread(pull_config: config::PullConfig) -> AnyhowResult<()> {
     pull_runtime_wrapper(pull_config)
-}
-
-pub async fn async_pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
-    let agent_output_collector = AgentOutputCollectorImpl::from(&pull_config.agent_channel);
-    let pull_state = PullState::try_from(pull_config)?;
-    _pull(pull_state, agent_output_collector).await
 }
 
 #[tokio::main(flavor = "current_thread")]
 async fn pull_runtime_wrapper(pull_config: config::PullConfig) -> AnyhowResult<()> {
-    async_pull(pull_config).await
+    let agent_output_collector = AgentOutputCollectorImpl::from(&pull_config.agent_channel);
+    let pull_state = PullState::try_from(pull_config)?;
+    _pull(pull_state, agent_output_collector).await
 }
 
 async fn _pull(
@@ -214,9 +210,8 @@ async fn _pull(
             pull_state.refresh()?;
             continue;
         }
-        let mut guard = MaxConnectionsGuard::new(pull_state.config.max_connections);
         info!("Start listening for incoming pull requests");
-        _pull_loop(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
+        _pull_loop(&mut pull_state, agent_output_collector.clone()).await?;
     }
 }
 
@@ -323,10 +318,10 @@ fn tcp_listener(listening_config: ListeningConfig) -> AnyhowResult<TcpListenerSt
 
 async fn _pull_loop(
     pull_state: &mut PullState,
-    guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
 ) -> AnyhowResult<()> {
     let listener = TcpListener::from_std(tcp_listener(pull_state.listening_config())?)?;
+    let mut guard = MaxConnectionsGuard::new(pull_state.config.max_connections);
 
     loop {
         let Ok(connection_attempt) = timeout(

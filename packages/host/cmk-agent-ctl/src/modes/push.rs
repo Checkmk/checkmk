@@ -12,7 +12,7 @@ use log::{debug, info, warn};
 use std::thread;
 use std::time::{Duration, Instant};
 
-pub fn push(
+pub fn fn_thread(
     mut registry: config::Registry,
     client_config: config::ClientConfig,
     agent_channel: AgentChannel,

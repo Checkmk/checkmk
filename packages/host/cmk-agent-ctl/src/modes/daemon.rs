@@ -36,23 +36,30 @@ pub fn daemon(
         &client_config,
     );
 
+    // create channels, 3x TX + 1x RX to "synchronize" thread stops on failure
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
     let tx_renew_certificate = tx_push.clone();
+
     let agent_channel = pull_config.agent_channel.clone();
     let registry_push = registry.clone();
     let client_config_push = client_config.clone();
+
     thread::spawn(move || {
         tx_push
-            .send(push::push(registry_push, client_config_push, agent_channel))
+            .send(push::fn_thread(
+                registry_push,
+                client_config_push,
+                agent_channel,
+            ))
             .unwrap();
     });
     thread::spawn(move || {
-        tx_pull.send(pull::pull(pull_config)).unwrap();
+        tx_pull.send(pull::fn_thread(pull_config)).unwrap();
     });
     thread::spawn(move || {
         tx_renew_certificate
-            .send(renew_certificate::daemon(registry, client_config))
+            .send(renew_certificate::fn_thread(registry, client_config))
             .unwrap();
     });
 

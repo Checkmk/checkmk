@@ -264,7 +264,10 @@ fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
         return Ok(None);
     };
 
-    debug!("Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.", installdir);
+    debug!(
+        "Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
+        installdir
+    );
 
     let owning_uid = nix::unistd::Uid::from_raw(
         std::fs::metadata(installdir.join("runtime").join("controller"))

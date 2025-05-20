@@ -80,7 +80,7 @@ fn renew_connection_cert(
     Ok(())
 }
 
-pub fn daemon(
+pub fn fn_thread(
     mut registry: config::Registry,
     client_config: config::ClientConfig,
 ) -> AnyhowResult<()> {

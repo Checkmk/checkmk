@@ -29,8 +29,7 @@ pub fn sleep_randomly() {
 
 #[cfg(windows)]
 pub fn validate_elevation() -> AnyhowResult<()> {
-    const MESSAGE_NOT_ELEVATED: &str =
-    "You must be elevated to execute the agent controller. Please, try 'Run as administrator...'";
+    const MESSAGE_NOT_ELEVATED: &str = "You must be elevated to execute the agent controller. Please, try 'Run as administrator...'";
 
     if is_elevated() {
         Ok(())

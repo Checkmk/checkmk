@@ -27,7 +27,7 @@ use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
 use modes::dump::dump;
 use modes::import_connection::import;
-use modes::pull::pull;
+use modes::pull::fn_thread;
 use modes::push::handle_push_cycle as push;
 use modes::registration;
 use modes::renew_certificate::renew_certificate;
@@ -76,7 +76,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             &config::ClientConfig::new(runtime_config, client_opts, None),
             &setup::agent_channel(),
         ),
-        cli::Mode::Pull(pull_opts) => pull(config::PullConfig::new(
+        cli::Mode::Pull(pull_opts) => fn_thread(config::PullConfig::new(
             runtime_config,
             pull_opts,
             registry,

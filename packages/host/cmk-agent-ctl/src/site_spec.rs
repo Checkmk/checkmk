@@ -198,7 +198,9 @@ impl AgentRecvPortDiscoverer<'_> {
             };
         }
 
-        bail!("Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors.")
+        bail!(
+            "Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors."
+        )
     }
 }
 

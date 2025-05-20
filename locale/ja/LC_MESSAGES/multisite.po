@@ -25966,6 +25966,10 @@ msgstr "グラフオプション"
 msgid "Graph metrics with all zero values"
 msgstr "すべてゼロの値を持つメトリック"
 
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "グラフオプション"
+
 #, fuzzy
 msgid "Graph options"
 msgstr "グラフオプション"

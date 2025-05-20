@@ -27125,6 +27125,10 @@ msgstr "Opțiuni grafice"
 msgid "Graph metrics with all zero values"
 msgstr "Metrici cu toate valorile zero"
 
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Opțiuni grafice"
+
 #, fuzzy
 msgid "Graph options"
 msgstr "Opțiuni grafice"

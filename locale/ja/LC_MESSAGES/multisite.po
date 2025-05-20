@@ -12864,6 +12864,14 @@ msgstr "Client secret"
 msgid "ClientID"
 msgstr "クライアント ID"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "クライアント ID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "クライアントシークレット"
+
 msgid "Clients"
 msgstr "クライアント"
 
@@ -22162,6 +22170,10 @@ msgstr ""
 "属性値を使用したい要求名を入力します。指定された属性一致値と返された要求属性"
 "値が一致した場合のみ、ユーザーは連絡先グループに割り当てられます。"
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
 
@@ -25597,9 +25609,6 @@ msgstr "一般"
 msgid "General Options"
 msgstr "一般的なオプション"
 
-msgid "General Permissions"
-msgstr "一般的な権限"
-
 msgid "General Settings"
 msgstr "一般設定"
 
@@ -25963,6 +25972,10 @@ msgstr "グラフオプション"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "すべてゼロの値を持つメトリック"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "グラフオプション"
 
 #, fuzzy
 msgid "Graph options"
@@ -30314,6 +30327,10 @@ msgstr "監視アイコン"
 
 msgid "Icons"
 msgstr "アイコン"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%dアイコンとアクション"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -61291,6 +61308,10 @@ msgstr "テナントID / ディレクトリID"
 msgid "TenantID"
 msgstr "テナントID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "テナントID"
+
 msgid "Terminated containers"
 msgstr "終了したコンテナの数"
 
@@ -68557,9 +68578,10 @@ msgstr ""
 "ために使用できます。そのために<tt>jarsigner -verify</tt> というツールが呼び出"
 "されています。"
 
+#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "このプラグインは、MSOnline PowerShellモジュールを使用して、すべてのMS Office "
 "365ライセンスとサービスプランの情報を収集するために使用できます。"
@@ -85291,6 +85313,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "General Permissions"
+#~ msgstr "一般的な権限"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "定義されたNutanixの希望のホスト状態"

@@ -13584,6 +13584,14 @@ msgstr "Secretul clientului"
 msgid "ClientID"
 msgstr "ClientID"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ClientID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Secretul clientului"
+
 msgid "Clients"
 msgstr "Clienți"
 
@@ -23327,6 +23335,10 @@ msgstr ""
 "în care există o corespondență între valoarea de corespondență a atributului "
 "specificat și valoarea atributului de cerere returnată."
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Introduceți codul de ieșire ca valoare hexagonală de 10 cifre, cu minuscule, "
@@ -26889,9 +26901,6 @@ msgstr "General"
 msgid "General Options"
 msgstr "Opțiuni generale"
 
-msgid "General Permissions"
-msgstr "Permisiuni generale"
-
 msgid "General Settings"
 msgstr "Setări generale"
 
@@ -27266,6 +27275,10 @@ msgstr "Opțiuni grafice"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metrici cu toate valorile zero"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Opțiuni grafice"
 
 #, fuzzy
 msgid "Graph options"
@@ -31783,6 +31796,10 @@ msgstr "Căutare în Monitorizare"
 
 msgid "Icons"
 msgstr "Icoane"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d pictograme și acțiuni"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -64190,6 +64207,10 @@ msgstr "ID-ul chiriașului / ID-ul directorului"
 msgid "TenantID"
 msgstr "TenantID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "TenantID"
+
 msgid "Terminated containers"
 msgstr "Containere terminate"
 
@@ -71899,7 +71920,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Acest plugin poate fi utilizat pentru a colecta informații despre toate "
 "licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
@@ -89763,6 +89784,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "General Permissions"
+#~ msgstr "Permisiuni generale"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Stare gazdă dorită pentru gazda Nutanix definită"

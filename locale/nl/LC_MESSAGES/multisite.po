@@ -13564,6 +13564,14 @@ msgstr "Geheim van de klant"
 msgid "ClientID"
 msgstr "ClientID"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ClientID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Geheim van de klant"
+
 msgid "Clients"
 msgstr "Klanten"
 
@@ -23266,6 +23274,10 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Voer de exit code in als 10-cijferige, kleine hex waarde, bijv. 0x000000."
@@ -26827,9 +26839,6 @@ msgstr "Algemeen"
 msgid "General Options"
 msgstr "Algemene opties"
 
-msgid "General Permissions"
-msgstr "Algemene Toestemmingen"
-
 msgid "General Settings"
 msgstr "Algemene Instellingen"
 
@@ -27205,6 +27214,10 @@ msgstr "Grafiek Opties"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metriek met alle nulwaarden"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Grafiek Opties"
 
 #, fuzzy
 msgid "Graph options"
@@ -31734,6 +31747,10 @@ msgstr "Zoeken in Toezicht"
 
 msgid "Icons"
 msgstr "Pictogrammen"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d iconen en acties"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -64020,6 +64037,10 @@ msgstr "Huurder ID / Directory ID"
 msgid "TenantID"
 msgstr "TenantID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "TenantID"
+
 msgid "Terminated containers"
 msgstr "Beëindigde containers"
 
@@ -71672,7 +71693,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Deze plugin kan worden gebruikt om informatie te verzamelen van alle MS "
 "Office 365 licenties en serviceplans met behulp van de MSOnline PowerShell "
@@ -89558,6 +89579,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "General Permissions"
+#~ msgstr "Algemene Toestemmingen"
 
 #~ msgid "%/m"
 #~ msgstr "%/m"

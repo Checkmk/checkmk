@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-14 22:51+0000\n"
+"PO-Revision-Date: 2025-05-20 01:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5392,7 +5392,7 @@ msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
 
 msgid "Alert if Acropolis disconnects from hypervisor"
-msgstr ""
+msgstr "Alert, wenn Acropolis die Verbindung zum Hypervisor trennt"
 
 msgid "Alert if failover mode is different from the value configured here."
 msgstr ""
@@ -9898,7 +9898,7 @@ msgstr ""
 "einschränken, indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel "
 "der Annotation sucht."
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "By default, Checkmk imports the AWS tags for EC2 and ELB instances as host "
 "labels for the respective piggyback hosts. The label syntax is 'cmk/aws/tag/"
@@ -9908,18 +9908,13 @@ msgid ""
 "pattern which Checkmk searches for in the key of the AWS tag, or you can "
 "disable the import of AWS tags altogether."
 msgstr ""
-"Standardmäßig importiert Checkmk alle Azure-Merkmale als Host-/Service-"
-"Label. Die importierten Merkmale werden als Host-Label für Ressourcengruppen "
-"und VMs, die als Hosts überwacht werden, und als Service-Label für "
-"Ressourcen, die als Services überwacht werden, hinzugefügt. Die Label-Syntax "
-"lautet 'cmk/azure/tag/{key}:{value}'.<br>Zusätzlich erhält jeder Host, der "
-"eine Ressourcengruppe repräsentiert, das Host-Label 'cmk/azure/"
-"resource_group:{rg_name}', und VMs, die als Hosts überwacht werden, erhalten "
-"das Host-Label 'cmk/azure/vm:instance', was unabhängig von dieser Option "
-"geschieht.<br> Sie können die importierten Merkmale weiter einschränken, "
-"indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel des Azure-"
-"Merkmals sucht, oder Sie können den Import von Azure-Merkmalen ganz "
-"deaktivieren."
+"Standardmäßig importiert Checkmk die AWS-Tags für EC2- und ELB-Instanzen als "
+"Host-Label für die jeweiligen Piggyback-Hosts. Die Label-Syntax lautet 'cmk/"
+"aws/tag/{key}:{value}'.<br>Zusätzlich erhalten die Piggyback-Hosts für EC2-"
+"Instanzen das Host-Label 'cmk/aws/ec2:instance'“, was unabhängig von dieser "
+"Option erfolgt.<br> Sie können die importierten Tags weiter einschränken, "
+"indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel des AWS-Tags "
+"sucht, oder Sie können den Import von AWS-Tags ganz deaktivieren."
 
 msgid ""
 "By default, Python agent plug-ins are written in Python 3. However, since "
@@ -11419,9 +11414,8 @@ msgid "Certificate for encrypted authentication request responses (PEM)"
 msgstr ""
 "Zertifikat für verschlüsselte Antworten auf Authentifizierungsanfragen (PEM)"
 
-#, fuzzy
 msgid "Certificate has no subject alternative name"
-msgstr "Alternativer Name des Zertifikatsgegenstands"
+msgstr "Das Zertifikat hat keinen alternativen Namen für den Betreff"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "Zertifikat ist nicht von der \"Trusted authority\" unterzeichnet"
@@ -13114,6 +13108,14 @@ msgstr "Kunden-Geheimnis"
 
 msgid "ClientID"
 msgstr "Kunden-ID"
+
+#, fuzzy
+msgid "ClientId"
+msgstr "Kunden-ID"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Kunden-Geheimnis"
 
 msgid "Clients"
 msgstr "Clients"
@@ -20893,7 +20895,6 @@ msgstr ""
 "gesendet. Wenn Sie diesen Wert niedriger als den Checkintervall des Hosts "
 "einstellen, werden Protokolle fehlen. "
 
-#, fuzzy
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -20910,14 +20911,17 @@ msgid ""
 msgstr ""
 "Während des Monitorings werden verschiedene Dateien pro Host angelegt. Es "
 "gibt beispielsweise die erkannten Services, Metriken und diverse temporäre "
-"Dateien. Wenn ein Host gelöscht wird, werden diese hostspezifischen Dateien "
-"normalerweise gelöscht. Es gibt allerdings auch Fälle in denen Dateien nur "
-"durch manuelles Löschen entfernt werden, z.B. wenn Sie einen Host von einer "
-"Instanz zu einer anderen verschieben oder einen Host über die "
-"Konfigurationsdateien direkt löschen.<br>Metriken (RRDs) und Archive der HW-/"
-"SW-Inventur werden beim Löschen eines Hosts nicht automatisch gelöscht. "
-"Diese werden nur automatisch nach der konfigurierten Zeit gelöscht, wenn Sie "
-"diese Option konfigurieren."
+"Dateien. Wenn ein Host gelöscht wird, werden diese Dateien normalerweise "
+"gelöscht. Es gibt jedoch Fälle, in denen die Dateien bis zur manuellen "
+"Löschung auf der Festplatte verbleiben, z.B. wenn Sie einen Host von einer "
+"Instanz zu einer anderen verschieben oder einen Host manuell aus der "
+"Konfiguration löschen.<br>Die Metriken (RRDs) und Archive der HW-/SW-"
+"Inventur werden nie beim Löschen eines Hosts automatisch gelöscht. Sie "
+"werden nur automatisch gelöscht, wenn Sie diese Option aktivieren und nach "
+"dem konfigurierten Zeitraum. Diese Option wirkt sich auch auf die "
+"Aufbewahrung von `Agent Update Status`-Dateien aus. Diese Dateien können "
+"ohne einen entsprechenden Host erstellt werden, sollten aber nach einer "
+"Karenzzeit bereinigt werden, wenn der Benutzer den Host nie erstellt."
 
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
@@ -22514,6 +22518,10 @@ msgstr ""
 "Der Benutzer wird nur dann einer Kontaktgruppe zugeordnet, wenn der "
 "angegebene Attributwert mit dem zurückgegebenen Attributwert des Claims "
 "übereinstimmt."
+
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -24154,6 +24162,8 @@ msgstr "Fehler beim Starten des Jobs: %s"
 #, python-format
 msgid "Failed to start the stage action on remote site %s: %s"
 msgstr ""
+"Die Aktion dieses Schrittes konnte auf der Remote-Instanz %s nicht gestartet "
+"werden: %s"
 
 #, python-format
 msgid "Failed to stop job: %s"
@@ -25983,9 +25993,6 @@ msgstr "Allgemein"
 msgid "General Options"
 msgstr "Generelle Einstellungen"
 
-msgid "General Permissions"
-msgstr "Globale Berechtigungen"
-
 msgid "General Settings"
 msgstr "Globale Einstellungen"
 
@@ -26340,6 +26347,10 @@ msgstr "Graphlinien"
 
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Graphoptionen"
 
 msgid "Graph options"
 msgstr "Graphoptionen"
@@ -30463,6 +30474,10 @@ msgstr "Symbol im Monitoring"
 
 msgid "Icons"
 msgstr "Symbole"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d Symbole und Aktionen"
 
 msgid "Ideas Portal"
 msgstr "Ideen-Portal"
@@ -61469,6 +61484,10 @@ msgstr "Tenant-ID / Verzeichnis-ID"
 msgid "TenantID"
 msgstr "TenantID"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "TenantID"
+
 msgid "Terminated containers"
 msgstr "Beendete Container"
 
@@ -67690,6 +67709,9 @@ msgid ""
 "en/wato.html#activate_changes' target='_blank'>Activate changes</a> before "
 "it becomes effective in monitoring."
 msgstr ""
+"Diese Änderung muss via <a href='https://docs.checkmk.com/latest/en/wato."
+"html#activate_changes' target='_blank'>Änderungen aktivieren</a> aktiviert "
+"werden, bevor sie im Monitoring wirksam wird."
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
@@ -69317,9 +69339,10 @@ msgstr ""
 "Zertifikaten prüfen, welche in Java Jar-Containern enthalten sind. Dafür "
 "wird der Kommandozeilenbefehl <tt>jarsigner -verify</tt> verwendet."
 
+#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
 "365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
@@ -86385,6 +86408,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "General Permissions"
+#~ msgstr "Globale Berechtigungen"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Gewünschter Host-Zustand für den definierten Nutanix Host"

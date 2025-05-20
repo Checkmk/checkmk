@@ -13443,6 +13443,14 @@ msgstr "Segreto del cliente"
 msgid "ClientID"
 msgstr "ID cliente"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ID cliente"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Segreto del cliente"
+
 msgid "Clients"
 msgstr "Cliente"
 
@@ -23065,6 +23073,10 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Inserisci il codice di uscita come valore esadecimale a 10 cifre, minuscolo, "
@@ -26610,9 +26622,6 @@ msgstr "Generale"
 msgid "General Options"
 msgstr "Opzioni generali"
 
-msgid "General Permissions"
-msgstr "Permessi generali"
-
 msgid "General Settings"
 msgstr "Impostazioni generali"
 
@@ -26983,6 +26992,10 @@ msgstr "Opzioni del grafico"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metriche con tutti i valori zero"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Opzioni del grafico"
 
 #, fuzzy
 msgid "Graph options"
@@ -31481,6 +31494,10 @@ msgstr "Ricerca in Monitoraggio"
 
 msgid "Icons"
 msgstr "Icone"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d icone e azioni"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -63500,6 +63517,10 @@ msgstr "ID inquilino / ID elenco"
 msgid "TenantID"
 msgstr "ID inquilino"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "ID inquilino"
+
 msgid "Terminated containers"
 msgstr "Contenitori terminati"
 
@@ -71098,7 +71119,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Questo plugin può essere utilizzato per raccogliere informazioni su tutte le "
 "licenze e i piani di servizio di MS Office 365 utilizzando il modulo "
@@ -88796,6 +88817,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "General Permissions"
+#~ msgstr "Permessi generali"
 
 #~ msgid "%/m"
 #~ msgstr "%/m"

@@ -13567,6 +13567,14 @@ msgstr "Segredo do cliente"
 msgid "ClientID"
 msgstr "ID do cliente"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "ID do cliente"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Segredo do Cliente"
+
 msgid "Clients"
 msgstr "Clientes"
 
@@ -23264,6 +23272,10 @@ msgstr ""
 "correspondência entre o valor de correspondência de atributo especificado e "
 "o valor de atributo de reclamação devolvido."
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Insira o código de saída como 10 dígitos, valor hexadecimais em minúsculas, "
@@ -26823,9 +26835,6 @@ msgstr "Geral"
 msgid "General Options"
 msgstr "Opções Gerais"
 
-msgid "General Permissions"
-msgstr "Permissões gerais"
-
 msgid "General Settings"
 msgstr "Configurações Gerais"
 
@@ -27208,6 +27217,10 @@ msgstr "Opções Gráficas"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Métricas com todos os valores zero"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Opções Gráficas"
 
 #, fuzzy
 msgid "Graph options"
@@ -31736,6 +31749,10 @@ msgstr "Pesquisa em Monitorização"
 
 msgid "Icons"
 msgstr "Ícones"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d icons e ações"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -64014,6 +64031,10 @@ msgstr "Identificação do locatário / Identificação do directório"
 msgid "TenantID"
 msgstr "ID do inquilino"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "ID do inquilino"
+
 msgid "Terminated containers"
 msgstr "Contentores encerrados"
 
@@ -71622,7 +71643,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Este plugin pode ser usado para recolher informações de todas as licenças e "
 "planos de serviço do MS Office 365 usando o módulo MSOnline PowerShell."
@@ -89451,6 +89472,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "General Permissions"
+#~ msgstr "Permissões gerais"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Estado do host desejado para o host Nutanix definido"

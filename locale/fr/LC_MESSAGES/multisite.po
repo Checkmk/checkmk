@@ -13638,6 +13638,14 @@ msgstr "Secret du client"
 msgid "ClientID"
 msgstr "Identifiant du client"
 
+#, fuzzy
+msgid "ClientId"
+msgstr "Identifiant du client"
+
+#, fuzzy
+msgid "ClientSecret"
+msgstr "Secret du client"
+
 msgid "Clients"
 msgstr "Clients"
 
@@ -23438,6 +23446,10 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 
+msgid ""
+"Enter the client secret explicitly or select one from the password store."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Entrez le code de sortie sous la forme d'une valeur hexagonale à 10 "
@@ -27026,9 +27038,6 @@ msgstr "Général"
 msgid "General Options"
 msgstr "Options générales"
 
-msgid "General Permissions"
-msgstr "Permissions générales"
-
 msgid "General Settings"
 msgstr "Paramètres généraux"
 
@@ -27408,6 +27417,10 @@ msgstr "Options graphiques"
 #, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Métriques avec toutes les valeurs zéro"
+
+#, fuzzy, python-format
+msgid "Graph not found '%s'"
+msgstr "Options graphiques"
 
 #, fuzzy
 msgid "Graph options"
@@ -31977,6 +31990,10 @@ msgstr "Recherche dans le monitoring"
 
 msgid "Icons"
 msgstr "Icônes"
+
+#, fuzzy
+msgid "Icons and Actions"
+msgstr "%d icônes et actions"
 
 msgid "Ideas Portal"
 msgstr ""
@@ -64560,6 +64577,10 @@ msgstr "ID locataire / ID répertoire"
 msgid "TenantID"
 msgstr "ID du locataire"
 
+#, fuzzy
+msgid "TenantId"
+msgstr "ID du locataire"
+
 msgid "Terminated containers"
 msgstr "Conteneurs terminés"
 
@@ -72293,7 +72314,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
-"licenses and serviceplans using the MSOnline PowerShell module."
+"licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Ce plugin peut être utilisé pour collecter les informations de toutes les "
 "licences et plans de service de MS Office 365 en utilisant le module "
@@ -90368,6 +90389,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#~ msgid "General Permissions"
+#~ msgstr "Permissions générales"
 
 #~ msgid "%/m"
 #~ msgstr "%/m"

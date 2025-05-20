@@ -22,7 +22,11 @@ def main(
     if werks_to_check:
         pass
     elif changed_werk_files := os.environ.get("CHANGED_WERK_FILES"):
-        werks_to_check = list(Path(line) for line in changed_werk_files.split(" ") if line)
+        werks_to_check = [
+            path
+            for path in list(Path(line) for line in changed_werk_files.split(" ") if line)
+            if path.stem.isdigit()  # we don't want to check config
+        ]
     else:
         werks_to_check = list(
             path

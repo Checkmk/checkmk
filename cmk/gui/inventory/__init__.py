@@ -71,6 +71,7 @@ __all__ = [
     "parse_internal_raw_path",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",
+    "inventory_of_host",
 ]
 
 
@@ -177,7 +178,7 @@ class _HostInvAPIResponse(TypedDict):
     result: str | Mapping[str, SDRawTree]
 
 
-def _inventory_of_host(
+def inventory_of_host(
     site_id: SiteId | None, host_name: HostName, filters: Sequence[SDFilterChoice]
 ) -> ImmutableTree:
     verify_permission(site_id, host_name)
@@ -214,7 +215,7 @@ def page_host_inv_api() -> None:
         for raw_host_name in hosts:
             _check_for_valid_hostname(raw_host_name)
             result[raw_host_name] = serialize_tree(
-                _inventory_of_host(
+                inventory_of_host(
                     SiteId(raw_site_id) if (raw_site_id := api_request.get("site")) else None,
                     HostName(raw_host_name),
                     (

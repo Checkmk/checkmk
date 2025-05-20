@@ -1183,7 +1183,7 @@ export function init_messages_and_werks(
     }
 
     create_initial_ids(
-        "help_links",
+        "help",
         "werks",
         "change_log.py?show_unack=1&wo_compatibility=3",
     );

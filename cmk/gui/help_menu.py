@@ -15,7 +15,13 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MegaMenuRegistry
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicEntries
+from cmk.gui.type_defs import (
+    MegaMenu,
+    TopicMenuItem,
+    TopicMenuTopic,
+    TopicMenuTopicEntries,
+    TopicMenuTopicSegment,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
@@ -112,34 +118,54 @@ def default_developer_items() -> TopicMenuTopicEntries:
                 "emblem": "api",
             },
         ),
-        TopicMenuItem(
-            name="rest_api_introduction",
-            title=_("REST API introduction"),
-            url=doc_reference_url(DocReference.REST_API),
-            target="_blank",
+        TopicMenuTopicSegment(
+            mode="multilevel",
+            name="rest_api",
+            title=_("REST API"),
             sort_index=30,
-            icon={
-                "icon": "global_settings",
-                "emblem": "api",
-            },
-        ),
-        TopicMenuItem(
-            name="rest_api_documentation",
-            title=_("REST API documentation"),
-            url="openapi/",
-            target="_blank",
-            sort_index=40,
-            icon={
-                "icon": "global_settings",
-                "emblem": "api",
-            },
-        ),
-        TopicMenuItem(
-            name="rest_api_interactive_gui",
-            title=_("REST API interactive GUI"),
-            url="api/1.0/ui/",
-            target="_blank",
-            sort_index=50,
+            entries=[
+                TopicMenuItem(
+                    name="rest_api_introduction",
+                    title=_("Introduction"),
+                    url=doc_reference_url(DocReference.REST_API),
+                    target="_blank",
+                    sort_index=10,
+                    icon={
+                        "icon": "global_settings",
+                        "emblem": "api",
+                    },
+                ),
+                TopicMenuTopicSegment(
+                    mode="indented",
+                    name="rest_api_version_1",
+                    title=_("Version 1"),
+                    sort_index=20,
+                    entries=[
+                        TopicMenuItem(
+                            name="rest_api_documentation",
+                            title=_("Documentation"),
+                            url="openapi/",
+                            target="_blank",
+                            sort_index=10,
+                            icon={
+                                "icon": "global_settings",
+                                "emblem": "api",
+                            },
+                        ),
+                        TopicMenuItem(
+                            name="rest_api_interactive_gui",
+                            title=_("Interactive GUI"),
+                            url="api/1.0/ui/",
+                            target="_blank",
+                            sort_index=20,
+                            icon={
+                                "icon": "global_settings",
+                                "emblem": "api",
+                            },
+                        ),
+                    ],
+                ),
+            ],
             icon={
                 "icon": "global_settings",
                 "emblem": "api",

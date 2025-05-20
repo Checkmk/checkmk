@@ -124,7 +124,7 @@
       }
     }
 
-    &.help_links > div.popup_menu {
+    &.help > div.popup_menu {
       @include small-menu;
     }
 
@@ -192,7 +192,7 @@
       }
 
       &#popup_menu_user div.navigation_bar div.search_bar,
-      &#popup_menu_help_links div.navigation_bar div.search_bar {
+      &#popup_menu_help div.navigation_bar div.search_bar {
         flex-grow: 0;
       }
 

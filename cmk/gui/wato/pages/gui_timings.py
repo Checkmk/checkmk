@@ -15,7 +15,7 @@ class GuiTimingsPage(Page):
         return "GUI timings"
 
     def page(self) -> PageResult:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help"], _("Info"))
         make_header(
             html,
             self._title(),

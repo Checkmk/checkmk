@@ -193,7 +193,10 @@ class MegaMenuRenderer:
         if any_show_more_items(topics):
             html.open_div()
             html.more_button(
-                id_=more_id, dom_levels_up=3, additional_js=hide_entries_js, with_text=True
+                id_=more_id,
+                dom_levels_up=3,
+                additional_js=hide_entries_js,
+                with_text=True,
             )
             html.close_div()
         html.close_div()
@@ -212,7 +215,11 @@ class MegaMenuRenderer:
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
         show_more = all(i.is_show_more for i in topic.items)
         topic_id = "_".join(
-            [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())]
+            [
+                menu_id,
+                "topic",
+                "".join(c.lower() for c in topic.title if not c.isspace()),
+            ]
         )
 
         html.open_div(
@@ -244,7 +251,10 @@ class MegaMenuRenderer:
         for item in sorted(topic.items, key=lambda g: g.sort_index):
             self._show_item(item)
         html.open_li(class_="show_all_items")
-        html.open_a(href=None, onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
+        html.open_a(
+            href=None,
+            onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id,
+        )
         if user.get_attribute("icons_per_item"):
             html.icon("trans")
         html.write_text_permissive(_("Show all"))

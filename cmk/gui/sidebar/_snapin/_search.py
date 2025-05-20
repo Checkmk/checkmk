@@ -175,7 +175,8 @@ class ABCQuicksearchConductor(abc.ABC):
 class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
     """Passes queries through to a non livestatus plug-in
 
-    There is no aggregation done by this conductor. It deals with a single search plug-in."""
+    There is no aggregation done by this conductor. It deals with a single search plug-in.
+    """
 
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
@@ -721,7 +722,10 @@ class QuicksearchSnapin(SidebarSnapin):
         html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button(
-            "#", _("Search"), "quicksearch", onclick="cmk.quicksearch.on_search_click();"
+            "#",
+            _("Search"),
+            "quicksearch",
+            onclick="cmk.quicksearch.on_search_click();",
         )
         html.close_div()
         html.div("", id_="mk_side_clear")
@@ -969,7 +973,10 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             "servicegroup": ["servicegroup", "name"],
             "svcgroups": ["servicegroup_regex", "name"],
             # Host/Service domain (hosts, services)
-            "allservices": ["%sgroups" % self._group_type, "%s_groups" % self._group_type],
+            "allservices": [
+                "%sgroups" % self._group_type,
+                "%s_groups" % self._group_type,
+            ],
             "searchsvc": [
                 "%sgroups" % self._group_type,
                 self._group_type == "service" and "groups" or "host_groups",
@@ -1155,10 +1162,22 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             # View name     Filter name
             # Exact matches (always uses hostname as filter)
             "host": {"name": "host", "address": "host", "alias": "host"},
-            "allservices": {"name": "host_regex", "address": "host_regex", "alias": "host_regex"},
+            "allservices": {
+                "name": "host_regex",
+                "address": "host_regex",
+                "alias": "host_regex",
+            },
             # Multi matches
-            "searchhost": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
-            "searchsvc": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
+            "searchhost": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias",
+            },
+            "searchsvc": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias",
+            },
         }
 
         view_info = supported_views.get(for_view)
@@ -1481,7 +1500,7 @@ class MenuSearchResultsRenderer(abc.ABC):
             mega_menu_registry.menu_monitoring(),
         ]:
             mapping[str(menu.title)] = (
-                menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0],
+                (menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0]),
                 menu.icon if menu.icon else default_icons[1],
             )
 
@@ -1513,7 +1532,10 @@ class MenuSearchResultsRenderer(abc.ABC):
         results: SearchResultsByTopic,
     ) -> str:
         with output_funnel.plugged():
-            default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
+            default_icons = (
+                "main_" + self.search_type + "_active",
+                "main_" + self.search_type,
+            )
             icon_mapping = self._get_icon_mapping(default_icons)
 
             for topic, search_results_iter in results:

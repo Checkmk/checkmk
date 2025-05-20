@@ -115,7 +115,9 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     return only_sites
 
 
-def make_topic_menu(visuals: Sequence[tuple[str, tuple[str, Visual]]]) -> list[TopicMenuTopic]:
+def make_topic_menu(
+    visuals: Sequence[tuple[str, tuple[str, Visual]]],
+) -> list[TopicMenuTopic]:
     topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
 
     by_topic: dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
@@ -223,5 +225,7 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
                 html.close_li()
             else:
                 bulletlink(
-                    item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)"
+                    item.title,
+                    item.url,
+                    onclick="return cmk.sidebar.wato_views_clicked(this)",
                 )

@@ -283,7 +283,10 @@ def register(
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(
-        endpoint_registry, versioned_endpoint_registry, endpoint_family_registry, job_registry
+        endpoint_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
+        job_registry,
     )
 
     register_userroles(config_file_registry)

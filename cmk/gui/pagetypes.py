@@ -1207,7 +1207,8 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
                 page = instances.instance((owner_id, page_name))
             except KeyError:
                 raise MKUserError(
-                    None, _("The requested %s does not exist") % self._type.phrase("title")
+                    None,
+                    _("The requested %s does not exist") % self._type.phrase("title"),
                 )
 
             page_dict = page.serialize()
@@ -2356,7 +2357,11 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             icon=page_type_.type_icon(),
         )
 
-        if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):
+        if page_type_.type_name() in (
+            "pagetype_topic",
+            "bookmark_list",
+            "custom_snapin",
+        ):
             general_items.append(item)
         elif page_type_.type_name() == "sla_configuration":
             business_reporting_items.append(item)

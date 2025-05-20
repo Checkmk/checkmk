@@ -413,7 +413,9 @@ class ColumnSpec:
 
         if isinstance(value, dict):
 
-            def _get_join_value(value: _RawColumnSpec | _RawLegacyColumnSpec) -> ColumnName | None:
+            def _get_join_value(
+                value: _RawColumnSpec | _RawLegacyColumnSpec,
+            ) -> ColumnName | None:
                 if isinstance(join_value := value.get("join_value"), str):
                     return join_value
                 if isinstance(join_value := value.get("join_index"), str):

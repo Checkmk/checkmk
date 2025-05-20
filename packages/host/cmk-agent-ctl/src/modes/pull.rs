@@ -158,6 +158,14 @@ impl MaxConnectionsGuard {
             active_connections: HashMap::new(),
         }
     }
+
+    pub fn obtain_connection_semaphore(&mut self, ip_addr: IpAddr) -> Arc<Semaphore> {
+        Arc::clone(
+            self.active_connections
+                .entry(ip_addr)
+                .or_insert_with(|| Arc::new(Semaphore::new(self.max_connections))),
+        )
+    }
 }
 
 pub fn fn_thread(pull_config: config::PullConfig) -> AnyhowResult<()> {
@@ -346,33 +354,26 @@ async fn _pull_loop(
             }
             ConnectionMode::Active(crypto_mode) => {
                 info!("{}: Handling pull request.", remote);
-                // TODO(sk): refactor code below. This is mandatory intermediate control point
-                let request_handler_future = make_handle_request_future(
-                    stream,
-                    agent_output_collector.clone(),
-                    remote.ip(),
-                    crypto_mode,
-                    pull_state.config.connection_timeout,
-                );
                 let ip_addr = remote.ip();
-                let sem = guard
-                    .active_connections
-                    .entry(ip_addr)
-                    .or_insert_with(|| Arc::new(Semaphore::new(guard.max_connections)));
-                // NOTE(sk). Below this point we should NOT use shared mutable `guard`
-                if let Ok(permit) = Arc::clone(sem).try_acquire_owned() {
-                    let task_num = max_connections - sem.available_permits();
-                    let request_handler_task = async move {
-                        let res = request_handler_future.await;
+                let sem = guard.obtain_connection_semaphore(ip_addr);
+                // NOTE(sk). Below this point we should NOT use shared mutable `guard` - may "leak"
+                if let Ok(permit) = sem.try_acquire_owned() {
+                    let task_num = max_connections - permit.semaphore().available_permits();
+                    let io_future = make_handle_request_future(
+                        stream,
+                        agent_output_collector.clone(),
+                        remote.ip(),
+                        crypto_mode,
+                        pull_state.config.connection_timeout,
+                    );
+                    let main_future = async move {
+                        let res = io_future.await;
                         drop(permit);
-                        debug!(
-                            "processed task {} from ip {:?} result {:?}",
-                            task_num, ip_addr, res
-                        );
+                        debug!("processed task {task_num} from ip {ip_addr:?} result {res:?}");
                         res
                     };
                     tokio::spawn(async move {
-                        if let Err(err) = request_handler_task.await {
+                        if let Err(err) = main_future.await {
                             warn!("{}: Request failed. ({})", remote, err)
                         };
                     });

@@ -86,10 +86,6 @@ load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
 
 httplib_workspace()
 
-load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
-
-rabbitmq_workspace()
-
 load("@aspect_rules_lint//lint:ruff.bzl", "fetch_ruff")
 
 fetch_ruff(RUFF_VERSION)

@@ -420,6 +420,17 @@ http_archive(
 )
 
 http_archive(
+    name = "rabbitmq",
+    build_file = "//omd/packages/rabbitmq:BUILD",
+    sha256 = "7bfc742e3d227e8a2b1ea2a0b5ef3ba4b6a7987d5e220e0fbf0919d29b6ed43c",
+    strip_prefix = "rabbitmq_server-3.13.6",
+    urls = [
+        "https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.13.6/rabbitmq-server-generic-unix-3.13.6.tar.xz",
+        UPSTREAM_MIRROR_URL + "rabbitmq-server-generic-unix-3.13.6.tar.xz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

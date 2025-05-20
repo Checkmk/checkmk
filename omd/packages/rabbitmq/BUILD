@@ -13,12 +13,12 @@ genrule(
     ],
     cmd = """
         tar --dereference -czvf $$(realpath $(RULEDIR))/rabbitmq.tar.gz  \
-            -C external \
+            -C external/$$(dirname $$(echo $(rlocationpaths :all_srcs) | awk '{print $$1}')) \
             --exclude=LICENSE* \
             --exclude=INSTALL* \
             --exclude=BUILD* \
             --exclude=WORKSPACE* \
-            rabbitmq/;
+            .;
     """,
     visibility = ["//visibility:public"],
 )

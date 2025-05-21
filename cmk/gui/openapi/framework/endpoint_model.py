@@ -131,12 +131,13 @@ class SignatureParametersProcessor:
             source = param_info.sources[0]
             default = param_info.default
             match source:
-                case PathParam(description=description, example=example):
+                case PathParam(alias=alias, description=description, example=example):
                     path[name] = Parameter(
                         annotation=param_info.annotation,
                         default=default,
                         description=description,
                         example=example,
+                        alias=alias,
                     )
                 case HeaderParam(alias=alias, description=description, example=example):
                     # we always set a case-insensitive alias for headers
@@ -311,6 +312,10 @@ class EndpointModel[**P, T]:
     @property
     def path_parameters(self) -> Mapping[str, Parameter]:
         return self._parameters.path
+
+    @property
+    def path_parameter_names(self) -> Mapping[str, str]:
+        return {k: v.alias or k for k, v in self.path_parameters.items()}
 
     @property
     def has_path_parameters(self) -> bool:

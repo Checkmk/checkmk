@@ -21,19 +21,21 @@ class RawRequestData(TypedDict):
 
 
 class _BaseParameterAnnotation:
-    __slots__ = ("description", "example")
+    __slots__ = ("alias", "description", "example")
 
-    def __init__(self, *, description: str, example: str) -> None:
+    def __init__(self, *, description: str, example: str, alias: str | None = None) -> None:
         super().__init__()
+        self.alias = alias
         self.description = description
         self.example = example
 
     def __repr__(self) -> str:
-        return self.__class__.__name__
+        return f"{self.__class__.__name__}(alias={self.alias!r})"
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, self.__class__)
+            and self.alias == other.alias
             and self.description == other.description
             and self.example == other.example
         )
@@ -43,29 +45,11 @@ class PathParam(_BaseParameterAnnotation):
     __slots__ = ()
 
 
-class _AliasedParameterAnnotation(_BaseParameterAnnotation):
-    __slots__ = ("alias",)
-
-    def __init__(self, *, description: str, example: str, alias: str | None = None) -> None:
-        super().__init__(description=description, example=example)
-        self.alias = alias
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(alias={self.alias!r})"
-
-    def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, self.__class__)
-            and self.alias == other.alias
-            and super().__eq__(other)
-        )
-
-
-class HeaderParam(_AliasedParameterAnnotation):
+class HeaderParam(_BaseParameterAnnotation):
     __slots__ = ()
 
 
-class QueryParam(_AliasedParameterAnnotation):
+class QueryParam(_BaseParameterAnnotation):
     __slots__ = ("is_list",)
 
     def __init__(

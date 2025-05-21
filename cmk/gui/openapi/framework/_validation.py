@@ -13,7 +13,7 @@ from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, Status
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
-from ._types import HeaderParam, QueryParam
+from ._types import HeaderParam, PathParam, QueryParam
 from ._utils import get_stripped_origin, strip_annotated
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
@@ -115,8 +115,10 @@ class ParameterValidator:
     @dataclasses.dataclass(slots=True)
     class Data:
         header_names: set[str] = dataclasses.field(default_factory=set)
+        path_names: set[str] = dataclasses.field(default_factory=set)
         query_names: set[str] = dataclasses.field(default_factory=set)
         header_aliases: list[str] = dataclasses.field(default_factory=list)
+        path_aliases: list[str] = dataclasses.field(default_factory=list)
         query_aliases: list[str] = dataclasses.field(default_factory=list)
 
     @staticmethod
@@ -131,6 +133,7 @@ class ParameterValidator:
             ParameterValidator._validate_source(data, name, param_info)
 
         ParameterValidator._validate_aliasing("query", data.query_names, data.query_aliases)
+        ParameterValidator._validate_aliasing("path", data.path_names, data.path_aliases)
         ParameterValidator._validate_aliasing("header", data.header_names, data.header_aliases)
 
     @staticmethod
@@ -157,6 +160,9 @@ class ParameterValidator:
         if isinstance(source, HeaderParam):
             ParameterValidator._validate_header_param(data, name, source)
 
+        elif isinstance(source, PathParam):
+            ParameterValidator._validate_path_param(data, name, source)
+
         elif isinstance(source, QueryParam):
             ParameterValidator._validate_query_param(data, name, param_info, source)
 
@@ -170,6 +176,13 @@ class ParameterValidator:
 
         if source.alias:
             data.header_aliases.append(source.alias.casefold())
+
+    @staticmethod
+    def _validate_path_param(data: Data, name: str, source: PathParam) -> None:
+        data.path_names.add(name)
+
+        if source.alias:
+            data.path_aliases.append(source.alias)
 
     @staticmethod
     def _validate_query_param(
@@ -328,5 +341,5 @@ class EndpointValidator:
             endpoint, model, endpoint_definition.handler.status_descriptions
         )
         PathParamsValidator.verify_path_params_presence(
-            endpoint_definition.metadata.path, set(model.path_parameters)
+            endpoint_definition.metadata.path, set(model.path_parameter_names.values())
         )

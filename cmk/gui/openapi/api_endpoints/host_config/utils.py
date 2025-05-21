@@ -15,6 +15,7 @@ from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewA
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
+from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -31,6 +32,7 @@ def serialize_host(
 ) -> HostConfigModel:
     links = []
     if compute_links:
+        links = generate_links("host_config", host.id())
         links.append(
             LinkModel.create(
                 rel="cmk/folder_config",

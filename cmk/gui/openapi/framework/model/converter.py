@@ -10,6 +10,7 @@ from typing import Literal
 from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.user import UserId
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Servicegroups
@@ -151,11 +152,12 @@ class GroupConverter:
 
 class UserConverter:
     @staticmethod
-    def active(user: str) -> str:
+    def active(user: str) -> UserId:
+        user_id = UserId.parse(user)
         users = userdb.load_users(lock=False)
-        if user not in users:
+        if user_id not in users:
             raise ValueError(f"User {user!r} does not exist.")
-        return user
+        return user_id
 
 
 class TagConverter:

@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import SiteId
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
@@ -58,7 +59,10 @@ def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
 @dataclass(kw_only=True)
 class BaseHostTagGroupModel:
     tag_address_family: (
-        Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("address_family")))]
+        Annotated[
+            Literal["ip-v4-only", "ip-v6-only", "ip-v4v6", "no-ip"],
+            AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("address_family"))),
+        ]
         | ApiOmitted
     ) = api_field(
         description="The IP address family of the host.",
@@ -67,14 +71,20 @@ class BaseHostTagGroupModel:
     )
 
     tag_agent: (
-        Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("agent")))]
+        Annotated[
+            Literal["cmk-agent", "all-agents", "special-agents", "no-agent"],
+            AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("agent"))),
+        ]
         | ApiOmitted
     ) = api_field(
         description="Agent and API integrations", example="cmk-agent", default_factory=ApiOmitted
     )
 
     tag_snmp_ds: (
-        Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("snmp_ds")))]
+        Annotated[
+            Literal["no-snmp", "snmp-v2", "snmp-v1"],
+            AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("snmp_ds"))),
+        ]
         | ApiOmitted
     ) = api_field(
         description="The SNMP data source of the host.",
@@ -83,7 +93,10 @@ class BaseHostTagGroupModel:
     )
 
     tag_piggyback: (
-        Annotated[str, AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("piggyback")))]
+        Annotated[
+            Literal["auto-piggyback", "piggyback", "no-piggyback"],
+            AfterValidator(lambda v: _validate_tag_id(v, TagGroupID("piggyback"))),
+        ]
         | ApiOmitted
     ) = api_field(
         description="Use piggyback data for this host.",
@@ -98,7 +111,7 @@ class BaseHostAttributeModel:
         description="Add a comment or describe this host", default_factory=ApiOmitted
     )
 
-    site: str | ApiOmitted = api_field(
+    site: SiteId | ApiOmitted = api_field(
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
 
@@ -128,13 +141,13 @@ class BaseHostAttributeModel:
         description="A list of IPv6 addresses.", default_factory=ApiOmitted
     )
 
-    # TODO: reevaluate edition handling
+    # TODO: reevaluate edition handling - not in raw
     bake_agent_package: bool | ApiOmitted = api_field(
         description="Bake agent packages for this folder even if it is empty.",
         default_factory=ApiOmitted,
     )
-    # TODO: reevaluate edition handling
-    cmk_agent_connection: str | ApiOmitted = api_field(
+    # TODO: reevaluate edition handling - not in raw
+    cmk_agent_connection: Literal["push-agent", "pull-agent"] | ApiOmitted = api_field(
         description=(
             "This configures the communication direction of this host.\n"
             f" * `{HostAgentConnectionMode.PULL.value}` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
@@ -168,18 +181,18 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    management_address: Annotated[str, AfterValidator(HostAddressConverter())] | ApiOmitted = (
-        api_field(
-            description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
-            default_factory=ApiOmitted,
-        )
+    management_address: (
+        Annotated[HostAddress, TypedPlainValidator(str, HostAddressConverter())] | ApiOmitted
+    ) = api_field(
+        description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
+        default_factory=ApiOmitted,
     )
 
-    management_snmp_community: SNMPCredentialsModel | None | ApiOmitted = api_field(
+    management_snmp_community: SNMPCredentialsModel | ApiOmitted = api_field(
         description="SNMP credentials", default_factory=ApiOmitted
     )
 
-    management_ipmi_credentials: IPMIParametersModel | None | ApiOmitted = api_field(
+    management_ipmi_credentials: IPMIParametersModel | ApiOmitted = api_field(
         description="IPMI credentials", default_factory=ApiOmitted
     )
 
@@ -215,7 +228,9 @@ class BaseHostAttributeModel:
         return value
 
     @staticmethod
-    def management_protocol_to_internal(value: str) -> str | None:
+    def management_protocol_to_internal(
+        value: Literal["none", "snmp", "ipmi"],
+    ) -> Literal["snmp", "ipmi"] | None:
         if value == "none":
             return None
         return value
@@ -285,9 +300,85 @@ class HostViewAttributeModel(
             tag_piggyback=value.get("tag_piggyback", ApiOmitted()),
             tag_snmp_ds=value.get("tag_snmp_ds", ApiOmitted()),
             tag_address_family=value.get("tag_address_family", ApiOmitted()),
+            locked_attributes=(
+                list(value["locked_attributes"]) if "locked_attributes" in value else ApiOmitted()
+            ),
+            locked_by=(
+                LockedByModel.from_internal(value["locked_by"])
+                if "locked_by" in value
+                else ApiOmitted()
+            ),
             dynamic_fields={
                 k: v
                 for k, v in value.items()
                 if (k not in static_attributes or k == "tag_criticality") and isinstance(v, str)
             },
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class HostUpdateAttributeModel(
+    BaseHostAttributeModel, BaseHostTagGroupModel, FolderCustomHostAttributesAndTagGroupsModel
+):
+    def to_internal(self) -> HostAttributes:
+        attributes = HostAttributes()
+        if not isinstance(self.alias, ApiOmitted):
+            attributes["alias"] = self.alias
+        if not isinstance(self.site, ApiOmitted):
+            attributes["site"] = self.site
+        if not isinstance(self.parents, ApiOmitted):
+            attributes["parents"] = self.parents
+        if not isinstance(self.contactgroups, ApiOmitted):
+            attributes["contactgroups"] = self.contactgroups.to_internal()
+        if not isinstance(self.ipaddress, ApiOmitted):
+            attributes["ipaddress"] = self.ipaddress
+        if not isinstance(self.ipv6address, ApiOmitted):
+            attributes["ipv6address"] = self.ipv6address
+        if not isinstance(self.additional_ipv4addresses, ApiOmitted):
+            attributes["additional_ipv4addresses"] = self.additional_ipv4addresses
+        if not isinstance(self.additional_ipv6addresses, ApiOmitted):
+            attributes["additional_ipv6addresses"] = self.additional_ipv6addresses
+        if not isinstance(self.bake_agent_package, ApiOmitted):
+            attributes["bake_agent_package"] = self.bake_agent_package
+        if not isinstance(self.cmk_agent_connection, ApiOmitted):
+            attributes["cmk_agent_connection"] = self.cmk_agent_connection
+        if not isinstance(self.snmp_community, ApiOmitted):
+            attributes["snmp_community"] = self.snmp_community_to_internal(self.snmp_community)
+        if not isinstance(self.labels, ApiOmitted):
+            attributes["labels"] = self.labels
+        if not isinstance(self.waiting_for_discovery, ApiOmitted):
+            attributes["waiting_for_discovery"] = self.waiting_for_discovery
+        if not isinstance(self.network_scan, ApiOmitted):
+            attributes["network_scan"] = self.network_scan.to_internal()
+        if not isinstance(self.management_protocol, ApiOmitted):
+            attributes["management_protocol"] = self.management_protocol_to_internal(
+                self.management_protocol
+            )
+        if not isinstance(self.management_address, ApiOmitted):
+            attributes["management_address"] = self.management_address
+        if not isinstance(self.management_snmp_community, ApiOmitted):
+            attributes["management_snmp_community"] = self.snmp_community_to_internal(
+                self.management_snmp_community
+            )
+        if not isinstance(self.management_ipmi_credentials, ApiOmitted):
+            attributes["management_ipmi_credentials"] = (
+                self.management_ipmi_credentials.to_internal()
+            )
+        if not isinstance(self.tag_agent, ApiOmitted):
+            attributes["tag_agent"] = self.tag_agent
+        if not isinstance(self.tag_piggyback, ApiOmitted):
+            attributes["tag_piggyback"] = self.tag_piggyback
+        if not isinstance(self.tag_snmp_ds, ApiOmitted):
+            attributes["tag_snmp_ds"] = self.tag_snmp_ds
+        if not isinstance(self.tag_address_family, ApiOmitted):
+            attributes["tag_address_family"] = self.tag_address_family
+        if not isinstance(self.locked_attributes, ApiOmitted):
+            attributes["locked_attributes"] = self.locked_attributes
+        if not isinstance(self.locked_by, ApiOmitted):
+            attributes["locked_by"] = self.locked_by.to_internal()
+
+        if not isinstance(self.dynamic_fields, ApiOmitted):
+            for k, v in self.dynamic_fields.items():
+                attributes[k] = v  # type: ignore[literal-required]
+
+        return attributes

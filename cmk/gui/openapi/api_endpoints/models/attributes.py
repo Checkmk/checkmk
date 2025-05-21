@@ -6,12 +6,15 @@ import datetime as dt
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from ipaddress import IPv4Network
 from typing import Annotated, Literal, Self
 
 from annotated_types import Ge, Interval, MaxLen, MinLen
 from pydantic import AfterValidator, model_validator, WithJsonSchema
 
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 
 from cmk.utils.translations import TranslationOptionsSpec
 
@@ -21,13 +24,21 @@ from cmk.gui.fields.attributes import (
     PrivacyProtocolConverter,
     PrivacyProtocolType,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import IPv4NetworkString, IPv4String, RegexString
-from cmk.gui.openapi.framework.model.converter import GroupConverter, TagConverter, UserConverter
+from cmk.gui.openapi.framework.model.common_fields import IPv4String, RegexString
+from cmk.gui.openapi.framework.model.converter import (
+    GroupConverter,
+    TagConverter,
+    TypedPlainValidator,
+    UserConverter,
+)
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 from cmk.gui.watolib.host_attributes import (
+    ExcludeIPRange,
     HostContactGroupSpec,
     IPMICredentials,
+    IPRange,
     MetaData,
     NetworkScanResult,
     NetworkScanSpec,
@@ -59,6 +70,15 @@ class HostContactGroupModel:
             recurse_use=value["recurse_use"],
             recurse_perms=value["recurse_perms"],
         )
+
+    def to_internal(self) -> HostContactGroupSpec:
+        return {
+            "groups": self.groups,
+            "use": self.use,
+            "use_for_services": self.use_for_services,
+            "recurse_use": self.recurse_use,
+            "recurse_perms": self.recurse_perms,
+        }
 
 
 @dataclass(kw_only=True, slots=True)
@@ -214,19 +234,20 @@ class IPAddressRangeModel:
 @dataclass(kw_only=True, slots=True)
 class IPNetworkModel:
     type: Literal["ip_network"] = api_field(description="Select an entire network")
-    network: IPv4NetworkString = api_field(
+    network: IPv4Network = api_field(
         description="A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, maximum prefix length is 30 bit.\n\nValid examples:\n\n * `192.168.0.0/24`\n * `192.168.0.0/255.255.255.0`"
     )
 
     @classmethod
-    def from_internal(cls, value: tuple[Literal["ip_network"], str]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_network"], tuple[str, int]]) -> Self:
+        network, mask = value[1]
         return cls(
             type=value[0],
-            network=value[1],
+            network=IPv4Network(f"{network}/{mask}"),
         )
 
-    def to_internal(self) -> tuple[Literal["ip_network"], str]:
-        return self.type, self.network
+    def to_internal(self) -> tuple[Literal["ip_network"], tuple[str, int]]:
+        return self.type, (str(self.network.network_address), self.network.prefixlen)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -235,14 +256,14 @@ class IPAddressesModel:
     addresses: list[IPv4String] = api_field(description="List of IPv4 addresses")
 
     @classmethod
-    def from_internal(cls, value: tuple[Literal["ip_list"], list[str]]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_list"], Sequence[HostAddress]]) -> Self:
         return cls(
             type=value[0],
             addresses=[IPv4String(x) for x in value[1]],
         )
 
-    def to_internal(self) -> tuple[Literal["ip_list"], list[str]]:
-        return self.type, [str(x) for x in self.addresses]
+    def to_internal(self) -> tuple[Literal["ip_list"], Sequence[HostAddress]]:
+        return self.type, [HostAddress(x) for x in self.addresses]
 
 
 @dataclass(kw_only=True, slots=True)
@@ -253,34 +274,38 @@ class IPRegexpModel:
     )
 
     @classmethod
-    def from_internal(cls, value: tuple[Literal["ip_regex_list"], list[str]]) -> Self:
+    def from_internal(cls, value: tuple[Literal["ip_regex_list"], Sequence[str]]) -> Self:
         return cls(
             type=value[0],
             regexp_list=[RegexString(x) for x in value[1]],
         )
 
-    def to_internal(self) -> tuple[Literal["ip_regex_list"], list[str]]:
+    def to_internal(self) -> tuple[Literal["ip_regex_list"], Sequence[str]]:
         return self.type, [str(x) for x in self.regexp_list]
 
 
-IPRangeWithRegexpModel = IPAddressRangeModel | IPNetworkModel | IPAddressesModel | IPRegexpModel
+IPRangeModel = IPAddressRangeModel | IPNetworkModel | IPAddressesModel
+IPRangeWithRegexpModel = IPRangeModel | IPRegexpModel
 _CheckmkTime = tuple[int, int]
 
 
 class IPRangeConverter:
     @staticmethod
-    def from_internal(value: tuple) -> IPRangeWithRegexpModel:
-        match value[0]:
-            case "ip_range":
-                return IPAddressRangeModel.from_internal(value)
-            case "ip_network":
-                return IPNetworkModel.from_internal(value)
-            case "ip_list":
-                return IPAddressesModel.from_internal(value)
-            case "ip_regex_list":
-                return IPRegexpModel.from_internal(value)
-            case _:
-                raise ValueError(f"Unknown IP range type: {value[0]!r}")
+    def from_internal(value: IPRange) -> IPRangeModel:
+        if value[0] == "ip_range":
+            return IPAddressRangeModel.from_internal(value)
+        if value[0] == "ip_network":
+            return IPNetworkModel.from_internal(value)
+        if value[0] == "ip_list":
+            return IPAddressesModel.from_internal(value)
+        raise ValueError(f"Unknown IP range type: {value[0]!r}")
+
+    @staticmethod
+    def from_internal_exclude(value: ExcludeIPRange) -> IPRangeWithRegexpModel:
+        if value[0] == "ip_regex_list":
+            return IPRegexpModel.from_internal(value)
+
+        return IPRangeConverter.from_internal(value)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -420,19 +445,46 @@ class TranslateNamesModel:
             return "nop"
         return value
 
+    @staticmethod
+    def case_to_internal(
+        value: Literal["nop", "lower", "upper"],
+    ) -> Literal["lower", "upper"] | None:
+        if value == "nop":
+            return None
+        return value
+
     @classmethod
     def from_internal(cls, value: TranslationOptionsSpec) -> "TranslateNamesModel":
         return cls(
             case=TranslateNamesModel.case_from_internal(value.get("case")),
             drop_domain=value["drop_domain"] if "drop_domain" in value else ApiOmitted(),
-            regex=[RegexpRewritesModel.from_internal(entry) for entry in value["mapping"]],
-            mapping=[DirectMappingModel.from_internal(entry) for entry in value["regex"]],
+            regex=[RegexpRewritesModel.from_internal(entry) for entry in value["regex"]],
+            mapping=[DirectMappingModel.from_internal(entry) for entry in value["mapping"]],
         )
+
+    def to_internal(self) -> TranslationOptionsSpec:
+        if not isinstance(self.regex, ApiOmitted):
+            regex = [entry.to_internal() for entry in self.regex]
+        else:
+            regex = []
+        if not isinstance(self.mapping, ApiOmitted):
+            mapping = [entry.to_internal() for entry in self.mapping]
+        else:
+            mapping = []
+        spec = TranslationOptionsSpec(
+            case=TranslateNamesModel.case_to_internal(self.case),
+            regex=regex,
+            mapping=mapping,
+        )
+        if not isinstance(self.drop_domain, ApiOmitted):
+            spec["drop_domain"] = self.drop_domain
+
+        return spec
 
 
 @dataclass(kw_only=True, slots=True)
 class NetworkScanModel:
-    ip_ranges: list[IPRangeWithRegexpModel] = api_field(
+    ip_ranges: list[IPRangeModel] = api_field(
         alias="addresses", description="IPv4 addresses to include."
     )
     exclude_ranges: list[IPRangeWithRegexpModel] | ApiOmitted = api_field(
@@ -456,9 +508,11 @@ class NetworkScanModel:
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
         # default=100,
     )
-    run_as: Annotated[str, AfterValidator(UserConverter.active)] | ApiOmitted = api_field(
-        description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
-        default_factory=ApiOmitted,
+    run_as: Annotated[UserId, TypedPlainValidator(str, UserConverter.active)] | ApiOmitted = (
+        api_field(
+            description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
+            default_factory=ApiOmitted,
+        )
     )
     tag_criticality: Annotated[
         str | ApiOmitted, AfterValidator(TagConverter.tag_criticality_presence)
@@ -476,7 +530,7 @@ class NetworkScanModel:
         return cls(
             ip_ranges=[IPRangeConverter.from_internal(entry) for entry in value["ip_ranges"]],
             exclude_ranges=[
-                IPRangeConverter.from_internal(entry) for entry in value["exclude_ranges"]
+                IPRangeConverter.from_internal_exclude(entry) for entry in value["exclude_ranges"]
             ]
             if "exclude_ranges" in value
             else ApiOmitted(),
@@ -495,9 +549,40 @@ class NetworkScanModel:
             else ApiOmitted(),
         )
 
+    def to_internal(self) -> NetworkScanSpec:
+        if not isinstance(self.exclude_ranges, ApiOmitted):
+            exclude_ranges = [entry.to_internal() for entry in self.exclude_ranges]
+        else:
+            exclude_ranges = []
+        if not isinstance(self.run_as, ApiOmitted):
+            run_as = self.run_as
+        elif user.id is not None:
+            run_as = user.id
+        else:
+            # TODO: adjust typing? maybe this can never happen?
+            raise ValueError("No run_as specified, no logged in user id?")
+        spec = NetworkScanSpec(
+            ip_ranges=[entry.to_internal() for entry in self.ip_ranges],
+            exclude_ranges=exclude_ranges,
+            scan_interval=(60 * 60 * 24)
+            if isinstance(self.scan_interval, ApiOmitted)
+            else self.scan_interval,
+            time_allowed=[entry.to_internal() for entry in self.time_allowed],
+            set_ipaddress=self.set_ipaddress,
+            run_as=run_as,
+        )
+        if not isinstance(self.tag_criticality, ApiOmitted):
+            spec["tag_criticality"] = self.tag_criticality
+        if not isinstance(self.max_parallel_pings, ApiOmitted):
+            spec["max_parallel_pings"] = self.max_parallel_pings
+        if not isinstance(self.translate_names, ApiOmitted):
+            spec["translate_names"] = self.translate_names.to_internal()
+
+        return spec
+
 
 @dataclass(kw_only=True, slots=True)
-class IPMIParametersModel:
+class IPMIParametersModel:  # TODO: this is dumb (or at least the IPMICredentials are)
     username: str | ApiOmitted = api_field(description="IPMI username", default_factory=ApiOmitted)
     password: str | ApiOmitted = api_field(description="IPMI password", default_factory=ApiOmitted)
 
@@ -507,6 +592,14 @@ class IPMIParametersModel:
             username=value.get("username", ApiOmitted()),
             password=value.get("password", ApiOmitted()),
         )
+
+    def to_internal(self) -> IPMICredentials:
+        spec = IPMICredentials()
+        if not isinstance(self.username, ApiOmitted):
+            spec["username"] = self.username
+        if not isinstance(self.password, ApiOmitted):
+            spec["password"] = self.password
+        return spec
 
 
 @dataclass(kw_only=True, slots=True)

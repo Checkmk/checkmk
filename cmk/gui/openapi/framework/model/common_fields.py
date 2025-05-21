@@ -7,7 +7,6 @@ import re
 from typing import Annotated
 
 from pydantic import (
-    AfterValidator,
     GetCoreSchemaHandler,
     GetJsonSchemaHandler,
     PlainSerializer,
@@ -72,15 +71,6 @@ class IPv4String(str):
         json_schema = handler(core_schema)
         json_schema.setdefault("format", "ipv4")
         return json_schema
-
-
-def _validate_ipv4_network(value: str) -> str:
-    """Check if the value is a valid IPv4 network."""
-    ipaddress.IPv4Network(value)
-    return value
-
-
-IPv4NetworkString = Annotated[str, AfterValidator(_validate_ipv4_network)]
 
 
 FieldsFilterType = Annotated[

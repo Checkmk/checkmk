@@ -57,7 +57,6 @@ def check_prism_hosts(item: str, params: CheckParamsPrimsHosts, section: Section
     if not data:
         return
     wanted_state = params["system_state"]
-    state = 0
     state_text = data["state"]
     num_vms = data["num_vms"]
     memory = render.bytes(data["memory_capacity_in_bytes"])
@@ -65,9 +64,10 @@ def check_prism_hosts(item: str, params: CheckParamsPrimsHosts, section: Section
 
     message = f"has state {state_text}"
     if state_text != wanted_state:
-        state = 1
-        message += f"(!) expected state {wanted_state}"
-    yield Result(state=State(state), summary=message)
+        yield Result(state=State.WARN, summary=message)
+        yield Result(state=State.OK, summary=f"expected state {wanted_state}")
+    else:
+        yield Result(state=State.OK, summary=message)
     yield Result(state=State.OK, summary=f"Number of VMs {num_vms}")
     yield Result(state=State.OK, summary=f"Memory {memory}")
     yield Result(state=State.OK, summary=f"Boottime {render.datetime(boottime)}")

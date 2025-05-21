@@ -115,7 +115,8 @@ def test_discovery_prism_hosts(
             },
             SECTION,
             [
-                Result(state=State.WARN, summary="has state NORMAL(!) expected state OFFLINE"),
+                Result(state=State.WARN, summary="has state NORMAL"),
+                Result(state=State.OK, summary="expected state OFFLINE"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 13:40:02"),
@@ -131,7 +132,8 @@ def test_discovery_prism_hosts(
             },
             SECTION,
             [
-                Result(state=State.WARN, summary="has state NORMAL(!) expected state ONLINE"),
+                Result(state=State.WARN, summary="has state NORMAL"),
+                Result(state=State.OK, summary="expected state ONLINE"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 14:10:36"),
@@ -147,7 +149,8 @@ def test_discovery_prism_hosts(
             },
             SECTION,
             [
-                Result(state=State.WARN, summary="has state NORMAL(!) expected state ONLINE"),
+                Result(state=State.WARN, summary="has state NORMAL"),
+                Result(state=State.OK, summary="expected state ONLINE"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 14:10:36"),

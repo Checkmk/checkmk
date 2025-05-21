@@ -482,12 +482,6 @@ def main() -> None:
     LOG.debug("Docker version: %r", docker_client.info()["ServerVersion"])
     LOG.debug("args: %s", args)
 
-    # Default to our internal registry, set it to "" if you want push it to dockerhub
-    registry = os.environ.get("CHECKMK_REGISTRY", "registry.checkmk.com")
-    # the leading "/" is needed to finally create a valid namespace
-    # all registry == "" have a different folder and/or all folder == "" have a different registry
-    # a full repo name shall not start with "/"
-    folder = f"/{args.edition}"  # known as namespace
     match args.edition:
         case "raw":
             suffix = ".cre"
@@ -495,6 +489,8 @@ def main() -> None:
             folder = "checkmk"
         case "enterprise":
             suffix = ".cee"
+            registry = os.environ.get("CHECKMK_REGISTRY", "registry.checkmk.com")
+            folder = "/enterprise"
         case "managed":
             suffix = ".cme"
             registry = ""

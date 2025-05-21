@@ -65,6 +65,7 @@ create_venv(
                "//packages/cmk-crypto:pkg_tar",
                "//packages/cmk-events:pkg_tar",
                "//packages/cmk-frontend",
+               "//packages/cmk-frontend-vue",
                "//packages/cmk-graphing:pkg_tar",
                "//packages/cmk-livestatus-client:cmk_livestatus_client_pkg_tar",
                "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",

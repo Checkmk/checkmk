@@ -14,7 +14,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -c, --clean                remove artifacts first"
     echo "  -b, --build                build"
     echo "  -d, --build-dev            build in dev mode"
     echo "  -t, --tests                run tests"
@@ -26,19 +25,8 @@ usage() {
     echo "  -h, --help                 show this help"
 }
 
-setup_venv() {
-    test "${SETUP_VENV_RAN}" = "yes" && return
-    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
-    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
-    CC="gcc" bazel run //:create_venv
-    # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv/bin/activate
-    SETUP_VENV_RAN=yes
-}
-
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_CLEAN=no
     RUN_BUILD=no
     RUN_BUILD_DEV=no
     RUN_TESTS=no
@@ -47,7 +35,7 @@ parse_options() {
     RUN_ESLINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'cbtdFTEafh' --long 'clean,build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'btdFTEafh' --long 'build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -56,11 +44,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-c' | '--clean')
-                RUN_CLEAN=yes
-                shift
-                continue
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -119,68 +102,62 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
+    readonly RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
 }
 
-npm_install_dependencies() {
-    npm \
-        ci \
-        --yes \
-        --unsafe-perm \
-        --audit=false
-}
-
-npm_dependencies_installed() {
-    npm ls --all &>/dev/null
-}
-
-setup_npm() {
-    test "${SETUP_NPM_RAN}" = "yes" && return
-    npm_dependencies_installed || npm_install_dependencies
-    echo "npm version $(npm --version)"
-    echo "node version $(node --version)"
-    SETUP_NPM_RAN=yes
-}
-
-run_clean() {
-    rm -rf dist node_modules dist-dev
+setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" bazel run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv/bin/activate
+    SETUP_VENV_RAN=yes
 }
 
 run_build() {
-    setup_npm
-    npm run build
+    # will run `vite build`
+    bazel build :dist
 }
 
 run_build_dev() {
-    setup_npm
-    NODE_ENV=dev npm run build -- --outDir dist-dev
+    bazel run vite -- build --mode=dev --outDir=dist-dev
 }
 
 run_check_format() {
-    setup_npm
-    npm run test-prettier
+    bazel lint \
+        --aspect:interactive=false \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
+        --diff \
+        --machine \
+        :all
+    bazel run :format.check "$(pwd)"
+    # this should be a `bazel run` target which can operate on the workspace
+    # but since we don't have any dependencies here and test_license_headers.py
+    # is subject to vanish system-python3 is ok here
     setup_venv
     python3 scripts/test_license_headers.py
 }
 
 run_tsc() {
-    setup_npm
-    npm run test-tsc
+    bazel test :type-check
 }
 
 run_eslint() {
-    setup_npm
-    npm run test-eslint
+    bazel test :eslint
 }
 
 run_format() {
-    setup_npm
-    npm run prettier
+    bazel lint \
+        --aspect:interactive=false \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
+        --fix \
+        :all
+    bazel run :format "$(pwd)"
 }
 
 run_tests() {
-    setup_npm
-    npm run test
+    bazel test :unit-test
 }
 
 main() {
@@ -188,7 +165,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_TESTS} = yes && run_tests
     test ${RUN_TSC} = yes && run_tsc

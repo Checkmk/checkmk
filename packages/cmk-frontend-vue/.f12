@@ -13,5 +13,5 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-npm run build
-rsync -rlD ./dist/ "$ROOT/share/check_mk/web/htdocs/cmk-frontend-vue/"
+bazel build //packages/cmk-frontend-vue:dist
+rsync -rlD --chmod=u+w "$(bazel info bazel-bin)/packages/cmk-frontend-vue/dist/" "$ROOT/share/check_mk/web/htdocs/cmk-frontend-vue/"

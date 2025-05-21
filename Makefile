@@ -20,7 +20,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        requirements.txt frontend-vue .venv
+        requirements.txt .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -62,7 +62,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) frontend-vue-build
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -98,9 +98,6 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) frontend-vue-build
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
-
-frontend-vue-build:
-	packages/cmk-frontend-vue/run --clean --build
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

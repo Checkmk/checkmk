@@ -20,7 +20,7 @@ super fast (currently six seconds)
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
-* run `npm run dev`
+* run `bazel run :vite`
 * surf to `http://localhost:5173/<yoursite>/check_mk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
@@ -31,12 +31,7 @@ cmk-frontend-vue project.
 
 ### testing components outsite a site
 
-* run `npm ci` in this folder, and also in `../cmk-frontend`
-    * yes, we should not need to execute `npm ci` in another package, but this
-      is the current reality: the code in `cmk-frontend-vue` is not really
-      independent of `cmk-frontend`. The styling of `cmk-frontend` is necessary
-      for many `FormEdit` sub-components.
-* run `npm run demo`
+* run `bazel run vite -- --config vite.config.demo.ts`
 * surf to `http://localhost:5173/`
 
 

@@ -661,7 +661,7 @@ STAGES:
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES
       DIR: "packages/cmk-frontend-vue"
-      COMMAND: "./run --clean --all &> ${RESULTS}/cmk-frontend-vue.txt"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-frontend-vue.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"

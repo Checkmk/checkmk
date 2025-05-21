@@ -102,12 +102,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail
 	find $(REPO_PATH)/notifications/templates/mail/ -maxdepth 1 -type f ! -name ".*" -exec install -m 644 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail \;
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
-	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist \
-	    $(CHECK_MK_TAROPTS) \
-	    . | \
-	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(CHECK_MK_CHANGELOG_PATH) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk

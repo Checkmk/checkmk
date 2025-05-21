@@ -101,11 +101,6 @@ def main() {
                 }
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
-
-            // FIXME: should this be done by another job?
-            dir("${checkout_dir}") {
-                sh("make frontend-vue-build");
-            }
         }
 
         inside_container_minimal(safe_branch_name: safe_branch_name) {

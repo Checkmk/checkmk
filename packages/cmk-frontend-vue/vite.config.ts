@@ -28,7 +28,8 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend/', import.meta.url))
+        'cmk-shared-typing': fileURLToPath(new URL('../cmk-shared-typing', import.meta.url)),
+        '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend', import.meta.url))
       }
     },
     build: {
@@ -73,7 +74,13 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['tests/setup-tests.ts']
+        setupFiles: ['tests/setup-tests.ts'],
+        // needed when running in Bazel context - without
+        // we get errors containing
+        //   `TypeError: Cannot read properties of null (reading 'ce')`
+        deps: {
+          inline: ['radix-vue']
+        }
       },
       server: {
         strictPort: true,

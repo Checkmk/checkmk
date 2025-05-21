@@ -10,6 +10,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     get_value_store,
     Service,
+    ServiceLabel,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
@@ -36,7 +37,15 @@ def discovery_smart_scsi_temp(
                 and disk.scsi_temperature.drive_trip == 0
             ):
                 continue
-            yield Service(item=item)
+            yield Service(
+                item=item,
+                labels=[
+                    ServiceLabel("cmk/smart/type", "SCSI"),
+                    ServiceLabel("cmk/smart/device", disk.device.name),
+                    ServiceLabel("cmk/smart/model", disk.model_name),
+                    ServiceLabel("cmk/smart/serial", disk.serial_number),
+                ],
+            )
 
 
 def check_smart_scsi_temp(

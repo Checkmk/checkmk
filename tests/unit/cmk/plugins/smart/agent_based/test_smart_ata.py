@@ -11,6 +11,7 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
+    ServiceLabel,
     State,
 )
 from cmk.plugins.smart.agent_based.smart_ata import (
@@ -141,6 +142,12 @@ def test_discover_smart_ata_stat() -> None:
     ) == [
         Service(
             item="WDC WD3200BUCT-63TWBY0 XXXATA",
+            labels=[
+                ServiceLabel("cmk/smart/type", "ATA"),
+                ServiceLabel("cmk/smart/device", "/dev/sda"),
+                ServiceLabel("cmk/smart/model", "WDC WD3200BUCT-63TWBY0"),
+                ServiceLabel("cmk/smart/serial", "XXXATA"),
+            ],
             parameters={
                 "id_5": 0,
                 "id_10": 0,

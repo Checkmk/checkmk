@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    ServiceLabel,
     State,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
@@ -39,7 +40,15 @@ def discovery_smart_ata_temp(
     }
     for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.temperature is not None:
-            yield Service(item=item)
+            yield Service(
+                item=item,
+                labels=[
+                    ServiceLabel("cmk/smart/type", "ATA"),
+                    ServiceLabel("cmk/smart/device", disk.device.name),
+                    ServiceLabel("cmk/smart/model", disk.model_name),
+                    ServiceLabel("cmk/smart/serial", disk.serial_number),
+                ],
+            )
 
 
 def check_smart_ata_temp(
@@ -136,7 +145,16 @@ def discover_smart_ata(
                 "id_197": entry.raw.value if (entry := disk.by_id(197)) is not None else None,
                 "id_199": entry.raw.value if (entry := disk.by_id(199)) is not None else None,
             }
-            yield Service(item=item, parameters=parameters)
+            yield Service(
+                item=item,
+                labels=[
+                    ServiceLabel("cmk/smart/type", "ATA"),
+                    ServiceLabel("cmk/smart/device", disk.device.name),
+                    ServiceLabel("cmk/smart/model", disk.model_name),
+                    ServiceLabel("cmk/smart/serial", disk.serial_number),
+                ],
+                parameters=parameters,
+            )
 
 
 def check_smart_ata(

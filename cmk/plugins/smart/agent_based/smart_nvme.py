@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    ServiceLabel,
     State,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
@@ -37,7 +38,15 @@ def discovery_smart_nvme_temp(
             isinstance(disk.device, NVMeDevice)
             and disk.nvme_smart_health_information_log is not None
         ):
-            yield Service(item=item)
+            yield Service(
+                item=item,
+                labels=[
+                    ServiceLabel("cmk/smart/type", "NVMe"),
+                    ServiceLabel("cmk/smart/device", disk.device.name),
+                    ServiceLabel("cmk/smart/model", disk.model_name),
+                    ServiceLabel("cmk/smart/serial", disk.serial_number),
+                ],
+            )
 
 
 def check_smart_nvme_temp(
@@ -134,7 +143,16 @@ def discover_smart_nvme(
                 "critical_warning": disk.nvme_smart_health_information_log.critical_warning,
                 "media_errors": disk.nvme_smart_health_information_log.media_errors,
             }
-            yield Service(item=item, parameters=parameters)
+            yield Service(
+                item=item,
+                labels=[
+                    ServiceLabel("cmk/smart/type", "NVMe"),
+                    ServiceLabel("cmk/smart/device", disk.device.name),
+                    ServiceLabel("cmk/smart/model", disk.model_name),
+                    ServiceLabel("cmk/smart/serial", disk.serial_number),
+                ],
+                parameters=parameters,
+            )
 
 
 def check_smart_nvme(

@@ -1038,7 +1038,7 @@ class _CustomerField(base.String):
         self._allow_global = allow_global
         self._required = required
         description = edition_field_description(
-            description, editions={version.Edition.CME}, field_required=required
+            description, supported_editions={version.Edition.CME}, field_required=required
         )
         super().__init__(
             example=example,
@@ -1083,18 +1083,39 @@ def customer_field_response(**kw: Any) -> _CustomerField | None:
     return customer_field(**kw)
 
 
-def bake_agent_field() -> Boolean | None:
+class _BakeAgentField(Boolean):
+    """A field representing the bake agent option."""
+
+    default_error_messages = {
+        "edition_not_supported": "Bake agent field not supported in this edition.",
+    }
+
+    def __init__(
+        self,
+        description: str = "Bake agent packages for this folder even if it is empty.",
+        **kwargs: Any,
+    ):
+        description = edition_field_description(
+            description=description,
+            excluded_editions={version.Edition.CRE},
+        )
+        super().__init__(description=description, **kwargs)
+
+    def _validate(self, value):
+        if version.edition(paths.omd_root) is version.Edition.CRE:
+            raise self.make_error("edition_not_supported")
+
+        super()._validate(value)
+
+
+def bake_agent_field() -> _BakeAgentField:
     """Enterprise specific implementation of host attribute field
 
     Notes:
         * takes inspiration of the customer field implementation (which is not the best) but
         deemed acceptable as the intention is to move away from the marshmallow implementation
     """
-    if version.edition(paths.omd_root) is not version.Edition.CRE:
-        return Boolean(
-            description="Bake agent packages for this folder even if it is empty.",
-        )
-    return None
+    return _BakeAgentField()
 
 
 def agent_connection_field() -> String | None:

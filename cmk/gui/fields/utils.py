@@ -287,23 +287,40 @@ def _table_name(table: type[Table]) -> str:
 
 
 def edition_field_description(
-    description: str, editions: set[Edition], field_required: bool = False
+    description: str,
+    supported_editions: set[Edition] | None = None,
+    excluded_editions: set[Edition] | None = None,
+    field_required: bool = False,
 ) -> str:
     """
 
     Example:
-        >>> edition_field_description("This is a test description.", {Edition.CEE}, True)
+        >>> edition_field_description("This is a test description.", supported_editions={Edition.CEE}, field_required=True)
         '[Enterprise edition only] This is a test description. This field is required for the following editions: Enterprise.'
 
-        >>> edition_field_description("This is a test description.", {Edition.CEE, Edition.CCE}, True)
+        >>> edition_field_description("This is a test description.", supported_editions={Edition.CEE, Edition.CCE}, field_required=True)
         '[Enterprise, Cloud editions only] This is a test description. This field is required for the following editions: Enterprise, Cloud.'
 
     """
-    ordered_editions = [edition for edition in Edition.__members__.values() if edition in editions]
+    if not supported_editions and not excluded_editions:
+        raise ValueError("Either supported_editions or excluded_editions must be provided.")
+
+    if supported_editions and excluded_editions:
+        raise ValueError("supported_editions and excluded_editions are mutually exclusive.")
+
+    if supported_editions:
+        ordered_editions = [
+            edition for edition in Edition.__members__.values() if edition in supported_editions
+        ]
+    elif excluded_editions:
+        ordered_editions = [
+            edition for edition in Edition.__members__.values() if edition not in excluded_editions
+        ]
+
     edition_capitalized_titles = ", ".join(
         [edition.value.long.capitalize() for edition in ordered_editions]
     )
-    description = f"[{edition_capitalized_titles} edition{'s' if len(editions) > 1 else ''} only] {description}"
+    description = f"[{edition_capitalized_titles} edition{'s' if len(ordered_editions) > 1 else ''} only] {description}"
 
     if field_required:
         description += (

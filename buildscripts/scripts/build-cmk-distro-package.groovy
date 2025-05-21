@@ -104,7 +104,7 @@ def main() {
 
             // FIXME: should this be done by another job?
             dir("${checkout_dir}") {
-                sh("make cmk-frontend-build frontend-vue-build");
+                sh("make frontend-vue-build");
             }
         }
 

@@ -8,7 +8,7 @@ set -e
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
 
 cd "$REPO_PATH/packages/cmk-frontend"
-./run --clean --build # we just want to install the dependencies, but there is no target for that
+./run --build # we just want to install the dependencies, but there is no target for that
 
 # npm-groovy-lint installs AdoptOpenJDK, which would be downloaded via IPv6
 NODE_OPTIONS="--dns-result-order=ipv4first" npx --no npm-groovy-lint -- "$REPO_PATH"/buildscripts/scripts/**/*.groovy "$@" --noserver

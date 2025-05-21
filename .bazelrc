@@ -68,6 +68,11 @@ common:ci --remote_upload_local_results=true
 # No standard in the CI where we must explicitly differentiate between LSB and FHS.
 common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 
+# For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
+common --@aspect_rules_ts//ts:skipLibCheck=always
+# For more correct typechecks - honor the setting of `skipLibCheck` in the tsconfig.json file
+# common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+
 ## For specific commands
 # build:ci ...
 # Don't require system python for bootstrapping

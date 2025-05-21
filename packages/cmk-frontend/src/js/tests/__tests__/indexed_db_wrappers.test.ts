@@ -39,6 +39,7 @@ describe("When the indexeddb is empty", () => {
         global.console.warn = jest.fn();
 
         delete (window as Partial<Window>).location;
+        // @ts-ignore  (CMK-23761)
         window.location = {
             ...window.location,
             reload: jest.fn(),
@@ -51,6 +52,7 @@ describe("When the indexeddb is empty", () => {
     });
 
     afterAll(() => {
+        // @ts-ignore  (CMK-23761)
         window.location = location;
         global.console.warn = warn;
     });

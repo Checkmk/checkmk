@@ -1,13 +1,8 @@
 {
     "compilerOptions": {
         "target": "ES6",
-        "types": [
-            "node",
-            "jquery"
-        ],
-        "typeRoots": [
-            "./node_modules/@types"
-        ],
+        "types": ["node", "jquery"],
+        "typeRoots": ["./node_modules/@types"],
         "strict": true,
         "strictNullChecks": true,
         "noImplicitAny": true,
@@ -23,13 +18,9 @@
         "allowSyntheticDefaultImports": true,
         "baseUrl": "./",
         "paths": {
-          "@/*": ["./src/js/*"]
+            "@/*": ["./src/js/*"]
         }
     },
-    "include": [
-        "./src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+    "include": ["./src/**/*"],
+    "exclude": ["node_modules"]
 }

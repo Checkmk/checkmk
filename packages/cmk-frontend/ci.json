@@ -1,4 +1,7 @@
 {
-    "command_line": "./run --clean --all",
-    "maintainers": ["team-prj-engelbart@checkmk.com", "team-rubicon@checkmk.com"]
+    "command_line": "./run --all",
+    "maintainers": [
+        "team-prj-engelbart@checkmk.com",
+        "team-rubicon@checkmk.com"
+    ]
 }

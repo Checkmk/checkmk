@@ -705,7 +705,7 @@ STAGES:
     - NAME: "Package cmk-frontend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES
       DIR: "packages/cmk-frontend"
-      COMMAND: "./run --clean --all &> ${RESULTS}/cmk-frontend.txt"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-frontend.txt"
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
 

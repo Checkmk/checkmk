@@ -13,20 +13,15 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-# check if node_modules is in sync with package-lock.json
-if ! npm ls --all &>/dev/null; then
-    # if not: install from package-lock.json
-    npm ci --yes --audit=false
-fi
-
 echo "Updating compiled JS/CSS files..."
-npm run build
+bazel build //packages/cmk-frontend:dist
+
 echo "Update site $SITE..."
 
 echo "Copy files..."
-rsync -rlD --delete \
+rsync -rlD --delete --chmod=u+w \
     --filter "protect /cmk-frontend-vue/" \
-    ./dist/ \
+    "$(bazel info bazel-bin)/packages/cmk-frontend/dist/" \
     "$ROOT/share/check_mk/web/htdocs"
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then

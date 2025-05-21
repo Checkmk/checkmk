@@ -28,7 +28,7 @@
         "no-unsanitized"
     ],
     "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["../"] }],
+        "no-restricted-imports": ["error", {"patterns": ["../"]}],
         "import/no-namespace": "error",
         "simple-import-sort/exports": "error",
         "simple-import-sort/imports": "error",
@@ -36,7 +36,7 @@
         "no-implied-eval": "error",
         "no-unsanitized/method": "error",
         "no-unsanitized/property": "error",
-        "license-header/header": [ "error", "./resources/license-header.js" ],
+        "license-header/header": ["error", "./resources/license-header.js"],
         "@typescript-eslint/consistent-type-imports": "error",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-explicit-any": "off",
@@ -51,22 +51,10 @@
         ],
         "strict": 1,
         "indent": "off",
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "double",
-            {"avoidEscape": true }
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
+        "linebreak-style": ["error", "unix"],
+        "quotes": ["error", "double", {"avoidEscape": true}],
+        "semi": ["error", "always"],
         "prettier/prettier": 2
     },
-    "ignorePatterns": [
-        "*_min.js"
-    ]
+    "ignorePatterns": ["*_min.js"]
 }

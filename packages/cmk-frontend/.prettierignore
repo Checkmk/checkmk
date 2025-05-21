@@ -1,8 +1,10 @@
-# colorpicker.js is a 3rd party module, so do not format it
+# 3rd party
 src/js/modules/colorpicker.js
+src/jquery
+src/openapi
+
+# generated
+package-lock.json
+pnpm-lock.yaml
 
 src/js/modules/figures/cmk_stats.ts
-
-src/jquery/jquery.mobile-*.js
-src/openapi/redoc.standalone.js
-src/openapi/swagger-ui-*/swagger-*.js

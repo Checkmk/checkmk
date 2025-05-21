@@ -14,9 +14,8 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -c, --clean                remove artifacts first"
-    echo "  -b, --build                build"
-    echo "  -t, --tests                run tests"
+    echo "  -b, --build                build webpack bundle"
+    echo "  -t, --tests                run scss_content tests"
     echo "  -F, --check-format         check for correct formatting"
     echo "  -T, --tsc                  run tsc"
     echo "  -E, --eslint               run eslint"
@@ -27,7 +26,6 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_CLEAN=no
     RUN_BUILD=no
     RUN_TESTS=no
     RUN_CHECK_FORMAT=no
@@ -35,7 +33,7 @@ parse_options() {
     RUN_ESLINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'cbtFTEafh' --long 'clean,build,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'btFTEafh' --long 'build,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -44,11 +42,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-c' | '--clean')
-                RUN_CLEAN=yes
-                shift
-                continue
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -101,9 +94,10 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
+    readonly RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
 }
 
+# >>> kept here for groovy-lint, see CMK-23740
 npm_install_dependencies() {
     npm \
         ci \
@@ -123,39 +117,33 @@ setup_npm() {
     echo "node version $(node --version)"
     SETUP_NPM_RAN=yes
 }
-
-run_clean() {
-    rm -rf dist node_packages
-}
+# <<< kept here for groovy-lint
 
 run_build() {
+    # kept here for groovy-lint, see CMK-23740
     setup_npm
-    npm run build
+
+    bazel build :dist
 }
 
 run_check_format() {
-    setup_npm
-    npm run test-prettier
+    bazel run :format.check "$(pwd)"
 }
 
 run_tsc() {
-    setup_npm
-    npm run test-tsc
+    bazel test :type-check
 }
 
 run_eslint() {
-    setup_npm
-    npm run test-eslint
+    bazel test :eslint
 }
 
 run_format() {
-    setup_npm
-    npm run prettier
+    bazel run :format "$(pwd)"
 }
 
 run_tests() {
-    setup_npm
-    npm run test
+    bazel test :scss_content
 }
 
 main() {
@@ -163,7 +151,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_TESTS} = yes && run_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format

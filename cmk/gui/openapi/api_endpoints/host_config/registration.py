@@ -5,7 +5,9 @@
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 
 from .list_hosts import ENDPOINT_LIST_HOSTS
+from .show_host import ENDPOINT_SHOW_HOST
 
 
 def register(versioned_endpoint_registry: VersionedEndpointRegistry) -> None:
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOSTS)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST)

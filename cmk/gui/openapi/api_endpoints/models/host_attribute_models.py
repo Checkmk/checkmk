@@ -8,6 +8,8 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator
 
+from cmk.ccc.hostaddress import HostAddress, HostName
+
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
 
@@ -25,12 +27,20 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model.converter import HostAddressConverter, HostConverter
+from cmk.gui.openapi.framework.model.converter import (
+    HostAddressConverter,
+    HostConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import HostAttributes
 
-HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressConverter(allow_ipv6=False))]
-HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressConverter(allow_ipv4=False))]
+HostNameOrIPv4 = Annotated[
+    HostAddress, TypedPlainValidator(str, HostAddressConverter(allow_ipv6=False))
+]
+HostNameOrIPv6 = Annotated[
+    HostAddress, TypedPlainValidator(str, HostAddressConverter(allow_ipv4=False))
+]
 
 
 def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
@@ -92,9 +102,10 @@ class BaseHostAttributeModel:
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
 
-    parents: Sequence[Annotated[str, AfterValidator(HostConverter.host_name)]] | ApiOmitted = (
-        api_field(description="A list of parents of this host.", default_factory=ApiOmitted)
-    )
+    parents: (
+        Sequence[Annotated[HostName, TypedPlainValidator(str, HostConverter.host_name)]]
+        | ApiOmitted
+    ) = api_field(description="A list of parents of this host.", default_factory=ApiOmitted)
 
     contactgroups: HostContactGroupModel | ApiOmitted = api_field(
         description="Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by rules.",

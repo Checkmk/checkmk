@@ -11,13 +11,13 @@ from pydantic import (
     GetCoreSchemaHandler,
     GetJsonSchemaHandler,
     PlainSerializer,
-    PlainValidator,
 )
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
 
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.openapi.framework import QueryParam
+from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
@@ -84,8 +84,7 @@ IPv4NetworkString = Annotated[str, AfterValidator(_validate_ipv4_network)]
 
 
 FieldsFilterType = Annotated[
-    Annotated[FieldsFilter, PlainValidator(parse_fields_filter, json_schema_input_type=str)]
-    | ApiOmitted,
+    Annotated[FieldsFilter, TypedPlainValidator(str, parse_fields_filter)] | ApiOmitted,
     QueryParam(
         description="""The fields to include/exclude.
 
@@ -169,6 +168,6 @@ class _FolderValidation:
 
 AnnotatedFolder = Annotated[
     Folder,
-    PlainValidator(_FolderValidation.validate, json_schema_input_type=str),
+    TypedPlainValidator(str, _FolderValidation.validate),
     PlainSerializer(_FolderValidation.serialize, return_type=str),
 ]

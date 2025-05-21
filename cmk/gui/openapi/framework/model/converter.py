@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ipaddress
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
+
+from pydantic import PlainValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 
@@ -17,6 +20,34 @@ from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
+
+
+def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]) -> PlainValidator:
+    """
+    Creates a pydantic validator that replaces the normal validation with the given `validator`.
+
+    This is similar to a normal `PlainValidator`, except that it also validates the input type,
+    before calling the `validator` function. It should most likely be used instead of
+    `PlainValidator` in all cases. If the input type is the same as the validator result, an
+    `AfterValidator` is the better choice. This validator will first check if the input matches the
+    specified `input_type`, then will execute the given `validator` function. The result of this
+    function should be used as an annotation on the field/type via `Annotated`.
+
+    Args:
+        input_type: Allowed input type, will be used for the schema and actual validation.
+        validator: A function which validates the input value and converts it to the output type.
+    """
+
+    def _with_type_check(value: T) -> object:
+        if not isinstance(value, input_type):
+            raise TypeError(f"Expected {input_type}, got {value!r}")
+
+        return validator(value)
+
+    return PlainValidator(
+        func=_with_type_check,
+        json_schema_input_type=input_type,
+    )
 
 
 @dataclass(slots=True)

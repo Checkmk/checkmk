@@ -20,7 +20,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostTagGroupModel
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model.validators import HostValidator
+from cmk.gui.openapi.framework.model.converter import HostConverter
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
 
 
@@ -31,7 +31,7 @@ class BaseFolderAttributeModel:
     site: str | ApiOmitted = api_field(
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
-    parents: list[Annotated[str, AfterValidator(HostValidator.exists)]] | ApiOmitted = api_field(
+    parents: list[Annotated[str, AfterValidator(HostConverter.host_name)]] | ApiOmitted = api_field(
         description="A list of parents of this host.",
         default_factory=ApiOmitted,
     )

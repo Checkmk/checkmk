@@ -23,12 +23,12 @@ from cmk.automations.results import DeleteHostsResult
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
-from cmk.gui.openapi.framework.model.validators import (
-    GroupValidator,
-    HostAddressValidator,
-    HostValidator,
-    TagValidator,
-    UserValidator,
+from cmk.gui.openapi.framework.model.converter import (
+    GroupConverter,
+    HostAddressConverter,
+    HostConverter,
+    TagConverter,
+    UserConverter,
 )
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.watolib.groups import HostAttributeContactGroups
@@ -48,45 +48,45 @@ def test_validators_dont_run_on_json_dump() -> None:
     json_dump_without_omitted(Model, instance)
 
 
-class TestHostAddressValidator:
+class TestHostAddressConverter:
     def test_allow_empty(self) -> None:
-        validator = HostAddressValidator(allow_empty=True)
+        validator = HostAddressConverter(allow_empty=True)
         assert validator("") == ""
 
     def test_forbid_empty(self) -> None:
-        validator = HostAddressValidator(allow_empty=False)
+        validator = HostAddressConverter(allow_empty=False)
         with pytest.raises(ValueError, match="Empty host address is not allowed"):
             validator("")
 
     @pytest.mark.parametrize("value", ["192.168.0.1"])
     def test_allow_ipv4(self, value: str) -> None:
-        validator = HostAddressValidator(allow_ipv4=True)
+        validator = HostAddressConverter(allow_ipv4=True)
         assert validator(value) == value
 
     @pytest.mark.parametrize("value", ["192.168.0.1"])
     def test_forbid_ipv4(self, value: str) -> None:
-        validator = HostAddressValidator(allow_ipv4=False)
+        validator = HostAddressConverter(allow_ipv4=False)
         with pytest.raises(ValueError, match="IPv4 address.* not allowed"):
             validator(value)
 
     @pytest.mark.parametrize("value", ["2001:db8::1"])
     def test_allow_ipv6(self, value: str) -> None:
-        validator = HostAddressValidator(allow_ipv6=True)
+        validator = HostAddressConverter(allow_ipv6=True)
         assert validator(value) == value
 
     @pytest.mark.parametrize("value", ["2001:db8::1"])
     def test_forbid_ipv6(self, value: str) -> None:
-        validator = HostAddressValidator(allow_ipv6=False)
+        validator = HostAddressConverter(allow_ipv6=False)
         with pytest.raises(ValueError, match="IPv6 address.* not allowed"):
             validator(value)
 
     @pytest.mark.parametrize("value", ["example.com"])
     def test_allow_hostname(self, value: str) -> None:
-        validator = HostAddressValidator(allow_ipv4=False, allow_ipv6=False, allow_empty=False)
+        validator = HostAddressConverter(allow_ipv4=False, allow_ipv6=False, allow_empty=False)
         assert validator(value) == value
 
 
-class TestTagValidatorCriticality:
+class TestTagConverterCriticality:
     @pytest.fixture(name="tag_is_present")
     def fixture_tag_is_present(self, mocker: MockerFixture) -> Iterator[TagID]:
         tag_id = TagID("test_tag")
@@ -115,26 +115,26 @@ class TestTagValidatorCriticality:
         yield None
 
     def test_present_and_valid_value(self, tag_is_present: TagID) -> None:
-        assert tag_is_present == TagValidator.tag_criticality_presence(tag_is_present)
+        assert tag_is_present == TagConverter.tag_criticality_presence(tag_is_present)
 
     def test_present_and_invalid_value(self, tag_is_present: TagID) -> None:
         with pytest.raises(ValueError, match="is not defined for criticality group"):
-            TagValidator.tag_criticality_presence(TagID("invalid_tag"))
+            TagConverter.tag_criticality_presence(TagID("invalid_tag"))
 
     def test_present_and_omitted(self, tag_is_present: TagID) -> None:
         with pytest.raises(ValueError, match="tag_criticality must be specified"):
-            TagValidator.tag_criticality_presence(ApiOmitted())
+            TagConverter.tag_criticality_presence(ApiOmitted())
 
     def test_not_present_and_value(self, tag_is_not_present: None) -> None:
         with pytest.raises(ValueError, match="tag_criticality must be omitted"):
-            TagValidator.tag_criticality_presence(TagID("test_tag"))
+            TagConverter.tag_criticality_presence(TagID("test_tag"))
 
     def test_not_present_and_omitted(self, tag_is_not_present: None) -> None:
         omitted = ApiOmitted()
-        assert omitted == TagValidator.tag_criticality_presence(omitted)
+        assert omitted == TagConverter.tag_criticality_presence(omitted)
 
 
-class TestUserValidator:
+class TestUserConverter:
     @pytest.fixture(name="user_is_present")
     def fixture_user_is_present(self, mocker: MockerFixture) -> Iterator[str]:
         user = "test_user"
@@ -147,14 +147,14 @@ class TestUserValidator:
         yield None
 
     def test_present(self, user_is_present: str) -> None:
-        assert user_is_present == UserValidator.active(user_is_present)
+        assert user_is_present == UserConverter.active(user_is_present)
 
     def test_not_present(self, user_is_not_present: None) -> None:
         with pytest.raises(ValueError, match="User .* does not exist"):
-            UserValidator.active("non_existent_user")
+            UserConverter.active("non_existent_user")
 
 
-class TestGroupValidator:
+class TestGroupConverter:
     @pytest.fixture(name="group_is_present")
     def fixture_group_is_present(
         self, mocker: MockerFixture, group_type: GroupType
@@ -177,22 +177,22 @@ class TestGroupValidator:
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
     def test_exists(self, group_type: GroupType, group_is_present: str) -> None:
-        assert group_is_present == GroupValidator(group_type).exists(group_is_present)
+        assert group_is_present == GroupConverter(group_type).exists(group_is_present)
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
     def test_exists_fails(self, group_type: GroupType, group_is_not_present: None) -> None:
         with pytest.raises(ValueError, match="Group missing"):
-            GroupValidator(group_type).exists("non_existent_group")
+            GroupConverter(group_type).exists("non_existent_group")
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
     def test_not_exists(self, group_type: GroupType, group_is_not_present: None) -> None:
         group_name = "non_existent_group"
-        assert group_name == GroupValidator(group_type).not_exists(group_name)
+        assert group_name == GroupConverter(group_type).not_exists(group_name)
 
     @pytest.mark.parametrize("group_type", get_args(GroupType))
     def test_not_exists_fails(self, group_type: GroupType, group_is_present: str) -> None:
         with pytest.raises(ValueError, match="Group .* exists"):
-            GroupValidator(group_type).not_exists(group_is_present)
+            GroupConverter(group_type).not_exists(group_is_present)
 
     @staticmethod
     def _groups_except_contact() -> list[GroupType]:
@@ -232,7 +232,7 @@ class TestGroupValidator:
         group_is_monitored: str,
     ) -> None:
         with mock_livestatus:
-            assert group_is_monitored == GroupValidator(group_type).monitored(group_is_monitored)
+            assert group_is_monitored == GroupConverter(group_type).monitored(group_is_monitored)
 
     @pytest.mark.parametrize("group_type", _groups_except_contact())
     @pytest.mark.usefixtures("request_context")
@@ -243,7 +243,7 @@ class TestGroupValidator:
         group_is_not_monitored: str,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="is not monitored"):
-            GroupValidator(group_type).monitored(group_is_not_monitored)
+            GroupConverter(group_type).monitored(group_is_not_monitored)
 
     @pytest.mark.parametrize("group_type", _groups_except_contact())
     @pytest.mark.usefixtures("request_context")
@@ -254,7 +254,7 @@ class TestGroupValidator:
         group_is_not_monitored: str,
     ) -> None:
         with mock_livestatus:
-            assert group_is_not_monitored == GroupValidator(group_type).not_monitored(
+            assert group_is_not_monitored == GroupConverter(group_type).not_monitored(
                 group_is_not_monitored
             )
 
@@ -267,21 +267,21 @@ class TestGroupValidator:
         group_is_monitored: str,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="should not be monitored"):
-            GroupValidator(group_type).not_monitored(group_is_monitored)
+            GroupConverter(group_type).not_monitored(group_is_monitored)
 
     def test_monitored_fails_contact(self) -> None:
         with pytest.raises(ValueError, match="Unsupported group type"):
-            GroupValidator("contact").monitored("some_group")
+            GroupConverter("contact").monitored("some_group")
 
     def test_not_monitored_fails_contact(self) -> None:
         with pytest.raises(ValueError, match="Unsupported group type"):
-            GroupValidator("contact").not_monitored("some_group")
+            GroupConverter("contact").not_monitored("some_group")
 
 
-class TestHostValidator:
+class TestHostConverter:
     @staticmethod
-    def _permission_types(*, except_monitor: bool = False) -> list[HostValidator.PermissionType]:
-        permission_types: list[HostValidator.PermissionType] = [
+    def _permission_types(*, except_monitor: bool = False) -> list[HostConverter.PermissionType]:
+        permission_types: list[HostConverter.PermissionType] = [
             "monitor",
             "setup_read",
             "setup_write",
@@ -319,32 +319,34 @@ class TestHostValidator:
     def test_exists_fails_not_found(
         self,
         with_admin_login: UserId,
-        permission_type: HostValidator.PermissionType,
+        permission_type: HostConverter.PermissionType,
     ) -> None:
         with pytest.raises(ValueError, match="Host not found"):
-            HostValidator(permission_type=permission_type).exists("non_existent_host")
+            HostConverter(permission_type=permission_type).host_name("non_existent_host")
 
     def test_exists_monitor_without_permissions(self, sample_host: str) -> None:
         with UserContext(UserId("made-up")):
-            assert sample_host == HostValidator(permission_type="monitor").exists(sample_host)
+            assert sample_host == HostConverter(permission_type="monitor").host_name(sample_host)
 
     @pytest.mark.parametrize("permission_type", _permission_types(except_monitor=True))
     def test_exists_fails_no_permission(
-        self, sample_host: str, permission_type: HostValidator.PermissionType
+        self, sample_host: str, permission_type: HostConverter.PermissionType
     ) -> None:
         with UserContext(UserId("made-up")), pytest.raises(MKAuthException):
-            HostValidator(permission_type=permission_type).exists(sample_host)
+            HostConverter(permission_type=permission_type).host_name(sample_host)
 
     def test_exists_setup_read_all_folders(self, sample_host: str) -> None:
         with UserContext(UserId("made-up"), explicit_permissions={"wato.see_all_folders"}):
-            assert sample_host == HostValidator(permission_type="setup_read").exists(sample_host)
+            assert sample_host == HostConverter(permission_type="setup_read").host_name(sample_host)
 
     def test_exists_setup_write_all_folders(self, sample_host: str) -> None:
         # write also requires read permissions, could be changed in the future
         with UserContext(
             UserId("made-up"), explicit_permissions={"wato.see_all_folders", "wato.all_folders"}
         ):
-            assert sample_host == HostValidator(permission_type="setup_write").exists(sample_host)
+            assert sample_host == HostConverter(permission_type="setup_write").host_name(
+                sample_host
+            )
 
     def test_exists_setup_write_edit_hosts(self, sample_host: str) -> None:
         # write also requires read permissions, could be changed in the future
@@ -352,6 +354,6 @@ class TestHostValidator:
             with UserContext(
                 user_id, explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"}
             ):
-                assert sample_host == HostValidator(permission_type="setup_write").exists(
+                assert sample_host == HostConverter(permission_type="setup_write").host_name(
                     sample_host
                 )

@@ -19,7 +19,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     ObjectCollectionMemberModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
-from cmk.gui.openapi.framework.model.validators import HostValidator
+from cmk.gui.openapi.framework.model.converter import HostConverter
 
 
 @dataclass(kw_only=True, slots=True)
@@ -34,7 +34,7 @@ class HostExtensionsModel:
         description="If this is a cluster host, i.e. a container for other hosts."
     )
     is_offline: bool = api_field(description="Whether the host is offline.")
-    cluster_nodes: Sequence[Annotated[str, AfterValidator(HostValidator.exists)]] | None = (
+    cluster_nodes: Sequence[Annotated[str, AfterValidator(HostConverter.host_name)]] | None = (
         api_field(
             description="In the case this is a cluster host, these are the cluster nodes.",
         )

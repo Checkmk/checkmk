@@ -20,18 +20,33 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @dataclass(slots=True)
-class HostValidator:
+class HostConverter:
     type PermissionType = Literal["setup_write", "setup_read", "monitor"]
 
     permission_type: PermissionType = "monitor"
 
-    def exists(self, value: str) -> str:
+    def host(self, value: str) -> Host:
         if host := Host.host(HostName(value)):
             self._verify_user_permissions(host)
-        else:
-            raise ValueError(f"Host not found: {value!r}")
+            return host
 
-        return value
+        raise ValueError(f"Host not found: {value!r}")
+
+    def host_name(self, value: str) -> HostName:
+        name = HostName(value)
+        if host := Host.host(name):
+            self._verify_user_permissions(host)
+            return name
+
+        raise ValueError(f"Host not found: {value!r}")
+
+    @staticmethod
+    def not_exists(value: str) -> HostName:
+        name = HostName(value)
+        if Host.host(name):
+            raise ValueError(f"Host {value!r} already exists.")
+
+        return name
 
     def _verify_user_permissions(self, host: Host) -> None:
         if self.permission_type == "monitor":
@@ -43,14 +58,14 @@ class HostValidator:
 
 
 @dataclass(slots=True)
-class GroupValidator:
+class GroupConverter:
     group_type: GroupType
 
     def exists(
         self,
         group: GroupName,
     ) -> GroupName:
-        if not GroupValidator._verify_group_exists(self.group_type, group):
+        if not GroupConverter._verify_group_exists(self.group_type, group):
             raise ValueError(f"Group missing: {group!r}")
         return group
 
@@ -58,7 +73,7 @@ class GroupValidator:
         self,
         group: GroupName,
     ) -> GroupName:
-        if GroupValidator._verify_group_exists(self.group_type, group):
+        if GroupConverter._verify_group_exists(self.group_type, group):
             raise ValueError(f"Group {group!r} already exists.")
         return group
 
@@ -66,7 +81,7 @@ class GroupValidator:
         self,
         group: GroupName,
     ) -> GroupName:
-        if not GroupValidator._group_is_monitored(self.group_type, group):
+        if not GroupConverter._group_is_monitored(self.group_type, group):
             raise ValueError(
                 f"Group {group!r} exists, but is not monitored. Activate the configuration?"
             )
@@ -76,7 +91,7 @@ class GroupValidator:
         self,
         group: GroupName,
     ) -> GroupName:
-        if GroupValidator._group_is_monitored(self.group_type, group):
+        if GroupConverter._group_is_monitored(self.group_type, group):
             raise ValueError(
                 f"Group {group!r} exists, but should not be monitored. Activate the configuration?"
             )
@@ -103,7 +118,7 @@ class GroupValidator:
         raise ValueError("Unsupported group type.")
 
 
-class UserValidator:
+class UserConverter:
     @staticmethod
     def active(user: str) -> str:
         users = userdb.load_users(lock=False)
@@ -112,9 +127,9 @@ class UserValidator:
         return user
 
 
-class TagValidator:
+class TagConverter:
     @staticmethod
-    def tag_criticality_presence(value: TagID | ApiOmitted) -> str | ApiOmitted:
+    def tag_criticality_presence(value: TagID | ApiOmitted) -> TagID | ApiOmitted:
         tag_criticality = tags.load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if not isinstance(value, ApiOmitted):
@@ -132,7 +147,7 @@ class TagValidator:
 
 
 @dataclass(slots=True)
-class HostAddressValidator:
+class HostAddressConverter:
     allow_ipv4: bool = True
     allow_ipv6: bool = True
     allow_empty: bool = False
@@ -144,11 +159,11 @@ class HostAddressValidator:
         except ValueError:
             return None
 
-    def __call__(self, value: str) -> str:
+    def __call__(self, value: str) -> HostAddress:
         if not self.allow_empty and not value:
             raise ValueError("Empty host address is not allowed.")
 
-        HostAddress(value)  # this allows hostnames and ip addresses
+        address = HostAddress(value)  # this allows hostnames and ip addresses
         if not self.allow_ipv4 or not self.allow_ipv6:
             if ip := self._try_parse_ip_address(value):
                 if not self.allow_ipv4 and isinstance(ip, ipaddress.IPv4Address):
@@ -156,4 +171,4 @@ class HostAddressValidator:
                 if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
                     raise ValueError(f"IPv6 address '{value}' is not allowed.")
 
-        return value
+        return address

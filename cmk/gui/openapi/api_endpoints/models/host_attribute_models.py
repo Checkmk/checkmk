@@ -25,12 +25,12 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
 )
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
-from cmk.gui.openapi.framework.model.validators import HostAddressValidator, HostValidator
+from cmk.gui.openapi.framework.model.converter import HostAddressConverter, HostConverter
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import HostAttributes
 
-HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv6=False))]
-HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressValidator(allow_ipv4=False))]
+HostNameOrIPv4 = Annotated[str, AfterValidator(HostAddressConverter(allow_ipv6=False))]
+HostNameOrIPv6 = Annotated[str, AfterValidator(HostAddressConverter(allow_ipv4=False))]
 
 
 def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
@@ -92,7 +92,7 @@ class BaseHostAttributeModel:
         description="The site that should monitor this host.", default_factory=ApiOmitted
     )
 
-    parents: Sequence[Annotated[str, AfterValidator(HostValidator.exists)]] | ApiOmitted = (
+    parents: Sequence[Annotated[str, AfterValidator(HostConverter.host_name)]] | ApiOmitted = (
         api_field(description="A list of parents of this host.", default_factory=ApiOmitted)
     )
 
@@ -157,7 +157,7 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    management_address: Annotated[str, AfterValidator(HostAddressValidator())] | ApiOmitted = (
+    management_address: Annotated[str, AfterValidator(HostAddressConverter())] | ApiOmitted = (
         api_field(
             description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
             default_factory=ApiOmitted,

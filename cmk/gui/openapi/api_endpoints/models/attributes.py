@@ -23,8 +23,8 @@ from cmk.gui.fields.attributes import (
 )
 from cmk.gui.openapi.framework.model import api_field, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import IPv4NetworkString, IPv4String, RegexString
+from cmk.gui.openapi.framework.model.converter import GroupConverter, TagConverter, UserConverter
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
-from cmk.gui.openapi.framework.model.validators import GroupValidator, TagValidator, UserValidator
 from cmk.gui.watolib.host_attributes import (
     HostContactGroupSpec,
     IPMICredentials,
@@ -36,7 +36,7 @@ from cmk.gui.watolib.host_attributes import (
 
 @dataclass(kw_only=True, slots=True)
 class HostContactGroupModel:
-    groups: list[Annotated[str, AfterValidator(GroupValidator(group_type="host").exists)]] = (
+    groups: list[Annotated[str, AfterValidator(GroupConverter(group_type="host").exists)]] = (
         api_field(description="A list of contact groups.", example="all")
     )
     use: bool = api_field(description="Add these contact groups to the host.")
@@ -456,12 +456,12 @@ class NetworkScanModel:
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
         # default=100,
     )
-    run_as: Annotated[str, AfterValidator(UserValidator.active)] | ApiOmitted = api_field(
+    run_as: Annotated[str, AfterValidator(UserConverter.active)] | ApiOmitted = api_field(
         description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
         default_factory=ApiOmitted,
     )
     tag_criticality: Annotated[
-        str | ApiOmitted, AfterValidator(TagValidator.tag_criticality_presence)
+        str | ApiOmitted, AfterValidator(TagConverter.tag_criticality_presence)
     ] = api_field(
         description="Specify which criticality tag to set on the host created by the network scan. This field is required if the criticality tag group exists, otherwise it as to be omitted.",
         default_factory=ApiOmitted,

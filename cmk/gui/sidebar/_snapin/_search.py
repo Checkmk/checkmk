@@ -1057,20 +1057,11 @@ match_plugin_registry.register(ServiceMatchPlugin())
 class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self) -> None:
         super().__init__(["services"], "services", "st")
+        self._state_mapping = {"ok": "0", "warn": "1", "crit": "2", "unkn": "3", "pend": "p"}
+        self._supported_views = frozenset({"allservices", "searchsvc"})
 
-    def _create_servicestate_filter_value(self, value: str) -> str:
-        _value = value.lower()
-        if _value == "ok":
-            return "0"
-        if _value == "warn":
-            return "1"
-        if _value == "critical":
-            return "2"
-        if _value == "unkn":
-            return "3"
-        if _value in "pend":
-            return "p"
-        return ""
+    def _get_service_state_from_filter(self, value: str) -> str:
+        return self._state_mapping.get(value.lower(), "")
 
     def get_match_topic(self) -> str:
         return _("Service states")
@@ -1081,10 +1072,13 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
     def get_livestatus_filters(
         self, livestatus_table: LivestatusTable, used_filters: UsedFilters
     ) -> LivestatusFilterHeaders:
-        filter_lines = []
-        for entry in used_filters.get(self.name, []):
-            value = self._create_servicestate_filter_value(entry)
-            filter_lines.append("Filter: state = %s" % value)
+        if not (raw_used_filters := used_filters.get(self.name, [])):
+            return ""
+
+        filter_lines = [
+            f"Filter: state = {self._get_service_state_from_filter(entry)}"
+            for entry in raw_used_filters
+        ]
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -1099,15 +1093,13 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
         used_filters: UsedFilters,
         rows: Rows,
     ) -> Matches:
-        supported_views = ["allservices", "searchsvc"]
-        if for_view not in supported_views:
+        if for_view not in self._supported_views:
             return None
 
-        url_infos: list[tuple[str, int | str | None]] = []
-
-        for entry in used_filters.get(self.name, []):
-            value = self._create_servicestate_filter_value(entry)
-            url_infos.append(("st%s" % value, "on"))
+        url_infos: HTTPVariables = [
+            (f"st{self._get_service_state_from_filter(entry)}", "on")
+            for entry in used_filters.get(self.name, [])
+        ]
 
         # add support for clicking on an individual filtered service.
         service_field = row["description"] if row else ""

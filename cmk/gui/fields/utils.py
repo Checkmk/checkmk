@@ -7,6 +7,8 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple, TypeVar
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
     And,
@@ -282,3 +284,29 @@ def _table_name(table: type[Table]) -> str:
         return table
 
     return table.__tablename__
+
+
+def edition_field_description(
+    description: str, editions: set[Edition], field_required: bool = False
+) -> str:
+    """
+
+    Example:
+        >>> edition_field_description("This is a test description.", {Edition.CEE}, True)
+        '[Enterprise edition only] This is a test description. This field is required for the following editions: Enterprise.'
+
+        >>> edition_field_description("This is a test description.", {Edition.CEE, Edition.CCE}, True)
+        '[Enterprise, Cloud editions only] This is a test description. This field is required for the following editions: Enterprise, Cloud.'
+
+    """
+    ordered_editions = [edition for edition in Edition.__members__.values() if edition in editions]
+    edition_capitalized_titles = ", ".join(
+        [edition.value.long.capitalize() for edition in ordered_editions]
+    )
+    description = f"[{edition_capitalized_titles} edition{'s' if len(editions) > 1 else ''} only] {description}"
+
+    if field_required:
+        description += (
+            f" This field is required for the following editions: {edition_capitalized_titles}."
+        )
+    return description

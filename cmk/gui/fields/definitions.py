@@ -41,7 +41,7 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import tree_to_expr
+from cmk.gui.fields.utils import edition_field_description, tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -1037,10 +1037,9 @@ class _CustomerField(base.String):
         self._should_exist = should_exist
         self._allow_global = allow_global
         self._required = required
-        description = f"[Managed Edition only] {description}"
-        if required:
-            description += " This field is required for the Managed edition."
-
+        description = edition_field_description(
+            description, editions={version.Edition.CME}, field_required=required
+        )
         super().__init__(
             example=example,
             description=description,

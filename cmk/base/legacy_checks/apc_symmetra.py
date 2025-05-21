@@ -324,7 +324,7 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
     check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
-        "capacity": (95, 80),
+        "capacity": (95.0, 80.0),
         "calibration_state": 0,
         "battery_replace_state": 1,
     },

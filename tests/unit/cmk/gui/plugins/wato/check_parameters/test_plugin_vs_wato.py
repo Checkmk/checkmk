@@ -305,16 +305,6 @@ class ErrorReporter:
         ("check", "apc_humidity", RuleGroup.CheckgroupParameters("humidity")),
         (
             "check",
-            "apc_symmetra",
-            RuleGroup.CheckgroupParameters("apc_symentra"),
-        ),
-        (
-            "check",
-            "apc_symmetra_temp",
-            RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),
@@ -500,11 +490,6 @@ class ErrorReporter:
             "check",
             "openhardwaremonitor_smart",
             RuleGroup.CheckgroupParameters("openhardwaremonitor_smart"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_temperature",
-            RuleGroup.CheckgroupParameters("temperature"),
         ),
         (
             "check",

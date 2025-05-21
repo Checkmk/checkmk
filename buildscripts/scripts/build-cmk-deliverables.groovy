@@ -322,7 +322,7 @@ def main() {
         dir("${deliverables_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "${bazel_log_prefix}*, **/*.json",
+                    artifacts: "${bazel_log_prefix}*",
                     fingerprint: true,
                 );
             }

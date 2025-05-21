@@ -8,7 +8,7 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import requests
 
@@ -27,6 +27,8 @@ from buildscripts.scripts.lib.registry import (
     get_default_registries,
     Registry,
 )
+
+MetaFileTypes = Literal["bill-of-materials.json", "licenses.csv"]
 
 
 def hash_file(artifact_name: str) -> str:
@@ -90,24 +92,40 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             yield hash_file(package_name), internal_only
 
 
-def bom_file_name(edition: str, version: str) -> str:
-    return f"check-mk-{edition}-{version}-bill-of-materials.json"
+def meta_file_name(edition: str, version: str, file_type: MetaFileTypes) -> str:
+    return f"check-mk-{edition}-{version}-{file_type}"
 
 
-def build_bom_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_meta_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = bom_file_name(edition, args.version)
+        bom_file_name = meta_file_name(edition, args.version, "bill-of-materials.json")
+        license_file_name = meta_file_name(edition, args.version, "licenses.csv")
         internal_only = edition in loaded_yaml.get("internal_editions", [])
-        yield file_name, internal_only
-        yield hash_file(file_name), internal_only
+        yield bom_file_name, internal_only
+        yield hash_file(bom_file_name), internal_only
+        yield license_file_name, internal_only
+        yield hash_file(license_file_name), internal_only
 
 
-def build_bom_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
+def build_meta_file_latest_mapping(
+    args: Args, loaded_yaml: dict, file_type: MetaFileTypes
+) -> dict[str, str]:
     base_version = Version.from_str(args.version).base
     return {
-        bom_file_name(
-            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest"
-        ): bom_file_name(edition, args.version)
+        meta_file_name(
+            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest", file_type
+        ): meta_file_name(edition, args.version, file_type)
+        for edition in loaded_yaml["editions"]
+        if edition not in loaded_yaml.get("internal_editions", [])
+    }
+
+
+def build_license_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
+    base_version = Version.from_str(args.version).base
+    return {
+        meta_file_name(
+            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest", "licenses.csv"
+        ): meta_file_name(edition, args.version, "licenses.csv")
         for edition in loaded_yaml["editions"]
         if edition not in loaded_yaml.get("internal_editions", [])
     }
@@ -175,7 +193,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
 
-    for artifact_name, internal_only in build_bom_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_meta_artifacts(args, loaded_yaml):
         results.append(
             assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
         )
@@ -213,8 +231,15 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
 # TODO
 
 
-def dump_bom_artifact_mapping(args: Args, loaded_yaml: dict) -> None:
-    print(json.dumps(build_bom_latest_mapping(args, loaded_yaml)))
+def dump_meta_artifacts_mapping(args: Args, loaded_yaml: dict) -> None:
+    print(
+        json.dumps(
+            {
+                **build_meta_file_latest_mapping(args, loaded_yaml, "bill-of-materials.json"),
+                **build_meta_file_latest_mapping(args, loaded_yaml, "licenses.csv"),
+            }
+        )
+    )
 
 
 def parse_arguments() -> Args:
@@ -232,8 +257,8 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
     sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
 
-    sub_print_bom_artifacts = subparsers.add_parser("dump_bom_artifact_mapping")
-    sub_print_bom_artifacts.set_defaults(func=dump_bom_artifact_mapping)
+    sub_print_bom_artifacts = subparsers.add_parser("dump_meta_artifacts_mapping")
+    sub_print_bom_artifacts.set_defaults(func=dump_meta_artifacts_mapping)
     sub_print_bom_artifacts.add_argument("--version", required=True, default=False)
     sub_print_bom_artifacts.add_argument("--version_agnostic", action=BooleanOptionalAction)
 

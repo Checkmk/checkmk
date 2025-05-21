@@ -504,7 +504,7 @@ def main() -> None:
             registries = [dockerhub]
         case "cloud":
             suffix = ".cce"
-            registries = [dockerhub]
+            registries = [dockerhub, nexus]
         case "saas":
             suffix = ".cse"
             registries = [nexus]

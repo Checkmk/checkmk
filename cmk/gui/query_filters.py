@@ -27,6 +27,7 @@ from cmk.gui.utils.labels import (
     encode_labels_for_livestatus,
     Label,
     Labels,
+    parse_label_groups_from_http_vars,
     parse_labels_value,
 )
 from cmk.gui.utils.user_errors import user_errors
@@ -163,7 +164,7 @@ class TristateQuery(SingleOptionQuery):
             ident=ident,
             filter_code=lambda pick: filter_code(pick == "1"),
             filter_row=(
-                lambda pick, row: filter_row(pick == "1", row) if filter_row is not None else True
+                lambda pick, row: (filter_row(pick == "1", row) if filter_row is not None else True)
             ),
             options=options or default_tri_state_options(),
         )
@@ -381,7 +382,10 @@ class TimeQuery(NumberRangeQuery):
                 return int(time.mktime(time.strptime(value[var], "%Y-%m-%d %H:%M:%S")))
             except ValueError:
                 user_errors.add(
-                    MKUserError(var, _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."))
+                    MKUserError(
+                        var,
+                        _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."),
+                    )
                 )
                 return None
         if rangename == "abs":
@@ -645,49 +649,7 @@ class AllLabelGroupsQuery(Query):
 
     def parse_value(self, value: FilterHTTPVariables) -> LabelGroups:
         prefix: str = self.ident  # "[host|service]_labels"
-        label_groups: list = []
-
-        groups_count: int = self._get_validated_count_value(f"{prefix}_count", value)
-        labels_count: int
-        for i in range(1, groups_count + 1):
-            labels_count = self._get_validated_count_value(f"{prefix}_{i}_vs_count", value)
-            label_group_operator: str = self._get_validated_operator_value(
-                f"{prefix}_{i}_bool", value
-            )
-            label_group = []
-            for j in range(1, labels_count + 1):
-                operator: str = self._get_validated_operator_value(
-                    f"{prefix}_{i}_vs_{j}_bool", value
-                )
-                if vs_value := value.get(f"{prefix}_{i}_vs_{j}_vs"):
-                    label_group.append((operator, vs_value))
-
-            if label_group:
-                label_groups.append((label_group_operator, label_group))
-
-        return label_groups
-
-    def _get_validated_count_value(self, ident: str, value: FilterHTTPVariables) -> int:
-        try:
-            str_val: str = value.get(ident) or "0"
-            return int(str_val)
-        except ValueError:
-            raise MKUserError(
-                ident,
-                _('The value "%s" of HTTP variable "%s" is not an integer.') % (str_val, ident),
-            )
-
-    def _get_validated_operator_value(self, ident: str, value: FilterHTTPVariables) -> str:
-        operator: str = value.get(ident, "and")
-        if operator not in ["and", "or", "not"]:
-            raise MKUserError(
-                ident,
-                _(
-                    'The value "%s" of HTTP variable "%s" is not a valid operator ({"and", "or", "not"}).'
-                )
-                % (operator, ident),
-            )
-        return operator
+        return parse_label_groups_from_http_vars(prefix, value)
 
 
 class ABCTagsQuery(Query):
@@ -747,7 +709,10 @@ class AuxTagsQuery(ABCTagsQuery):
 
         request_vars = []
         for num in range(self.count):
-            request_vars += ["%s_%d" % (self.var_prefix, num), "%s_%d_neg" % (self.var_prefix, num)]
+            request_vars += [
+                "%s_%d" % (self.var_prefix, num),
+                "%s_%d_neg" % (self.var_prefix, num),
+            ]
 
         super().__init__(ident=f"{object_type}_auxtags", request_vars=request_vars)
 
@@ -847,7 +812,11 @@ def log_alerts_filter(value: FilterHTTPVariables) -> FilterHeader:
             log_type = "HOST" if request_var[-2] == "h" else "SERVICE"
             state = request_var[-1]
             headers.append(
-                lq_logic("Filter:", [f"log_type ~ {log_type} .*", f"log_state = {state}"], "And")
+                lq_logic(
+                    "Filter:",
+                    [f"log_type ~ {log_type} .*", f"log_state = {state}"],
+                    "And",
+                )
             )
 
     return "".join(headers) + ("Or: %d\n" % len(headers))

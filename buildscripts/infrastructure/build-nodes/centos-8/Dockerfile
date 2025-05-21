@@ -1,9 +1,14 @@
 ARG IMAGE_CENTOS_8
+
 # hadolint ignore=DL3006
+# Create base image
 FROM ${IMAGE_CENTOS_8} as base
 
 SHELL ["/bin/bash", "-c"]
-ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
+ENV \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PATH="/opt/bin:${PATH}"
 
 # Centos-8 is EOL, therfor we switch to the vault repos
 RUN sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/* \
@@ -122,7 +127,7 @@ RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
     && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
     fi
 
-# Install our standard tool chain for building
+# Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
@@ -133,8 +138,14 @@ ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    NEXUS_ARCHIVES_URL="${NEXUS_ARCHIVES_URL}" \
+    NEXUS_USERNAME="${NEXUS_USERNAME}" \
+    NEXUS_PASSWORD="${NEXUS_PASSWORD}" \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
+# Copy over stuff that's needed by lots of scripts (has to be copied to context before)
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-valgrind.sh
@@ -152,14 +163,16 @@ RUN /opt/strip_binaries /opt
 # Run this AFTER strip_binaries!!
 RUN /opt/install-bazel.sh
 
-### Actual Image ###
+### Actual Build Image ###
 FROM base
 
 # Copy our standard tool chain for building
 COPY --from=builder /opt /opt
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
@@ -190,7 +203,7 @@ RUN mkdir -p /home/jenkins/.cache/ \
     && chown jenkins:jenkins /home/jenkins/.cache/
 
 ARG VERS_TAG
-RUN echo $VERS_TAG > /version.txt
+RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \

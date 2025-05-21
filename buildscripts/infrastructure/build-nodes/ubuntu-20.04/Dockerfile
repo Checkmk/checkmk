@@ -1,10 +1,15 @@
 ARG IMAGE_UBUNTU_20_04
+
 # hadolint ignore=DL3006
 # Create base image
 FROM ${IMAGE_UBUNTU_20_04} as base
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
+ENV \
+    DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -96,9 +101,14 @@ ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    NEXUS_ARCHIVES_URL="${NEXUS_ARCHIVES_URL}" \
+    NEXUS_USERNAME="${NEXUS_USERNAME}" \
+    NEXUS_PASSWORD="${NEXUS_PASSWORD}" \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
-
+# Copy over stuff that's needed by lots of scripts (has to be copied to context before)
 COPY scripts/.bazelversion /opt/
 COPY scripts/install-iwyu.sh /opt/
 COPY scripts/Check_MK-pubkey.gpg /opt/
@@ -151,7 +161,9 @@ COPY --from=builder /opt /opt
 
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
@@ -222,7 +234,7 @@ RUN mkdir -p /home/jenkins/.cache/ \
     && chown jenkins:jenkins /home/jenkins/.cache/
 
 ARG VERS_TAG
-RUN echo $VERS_TAG > /version.txt
+RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \

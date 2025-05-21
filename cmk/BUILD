@@ -130,6 +130,7 @@ CSE_PY = glob([
 ])
 
 CMK_PACKAGES = [
+    "//packages/cmk-shared-typing:cmk_shared_typing_py",
     "//packages/cmk-agent-based",
     "//packages/cmk-agent-receiver",
     "//packages/cmk-ccc:cleanup",

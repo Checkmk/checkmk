@@ -290,6 +290,7 @@ create_venv(
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
+        "//packages/cmk-shared-typing:wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",
     ] + select({

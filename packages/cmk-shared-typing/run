@@ -5,10 +5,6 @@
 
 set -e
 
-JOBS=6
-
-PYTHON_DESTINATION=../../cmk/shared_typing
-
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -22,7 +18,6 @@ usage() {
     echo "  -F, --check-format      check for correct formatting"
     echo "  -a, --all               shortcut for -c -b -F -f"
     echo "  -f, --format            format sources"
-    echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
     echo "  -h, --help              show this help"
 }
 
@@ -32,7 +27,7 @@ parse_options() {
     RUN_CHECK_FORMAT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'bFafj:h' --long 'build,check-format,all,format,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'bFafh' --long 'build,check-format,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -63,11 +58,6 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-j' | '--jobs')
-                JOBS="$2"
-                shift 2
-                continue
-                ;;
             '-h' | '--help')
                 usage
                 exit 0
@@ -81,72 +71,11 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_CHECK_FORMAT RUN_FORMAT JOBS
-}
-
-setup_venv() {
-    test "${SETUP_VENV_RAN}" = "yes" && return
-    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
-    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
-    CC="gcc" bazel run //:create_venv
-    # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv/bin/activate
-    SETUP_VENV_RAN=yes
-}
-
-setup() {
-    setup_venv
+    readonly RUN_BUILD RUN_CHECK_FORMAT RUN_FORMAT
 }
 
 run_build() {
-    setup
-    cwd=$(pwd)
-    export PYTHONPATH="$PYTHONPATH:$cwd"
-    for file in source/*.json; do
-        target_base=$(basename "${file}" .json)
-        echo "Processing $file"
-
-        if [[ "$file" == "source/graph_designer.json" ]]; then
-            datamodel-codegen --input "$file" \
-                --input-file-type jsonschema \
-                --output "${PYTHON_DESTINATION}/${target_base}.py" \
-                --target-python-version 3.12 \
-                --output-model-type=pydantic.BaseModel \
-                --collapse-root-models \
-                --use-field-description \
-                --use-title-as-name \
-                --use-double-quotes \
-                --use-default \
-                --use-one-literal-as-default \
-                --custom-file-header-path header_py.txt \
-                --custom-formatters "utils.format" \
-                --enum-field-as-literal all \
-                --use-generic-container-types \
-                --use-union-operator
-        else
-            datamodel-codegen --input "$file" \
-                --input-file-type jsonschema \
-                --output "${PYTHON_DESTINATION}/${target_base}.py" \
-                --target-python-version 3.12 \
-                --output-model-type=dataclasses.dataclass \
-                --use-field-description \
-                --use-title-as-name \
-                --use-double-quotes \
-                --use-default \
-                --use-standard-collections \
-                --use-one-literal-as-default \
-                --use-subclass-enum \
-                --custom-file-header-path header_py.txt \
-                --custom-formatters "utils.format"
-        fi
-    done
-
-    if [ "$CI" == "true" ]; then
-        echo "Checking if the generated files are up-to-date..."
-        git diff --exit-code ${PYTHON_DESTINATION}
-    fi
-
-    bazel build :cmk_shared_typing_ts
+    bazel build :cmk_shared_typing_ts :cmk_shared_typing_py
 }
 
 run_check_format() {

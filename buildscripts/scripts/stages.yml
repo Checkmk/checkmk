@@ -196,7 +196,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
     - NAME: CHANGED_SHARED_TYPING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^cmk/shared_typing/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/' || true"
 
     - NAME: CHANGED_CMK_FRONTEND_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"

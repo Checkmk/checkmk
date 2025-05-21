@@ -77,6 +77,7 @@ create_venv(
                "//packages/cmk-werks:pkg_tar",
                "//packages/livestatus:livestatus_pkg",
                "//packages/neb:neb_pkg",
+               "//packages/cmk-shared-typing:pkg_tar",
                "//packages/unixcat:unixcat_tar",
                ":license_info",
            ] + select({

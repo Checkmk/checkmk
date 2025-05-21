@@ -13,7 +13,19 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-./run --build
+bazel build ":wheel"
+
+# pip installs the package in the user directory in case of missing permissions
+# this might be surprising and hard to spot, so we force the global installation
+# hint: use `omd-setup-version-for-dev` to fix permissions of the checkmk site.
+export PYTHONNOUSERSITE=1
+
+"${ROOT}/bin/python3" -m pip install \
+    --no-deps \
+    --upgrade \
+    --force-reinstall \
+    --isolated \
+    "$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")"
 
 if [ -z "${ONLY_COPY}" ]; then
     sudo --login -u "${SITE}" -- bash -c "omd reload apache"

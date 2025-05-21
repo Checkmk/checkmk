@@ -1120,10 +1120,7 @@ def bake_agent_field() -> _BakeAgentField:
 
 def agent_connection_field() -> String | None:
     """CME and CCE editions only implementation of cmk_agent_connection field"""
-    if version.edition(paths.omd_root) in [version.Edition.CME, version.Edition.CCE]:
-        return CONNECTION_MODE_FIELD
-
-    return None
+    return CONNECTION_MODE_FIELD
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:

@@ -7,6 +7,7 @@ from cmk.agent_based.v2 import (
     Metric,
     Result,
     Service,
+    ServiceLabel,
     State,
 )
 from cmk.plugins.smart.agent_based.smart_nvme import (
@@ -63,6 +64,12 @@ def test_discover_smart_nvme_stat() -> None:
     assert list(discover_smart_nvme(SECTION_NVME, SECTION_NVME)) == [
         Service(
             item="PC601 NVMe SK hynix 512GB XXXNVMe",
+            labels=[
+                ServiceLabel("cmk/smart/type", "NVMe"),
+                ServiceLabel("cmk/smart/device", "/dev/nvme0"),
+                ServiceLabel("cmk/smart/model", "PC601 NVMe SK hynix 512GB"),
+                ServiceLabel("cmk/smart/serial", "XXXNVMe"),
+            ],
             parameters={
                 "critical_warning": 0,
                 "media_errors": 0,

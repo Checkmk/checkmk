@@ -190,18 +190,18 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
             }
 
             if (latest) {
-                def bom_mapping_latest = readJSON(
+                def mapping_latest = readJSON(
                     text: sh(script: """
                         scripts/run-uvenv \
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
-                            dump_bom_artifact_mapping \
+                            dump_meta_artifacts_mapping \
                             --version_agnostic \
                             --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)
                 );
-                bom_mapping_latest.each { symlink, target ->
+                mapping_latest.each { symlink, target ->
                     execute_cmd_on_archive_server(
                         "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
                     );

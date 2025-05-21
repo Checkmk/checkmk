@@ -13,16 +13,25 @@ from cmk.gui.watolib.rulespec_groups import (
 )
 from cmk.gui.watolib.users import notification_script_title
 
+from cmk.rulesets.v1.rule_specs import NotificationParameters
+
 from ._base import NotificationParameter
 
 
-class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
-    def plugin_name(self, instance):
-        return instance().ident
+class NotificationParameterRegistry(Registry[type[NotificationParameter] | NotificationParameters]):
+    def plugin_name(self, instance: type[NotificationParameter] | NotificationParameters) -> str:
+        return instance.name if isinstance(instance, NotificationParameters) else instance().ident
 
     # TODO: Make this registration_hook actually take an instance. Atm it takes a class and
     #       instantiates it
-    def registration_hook(self, instance):
+    def registration_hook(
+        self, instance: type[NotificationParameter] | NotificationParameters
+    ) -> None:
+        if isinstance(instance, NotificationParameters):
+            # Ruleset API v1
+            # _rulespecs registration occurs in cmk.gui.rulespec.register_plugins
+            return
+
         plugin = instance()
 
         script_title = notification_script_title(plugin.ident)

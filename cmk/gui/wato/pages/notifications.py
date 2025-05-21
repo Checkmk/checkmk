@@ -64,6 +64,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -131,6 +132,8 @@ from cmk.gui.watolib.sample_config import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 from .._group_selection import ContactGroupSelection
 from .._notification_parameter import notification_parameter_registry
@@ -2292,7 +2295,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         choices = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name]().spec
+                plugin = notification_parameter_registry[script_name]
+                if isinstance(plugin, NotificationParameters):
+                    vs = convert_to_legacy_valuespec(plugin.parameter_form(), _)
+                else:
+                    vs = plugin().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),

@@ -14,7 +14,16 @@ from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.validation.visitors.vue_lib import form_spec_registry
+from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.rulespecs import rulespec_registry
+
+from cmk.rulesets.v1.rule_specs import NotificationParameters
+
+
+def register() -> None:
+    # This is only a placeholder to call to ensure that the module is loaded and recognized as a
+    # main module
+    pass
 
 
 def load_plugins() -> None:
@@ -36,6 +45,9 @@ def load_plugins() -> None:
 def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
     for loaded_rule_spec in loaded_rule_specs:
         try:
+            if isinstance(loaded_rule_spec.rule_spec, NotificationParameters):
+                notification_parameter_registry.register(loaded_rule_spec.rule_spec)
+
             legacy_rulespec = convert_to_legacy_rulespec(
                 loaded_rule_spec.rule_spec, loaded_rule_spec.edition_only, _
             )

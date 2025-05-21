@@ -34,6 +34,7 @@ from cmk.gui import (
     notifications,
     painter_options,
     prediction,
+    rulespec,
     sidebar,
     sites,
     user_message,
@@ -280,6 +281,7 @@ def register() -> None:
     openapi_registration.register(endpoint_registry, job_registry)
     sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
+    rulespec.register()
 
 
 register()

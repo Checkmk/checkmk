@@ -19,7 +19,6 @@ from cmk.utils.version import Edition
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
-from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -27,7 +26,7 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Transform
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
-from cmk.gui.wato import pages as legacy_page_groups
+from cmk.gui.wato.pages._password_store_valuespecs import IndividualOrStoredPassword
 from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
@@ -155,7 +154,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.DiscoveryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                legacy_wato_groups.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
         case ruleset_api_v1.rule_specs.Service():
@@ -182,7 +181,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.SpecialAgent():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDatasourcePrograms,
+                legacy_wato_groups.RulespecGroupDatasourcePrograms,
                 localizer,
                 config_scope_prefix=RuleGroup.SpecialAgents,
             )
@@ -209,7 +208,7 @@ def _convert_to_legacy_check_parameter_rulespec(
             item_spec=_get_item_spec_maker(to_convert.condition, localizer),
             match_type="dict",
             parameter_valuespec=partial(
-                _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+                convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
             ),
             is_deprecated=to_convert.is_deprecated,
             create_manual_check=False,
@@ -227,7 +226,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         ),
         match_type="dict",
         parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+            convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
         ),
         create_manual_check=False,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
@@ -253,7 +252,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         ),
         check_group_name=to_convert.name,
         parameter_valuespec=(
-            partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer)
+            partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer)
             if to_convert.parameter_form is not None
             else None
         ),
@@ -329,7 +328,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     return legacy_rulespecs.HostRulespec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
@@ -375,7 +374,7 @@ def _remove_agent_config_match_type_key(value: object) -> object:
 def _transform_agent_config_rule_spec_match_type(
     parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-    legacy_vs = _convert_to_legacy_valuespec(parameter_form, localizer)
+    legacy_vs = convert_to_legacy_valuespec(parameter_form, localizer)
     inner_transform = (
         legacy_vs if isinstance(legacy_vs, Transform) and parameter_form.migrate else None
     )
@@ -417,7 +416,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         ),
         item_type="service",
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=(
@@ -489,7 +488,7 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
                 return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesVarious
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
-            if legacy_main_group == legacy_wato.RulespecGroupDiscoveryCheckParameters:
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDiscoveryCheckParameters:
                 return legacy_wato_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.rule_specs.Topic.ENVIRONMENTAL:
@@ -751,7 +750,7 @@ def _convert_to_inner_legacy_valuespec(
             raise NotImplementedError(other)
 
 
-def _convert_to_legacy_valuespec(
+def convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     def allow_empty_value_wrapper(
@@ -1242,7 +1241,7 @@ def _get_ungrouped_elements(
         },
     )
     elements = [
-        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        (key, convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
         for key, dict_element in dict_elements_map.items()
         if isinstance(dict_element.group, ruleset_api_v1.form_specs.NoGroup)
     ]
@@ -1266,7 +1265,7 @@ def _make_group_as_nested_dict(
 ) -> tuple[legacy_valuespecs.Dictionary, bool]:
     key_props = _LegacyDictKeyProps.from_elements(dict_elements)
     elements = [
-        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        (key, convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
         for key, dict_element in dict_elements.items()
     ]
 
@@ -1400,7 +1399,7 @@ def _convert_to_legacy_cascading_dropdown(
         (
             str(element.name),
             element.title.localize(localizer),
-            _convert_to_legacy_valuespec(element.parameter_form, localizer),
+            convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
         for element in to_convert.elements
     ]
@@ -1472,7 +1471,7 @@ def _convert_to_legacy_validation(
 def _convert_to_legacy_list(
     to_convert: ruleset_api_v1.form_specs.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
-    template = _convert_to_legacy_valuespec(to_convert.element_template, localizer)
+    template = convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: dict[str, Any] = {
         "valuespec": template,
         "title": _localize_optional(to_convert.title, localizer),
@@ -1569,7 +1568,7 @@ def _get_legacy_level_spec(
             form_spec_template,
             prefill=prefill_type(prefill_value),  # type: ignore[call-arg]
         )
-    return _convert_to_legacy_valuespec(
+    return convert_to_legacy_valuespec(
         dataclasses.replace(form_spec_template, title=title), localizer
     )
 
@@ -2239,7 +2238,7 @@ def _convert_to_legacy_individual_or_stored_password(
     to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
     return Transform(
-        legacy_page_groups.IndividualOrStoredPassword(
+        IndividualOrStoredPassword(
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             allow_empty=False,

@@ -14,9 +14,6 @@ dependencies:
   clsx:
     specifier: ^2.1.1
     version: 2.1.1
-  cmk-shared-typing:
-    specifier: file:../cmk-shared-typing
-    version: file:../cmk-shared-typing
   lucide-vue-next:
     specifier: ^0.487.0
     version: 0.487.0(vue@3.5.13)
@@ -4636,8 +4633,3 @@ packages:
     resolution: {integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA==}
     engines: {node: '>=18'}
     dev: true
-
-  file:../cmk-shared-typing:
-    resolution: {directory: ../cmk-shared-typing, type: directory}
-    name: cmk-shared-typing
-    dev: false

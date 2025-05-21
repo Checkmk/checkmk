@@ -672,7 +672,7 @@ STAGES:
     - NAME: "Package cmk-shared-typing"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_SHARED_TYPING_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-shared-typing"
-      COMMAND: "./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-shared-typing.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-shared-typing files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"

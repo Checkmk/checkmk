@@ -28,7 +28,6 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
-        'cmk-shared-typing': fileURLToPath(new URL('../cmk-shared-typing', import.meta.url)),
         '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend', import.meta.url))
       }
     },

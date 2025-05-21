@@ -1,3 +1,4 @@
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm_cmk_frontend_vue//:defs.bzl", "npm_link_all_packages")
 load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:eslint/package_json.bzl", eslint_bin = "bin")
@@ -23,7 +24,6 @@ SRCS = [
     "vite.config.demo.ts",
     "vite.config.ts",
     "//packages/cmk-frontend:src",
-    "//packages/cmk-shared-typing:src",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -32,6 +32,7 @@ SRCS = [
     ":node_modules/@vue",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
+    ":node_modules/cmk-shared-typing",
     ":node_modules/eslint-plugin-vue",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
@@ -48,6 +49,14 @@ SRCS = [
     "src/**/*.vue",
     "src/**/*.css",
 ])
+
+npm_link_package(
+    name = "node_modules/cmk-shared-typing",
+    src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
+    package = "cmk-shared-typing",
+    root_package = "packages/cmk-frontend-vue",
+    visibility = ["//packages:__subpackages__"],
+)
 
 vite_bin.vite(
     name = "dist",

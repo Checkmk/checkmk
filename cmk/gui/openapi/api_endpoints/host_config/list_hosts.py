@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Annotated, get_type_hints, Literal
+from typing import Annotated, Literal
 
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.host_config.models.response_models import (
@@ -26,7 +26,6 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 from cmk import trace
@@ -105,7 +104,6 @@ def list_hosts_v1(
         hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
     else:
         hosts = _iter_hosts_with_permission(root_folder)
-    static_attribute_names = set(get_type_hints(HostAttributes))
     with tracer.span("list-hosts-build-response"):
         return HostConfigCollectionModel(
             domainType="host_config",
@@ -114,7 +112,6 @@ def list_hosts_v1(
             value=[
                 serialize_host(
                     host=host,
-                    static_attribute_names=static_attribute_names,
                     compute_links=include_links,
                     compute_effective_attributes=effective_attributes,
                 )

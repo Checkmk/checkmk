@@ -117,6 +117,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
     LABEL_REGEX,
     LabelType,
+    parse_label_groups_from_http_vars,
     parse_labels_value,
 )
 from cmk.gui.utils.output_funnel import output_funnel
@@ -444,7 +445,7 @@ class Age(ValueSpec[int]):
         footer: str | None = None,
         minvalue: int | None = None,
         maxvalue: int | None = None,
-        display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
+        display: (Container[Literal["days", "hours", "minutes", "seconds"]] | None) = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[int] = DEF_VALUE,
@@ -4351,10 +4352,10 @@ class DualListChoice(ListChoice):
                 deflt="",
                 ordered=self._custom_order,
                 multiple="multiple",
-                style="height:auto" if self._autoheight else "height: %dpx" % (self._rows * 16),
+                style=("height:auto" if self._autoheight else "height: %dpx" % (self._rows * 16)),
                 ondblclick=select_func if not self._instant_add else "",
                 onchange=onchange_func,
-                locked_choice=self._locked_choice_text(value) if suffix == "selected" else None,
+                locked_choice=(self._locked_choice_text(value) if suffix == "selected" else None),
             )
 
             html.close_td()
@@ -6977,7 +6978,7 @@ class Password(TextInput):
         if self._encrypt_value:
             html.hidden_field(
                 varprefix + "_orig",
-                value=base64.b64encode(Encrypter.encrypt(value)).decode("ascii") if value else "",
+                value=(base64.b64encode(Encrypter.encrypt(value)).decode("ascii") if value else ""),
             )
             default_value = ""
         else:
@@ -7272,7 +7273,7 @@ class UploadOrPasteTextFile(Alternative):
         # Alternative
         elements: Iterable[ValueSpec] = (),
         # NOTE: Match defaut is different!
-        match: Callable[[Any], int] | None = lambda val: 0 if isinstance(val, tuple) else 1,
+        match: Callable[[Any], int] | None = lambda val: (0 if isinstance(val, tuple) else 1),
         show_alternative_title: bool = False,
         on_change: str | None = None,
         orientation: Literal["horizontal", "vertical"] = "vertical",
@@ -7604,7 +7605,7 @@ class _SingleLabel(AjaxDropdownChoice):
             ),
             strict=strict,
             html_attrs={"data-world": world.value},
-            on_change=on_change if on_change else "cmk.valuespecs.single_label_on_change(this)",
+            on_change=(on_change if on_change else "cmk.valuespecs.single_label_on_change(this)"),
             cssclass=self.ident,
             default_value="",
         )
@@ -7710,6 +7711,8 @@ class LabelGroups(LabelGroup):
         return _("Remove this label group")
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
+        if request.has_var(varprefix + "_count"):
+            value = self.from_html_vars(varprefix)
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
         html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
@@ -7725,13 +7728,8 @@ class LabelGroups(LabelGroup):
                 label_group.append(("and", ""))
         return value
 
-    def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
-        # If LabelGroups are initiated with the parameter show_empty_groups_by_default set to
-        # True, rendered and submitted LabelGroups (without any user input) return a value
-        # of [("and", [("and", "")])]  (self._default_value)
-        # For this default case we provide an actually empty value [] here
-        value = super().from_html_vars(varprefix)
-        return [] if value == self._default_value else value
+    def from_html_vars(self, varprefix: str) -> ListOfAndOrNotDropdownValue:
+        return parse_label_groups_from_http_vars(varprefix, dict(request.itervars(varprefix)))
 
 
 # https://github.com/python/mypy/issues/12368
@@ -8648,7 +8646,7 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
     return ListOf(
         valuespec=CAorCAChain(),
         magic=magic,
-        add_label=_("Add new CA certificate or chain") if add_label is None else add_label,
+        add_label=(_("Add new CA certificate or chain") if add_label is None else add_label),
         del_label=del_label,
         movable=False,
         style=style,
@@ -8802,7 +8800,7 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
         html_attrs=html_attrs,
         title=title,
         help=help,
-        default_value=logging.INFO if isinstance(default_value, Sentinel) else default_value,
+        default_value=(logging.INFO if isinstance(default_value, Sentinel) else default_value),
         validate=validate,
         deprecated_choices=deprecated_choices,
     )

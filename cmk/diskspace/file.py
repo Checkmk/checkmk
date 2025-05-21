@@ -27,7 +27,7 @@ class _PluginData:
     base_path: Path
     plugin_name: str
     cleanup_paths: Sequence[str]
-    file_infos: dict[str, float]
+    file_infos: Mapping[str, float]
 
 
 def _resolve_plugin_cleanup_paths(omd_root: Path, plugin: _PluginData) -> list[str]:
@@ -66,10 +66,13 @@ def _load_plugin(plugin_base_dir: Path, plugin_file_name: str) -> _PluginData | 
 
 
 def _read_plugin_info(omd_root: Path, plugin: _PluginData) -> _Info:
-    resolved_paths = _resolve_plugin_cleanup_paths(omd_root, plugin)
-    for path in resolved_paths:
-        plugin.file_infos[path] = os.stat(path).st_mtime
-    return _Info(plugin_name=plugin.plugin_name, path_to_mod_time=plugin.file_infos)
+    return _Info(
+        plugin_name=plugin.plugin_name,
+        path_to_mod_time={
+            **plugin.file_infos,
+            **{p: os.stat(p).st_mtime for p in _resolve_plugin_cleanup_paths(omd_root, plugin)},
+        },
+    )
 
 
 def load_plugins(omd_root: Path, plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:

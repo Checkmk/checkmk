@@ -45,7 +45,7 @@ def _render_inventory_icon(
         assert v is not None
         return (
             "inventory",
-            _("Show HW/SW Inventory of this host"),
+            _("Show HW/SW Inventory tree"),
             v,
         )
     return None
@@ -87,7 +87,7 @@ def _render_inventory_history_icon(
         assert v is not None
         return (
             "inventory",
-            _("Show HW/SW Inventory history of this host"),
+            _("Show HW/SW Inventory history"),
             v,
         )
     return None

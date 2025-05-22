@@ -181,6 +181,8 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
     Makes a "real" WSGI application out of a versioned definition.
     """
 
+    __slots__ = ("endpoint", "requested_version")
+
     def __init__(
         self, endpoint: EndpointDefinition, requested_version: APIVersion, debug: bool = False
     ) -> None:
@@ -233,6 +235,8 @@ class LegacyEndpointAdapter(AbstractWSGIApp):
 
     Makes a "real" WSGI application out of an endpoint. Should be refactored away.
     """
+
+    __slots__ = ("endpoint",)
 
     def __init__(self, endpoint: Endpoint, debug: bool = False) -> None:
         super().__init__(debug)
@@ -412,6 +416,8 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
 
 class ServeSpec(AbstractWSGIApp):
+    __slots__ = ("target", "extension")
+
     def __init__(
         self, target: EndpointTarget, extension: Literal["yaml", "json"], debug: bool = False
     ) -> None:
@@ -431,6 +437,8 @@ class ServeSpec(AbstractWSGIApp):
 
 
 class ServeSwaggerUI(AbstractWSGIApp):
+    __slots__ = ("prefix", "data")
+
     def __init__(self, prefix: str = "", debug: bool = False) -> None:
         super().__init__(debug)
         self.prefix = prefix
@@ -465,6 +473,8 @@ type MapByVersion = dict[APIVersion, Map]
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
+    __slots__ = ("_versioned_url_map", "_versioned_endpoints", "_versioned_rules", "testing")
+
     def __init__(self, debug: bool = False, testing: bool = False) -> None:
         super().__init__(debug)
         # This intermediate data structure is necessary because `Rule`s can't contain anything

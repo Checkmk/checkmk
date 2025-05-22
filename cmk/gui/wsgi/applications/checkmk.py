@@ -162,6 +162,8 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
+    __slots__ = ("testing",)
+
     def __init__(self, debug: bool = False, testing: bool = False) -> None:
         super().__init__(debug)
         self.testing = testing

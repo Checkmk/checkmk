@@ -128,7 +128,6 @@ rust_binary(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
 )
 
@@ -136,4 +135,5 @@ platform_transition_binary(
     name = "cmk-agent-ctl-musl",
     binary = ":cmk-agent-ctl",
     platform = "//bazel/platforms:x86_64-unknown-linux-musl",
+    visibility = ["//visibility:public"],
 )

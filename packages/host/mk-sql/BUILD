@@ -56,7 +56,6 @@ rust_binary(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":mk-sql-lib"],
 )
 
@@ -64,6 +63,7 @@ platform_transition_binary(
     name = "mk-sql-musl",
     binary = ":mk-sql",
     platform = "//bazel/platforms:x86_64-unknown-linux-musl",
+    visibility = ["//visibility:public"],
 )
 
 rust_test(

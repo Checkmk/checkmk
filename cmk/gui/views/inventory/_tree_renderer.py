@@ -325,7 +325,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
     host_name = request.get_validated_type_input_mandatory(HostName, "host")
-    inventory.verify_permission(host_name, site_id)
+    inventory.verify_permission(site_id, host_name)
 
     raw_path = request.get_ascii_input_mandatory("raw_path", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))

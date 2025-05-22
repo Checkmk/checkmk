@@ -92,7 +92,7 @@ def register(
     icon_and_action_registry.register(InventoryIcon)
 
 
-def verify_permission(host_name: HostName, site: SiteId | None) -> None:
+def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
     if user.may("general.see_all"):
         return
 
@@ -101,8 +101,8 @@ def verify_permission(host_name: HostName, site: SiteId | None) -> None:
         "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
     )
 
-    if site:
-        sites.live().set_only_sites([site])
+    if site_id:
+        sites.live().set_only_sites([site_id])
 
     try:
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
@@ -112,7 +112,7 @@ def verify_permission(host_name: HostName, site: SiteId | None) -> None:
             % host_name
         )
     finally:
-        if site:
+        if site_id:
             sites.live().set_only_sites()
 
     if result[0] == 0:
@@ -173,7 +173,7 @@ class _HostInvAPIResponse(TypedDict):
 def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
     raw_site = api_request.get("site")
     site = SiteId(raw_site) if raw_site is not None else None
-    verify_permission(host_name, site)
+    verify_permission(site, host_name)
 
     tree = load_tree(
         host_name=host_name,

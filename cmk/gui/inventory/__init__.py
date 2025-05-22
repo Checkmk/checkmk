@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import json
 import shutil
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 import livestatus
 
@@ -19,7 +19,13 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
-from cmk.utils.structured_data import InventoryPaths, SDRawTree, serialize_tree
+from cmk.utils.structured_data import (
+    ImmutableTree,
+    InventoryPaths,
+    SDFilterChoice,
+    SDRawTree,
+    serialize_tree,
+)
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -170,20 +176,15 @@ class _HostInvAPIResponse(TypedDict):
     result: str | Mapping[str, SDRawTree]
 
 
-def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRawTree:
-    raw_site = api_request.get("site")
-    site = SiteId(raw_site) if raw_site is not None else None
-    verify_permission(site, host_name)
-
+def _inventory_of_host(
+    site_id: SiteId | None, host_name: HostName, filters: Sequence[SDFilterChoice]
+) -> ImmutableTree:
+    verify_permission(site_id, host_name)
     tree = load_tree(
         host_name=host_name,
-        raw_status_data_tree=get_raw_status_data_via_livestatus(site, host_name),
+        raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
     )
-    if "paths" in api_request:
-        return serialize_tree(
-            tree.filter(make_filter_choices_from_api_request_paths(api_request["paths"]))
-        )
-    return serialize_tree(tree)
+    return tree.filter(filters) if filters else tree
 
 
 def _write_json(resp):
@@ -209,9 +210,19 @@ def page_host_inv_api() -> None:
             hosts = [host_name]
 
         result: dict[str, SDRawTree] = {}
-        for a_host_name in hosts:
-            _check_for_valid_hostname(a_host_name)
-            result[a_host_name] = _inventory_of_host(a_host_name, api_request)
+        for raw_host_name in hosts:
+            _check_for_valid_hostname(raw_host_name)
+            result[raw_host_name] = serialize_tree(
+                _inventory_of_host(
+                    SiteId(raw_site_id) if (raw_site_id := api_request.get("site")) else None,
+                    HostName(raw_host_name),
+                    (
+                        make_filter_choices_from_api_request_paths(api_request["paths"])
+                        if "paths" in api_request
+                        else []
+                    ),
+                )
+            )
 
         resp = {"result_code": 0, "result": result}
 

@@ -286,9 +286,12 @@ def start_checkmk(
         if value is not None
     }
 
+    c: docker.models.containers.Container | None = None
     try:
         try:
-            c: docker.models.containers.Container = client.containers.get(name)
+            if not name:
+                raise ValueError("Container name not defined!")
+            c = client.containers.get(name)
             if os.getenv("REUSE") == "1":
                 logger.info("Reusing existing container %s", c.short_id)
                 c.start()
@@ -298,8 +301,8 @@ def start_checkmk(
                 c.remove(force=True)
                 _remove_volumes(client, volumes, is_update)
                 raise docker.errors.NotFound(name)
-        except (docker.errors.NotFound, docker.errors.NullResource):
-            c = client.containers.run(image=_image.id, detach=True, **kwargs)
+        except (docker.errors.NotFound, docker.errors.NullResource, ValueError):
+            assert (c := client.containers.run(image=_image, detach=True, **kwargs))
             logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
             try:
@@ -344,10 +347,9 @@ def start_checkmk(
         with cse_oauth_context_mngr:
             yield c
     finally:
-        if os.getenv("CLEANUP", "1") != "0":
+        if os.getenv("CLEANUP", "1") != "0" and c:
             c.stop()
-            c.remove(force=True)
-            _remove_volumes(client, volumes, is_update)
+            c.remove(v=True, force=True)
 
 
 def get_cse_volumes(config_root: Path) -> list[str]:

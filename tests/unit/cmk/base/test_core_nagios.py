@@ -458,6 +458,11 @@ def test_dump_precompiled_hostcheck(
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
 
+    try:
+        exec(host_check)
+    except Exception as e:
+        assert False, f"Execution failed with error: {e}"
+
 
 MOCK_PLUGIN = ActiveCheckConfig(
     name="my_active_check",

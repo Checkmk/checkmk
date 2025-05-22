@@ -130,6 +130,15 @@ def main() {
                             ];
                             break;
                     }
+                    // preparing the mapping entry here before the smart_build call
+                    // ensures the stage is always listed in the job overview independant of the result
+                    // or failures during execution or similar
+                    analyse_mapping["${item.NAME}"] = [
+                        stepName: item.NAME,
+                        duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
+                        status: "failure",
+                    ];
+
                     build_instance = smart_build(
                         // see global-defaults.yml, needs to run in minimal container
                         use_upstream_build: true,

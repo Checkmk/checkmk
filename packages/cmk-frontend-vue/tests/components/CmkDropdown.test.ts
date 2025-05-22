@@ -56,6 +56,30 @@ test('dropdown truncates center of very long label', async () => {
   ).toBeInTheDocument()
 })
 
+test('dropdown marks selectedOptions as selected', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Preselected Option', name: 'preselected_option' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
+      selectedOption: 'preselected_option',
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+
+  await fireEvent.click(dropdown)
+
+  await expect((await screen.findAllByRole('option'))[1]).toHaveClass('selected')
+})
+
 test('dropdown updates selecedOption', async () => {
   let selectedOption: string | null = ''
   const props = {

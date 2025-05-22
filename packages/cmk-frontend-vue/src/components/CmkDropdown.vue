@@ -17,7 +17,7 @@ export interface DropdownOption {
   name: string
   title: string
 }
-import { type Suggestion, ErrorResponse } from './suggestions'
+import { ErrorResponse } from './suggestions'
 
 const {
   inputHint = '',
@@ -123,8 +123,8 @@ function hideSuggestions(): void {
   comboboxButtonRef.value?.focus()
 }
 
-function selectOption(option: Suggestion): void {
-  selectedOption.value = option.name
+function handleUpdate(selected: string | null): void {
+  selectedOption.value = selected
   hideSuggestions()
 }
 
@@ -175,10 +175,10 @@ const truncatedButtonLabel = computed(() =>
       ref="suggestionsRef"
       role="option"
       :suggestions="options"
+      :selected-option="selectedOption"
       :no-results-hint="noResultsHint"
-      @select="selectOption"
-      @keydown.escape.prevent="hideSuggestions"
-      @keydown.tab.prevent="hideSuggestions"
+      @request-close-suggestions="hideSuggestions"
+      @update:selected-option="handleUpdate"
     />
   </div>
 </template>

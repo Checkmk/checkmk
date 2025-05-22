@@ -214,7 +214,7 @@ def main() {
                         --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
                         --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
                         --action=build \
-                        -vvvv
+                        -vvv
                     """);
 
                     def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
@@ -262,7 +262,7 @@ def main() {
                             --version_rc_aware=${cmk_version_rc_aware} \
                             --source_path=${source_dir} \
                             --action=load \
-                            -vvvv
+                            -vvv
                         """);
                     }
                 }
@@ -280,7 +280,7 @@ def main() {
                         --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
                         --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
                         --action=push \
-                        -vvvv
+                        -vvv
                     """);
                 }
             }

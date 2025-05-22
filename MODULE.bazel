@@ -431,6 +431,15 @@ http_archive(
 )
 
 http_archive(
+    name = "robotmk",
+    build_file = "//omd/packages/robotmk:BUILD.robotmk.bazel",
+    sha256 = "a92c3e62380e440c41196d609fe8a84d03255ffb9c5fa0aef758a9996686ffa5",
+    urls = [
+        "https://github.com/elabit/robotmk/releases/download/v4.0.0-alpha-1/all_executables.zip",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

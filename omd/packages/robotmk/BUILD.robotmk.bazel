@@ -18,7 +18,7 @@ genrule(
     ],
     cmd = """
          target_path=$$(realpath $(RULEDIR));
-         cd external/robotmk/artifact/;
+         cd external/$$(dirname $$(echo $(rlocationpaths :package_source_files) | awk '{print $$1}'))/artifact/;
          cp rmk_linux64/robotmk_scheduler rmk_windows64/robotmk_scheduler.exe rmk_linux64/robotmk_agent_plugin rmk_windows64/robotmk_agent_plugin.exe rcc/linux64/rcc rcc/windows64/rcc.exe $${target_path};
     """,
     visibility = ["//visibility:public"],

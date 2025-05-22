@@ -70,10 +70,6 @@ load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp_workspace")
 
 netsnmp_workspace()
 
-load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk_workspace")
-
-robotmk_workspace()
-
 load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool_workspace")
 
 rrdtool_workspace()

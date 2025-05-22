@@ -13,7 +13,14 @@ import pytest
 from pydantic import AfterValidator, ValidationError
 from werkzeug.datastructures import Headers
 
-from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam, RawRequestData
+from cmk.gui.openapi.framework import (
+    ApiContext,
+    APIVersion,
+    HeaderParam,
+    PathParam,
+    QueryParam,
+    RawRequestData,
+)
 from cmk.gui.openapi.framework._validation import ParameterValidator
 from cmk.gui.openapi.framework.endpoint_model import (
     _QueryParameter,
@@ -279,7 +286,9 @@ def _request_data(
 def test_input_model_validate_parameters(func: Callable, request_data: RawRequestData) -> None:
     model = EndpointModel.build(func)
     model._validate_request_parameters(
-        request_data, "application/json" if request_data["body"] else None
+        request_data,
+        "application/json" if request_data["body"] else None,
+        ApiContext(version=APIVersion.UNSTABLE),
     )
 
 
@@ -287,7 +296,11 @@ def test_input_model_extra_body() -> None:
     """Test that specifying a body when none is expected raises an error."""
     model = EndpointModel.build(_empty_endpoint_handler)
     with pytest.raises(ValidationError, match="type=none_required"):
-        model._validate_request_parameters(_request_data(body={"extra_body_field": "test"}), None)
+        model._validate_request_parameters(
+            _request_data(body={"extra_body_field": "test"}),
+            None,
+            ApiContext(version=APIVersion.UNSTABLE),
+        )
 
 
 @pytest.mark.parametrize(
@@ -329,7 +342,9 @@ def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) 
     # type=unexpected_keyword_argument happens only because we use dataclasses (with extra=forbid)
     with pytest.raises(ValidationError, match="type=unexpected_keyword_argument"):
         model._validate_request_parameters(
-            request_data, "application/json" if request_data["body"] else None
+            request_data,
+            "application/json" if request_data["body"] else None,
+            ApiContext(version=APIVersion.UNSTABLE),
         )
 
 
@@ -362,7 +377,9 @@ def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) 
 def test_input_model_missing_fields(request_data: RawRequestData) -> None:
     model = EndpointModel.build(_all_endpoint_handler)
     with pytest.raises(ValidationError, match="type=missing"):
-        model._validate_request_parameters(request_data, "application/json")
+        model._validate_request_parameters(
+            request_data, "application/json", ApiContext(version=APIVersion.UNSTABLE)
+        )
 
 
 class TestAnnotatedValidators:
@@ -397,12 +414,16 @@ class TestAnnotatedValidators:
         model = EndpointModel.build(handler)
         with pytest.raises(ValidationError, match="Value must be 'two'"):
             model._validate_request_parameters(
-                _request_data(body={"field": "one"}), "application/json"
+                _request_data(body={"field": "one"}),
+                "application/json",
+                ApiContext(version=APIVersion.UNSTABLE),
             )
 
         with pytest.raises(ValidationError, match="Value must be 'one'"):
             model._validate_request_parameters(
-                _request_data(body={"field": "three"}), "application/json"
+                _request_data(body={"field": "three"}),
+                "application/json",
+                ApiContext(version=APIVersion.UNSTABLE),
             )
 
     def test_annotated_validator_change_value(self) -> None:
@@ -415,7 +436,9 @@ class TestAnnotatedValidators:
 
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
-        bound = model._validate_request_parameters(request_data, "application/json")
+        bound = model._validate_request_parameters(
+            request_data, "application/json", ApiContext(version=APIVersion.UNSTABLE)
+        )
         assert bound.arguments["body"].field is None
 
     def test_annotated_validator_with_different_return_values(self) -> None:
@@ -432,7 +455,9 @@ class TestAnnotatedValidators:
 
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
-        bound = model._validate_request_parameters(request_data, "application/json")
+        bound = model._validate_request_parameters(
+            request_data, "application/json", ApiContext(version=APIVersion.UNSTABLE)
+        )
         assert bound.arguments["body"].field is None
 
     def test_annotated_validator_with_changing_value_first(self) -> None:
@@ -450,7 +475,9 @@ class TestAnnotatedValidators:
         model = EndpointModel.build(handler)
         request_data = _request_data(body={"field": "one"})
         with pytest.raises(ValidationError, match="Value must be 'one'"):
-            model._validate_request_parameters(request_data, "application/json")
+            model._validate_request_parameters(
+                request_data, "application/json", ApiContext(version=APIVersion.UNSTABLE)
+            )
 
     def test_annotated_validator_ignores_other_union_types(self) -> None:
         def handler(
@@ -464,11 +491,15 @@ class TestAnnotatedValidators:
         model = EndpointModel.build(handler)
 
         request_data = _request_data(query={"_arg": ["one"]})
-        bound = model._validate_request_parameters(request_data, None)
+        bound = model._validate_request_parameters(
+            request_data, None, ApiContext(version=APIVersion.UNSTABLE)
+        )
         assert bound.arguments["_arg"] == "one"
 
         request_data = _request_data()
-        bound = model._validate_request_parameters(request_data, None)
+        bound = model._validate_request_parameters(
+            request_data, None, ApiContext(version=APIVersion.UNSTABLE)
+        )
         assert isinstance(bound.arguments["_arg"], ApiOmitted)
 
 
@@ -479,7 +510,9 @@ def test_query_parameter_list() -> None:
             "query_param": ["test1", "test2"],
         }
     )
-    bound = model._validate_request_parameters(request_data, None)
+    bound = model._validate_request_parameters(
+        request_data, None, ApiContext(version=APIVersion.UNSTABLE)
+    )
     assert bound.arguments["query_param"] == ["test1", "test2"]
 
 
@@ -492,7 +525,9 @@ def test_query_parameter_single() -> None:
     )
     # TODO: check if we can improve the error message here without exiting validation early
     with pytest.raises(ValidationError, match="type=string_type"):
-        model._validate_request_parameters(request_data, None)
+        model._validate_request_parameters(
+            request_data, None, ApiContext(version=APIVersion.UNSTABLE)
+        )
 
 
 def test_header_parameter_case() -> None:
@@ -503,7 +538,9 @@ def test_header_parameter_case() -> None:
 
     model = EndpointModel.build(_header_case_test)
     request_data = _request_data(headers={"header": "test"})
-    bound = model._validate_request_parameters(request_data, None)
+    bound = model._validate_request_parameters(
+        request_data, None, ApiContext(version=APIVersion.UNSTABLE)
+    )
     assert bound.arguments["Header"] == "test"
 
 

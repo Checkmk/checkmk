@@ -18,7 +18,7 @@ from tests.unit.cmk.gui.openapi.framework.factories import (
 )
 
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
+from cmk.gui.openapi.framework import ApiContext, APIVersion, HeaderParam, PathParam, QueryParam
 from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
@@ -172,7 +172,11 @@ def test_handle_endpoint_request_wato_disabled(permission_validator: PermissionV
     request_data = RawRequestDataFactory.build()
     with pytest.raises(RestAPIWatoDisabledException):
         handle_endpoint_request(
-            request_endpoint, request_data, permission_validator, wato_enabled=False
+            request_endpoint,
+            request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
+            permission_validator,
+            wato_enabled=False,
         )
 
 
@@ -183,6 +187,7 @@ def test_handle_endpoint_request_accept_required(permission_validator: Permissio
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
         )
 
@@ -200,6 +205,7 @@ def test_handle_endpoint_request_empty_handler(permission_validator: PermissionV
     response = handle_endpoint_request(
         request_endpoint,
         request_data,
+        ApiContext(version=APIVersion.UNSTABLE),
         permission_validator,
         wato_enabled=True,
         wato_use_git=False,
@@ -224,6 +230,7 @@ def test_handle_endpoint_request_missing_parameters_header(
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -252,6 +259,7 @@ def test_handle_endpoint_request_missing_parameters_query(
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -280,6 +288,7 @@ def test_handle_endpoint_request_missing_parameters_path(
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -312,6 +321,7 @@ def test_handle_endpoint_request_missing_parameters_body(
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -352,6 +362,7 @@ def test_handle_endpoint_request_complex_handler(
     response = handle_endpoint_request(
         request_endpoint,
         request_data,
+        ApiContext(version=APIVersion.UNSTABLE),
         permission_validator,
         wato_enabled=True,
         wato_use_git=False,
@@ -384,6 +395,7 @@ def test_handle_endpoint_request_permissions() -> None:
     response = handle_endpoint_request(
         request_endpoint,
         request_data,
+        ApiContext(version=APIVersion.UNSTABLE),
         permission_validator,
         wato_enabled=True,
         wato_use_git=False,
@@ -409,6 +421,7 @@ def test_handle_endpoint_request_permissions_not_declared() -> None:
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -432,6 +445,7 @@ def test_handle_endpoint_request_permissions_not_checked() -> None:
         handle_endpoint_request(
             request_endpoint,
             request_data,
+            ApiContext(version=APIVersion.UNSTABLE),
             permission_validator,
             wato_enabled=True,
             wato_use_git=False,
@@ -464,9 +478,29 @@ def test_handle_endpoint_with_fields_filter(permission_validator: PermissionVali
     response = handle_endpoint_request(
         request_endpoint,
         request_data,
+        ApiContext(version=APIVersion.UNSTABLE),
         permission_validator,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
     )
     assert response.get_data() == b'{"id": "123"}'
+
+
+def test_handle_endpoint_with_context(permission_validator: PermissionValidator) -> None:
+    def handler(api_context: ApiContext) -> None:
+        assert api_context.version == APIVersion.UNSTABLE
+
+    request_endpoint = RequestEndpointFactory.build(handler=handler)
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+    handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        ApiContext(version=APIVersion.UNSTABLE),
+        permission_validator,
+        wato_enabled=True,
+        wato_use_git=False,
+        is_testing=False,
+    )

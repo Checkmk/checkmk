@@ -15,7 +15,7 @@ from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import HTTPMethod, Response
-from cmk.gui.openapi.framework._types import DataclassInstance, RawRequestData
+from cmk.gui.openapi.framework._types import ApiContext, DataclassInstance, RawRequestData
 from cmk.gui.openapi.framework._utils import get_stripped_origin, iter_dataclass_fields
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
@@ -159,6 +159,7 @@ def _identify_fields_filter(
 def handle_endpoint_request(
     endpoint: RequestEndpoint,
     request_data: RawRequestData,
+    api_context: ApiContext,
     permission_validator: PermissionValidator,
     *,
     wato_enabled: bool = True,
@@ -195,7 +196,9 @@ def handle_endpoint_request(
         permission_validator.track_permissions(),
         _optional_config_lock(endpoint.skip_locking, endpoint.method),
     ):
-        bound_arguments = model.validate_request_and_identify_args(request_data, content_type)
+        bound_arguments = model.validate_request_and_identify_args(
+            request_data, content_type, api_context
+        )
         with tracer.span("endpoint-body-call"):
             raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
 

@@ -13,7 +13,7 @@ from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, Status
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
-from ._types import HeaderParam, PathParam, QueryParam
+from ._types import ApiContext, HeaderParam, PathParam, QueryParam
 from ._utils import get_stripped_origin, strip_annotated
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
@@ -216,6 +216,12 @@ class ParameterValidator:
         if duplicate := names & aliases_set:
             raise ValueError(f"Alias conflict in {source} parameters: {', '.join(duplicate)}")
 
+        if "body" in aliases_set:
+            raise ValueError("Cannot set alias to `body`")
+
+        if "api_context" in aliases_set:
+            raise ValueError("Cannot set alias to `api_context`")
+
 
 class EndpointValidator:
     @staticmethod
@@ -241,6 +247,17 @@ class EndpointValidator:
 
             if not dataclasses.is_dataclass(body_type):
                 raise ValueError("Request body annotation must be a dataclass")
+
+        if "api_context" in signature.parameters:
+            api_context = signature.parameters["api_context"]
+            if api_context.kind not in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            ):
+                raise ValueError("Invalid parameter kind for api_context")
+
+            if api_context.annotation is not ApiContext:
+                raise ValueError("api_context must be annotated as `ApiContext`")
 
     @staticmethod
     def _validate_response_schema(endpoint: RequestEndpoint, model: EndpointModel) -> None:

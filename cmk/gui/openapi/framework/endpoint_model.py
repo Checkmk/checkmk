@@ -18,6 +18,7 @@ from typing import (
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, with_config
 
 from cmk.gui.openapi.framework._types import (
+    ApiContext,
     DataclassInstance,
     HeaderParam,
     PathParam,
@@ -109,7 +110,7 @@ class SignatureParametersProcessor:
         parsed_params: dict[str, ParameterInfo] = {}
 
         for name, parameter in signature.parameters.items():
-            if name == "body":
+            if name in ("body", "api_context"):
                 continue
 
             param_info = ParameterInfo(
@@ -275,6 +276,7 @@ class EndpointModel[**P, T]:
         "_input_model",
         "request_body_type",
         "response_body_type",
+        "uses_api_context",
     )
 
     def __init__(
@@ -284,12 +286,14 @@ class EndpointModel[**P, T]:
         input_model: ApiInputModel,
         request_body_type: type | None,
         response_body_type: type[T] | None,
+        uses_api_context: bool,
     ) -> None:
         self._signature = signature
         self._parameters = parameters
         self._input_model = input_model
         self.request_body_type = request_body_type
         self.response_body_type = response_body_type
+        self.uses_api_context = uses_api_context
 
     @classmethod
     @tracer.instrument("build_endpoint_model")
@@ -307,6 +311,7 @@ class EndpointModel[**P, T]:
             input_model,
             request_body_type,
             response_body_type,
+            uses_api_context="api_context" in signature.parameters,
         )
 
     @property
@@ -355,7 +360,7 @@ class EndpointModel[**P, T]:
 
     @tracer.instrument("validate_request_parameters")
     def _validate_request_parameters(
-        self, request_data: RawRequestData, content_type: str | None
+        self, request_data: RawRequestData, content_type: str | None, api_context: ApiContext
     ) -> inspect.BoundArguments:
         """Validate the request parameters and return them as the bound arguments.
 
@@ -389,6 +394,8 @@ class EndpointModel[**P, T]:
         out = {}
         if self.has_request_schema:
             out["body"] = input_data.body
+        if self.uses_api_context:
+            out["api_context"] = api_context
 
         if self.has_path_parameters:
             out.update(iter_dataclass_fields(input_data.path))
@@ -401,14 +408,14 @@ class EndpointModel[**P, T]:
         return self._signature.bind(**out)
 
     def validate_request_and_identify_args(
-        self, request_data: RawRequestData, content_type: str | None
+        self, request_data: RawRequestData, content_type: str | None, api_context: ApiContext
     ) -> inspect.BoundArguments:
         """Validate the request parameters.
 
         This function will handle the aliasing of query parameters and headers, so the request data
         should be with the original keys."""
         try:
-            return self._validate_request_parameters(request_data, content_type)
+            return self._validate_request_parameters(request_data, content_type, api_context)
         except ValidationError as e:
             RequestDataValidator.raise_formatted_pydantic_error(e)
 

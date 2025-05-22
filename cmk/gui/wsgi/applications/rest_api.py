@@ -33,7 +33,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
-from cmk.gui.openapi.framework import RawRequestData
+from cmk.gui.openapi.framework import ApiContext, RawRequestData
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.handler import handle_endpoint_request
 from cmk.gui.openapi.framework.model.headers import (
@@ -181,9 +181,12 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
     Makes a "real" WSGI application out of a versioned definition.
     """
 
-    def __init__(self, endpoint: EndpointDefinition, debug: bool = False) -> None:
+    def __init__(
+        self, endpoint: EndpointDefinition, requested_version: APIVersion, debug: bool = False
+    ) -> None:
         super().__init__(debug)
         self.endpoint = endpoint
+        self.requested_version = requested_version
 
     def __repr__(self) -> str:
         return f"<VersionedEndpointAdapter {self.endpoint.metadata.method} {self.endpoint.metadata.path}>"
@@ -213,6 +216,7 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
         response = handle_endpoint_request(
             endpoint=self.endpoint.request_endpoint(),
             request_data=request_data,
+            api_context=ApiContext(version=self.requested_version),
             permission_validator=permission_validator,
             wato_enabled=active_config.wato_enabled,
             wato_use_git=active_config.wato_use_git,
@@ -496,7 +500,9 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                         )
 
                     else:
-                        versioned_endpoint = VersionedEndpointAdapter(endpoint)
+                        versioned_endpoint = VersionedEndpointAdapter(
+                            endpoint, requested_version=version
+                        )
                         self._add_versioned_rule(
                             path_entries=[
                                 format_to_routing_path(versioned_endpoint.endpoint.metadata.path)

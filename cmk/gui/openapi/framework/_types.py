@@ -7,6 +7,8 @@ from typing import ClassVar, Protocol, TypedDict
 
 from werkzeug.datastructures import Headers
 
+from .api_config import APIVersion
+
 
 # copied from typeshed
 class DataclassInstance(Protocol):
@@ -18,6 +20,11 @@ class RawRequestData(TypedDict):
     path: dict[str, str]
     query: dict[str, list[str]]
     headers: Headers
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class ApiContext:
+    version: APIVersion
 
 
 class _BaseParameterAnnotation:
@@ -67,6 +74,7 @@ class QueryParam(_BaseParameterAnnotation):
 
 
 __all__ = [
+    "ApiContext",
     "DataclassInstance",
     "RawRequestData",
     "PathParam",

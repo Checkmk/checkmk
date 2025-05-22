@@ -161,6 +161,7 @@ class ModeParentScan(WatoMode):
                     self._job,
                     self._settings,
                     pprint_value=active_config.wato_pprint_config,
+                    debug=active_config.debug,
                 )
             ).is_error():
                 raise result.error

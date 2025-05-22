@@ -146,7 +146,7 @@ class ModeBulkImport(WatoMode):
             csv_reader = self._open_csv_file()
 
             if request.var("_do_import"):
-                return self._import(csv_reader)
+                return self._import(csv_reader, debug=active_config.debug)
         return None
 
     def _file_path(self, file_id: str | None = None) -> Path:
@@ -227,7 +227,7 @@ class ModeBulkImport(WatoMode):
 
         return csv.reader(csv_file, csv_dialect)
 
-    def _import(self, csv_reader: CSVReader) -> ActionResult:
+    def _import(self, csv_reader: CSVReader, *, debug: bool) -> ActionResult:
         def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
                 try:
@@ -345,7 +345,7 @@ class ModeBulkImport(WatoMode):
             batch_size=100,
         )
 
-        bakery.try_bake_agents_for_hosts(imported_hosts)
+        bakery.try_bake_agents_for_hosts(imported_hosts, debug=debug)
 
         self._delete_csv_file()
 

@@ -98,7 +98,11 @@ def execute_network_scan_job() -> None:
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
             _add_scanned_hosts_to_folder(
-                folder, found, run_as, pprint_value=active_config.wato_pprint_config
+                folder,
+                found,
+                run_as,
+                pprint_value=active_config.wato_pprint_config,
+                debug=active_config.debug,
             )
 
             result.update(
@@ -135,7 +139,12 @@ def _find_folder_to_scan() -> Folder | None:
 
 
 def _add_scanned_hosts_to_folder(
-    folder: Folder, found: NetworkScanFoundHosts, username: UserId, *, pprint_value: bool
+    folder: Folder,
+    found: NetworkScanFoundHosts,
+    username: UserId,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> None:
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
@@ -173,7 +182,7 @@ def _add_scanned_hosts_to_folder(
         folder.save_folder_attributes()
         folder_tree().invalidate_caches()
 
-    bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
+    bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries), debug=debug)
 
 
 def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:

@@ -129,7 +129,7 @@ def test_openapi_add_host_bake_agent_parameter(
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent)
 
     if called:
-        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"], debug=False)
     else:
         suppress_bake_agents_in_background.assert_not_called()
 
@@ -230,7 +230,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
     clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
-        suppress_bake_agents_in_background.assert_called_once_with(["foobar"])
+        suppress_bake_agents_in_background.assert_called_once_with(["foobar"], debug=False)
     else:
         suppress_bake_agents_in_background.assert_not_called()
     suppress_bake_agents_in_background.reset_mock()
@@ -240,7 +240,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
     ).assert_status_code(200)
 
     if called:
-        suppress_bake_agents_in_background.assert_called_once_with(["bazfoo"])
+        suppress_bake_agents_in_background.assert_called_once_with(["bazfoo"], debug=False)
     else:
         suppress_bake_agents_in_background.assert_not_called()
 
@@ -281,7 +281,9 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
     assert len(resp.json["value"]) == 2
 
     if called:
-        suppress_bake_agents_in_background.assert_called_once_with(["foobar", "sample"])
+        suppress_bake_agents_in_background.assert_called_once_with(
+            ["foobar", "sample"], debug=False
+        )
     else:
         suppress_bake_agents_in_background.assert_not_called()
 

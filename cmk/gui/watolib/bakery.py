@@ -9,5 +9,5 @@ from cmk.ccc.hostaddress import HostName
 
 
 # Get's replaced by the actual implementation in non CRE editions
-def try_bake_agents_for_hosts(hosts: Sequence[HostName]) -> None:
+def try_bake_agents_for_hosts(hosts: Sequence[HostName], *, debug: bool) -> None:
     pass

@@ -47,7 +47,7 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
     job_prefix = "spec_generator"
 
     @classmethod
-    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+    def on_scheduler_start(cls, executor: JobExecutor, *, debug: bool) -> None:
         """Generate the REST API specification on ui-job-scheduler startup"""
         SpecGeneratorBackgroundJob(executor=executor).start(
             simple_job_target(_generate_spec_in_background_job),

@@ -47,7 +47,7 @@ def get_application(
         # The code before `yield` is executed on startup, after `yield` on shutdown
         logger.info("Starting background jobs on_scheduler_start hooks")
         for job_cls in registered_jobs.values():
-            job_cls.on_scheduler_start(executor)
+            job_cls.on_scheduler_start(executor, debug=False)
         logger.info("Finished on_scheduler_start hooks")
         yield
 

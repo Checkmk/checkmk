@@ -47,7 +47,7 @@ class BackgroundJob:
         raise NotImplementedError()
 
     @classmethod
-    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+    def on_scheduler_start(cls, executor: JobExecutor, *, debug: bool) -> None:
         """Called when the job scheduler starts
 
         Can be used to implement initialization tasks that should be triggered once

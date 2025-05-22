@@ -77,7 +77,7 @@ class HelloJob(BackgroundJob):
         return "Hello Job"
 
     @classmethod
-    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+    def on_scheduler_start(cls, executor: JobExecutor, *, debug: bool) -> None:
         HelloJob.on_scheduler_start_called = True
 
 

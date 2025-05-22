@@ -218,7 +218,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
         [(host_name, body["attributes"], None)], pprint_value=active_config.wato_pprint_config
     )
     if params[BAKE_AGENT_PARAM_NAME]:
-        bakery.try_bake_agents_for_hosts([host_name])
+        bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
 
     host = Host.load_host(host_name)
     return _serve_host(
@@ -253,7 +253,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
         pprint_value=active_config.wato_pprint_config,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
-        bakery.try_bake_agents_for_hosts([host_name])
+        bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
 
     host = Host.load_host(host_name)
     return _serve_host(
@@ -337,7 +337,7 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:
-        bakery.try_bake_agents_for_hosts(succeeded_hosts)
+        bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=active_config.debug)
 
     return _bulk_host_action_response(
         failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]

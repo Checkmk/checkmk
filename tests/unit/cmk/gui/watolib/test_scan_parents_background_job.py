@@ -68,7 +68,11 @@ def test_scan_parents_job(
 
     # WHEN
     start_parent_scan(
-        hosts=[host], job=ParentScanBackgroundJob(), settings=settings, pprint_value=False
+        hosts=[host],
+        job=ParentScanBackgroundJob(),
+        settings=settings,
+        pprint_value=False,
+        debug=False,
     )
 
     # THEN
@@ -76,4 +80,6 @@ def test_scan_parents_job(
         updated_host = folder_tree().root_folder().host(host.name())
         assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]
 
-    suppress_bake_agents_in_background.assert_called_once_with([f"gw-{host.id()}-123-0-0-1"])
+    suppress_bake_agents_in_background.assert_called_once_with(
+        [f"gw-{host.id()}-123-0-0-1"], debug=False
+    )

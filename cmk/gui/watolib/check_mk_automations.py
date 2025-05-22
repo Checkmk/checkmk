@@ -705,18 +705,20 @@ def create_diagnostics_dump(
 
 
 def bake_agents(
-    indata: Mapping[str, Any] | None = None,
-    force_automation_cli_interface: bool = False,
+    *,
+    indata: Mapping[str, Any] | None,
+    force_automation_cli_interface: bool,
+    debug: bool,
 ) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
             "bake-agents",
             indata="" if indata is None else indata,
             force_cli_interface=force_automation_cli_interface,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.BakeAgentsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

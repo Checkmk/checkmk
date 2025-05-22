@@ -92,13 +92,14 @@ class ParentScanBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         with job_interface.gui_context():
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
             for task in tasks:
-                self._process_task(task, settings, pprint_value=pprint_value)
+                self._process_task(task, settings, pprint_value=pprint_value, debug=debug)
 
             self._logger.info("Summary:")
             for title, value in [
@@ -126,7 +127,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self._num_errors = 0
 
     def _process_task(
-        self, task: ParentScanTask, settings: ParentScanSettings, *, pprint_value: bool
+        self, task: ParentScanTask, settings: ParentScanSettings, *, pprint_value: bool, debug: bool
     ) -> None:
         self._num_hosts_total += 1
 
@@ -136,6 +137,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 settings,
                 self._execute_parent_scan(task, settings),
                 pprint_value=pprint_value,
+                debug=debug,
             )
         except Exception as e:
             self._num_errors += 1
@@ -173,6 +175,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         results: Sequence[GatewayResult],
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         for result in results:
             if result.state in ["direct", "root", "gateway"]:
@@ -180,7 +183,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 # until it has been saved needs to be locked.
                 with store.lock_checkmk_configuration(configuration_lockfile):
                     self._configure_host_and_gateway(
-                        task, settings, result.gateway, pprint_value=pprint_value
+                        task, settings, result.gateway, pprint_value=pprint_value, debug=debug
                     )
             else:
                 self._logger.error(result.message)
@@ -206,6 +209,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway: Gateway | None,
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         tree = folder_tree()
         tree.invalidate_caches()
@@ -215,7 +219,13 @@ class ParentScanBackgroundJob(BackgroundJob):
         )
 
         parents = self._configure_gateway(
-            task, settings, gateway, host_folder, gateway_folder, pprint_value=pprint_value
+            task,
+            settings,
+            gateway,
+            host_folder,
+            gateway_folder,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
         if (host := host_folder.host(task.host_name)) is None:
@@ -254,6 +264,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway_folder: Folder | None,
         *,
         pprint_value: bool,
+        debug: bool,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -277,7 +288,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gw_folder.create_hosts(
             [(gw_host_name, gw_host_attributes, None)], pprint_value=pprint_value
         )
-        bakery.try_bake_agents_for_hosts([gw_host_name])
+        bakery.try_bake_agents_for_hosts([gw_host_name], debug=debug)
         self._num_gateway_hosts_created += 1
 
         return [gw_host_name]
@@ -356,6 +367,7 @@ def start_parent_scan(
     settings: ParentScanSettings,
     *,
     pprint_value: bool,
+    debug: bool,
 ) -> Result[None, AlreadyRunningError | StartupError]:
     return job.start(
         JobTarget(
@@ -367,6 +379,7 @@ def start_parent_scan(
                 ],
                 settings=settings,
                 pprint_value=pprint_value,
+                debug=debug,
             ),
         ),
         InitialStatusArgs(
@@ -382,11 +395,12 @@ class ParentScanJobArgs(BaseModel, frozen=True):
     tasks: Sequence[ParentScanTask]
     settings: ParentScanSettings
     pprint_value: bool
+    debug: bool
 
 
 def parent_scan_job_entry_point(
     job_interface: BackgroundProcessInterface, args: ParentScanJobArgs
 ) -> None:
     ParentScanBackgroundJob().do_execute(
-        args.settings, args.tasks, job_interface, pprint_value=args.pprint_value
+        args.settings, args.tasks, job_interface, pprint_value=args.pprint_value, debug=args.debug
     )

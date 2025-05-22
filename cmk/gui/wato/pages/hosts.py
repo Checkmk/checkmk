@@ -703,7 +703,7 @@ class CreateHostMode(ABCHostMode):
             )
 
         self._host = folder.load_host(hostname)
-        bakery.try_bake_agents_for_hosts([hostname])
+        bakery.try_bake_agents_for_hosts([hostname], debug=active_config.debug)
 
         inventory_url = folder_preserving_link(
             [

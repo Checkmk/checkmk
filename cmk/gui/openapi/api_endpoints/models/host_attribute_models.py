@@ -10,10 +10,12 @@ from pydantic import AfterValidator
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
 
+from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.openapi.api_endpoints.models.attributes import (
     FolderCustomHostAttributesAndTagGroupsModel,
     HostContactGroupModel,
@@ -33,6 +35,7 @@ from cmk.gui.openapi.framework.model.converter import (
     HostConverter,
     TypedPlainValidator,
 )
+from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import HostAttributes
 
@@ -141,17 +144,24 @@ class BaseHostAttributeModel:
         description="A list of IPv6 addresses.", default_factory=ApiOmitted
     )
 
-    # TODO: reevaluate edition handling - not in raw
-    bake_agent_package: bool | ApiOmitted = api_field(
-        description="Bake agent packages for this folder even if it is empty.",
+    bake_agent_package: Annotated[
+        bool | ApiOmitted, RestrictEditions(excluded_editions={Edition.CRE})
+    ] = api_field(
+        description=edition_field_description(
+            "Bake agent packages for this folder even if it is empty.",
+            excluded_editions={Edition.CRE},
+        ),
         default_factory=ApiOmitted,
     )
-    # TODO: reevaluate edition handling - not in raw
-    cmk_agent_connection: Literal["push-agent", "pull-agent"] | ApiOmitted = api_field(
-        description=(
+    cmk_agent_connection: Annotated[
+        Literal["push-agent", "pull-agent"] | ApiOmitted,
+        RestrictEditions(excluded_editions={Edition.CRE}),
+    ] = api_field(
+        description=edition_field_description(
             "This configures the communication direction of this host.\n"
             f" * `{HostAgentConnectionMode.PULL.value}` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
-            f" * `{HostAgentConnectionMode.PUSH.value}` - the host is expected to send the data to the monitoring server without being triggered\n"
+            f" * `{HostAgentConnectionMode.PUSH.value}` - the host is expected to send the data to the monitoring server without being triggered\n",
+            excluded_editions={Edition.CRE},
         ),
         default_factory=ApiOmitted,
     )

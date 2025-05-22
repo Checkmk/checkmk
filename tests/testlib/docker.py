@@ -105,9 +105,7 @@ def prepare_package(version: CMKVersion) -> None:
     test_package_path.write_bytes(source_package_path.read_bytes())
 
 
-def pull_checkmk(
-    client: docker.DockerClient, version: CMKVersion
-) -> docker.models.containers.Image:
+def pull_checkmk(client: docker.DockerClient, version: CMKVersion) -> docker.models.images.Image:
     if not version.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
 
@@ -134,7 +132,7 @@ def build_checkmk(
     client: docker.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.images.Image, Mapping[str, str]]:
+) -> tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]:
     prepare_build()
 
     if prepare_pkg:
@@ -143,7 +141,7 @@ def build_checkmk(
     logger.info("Building docker image (or reuse existing): %s", image_name(version))
     try:
         image: docker.models.images.Image
-        build_logs: Mapping[str, str]
+        build_logs: Iterator[Mapping[str, Any]]
         image, build_logs = client.images.build(
             path=build_path,
             tag=image_name(version),
@@ -228,7 +226,7 @@ def _remove_volumes(
 ) -> None:
     """remove any pre-existing volumes"""
     volume_ids = [_.split(":")[0] for _ in volumes or []]
-    exceptions = [docker.errors.NotFound]
+    exceptions: list[type[docker.errors.APIError]] = [docker.errors.NotFound]
     if is_update:
         exceptions.append(docker.errors.APIError)
     with suppress(*exceptions):

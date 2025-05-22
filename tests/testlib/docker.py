@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, ContextManager
 
 import docker  # type: ignore[import-untyped]
+import docker.errors  # type: ignore[import-untyped]
 import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
 import docker.models.images  # type: ignore[import-untyped]

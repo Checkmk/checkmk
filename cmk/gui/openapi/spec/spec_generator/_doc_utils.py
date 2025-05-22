@@ -204,46 +204,46 @@ def _permission_descriptions(
         ...     permissions.Perm("wato.edit_folders"),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+        'This endpoint requires the following permissions: \n * Modify existing folders (`wato.edit_folders`): Allowed to cook the books.\n'
 
         >>> _permission_descriptions(
         ...     permissions.AllPerm([permissions.Perm("wato.edit_folders")]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+        'This endpoint requires the following permissions: \n * Modify existing folders (`wato.edit_folders`): Allowed to cook the books.\n'
 
         >>> _permission_descriptions(
         ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
         ...                          permissions.Undocumented(permissions.Perm("wato.edit"))]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
-        'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
+        'This endpoint requires the following permissions: \n * Modify existing folders (`wato.edit_folders`): Allowed to cook the books.\n'
 
         >>> _permission_descriptions(
         ...     permissions.AnyPerm([permissions.Perm("wato.edit_folders"), permissions.Perm("wato.edit_folders")]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
-        'This endpoint requires the following permissions: \n * Any of:\n   * `wato.edit_folders`: Allowed to cook the books.\n   * `wato.edit_folders`: Allowed to cook the books.\n'
+        'This endpoint requires the following permissions: \n * Any of:\n   * Modify existing folders (`wato.edit_folders`): Allowed to cook the books.\n   * Modify existing folders (`wato.edit_folders`): Allowed to cook the books.\n'
 
         The description will have a structure like this:
 
             * Any of:
-               * c
+               * a
                * All of:
-                  * a
                   * b
+                  * c
 
         >>> _permission_descriptions(
         ...     permissions.AnyPerm([
-        ...         permissions.Perm("c"),
+        ...         permissions.Perm("wato.edit"),
         ...         permissions.AllPerm([
-        ...              permissions.Perm("a"),
-        ...              permissions.Perm("b"),
+        ...              permissions.Perm("wato.manage_hosts"),
+        ...              permissions.Perm("wato.edit_folders"),
         ...         ]),
         ...     ]),
-        ...     {'a': 'Hold a', 'b': 'Hold b', 'c': 'Hold c'}
+        ...     {'wato.edit': 'a', 'wato.manage_hosts': 'b', 'wato.edit_folders':  'c'}
         ... )
-        'This endpoint requires the following permissions: \n * Any of:\n   * `c`: Hold c\n   * All of:\n     * `a`: Hold a\n     * `b`: Hold b\n'
+        'This endpoint requires the following permissions: \n * Any of:\n   * Make changes, perform actions (`wato.edit`): a\n   * All of:\n     * Add & remove hosts (`wato.manage_hosts`): b\n     * Modify existing folders (`wato.edit_folders`): c\n'
 
     Returns:
         The description as a string.
@@ -265,12 +265,13 @@ def _permission_descriptions(
         if isinstance(permission, permissions.Perm | permissions.OkayToIgnorePerm):
             perm_name = permission.name
             try:
+                display_name = permission_registry[perm_name].title
                 desc = description_map.get(perm_name) or permission_registry[perm_name].description
             except KeyError:
                 if isinstance(permission, permissions.OkayToIgnorePerm):
                     return
                 raise
-            _description.append(f"{prefix} * `{perm_name}`: {desc}")
+            _description.append(f"{prefix} * {display_name} (`{perm_name}`): {desc}")
         elif isinstance(permission, permissions.AllPerm):
             # If AllOf only contains one permission, we don't need to show the AllOf
             if _count_perms(permission.perms) == 1:

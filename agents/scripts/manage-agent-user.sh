@@ -43,6 +43,7 @@ _set_agent_user_permissions() {
 
 _set_agent_controller_user_permissions() {
     # Get more finegrained access for the agent controller user only
+    chown :"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
     chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime/controller"
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"

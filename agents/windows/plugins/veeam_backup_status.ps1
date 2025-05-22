@@ -159,9 +159,9 @@ foreach ($myJob in $myBackupJobs)
     } Else {
     		$myTaskStopTime = $myTask.Progress.StopTime
     }
-    $myTaskStopTime = $myTaskStopTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
+	$lastBackupAge = New-TimeSpan -Start $myTaskStopTime -End (Get-Date) -ErrorAction SilentlyContinue
 
-		$myTaskText = "$myTaskText" + "StopTime" + "`t" + "$myTaskStopTime" + "`n"
+	$myTaskText = "$myTaskText" + "LastBackupAge" + "`t" + "$($lastBackupAge.TotalSeconds)" + "`n"
 
 		# Result is a value of type System.TimeStamp. I'm sure there is a more elegant way of formatting the output:
 		$myTaskDuration = "" + "{0:D2}" -f $myTask.Progress.duration.Days + ":" + "{0:D2}" -f $myTask.Progress.duration.Hours + ":" + "{0:D2}" -f $myTask.Progress.duration.Minutes + ":" + "{0:D2}" -f $myTask.Progress.duration.Seconds
@@ -197,4 +197,3 @@ $errItem = $_.Exception.ItemName
 Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
 Break
 }
-

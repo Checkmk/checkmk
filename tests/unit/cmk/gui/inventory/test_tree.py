@@ -31,7 +31,7 @@ from cmk.gui.inventory._tree import (
     load_latest_delta_tree,
     load_tree,
     make_filter_choices_from_api_request_paths,
-    parse_inventory_path,
+    parse_internal_raw_path,
     TreeSource,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
@@ -149,7 +149,7 @@ from cmk.gui.watolib.groups_io import PermittedPath
 def test_parse_tree_path(
     raw_path: str, expected_path: InventoryPath, expected_node_name: str
 ) -> None:
-    inventory_path = parse_inventory_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     assert inventory_path == expected_path
     assert inventory_path.node_name == expected_node_name
 

@@ -53,7 +53,7 @@ from ._tree import (
     load_latest_delta_tree,
     load_tree,
     make_filter_choices_from_api_request_paths,
-    parse_inventory_path,
+    parse_internal_raw_path,
     TreeSource,
 )
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
@@ -68,7 +68,7 @@ __all__ = [
     "load_delta_tree",
     "load_tree",
     "load_latest_delta_tree",
-    "parse_inventory_path",
+    "parse_internal_raw_path",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",
 ]

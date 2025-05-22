@@ -69,7 +69,7 @@ class RowTableInventoryHistoryTest2(RowTableInventoryHistory):
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory(view: View) -> None:
     row_table = RowTableInventoryTest1(
-        "invtesttable", cmk.gui.inventory.parse_inventory_path(".foo.bar:")
+        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
     )
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
@@ -79,7 +79,7 @@ def test_query_row_table_inventory(view: View) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_unknown_columns(view: View) -> None:
     row_table = RowTableInventoryTest1(
-        "invtesttable", cmk.gui.inventory.parse_inventory_path(".foo.bar:")
+        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
     )
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
@@ -89,7 +89,7 @@ def test_query_row_table_inventory_unknown_columns(view: View) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_add_columns(view: View) -> None:
     row_table = RowTableInventoryTest2(
-        "invtesttable", cmk.gui.inventory.parse_inventory_path(".foo.bar:")
+        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
     )
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:

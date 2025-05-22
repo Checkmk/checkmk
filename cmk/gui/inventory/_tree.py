@@ -63,7 +63,7 @@ def _sanitize_path(path: Sequence[str]) -> SDPath:
     )
 
 
-def parse_inventory_path(raw: str) -> InventoryPath:
+def parse_internal_raw_path(raw: str) -> InventoryPath:
     if not raw:
         return InventoryPath(
             path=tuple(),
@@ -96,7 +96,7 @@ def parse_inventory_path(raw: str) -> InventoryPath:
 
 
 # TODO Cleanup variation:
-#   - parse_inventory_path parses NOT visible, internal tree paths used in displayhints/views
+#   - parse_internal_raw_path parses NOT visible, internal tree paths used in displayhints/views
 #   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
@@ -147,7 +147,9 @@ def make_filter_choices_from_api_request_paths(
             nodes="all",
         )
 
-    return [_make_filter_choice(parse_inventory_path(raw_path)) for raw_path in api_request_paths]
+    return [
+        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
+    ]
 
 
 @request_memoize(maxsize=None)

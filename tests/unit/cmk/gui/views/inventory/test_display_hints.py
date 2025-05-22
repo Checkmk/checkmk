@@ -400,7 +400,7 @@ def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
     node_hint = inv_display_hints.get_node_hint(
-        cmk.gui.inventory.parse_inventory_path(raw_path).path
+        cmk.gui.inventory.parse_internal_raw_path(raw_path).path
     )
 
     assert node_hint.ident == "_".join(("inv",) + node_hint.path)
@@ -540,7 +540,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     ],
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
-    inventory_path = cmk.gui.inventory.parse_inventory_path(raw_path)
+    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
@@ -651,7 +651,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
-    inventory_path = cmk.gui.inventory.parse_inventory_path(raw_path)
+    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )

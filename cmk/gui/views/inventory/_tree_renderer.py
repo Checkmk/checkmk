@@ -372,7 +372,7 @@ def ajax_inv_render_tree() -> None:
         theme,
         request,
         show_internal_tree_paths,
-    ).show(tree.get_tree(inventory.parse_inventory_path(raw_path).path), tree_id)
+    ).show(tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:

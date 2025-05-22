@@ -43,7 +43,7 @@ def _get_related_legacy_hints(
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
-        inventory_path = inventory.parse_inventory_path(raw_path)
+        inventory_path = inventory.parse_internal_raw_path(raw_path)
         related_legacy_hints = related_legacy_hints_by_path.setdefault(
             inventory_path.path,
             _RelatedLegacyHints(),

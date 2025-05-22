@@ -38,12 +38,37 @@ def inventory_veeam_client(parsed):
         yield job, {}
 
 
-def check_veeam_client(item, params, parsed):
-    # Fallback for old None item version
-    # FIXME Can be remvoed in CMK 2.0
-    if item is None and len(parsed) > 0:
-        item = list(parsed)[0]
+def _check_backup_age(data, params, state):
+    if (backup_age := data.get("LastBackupAge")) is not None:
+        age = float(backup_age)
+    # elif section (StopTime) kept for compatibility with old agent version
+    # that was reporting StopTime and not LastBackupAge
+    elif (stop_time := data.get("StopTime")) is not None:
+        # If the Backup is currently running, the stop time is strange
+        if stop_time == "01.01.1900 00:00:00":
+            return state, None
 
+        stop_time = time.mktime(time.strptime(stop_time, "%d.%m.%Y %H:%M:%S"))
+        age = time.time() - stop_time
+    else:
+        return 2, "No complete Backup(!!)"
+
+    warn, crit = params["age"]
+    levels = ""
+    label = ""
+    if age >= crit:
+        state = 2
+        label = "(!!)"
+        levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
+    elif age >= warn:
+        state = max(state, 1)
+        label = "(!)"
+        levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
+
+    return state, f"Last backup: {render.timespan(age)} ago{label}{levels}"
+
+
+def check_veeam_client(item, params, parsed):
     try:
         data = parsed[item]
     except KeyError:
@@ -87,38 +112,14 @@ def check_veeam_client(item, params, parsed):
 
     infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
-    # Bugged agent plugins were reporting . instead of : as separator for
-    # the time. This has been fixed in the agent, but be compatible to old agent.
-    timesep = ":"
-    if "StopTime" in data and timesep not in data["StopTime"]:
-        timesep = "."
-
-    # Check Stop time in any case, that we can catch hanging backups
-    if "StopTime" not in data:
-        state = 2
-        infotexts.append("No complete Backup(!!)")
-    # If the Backup currently is running, the stop time is strange.
-    elif data["StopTime"] != "01.01.1900 00" + timesep + "00" + timesep + "00":
-        stop_time = time.mktime(
-            time.strptime(data["StopTime"], "%d.%m.%Y %H" + timesep + "%M" + timesep + "%S")
-        )
-        now = time.time()
-        age = now - stop_time
-        warn, crit = params["age"]
-        levels = ""
-        label = ""
-        if age >= crit:
-            state = 2
-            label = "(!!)"
-            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
-        elif age >= warn:
-            state = max(state, 1)
-            label = "(!)"
-            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
-        infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
-
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
+        # when status is "InProgress" or "Pending"
+        # lastBackupAge and StopTime have strange values
+        state, info = _check_backup_age(data, params, state)
+        if info is not None:
+            infotexts.append(info)
+
         # Information may missing
         if data.get("DurationDDHHMMSS"):
             duration = 0

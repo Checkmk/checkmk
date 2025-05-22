@@ -775,7 +775,7 @@ table.timeline {
   }
 
   &.standalone {
-    width: 800px;
+    width: 100%;
     margin-bottom: 20px;
   }
 
@@ -797,17 +797,17 @@ table.timeline {
 }
 
 div.sla_timerange {
-  width: $timerange-width;
+  width: 100%;
 }
 
 div.timelinerange {
   position: relative;
   float: none;
-  width: 800px;
+  width: 100%;
 
   div {
     float: left;
-    width: ($timerange-width * 0.5);
+    width: 50%;
 
     /* We render the small vertical lines in a way that only
        the left border is visible but the thing is thick 5 pixels.
@@ -834,7 +834,7 @@ div.timelinerange {
 }
 
 table.timelineevents {
-  width: 800px;
+  width: 100%;
 }
 
 table.data.oddeven.timelineevents > tbody > tr.hilite {
@@ -856,7 +856,7 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
 
 // Timewarping table for BI availability timelines
 table.data.timewarp {
-  width: 800px;
+  width: 100%;
   margin-bottom: 20px;
 }
 

@@ -29,6 +29,15 @@ Section = Sequence[models.AlertModel]
 # }
 
 
+def format_alert(alert):
+    s = alert["name"]
+    if alert.get("acknowledge"):
+        s += f", acknowledged by {alert['acknowledger']}"
+    if alert.get("suppress"):
+        s += f", suppressed by {alert['suppressor']}"
+    return s
+
+
 def parse_netapp_api_status(string_table: StringTable) -> Section:
     return [
         alert for line in string_table for alert in [models.AlertModel.model_validate_json(line[0])]
@@ -51,9 +60,26 @@ def check_netapp_ontap_status(section: Section) -> CheckResult:
     """
 
     if not section:
-        yield Result(state=State.OK, summary="Status: OK")
+        yield Result(state=State.OK, summary="No alerts present")
     else:
-        yield Result(state=State.CRIT, summary="Status: Alerts present")
+        alerts = [dict(alert) for alert in section]
+        unhandled_alerts = [
+            alert for alert in alerts if not (alert.get("acknowledge") or alert.get("suppress"))
+        ]
+        handled_alerts = [
+            alert for alert in alerts if alert.get("acknowledge") or alert.get("suppress")
+        ]
+        details = "\n".join(format_alert(alert) for alert in unhandled_alerts + handled_alerts)
+        if unhandled_alerts:
+            yield Result(
+                state=State.CRIT, summary="Unhandled alerts present, see details", details=details
+            )
+        else:
+            yield Result(
+                state=State.OK,
+                summary="Alerts present, but all acknowledged or suppressed, see details",
+                details=details,
+            )
 
 
 check_plugin_netapp_ontap_status = CheckPlugin(

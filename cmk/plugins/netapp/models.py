@@ -573,10 +573,15 @@ class ShelfPsuModel(ShelfObjectModel):
 
 class AlertModel(BaseModel):
     """
-    cfr: https://docs.netapp.com/us-en/ontap-restmap-9141//diagnosis.html#diagnosis-alert-get
+    https://docs.netapp.com/us-en/ontap-restmap-9141//diagnosis.html#diagnosis-alert-get
     """
 
     name: str
+    # this fields should always be present since ONTAP v 9.8 but better be safe than sorry...
+    acknowledge: bool = False
+    acknowledger: str = ""
+    suppress: bool = False
+    suppressor: str = ""
 
 
 class SvmTrafficCountersModel(BaseModel):

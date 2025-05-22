@@ -23,7 +23,7 @@ from cmk.utils.structured_data import (
     InventoryPaths,
     InventoryStore,
     load_history,
-    parse_from_raw,
+    parse_from_raw_status_data_tree,
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
@@ -212,7 +212,7 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
     merge these trees and returns the filtered tree"""
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
     status_data_tree = (
-        parse_from_raw(raw_status_data_tree)
+        parse_from_raw_status_data_tree(raw_status_data_tree)
         if raw_status_data_tree
         else _load_tree_from_file(tree_type="status_data", host_name=host_name)
     )

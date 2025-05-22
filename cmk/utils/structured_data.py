@@ -1902,7 +1902,7 @@ def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     )
 
 
-def _parse_from_raw(raw: bytes) -> SDRawTree:
+def _parse_from_raw_status_data_tree(raw: bytes) -> SDRawTree:
     try:
         return json.loads(raw.decode("utf-8"))
     except json.JSONDecodeError:
@@ -1914,11 +1914,13 @@ def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
     # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
     # deserialization. This means that "meta_*" are not taken into account and we stay
     # compatible.
-    return _parse_from_unzipped(_parse_from_raw(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
+    return _parse_from_unzipped(
+        _parse_from_raw_status_data_tree(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read())
+    )
 
 
-def parse_from_raw(raw: bytes) -> ImmutableTree:
-    return deserialize_tree(_parse_from_raw(raw))
+def parse_from_raw_status_data_tree(raw: bytes) -> ImmutableTree:
+    return deserialize_tree(_parse_from_raw_status_data_tree(raw))
 
 
 class RawInventoryStore:

@@ -373,7 +373,7 @@ def _save_site_replication_status(site_id: SiteId, repl_status: SiteReplicationS
 
 def _update_replication_status(site_id, vars_):
     """Updates one or more dict elements of a site in an atomic way."""
-    store.mkdir(var_dir)
+    Path(var_dir).mkdir(mode=0o770, exist_ok=True)
 
     repl_status = _load_site_replication_status(site_id, lock=True)
     try:
@@ -1362,7 +1362,7 @@ class ActivateChangesManager(ActivateChanges):
         self._prevent_activate = False
         self._persisted_changes: list[dict[str, Any]] = []
 
-        store.makedirs(ACTIVATION_PERISTED_DIR)
+        Path(ACTIVATION_PERISTED_DIR).mkdir(mode=0o770, parents=True, exist_ok=True)
         super().__init__()
 
     @property
@@ -1634,7 +1634,9 @@ class ActivateChangesManager(ActivateChanges):
         if self._activation_id is None:
             raise MKUserError(None, _("activation ID is not set"))
 
-        store.makedirs(os.path.dirname(self._info_path(self._activation_id)))
+        Path(self._info_path(self._activation_id)).parent.mkdir(
+            mode=0o770, parents=True, exist_ok=True
+        )
         to_file = {key: getattr(self, key) for key in self.info_keys}
         store.save_object_to_file(self._info_path(self._activation_id), to_file)
 

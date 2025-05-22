@@ -1743,7 +1743,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
         pprint_value: bool,
     ) -> None:
-        store.mkdir(folder.tree.get_root_dir())
+        Path(folder.tree.get_root_dir()).mkdir(mode=0o770, exist_ok=True)
         content = [
             *(
                 ruleset.to_config(folder, pprint_value)

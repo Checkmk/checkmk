@@ -8,7 +8,6 @@ import enum
 import errno
 import os
 import queue
-import stat
 import threading
 import types
 from collections.abc import Callable, Generator, Iterator, Sequence
@@ -79,41 +78,6 @@ def test_object_store_default(io: type[FileIo], exists: bool, tmp_path: Path) ->
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
     assert a.read_obj(default="zz") == "zz"
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_mkdir(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    test_dir = tmp_path / "abc"
-    store.mkdir(path_type(test_dir))
-    store.mkdir(path_type(test_dir))
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_mkdir_mode(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    test_dir = tmp_path / "bla"
-    store.mkdir(path_type(test_dir), mode=0o750)
-    assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_mkdir_parent_not_exists(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    test_dir = tmp_path / "not-existing/xyz"
-    with pytest.raises(OSError, match="No such file or directory"):
-        store.mkdir(path_type(test_dir))
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_makedirs(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    test_dir = tmp_path / "not-existing/xyz"
-    store.makedirs(path_type(test_dir))
-    store.makedirs(path_type(test_dir))
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_makedirs_mode(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    test_dir = tmp_path / "whee/blub"
-    store.makedirs(path_type(test_dir), mode=0o750)
-    assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

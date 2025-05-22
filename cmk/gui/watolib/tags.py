@@ -558,7 +558,7 @@ def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:
 def _export_hosttags_to_php(cfg: TagConfigSpec) -> None:
     php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
     path = php_api_dir / "hosttags.php"
-    store.mkdir(php_api_dir)
+    php_api_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
 
     tag_config = cmk.utils.tags.TagConfig.from_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()

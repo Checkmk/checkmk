@@ -69,32 +69,6 @@ tracer = trace.get_tracer()
 # care about encoding a path to UTF-8. The others don't to that.
 
 # .
-#   .--Directories---------------------------------------------------------.
-#   |           ____  _               _             _                      |
-#   |          |  _ \(_)_ __ ___  ___| |_ ___  _ __(_) ___  ___            |
-#   |          | | | | | '__/ _ \/ __| __/ _ \| '__| |/ _ \/ __|           |
-#   |          | |_| | | | |  __/ (__| || (_) | |  | |  __/\__ \           |
-#   |          |____/|_|_|  \___|\___|\__\___/|_|  |_|\___||___/           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Some small wrappers around the python standard directory handling    |
-#   | functions.                                                           |
-#   '----------------------------------------------------------------------'
-
-
-def mkdir(path: Path | str, mode: int = 0o770) -> None:
-    if not isinstance(path, Path):
-        path = Path(path)
-    path.mkdir(mode=mode, exist_ok=True)
-
-
-def makedirs(path: Path | str, mode: int = 0o770) -> None:
-    if not isinstance(path, Path):
-        path = Path(path)
-    path.mkdir(mode=mode, exist_ok=True, parents=True)
-
-
-# .
 #   .--.mk Configs---------------------------------------------------------.
 #   |                     _       ____             __ _                    |
 #   |           _ __ ___ | | __  / ___|___  _ __  / _(_) __ _ ___          |

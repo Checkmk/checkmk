@@ -1345,7 +1345,7 @@ class Folder(FolderProtocol):
         call_hook_hosts_changed(self)
 
     def _save_hosts_file(self, *, pprint_value: bool) -> None:
-        store.makedirs(self.filesystem_path())
+        Path(self.filesystem_path()).mkdir(mode=0o770, parents=True, exist_ok=True)
         exposed_folder_attributes_for_base = self._folder_attributes_for_base_config()
         if not self.has_hosts() and not exposed_folder_attributes_for_base:
             for storage in get_all_storage_readers():
@@ -1575,7 +1575,7 @@ class Folder(FolderProtocol):
     def save_folder_attributes(self) -> None:
         """Save the current state of the instance to a file."""
         self.attributes = update_metadata(self.attributes)
-        store.makedirs(os.path.dirname(self.wato_info_path()))
+        Path(self.wato_info_path()).parent.mkdir(mode=0o770, parents=True, exist_ok=True)
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
             get_wato_redis_client(self.tree).save_folder_info(self)

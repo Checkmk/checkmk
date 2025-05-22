@@ -152,5 +152,5 @@ class AutomationUserFile:
         return store.load_object_from_file(self.path, default=False)
 
     def save(self, value: bool) -> None:
-        store.mkdir(self.path.parent)
+        self.path.parent.mkdir(mode=0o770, exist_ok=True)
         store.save_object_to_file(self.path, value)

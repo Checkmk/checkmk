@@ -25,7 +25,6 @@ import livestatus
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
 import cmk.utils.caching
@@ -250,29 +249,28 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
-    _touch(cmk.utils.paths.htpasswd_file)
-    store.makedirs(cmk.utils.paths.autochecks_dir)
-    store.makedirs(cmk.utils.paths.var_dir + "/web")
-    store.makedirs(cmk.utils.paths.var_dir + "/php-api")
-    store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
-    store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
-    store.makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
-    store.makedirs(cmk.utils.paths.omd_root / "var/log")
-    store.makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
-    store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
-    store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
-    store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
-    store.makedirs(cmk.utils.paths.local_dashboards_dir)
-    store.makedirs(cmk.utils.paths.local_views_dir)
+    _touch(Path(cmk.utils.paths.htpasswd_file))
+    makedirs(Path(cmk.utils.paths.autochecks_dir))
+    makedirs(Path(cmk.utils.paths.var_dir, "web"))
+    makedirs(Path(cmk.utils.paths.var_dir, "php-api"))
+    makedirs(Path(cmk.utils.paths.var_dir, "wato/php-api"))
+    makedirs(Path(cmk.utils.paths.var_dir, "wato/auth"))
+    makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
+    makedirs(cmk.utils.paths.omd_root / "var/log")
+    makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
+    makedirs(Path(cmk.utils.paths.default_config_dir, "conf.d/wato"))
+    makedirs(Path(cmk.utils.paths.default_config_dir, "multisite.d/wato"))
+    makedirs(Path(cmk.utils.paths.default_config_dir, "mkeventd.d/wato"))
+    makedirs(cmk.utils.paths.local_dashboards_dir)
+    makedirs(cmk.utils.paths.local_views_dir)
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         # needed for visuals.load()
-        store.makedirs(cmk.utils.paths.local_reports_dir)
-    _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
-    _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
+        makedirs(cmk.utils.paths.local_reports_dir)
+    _touch(Path(cmk.utils.paths.default_config_dir, "mkeventd.mk"))
+    _touch(Path(cmk.utils.paths.default_config_dir, "multisite.mk"))
 
-    omd_config_dir = f"{cmk.utils.paths.omd_root}/etc/omd"
     _dump(
-        omd_config_dir + "/site.conf",
+        Path(cmk.utils.paths.omd_root, "etc/omd/site.conf"),
         """CONFIG_ADMIN_MAIL=''
 CONFIG_AGENT_RECEIVER='on'
 CONFIG_AGENT_RECEIVER_PORT='8000'
@@ -309,7 +307,7 @@ CONFIG_TRACE_SEND_TARGET='local_site'
 CONFIG_TMPFS='on'""",
     )
     _dump(
-        cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",
+        Path(cmk.utils.paths.default_config_dir, "mkeventd.d/wato/rules.mk"),
         r"""
 # Written by WATO
 # encoding: utf-8
@@ -323,16 +321,19 @@ rule_packs += \
     omd_site.cache_clear()
 
 
-def _dump(path, data):
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
+def _dump(path: Path, data: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         f.write(data)
 
 
-def _touch(path):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).touch()
+def makedirs(path: Path) -> None:
+    path.mkdir(mode=0o770, parents=True, exist_ok=True)
+
+
+def _touch(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
 
 
 @pytest.fixture(autouse=True)

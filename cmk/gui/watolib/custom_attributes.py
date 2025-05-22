@@ -5,6 +5,7 @@
 import os
 import pprint
 from datetime import datetime
+from pathlib import Path
 from typing import TypedDict
 
 from cmk.ccc import store
@@ -64,5 +65,5 @@ def save_custom_attrs_to_mk_file(attrs: CustomAttrSpecs) -> None:
         output += "if type(wato_host_attrs) != list:\n    wato_host_attrs = []\n"
         output += f"wato_host_attrs += {pprint.pformat(attrs['host'])}\n\n"
 
-    store.makedirs(multisite_dir())
+    Path(multisite_dir()).mkdir(mode=0o770, parents=True, exist_ok=True)
     store.save_text_to_file(multisite_dir() + "custom_attrs.mk", output)

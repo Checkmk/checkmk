@@ -193,7 +193,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts.apply(monkeypatch)
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]]
+        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> AnalyzeHostRuleMatchesResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return AutomationAnalyzeHostRuleMatches().execute([h], None, None)

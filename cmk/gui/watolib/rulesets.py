@@ -1056,6 +1056,8 @@ class Ruleset:
         svc_desc_or_item: str | None,
         svc_desc: str | None,
         service_labels: Labels,
+        *,
+        debug: bool,
     ) -> tuple[object, list[tuple[Folder, int, Rule]]]:
         resultlist = []
         resultdict: dict[str, Any] = {}
@@ -1070,6 +1072,7 @@ class Ruleset:
                     (svc_desc if self.rulespec.item_type == "service" else svc_desc_or_item) or "",
                     service_labels,
                     [r.to_single_base_ruleset() for _f, _i, r in rules],
+                    debug=debug,
                 ).results.items()
             }
         else:
@@ -1078,6 +1081,7 @@ class Ruleset:
                 for rule_id, matches in analyze_host_rule_matches(
                     hostname,
                     [r.to_single_base_ruleset() for _f, _i, r in rules],
+                    debug=debug,
                 ).results.items()
             }
 
@@ -1594,6 +1598,7 @@ class EnabledDisabledServicesEditor:
                 service,
                 service,
                 service_labels=service_labels,
+                debug=debug,
             )
             if (
                 not value and value_without_host_rule in [None, False]

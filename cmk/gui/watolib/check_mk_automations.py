@@ -359,31 +359,36 @@ def analyse_service(
 def analyse_host(
     site_id: SiteId,
     host_name: HostName,
+    *,
+    debug: bool,
 ) -> results.AnalyseHostResult:
     return _deserialize(
         _automation_serialized(
             "analyse-host",
             siteid=site_id,
             args=[host_name],
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AnalyseHostResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 def analyze_host_rule_matches(
-    host_name: HostName, rules: Sequence[Sequence[RuleSpec]]
+    host_name: HostName,
+    rules: Sequence[Sequence[RuleSpec]],
+    *,
+    debug: bool,
 ) -> results.AnalyzeHostRuleMatchesResult:
     return _deserialize(
         _automation_serialized(
             "analyze-host-rule-matches",
             args=[host_name],
             indata=rules,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AnalyzeHostRuleMatchesResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -392,16 +397,18 @@ def analyze_service_rule_matches(
     service_or_item: str,
     service_labels: Labels,
     rules: Sequence[Sequence[RuleSpec]],
+    *,
+    debug: bool,
 ) -> results.AnalyzeServiceRuleMatchesResult:
     return _deserialize(
         _automation_serialized(
             "analyze-service-rule-matches",
             args=[host_name, service_or_item],
             indata=(rules, service_labels),
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AnalyzeServiceRuleMatchesResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

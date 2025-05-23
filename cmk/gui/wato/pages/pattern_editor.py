@@ -363,6 +363,7 @@ class ModePatternEditor(WatoMode):
                 item,
                 service_labels,
                 [r.to_single_base_ruleset() for r in rules],
+                debug=debug,
             ).results.items()
             for rule in rules
         }

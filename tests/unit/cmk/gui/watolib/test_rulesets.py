@@ -39,7 +39,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]]
+        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> AnalyzeHostRuleMatchesResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -62,7 +62,7 @@ def test_analyse_host_ruleset() -> None:
     (Path(default_config_dir) / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
-    result = ruleset.analyse_ruleset(HostName("ding"), None, None, {})
+    result = ruleset.analyse_ruleset(HostName("ding"), None, None, {}, debug=False)
     assert isinstance(result, tuple)
     assert len(result) == 2
 
@@ -74,7 +74,7 @@ def test_analyse_host_ruleset() -> None:
     assert entry[1] == 1  # index of rule in folder
     assert isinstance(entry[2], Rule)
 
-    result = ruleset.analyse_ruleset(HostName("dong"), None, None, {})
+    result = ruleset.analyse_ruleset(HostName("dong"), None, None, {}, debug=False)
     assert isinstance(result, tuple)
     assert len(result) == 2
 
@@ -158,6 +158,8 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         service_or_item: str,
         service_labels: Labels,
         rules: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,
     ) -> AnalyzeServiceRuleMatchesResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -181,7 +183,7 @@ def test_analyse_service_ruleset() -> None:
     (Path(default_config_dir) / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
-    result = ruleset.analyse_ruleset(HostName("ding"), "Ding", "Ding", {})
+    result = ruleset.analyse_ruleset(HostName("ding"), "Ding", "Ding", {}, debug=False)
     assert isinstance(result, tuple)
     assert len(result) == 2
 
@@ -193,7 +195,9 @@ def test_analyse_service_ruleset() -> None:
     assert entry[1] == 0  # index of rule in folder
     assert isinstance(entry[2], Rule)
 
-    result = ruleset.analyse_ruleset(HostName("ding"), "Not matching", "Not matching", {})
+    result = ruleset.analyse_ruleset(
+        HostName("ding"), "Not matching", "Not matching", {}, debug=False
+    )
     assert result == (None, [])
 
 

@@ -114,7 +114,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]
     if site_is_local(active_config, site_id):
         try:
             # evaluate the generator here to potentially catch the exception below
-            hostnames = list(_hosts_to_be_removed_local())
+            hostnames = list(_hosts_to_be_removed_local(debug=debug))
         # can happen if the Nagios core is currently restarting during the activation of changes
         except MKLivestatusSocketError:
             _LOGGER.info(
@@ -140,7 +140,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]
     return [Host.load_host(hostname) for hostname in hostnames]
 
 
-def _hosts_to_be_removed_local() -> Iterator[HostName]:
+def _hosts_to_be_removed_local(*, debug: bool) -> Iterator[HostName]:
     if not (automatic_host_removal_ruleset := _load_automatic_host_removal_ruleset()):
         _LOGGER.debug("No cleanup rule configured: Terminating.")
         return  # small 'optimization'
@@ -151,7 +151,7 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
         if not (
             matches := list(
                 analyze_host_rule_matches(
-                    hostname, [automatic_host_removal_ruleset]
+                    hostname, [automatic_host_removal_ruleset], debug=debug
                 ).results.values()
             )[0]
         ):
@@ -257,7 +257,7 @@ class AutomationHostsForAutoRemoval(AutomationCommand[None]):
         return "hosts-for-auto-removal"
 
     def execute(self, api_request: None) -> str:
-        return json.dumps(list(_hosts_to_be_removed_local()))
+        return json.dumps(list(_hosts_to_be_removed_local(debug=active_config.debug)))
 
     def get_request(self) -> None:
         pass

@@ -1416,6 +1416,7 @@ class ModeEditRuleset(WatoMode):
                         (service_name if rulespec.item_type == "service" else item) or "",
                         service_labels,
                         [r.to_single_base_ruleset() for r in rules],
+                        debug=debug,
                     ).results.items()
                 }
             else:
@@ -1424,6 +1425,7 @@ class ModeEditRuleset(WatoMode):
                     for rule_id, matches in analyze_host_rule_matches(
                         host_name,
                         [r.to_single_base_ruleset() for r in rules],
+                        debug=debug,
                     ).results.items()
                 }
 

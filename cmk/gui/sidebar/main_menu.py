@@ -202,7 +202,7 @@ class MegaMenuRenderer:
         html.close_div()
         html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
         for topic in topics:
-            if not topic.items:
+            if not topic.entries:
                 continue
             self._show_topic(topic, menu.name)
         html.close_div()
@@ -213,7 +213,7 @@ class MegaMenuRenderer:
         html.close_div()
 
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
-        show_more = all(i.is_show_more for i in topic.items)
+        show_more = all(i.is_show_more for i in topic.entries)
         topic_id = "_".join(
             [
                 menu_id,
@@ -248,7 +248,7 @@ class MegaMenuRenderer:
 
     def _show_items(self, topic_id: str, topic: TopicMenuTopic) -> None:
         html.open_ul()
-        for item in sorted(topic.items, key=lambda g: g.sort_index):
+        for item in sorted(topic.entries, key=lambda g: g.sort_index):
             self._show_item(item)
         html.open_li(class_="show_all_items")
         html.open_a(

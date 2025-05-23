@@ -2303,13 +2303,13 @@ def _no_bi_aggregate_active() -> bool:
 
 
 def _customize_menu_topics() -> list[TopicMenuTopic]:
-    general_items = []
-    monitoring_items = []
-    graph_items = []
-    business_reporting_items = []
+    general_entries = []
+    monitoring_entries = []
+    graph_entries = []
+    business_reporting_entries = []
 
     if user.may("general.edit_views"):
-        monitoring_items.append(
+        monitoring_entries.append(
             TopicMenuItem(
                 name="views",
                 title=_("Views"),
@@ -2321,7 +2321,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
         )
 
     if user.may("general.edit_dashboards"):
-        monitoring_items.append(
+        monitoring_entries.append(
             TopicMenuItem(
                 name="dashboards",
                 title=_("Dashboards"),
@@ -2333,7 +2333,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
         )
 
     if user.may("general.edit_reports"):
-        business_reporting_items.append(
+        business_reporting_entries.append(
             TopicMenuItem(
                 name="reports",
                 title=_("Reports"),
@@ -2362,32 +2362,32 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             "bookmark_list",
             "custom_snapin",
         ):
-            general_items.append(item)
+            general_entries.append(item)
         elif page_type_.type_name() == "sla_configuration":
-            business_reporting_items.append(item)
+            business_reporting_entries.append(item)
         elif "graph" in page_type_.type_name():
-            graph_items.append(item)
+            graph_entries.append(item)
         else:
-            monitoring_items.append(item)
+            monitoring_entries.append(item)
 
     topics = [
         TopicMenuTopic(
             name="general",
             title=_("General"),
             icon="topic_general",
-            items=general_items,
+            entries=general_entries,
         ),
         TopicMenuTopic(
             name="visualization",
             title=_("Visualization"),
             icon="topic_visualization",
-            items=monitoring_items,
+            entries=monitoring_entries,
         ),
         TopicMenuTopic(
             name="graphs",
             title=_("Graphs"),
             icon="topic_graphs",
-            items=graph_items,
+            entries=graph_entries,
         ),
     ]
 
@@ -2397,7 +2397,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
                 name="business_reporting",
                 title=_("Business reporting"),
                 icon="topic_reporting",
-                items=business_reporting_items,
+                entries=business_reporting_entries,
             )
         )
 

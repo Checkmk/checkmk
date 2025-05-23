@@ -1428,7 +1428,7 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
                 url=topic_menu_item.url,
             )
             for topic_menu_topic in mega_menu_registry["monitoring"].topics()
-            for topic_menu_item in topic_menu_topic.items
+            for topic_menu_item in topic_menu_topic.entries
             if any(
                 query.lower() in match_text.lower()
                 for match_text in [
@@ -1509,7 +1509,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                     topic.icon if topic.icon else default_icons[0],
                     topic.icon if topic.icon else default_icons[1],
                 )
-                for item in topic.items:
+                for item in topic.entries:
                     mapping[item.title] = (
                         topic.icon if topic.icon else default_icons[0],
                         item.icon if item.icon else default_icons[1],

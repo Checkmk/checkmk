@@ -171,19 +171,19 @@ def _help_menu_topics(
                 name="learning_checkmk",
                 title=_("Learning Checkmk"),
                 icon="learning_checkmk",
-                items=learning_items(),
+                entries=learning_items(),
             ),
             TopicMenuTopic(
                 name="developer_resources",
                 title=_("Developer resources"),
                 icon="developer_resources",
-                items=developer_items(),
+                entries=developer_items(),
             ),
             TopicMenuTopic(
                 name="ideas_portal",
                 title=_("Ideas Portal"),
                 icon="lightbulb",
-                items=[
+                entries=[
                     TopicMenuItem(
                         name="suggest_product_improvement",
                         title=_("Suggest a product improvement"),
@@ -198,7 +198,7 @@ def _help_menu_topics(
                 name="about_checkmk",
                 title=_("About Checkmk"),
                 icon="about_checkmk",
-                items=about_checkmk_items(),
+                entries=about_checkmk_items(),
             ),
         ]
 

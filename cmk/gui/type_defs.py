@@ -612,7 +612,7 @@ class TopicMenuItem(NamedTuple):
 class TopicMenuTopic(NamedTuple):
     name: str
     title: str
-    items: list[TopicMenuItem]
+    entries: list[TopicMenuItem]
     max_entries: int = 10
     icon: Icon | None = None
     hide: bool = False

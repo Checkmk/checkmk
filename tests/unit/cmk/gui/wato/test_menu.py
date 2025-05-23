@@ -80,7 +80,10 @@ def expected_items() -> dict[str, list[str]]:
         "wato.py?group=inventory&mode=rulesets",
     ]
 
-    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+    if cmk_version.edition(paths.omd_root) in [
+        cmk_version.Edition.CCE,
+        cmk_version.Edition.CME,
+    ]:
         hosts_items.append("otel_collectors")
 
     users_items = []
@@ -148,7 +151,7 @@ def test_get_wato_menu_items() -> None:
     items_by_topic: dict[str, list[str]] = {}
     for topic in get_wato_menu_items():
         items = items_by_topic.setdefault(topic.name, [])
-        for item in topic.items:
+        for item in topic.entries:
             items.append(item.name)
 
     assert expected_items() == items_by_topic
@@ -159,7 +162,7 @@ def test_unique_wato_menu_item_titels() -> None:
     titles = [
         entry.title
         for topic_menu_topic in get_wato_menu_items()
-        for entry in topic_menu_topic.items
+        for entry in topic_menu_topic.entries
     ]
     assert len(titles) == len(set(titles))
 
@@ -172,7 +175,7 @@ def test_match_item_generator_setup_menu() -> None:
                 TopicMenuTopic(
                     name="topic",
                     title="Topic",
-                    items=[
+                    entries=[
                         TopicMenuItem(name="item 1", title="Item 1", sort_index=0, url="url 1"),
                         TopicMenuItem(name="item 2", title="Item 2", sort_index=1, url="url 2"),
                     ],

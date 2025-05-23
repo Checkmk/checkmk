@@ -154,13 +154,13 @@ def default_user_menu_topics(
             name="user_interface",
             title=_("User interface"),
             icon="topic_user_interface",
-            items=quick_items,
+            entries=quick_items,
         ),
         TopicMenuTopic(
             name="user_messages",
             title=_("User messages"),
             icon="topic_events",
-            items=[
+            entries=[
                 TopicMenuItem(
                     name="user_messages",
                     title=_("Received messages"),
@@ -174,7 +174,7 @@ def default_user_menu_topics(
             name="user_profile",
             title=_("User profile"),
             icon="topic_profile",
-            items=items,
+            entries=items,
         ),
     ]
 

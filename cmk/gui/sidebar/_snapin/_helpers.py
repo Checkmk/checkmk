@@ -147,12 +147,12 @@ def make_topic_menu(
                 name=topic.name(),
                 title=topic.title(),
                 max_entries=topic.max_entries(),
-                items=[],
+                entries=[],
                 icon=topic.icon_name(),
                 hide=topic.hide(),
             ),
         )
-        topic_menu_topic.items.append(
+        topic_menu_topic.entries.append(
             TopicMenuItem(
                 name=name,
                 title=visual_title(
@@ -166,9 +166,9 @@ def make_topic_menu(
             )
         )
 
-    # Sort the items of all topics
+    # Sort the entries of all topics
     for topic_menu in by_topic.values():
-        topic_menu.items.sort(key=lambda i: (i.sort_index, i.title))
+        topic_menu.entries.sort(key=lambda i: (i.sort_index, i.title))
 
     # Return the sorted topics
     return [
@@ -208,7 +208,7 @@ def show_topic_menu(
 
 
 def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> None:
-    if not topic.items:
+    if not topic.entries:
         return
 
     with foldable_container(
@@ -218,7 +218,7 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
         title=topic.title,
         indent=True,
     ):
-        for item in topic.items:
+        for item in topic.entries:
             if show_item_icons:
                 html.open_li(class_=["sidebar"] + (["show_more_mode"] if item.is_show_more else []))
                 iconlink(item.title, item.url, item.icon or "icon_missing")

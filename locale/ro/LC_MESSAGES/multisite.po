@@ -59062,6 +59062,10 @@ msgid "Show / hide notification context"
 msgstr "Afișați / ascundeți contextul de notificare"
 
 #, fuzzy
+msgid "Show HW/SW Inventory history of this host"
+msgstr "Afișați inventarul hardware/software al acestei gazde"
+
+#, fuzzy
 msgid "Show HW/SW Inventory of this host"
 msgstr "Afișați inventarul hardware/software al acestei gazde"
 

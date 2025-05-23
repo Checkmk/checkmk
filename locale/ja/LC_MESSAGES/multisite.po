@@ -56412,6 +56412,10 @@ msgid "Show / hide notification context"
 msgstr "通知コンテキストの表示／非表示"
 
 #, fuzzy
+msgid "Show HW/SW Inventory history of this host"
+msgstr "このホストのハードウェア/ソフトウェアインベントリを表示する"
+
+#, fuzzy
 msgid "Show HW/SW Inventory of this host"
 msgstr "このホストのハードウェア/ソフトウェアインベントリを表示する"
 

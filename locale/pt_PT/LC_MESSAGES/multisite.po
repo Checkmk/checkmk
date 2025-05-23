@@ -58894,6 +58894,10 @@ msgid "Show / hide notification context"
 msgstr "Mostrar / ocultar contexto de notificação"
 
 #, fuzzy
+msgid "Show HW/SW Inventory history of this host"
+msgstr "Mostrar Inventário de Hardware/Software deste host"
+
+#, fuzzy
 msgid "Show HW/SW Inventory of this host"
 msgstr "Mostrar Inventário de Hardware/Software deste host"
 

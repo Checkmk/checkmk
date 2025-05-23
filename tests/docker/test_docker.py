@@ -25,8 +25,8 @@ from tests.testlib.docker import (
 from tests.testlib.version import (
     CMKEdition,
     CMKPackageInfo,
-    CMKVersion,
     edition_from_env,
+    get_min_version,
     version_from_env,
 )
 
@@ -334,7 +334,7 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
 
 def test_update(client: docker.DockerClient) -> None:
     base_package = CMKPackageInfo(
-        CMKVersion(version_spec="2.4.0b1", branch="2.4.0", branch_version="2.4.0"),
+        get_min_version(),
         CMKEdition(CMKEdition.CRE),
     )
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())

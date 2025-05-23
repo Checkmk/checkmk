@@ -3565,7 +3565,7 @@ def main_cleanup(
     _options: object,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
-    package_manager = PackageManager.factory(version_info)
+    package_manager = PackageManager.factory(version_info.DISTRO_CODE)
     if package_manager is None:
         bail_out("Command is not supported on this platform")
 
@@ -3640,11 +3640,10 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 
 class PackageManager(abc.ABC):
     @classmethod
-    def factory(cls, version_info: VersionInfo) -> PackageManager | None:
+    def factory(cls, distro_code: str) -> "PackageManager | None":  # noqa: UP037
         if os.path.exists("/etc/cma"):
             return None
 
-        distro_code = version_info.DISTRO_CODE
         if distro_code.startswith("el") or distro_code.startswith("sles"):
             return PackageManagerRPM()
         return PackageManagerDEB()
@@ -3661,7 +3660,7 @@ class PackageManager(abc.ABC):
         p = self._execute(cmd)
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to uninstall package:\n%s" % output)
+            sys.exit("Failed to uninstall package:\n%s" % output)
 
     def _execute(self, cmd: list[str]) -> subprocess.Popen:
         logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
@@ -3687,7 +3686,7 @@ class PackageManagerDEB(PackageManager):
         p = self._execute(["dpkg", "-l"])
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to get all installed packages:\n%s" % output)
+            sys.exit("Failed to get all installed packages:\n%s" % output)
 
         packages: list[str] = []
         for package in output.split("\n"):
@@ -3708,7 +3707,7 @@ class PackageManagerRPM(PackageManager):
         output = p.communicate()[0]
 
         if p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % output)
+            sys.exit("Failed to find packages:\n%s" % output)
 
         packages: list[str] = []
         for package in output.split("\n"):

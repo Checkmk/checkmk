@@ -20,8 +20,7 @@ import pickle
 import socket
 import sys
 import time
-from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
-from enum import Enum
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import (
     Any,
@@ -32,7 +31,6 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
-    Self,
     TypeGuard,
     TypeVar,
 )
@@ -3948,81 +3946,6 @@ def _create_config_cache(loaded_config: LoadedConfigFragment) -> ConfigCache:
     return CEEConfigCache(loaded_config)
 
 
-# TODO(au): Find a way to retreive the matchtype_information directly from the
-# rulespecs. This is not possible atm because they live in cmk.gui
-class _Matchtype(Enum):
-    LIST = "list"
-    FIRST = "first"
-    DICT = "dict"
-    ALL = "all"
-
-
-_BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES = {
-    "agent_paths": _Matchtype.DICT,
-    "cmk_update_agent": _Matchtype.DICT,
-    "custom_files": _Matchtype.LIST,
-    "fileinfo": _Matchtype.LIST,
-    "logging": _Matchtype.DICT,
-    "lnx_remote_alert_handlers": _Matchtype.ALL,
-    "mk_logwatch": _Matchtype.ALL,
-    "mk_filestats": _Matchtype.DICT,
-    "mk_oracle": _Matchtype.DICT,
-    "mrpe": _Matchtype.LIST,
-    "bakery_packages": _Matchtype.DICT,
-    "real_time_checks": _Matchtype.DICT,
-    "runas": _Matchtype.LIST,
-    "win_script_cache_age": _Matchtype.ALL,
-    "win_script_execution": _Matchtype.ALL,
-    "win_script_retry_count": _Matchtype.ALL,
-    "win_script_runas": _Matchtype.ALL,
-    "win_script_timeout": _Matchtype.ALL,
-    "unix_plugins_cache_age": _Matchtype.ALL,
-}
-
-
-def boil_down_agent_rules(
-    *, defaults: Mapping[str, Any], rulesets: Mapping[str, Any]
-) -> Mapping[str, Any]:
-    boiled_down = {**defaults}
-
-    for varname, entries in rulesets.items():
-        if not entries:
-            continue
-
-        if (
-            len(entries) > 0
-            and isinstance(first_entry := entries[0], dict)
-            and (cmk_match_type := first_entry.get("cmk-match-type", None)) is not None
-        ):
-            # new Ruleset API will use merge as default match_type
-            match_type = _Matchtype(cmk_match_type)
-        else:
-            match_type = _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES.get(varname, _Matchtype.FIRST)
-
-        if match_type is _Matchtype.FIRST:
-            boiled_down[varname] = entries[0]
-        elif match_type is _Matchtype.LIST:
-            boiled_down[varname] = [it for entry in entries for it in entry]
-        elif match_type is _Matchtype.DICT:
-            # Watch out! In this case we have to merge all rules on top of the defaults!
-            # Compare #14868
-            boiled_down[varname] = {
-                **defaults.get(varname, {}),
-                **{
-                    k: v
-                    for entry in entries[::-1]
-                    for k, v in entry.items()
-                    if k != "cmk-match-type"
-                },
-            }
-        elif match_type is _Matchtype.ALL:
-            boiled_down[varname] = entries
-        else:
-            assert_never(match_type)
-
-    return boiled_down
-
-
 class ParserFactory:
     # TODO: better and clearer separation between ConfigCache and this class.
     def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
@@ -4546,133 +4469,6 @@ class CEEConfigCache(ConfigCache):
             self.label_manager.labels_of_host,
         )
         return out[0] if out else None
-
-
-@dataclasses.dataclass(frozen=True)
-class BakeryConfig:
-    ruleset_matcher: RulesetMatcher
-    is_tcp: Callable[[HostName], bool]
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ]
-    labels_of_host: Callable[[HostName], Labels]
-    folders_to_bake_for: Collection[str]
-    agent_rulesets: Sequence[tuple[str, Sequence[RuleSpec[object]]]]
-    cmc_real_time_checks: object
-
-    __agent_config: dict[HostName, Mapping[str, Any]] = dataclasses.field(default_factory=dict)
-
-    @classmethod
-    def make(
-        cls,
-        ruleset_matcher: RulesetMatcher,
-        folder_attributes: Mapping[str, FolderAttributesForBase],
-        is_tcp: Callable[[HostName], bool],
-        default_address_family: Callable[
-            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-        ],
-        labels_of_host: Callable[[HostName], Labels],
-        agent_config: Mapping[str, Sequence[RuleSpec[object]]],
-        agent_ports: Sequence[RuleSpec[int]],
-        agent_encryption: Sequence[RuleSpec[str | None]],
-        agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]],
-        cmc_real_time_checks: object,
-    ) -> Self:
-        # we can't even type RuleSpec[object] here, because RuleSpec is invariant.
-        # To fix this, RuleSpec should be covariant in the value type (-> "read only", which is all we need.).
-        agent_rulesets: Sequence[tuple[str, Sequence[RuleSpec[Any]]]] = [
-            *agent_config.items(),
-            ("agent_port", agent_ports),
-            ("agent_encryption", agent_encryption),
-            ("agent_exclude_sections", agent_exclude_sections),
-        ]
-        return cls(
-            ruleset_matcher=ruleset_matcher,
-            is_tcp=is_tcp,
-            default_address_family=default_address_family,
-            labels_of_host=labels_of_host,
-            folders_to_bake_for={
-                match_path
-                for match_path, attrs in folder_attributes.items()
-                if attrs.get("bake_agent_package")
-            },
-            agent_rulesets=agent_rulesets,
-            cmc_real_time_checks=cmc_real_time_checks,
-        )
-
-    def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
-        def _impl() -> Mapping[str, Any]:
-            return {
-                **boil_down_agent_rules(
-                    defaults=default,
-                    rulesets=self.matched_agent_config_entries(host_name),
-                ),
-                "is_ipv6_primary": self.default_address_family(host_name) is socket.AF_INET6,
-            }
-
-        with contextlib.suppress(KeyError):
-            return self.__agent_config[host_name]
-
-        return self.__agent_config.setdefault(host_name, _impl())
-
-    def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
-        return {
-            varname: self.ruleset_matcher.get_host_values(hostname, ruleset, self.labels_of_host)
-            for varname, ruleset in self.agent_rulesets
-        }
-
-    def generic_agent_config_entries(
-        self, *, defaults: Mapping[str, object]
-    ) -> Iterable[tuple[str, Mapping[str, object]]]:
-        yield from (
-            (
-                match_path,
-                boil_down_agent_rules(
-                    defaults=defaults,
-                    rulesets={
-                        varname: self._get_values_for_generic_agent(ruleset, match_path)
-                        for varname, ruleset in self.agent_rulesets
-                    },
-                ),
-            )
-            for match_path in self.folders_to_bake_for
-        )
-
-    @staticmethod
-    def _get_values_for_generic_agent(
-        ruleset: Iterable[RuleSpec[object]], path_for_rule_matching: str
-    ) -> Sequence[object]:
-        """Compute rulesets for "generic" hosts
-
-        This fictious host has no name and no tags.
-        It matches all rules that do not require specific hosts or tags.
-        It matches rules that e.g. except specific hosts or tags (is not, has not set).
-        """
-        entries: list[object] = []
-        for rule in ruleset:
-            if ruleset_matcher.is_disabled(rule):
-                continue
-
-            rule_path = (cond := rule["condition"]).get("host_folder")
-            if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
-                continue
-
-            if (tags := cond.get("host_tags", {})) and not ruleset_matcher.matches_host_tags(
-                set(), tags
-            ):
-                continue
-
-            if (
-                label_groups := cond.get("host_label_groups", [])
-            ) and not ruleset_matcher.matches_labels({}, label_groups):
-                continue
-
-            if not ruleset_matcher.matches_host_name(cond.get("host_name"), HostName("")):
-                continue
-
-            entries.append(rule["value"])
-
-        return entries
 
 
 class CMEConfigCache(CEEConfigCache):

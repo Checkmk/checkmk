@@ -3118,38 +3118,6 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    ["input_rulesets", "expected"],
-    [
-        pytest.param({}, {}, id="empty"),
-        pytest.param(
-            {
-                "plugin_name": [
-                    {"cmk-match-type": "dict", "normal_key": 2},
-                    {"cmk-match-type": "dict"},
-                ]
-            },
-            {"plugin_name": {"normal_key": 2}},
-            id="cmk-match-type exists",
-        ),
-        pytest.param(
-            {"mk_logwatch": [{"normal_key": 2}, {"normal_key": 3}]},
-            {"mk_logwatch": [{"normal_key": 2}, {"normal_key": 3}]},
-            id="special matchtype configured",
-        ),
-        pytest.param(
-            {"old_plugin_name": [{"normal_key": 2}, {"normal_key": 3}]},
-            {"old_plugin_name": {"normal_key": 2}},
-            id="default matchtype",
-        ),
-    ],
-)
-def test_boil_down_agent_rules(
-    input_rulesets: Mapping[str, Any], expected: Mapping[str, Any]
-) -> None:
-    assert config.boil_down_agent_rules(defaults={}, rulesets=input_rulesets) == expected
-
-
-@pytest.mark.parametrize(
     ["nodes", "expected"],
     [
         pytest.param(

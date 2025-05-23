@@ -45,7 +45,7 @@ SNMPCommunity = str
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]
 SNMPv3AuthPriv = tuple[str, str, str, str, str, str]
-SNMPCredentials = SNMPCommunity | SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv
+type SNMPCredentials = SNMPCommunity | SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv
 # TODO: Cleanup to named tuple
 SNMPTiming = dict
 

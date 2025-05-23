@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import abc
 import contextlib
 import errno
 import fcntl
@@ -59,7 +58,7 @@ from omdlib.dialog import (
 )
 from omdlib.global_options import GlobalOptions, parse_global_opts
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.package_manager import get_edition, select_matching_packages
+from omdlib.package_manager import get_edition, PackageManager, select_matching_packages
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
@@ -3636,84 +3635,6 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 
     if group_exists("omd"):
         groupdel("omd")
-
-
-class PackageManager(abc.ABC):
-    @classmethod
-    def factory(cls, distro_code: str) -> "PackageManager | None":  # noqa: UP037
-        if os.path.exists("/etc/cma"):
-            return None
-
-        if distro_code.startswith("el") or distro_code.startswith("sles"):
-            return PackageManagerRPM()
-        return PackageManagerDEB()
-
-    @abc.abstractmethod
-    def uninstall(self, package_name: str) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_all_installed_packages(self) -> list[str]:
-        raise NotImplementedError()
-
-    def _execute_uninstall(self, cmd: list[str]) -> None:
-        p = self._execute(cmd)
-        output = p.communicate()[0]
-        if p.wait() != 0:
-            sys.exit("Failed to uninstall package:\n%s" % output)
-
-    def _execute(self, cmd: list[str]) -> subprocess.Popen:
-        logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-
-        return subprocess.Popen(
-            cmd,
-            shell=False,
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-        )
-
-
-class PackageManagerDEB(PackageManager):
-    @override
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["apt-get", "-y", "purge", package_name])
-
-    @override
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["dpkg", "-l"])
-        output = p.communicate()[0]
-        if p.wait() != 0:
-            sys.exit("Failed to get all installed packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            if not package.startswith("ii"):
-                continue
-
-            packages.append(package.split()[1])
-
-        return packages
-
-
-class PackageManagerRPM(PackageManager):
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["rpm", "-e", package_name])
-
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["rpm", "-qa"])
-        output = p.communicate()[0]
-
-        if p.wait() != 0:
-            sys.exit("Failed to find packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            packages.append(package)
-
-        return packages
 
 
 class Option(NamedTuple):

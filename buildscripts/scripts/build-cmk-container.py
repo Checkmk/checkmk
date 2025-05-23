@@ -60,6 +60,8 @@ from buildscripts.scripts.lib.common import cwd, strtobool
 class RegistryConfig(NamedTuple):
     url: str
     namespace: str
+    username_env_var: str
+    password_env_var: str
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -237,9 +239,19 @@ def docker_login(registry: str, docker_username: str, docker_passphrase: str) ->
     docker_client.login(registry=registry, username=docker_username, password=docker_passphrase)
 
 
-def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folder: str) -> None:
+def docker_push(
+    args: argparse.Namespace,
+    version_tag: str,
+    registry_config: RegistryConfig,
+) -> None:
     """Push images to a registry"""
-    this_repository = f"{registry}{folder}/check-mk-{args.edition}"
+    this_repository = f"{registry_config.url}{registry_config.namespace}/check-mk-{args.edition}"
+
+    docker_login(
+        registry=registry_config.url,
+        docker_username=os.environ[registry_config.username_env_var],
+        docker_passphrase=os.environ[registry_config.password_env_var],
+    )
 
     if "-rc" in version_tag:
         LOG.info("%s was a release candidate, do a retagging before pushing", version_tag)
@@ -247,16 +259,10 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
         docker_tag(
             args=args,
             version_tag=version_tag,
-            registry=registry,
-            folder=folder,
+            registry=registry_config.url,
+            folder=registry_config.namespace,
             target_version=version_tag,
         )
-
-    docker_login(
-        registry=registry,
-        docker_username=os.environ.get("DOCKER_USERNAME", ""),
-        docker_passphrase=os.environ.get("DOCKER_PASSPHRASE", ""),
-    )
 
     LOG.info("Pushing '%s' as '%s' ...", this_repository, version_tag)
     resp = docker_client.images.push(
@@ -482,9 +488,24 @@ def build_image(
 def main() -> None:
     args: argparse.Namespace = parse_arguments()
 
-    dockerhub = RegistryConfig(url="", namespace="checkmk")
-    enterprise_registry = RegistryConfig(url="registry.checkmk.com", namespace="/enterprise")
-    nexus = RegistryConfig(url="artifacts.lan.tribe29.com:4000", namespace="")
+    dockerhub = RegistryConfig(
+        url="",  # That's basically dockerhub
+        namespace="checkmk",
+        username_env_var="DOCKER_USERNAME",
+        password_env_var="DOCKER_PASSPHRASE",
+    )
+    enterprise_registry = RegistryConfig(
+        url="registry.checkmk.com",
+        namespace="/enterprise",
+        username_env_var="DOCKER_USERNAME",
+        password_env_var="DOCKER_PASSPHRASE",
+    )
+    nexus = RegistryConfig(
+        url="artifacts.lan.tribe29.com:4000",
+        namespace="",
+        username_env_var="NEXUS_USERNAME",
+        password_env_var="NEXUS_PASSWORD",
+    )
 
     LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][::-1]
     LOG.setLevel(LOG_LEVELS[min(len(LOG_LEVELS) - 1, max(args.verbose, 0))])
@@ -520,13 +541,6 @@ def main() -> None:
     LOG.debug("suffix: %s", suffix)
     LOG.debug("base_path: %s", base_path)
 
-    if os.environ.get("NEXUS_USERNAME"):
-        docker_login(
-            registry=os.environ.get("DOCKER_REGISTRY", ""),
-            docker_username=os.environ.get("NEXUS_USERNAME", ""),
-            docker_passphrase=os.environ.get("NEXUS_PASSWORD", ""),
-        )
-
     for registry in registries:
         match args.action:
             case "build":
@@ -540,8 +554,7 @@ def main() -> None:
             case "push":
                 docker_push(
                     args=args,
-                    registry=registry.url,
-                    folder=registry.namespace,
+                    registry_config=registry,
                     version_tag=version_tag,
                 )
             case "load":

@@ -352,10 +352,12 @@ async fn _pull_loop(
                 );
                 return Ok(());
             }
+
             ConnectionMode::Active(crypto_mode) => {
                 info!("{}: Handling pull request.", remote);
                 let ip_addr = remote.ip();
                 let sem = guard.obtain_connection_semaphore(ip_addr);
+
                 // NOTE(sk). Below this point we should NOT use shared mutable `guard` - may "leak"
                 if let Ok(permit) = sem.try_acquire_owned() {
                     let task_num = max_connections - permit.semaphore().available_permits();
@@ -366,16 +368,13 @@ async fn _pull_loop(
                         crypto_mode,
                         pull_state.config.connection_timeout,
                     );
-                    let main_future = async move {
-                        let res = io_future.await;
-                        drop(permit);
-                        debug!("processed task {task_num} from ip {ip_addr:?} result {res:?}");
-                        res
-                    };
                     tokio::spawn(async move {
-                        if let Err(err) = main_future.await {
-                            warn!("{}: Request failed. ({})", remote, err)
+                        if let Err(err) = io_future.await {
+                            warn!("Failed processing task {task_num} from ip {ip_addr:?} ({err})");
+                        } else {
+                            debug!("Successfully processed task {task_num} from ip {ip_addr:?}");
                         };
+                        drop(permit);
                     });
                     debug!("{}: Handling pull request DONE (Task started).", remote);
                 } else {

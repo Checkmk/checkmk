@@ -183,7 +183,7 @@ def _read_snmp_info(hostname: str) -> bytes | None:
 def _read_agent_output(hostname: HostName) -> AgentRawData | None:
     agent_outputs = []
 
-    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
+    cache_path = cmk.utils.paths.tcp_cache_dir / hostname
     try:
         agent_outputs.append(cache_path.read_bytes())
     except OSError:

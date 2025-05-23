@@ -43,7 +43,7 @@ config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = params[3]
 
 snmp_cache.initialize_single_oid_cache(
-    HostName("abc"), None, cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir)
+    HostName("abc"), None, cache_dir=cmk.utils.paths.snmp_scan_cache_dir
 )
 
 backend: Callable[[SNMPHostConfig, logging.Logger], SNMPBackend]

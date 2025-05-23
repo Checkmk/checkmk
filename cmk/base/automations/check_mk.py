@@ -2085,7 +2085,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
             f"{autochecks_dir}/{hostname}.mk",
             f"{counters_dir}/{hostname}",
             f"{discovered_host_labels_dir}/{hostname}.mk",
-            f"{tcp_cache_dir}/{hostname}",
+            f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
             f"{var_dir}/inventory/{hostname}",
             f"{var_dir}/inventory/{hostname}.gz",
@@ -2132,7 +2132,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
             f"{precompiled_hostchecks_dir}/{hostname}.py",
             f"{autochecks_dir}/{hostname}.mk",
             f"{counters_dir}/{hostname}",
-            f"{tcp_cache_dir}/{hostname}",
+            f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
         ]
 
@@ -2760,11 +2760,11 @@ class AutomationDiagHost(Automation):
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
-        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
-        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
-        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+        file_cache_path = cmk.utils.paths.data_source_cache_dir
+        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3271,8 +3271,8 @@ class AutomationGetAgentOutput(Automation):
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
             section_cache_path = Path(var_dir)
-            file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
-            tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+            file_cache_path = cmk.utils.paths.data_source_cache_dir
+            tcp_cache_path = cmk.utils.paths.tcp_cache_dir
             tls_config = TLSConfig(
                 cas_dir=Path(cmk.utils.paths.agent_cas_dir),
                 ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3280,7 +3280,7 @@ class AutomationGetAgentOutput(Automation):
             )
             snmp_scan_config = SNMPScanConfig(
                 on_error=OnError.RAISE,
-                oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 missing_sys_description=config_cache.missing_sys_description(hostname),
             )
 

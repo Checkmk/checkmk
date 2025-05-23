@@ -11,7 +11,6 @@ ensuring a controlled environment for testing.
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
-from pathlib import Path
 from typing import Any
 
 from pytest import MonkeyPatch
@@ -119,7 +118,7 @@ class Scenario:
         linux_agent_output = get_standard_linux_agent_output()
 
         for h in test_hosts:
-            cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
+            cache_path = cmk.utils.paths.tcp_cache_dir / h
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             with cache_path.open("w", encoding="utf-8") as f:
                 f.write(linux_agent_output)

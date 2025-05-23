@@ -633,8 +633,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         section_cache_path = Path(cmk.utils.paths.var_dir)
-        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
-        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+        file_cache_path = cmk.utils.paths.data_source_cache_dir
+        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -643,7 +643,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         snmp_scan_config = SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=config_cache.missing_sys_description(hostname),
-            oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
         )
 
         output = []
@@ -1278,7 +1278,7 @@ def mode_flush(hosts: list[HostName]) -> None:
             for f in os.listdir(cache_dir):
                 if f == host or f.startswith(host + "."):
                     try:
-                        os.remove(cache_dir + "/" + f)
+                        (cache_dir / f).unlink()
                         d += 1
                         flushed = True
                     except OSError:

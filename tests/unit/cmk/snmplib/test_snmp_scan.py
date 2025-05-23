@@ -176,7 +176,7 @@ def backend() -> Iterator[SNMPBackend]:
     try:
         yield SNMPTestBackend(SNMPConfig, logger)
     finally:
-        cachefile = Path(snmp_scan_cache_dir, f"{SNMPConfig.hostname}.{SNMPConfig.ipaddress}")
+        cachefile = snmp_scan_cache_dir / f"{SNMPConfig.hostname}.{SNMPConfig.ipaddress}"
         try:
             cachefile.unlink()
         except FileNotFoundError:

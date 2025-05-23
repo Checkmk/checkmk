@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
+from collections import defaultdict
 from collections.abc import Hashable, Mapping
 
 from cmk.utils.sectionname import SectionName
@@ -171,17 +172,10 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
         ".1.3.6.1.2.1.1.2.0",  # system object ID
     }
 
-    known_exceptions = {
+    known_offenders = {
         ".1.3.6.1.2.1.2.2.1.*": {"if", "inv_if"},
         ".1.3.6.1.2.1.25.1.1.0": {"hr_cpu", "hr_fs", "hr_ps"},
         ".1.3.6.1.2.1.31.1.1.1.6.*": {"if64", "if64adm"},
-        ".1.3.6.1.2.1.43.*": {
-            "printer_alerts",
-            "printer_input",
-            "printer_output",
-            "printer_pages",
-            "printer_supply",
-        },
         ".1.3.6.1.2.1.47.1.1.1.1.*": {"snmp_extended_info"},
         ".1.3.6.1.2.1.105.1.3.1.1.*": {"pse_poe"},
         ".1.3.6.1.4.1.14848.2.1.1.1.0": {"etherbox"},
@@ -210,21 +204,28 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
         },
     }
 
+    current_offenders: dict[str, set[str]] = defaultdict(set)
     for section in agent_based_plugins.snmp_sections.values():
-        for (first_checked_oid, *_rest1), *_rest2 in (  #
+        for (first_checked_oid, *_rest1), *_rest2 in (
             criterion
             for criterion in section.detect_spec
             if criterion  #
         ):
             if first_checked_oid in allowed_oids:
                 continue
-            assert str(section.name) in known_exceptions.get(first_checked_oid, ()), f"""
-            If you've made it here, you have added a case to the known exceptions above.
-            Even worse: You may have added an OID to the list of OIDs that are fetched
-            from *all SNMP devices* known to the Checkmk site. Please reconsider!
+            current_offenders[first_checked_oid].add(str(section.name))
 
-            First OID fetched by {section.name}: {first_checked_oid}
-            """
+    # If these fail: Nice! Update the test!
+    assert not {k for k in known_offenders if k not in current_offenders}
+    assert not {v for values in known_offenders.values() for v in values} - {
+        v for values in current_offenders.values() for v in values
+    }
+
+    # If THIS fails, you have added a case where a plugin does not first check
+    # the system description or object ID.
+    # Even worse: You may have added an OID to the list of OIDs that are fetched
+    # from *all SNMP devices* known to the Checkmk site. Please reconsider!
+    assert current_offenders == known_offenders
 
 
 def test_snmp_section_parse_function_deals_with_empty_input(

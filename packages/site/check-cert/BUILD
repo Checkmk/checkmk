@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -74,4 +75,9 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-cert-lib"],
+)
+
+format_multirun(
+    name = "format",
+    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
 )

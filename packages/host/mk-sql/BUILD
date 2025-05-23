@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
@@ -117,4 +118,9 @@ rust_test_suite(
         "@host_crates//:assert_cmd",
         "@host_crates//:tempfile",
     ],
+)
+
+format_multirun(
+    name = "format",
+    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
 )

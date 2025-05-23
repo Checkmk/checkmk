@@ -1,0 +1,5 @@
+# TODO: De-dup rust edition information here!
+# This is currently _only_ needed for rules_lint/rustfmt to determine the edition.
+# It would be better if rules_lint would detect the rust edition automatically via the registered toolchain, but
+# somehow this does not work out-of-the-box.
+edition = "2021"

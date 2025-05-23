@@ -53,7 +53,11 @@ where
     let lvl: [_; 2] = lvl.try_into().expect("invalid arg count");
     let lvl_orig = lvl.clone();
     let mut lvl = lvl.map(|x| conv(x.into()));
-    let Ok(lvl) = Levels::try_new(strat.clone(), mem::take(&mut lvl[0]), mem::take(&mut lvl[1])) else {
+    let Ok(lvl) = Levels::try_new(
+        strat.clone(),
+        mem::take(&mut lvl[0]),
+        mem::take(&mut lvl[1]),
+    ) else {
         check::bail_out(match strat {
             LevelsStrategy::Upper => format!(
                 "invalid args: WARN must be smaller than or equal to CRIT but got {:?} {:?}",

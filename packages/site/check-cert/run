@@ -150,6 +150,7 @@ $RUSTFLAGS \
     export RUSTFLAGS
 }
 
+# TODO: Port all cargo call sites to bazel
 run_cargo_cmd_with_explicit_package() {
     cargo "${1}" --package "${PWD##*/}" "${@:2}"
 }
@@ -159,7 +160,7 @@ run_format() {
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format Cargo.toml
-    run_cargo_cmd_with_explicit_package fmt
+    bazel run :format "$PWD"
 }
 
 run_check_format() {
@@ -167,7 +168,7 @@ run_check_format() {
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format --check --diff Cargo.toml
-    bazel build --config=rustfmt :all
+    bazel run :format.check "$PWD"
 }
 
 main() {

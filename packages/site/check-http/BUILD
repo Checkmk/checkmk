@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
@@ -82,4 +83,9 @@ pkg_files(
 pkg_tar(
     name = "check_http_tar",
     srcs = [":check_http_pkg"],
+)
+
+format_multirun(
+    name = "format",
+    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
 )

@@ -332,6 +332,7 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
     assert ":::6556" in checkmk.container.exec_run(["netstat", "-tln"])[-1].decode("utf-8")
 
 
+@pytest.mark.skip(reason="Minimal supported version not available yet. See CMK-23635")
 def test_update(client: docker.DockerClient) -> None:
     base_package = CMKPackageInfo(
         get_min_version(),

@@ -22,6 +22,7 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="Minimal supported version not available yet. See CMK-23635")
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )

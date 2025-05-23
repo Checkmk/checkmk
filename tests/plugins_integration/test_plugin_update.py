@@ -52,6 +52,7 @@ def _skip_checks():
         config.skipped_checks = []
 
 
+@pytest.mark.skip(reason="Minimal supported version not available yet. See CMK-23635")
 @pytest.mark.usefixtures("skip_checks", "skip_dumps")
 def test_plugin_update(
     test_site_update: Site,

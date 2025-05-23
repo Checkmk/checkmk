@@ -333,8 +333,8 @@ def get_region_from_item(item: str) -> str:
 class LambdaCloudwatchMetrics:
     Duration: float
     Errors: float
-    Invocations: float
     Throttles: float
+    Invocations: float | None = None
     ConcurrentExecutions: float | None = None
     DeadLetterErrors: float | None = None
     DestinationDeliveryFailures: float | None = None

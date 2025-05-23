@@ -895,7 +895,7 @@ class ModeEditRuleset(WatoMode):
         # take translations into account (see cmk.base.config.service_description()).
         check_command = request.get_ascii_input("check_command")
         if check_command:
-            checks = get_check_information().plugin_infos
+            checks = get_check_information(debug=active_config.debug).plugin_infos
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
                 self._name = RuleGroup.CheckgroupParameters(checks[check_command].get("group", ""))

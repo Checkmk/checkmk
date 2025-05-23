@@ -217,7 +217,7 @@ def label_autocompleter(value: str, params: dict) -> Choices:
 def check_types_autocompleter(value: str, params: dict) -> Choices:
     return [
         (str(cn), (str(cn) + " - " + c["title"]))
-        for (cn, c) in get_check_information_cached().items()
+        for (cn, c) in get_check_information_cached(debug=active_config.debug).items()
         if not cn.is_management_name()
     ]
 

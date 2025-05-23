@@ -494,20 +494,20 @@ def update_merged_password_file() -> results.UpdatePasswordsMergedFileResult:
     )
 
 
-def get_check_information() -> results.GetCheckInformationResult:
+def get_check_information(*, debug: bool) -> results.GetCheckInformationResult:
     return _deserialize(
         _automation_serialized(
             "get-check-information",
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetCheckInformationResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 @request_memoize()
-def get_check_information_cached() -> Mapping[CheckPluginName, Mapping[str, str]]:
-    raw_check_dict = get_check_information().plugin_infos
+def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Mapping[str, str]]:
+    raw_check_dict = get_check_information(debug=debug).plugin_infos
     return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 

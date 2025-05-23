@@ -4,17 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import TypeVar
 
-from cmk.rulesets.v1 import Message
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, DictGroup, FormSpec
+from cmk.rulesets.v1.form_specs import DefaultValue, DictGroup, Dictionary
 from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout, DictionaryLayout
 
 T = TypeVar("T")
 
 
 @dataclass(frozen=True, kw_only=True)
-class DictionaryExtended(FormSpec[Mapping[str, object]]):
+class DictionaryExtended(Dictionary):
     """
     Specifies a (multi-)selection of configuration options.
 
@@ -28,21 +27,11 @@ class DictionaryExtended(FormSpec[Mapping[str, object]]):
     **********
     """
 
-    elements: Mapping[str, DictElement[Any]]
-    """key-value mapping where the key identifies the option and the value specifies how
-    the nested form can be configured. The key has to be a valid Python identifier."""
-
-    no_elements_text: Message = Message("(no parameters)")
-    """Text to show if no elements are specified"""
-
-    ignored_elements: tuple[str, ...] = ()
-    """Elements that can no longer be configured, but aren't removed from rules if they are present.
-    They might be ignored when rendering the ruleset.
-    You can use these to deprecate elements, to avoid breaking the old configurations.
-    """
-
     prefill: DefaultValue[Mapping[str, object]] | None = None
     layout: DictionaryLayout = DictionaryLayout.one_column
+
+    def __post_init__(self) -> None:
+        pass
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -709,12 +709,14 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
     ) -> None:
         with job_interface.gui_context():
-            self._do_execute(diagnostics_parameters, job_interface)
+            self._do_execute(diagnostics_parameters, job_interface, debug=active_config.debug)
 
     def _do_execute(
         self,
         diagnostics_parameters: DiagnosticsParameters,
         job_interface: BackgroundProcessInterface,
+        *,
+        debug: bool,
     ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
@@ -730,18 +732,9 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 site,
                 chunk,
                 diagnostics_parameters["timeout"],
+                debug=debug,
             )
             results.append(chunk_result)
-
-        # for site in sites:
-        #    for chunk in chunks:
-
-        #        chunk_result = create_diagnostics_dump(
-        #            site,
-        #            chunk,
-        #            timeout,
-        #        )
-        #        results.append(chunk_result)
 
         if len(results) > 1:
             result = _merge_results(

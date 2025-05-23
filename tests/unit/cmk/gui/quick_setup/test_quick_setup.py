@@ -65,6 +65,7 @@ def test_form_spec_recap() -> None:
         ],
         quick_setup_formspec_map=form_spec_map,
         progress_logger=InfoLogger(),
+        debug=False,
     )
 
     assert len(stage_recap) == 1

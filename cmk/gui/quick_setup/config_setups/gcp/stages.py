@@ -235,6 +235,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("gcp"),
@@ -242,6 +243,7 @@ def recap_found_services(
         parameter_form=gcp.form_spec(),
         collect_params=gcp_collect_params,
         progress_logger=progress_logger,
+        debug=debug,
     )
     gcp_service_interest = ServiceInterest("gcp_.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -277,7 +279,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, parsed_data, ____: _save_and_activate_recap(
+                    lambda __, ___, parsed_data, ____, _____: _save_and_activate_recap(
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],

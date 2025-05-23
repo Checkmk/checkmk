@@ -35,6 +35,8 @@ def get_service_discovery_preview(
     parameter_form: Dictionary,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
+    *,
+    debug: bool,
 ) -> SpecialAgentDiscoveryPreviewResult:
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
     params = collect_params(all_stages_form_data, parameter_form)
@@ -50,6 +52,7 @@ def get_service_discovery_preview(
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),
+        debug=debug,
     )
     progress_logger.update_progress_step_status("test_connection", StepStatus.COMPLETED)
     return service_discovery_result

@@ -26,6 +26,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
@@ -201,6 +202,7 @@ def recap_stage(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     parsed_formspec = form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
     recap_widgets: list[Widget] = []
@@ -211,6 +213,7 @@ def recap_stage(
                 stage_index,
                 parsed_formspec,
                 progress_logger,
+                debug,
             )
         )
     return recap_widgets
@@ -245,13 +248,15 @@ class StageActionResult(BaseModel, frozen=False):
 
 
 def verify_custom_validators_and_recap_stage(
+    *,
     quick_setup: QuickSetup,
     stage_index: StageIndex,
     stage_action_id: ActionId,
     input_stages: Sequence[dict],
     form_spec_map: FormspecMap,
     built_stages: Sequence[QuickSetupStage],
-    progress_logger: ProgressLogger | None = None,
+    progress_logger: ProgressLogger | None,
+    debug: bool,
 ) -> StageActionResult:
     if progress_logger is None:
         progress_logger = InfoLogger()
@@ -279,6 +284,7 @@ def verify_custom_validators_and_recap_stage(
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
+        debug=debug,
     )
     return response
 
@@ -328,7 +334,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         with job_interface.gui_context():
             localize(self._language)
             try:
-                self._run_quick_setup_stage_action(job_interface)
+                self._run_quick_setup_stage_action(job_interface, debug=active_config.debug)
             except Exception as e:
                 job_interface.get_logger().debug(
                     "Exception raised while the Quick setup stage action: %s", e
@@ -341,7 +347,9 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                     )
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
-    def _run_quick_setup_stage_action(self, job_interface: BackgroundProcessInterface) -> None:
+    def _run_quick_setup_stage_action(
+        self, job_interface: BackgroundProcessInterface, *, debug: bool
+    ) -> None:
         job_interface.send_progress_update(_("Starting Quick stage action..."))
 
         register_config_setups(quick_setup_registry)
@@ -358,6 +366,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
             form_spec_map=form_spec_map,
             built_stages=built_stages_up_to_index,
             progress_logger=JobBasedProgressLogger(job_interface),
+            debug=debug,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))

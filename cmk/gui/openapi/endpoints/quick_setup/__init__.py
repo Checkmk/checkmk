@@ -337,6 +337,8 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         input_stages=body["stages"],
         form_spec_map=form_spec_map,
         built_stages=built_stages,
+        progress_logger=None,
+        debug=active_config.debug,
     )
     return _serve_action_result(
         result, status_code=200 if result.validation_errors is None else 400

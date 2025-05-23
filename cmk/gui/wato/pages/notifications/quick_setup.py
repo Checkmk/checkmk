@@ -379,6 +379,7 @@ def custom_recap_formspec_triggering_events(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: (
@@ -394,7 +395,11 @@ def custom_recap_formspec_triggering_events(
         for form_spec_wrapper_id, (mode, form_data) in all_stages_form_data.items()
     }
     return recaps.recaps_form_spec(
-        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger
+        quick_setup_id,
+        stage_index,
+        cleaned_stages_form_data,
+        progress_logger,
+        debug=debug,
     )
 
 
@@ -468,6 +473,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
         form_spec_wrapper_id: form_data
@@ -475,7 +481,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
         if len(form_data) > 0
     }
     return recaps.recaps_form_spec(
-        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger
+        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger, debug
     )
 
 

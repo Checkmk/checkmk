@@ -265,6 +265,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("aws"),
@@ -272,6 +273,7 @@ def recap_found_services(
         parameter_form=quick_setup_aws_form_spec(),
         collect_params=aws_collect_params_with_defaults,
         progress_logger=progress_logger,
+        debug=debug,
     )
     progress_logger.log_new_progress_step(
         "identify_relevant_services", "Search for AWS related services"
@@ -314,7 +316,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, parsed_data, ____: _save_and_activate_recap(
+                    lambda __, ___, parsed_data, ____, _____: _save_and_activate_recap(
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],

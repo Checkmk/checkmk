@@ -191,6 +191,8 @@ def discovery(
 def special_agent_discovery_preview(
     site_id: SiteId,
     special_agent_preview_input: results.DiagSpecialAgentInput,
+    *,
+    debug: bool,
 ) -> results.SpecialAgentDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
@@ -204,10 +206,10 @@ def special_agent_discovery_preview(
             # the special agent discovery preview can take a long time depending on the underlying
             # datasource agent which can be problematic for remote setups
             timeout=5 * 60,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.SpecialAgentDiscoveryPreviewResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -547,6 +549,8 @@ def scan_parents(
 def diag_special_agent(
     site_id: SiteId,
     diag_special_agent_input: results.DiagSpecialAgentInput,
+    *,
+    debug: bool,
 ) -> results.DiagSpecialAgentResult:
     return _deserialize(
         _automation_serialized(
@@ -556,10 +560,10 @@ def diag_special_agent(
             stdin_data=diag_special_agent_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.DiagSpecialAgentResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -697,6 +701,8 @@ def create_diagnostics_dump(
     site_id: SiteId,
     serialized_params: DiagnosticsCLParameters,
     timeout: int,
+    *,
+    debug: bool,
 ) -> results.CreateDiagnosticsDumpResult:
     return _deserialize(
         _automation_serialized(
@@ -705,10 +711,10 @@ def create_diagnostics_dump(
             args=serialized_params,
             timeout=timeout,
             non_blocking_http=True,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.CreateDiagnosticsDumpResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

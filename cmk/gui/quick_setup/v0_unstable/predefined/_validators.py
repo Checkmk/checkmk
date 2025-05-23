@@ -10,6 +10,7 @@ from uuid import uuid4
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
@@ -18,7 +19,6 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     UniqueBundleIDStr,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
     _find_id_in_form_data,
@@ -53,20 +53,7 @@ def validate_test_connection_custom_collect_params(
         parameter_form,
         custom_collect_params,
         error_message,
-    )
-
-
-def validate_test_connection(
-    rulespec_name: str,
-    parameter_form: Dictionary,
-    error_message: str | None = None,
-) -> CallableValidator:
-    return partial(
-        _validate_test_connection,
-        rulespec_name,
-        parameter_form,
-        _collect_params_with_defaults_from_form_data,
-        error_message,
+        debug=active_config.debug,
     )
 
 
@@ -119,6 +106,8 @@ def _validate_test_connection(
     _quick_setup_id: QuickSetupId,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    *,
+    debug: bool,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
@@ -138,6 +127,7 @@ def _validate_test_connection(
             passwords=passwords,
             params=params,
         ),
+        debug=debug,
     )
     progress_logger.update_progress_step_status("test_connection", StepStatus.COMPLETED)
     progress_logger.log_new_progress_step(

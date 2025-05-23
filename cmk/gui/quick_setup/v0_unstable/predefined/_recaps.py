@@ -25,6 +25,7 @@ def recaps_form_spec(
     stage_index: StageIndex,
     parsed_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    debug: bool,
 ) -> Sequence[Widget]:
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:

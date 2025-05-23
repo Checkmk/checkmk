@@ -48,7 +48,7 @@ FormspecMap = Mapping[FormSpecId, FormSpec]
 #  skipped
 CallableValidator = Callable[[QuickSetupId, ParsedFormData, ProgressLogger], GeneralStageErrors]
 CallableRecap = Callable[
-    [QuickSetupId, StageIndex, ParsedFormData, ProgressLogger], Sequence[Widget]
+    [QuickSetupId, StageIndex, ParsedFormData, ProgressLogger, bool], Sequence[Widget]
 ]
 CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, ProgressLogger, str | None], str]
 WidgetConfigurator = Callable[[], Sequence[Widget]]

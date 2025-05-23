@@ -93,7 +93,7 @@ class ABCConfigDomain(abc.ABC):
         return _get_all_default_globals()
 
     @abc.abstractmethod
-    def config_dir(self) -> str:
+    def config_dir(self) -> Path:
         raise NotImplementedError()
 
     def config_file(self, site_specific: bool) -> str:

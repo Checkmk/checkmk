@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, NewType
+from typing import Any, NewType, override
 
 from pydantic import BaseModel
 
@@ -100,13 +100,16 @@ def _core_config_default_globals(*config_var_names: str) -> Mapping[str, object]
 
 
 class ConfigDomainCore(ABCConfigDomain):
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CORE
 
-    def config_dir(self) -> str:
-        return str(wato_root_dir())
+    @override
+    def config_dir(self) -> Path:
+        return wato_root_dir()
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         # Import cycle
         from cmk.gui.watolib.check_mk_automations import reload, restart
@@ -125,7 +128,8 @@ class ConfigDomainCore(ABCConfigDomain):
             hosts_to_update=list(activate_settings.get("hosts_to_update", []))
         )
 
-    def default_globals(self) -> Mapping[str, Any]:
+    @override
+    def default_globals(self) -> GlobalSettings:
         return _core_config_default_globals(*self._get_global_config_var_names())
 
     @classmethod
@@ -144,13 +148,16 @@ class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
 
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.GUI
 
-    def config_dir(self) -> str:
-        return str(multisite_dir())
+    @override
+    def config_dir(self) -> Path:
+        return multisite_dir()
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         warnings: ConfigurationWarnings = []
         if not active_config.enable_community_translations:
@@ -206,7 +213,8 @@ class ConfigDomainGUI(ABCConfigDomain):
 
         return warnings
 
-    def default_globals(self) -> Mapping[str, Any]:
+    @override
+    def default_globals(self) -> GlobalSettings:
         return get_default_config()
 
     @classmethod
@@ -226,10 +234,12 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_activation = False
     in_global_settings = True
 
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.LIVEPROXY
 
+    @override
     @classmethod
     def enabled(cls) -> bool:
         return (
@@ -237,13 +247,15 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             and active_config.liveproxyd_enabled
         )
 
-    def config_dir(self) -> str:
-        return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
+    @override
+    def config_dir(self) -> Path:
+        return Path(cmk.utils.paths.default_config_dir, "liveproxyd.d/wato")
 
     def save(self, settings, site_specific=False, custom_site_path=None):
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         log_audit(
             action="liveproxyd-activate",
@@ -285,7 +297,8 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     # TODO: Move default values to common module to share
     # the defaults between the GUI code an liveproxyd.
-    def default_globals(self) -> Mapping[str, Any]:
+    @override
+    def default_globals(self) -> GlobalSettings:
         return {
             "liveproxyd_log_levels": {
                 "cmk.liveproxyd": logging.INFO,
@@ -321,12 +334,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.CA_CERTIFICATES
 
-    def config_dir(self) -> str:
-        return str(multisite_dir())
+    @override
+    def config_dir(self) -> Path:
+        return multisite_dir()
 
     @staticmethod
     def log_changes(
@@ -404,6 +419,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             self._update_trusted_cas(current_config)
             self.update_remote_sites_cas(current_config["trusted_cas"])
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             warnings = self._update_trusted_cas(active_config.trusted_certificate_authorities)
@@ -543,7 +559,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def default_globals(self) -> Mapping[str, TrustedCertificateAuthorities]:
+    @override
+    def default_globals(self) -> GlobalSettings:
         return {
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,
@@ -592,12 +609,13 @@ def finalize_all_settings_per_site(
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    omd_config_dir = f"{cmk.utils.paths.omd_root}/etc/omd"
+    omd_config_dir = cmk.utils.paths.omd_root / "etc/omd"
 
     def __init__(self) -> None:
         super().__init__()
         self._logger: logging.Logger = logger.getChild("config.omd")
 
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.OMD
@@ -610,10 +628,12 @@ class ConfigDomainOMD(ABCConfigDomain):
             )
         )
 
-    def config_dir(self) -> str:
+    @override
+    def config_dir(self) -> Path:
         return self.omd_config_dir
 
-    def default_globals(self) -> Mapping[str, Any]:
+    @override
+    def default_globals(self) -> GlobalSettings:
         return self._from_omd_config(self._load_site_config())
 
     def save(
@@ -645,6 +665,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
@@ -701,16 +722,13 @@ class ConfigDomainOMD(ABCConfigDomain):
         return []
 
     def _load_site_config(self):
-        return self._load_omd_config("%s/site.conf" % self.omd_config_dir)
+        return self._load_omd_config(self.omd_config_dir / "site.conf")
 
-    def _load_omd_config(self, path):
-        settings = {}
-
-        file_path = Path(path)
-
+    def _load_omd_config(self, file_path: Path) -> dict:
         if not file_path.exists():
             return {}
 
+        settings = {}
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
@@ -729,7 +747,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
                     settings[key] = val
         except Exception as e:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") % (path, e))
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") % (file_path, e))
 
         return settings
 

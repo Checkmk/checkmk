@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import Final
+from pathlib import Path
+from typing import Final, override
 
 from cmk.ccc.site import omd_site
 
@@ -28,10 +29,12 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     needs_activation = True
     in_global_settings = False
 
+    @override
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return EVENT_CONSOLE
 
+    @override
     @classmethod
     def enabled(cls) -> bool:
         return active_config.mkeventd_enabled
@@ -40,9 +43,11 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         super().__init__()
         self._save_active_config = save_active_config
 
-    def config_dir(self) -> str:
-        return str(ec.rule_pack_dir())
+    @override
+    def config_dir(self) -> Path:
+        return ec.rule_pack_dir()
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
             log_audit(
@@ -55,5 +60,6 @@ class ConfigDomainEventConsole(ABCConfigDomain):
             execute_command("RELOAD", site=omd_site())
         return []
 
+    @override
     def default_globals(self) -> GlobalSettings:
         return ec.default_config()

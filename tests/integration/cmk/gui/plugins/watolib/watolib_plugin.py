@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+from typing import override
+
 import cmk.utils.paths
 from cmk.utils.config_warnings import ConfigurationWarnings
 
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
@@ -17,17 +21,21 @@ class ConfigDomainTest(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
 
+    @override
     @classmethod
     def ident(cls):
         return "test"
 
-    def config_dir(self) -> str:
-        return cmk.utils.paths.default_config_dir + "/test.d/wato/"
+    @override
+    def config_dir(self) -> Path:
+        return Path(cmk.utils.paths.default_config_dir, "test.d/wato")
 
+    @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 
-    def default_globals(self):
+    @override
+    def default_globals(self) -> GlobalSettings:
         return {}
 
 

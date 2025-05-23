@@ -8,4 +8,4 @@ from pydantic import BaseModel
 
 
 class AgentConfigParams(BaseModel):
-    timeout: int | None = None
+    timeout: float | None = None

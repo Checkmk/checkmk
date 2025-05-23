@@ -2715,14 +2715,14 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
         if (
-            not _need_to_update_mkps_after_sync()
-            or (local_path := plugins_local_path()) is None
-            or (addons_path := addons_plugins_local_path()) is None
+            _need_to_update_mkps_after_sync()
+            and (local_path := plugins_local_path())
+            and (addons_path := addons_plugins_local_path())
         ):
-            mkps_changed = False
-        else:
             uninstalled, installed = _execute_update_mkps(local_path, addons_path)
             mkps_changed = bool(uninstalled or installed)
+        else:
+            mkps_changed = False
 
         if mkps_changed:
             _execute_changed_local_files_actions()

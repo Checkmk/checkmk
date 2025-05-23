@@ -40,7 +40,9 @@ def check_emerson_temp(item, params, info):
 
 
 def parse_emerson_temp(string_table: StringTable) -> StringTable:
-    return [[x] for x in string_table[0]]
+    # Only use the first two sensor values, as values beyond that seem to be handled in a different
+    # structure that we lack a concrete definition for.
+    return string_table[:2]
 
 
 check_info["emerson_temp"] = LegacyCheckDefinition(
@@ -49,7 +51,7 @@ check_info["emerson_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2",
-        oids=["7.1", "7.2"],
+        oids=["7"],
     ),
     service_name="Temperature %s",
     discovery_function=inventory_emerson_temp,

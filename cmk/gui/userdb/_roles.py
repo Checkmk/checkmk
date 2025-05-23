@@ -5,7 +5,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 from cmk.ccc import store
@@ -69,7 +68,7 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir()) / "roles.mk",
+            config_file_path=multisite_dir() / "roles.mk",
             config_variable="roles",
             spec_class=dict[RoleName, CustomUserRole | BuiltInUserRole],
         )

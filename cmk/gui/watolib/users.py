@@ -5,7 +5,6 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import cast, Literal, TypeAlias
 
 from livestatus import SiteConfigurations
@@ -371,7 +370,7 @@ class UsersConfigFile(WatoSingleConfigFile[Users]):
 
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir()) / "users.mk",
+            config_file_path=multisite_dir() / "users.mk",
             config_variable="multisite_users",
             spec_class=Users,
         )

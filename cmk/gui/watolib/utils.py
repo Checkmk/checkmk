@@ -27,8 +27,8 @@ def wato_root_dir() -> Path:
     return Path(cmk.utils.paths.check_mk_config_dir, "wato")
 
 
-def multisite_dir() -> str:
-    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+def multisite_dir() -> Path:
+    return Path(cmk.utils.paths.default_config_dir, "multisite.d/wato")
 
 
 def mk_repr(x: Any) -> bytes:

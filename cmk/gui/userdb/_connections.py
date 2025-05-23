@@ -365,7 +365,7 @@ def save_snapshot_user_connection_config(
 class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir() + "user_connections.mk"),
+            config_file_path=multisite_dir() / "user_connections.mk",
             config_variable="user_connections",
             spec_class=ConfigurableUserConnectionSpec,
         )

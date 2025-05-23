@@ -49,7 +49,7 @@ class CMCServiceObject:
 
 
 class BILayoutManagement:
-    _config_file = Path(multisite_dir()) / "bi_layouts.mk"
+    _config_file = multisite_dir() / "bi_layouts.mk"
 
     @classmethod
     def save_layouts(cls) -> None:

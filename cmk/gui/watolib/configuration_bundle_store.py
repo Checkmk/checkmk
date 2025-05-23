@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from pathlib import Path
 from typing import NewType, NotRequired, TypedDict, TypeGuard
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
@@ -67,7 +66,7 @@ class ConfigBundle(TypedDict):
 class ConfigBundleStore(WatoSingleConfigFile[dict[BundleId, ConfigBundle]]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(multisite_dir()) / "configuration_bundles.mk",
+            config_file_path=multisite_dir() / "configuration_bundles.mk",
             config_variable="configuration_bundles",
             spec_class=dict[BundleId, ConfigBundle],
         )

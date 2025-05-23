@@ -74,7 +74,7 @@ def init_wato_datastructures(with_wato_lock: bool = False) -> None:
 
 def _need_to_create_sample_config() -> bool:
     if (
-        os.path.exists(multisite_dir() + "tags.mk")
+        (multisite_dir() / "tags.mk").exists()
         or (wato_root_dir() / "rules.mk").exists()
         or (wato_root_dir() / "groups.mk").exists()
         or (wato_root_dir() / "notifications.mk").exists()

@@ -149,7 +149,7 @@ class ConfigDomainGUI(ABCConfigDomain):
         return config_domain_name.GUI
 
     def config_dir(self) -> str:
-        return multisite_dir()
+        return str(multisite_dir())
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         warnings: ConfigurationWarnings = []
@@ -326,7 +326,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return config_domain_name.CA_CERTIFICATES
 
     def config_dir(self) -> str:
-        return multisite_dir()
+        return str(multisite_dir())
 
     @staticmethod
     def log_changes(

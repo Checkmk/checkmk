@@ -219,7 +219,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty=ReplicationPathType.DIR,
             ident="multisite",
             site_path=os.path.relpath(
-                cmk.gui.watolib.utils.multisite_dir(), cmk.utils.paths.omd_root
+                str(cmk.gui.watolib.utils.multisite_dir()), cmk.utils.paths.omd_root
             ),
         ),
         ReplicationPath.make(

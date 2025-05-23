@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
@@ -9,6 +10,13 @@ mypy_cli(
         # for `plugins = ["pydantic.mypy"]`
         requirement("pydantic"),
     ],
+)
+
+# TODO: Collect here all formatters we're currently using
+format_multirun(
+    name = "format",
+    rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
+    visibility = ["//visibility:public"],
 )
 
 alias(

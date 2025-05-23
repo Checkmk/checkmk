@@ -160,7 +160,7 @@ run_format() {
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format Cargo.toml
-    bazel run :format "$PWD"
+    bazel run //:format "$PWD"
 }
 
 run_check_format() {
@@ -168,7 +168,7 @@ run_check_format() {
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format --check --diff Cargo.toml
-    bazel run :format.check "$PWD"
+    bazel run //:format.check "$PWD"
 }
 
 main() {

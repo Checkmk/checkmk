@@ -330,3 +330,13 @@ gazelle(
 gazelle(
     name = "gazelle",
 )
+
+alias(
+    name = "format",
+    actual = "//bazel/tools:format",
+)
+
+alias(
+    name = "format.check",
+    actual = "//bazel/tools:format.check",
+)

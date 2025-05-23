@@ -1,0 +1,33 @@
+Title: NagVis: Updated to 1.9.47
+Class: security
+Compatible: compat
+Component: packages
+Date: 1747983799
+Edition: cre
+Level: 1
+Version: 2.2.0p43
+
+NagVis has been updated to version 1.9.47.
+
+This update contains fixes for the following security issues:
+
+<em>potential XSS via WYSIWYG editor</em>:
+
+LI: CVE-2024-47090
+LI: rated with CVSS score 5.1 Medium (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N</code>)
+
+<em>possible livestatus injection via dynmaps</em>:
+
+LI: CVE-2024-38866
+LI: rated with CVSS score 5.7 Medium (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:L</code>)
+
+See also https://www.nagvis.org/downloads/changelog/1.9.47.
+
+Both issues were discovered during internal review.
+
+<em>Affected Checkmk versions</em>:
+
+LI: 2.4.0
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)

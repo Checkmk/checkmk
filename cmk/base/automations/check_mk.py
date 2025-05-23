@@ -807,6 +807,22 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 automations.register(AutomationAutodiscovery())
 
 
+def _make_configured_bake_on_restart_callback(
+    loading_result: config.LoadingResult,
+    hosts: Sequence[HostAddress],
+) -> Callable[[], None]:
+    # TODO: consider passing the edition here, instead of "detecting" it (and thus
+    # silently failing if the bakery is missing unexpectedly)
+    try:
+        from cmk.base.configlib.cee.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            make_configured_bake_on_restart_callback,
+        )
+    except ImportError:
+        return lambda: None
+
+    return make_configured_bake_on_restart_callback(loading_result, hosts)
+
+
 def _execute_autodiscovery(
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -997,17 +1013,8 @@ def _execute_autodiscovery(
             cache_manager.clear_all()
             config_cache.initialize()
             hosts_config = config.make_hosts_config(loading_result.loaded_config)
-            bakery_config = config.BakeryConfig.make(
-                ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-                is_tcp=loading_result.config_cache.is_tcp,
-                default_address_family=loading_result.config_cache.default_address_family,
-                labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-                folder_attributes=loading_result.loaded_config.folder_attributes,
-                agent_config=loading_result.loaded_config.agent_config,
-                agent_ports=loading_result.loaded_config.agent_ports,
-                agent_encryption=loading_result.loaded_config.agent_encryption,
-                agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-                cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
+            bake_on_restart = _make_configured_bake_on_restart_callback(
+                loading_result, hosts_config.hosts
             )
 
             # reset these to their original value to create a correct config
@@ -1015,13 +1022,11 @@ def _execute_autodiscovery(
                 cmk.base.core.do_reload(
                     config_cache,
                     hosts_config,
-                    bakery_config,
                     service_name_config,
                     ip_address_of,
                     core,
                     ab_plugins,
                     locking_mode=config.restart_locking,
-                    all_hosts=hosts_config.hosts,
                     discovery_rules=loading_result.loaded_config.discovery_rules,
                     hosts_to_update=None,
                     service_depends_on=config.ServiceDependsOn(
@@ -1033,17 +1038,16 @@ def _execute_autodiscovery(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                         ),
                     ),
+                    bake_on_restart=bake_on_restart,
                 )
             else:
                 cmk.base.core.do_restart(
                     config_cache,
                     hosts_config,
-                    bakery_config,
                     service_name_config,
                     ip_address_of,
                     core,
                     ab_plugins,
-                    all_hosts=hosts_config.hosts,
                     service_depends_on=config.ServiceDependsOn(
                         tag_list=config_cache.tag_list,
                         service_dependencies=loading_result.loaded_config.service_dependencies,
@@ -1055,6 +1059,7 @@ def _execute_autodiscovery(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                         ),
                     ),
+                    bake_on_restart=bake_on_restart,
                 )
         finally:
             cache_manager.clear_all()
@@ -1256,22 +1261,9 @@ class AutomationRenameHosts(Automation):
                 ip_address_of = config.ConfiguredIPLookup(
                     config_cache, error_handler=ip_lookup.CollectFailedHosts()
                 )
-                bakery_config = config.BakeryConfig.make(
-                    ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-                    is_tcp=loading_result.config_cache.is_tcp,
-                    default_address_family=loading_result.config_cache.default_address_family,
-                    labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-                    folder_attributes=loading_result.loaded_config.folder_attributes,
-                    agent_config=loading_result.loaded_config.agent_config,
-                    agent_ports=loading_result.loaded_config.agent_ports,
-                    agent_encryption=loading_result.loaded_config.agent_encryption,
-                    agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-                    cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
-                )
 
                 _execute_silently(
                     config_cache,
-                    bakery_config,
                     service_name_config,
                     CoreAction.START,
                     ip_address_of,
@@ -1282,6 +1274,9 @@ class AutomationRenameHosts(Automation):
                     service_depends_on=config.ServiceDependsOn(
                         tag_list=config_cache.tag_list,
                         service_dependencies=loading_result.loaded_config.service_dependencies,
+                    ),
+                    bake_on_restart=_make_configured_bake_on_restart_callback(
+                        loading_result, hosts_config.hosts
                     ),
                 )
 
@@ -2224,22 +2219,9 @@ class AutomationRestart(Automation):
         ip_address_of = config.ConfiguredIPLookup(
             loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
         )
-        bakery_config = config.BakeryConfig.make(
-            ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-            is_tcp=loading_result.config_cache.is_tcp,
-            default_address_family=loading_result.config_cache.default_address_family,
-            labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-            folder_attributes=loading_result.loaded_config.folder_attributes,
-            agent_config=loading_result.loaded_config.agent_config,
-            agent_ports=loading_result.loaded_config.agent_ports,
-            agent_encryption=loading_result.loaded_config.agent_encryption,
-            agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-            cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
-        )
 
         return _execute_silently(
             loading_result.config_cache,
-            bakery_config,
             service_name_config,
             self._mode(),
             ip_address_of,
@@ -2250,6 +2232,9 @@ class AutomationRestart(Automation):
             service_depends_on=config.ServiceDependsOn(
                 tag_list=loading_result.config_cache.tag_list,
                 service_dependencies=loading_result.loaded_config.service_dependencies,
+            ),
+            bake_on_restart=_make_configured_bake_on_restart_callback(
+                loading_result, hosts_config.hosts
             ),
         )
 
@@ -2311,7 +2296,6 @@ automations.register(AutomationReload())
 
 def _execute_silently(
     config_cache: ConfigCache,
-    bakery_config: config.BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     action: CoreAction,
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
@@ -2320,6 +2304,7 @@ def _execute_silently(
     plugins: AgentBasedPlugins,
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
+    bake_on_restart: Callable[[], None],
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2329,13 +2314,11 @@ def _execute_silently(
             do_restart(
                 config_cache,
                 hosts_config,
-                bakery_config,
                 service_name_config,
                 ip_address_of,
                 create_core(config.monitoring_core),
                 plugins,
                 action=action,
-                all_hosts=hosts_config.hosts,
                 discovery_rules=loaded_config.discovery_rules,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
@@ -2345,6 +2328,7 @@ def _execute_silently(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                     )
                 ),
+                bake_on_restart=bake_on_restart,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))

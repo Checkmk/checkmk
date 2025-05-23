@@ -8,7 +8,7 @@ import os
 import shutil
 import socket
 import sys
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Literal
@@ -269,16 +269,15 @@ def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    bakery_config: config.BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
+    bake_on_restart: Callable[[], None],
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -316,56 +315,8 @@ def do_create_config(
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        with tracer.span("bake_on_restart"):
-            _bake_on_restart(bakery_config, all_hosts)
-
-
-def _bake_on_restart(bakery_config: config.BakeryConfig, all_hosts: Iterable[HostName]) -> None:
-    try:
-        # Local import is needed, because this is not available in all environments
-        from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            agent_bakery,
-        )
-        from cmk.base.cee.bakery.errorhandling import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            handle_bakery_exception,
-            handle_plugin_exception,
-        )
-        from cmk.base.cee.bakery.load_plugins import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            load_core_plugins,
-            load_v1_plugins,
-        )
-
-        from cmk.cee.bakery.type_defs import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            BakeRevisionMode,
-        )
-
-    except ImportError:
-        return
-
-    target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
-        bakery_config, all_hosts=all_hosts, selected_hosts=None
-    )
-
-    try:
-        agent_bakery.bake_agents(
-            target_configs,
-            plugin_executor=agent_bakery.PluginExecutor(
-                v1_bakery_plugins=load_v1_plugins(),
-                core_bakelets=load_core_plugins(),
-                exception_handler=handle_plugin_exception,
-            ),
-            bake_revision_mode=(
-                BakeRevisionMode.INACTIVE
-                if config.apply_bake_revision
-                else BakeRevisionMode.DISABLED
-            ),
-            logging_level=config.agent_bakery_logging,
-            call_site="config creation",
-        )
-    except Exception as e:
-        # TODO: check how much of this functionality is actually needed *here*.
-        handle_bakery_exception(e)
+    with tracer.span("bake_on_restart"):
+        bake_on_restart()
 
 
 @contextmanager

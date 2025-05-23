@@ -25,4 +25,8 @@ EMPTYCONFIG = LoadedConfigFragment(
     agent_encryption=(),
     agent_exclude_sections=(),
     cmc_real_time_checks=None,
+    agent_bakery_logging=None,
+    apply_bake_revision=False,
+    bake_agents_on_restart=False,
+    is_wato_slave_site=False,
 )

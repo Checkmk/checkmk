@@ -8,7 +8,7 @@ import enum
 import os
 import subprocess
 import sys
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Literal
 
@@ -26,7 +26,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import core_config
-from cmk.base.config import BakeryConfig, ConfigCache, ConfiguredIPLookup
+from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.core_config import MonitoringCore
 
@@ -59,53 +59,50 @@ class CoreAction(enum.Enum):
 def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    bakery_config: BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
     *,
-    all_hosts: Iterable[HostName],
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
+    bake_on_restart: Callable[[], None],
 ) -> None:
     do_restart(
         config_cache,
         hosts_config,
-        bakery_config,
         service_name_config,
         ip_address_of,
         core,
         plugins,
         action=CoreAction.RELOAD,
-        all_hosts=all_hosts,
         discovery_rules=discovery_rules,
         hosts_to_update=hosts_to_update,
         service_depends_on=service_depends_on,
         locking_mode=locking_mode,
         duplicates=duplicates,
+        bake_on_restart=bake_on_restart,
     )
 
 
 def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
-    bakery_config: BakeryConfig,
     service_name_config: PassiveServiceNameConfig,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
     *,
-    all_hosts: Iterable[HostName],
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
+    bake_on_restart: Callable[[], None],
 ) -> None:
     try:
         with activation_lock(mode=locking_mode):
@@ -113,15 +110,14 @@ def do_restart(
                 core=core,
                 config_cache=config_cache,
                 hosts_config=host_config,
-                bakery_config=bakery_config,
                 service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,
                 ip_address_of=ip_address_of,
-                all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
+                bake_on_restart=bake_on_restart,
             )
             do_core_action(action, monitoring_core=core.name())
 

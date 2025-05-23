@@ -618,6 +618,10 @@ class LoadedConfigFragment:
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     cmc_real_time_checks: RealTimeChecks | None
+    apply_bake_revision: bool
+    bake_agents_on_restart: bool
+    agent_bakery_logging: int | None
+    is_wato_slave_site: bool
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -722,6 +726,10 @@ def _perform_post_config_loading_actions(
         agent_encryption=agent_encryption,
         agent_exclude_sections=agent_exclude_sections,
         cmc_real_time_checks=cmc_real_time_checks,
+        agent_bakery_logging=agent_bakery_logging,
+        apply_bake_revision=apply_bake_revision,
+        bake_agents_on_restart=bake_agents_on_restart,
+        is_wato_slave_site=is_wato_slave_site,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()

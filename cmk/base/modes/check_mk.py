@@ -1437,6 +1437,22 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+def _make_configured_bake_on_restart(
+    loading_result: config.LoadingResult,
+    hosts: Sequence[HostAddress],
+) -> Callable[[], None]:
+    # TODO: consider passing the edition here, instead of "detecting" it (and thus
+    # silently failing if the bakery is missing unexpectedly)
+    try:
+        from cmk.base.configlib.cee.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            make_configured_bake_on_restart_callback,
+        )
+    except ImportError:
+        return lambda: None
+
+    return make_configured_bake_on_restart_callback(loading_result, hosts)
+
+
 def mode_update() -> None:
     from cmk.base.core_config import do_create_config
 
@@ -1447,30 +1463,19 @@ def mode_update() -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
-    bakery_config = config.BakeryConfig.make(
-        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-        is_tcp=loading_result.config_cache.is_tcp,
-        default_address_family=loading_result.config_cache.default_address_family,
-        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-        folder_attributes=loading_result.loaded_config.folder_attributes,
-        agent_config=loading_result.loaded_config.agent_config,
-        agent_ports=loading_result.loaded_config.agent_ports,
-        agent_encryption=loading_result.loaded_config.agent_encryption,
-        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
-    )
+
+    bake_on_restart = _make_configured_bake_on_restart(loading_result, hosts_config.hosts)
+
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
-                bakery_config=bakery_config,
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
                 ip_address_of=ip_address_of,
-                all_hosts=hosts_config.hosts,
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.config_cache.tag_list,
@@ -1482,6 +1487,7 @@ def mode_update() -> None:
                         and loading_result.config_cache.is_online(hn)
                     )
                 ),
+                bake_on_restart=bake_on_restart,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -1528,29 +1534,16 @@ def mode_restart(args: Sequence[HostName]) -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
-    bakery_config = config.BakeryConfig.make(
-        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-        is_tcp=loading_result.config_cache.is_tcp,
-        default_address_family=loading_result.config_cache.default_address_family,
-        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-        folder_attributes=loading_result.loaded_config.folder_attributes,
-        agent_config=loading_result.loaded_config.agent_config,
-        agent_ports=loading_result.loaded_config.agent_ports,
-        agent_encryption=loading_result.loaded_config.agent_encryption,
-        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
-    )
+
     cmk.base.core.do_restart(
         loading_result.config_cache,
         hosts_config,
-        bakery_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        all_hosts=hosts_config.hosts,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.config_cache.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
@@ -1562,6 +1555,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             )
         ),
+        bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
@@ -1602,29 +1596,16 @@ def mode_reload(args: Sequence[HostName]) -> None:
     ip_address_of = config.ConfiguredIPLookup(
         loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
-    bakery_config = config.BakeryConfig.make(
-        ruleset_matcher=loading_result.config_cache.ruleset_matcher,
-        is_tcp=loading_result.config_cache.is_tcp,
-        default_address_family=loading_result.config_cache.default_address_family,
-        labels_of_host=loading_result.config_cache.label_manager.labels_of_host,
-        folder_attributes=loading_result.loaded_config.folder_attributes,
-        agent_config=loading_result.loaded_config.agent_config,
-        agent_ports=loading_result.loaded_config.agent_ports,
-        agent_encryption=loading_result.loaded_config.agent_encryption,
-        agent_exclude_sections=loading_result.loaded_config.agent_exclude_sections,
-        cmc_real_time_checks=loading_result.loaded_config.cmc_real_time_checks,
-    )
+
     cmk.base.core.do_reload(
         loading_result.config_cache,
         hosts_config,
-        bakery_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
         create_core(config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        all_hosts=hosts_config.hosts,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.config_cache.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
@@ -1636,6 +1617,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             ),
         ),
+        bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))

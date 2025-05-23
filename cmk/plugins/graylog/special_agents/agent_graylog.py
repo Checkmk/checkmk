@@ -23,11 +23,23 @@ class GraylogSection(NamedTuple):
     uri: str
 
 
+def _probe_api(args: argparse.Namespace) -> None:
+    url = f"{args.proto}://{args.hostname}:{args.port}/api/system"
+    response = requests.get(url, auth=(args.user, args.password), timeout=900)
+    response.raise_for_status()
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
+
+    try:
+        _probe_api(args)
+    except requests.exceptions.RequestException as e:
+        sys.stderr.write(f"Error: Request to Graylog API failed: '{e}'\n")
+        return 2
 
     # calculate time difference from now and args.since in ISO8601 Format
     since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))

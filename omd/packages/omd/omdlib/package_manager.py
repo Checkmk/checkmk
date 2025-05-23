@@ -16,12 +16,8 @@ from cmk.utils.log import VERBOSE
 logger = logging.getLogger("cmk.omd")
 
 
-def _get_raw_version(omd_version: str) -> str:
-    return omd_version[:-4]
-
-
 def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
-    raw_version = _get_raw_version(version)
+    raw_version = version[:-4]
     target_package_name = f"{get_edition(version)}-{raw_version}"
     with_version_str = [package for package in installed_packages if target_package_name in package]
     if "p" in raw_version:

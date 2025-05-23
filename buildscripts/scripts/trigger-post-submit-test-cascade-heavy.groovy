@@ -19,8 +19,8 @@ def main() {
         "test-integration-single-f12less",
         "test-integration-single-f12less-cme",
         "test-integration-single-f12less-cre",
-        "test-gui-crawl-f12less",
-        "test-gui-e2e-f12less",
+        "test-gui-crawl-f12less-230",
+        "test-gui-e2e-f12less-230",
         "test-update-single-f12less",
     ];
 

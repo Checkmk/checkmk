@@ -69,7 +69,6 @@ from cmk.gui.utils.compatibility import (
 )
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
 from cmk import trace
@@ -329,28 +328,6 @@ def _do_remote_automation_serialized(
         raise MKAutomationException(_("Empty output from remote site."))
 
     return response
-
-
-def execute_phase1_result(
-    site_id: SiteId, connection_id: str, *, debug: bool
-) -> PhaseOneResult | str:
-    command_args = [
-        ("request_format", "python"),
-        (
-            "request",
-            repr({"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}),
-        ),
-    ]
-    return ast.literal_eval(
-        str(
-            do_remote_automation(
-                site=get_site_config(active_config, site_id),
-                command="execute-dcd-command",
-                vars_=command_args,
-                debug=debug,
-            )
-        )
-    )
 
 
 def fetch_service_discovery_background_job_status(

@@ -4,24 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {add_event_handler} from "./utils";
+import {KeyShortcutService} from "./keyShortcuts";
 
-function handle_main_menu_shortcuts(event: Event): void {
-    if (!(event instanceof KeyboardEvent)) return;
-
-    let menu_id = "";
-    if (event.altKey && event.key.toLowerCase() === "m") {
-        menu_id = "popup_trigger_mega_menu_monitoring";
-    } else if (event.altKey && event.key.toLowerCase() === "s") {
-        // Make sure this does not collide with browser shortcuts (Firefox)
-        event.preventDefault();
-        menu_id = "popup_trigger_mega_menu_setup";
-    } else if (event.altKey && event.key.toLowerCase() === "c") {
-        menu_id = "popup_trigger_mega_menu_customize";
-    }
-
-    // Get the top level document, when already executed from that context and
-    // also when executed from the content frame document
+export function handle_main_menu(id: string): void {
+    const menu_id = "popup_trigger_mega_menu_".concat(id);
     let menu_document = document;
     if (!document || !menu_document.getElementById("main_menu"))
         menu_document = window.parent.document;
@@ -38,6 +24,34 @@ function handle_main_menu_shortcuts(event: Event): void {
     menu_item.getElementsByTagName("a")[0].click();
 }
 
-export function register_shortcuts(): void {
-    add_event_handler("keydown", handle_main_menu_shortcuts, document);
+export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
+    keyShortcuts.on(
+        {
+            key: ["m"],
+            alt: true,
+        },
+        () => {
+            handle_main_menu("monitoring");
+        },
+    );
+
+    keyShortcuts.on(
+        {
+            key: ["c"],
+            alt: true,
+        },
+        () => {
+            handle_main_menu("customize");
+        },
+    );
+
+    keyShortcuts.on(
+        {
+            key: ["s"],
+            alt: true,
+        },
+        () => {
+            handle_main_menu("setup");
+        },
+    );
 }

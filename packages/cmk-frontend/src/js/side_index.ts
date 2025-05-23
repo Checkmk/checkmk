@@ -11,7 +11,7 @@ import $ from "jquery";
 /* eslint-disable import/no-namespace -- Needed for exports */
 import * as ajax from "./modules/ajax";
 import * as foldable_container from "./modules/foldable_container";
-import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
+import * as main_menu_shortcut_handler from "./modules/main_menu_shortcut_handler";
 import * as popup_menu from "./modules/popup_menu";
 import * as quicksearch from "./modules/quicksearch";
 import * as search from "./modules/search";
@@ -19,9 +19,14 @@ import * as sidebar from "./modules/sidebar";
 import * as utils from "./modules/utils";
 import * as valuespecs from "./modules/valuespecs";
 import * as visibility_detection from "./modules/visibility_detection";
+import {getKeyShortcutServiceInstance} from "./modules/keyShortcuts";
 
 $(() => {
-    keyboard_shortcuts.register_shortcuts();
+    const keyShortcuts = getKeyShortcutServiceInstance(
+        document.getElementsByTagName("iframe"),
+    );
+
+    main_menu_shortcut_handler.register_shortcuts(keyShortcuts);
 });
 
 export const cmk_export = {
@@ -30,7 +35,6 @@ export const cmk_export = {
         ajax: ajax,
         sidebar: sidebar,
         utils: utils,
-        keyboard_shortcuts: keyboard_shortcuts,
         foldable_container: foldable_container,
         quicksearch: quicksearch,
         visibility_detection: visibility_detection,

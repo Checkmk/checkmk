@@ -33,7 +33,7 @@ import * as graphs_cee from "./modules/graphs_cee";
 import * as help from "./modules/help";
 import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
-import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
+import * as main_menu_shortcut_handler from "./modules/main_menu_shortcut_handler";
 import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
 import * as ntop_alerts from "./modules/ntop/ntop_alerts";
@@ -63,6 +63,7 @@ import * as views from "./modules/views";
 import * as visibility_detection from "./modules/visibility_detection";
 import * as wato from "./modules/wato";
 import * as webauthn from "./modules/webauthn";
+import {getKeyShortcutServiceInstance} from "./modules/keyShortcuts";
 
 register();
 
@@ -71,7 +72,10 @@ $(() => {
     forms.enable_dynamic_form_elements();
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
-    keyboard_shortcuts.register_shortcuts();
+
+    const keyShortcuts = getKeyShortcutServiceInstance();
+    main_menu_shortcut_handler.register_shortcuts(keyShortcuts);
+
     // add a confirmation popup for each for that has a valid confirmation text
     callable_functions.init_callable_ts_functions(document);
 
@@ -109,7 +113,6 @@ export const cmk_export = {
         help: help,
         host_diagnose: host_diagnose,
         hover: hover,
-        keyboard_shortcuts: keyboard_shortcuts,
         license_usage: {
             timeseries_graph: license_usage_timeseries_graph,
         },

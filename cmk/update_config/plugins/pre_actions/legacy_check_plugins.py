@@ -27,7 +27,7 @@ class PreUpdateLegacyCheckPlugins(PreUpdateAction):
     @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         err_list, _sections, _checks = load_and_convert_legacy_checks(
-            find_plugin_files(str(local_checks_dir))
+            find_plugin_files(local_checks_dir)
         )
         if errors := "".join(err_list):
             logger.error(errors)

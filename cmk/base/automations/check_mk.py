@@ -713,7 +713,7 @@ def _execute_discovery(
 
     with (
         set_value_store_manager(
-            ValueStoreManager(host_name, AllValueStoresStore(Path(counters_dir, host_name))),
+            ValueStoreManager(host_name, AllValueStoresStore(counters_dir / host_name)),
             store_changes=False,
         ) as value_store_manager,
     ):
@@ -992,7 +992,7 @@ def _execute_autodiscovery(
 
     core = create_core(config.monitoring_core)
     with config.set_use_core_config(
-        autochecks_dir=Path(base_autochecks_dir),
+        autochecks_dir=base_autochecks_dir,
         discovered_host_labels_dir=base_discovered_host_labels_dir,
     ):
         try:
@@ -2080,10 +2080,10 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
-            f"{precompiled_hostchecks_dir}/{hostname}",
-            f"{precompiled_hostchecks_dir}/{hostname}.py",
+            f"{precompiled_hostchecks_dir / hostname}",
+            f"{precompiled_hostchecks_dir / hostname}.py",
             f"{autochecks_dir}/{hostname}.mk",
-            f"{counters_dir}/{hostname}",
+            f"{counters_dir / hostname}",
             f"{discovered_host_labels_dir}/{hostname}.mk",
             f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
@@ -2128,10 +2128,10 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
-            f"{precompiled_hostchecks_dir}/{hostname}",
-            f"{precompiled_hostchecks_dir}/{hostname}.py",
+            f"{precompiled_hostchecks_dir / hostname}",
+            f"{precompiled_hostchecks_dir / hostname}.py",
             f"{autochecks_dir}/{hostname}.mk",
-            f"{counters_dir}/{hostname}",
+            f"{counters_dir / hostname}",
             f"{tcp_cache_dir / hostname}",
             f"{var_dir}/persisted/{hostname}",
         ]

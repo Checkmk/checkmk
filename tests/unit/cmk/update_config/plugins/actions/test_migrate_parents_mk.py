@@ -72,7 +72,7 @@ def _conf_root(with_admin_login: UserId, load_config: None) -> Iterator[Folder]:
     tree = folder_tree()
     tree.invalidate_caches()
     root = tree.root_folder()
-    Path(cmk.utils.paths.main_config_file).touch()
+    cmk.utils.paths.main_config_file.touch()
 
     yield root
 

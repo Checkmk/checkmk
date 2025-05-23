@@ -32,7 +32,7 @@ class Check:
     @classmethod
     def _load_checks(cls) -> None:
         for legacy_check in discover_legacy_checks(
-            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            find_plugin_files(repo_path() / "cmk/base/legacy_checks"),
             FileLoader(
                 precomile_path=cmk.utils.paths.precompiled_checks_dir,
                 makedirs=lambda path: Path(path).mkdir(mode=0o770, exist_ok=True, parents=True),

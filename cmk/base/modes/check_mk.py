@@ -1265,7 +1265,7 @@ def mode_flush(hosts: list[HostName]) -> None:
 
         # counters
         try:
-            os.remove(cmk.utils.paths.counters_dir + "/" + host)
+            (cmk.utils.paths.counters_dir / host).unlink()
             print_(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
@@ -2419,7 +2419,7 @@ def run_checking(
         error_handler,
         set_value_store_manager(
             ValueStoreManager(
-                hostname, AllValueStoresStore(Path(cmk.utils.paths.counters_dir, hostname))
+                hostname, AllValueStoresStore(cmk.utils.paths.counters_dir / hostname)
             ),
             store_changes=not dry_run,
         ) as value_store_manager,

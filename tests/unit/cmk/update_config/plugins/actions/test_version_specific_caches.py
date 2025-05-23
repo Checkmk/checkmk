@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from pathlib import Path
 
 import pytest
 
@@ -28,10 +27,10 @@ def test_cleanup_missing_directory(plugin: VersionSpecificCachesCleaner) -> None
 
 def test_cleanup(plugin: VersionSpecificCachesCleaner) -> None:
     paths = [
-        Path(paths_utils.include_cache_dir, "builtin"),
-        Path(paths_utils.include_cache_dir, "local"),
-        Path(paths_utils.precompiled_checks_dir, "builtin"),
-        Path(paths_utils.precompiled_checks_dir, "local"),
+        paths_utils.include_cache_dir / "builtin",
+        paths_utils.include_cache_dir / "local",
+        paths_utils.precompiled_checks_dir / "builtin",
+        paths_utils.precompiled_checks_dir / "local",
     ]
     for base_dir in paths:
         base_dir.mkdir(parents=True, exist_ok=True)

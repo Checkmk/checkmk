@@ -2842,7 +2842,7 @@ def folder_path_test_config_fixture(
     config_dir = Path(cmk.utils.paths.check_mk_config_dir)
     config_dir.mkdir(parents=True, exist_ok=True)
 
-    with Path(cmk.utils.paths.main_config_file).open("w", encoding="utf-8") as f:
+    with cmk.utils.paths.main_config_file.open("w", encoding="utf-8") as f:
         f.write(
             """
 all_hosts += ['%(name)s']
@@ -2897,7 +2897,7 @@ cmc_host_rrd_config = [
     yield config.load(discovery_rulesets=()).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
-    Path(cmk.utils.paths.main_config_file).unlink()
+    cmk.utils.paths.main_config_file.unlink()
     (wato_main_folder / "hosts.mk").unlink()
     (wato_main_folder / "rules.mk").unlink()
     (wato_lvl1_folder / "hosts.mk").unlink()
@@ -2971,7 +2971,7 @@ explicit_host_conf['{setting_name}'].update({values_})
 
 
 def test_explicit_setting_loading(patch_omd_site: None) -> None:
-    main_mk_file = Path(cmk.utils.paths.main_config_file)
+    main_mk_file = cmk.utils.paths.main_config_file
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),
         ("sub2", "parents", {HostName("hostB"): "setting2"}),

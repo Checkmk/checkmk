@@ -19,10 +19,10 @@ class VersionSpecificCachesCleaner(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         paths = [
-            Path(paths_utils.include_cache_dir, "builtin"),
-            Path(paths_utils.include_cache_dir, "local"),
-            Path(paths_utils.precompiled_checks_dir, "builtin"),
-            Path(paths_utils.precompiled_checks_dir, "local"),
+            paths_utils.include_cache_dir / "builtin",
+            paths_utils.include_cache_dir / "local",
+            paths_utils.precompiled_checks_dir / "builtin",
+            paths_utils.precompiled_checks_dir / "local",
         ]
 
         walk_cache_dir = Path(paths_utils.var_dir, "snmp_cache")

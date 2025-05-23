@@ -18,11 +18,11 @@ from typing import Self
 from .v0_unstable import LegacyCheckDefinition
 
 
-def find_plugin_files(directory: str) -> tuple[str, ...]:
+def find_plugin_files(directory: Path) -> tuple[str, ...]:
     return tuple(_plugin_pathnames_in_directory(directory))
 
 
-def _plugin_pathnames_in_directory(path: str) -> Iterable[str]:
+def _plugin_pathnames_in_directory(path: Path) -> Iterable[str]:
     try:
         return sorted(
             [
@@ -55,7 +55,7 @@ class _PYCHeader:
 
 
 class FileLoader:
-    def __init__(self, *, precomile_path: str, makedirs: Callable[[str], None]) -> None:
+    def __init__(self, *, precomile_path: Path, makedirs: Callable[[str], None]) -> None:
         self._precompile_path = precomile_path
         self._makedirs = makedirs
 
@@ -104,7 +104,7 @@ class FileLoader:
         return int(os.stat(path).st_mtime) == header.origin_mtime
 
     def _precompiled_plugin_path(self, path: str) -> str:
-        return os.path.join(self._precompile_path, "builtin", os.path.basename(path))
+        return os.path.join(str(self._precompile_path), "builtin", os.path.basename(path))
 
 
 @dataclasses.dataclass

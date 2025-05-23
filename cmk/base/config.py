@@ -883,13 +883,13 @@ def _collect_parameter_rulesets_from_globals(
 
 # Create list of all files to be included during configuration loading
 def get_config_file_paths(with_conf_d: bool) -> list[Path]:
-    list_of_files = [Path(cmk.utils.paths.main_config_file)]
+    list_of_files = [cmk.utils.paths.main_config_file]
     if with_conf_d:
         all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
         list_of_files += sorted(
             [p for p in all_files if p.suffix in {".mk"}], key=cmk.utils.key_config_paths
         )
-    for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
+    for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
         if path.exists():
             list_of_files.append(path)
     return list_of_files
@@ -1283,7 +1283,7 @@ def load_all_plugins(
 ) -> AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
-            filelist = find_plugin_files(checks_dir)
+            filelist = find_plugin_files(Path(checks_dir))
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
 

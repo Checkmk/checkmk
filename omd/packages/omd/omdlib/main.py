@@ -59,6 +59,7 @@ from omdlib.dialog import (
 )
 from omdlib.global_options import GlobalOptions, parse_global_opts
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.package_manager import get_edition, select_matching_packages
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
@@ -2801,7 +2802,7 @@ def main_update(
 
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
-    from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
+    from_edition, to_edition = get_edition(from_version), get_edition(to_version)
     if from_edition == "managed" and to_edition != "managed" and not global_opts.force:
         bail_out(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
 
@@ -2962,35 +2963,6 @@ def _update_cmk_core_config(site: SiteContext) -> None:
         subprocess.check_call(["cmk", "-U"], shell=False)
     except subprocess.SubprocessError:
         bail_out("Could not update core configuration. Aborting.")
-
-
-def _get_edition(
-    omd_version: str,
-) -> Literal["raw", "enterprise", "managed", "free", "cloud", "saas", "unknown"]:
-    """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
-    parts = omd_version.split(".")
-    if parts[-1] == "demo":
-        edition_short = parts[-2]
-    else:
-        edition_short = parts[-1]
-
-    if edition_short == "cre":
-        return "raw"
-    if edition_short == "cee":
-        return "enterprise"
-    if edition_short == "cme":
-        return "managed"
-    if edition_short == "cfe":
-        return "free"
-    if edition_short == "cce":
-        return "cloud"
-    if edition_short == "cse":
-        return "saas"
-    return "unknown"
-
-
-def _get_raw_version(omd_version: str) -> str:
-    return omd_version[:-4]
 
 
 def _omd_to_check_mk_version(omd_version: str) -> Version:
@@ -3583,21 +3555,6 @@ def postprocess_restore_as_site_user(
             else CommandType.restore_as_new_site
         ),
     )
-
-
-def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
-    raw_version = _get_raw_version(version)
-    target_package_name = f"{_get_edition(version)}-{raw_version}"
-    with_version_str = [package for package in installed_packages if target_package_name in package]
-    if "p" in raw_version:
-        return with_version_str
-    if "-" in raw_version:
-        return with_version_str
-    return [
-        package
-        for package in with_version_str
-        if f"{raw_version}p" not in package and f"{raw_version}-" not in package
-    ]
 
 
 def main_cleanup(

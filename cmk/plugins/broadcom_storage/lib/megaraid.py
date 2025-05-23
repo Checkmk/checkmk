@@ -84,7 +84,7 @@ SectionPDisks = Mapping[str, PDisk]
 _T = TypeVar("_T")
 
 
-def check_state(missmatch_state: State, label: str, actual: _T, expected: _T) -> Result:
+def check_state(mismatch_state: State, label: str, actual: _T, expected: _T) -> Result:
     """
     >>> check_state(State.WARN, "socks", "white", "black")
     Result(state=<State.WARN: 1>, summary='Socks: white (expected: black)')
@@ -92,7 +92,7 @@ def check_state(missmatch_state: State, label: str, actual: _T, expected: _T) ->
     short = f"{label.capitalize()}: {actual}"
     if actual == expected:
         return Result(state=State.OK, summary=short)
-    return Result(state=missmatch_state, summary=f"{short} (expected: {expected})")
+    return Result(state=mismatch_state, summary=f"{short} (expected: {expected})")
 
 
 PDISKS_DEFAULTS: Final[dict[RawState, int]] = {

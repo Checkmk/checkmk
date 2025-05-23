@@ -250,7 +250,7 @@ def test_all_agents_considered() -> None:
 
 def test_all_agents_versions() -> None:
     """Ensure the agents `__version__` is up to date, if present."""
-    version_missmatch = {
+    version_mismatch = {
         module.__name__
         for module in TESTED_SA_MODULES.values()
         # not having the __version__ is ok, but if present it must match
@@ -258,7 +258,7 @@ def test_all_agents_versions() -> None:
         and hasattr(module, "__version__")
         and module.__version__ != checkmk_version.__version__
     }
-    assert not version_missmatch
+    assert not version_mismatch
 
 
 @pytest.mark.parametrize(

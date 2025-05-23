@@ -315,7 +315,9 @@ class ABCRulesetMode(WatoMode):
                     {
                         name: ruleset
                         for name, ruleset in self._rulesets().get_rulesets().items()
-                        if ruleset.matches_search_with_rules(self._search_options)
+                        if ruleset.matches_search_with_rules(
+                            self._search_options, debug=active_config.debug
+                        )
                     }
                 )
             )
@@ -1222,6 +1224,7 @@ class ModeEditRuleset(WatoMode):
         rule_effectiveness = (
             analyze_host_rule_effectiveness(
                 [r.to_single_base_ruleset() for _f, _i, r in rules],
+                debug=debug,
             ).results
             if "rule_ineffective" in search_options
             else {}

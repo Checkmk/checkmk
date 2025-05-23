@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
@@ -67,7 +68,7 @@ def list_rulesets(param):
             {
                 name: ruleset
                 for name, ruleset in all_sets.get_rulesets().items()
-                if ruleset.matches_search_with_rules(search_options)
+                if ruleset.matches_search_with_rules(search_options, debug=active_config.debug)
             }
         )
     else:

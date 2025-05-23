@@ -794,7 +794,7 @@ def test_matches_search_with_rules(
     rule = rulesets.Rule.from_config(folder, ruleset, rule_config)
     ruleset.append_rule(folder, rule)
 
-    assert ruleset.matches_search_with_rules(search_options) == expected_result
+    assert ruleset.matches_search_with_rules(search_options, debug=False) == expected_result
 
 
 @pytest.fixture(name="inline_analyze_host_rule_effectiveness_automation")
@@ -804,7 +804,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     """Inline rule matching automation call"""
 
     def analyze_host_rule_effectiveness(
-        r: Sequence[Sequence[RuleSpec]],
+        r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> AnalyzeHostRuleEffectivenessResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
@@ -843,7 +843,7 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
         ),
     )
 
-    assert ruleset.matches_search_with_rules({"rule_ineffective": False}) is True
+    assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
@@ -864,7 +864,7 @@ def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_logi
         ),
     )
 
-    assert ruleset.matches_search_with_rules({"rule_ineffective": True}) is False
+    assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is False
 
 
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
@@ -887,7 +887,7 @@ def test_matches_search_with_rules_is_ineffective_finds_not_matching(
         ),
     )
 
-    assert ruleset.matches_search_with_rules({"rule_ineffective": True}) is True
+    assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is True
 
 
 @dataclass

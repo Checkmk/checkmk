@@ -113,11 +113,13 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     def _table_title(self) -> str:
         return _("Predefined conditions")
 
-    def _validate_deletion(self, ident: str, entry: PredefinedConditionSpec) -> None:
+    def _validate_deletion(
+        self, ident: str, entry: PredefinedConditionSpec, *, debug: bool
+    ) -> None:
         if {
             name: ruleset
             for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
-            if ruleset.matches_search_with_rules({"rule_predefined_condition": ident})
+            if ruleset.matches_search_with_rules({"rule_predefined_condition": ident}, debug=debug)
         }:
             raise MKUserError(
                 "_delete",

@@ -413,17 +413,17 @@ def analyze_service_rule_matches(
 
 
 def analyze_host_rule_effectiveness(
-    rules: Sequence[Sequence[RuleSpec]],
+    rules: Sequence[Sequence[RuleSpec]], *, debug: bool
 ) -> results.AnalyzeHostRuleEffectivenessResult:
     return _deserialize(
         _automation_serialized(
             "analyze-host-rule-effectiveness",
             args=[],
             indata=rules,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.AnalyzeHostRuleEffectivenessResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

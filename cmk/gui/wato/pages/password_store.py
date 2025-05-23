@@ -90,7 +90,7 @@ class ModePasswords(SimpleListMode[Password]):
     def _table_title(self) -> str:
         return _("Passwords")
 
-    def _validate_deletion(self, ident: str, entry: Password) -> None:
+    def _validate_deletion(self, ident: str, entry: Password, *, debug: bool) -> None:
         if is_locked_by_quick_setup(entry.get("locked_by")):
             raise MKUserError(
                 "_delete",

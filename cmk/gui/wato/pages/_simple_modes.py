@@ -268,7 +268,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular(),
             )
 
-        self._validate_deletion(ident, entries[ident])
+        self._validate_deletion(ident, entries[ident], debug=active_config.debug)
 
         entry = entries.pop(ident)
         self._add_change(
@@ -282,7 +282,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
-    def _validate_deletion(self, ident: str, entry: _T) -> None:
+    def _validate_deletion(self, ident: str, entry: _T, *, debug: bool) -> None:
         """Override this to implement custom validations"""
 
     def _delete_confirm_title(self, nr: int) -> str:

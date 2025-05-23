@@ -848,7 +848,7 @@ class Ruleset:
         return content
 
     # Whether or not either the ruleset itself matches the search or the rules match
-    def matches_search_with_rules(self, search_options: SearchOptions) -> bool:
+    def matches_search_with_rules(self, search_options: SearchOptions, *, debug: bool) -> bool:
         if not self.matches_ruleset_search_options(search_options):
             return False
 
@@ -865,7 +865,7 @@ class Ruleset:
         # too expensive.
         rule_effectiveness = (
             analyze_host_rule_effectiveness(
-                [r.to_single_base_ruleset() for _f, _i, r in rules],
+                [r.to_single_base_ruleset() for _f, _i, r in rules], debug=debug
             ).results
             if rules and "rule_ineffective" in search_options
             else {}

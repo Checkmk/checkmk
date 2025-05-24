@@ -430,16 +430,17 @@ def analyze_host_rule_effectiveness(
 def delete_hosts(
     site_id: SiteId,
     host_names: Sequence[HostName],
+    debug: bool,
 ) -> results.DeleteHostsResult:
     return _deserialize(
         _automation_serialized(
             "delete-hosts",
             siteid=site_id,
             args=host_names,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.DeleteHostsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

@@ -67,6 +67,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
         user_id=user.id,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     yield bundle_id, program_id
     store = ConfigBundleStore()

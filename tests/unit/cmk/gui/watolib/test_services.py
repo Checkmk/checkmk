@@ -145,7 +145,10 @@ def fixture_sample_host(
     assert host is not None
     yield host
     root_folder.delete_hosts(
-        [hostname], automation=lambda *args, **kwargs: DeleteHostsResult(), pprint_value=False
+        [hostname],
+        automation=lambda *args, **kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
     )
 
 

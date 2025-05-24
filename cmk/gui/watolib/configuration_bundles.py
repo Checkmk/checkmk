@@ -270,6 +270,7 @@ def create_config_bundle(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> None:
     bundle_ident = GlobalIdent(
         site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
@@ -303,6 +304,7 @@ def create_config_bundle(
             user_id=user_id,
             pprint_value=pprint_value,
             use_git=use_git,
+            debug=debug,
         )
         raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
 
@@ -313,6 +315,7 @@ def delete_config_bundle(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
@@ -331,6 +334,7 @@ def delete_config_bundle(
         user_id=user_id,
         pprint_value=pprint_value,
         use_git=use_git,
+        debug=debug,
     )
 
 
@@ -378,12 +382,13 @@ def delete_config_bundle_objects(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
         _delete_rules(references.rules, pprint_value=pprint_value)
     if references.hosts:
-        _delete_hosts(references.hosts, pprint_value=pprint_value)
+        _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug)
     if references.passwords:
         _delete_passwords(
             references.passwords,
@@ -392,7 +397,7 @@ def delete_config_bundle_objects(
             use_git=use_git,
         )
     if references.dcd_connections:
-        _delete_dcd_connections(references.dcd_connections, pprint_value=pprint_value)
+        _delete_dcd_connections(references.dcd_connections, pprint_value=pprint_value, debug=debug)
 
 
 def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:
@@ -468,7 +473,7 @@ def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
         )
 
 
-def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool) -> None:
+def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
         ((host.folder(), host) for host in hosts),
@@ -481,6 +486,7 @@ def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool) -> None:
             automation=check_mk_automations.delete_hosts,
             allow_locked_deletion=True,
             pprint_value=pprint_value,
+            debug=debug,
         )
 
 
@@ -649,7 +655,7 @@ def _prepare_create_dcd_connections(
 
 
 def _delete_dcd_connections(
-    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]], *, pprint_value: bool
+    dcd_connections: Sequence[tuple[str, DCDConnectionSpec]], *, pprint_value: bool, debug: bool
 ) -> None:
     for dcd_connection_id, _spec in dcd_connections:
         DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
@@ -663,6 +669,7 @@ def _delete_dcd_connections(
             )
         ),
         pprint_value=pprint_value,
+        debug=debug,
     )
 
 

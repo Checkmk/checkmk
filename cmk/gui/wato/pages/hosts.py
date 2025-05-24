@@ -433,6 +433,7 @@ class ModeEditHost(ABCHostMode):
                 [self._host.name()],
                 automation=delete_hosts,
                 pprint_value=active_config.wato_pprint_config,
+                debug=active_config.debug,
             )
             return redirect(mode_url("folder", folder=folder.path()))
 

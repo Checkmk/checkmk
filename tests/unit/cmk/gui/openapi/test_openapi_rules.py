@@ -519,6 +519,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
         user_id=user.id,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")

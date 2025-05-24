@@ -80,6 +80,7 @@ def execute_host_removal_job() -> None:
                     hostnames,
                     automation=delete_hosts,
                     pprint_value=active_config.wato_pprint_config,
+                    debug=active_config.debug,
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")

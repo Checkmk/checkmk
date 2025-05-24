@@ -877,7 +877,10 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     host: Host = Host.load_host(params["host_name"])
     host.folder().delete_hosts(
-        [host.name()], automation=delete_hosts, pprint_value=active_config.wato_pprint_config
+        [host.name()],
+        automation=delete_hosts,
+        pprint_value=active_config.wato_pprint_config,
+        debug=active_config.debug,
     )
     return Response(status=204)
 
@@ -915,6 +918,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             list(hostnames_per_folder),
             automation=delete_hosts,
             pprint_value=active_config.wato_pprint_config,
+            debug=active_config.debug,
         )
 
     return Response(status=204)

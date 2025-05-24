@@ -2498,15 +2498,20 @@ class Folder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
         pprint_value: bool,
+        debug: bool,
         allow_locked_deletion: bool = False,
     ) -> None:
         # 1. Check preconditions and whether hosts can be deleted
         self.user_may_delete_hosts(host_names, allow_locked_deletion=allow_locked_deletion)
 
         # 2. Delete host specific files (caches, tempfiles, ...)
-        self._delete_host_files(host_names, automation=automation)
+        self._delete_host_files(
+            host_names,
+            automation=automation,
+            debug=debug,
+        )
 
         # 3. Actual modification
         assert self._hosts is not None
@@ -2586,12 +2591,14 @@ class Folder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
+        debug: bool,
     ) -> None:
         for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
             automation(
                 site_id,
                 site_host_names,
+                debug,
             )
 
     def get_hosts_by_site(
@@ -3039,14 +3046,18 @@ class SearchFolder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
         pprint_value: bool,
+        debug: bool,
     ) -> None:
         auth_errors = []
         for folder, these_host_names in self._group_hostnames_by_folder(host_names):
             try:
                 folder.delete_hosts(
-                    these_host_names, automation=automation, pprint_value=pprint_value
+                    these_host_names,
+                    automation=automation,
+                    pprint_value=pprint_value,
+                    debug=debug,
                 )
             except MKAuthException as e:
                 auth_errors.append(

@@ -60,6 +60,7 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -78,6 +79,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
     with pytest.raises(MKGeneralException, match="already exists"):
@@ -88,6 +90,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
             user_id=with_admin_login,
             pprint_value=False,
             use_git=False,
+            debug=False,
         )
 
 
@@ -101,12 +104,14 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     delete_config_bundle(
         bundle_id,
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
 
@@ -117,6 +122,7 @@ def test_delete_config_bundle_unknown_id() -> None:
             user_id=UserId("harry"),
             pprint_value=False,
             use_git=False,
+            debug=False,
         )
 
 
@@ -165,6 +171,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
     references = identify_single_bundle_references(bundle_id, bundle["group"])
@@ -178,6 +185,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.hosts is None
@@ -209,6 +217,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -221,6 +230,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
@@ -269,6 +279,7 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -281,6 +292,7 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
 

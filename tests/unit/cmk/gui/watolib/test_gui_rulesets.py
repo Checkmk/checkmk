@@ -589,6 +589,7 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
         user_id=user.id,
         pprint_value=False,
         use_git=False,
+        debug=False,
     )
 
     folder = folder_tree().root_folder()

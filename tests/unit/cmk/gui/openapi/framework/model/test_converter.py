@@ -311,8 +311,9 @@ class TestHostConverter:
             with SuperUserContext():
                 root_folder.delete_hosts(
                     [HostName(host_name)],
-                    automation=lambda _site, _hosts: DeleteHostsResult(),
+                    automation=lambda _site, _hosts, _debug: DeleteHostsResult(),
                     pprint_value=False,
+                    debug=False,
                 )
 
     @pytest.mark.parametrize("permission_type", _permission_types())

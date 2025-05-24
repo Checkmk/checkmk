@@ -267,6 +267,7 @@ class ModeEditConfigurationBundles(WatoMode):
             user_id=user.id,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
+            debug=active_config.debug,
         )
         add_change(
             action_name="delete-quick-setup",
@@ -793,6 +794,7 @@ class ModeConfigurationBundle(WatoMode):
                 user_id=user.id,
                 pprint_value=active_config.wato_pprint_config,
                 use_git=active_config.wato_use_git,
+                debug=active_config.debug,
             )
             return redirect(mode_url("changelog"))
 

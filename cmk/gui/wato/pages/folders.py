@@ -649,7 +649,10 @@ class ModeFolder(WatoMode):
 
         if delname and self._folder.has_host(delname):
             self._folder.delete_hosts(
-                [delname], automation=delete_hosts, pprint_value=active_config.wato_pprint_config
+                [delname],
+                automation=delete_hosts,
+                pprint_value=active_config.wato_pprint_config,
+                debug=active_config.debug,
             )
             return redirect(folder_url)
 
@@ -1265,7 +1268,10 @@ class ModeFolder(WatoMode):
 
     def _delete_hosts(self, host_names: Sequence[HostName]) -> ActionResult:
         self._folder.delete_hosts(
-            host_names, automation=delete_hosts, pprint_value=active_config.wato_pprint_config
+            host_names,
+            automation=delete_hosts,
+            pprint_value=active_config.wato_pprint_config,
+            debug=active_config.debug,
         )
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())

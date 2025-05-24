@@ -419,7 +419,10 @@ def with_host(
     root_folder.create_hosts([(hostname, {}, None) for hostname in hostnames], pprint_value=False)
     yield hostnames
     root_folder.delete_hosts(
-        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult(), pprint_value=False
+        hostnames,
+        automation=lambda *args, **kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
     )
 
 

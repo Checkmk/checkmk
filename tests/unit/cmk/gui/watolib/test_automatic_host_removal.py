@@ -127,7 +127,8 @@ def fixture_setup_rules() -> None:
     )
     (default_config_dir / "main.mk").touch()
     FolderRulesets({"automatic_host_removal": ruleset}, folder=root_folder).save_folder(
-        pprint_value=False
+        pprint_value=False,
+        debug=False,
     )
 
 

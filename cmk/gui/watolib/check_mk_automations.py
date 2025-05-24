@@ -446,27 +446,27 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: Sequence[HostName] | None = None) -> results.RestartResult:
+def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.RestartResult:
     return _deserialize(
         _automation_serialized(
             "restart",
             args=hosts_to_update,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.RestartResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
-def reload(hosts_to_update: Sequence[HostName] | None = None) -> results.ReloadResult:
+def reload(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized(
             "reload",
             args=hosts_to_update,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.ReloadResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -489,14 +489,14 @@ def get_configuration(
     )
 
 
-def update_merged_password_file() -> results.UpdatePasswordsMergedFileResult:
+def update_merged_password_file(*, debug: bool) -> results.UpdatePasswordsMergedFileResult:
     return _deserialize(
         _automation_serialized(
             "update-passwords-merged-file",
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.UpdatePasswordsMergedFileResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
@@ -517,20 +517,20 @@ def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Map
     return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
-def get_section_information() -> results.GetSectionInformationResult:
+def get_section_information(*, debug: bool) -> results.GetSectionInformationResult:
     return _deserialize(
         _automation_serialized(
             "get-section-information",
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetSectionInformationResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 
 @request_memoize()
-def get_section_information_cached() -> Mapping[str, Mapping[str, str]]:
-    return get_section_information().section_infos
+def get_section_information_cached(*, debug: bool) -> Mapping[str, Mapping[str, str]]:
+    return get_section_information(debug=debug).section_infos
 
 
 def scan_parents(

@@ -117,7 +117,7 @@ class ConfigDomainCore(ABCConfigDomain):
         from cmk.gui.watolib.check_mk_automations import reload, restart
 
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
-            self._parse_settings(settings).hosts_to_update
+            self._parse_settings(settings).hosts_to_update, debug=active_config.debug
         ).config_warnings
 
     def _parse_settings(

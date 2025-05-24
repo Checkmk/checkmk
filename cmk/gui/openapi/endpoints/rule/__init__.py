@@ -173,7 +173,7 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
     dest_folder.permissions.need_permission("write")
     source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
     source_entry.folder = dest_folder
-    all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+    all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
     affected_sites = source_entry.folder.all_site_ids()
 
     if dest_folder != source_entry.folder:
@@ -230,7 +230,7 @@ def create_rule(param):
     )
 
     index = ruleset.append_rule(folder, rule)
-    rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+    rulesets.save_folder(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
     ruleset.add_new_rule_change(index, folder, rule)
     rule_entry = _get_rule_by_id(rule.id)
     return serve_json(_serialize_rule(rule_entry))
@@ -352,7 +352,9 @@ def delete_rule(param):
                         detail="Rules managed by Quick setup cannot be deleted.",
                     )
                 ruleset.delete_rule(rule)
-                all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+                all_rulesets.save(
+                    pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+                )
                 return http.Response(status=204)
 
     return problem(
@@ -414,7 +416,9 @@ def edit_rule(param):
         )
 
     ruleset.edit_rule(current_rule, new_rule)
-    rulesets.save_folder(folder, pprint_value=active_config.wato_pprint_config)
+    rulesets.save_folder(
+        folder, pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+    )
 
     new_rule_entry = _get_rule_by_id(param["rule_id"])
     return serve_json(_serialize_rule(new_rule_entry))

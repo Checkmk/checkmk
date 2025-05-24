@@ -191,7 +191,7 @@ def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
         for transformed_rulename, transformed_rule in rulesets.get_rulesets().items():
             all_rulesets.set(transformed_rulename, transformed_rule)
 
-        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
 def migrate_extension_rulesets(args: argparse.Namespace) -> int:

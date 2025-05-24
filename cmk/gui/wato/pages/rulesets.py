@@ -1161,7 +1161,9 @@ class ModeEditRuleset(WatoMode):
                     msg_type="warning",
                 )
 
-        rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        rulesets.save_folder(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
         return redirect(back_url)
 
     def page(self) -> None:
@@ -2161,7 +2163,9 @@ class ABCEditRuleMode(WatoMode):
             self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+            self._rulesets.save_folder(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
@@ -2253,7 +2257,9 @@ class ABCEditRuleMode(WatoMode):
 
     def _remove_from_orig_folder(self) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False)
-        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        self._rulesets.save_folder(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
 
     def _success_message(self) -> str:
         return _('Edited rule in ruleset "%s" in folder "%s"') % (
@@ -3158,7 +3164,9 @@ class ModeEditRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        self._rulesets.save_folder(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
 
 
 class ModeCloneRule(ABCEditRuleMode):
@@ -3175,7 +3183,9 @@ class ModeCloneRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule)
-        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        self._rulesets.save_folder(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
 
     def _remove_from_orig_folder(self) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
@@ -3261,7 +3271,9 @@ class ModeNewRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
-        self._rulesets.save_folder(pprint_value=active_config.wato_pprint_config)
+        self._rulesets.save_folder(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
         self._ruleset.add_new_rule_change(index, self._folder, self._rule)
 
     def _success_message(self) -> str:
@@ -3624,7 +3636,9 @@ class ModeUnknownRulesets(WatoMode):
         for folder, rulesets_and_rules in by_folder.items():
             for ruleset, rule in rulesets_and_rules:
                 self._delete_cp_rule(rulesets, ruleset, rule)
-            rulesets.save_folder(folder, pprint_value=active_config.wato_pprint_config)
+            rulesets.save_folder(
+                folder, pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
         do_save = False
         for folder_path, rulespecs_by_name in rulesets.get_unknown_rulesets().items():
@@ -3636,7 +3650,7 @@ class ModeUnknownRulesets(WatoMode):
                         do_reset = True
 
         if do_save:
-            rulesets.save(pprint_value=active_config.wato_pprint_config)
+            rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
         if do_reset:
             deprecations.reset_scheduling()
         return redirect(self.mode_url())
@@ -3652,7 +3666,11 @@ class ModeUnknownRulesets(WatoMode):
             for rule in rules:
                 if rule.id == selected_rule_id:
                     self._delete_cp_rule(rulesets, ruleset, rule)
-                    rulesets.save_folder(rule.folder, pprint_value=active_config.wato_pprint_config)
+                    rulesets.save_folder(
+                        rule.folder,
+                        pprint_value=active_config.wato_pprint_config,
+                        debug=active_config.debug,
+                    )
                     deprecations.reset_scheduling()
                     return redirect(self.mode_url())
 
@@ -3667,7 +3685,9 @@ class ModeUnknownRulesets(WatoMode):
                 for rulespec in rulespecs:
                     if rulespec["id"] == selected_rule_id:
                         rulesets.delete_unknown_rule(folder_path, ruleset_name, rulespec["id"])
-                        rulesets.save(pprint_value=active_config.wato_pprint_config)
+                        rulesets.save(
+                            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+                        )
                         deprecations.reset_scheduling()
                         return redirect(self.mode_url())
 

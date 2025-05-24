@@ -20,7 +20,9 @@ class MigrateAzureStorage(UpdateAction):
         )
         for error in migration:
             pass
-        migration.all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+        migration.all_rulesets.save(
+            pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+        )
 
 
 update_action_registry.register(

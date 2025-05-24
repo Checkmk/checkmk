@@ -5658,7 +5658,7 @@ ServiceDescriptionTranslationRulespec = HostRulespec(
 
 
 def get_snmp_section_names() -> list[tuple[str, str]]:
-    sections = get_section_information_cached()
+    sections = get_section_information_cached(debug=active_config.debug)
     section_choices = {(s["name"], s["name"]) for s in sections.values() if s["type"] == "snmp"}
     return sorted(section_choices)
 

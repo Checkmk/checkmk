@@ -178,7 +178,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         root_folder = folder_tree().root_folder()
         rulesets = FolderRulesets.load_folder_rulesets(root_folder)
         rulesets.replace_folder_config(root_folder, SHIPPED_RULES)
-        rulesets.save_folder(pprint_value=False)
+        rulesets.save_folder(pprint_value=False, debug=False)
 
         _create_default_notify_plugin()
         notification_rules = [get_default_notification_rule()]

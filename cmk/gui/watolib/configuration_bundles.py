@@ -230,6 +230,7 @@ def _validate_and_prepare_create_calls(
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
+    debug: bool,
 ) -> list[CreateFunction]:
     create_functions = []
     if entities.passwords:
@@ -249,7 +250,9 @@ def _validate_and_prepare_create_calls(
         )
     if entities.rules:
         create_functions.append(
-            _prepare_create_rules(bundle_ident, entities.rules, pprint_value=pprint_value)
+            _prepare_create_rules(
+                bundle_ident, entities.rules, pprint_value=pprint_value, debug=debug
+            )
         )
     if entities.dcd_connections:
         create_functions.append(
@@ -287,6 +290,7 @@ def create_config_bundle(
             user_id=user_id,
             pprint_value=pprint_value,
             use_git=use_git,
+            debug=debug,
         )
     except Exception as e:
         raise MKGeneralException(
@@ -386,7 +390,7 @@ def delete_config_bundle_objects(
 ) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
-        _delete_rules(references.rules, pprint_value=pprint_value)
+        _delete_rules(references.rules, pprint_value=pprint_value, debug=debug)
     if references.hosts:
         _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug)
     if references.passwords:
@@ -577,7 +581,7 @@ def _collect_rules(
 
 
 def _prepare_create_rules(
-    bundle_ident: GlobalIdent, rules: Iterable[CreateRule], *, pprint_value: bool
+    bundle_ident: GlobalIdent, rules: Iterable[CreateRule], *, pprint_value: bool, debug: bool
 ) -> CreateFunction:
     validated_data = []
     # sort by folder, then ruleset
@@ -608,12 +612,12 @@ def _prepare_create_rules(
                 index = rule.ruleset.append_rule(f, rule)
                 rule.ruleset.add_new_rule_change(index, f, rule)
 
-            rulesets.save_folder(pprint_value=pprint_value)
+            rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     return create
 
 
-def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool) -> None:
+def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
     for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
@@ -624,7 +628,7 @@ def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool) -> None:
             actual_rule = ruleset.get_rule_by_id(rule.id)
             rulesets.get(rule.ruleset.name).delete_rule(actual_rule)
 
-        rulesets.save_folder(pprint_value=pprint_value)
+        rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
 
 def _collect_dcd_connections(

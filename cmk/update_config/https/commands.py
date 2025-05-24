@@ -118,7 +118,9 @@ def migrate_main(search: SearchArgs, config: Config, write: bool) -> None:
         count = _new_migrated_rules(search, config, ruleset_v1, ruleset_v2)
         if write:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+            all_rulesets.save(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
             print_summary_write(count.conflicts, count.rules, count.skipped)
         else:
             print_summary_dryrun(count.conflicts, count.rules, count.skipped)
@@ -162,7 +164,9 @@ def finalize_main(search: SearchArgs) -> None:
         print_summary_finalize(rulecount_v1, rulecount_v2)
         if rulecount_v1 or rulecount_v2:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+            all_rulesets.save(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
 
 def delete_main(search: SearchArgs) -> None:
@@ -179,7 +183,9 @@ def delete_main(search: SearchArgs) -> None:
         print_summary_delete(count)
         if count:
             sys.stdout.write("Saving rule sets...\n")
-            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+            all_rulesets.save(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
 
 def activate_main(search: SearchArgs) -> None:
@@ -203,7 +209,9 @@ def activate_main(search: SearchArgs) -> None:
         print_summary_activated(count)
         if count:
             sys.stdout.write("Saving rulesets...\n")
-            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+            all_rulesets.save(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
 
 def deactivate_main(search: SearchArgs) -> None:
@@ -227,7 +235,9 @@ def deactivate_main(search: SearchArgs) -> None:
         print_summary_deactivated(count)
         if count:
             sys.stdout.write("Saving rulesets...\n")
-            all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+            all_rulesets.save(
+                pprint_value=active_config.wato_pprint_config, debug=active_config.debug
+            )
 
 
 @contextmanager

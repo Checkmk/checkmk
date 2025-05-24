@@ -522,16 +522,16 @@ class AllRulesets(RulesetCollection):
         self._load_rulesets_recursively(folder_tree().root_folder())
         return self
 
-    def save(self, *, pprint_value: bool) -> None:
+    def save(self, *, pprint_value: bool, debug: bool) -> None:
         """Save all rulesets of all folders recursively"""
         if self._save_rulesets_recursively(folder_tree().root_folder(), pprint_value=pprint_value):
-            update_merged_password_file()
+            update_merged_password_file(debug=debug)
 
-    def save_folder(self, folder: Folder, *, pprint_value: bool) -> None:
+    def save_folder(self, folder: Folder, *, pprint_value: bool, debug: bool) -> None:
         if self._save_folder(
             folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         ):
-            update_merged_password_file()
+            update_merged_password_file(debug=debug)
 
     def _save_rulesets_recursively(self, folder: Folder, *, pprint_value: bool) -> bool:
         needs_password_file_updating = False
@@ -626,11 +626,11 @@ class FolderRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
         return self
 
-    def save_folder(self, *, pprint_value: bool) -> None:
+    def save_folder(self, *, pprint_value: bool, debug: bool) -> None:
         if RulesetCollection._save_folder(
             self._folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         ):
-            update_merged_password_file()
+            update_merged_password_file(debug=debug)
 
 
 class Ruleset:
@@ -1609,7 +1609,7 @@ class EnabledDisabledServicesEditor:
         modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
 
         for folder in modified_folders:
-            rulesets.save_folder(folder, pprint_value=pprint_value)
+            rulesets.save_folder(folder, pprint_value=pprint_value, debug=debug)
 
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)

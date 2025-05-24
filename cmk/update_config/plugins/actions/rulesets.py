@@ -22,7 +22,7 @@ class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         all_rulesets = load_and_transform(logger)
         validate_rule_values(logger, all_rulesets)
-        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
 def validate_rule_values(

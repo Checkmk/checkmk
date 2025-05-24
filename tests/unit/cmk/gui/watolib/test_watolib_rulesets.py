@@ -133,8 +133,8 @@ def test_all_rulesets_save(
 
     if callback is not None:
         with pytest.raises(ZeroDivisionError):
-            allrulesets_with_rules_in_multiple_files.save(pprint_value=False)
+            allrulesets_with_rules_in_multiple_files.save(pprint_value=False, debug=False)
     else:
-        allrulesets_with_rules_in_multiple_files.save(pprint_value=False)
+        allrulesets_with_rules_in_multiple_files.save(pprint_value=False, debug=False)
 
     assert updated_password_file_automation.called

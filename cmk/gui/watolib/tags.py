@@ -164,6 +164,7 @@ def edit_tag_group(
     edited_group: TagGroup,
     allow_repair: bool,
     pprint_value: bool,
+    debug: bool,
 ) -> None:
     """Update attributes of a tag group & update the relevant positions which used the relevant tag group
 
@@ -186,7 +187,9 @@ def edit_tag_group(
     tag_config.update_tag_group(edited_group)
     tag_config.validate_config()
     operation = OperationReplaceGroupedTags(ident, tag_ids_to_remove, tag_ids_to_replace)
-    affected = change_host_tags(operation, TagCleanupMode.CHECK, pprint_value=pprint_value)
+    affected = change_host_tags(
+        operation, TagCleanupMode.CHECK, pprint_value=pprint_value, debug=debug
+    )
     if any(affected):
         if not allow_repair:
             raise RepairError("Permission missing")
@@ -194,6 +197,7 @@ def edit_tag_group(
             operation,
             TagCleanupMode("repair"),
             pprint_value=pprint_value,
+            debug=debug,
         )
     update_tag_config(tag_config, pprint_value)
 
@@ -303,12 +307,15 @@ def change_host_tags(
     mode: TagCleanupMode,
     *,
     pprint_value: bool,
+    debug: bool,
 ) -> tuple[list[Folder], list[Host], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation, mode, folder_tree().root_folder(), pprint_value=pprint_value
     )
 
-    affected_rulesets = _change_host_tags_in_rulesets(operation, mode, pprint_value=pprint_value)
+    affected_rulesets = _change_host_tags_in_rulesets(
+        operation, mode, pprint_value=pprint_value, debug=debug
+    )
     return affected_folder, affected_hosts, affected_rulesets
 
 
@@ -322,6 +329,7 @@ def _change_host_tags_in_rulesets(
     mode: TagCleanupMode,
     *,
     pprint_value: bool,
+    debug: bool,
 ) -> list[Ruleset]:
     affected_rulesets = set()
     all_rulesets = _get_all_rulesets()
@@ -330,7 +338,7 @@ def _change_host_tags_in_rulesets(
             affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
 
     if mode != TagCleanupMode.CHECK:
-        all_rulesets.save(pprint_value=pprint_value)
+        all_rulesets.save(pprint_value=pprint_value, debug=debug)
 
     return sorted(affected_rulesets, key=lambda x: x.title() or "")
 

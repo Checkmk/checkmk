@@ -119,7 +119,7 @@ def perform_rename_hosts(
             update_interface(_("Renaming host(s) in rule sets..."))
             this_host_actions.extend(
                 _rename_host_in_rulesets(
-                    oldname, newname, use_git=use_git, pprint_value=pprint_value
+                    oldname, newname, use_git=use_git, pprint_value=pprint_value, debug=debug
                 )
             )
 
@@ -227,7 +227,7 @@ def _rename_host_in_parents(
 
 
 def _rename_host_in_rulesets(
-    oldname: HostName, newname: HostName, *, use_git: bool, pprint_value: bool
+    oldname: HostName, newname: HostName, *, use_git: bool, pprint_value: bool, debug: bool
 ) -> list[str]:
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
@@ -261,7 +261,7 @@ def _rename_host_in_rulesets(
                 sites=folder.all_site_ids(),
                 use_git=use_git,
             )
-            rulesets.save_folder(pprint_value=pprint_value)
+            rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
         changed_rulesets.extend(changed_folder_rulesets)
 

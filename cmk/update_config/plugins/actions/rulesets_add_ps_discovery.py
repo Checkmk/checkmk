@@ -23,7 +23,7 @@ class UpdatePSDiscovery(UpdateAction):
         all_rulesets = AllRulesets.load_all_rulesets()
         add_ps_discovery_rules(logger, all_rulesets)
         overwrite_ps_discovery_rules(logger, all_rulesets)
-        all_rulesets.save(pprint_value=active_config.wato_pprint_config)
+        all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
 def add_ps_discovery_rules(

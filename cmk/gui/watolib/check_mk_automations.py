@@ -534,19 +534,30 @@ def get_section_information_cached() -> Mapping[str, Mapping[str, str]]:
 
 
 def scan_parents(
+    *,
     site_id: SiteId,
     host_name: HostName,
-    *params: str,
+    timeout: int,
+    probes: int,
+    max_ttl: int,
+    ping_probes: int,
+    debug: bool,
 ) -> results.ScanParentsResult:
     return _deserialize(
         _automation_serialized(
             "scan-parents",
             siteid=site_id,
-            args=[*params, host_name],
-            debug=active_config.debug,
+            args=[
+                str(timeout),
+                str(probes),
+                str(max_ttl),
+                str(ping_probes),
+                host_name,
+            ],
+            debug=debug,
         ),
         results.ScanParentsResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

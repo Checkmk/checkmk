@@ -135,7 +135,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             self._process_parent_scan_results(
                 task,
                 settings,
-                self._execute_parent_scan(task, settings),
+                self._execute_parent_scan(task, settings, debug=debug),
                 pprint_value=pprint_value,
                 debug=debug,
             )
@@ -152,20 +152,16 @@ class ParentScanBackgroundJob(BackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(
-        self, task: ParentScanTask, settings: ParentScanSettings
+        self, task: ParentScanTask, settings: ParentScanSettings, *, debug: bool
     ) -> Sequence[GatewayResult]:
         return scan_parents(
-            task.site_id,
-            task.host_name,
-            *map(
-                str,
-                [
-                    settings.timeout,
-                    settings.probes,
-                    settings.max_ttl,
-                    settings.ping_probes,
-                ],
-            ),
+            site_id=task.site_id,
+            host_name=task.host_name,
+            timeout=settings.timeout,
+            probes=settings.probes,
+            max_ttl=settings.max_ttl,
+            ping_probes=settings.ping_probes,
+            debug=debug,
         ).results
 
     def _process_parent_scan_results(

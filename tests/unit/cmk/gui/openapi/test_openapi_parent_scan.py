@@ -41,9 +41,25 @@ def test_openapi_parent_scan_background(
 
     automation.assert_has_calls(
         [
-            call("NO_SITE", "foobar", "8", "2", "10", "5"),
+            call(
+                site_id="NO_SITE",
+                host_name="foobar",
+                timeout=8,
+                probes=2,
+                max_ttl=10,
+                ping_probes=5,
+                debug=False,
+            ),
             call().results.__iter__(),
-            call("NO_SITE", "sample", "8", "2", "10", "5"),
+            call(
+                site_id="NO_SITE",
+                host_name="sample",
+                timeout=8,
+                probes=2,
+                max_ttl=10,
+                ping_probes=5,
+                debug=False,
+            ),
             call().results.__iter__(),
         ]
     )

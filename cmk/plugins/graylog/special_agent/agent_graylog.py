@@ -46,9 +46,7 @@ def main(argv=None):
     since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))
 
     # Add new queries here
-    sections = [
-        GraylogSection(name="sources", uri="/sources"),
-    ]
+    sections: list[GraylogSection] = []
 
     handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
     handle_section(args, "cluster_health", "/system/indexer/cluster/health", section_cluster_health)
@@ -70,12 +68,13 @@ def main(argv=None):
     handle_section(args, "messages", "/system/indexer/overview", section_messages)
     handle_section(args, "nodes", "/cluster", section_nodes)
     handle_section(args, "sidecars", "/sidecars/all", section_sidecars)
+    handle_section(args, "sources", "/sources", section_sources)
     handle_section(args, "streams", "/streams", section_streams)
     handle_section(args, "events", "/events/search", section_events)
 
     try:
         handle_request(args, sections)
-    except Exception:
+    except requests.exceptions.RequestException:
         if args.debug:
             raise
 
@@ -94,7 +93,7 @@ def handle_section(
         section_output = handle_function(args, section_uri)
         if section_output:
             handle_output(section_output, section_name, args)
-    except Exception:
+    except requests.exceptions.RequestException:
         if args.debug:
             raise
 
@@ -227,6 +226,31 @@ def section_sidecars(args: argparse.Namespace, uri: str) -> list[dict[str, Any]]
     return sidecar_list
 
 
+def section_sources(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    sources_response = handle_response(_get_section_url(args, uri), args).json()
+    sources_in_range = {}
+    source_since_argument = args.source_since
+    if source_since_argument:
+        url_sources_in_range = f"{_get_section_url(args, uri)}?range={str(source_since_argument)}"
+        sources_in_range = handle_response(url_sources_in_range, args).json().get("sources", {})
+
+    results = {}
+    for source, messages in sources_response.get("sources", {}).items():
+        source_section = {
+            "messages": messages,
+            "has_since_argument": bool(source_since_argument),
+            "source_since": source_since_argument if source_since_argument else None,
+        }
+        if source in sources_in_range and sources_in_range[source] is not None:
+            source_section["messages_since"] = sources_in_range[source]
+        if args.display_source_details == "source":
+            handle_piggyback({"sources": {source: source_section}}, args, source, "sources")
+        else:
+            results[source] = source_section
+
+    return {"sources": results} if args.display_source_details == "host" else []
+
+
 def section_streams(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
     return handle_response(_get_section_url(args, uri), args).json()
 
@@ -281,44 +305,6 @@ def handle_request(args, sections):
         # If sections require special or additional handling, this will
         # be done afterwards.
         value = handle_response(url, args).json()
-
-        if section.name == "sources":
-            sources_in_range = {}
-            source_since_argument = args.source_since
-
-            if source_since_argument:
-                url_sources_in_range = f"{url_base}/sources?range={str(source_since_argument)}"
-                sources_in_range = (
-                    handle_response(url_sources_in_range, args).json().get("sources", {})
-                )
-
-            if (sources := value.get("sources")) is None:
-                continue
-
-            value = {"sources": {}}
-            for source, messages in sources.items():
-                value["sources"].setdefault(
-                    source,
-                    {
-                        "messages": messages,
-                        "has_since_argument": bool(source_since_argument),
-                        "source_since": source_since_argument if source_since_argument else None,
-                    },
-                )
-
-                if source in sources_in_range:
-                    value["sources"][source].update(
-                        {
-                            "messages_since": sources_in_range[source],
-                        }
-                    )
-
-                if args.display_source_details == "source":
-                    handle_piggyback(value, args, source, section.name)
-                    value = {"sources": {}}
-
-            if args.display_source_details == "host":
-                handle_output([value], section.name, args)
 
         if section.name not in ["nodes", "sidecars", "sources", "alerts", "events"]:
             handle_output(value, section.name, args)

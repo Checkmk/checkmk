@@ -30,7 +30,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '793'
+      - '1018'
     status:
       code: 200
       message: OK
@@ -64,7 +64,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1188'
+      - '1292'
     status:
       code: 404
       message: Not Found
@@ -82,82 +82,10 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/cluster/health
-  response:
-    body:
-      string: '{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}}'
-    headers:
-      Content-Length:
-      - '88'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1278'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '6365'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
     uri: http://127.0.0.1:9000/api/system/cluster/stats
   response:
     body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":0,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-26T09:23:40.506Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
+      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-26T09:23:40.506Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
         version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
         (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
         #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"1155.080","cpu_features":"fpu
@@ -172,14 +100,12 @@ interactions:
         intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
         avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
         hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054739,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":7886,"uptime_millis":7886092,"uptime_estimate":7886,"local_time":"2025-05-26T11:34:54.406Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":32907686,"bytes_out":69124205,"num_requests":103538},"memory":{"bits":64,"resident":124,"virtual":1506,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":284,"avg_obj_size":498.84154929577466,"data_size":141671,"storage_size":688128,"num_extents":null,"indexes":94,"index_size":1359872,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
+        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054739,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":11936,"uptime_millis":11935695,"uptime_estimate":11935,"local_time":"2025-05-26T12:42:24.009Z","connections":{"current":8,"available":838852,"total_created":11},"network":{"bytes_in":49902890,"bytes_out":104932370,"num_requests":157196},"memory":{"bits":64,"resident":127,"virtual":1509,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":285,"avg_obj_size":497.8456140350877,"data_size":141886,"storage_size":688128,"num_extents":null,"indexes":94,"index_size":1359872,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
     headers:
       Content-Encoding:
       - gzip
       Content-Type:
       - application/json
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -187,7 +113,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '22982'
+      - '13625'
     status:
       code: 200
       message: OK
@@ -208,10 +134,10 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
   response:
     body:
-      string: '{"from":"2025-05-25T00:00:00.000Z","to":"2025-05-26T11:34:54.429Z","input":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0},"output":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0},"decoded":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0}}'
+      string: '{"from":"2025-05-25T00:00:00.000Z","to":"2025-05-26T12:42:24.025Z","input":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0,"2025-05-26T12:00:00.000Z":0},"output":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0,"2025-05-26T12:00:00.000Z":0},"decoded":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0,"2025-05-26T12:00:00.000Z":0}}'
     headers:
       Content-Length:
-      - '361'
+      - '448'
       Content-Type:
       - application/json
       X-Content-Type-Options:
@@ -253,7 +179,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2159'
+      - '1358'
     status:
       code: 200
       message: OK
@@ -287,7 +213,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2504'
+      - '1896'
     status:
       code: 200
       message: OK
@@ -308,14 +234,12 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
   response:
     body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":147000480},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.017817816760979998},"name":"usage","type":"gauge"}]}'
+      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":170099488},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.020617630012640203},"name":"usage","type":"gauge"}]}'
     headers:
       Content-Encoding:
       - gzip
       Content-Type:
       - application/json
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -323,7 +247,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1638'
+      - '1668'
     status:
       code: 200
       message: OK
@@ -389,7 +313,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '16015'
+      - '15598'
     status:
       code: 200
       message: OK
@@ -424,7 +348,43 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '7957'
+      - '7549'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/cluster/inputstates
+  response:
+    body:
+      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '9022'
     status:
       code: 200
       message: OK
@@ -458,45 +418,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '5561'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '5819'
+      - '7510'
     status:
       code: 200
       message: OK
@@ -530,12 +452,15 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '983'
+      - '1696'
     status:
       code: 200
       message: OK
 - request:
-    body: null
+    body: '{"queries": [{"query": {"type": "elasticsearch", "query_string": "*"},
+      "timerange": {"type": "relative", "range": null}, "search_types": [{"type":
+      "pivot", "rollup": true, "row_groups": [{"type": "values", "field": "source"}],
+      "series": [{"type": "count"}], "name": "source_aggregation"}]}]}'
     headers:
       Accept:
       - '*/*'
@@ -545,18 +470,26 @@ interactions:
       - Basic YWRtaW46cGFzc3dvcmQ=
       Connection:
       - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/sources
-  response:
-    body:
-      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
-    headers:
       Content-Length:
-      - '50'
+      - '291'
       Content-Type:
       - application/json
+      User-Agent:
+      - python-requests/2.32.3
+      X-Requested-By:
+      - admin
+    method: POST
+    uri: http://127.0.0.1:9000/api/views/search/sync
+  response:
+    body:
+      string: '{"execution":{"done":true,"cancelled":false,"completed_exceptionally":false},"results":{"e5ff4e91-3927-41e6-a81f-a7156f9a4867":{"query":{"id":"e5ff4e91-3927-41e6-a81f-a7156f9a4867","timerange":{"range":0,"type":"relative"},"filter":{"type":"or","filters":[{"type":"stream","id":"000000000000000000000001"}]},"filters":[],"query":{"type":"elasticsearch","query_string":"*"},"search_types":[{"timerange":null,"query":null,"streams":[],"id":"6ba82745-b6e4-4f97-9bcc-8ab5df80a7a1","name":"source_aggregation","series":[{"type":"count","id":"count()","field":null}],"sort":[],"rollup":true,"type":"pivot","row_groups":[{"type":"values","fields":["source"],"limit":15}],"column_groups":[],"filter":null,"filters":[]}]},"execution_stats":{"duration":12,"timestamp":"2025-05-26T12:42:24.175Z","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}},"search_types":{"6ba82745-b6e4-4f97-9bcc-8ab5df80a7a1":{"name":"source_aggregation","id":"6ba82745-b6e4-4f97-9bcc-8ab5df80a7a1","rows":[{"key":["172.20.0.1"],"values":[{"key":["count()"],"value":8,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":["foobar"],"values":[{"key":["count()"],"value":7,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":[],"values":[{"key":["count()"],"value":15,"rollup":true,"source":"row-inner"}],"source":"non-leaf"}],"total":15,"type":"pivot","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}}},"errors":[],"state":"COMPLETED"}},"id":"683461b0b1bef859ce1ea30b","owner":"admin","search_id":"683461b0b1bef859ce1ea30a"}'
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -564,8 +497,8 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
     status:
-      code: 404
-      message: Not Found
+      code: 200
+      message: OK
 - request:
     body: null
     headers:
@@ -595,8 +528,6 @@ interactions:
       - gzip
       Content-Type:
       - application/json
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -604,12 +535,12 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2860'
+      - '7468'
     status:
       code: 200
       message: OK
 - request:
-    body: '{"timerange": {"type": "relative", "range": 86400}}'
+    body: null
     headers:
       Accept:
       - '*/*'
@@ -620,7 +551,7 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '51'
+      - '0'
       Content-Type:
       - application/json
       User-Agent:
@@ -631,10 +562,10 @@ interactions:
     uri: http://127.0.0.1:9000/api/events/search
   response:
     body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":86400,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":2,"context":{"event_definitions":{},"streams":{}}}'
+      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":3600,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":2,"context":{"event_definitions":{},"streams":{}}}'
     headers:
       Content-Length:
-      - '337'
+      - '336'
       Content-Type:
       - application/json
       X-Content-Type-Options:
@@ -643,6 +574,58 @@ interactions:
       - DENY
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/sources
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html>\n  <head>\n    <meta http-equiv=\"X-UA-Compatible\"
+        content=\"IE=edge\">\n    <meta name=\"robots\" content=\"noindex, nofollow\">\n
+        \   <meta charset=\"UTF-8\">\n    <title>Graylog Web Interface</title>\n    <link
+        rel=\"shortcut icon\" href=\"/assets/favicon.png\">\n    \n  </head>\n  <body>\n
+        \   <div id=\"app-root\" />\n    <script nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\"
+        src=\"/config.js\"></script>\n    \n    <script nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\"
+        src=\"/assets/vendor.437b8293e0632fce4768.js\"></script>\n    \n    <script
+        nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\" src=\"/assets/polyfill.8a022b3a621fe5fa58fe.js\"></script>\n
+        \   \n    <script nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\" src=\"/assets/app.6d3661743d5c3955808e.js\"></script>\n
+        \   \n    <script nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\" src=\"/assets/1a491898-4521.8e33dad55963d91dc773.js\"></script>\n
+        \   \n    <script nonce=\"1886b144-b69d-4964-8f2a-1899a53880c4\" src=\"/assets/1a491898-1952.b2564caf9d259d6498dc.js\"></script>\n
+        \   \n  </body>\n</html>\n"
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Security-Policy:
+      - 'connect-src ''self'' https://graylog.org/post/tag/ https://telemetry.graylog.cloud;default-src
+        ''self'';img-src ''self'' data: https://*.tile.openstreetmap.org https://graylog.org;script-src
+        ''nonce-1886b144-b69d-4964-8f2a-1899a53880c4'' ''strict-dynamic'' ''unsafe-eval'';style-src
+        ''self'' ''unsafe-inline'''
+      Content-Type:
+      - text/html
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 1a7db528-5c1e-4212-a4fa-447f3ffdd3e9
+      X-UA-Compatible:
+      - IE=edge
     status:
       code: 200
       message: OK

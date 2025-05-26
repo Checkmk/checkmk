@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="sidecars", uri="/sidecars/all"),
         GraylogSection(name="sources", uri="/sources"),
         GraylogSection(name="streams", uri="/streams"),
         GraylogSection(name="events", uri="/events/search"),
@@ -72,6 +71,7 @@ def main(argv=None):
     )
     handle_section(args, "messages", "/system/indexer/overview", section_messages)
     handle_section(args, "nodes", "/cluster", section_nodes)
+    handle_section(args, "sidecars", "/sidecars/all", section_sidecars)
 
     try:
         handle_request(args, sections)
@@ -92,7 +92,8 @@ def handle_section(
         return
     try:
         section_output = handle_function(args, section_uri)
-        handle_output(section_output, section_name, args)
+        if section_output:
+            handle_output(section_output, section_name, args)
     except Exception:
         if args.debug:
             raise
@@ -214,6 +215,18 @@ def section_nodes(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | 
     return node_list
 
 
+def section_sidecars(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = handle_response(_get_section_url(args, uri), args).json()
+    sidecar_list = []
+    if sidecars := value.get("sidecars"):
+        for sidecar in sidecars:
+            if args.display_sidecar_details == "sidecar":
+                handle_piggyback(sidecar, args, sidecar["node_name"], "sidecars")
+                continue
+            sidecar_list.append(sidecar)
+    return sidecar_list
+
+
 def _get_base_url(args: argparse.Namespace) -> str:
     return f"{args.proto}://{args.hostname}:{args.port}/api"
 
@@ -238,19 +251,6 @@ def handle_request(args, sections):
             value = handle_response(url, args, "POST").json()
         else:
             value = handle_response(url, args).json()
-
-        if section.name == "sidecars":
-            sidecars = value.get("sidecars")
-            if sidecars is not None:
-                sidecar_list = []
-                for sidecar in sidecars:
-                    if args.display_sidecar_details == "sidecar":
-                        handle_piggyback(sidecar, args, sidecar["node_name"], section.name)
-                        continue
-                    sidecar_list.append(sidecar)
-
-                if sidecar_list:
-                    handle_output(sidecar_list, section.name, args)
 
         if section.name == "events":
             num_of_events = value.get("total_events", 0)

@@ -122,9 +122,9 @@ _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
 #   '----------------------------------------------------------------------'
 
 # Default settings
-notification_logdir = cmk.utils.paths.var_dir + "/notify"
-notification_spooldir = cmk.utils.paths.var_dir + "/notify/spool"
-notification_bulkdir = cmk.utils.paths.var_dir + "/notify/bulk"
+notification_logdir = str(cmk.utils.paths.var_dir / "notify")
+notification_spooldir = str(cmk.utils.paths.var_dir / "notify/spool")
+notification_bulkdir = str(cmk.utils.paths.var_dir / "notify/bulk")
 notification_log = str(cmk.utils.paths.log_dir / "notify.log")
 
 notification_log_template = (
@@ -374,7 +374,7 @@ def do_notify(
             )
 
     except Exception:
-        crash_dir = Path(cmk.utils.paths.var_dir) / "notify"
+        crash_dir = cmk.utils.paths.var_dir / "notify"
         if not crash_dir.exists():
             crash_dir.mkdir(parents=True)
         with (crash_dir / "crash.log").open(mode="a") as crash_file:

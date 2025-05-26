@@ -916,7 +916,7 @@ class LastKnownCentralSiteVersion(BaseModel):
 
 class LastKnownCentralSiteVersionStore:
     def __init__(self) -> None:
-        self._io: Final = RealIo(Path(paths.var_dir) / "last_known_site_version.json")
+        self._io: Final = RealIo(paths.var_dir / "last_known_site_version.json")
 
     @contextmanager
     def locked(self) -> Iterator[None]:

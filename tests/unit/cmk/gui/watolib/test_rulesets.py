@@ -6,7 +6,6 @@
 import sys
 from collections.abc import Sequence
 from io import StringIO
-from pathlib import Path
 
 import pytest
 
@@ -59,7 +58,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 def test_analyse_host_ruleset() -> None:
     ruleset = _test_host_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
-    (Path(default_config_dir) / "main.mk").touch()
+    (default_config_dir / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
     result = ruleset.analyse_ruleset(HostName("ding"), None, None, {}, debug=False)
@@ -180,7 +179,7 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
 def test_analyse_service_ruleset() -> None:
     ruleset = _test_service_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
-    (Path(default_config_dir) / "main.mk").touch()
+    (default_config_dir / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(pprint_value=False)
 
     result = ruleset.analyse_ruleset(HostName("ding"), "Ding", "Ding", {}, debug=False)

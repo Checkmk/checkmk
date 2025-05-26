@@ -176,10 +176,10 @@ def load_config() -> None:
         _load_config_file_to(str(experimental_config), raw_config)
 
     # First load main file
-    _load_config_file_to(cmk.utils.paths.default_config_dir + "/multisite.mk", raw_config)
+    _load_config_file_to(str(cmk.utils.paths.default_config_dir / "multisite.mk"), raw_config)
 
     # Load also recursively all files below multisite.d
-    conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
+    conf_dir = cmk.utils.paths.default_config_dir / "multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
         for root, _directories, files in os.walk(conf_dir):

@@ -451,7 +451,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
     if is_wato_slave_site():
         return
 
-    marker_file_store = _MarkerFileStore(Path(paths.var_dir) / "deprecations")
+    marker_file_store = _MarkerFileStore(paths.var_dir / "deprecations")
 
     site_versions_by_site_id = {
         site_id: site_version

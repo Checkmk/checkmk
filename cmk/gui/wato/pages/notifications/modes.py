@@ -1365,7 +1365,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
     def _show_notification_backlog(self) -> None:
         """Show recent notifications. We can use them for rule analysis"""
         backlog = store.load_object_from_file(
-            cmk.utils.paths.var_dir + "/notify/backlog.mk",
+            cmk.utils.paths.var_dir / "notify/backlog.mk",
             default=[],
         )
         if not backlog:

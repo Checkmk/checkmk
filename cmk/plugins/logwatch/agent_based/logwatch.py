@@ -15,12 +15,12 @@
 
 import fnmatch
 import hashlib
-import pathlib
 import re
 import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from re import Match
 from typing import IO, Literal, TypedDict
 
@@ -386,7 +386,7 @@ check_plugin_logwatch_groups = CheckPlugin(
 
 
 # truncate a file near the specified offset while keeping lines intact
-def truncate_by_line(file_path: pathlib.Path, offset: int) -> None:
+def truncate_by_line(file_path: Path, offset: int) -> None:
     with file_path.open("r+") as handle:
         handle.seek(offset)
         handle.readline()  # ensures we don't cut inside a line
@@ -481,8 +481,8 @@ class LogwatchBlockCollector:
         return "%s messages" % ", ".join(count_txt)
 
 
-def _logmsg_file_path(item: str, host_name: str) -> pathlib.Path:
-    logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, "logwatch", host_name)
+def _logmsg_file_path(item: str, host_name: str) -> Path:
+    logmsg_dir = cmk.utils.paths.var_dir / "logwatch" / host_name
     logmsg_dir.mkdir(parents=True, exist_ok=True)
     return logmsg_dir / item.replace("/", "\\")
 
@@ -594,7 +594,7 @@ def _patterns_changed(file_handle: IO[str], current_pattern: str) -> bool:
 
 
 def _truncate_way_too_large_result(
-    file_path: pathlib.Path,
+    file_path: Path,
     max_filesize: int,
 ) -> bool:
     logfile_size = file_path.stat().st_size

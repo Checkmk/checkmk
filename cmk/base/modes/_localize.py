@@ -37,7 +37,7 @@ def _locale_base() -> Path:
 def _pot_file() -> Path:
     if (local_pot_file := cmk.utils.paths.local_locale_dir / "multisite.pot").exists():
         return local_pot_file
-    return _locale_base() / "/multisite.pot"
+    return _locale_base() / "multisite.pot"
 
 
 def _builtin_po_file(lang: str) -> Path:
@@ -185,7 +185,7 @@ def _localize_sniff() -> None:
     logger.info("Sniffing source code...")
 
     paths = [
-        cmk.utils.paths.default_config_dir,
+        str(cmk.utils.paths.default_config_dir),
         str(cmk.utils.paths.web_dir / "app"),
         str(cmk.utils.paths.lib_dir / "python/cmk"),
     ]

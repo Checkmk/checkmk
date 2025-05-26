@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
 
-from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
+import cmk.utils.paths
 
-import cmk
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 LIVESTATUS_GENERIC_EXPLANATION = (
     "The REST API exclusively manages the preparation and dispatch of commands to Livestatus. "
@@ -18,4 +18,4 @@ LIVESTATUS_GENERIC_EXPLANATION = (
 
 
 def spec_path(target: EndpointTarget) -> Path:
-    return Path(cmk.utils.paths.var_dir) / "rest_api" / "spec" / f"{target}.spec"
+    return cmk.utils.paths.var_dir / "rest_api" / "spec" / f"{target}.spec"

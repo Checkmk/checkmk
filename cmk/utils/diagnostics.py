@@ -233,7 +233,7 @@ def deserialize_modes_parameters(
 
 def get_checkmk_config_files_map() -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(cmk.utils.paths.default_config_dir):
+    for root, _dirs, files in os.walk(str(cmk.utils.paths.default_config_dir)):
         for file_name in files:
             if file_name == "ca-certificates.mk":
                 continue
@@ -246,7 +246,7 @@ def get_checkmk_config_files_map() -> CheckmkFilesMap:
 
 def get_checkmk_core_files_map() -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(f"{cmk.utils.paths.var_dir}/core"):
+    for root, _dirs, files in os.walk(str(cmk.utils.paths.var_dir / "core")):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             if filepath.stem in ("state", "history", "config"):
@@ -257,7 +257,7 @@ def get_checkmk_core_files_map() -> CheckmkFilesMap:
 
 def get_checkmk_licensing_files_map() -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(f"{cmk.utils.paths.var_dir}/licensing"):
+    for root, _dirs, files in os.walk(str(cmk.utils.paths.var_dir / "licensing")):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))

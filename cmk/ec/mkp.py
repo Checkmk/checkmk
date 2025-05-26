@@ -16,12 +16,12 @@ from .rule_packs import export_rule_pack, load_rule_packs, save_rule_packs
 
 def rule_pack_dir() -> Path:
     """Returns the default WATO directory of the Event Console."""
-    return Path(cmk.utils.paths.default_config_dir) / "mkeventd.d" / "wato"
+    return cmk.utils.paths.default_config_dir / "mkeventd.d/wato"
 
 
 def mkp_rule_pack_dir() -> Path:
     """Returns the default directory for rule pack exports of the Event Console."""
-    return Path(cmk.utils.paths.default_config_dir) / "mkeventd.d" / "mkp" / "rule_packs"
+    return cmk.utils.paths.default_config_dir / "mkeventd.d/mkp/rule_packs"
 
 
 def _install_packaged_rule_packs(file_names: Iterable[Path]) -> None:

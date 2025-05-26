@@ -48,6 +48,6 @@ def _load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
     settings, which should be enough for most cases.
     """
     settings = load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
+        cmk.utils.paths.default_config_dir / "multisite.d/wato/global.mk", default={}
     )
     return settings.get(varname, deflt)

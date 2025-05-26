@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from pathlib import Path
 from shutil import rmtree
 from typing import override
 
@@ -16,8 +15,8 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class RemoveLeftoversUserProfileCleanup(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        Path(var_dir, "wato", "last_user_profile_cleanup.mk").unlink(missing_ok=True)
-        rmtree(Path(var_dir, "background_jobs", "user_profile_cleanup"), ignore_errors=True)
+        (var_dir / "wato/last_user_profile_cleanup.mk").unlink(missing_ok=True)
+        rmtree(var_dir / "background_jobs/user_profile_cleanup", ignore_errors=True)
 
 
 update_action_registry.register(

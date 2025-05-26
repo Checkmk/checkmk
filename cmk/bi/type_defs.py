@@ -2,7 +2,6 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 
 import cmk.utils.paths
@@ -38,6 +37,6 @@ class AggrConfigDict(TypedDict):
     aggregation_visualization: Any
 
 
-frozen_aggregations_dir = Path(cmk.utils.paths.var_dir) / "frozen_aggregations"
+frozen_aggregations_dir = cmk.utils.paths.var_dir / "frozen_aggregations"
 
 HostState = int

@@ -1315,15 +1315,15 @@ class AutomationRenameHosts(Automation):
             actions.append("snmpwalk")
 
         # HW/SW Inventory
-        if self._rename_host_file(var_dir + "/inventory", oldname, newname):
-            self._rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
+        if self._rename_host_file(str(var_dir / "inventory"), oldname, newname):
+            self._rename_host_file(str(var_dir / "inventory"), oldname + ".gz", newname + ".gz")
             actions.append("inv")
 
-        if self._rename_host_dir(var_dir + "/inventory_archive", oldname, newname):
+        if self._rename_host_dir(str(var_dir / "inventory_archive"), oldname, newname):
             actions.append("invarch")
 
         # Baked agents
-        baked_agents_dir = var_dir + "/agents/"
+        baked_agents_dir = str(var_dir) + "/agents/"
         have_renamed_agent = False
         if os.path.exists(baked_agents_dir):
             for opsys in os.listdir(baked_agents_dir):
@@ -1333,7 +1333,7 @@ class AutomationRenameHosts(Automation):
             actions.append("agent")
 
         # Agent deployment
-        deployment_dir = var_dir + "/agent_deployment/"
+        deployment_dir = str(var_dir) + "/agent_deployment/"
         if self._rename_host_file(deployment_dir, oldname, newname):
             actions.append("agent_deployment")
 
@@ -1434,7 +1434,7 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            Path(var_dir, "core/renamed_hosts").write_text(f"{oldname}\n{newname}\n")
+            (var_dir / "core/renamed_hosts").write_text(f"{oldname}\n{newname}\n")
             actions.append("retention")
 
         # NagVis maps
@@ -2053,7 +2053,7 @@ class ABCDeleteHosts:
     def _delete_baked_agents(self, hostname: HostName) -> None:
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code
-        baked_agents_dir = var_dir + "/agents/"
+        baked_agents_dir = str(var_dir) + "/agents/"
         if os.path.exists(baked_agents_dir):
             for folder in os.listdir(baked_agents_dir):
                 self._delete_if_exists(f"{folder}/{hostname}")
@@ -2778,7 +2778,7 @@ class AutomationDiagHost(Automation):
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
@@ -3285,8 +3285,8 @@ class AutomationGetAgentOutput(Automation):
                 else config.lookup_ip_address(config_cache, hostname)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
-            walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
-            section_cache_path = Path(var_dir)
+            walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
+            section_cache_path = var_dir
             file_cache_path = cmk.utils.paths.data_source_cache_dir
             tcp_cache_path = cmk.utils.paths.tcp_cache_dir
             tls_config = TLSConfig(

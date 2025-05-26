@@ -794,7 +794,6 @@ def _load_config(with_conf_d: bool) -> set[str]:
         _load_config_file(experimental_config, global_dict)
 
     host_storage_loaders = get_host_storage_loaders(config_storage_format)
-    config_dir_path = Path(cmk.utils.paths.check_mk_config_dir)
     for path in get_config_file_paths(with_conf_d):
         try:
             # Make the config path available as a global variable to be used
@@ -804,7 +803,7 @@ def _load_config(with_conf_d: bool) -> set[str]:
             current_path: str | None = None
             folder_path: str | None = None
             with contextlib.suppress(ValueError):
-                relative_path = path.relative_to(config_dir_path)
+                relative_path = path.relative_to(cmk.utils.paths.check_mk_config_dir)
                 current_path = f"/{relative_path}"
                 folder_path = str(relative_path.parent)
             global_dict["FOLDER_PATH"] = folder_path
@@ -887,7 +886,7 @@ def _collect_parameter_rulesets_from_globals(
 def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     list_of_files = [cmk.utils.paths.main_config_file]
     if with_conf_d:
-        all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
+        all_files = cmk.utils.paths.check_mk_config_dir.rglob("*")
         list_of_files += sorted(
             [p for p in all_files if p.suffix in {".mk"}], key=cmk.utils.key_config_paths
         )
@@ -3129,7 +3128,7 @@ class ConfigCache:
                 fetcher_type=FetcherType.PIGGYBACK,
                 host_name=host_name,
                 ident="piggyback",
-                section_cache_path=Path(cmk.utils.paths.var_dir),
+                section_cache_path=cmk.utils.paths.var_dir,
             ).exists()
         )
 
@@ -4150,7 +4149,7 @@ class FetcherFactory:
                 host_name,
                 fetcher_type=FetcherType.SNMP,
                 ident="snmp",
-                section_cache_path=Path(cmk.utils.paths.var_dir),
+                section_cache_path=cmk.utils.paths.var_dir,
             ),
             snmp_config=snmp_config,
             stored_walk_path=fetcher_config.stored_walk_path,

@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import os
 import queue
 import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from pathlib import Path
 from typing import Any, cast, NamedTuple
 
 from livestatus import (
@@ -88,7 +86,7 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleCon
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),
+            config_file_path=cmk.utils.paths.default_config_dir / "multisite.d/sites.mk",
             config_variable="sites",
             spec_class=SiteConfigurations,
         )
@@ -757,11 +755,11 @@ def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
 
 
 def _delete_distributed_wato_file():
-    p = cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk"
+    p = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d
     # directory!
-    if os.path.exists(p):
+    if p.exists():
         store.save_text_to_file(p, "")
 
 

@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import os
-
 from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import omd_site, SiteId
@@ -48,10 +46,8 @@ def is_wato_slave_site() -> bool:
 
 
 def _has_distributed_wato_file() -> bool:
-    return (
-        os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk")
-        and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
-    )
+    path = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
+    return path.exists() and path.stat().st_size != 0
 
 
 def get_login_sites() -> list[SiteId]:

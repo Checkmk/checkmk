@@ -17,11 +17,11 @@ from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 @pytest.fixture(autouse=True)
 def patch_config_paths(monkeypatch, tmp_path):
     cmk_confd = tmp_path / "check_mk" / "conf.d"
-    monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", str(cmk_confd))
+    monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", cmk_confd)
     (cmk_confd / "wato").mkdir(parents=True)
 
     gui_confd = tmp_path / "check_mk" / "multisite.d"
-    monkeypatch.setattr(cmk.utils.paths, "default_config_dir", str(gui_confd.parent))
+    monkeypatch.setattr(cmk.utils.paths, "default_config_dir", gui_confd.parent)
     (gui_confd / "wato").mkdir(parents=True)
 
 
@@ -35,7 +35,7 @@ def test_load_group_information_empty() -> None:
 
 @pytest.mark.usefixtures("tmp_path")
 def test_load_group_information() -> None:
-    with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
+    with open(cmk.utils.paths.check_mk_config_dir / "wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8
 
@@ -45,7 +45,7 @@ define_contactgroups.update({'all': u'Everything'})
 """
         )
 
-    with open(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", "w") as f:
+    with open(cmk.utils.paths.default_config_dir / "multisite.d/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8
 

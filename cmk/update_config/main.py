@@ -18,7 +18,6 @@ import traceback
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from itertools import chain
-from pathlib import Path
 from typing import Literal
 
 from cmk.ccc import debug
@@ -114,7 +113,7 @@ def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal
 
 def _cleanup_precompiled_files(logger: logging.Logger) -> None:
     logger.info("Cleanup precompiled host and folder files")
-    for p in Path(check_mk_config_dir, "wato").glob("**/*.pkl"):
+    for p in (check_mk_config_dir / "wato").glob("**/*.pkl"):
         p.unlink(missing_ok=True)
 
 

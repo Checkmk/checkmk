@@ -145,7 +145,7 @@ def event_keepalive(
 
 def config_timestamp() -> float:
     mtime = 0.0
-    for dirpath, _unused_dirnames, filenames in os.walk(cmk.utils.paths.check_mk_config_dir):
+    for dirpath, _unused_dirnames, filenames in os.walk(str(cmk.utils.paths.check_mk_config_dir)):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 

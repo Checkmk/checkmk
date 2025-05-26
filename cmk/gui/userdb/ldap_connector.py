@@ -552,7 +552,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._group_search_cache: dict = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = Path(cmk.utils.paths.var_dir).joinpath(
+        self._sync_time_file = cmk.utils.paths.var_dir.joinpath(
             "web/ldap_%s_sync_time.mk" % self.id
         )
 

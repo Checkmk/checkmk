@@ -6,7 +6,6 @@
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Final
 
 from pytest import MonkeyPatch
 
@@ -20,15 +19,7 @@ _NON_STD_PREFIX: Mapping[str, str] = {
     "rrd_single_dir": "/opt%s",
 }
 
-_STR_PATHS: Final = {
-    "default_config_dir",
-    "check_mk_config_dir",
-    "modules_dir",
-    "var_dir",
-}
-
-
-_IGNORED_VARS = {"Path", "os", "sys", "Union"}
+_IGNORED_VARS = {"Path", "os", "cse_config_dir"}
 
 
 def _ignore(varname: str) -> bool:
@@ -38,14 +29,6 @@ def _ignore(varname: str) -> bool:
 def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
     for var, value in namespace_dict.items():
         if _ignore(var):
-            continue
-
-        if var in _STR_PATHS:
-            assert isinstance(value, str)
-            assert value.startswith(root)
-            continue
-
-        if var == "cse_config_dir":
             continue
 
         assert isinstance(value, Path)

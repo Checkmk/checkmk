@@ -334,7 +334,7 @@ class BIAggregationPacks:
 
     @classmethod
     def _num_enabled_aggregations_dir(cls) -> Path:
-        return Path(var_dir, "wato")
+        return var_dir / "wato"
 
     @classmethod
     def _num_enabled_aggregations_path(cls) -> Path:

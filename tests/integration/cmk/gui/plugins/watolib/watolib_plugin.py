@@ -28,7 +28,7 @@ class ConfigDomainTest(ABCConfigDomain):
 
     @override
     def config_dir(self) -> Path:
-        return Path(cmk.utils.paths.default_config_dir, "test.d/wato")
+        return cmk.utils.paths.default_config_dir / "test.d/wato"
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

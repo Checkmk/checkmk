@@ -74,7 +74,7 @@ def _run_scheduler(
 
 
 def _last_job_runs_file_path() -> Path:
-    return Path(paths.var_dir) / "last_job_runs.mk"
+    return paths.var_dir / "last_job_runs.mk"
 
 
 def _load_last_job_runs() -> dict[str, datetime.datetime]:

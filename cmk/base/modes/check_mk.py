@@ -632,8 +632,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         )
         check_interval = config_cache.check_mk_check_interval(hostname)
         stored_walk_path = cmk.utils.paths.snmpwalks_dir
-        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
-        section_cache_path = Path(cmk.utils.paths.var_dir)
+        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
+        section_cache_path = cmk.utils.paths.var_dir
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
@@ -1317,9 +1317,9 @@ def mode_flush(hosts: list[HostName]) -> None:
             print_(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
-        path = cmk.utils.paths.var_dir + "/inventory/" + host
-        if os.path.exists(path):
-            os.remove(path)
+        path = cmk.utils.paths.var_dir / "inventory" / host
+        if path.exists():
+            path.unlink()
             print_(tty.bold + tty.yellow + " inventory")
 
         if not flushed:

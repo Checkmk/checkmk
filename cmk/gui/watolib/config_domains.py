@@ -249,7 +249,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @override
     def config_dir(self) -> Path:
-        return Path(cmk.utils.paths.default_config_dir, "liveproxyd.d/wato")
+        return cmk.utils.paths.default_config_dir / "liveproxyd.d/wato"
 
     def save(self, settings, site_specific=False, custom_site_path=None):
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)

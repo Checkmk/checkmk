@@ -91,4 +91,4 @@ class BIFileSystem:
 
 
 def get_default_site_filesystem() -> BIFileSystem:
-    return BIFileSystem.build(tmp_dir, Path(var_dir), Path(default_config_dir))
+    return BIFileSystem.build(tmp_dir, var_dir, default_config_dir)

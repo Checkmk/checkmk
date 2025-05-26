@@ -24,11 +24,11 @@ NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
 
 
 def wato_root_dir() -> Path:
-    return Path(cmk.utils.paths.check_mk_config_dir, "wato")
+    return cmk.utils.paths.check_mk_config_dir / "wato"
 
 
 def multisite_dir() -> Path:
-    return Path(cmk.utils.paths.default_config_dir, "multisite.d/wato")
+    return cmk.utils.paths.default_config_dir / "multisite.d/wato"
 
 
 def mk_repr(x: Any) -> bytes:

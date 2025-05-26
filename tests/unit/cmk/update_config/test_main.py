@@ -48,7 +48,7 @@ def test_main_calls_config_updater(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
-    packages_dir = Path(cmk.utils.paths.var_dir, "packages")
+    packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
     mock_config_checker_call = mocker.patch.object(
@@ -81,7 +81,7 @@ def test_config_updater_executes_plugins(
     mocker: MockerFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    packages_dir = Path(cmk.utils.paths.var_dir, "packages")
+    packages_dir = cmk.utils.paths.var_dir / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
     reg = registry.UpdateActionRegistry()

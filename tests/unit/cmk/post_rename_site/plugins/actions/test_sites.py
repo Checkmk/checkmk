@@ -26,7 +26,7 @@ from cmk.post_rename_site.plugins.actions.sites import update_site_config
 
 @pytest.fixture(name="site_config_file")
 def fixture_site_config_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterable[Path]:
-    monkeypatch.setattr("cmk.utils.paths.default_config_dir", str(tmp_path))
+    monkeypatch.setattr("cmk.utils.paths.default_config_dir", tmp_path)
     sites_mk = tmp_path / "multisite.d" / "sites.mk"
     sites_mk.parent.mkdir(parents=True)
     yield sites_mk

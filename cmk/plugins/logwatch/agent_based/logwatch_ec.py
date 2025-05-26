@@ -769,7 +769,5 @@ class MessageForwarder:
 
     @staticmethod
     def _get_spool_path(hostname: str, item: str | None) -> Path:
-        result = Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
-        if item is not None:
-            result = result / "item_{}".format(url_quote(item, safe=""))
-        return result
+        result = cmk.utils.paths.var_dir / "logwatch_spool" / hostname
+        return result if item is None else (result / f"item_{url_quote(item, safe='')}")

@@ -7,7 +7,6 @@
 import datetime
 from collections.abc import Sequence
 from io import StringIO
-from pathlib import Path
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
@@ -126,7 +125,7 @@ def fixture_setup_rules() -> None:
             ),
         ),
     )
-    (Path(default_config_dir) / "main.mk").touch()
+    (default_config_dir / "main.mk").touch()
     FolderRulesets({"automatic_host_removal": ruleset}, folder=root_folder).save_folder(
         pprint_value=False
     )

@@ -355,7 +355,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
     @override
     def config_dir(self) -> Path:
-        return Path(cmk.utils.paths.default_config_dir, "apache.d/wato")
+        return cmk.utils.paths.default_config_dir / "apache.d/wato"
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
@@ -475,7 +475,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
     @override
     def config_dir(self) -> Path:
-        return Path(cmk.utils.paths.default_config_dir, "rrdcached.d/wato")
+        return cmk.utils.paths.default_config_dir / "rrdcached.d/wato"
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

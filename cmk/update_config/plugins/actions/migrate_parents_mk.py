@@ -40,7 +40,7 @@ class MigrateParentsMK(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         results: dict[Path, ParentsMKResult] = {}
-        for path in Path(cmk.utils.paths.check_mk_config_dir).glob("*.mk"):
+        for path in cmk.utils.paths.check_mk_config_dir.glob("*.mk"):
             with open(path) as f:
                 first_line = f.readline()
                 if not first_line.startswith("# Automatically created by --scan-parents at"):

@@ -9,7 +9,6 @@ import enum
 import socket
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, assert_never, Literal, NamedTuple
 
 import cmk.ccc.debug
@@ -259,7 +258,7 @@ class IPLookupCacheSerializer:
 
 
 class IPLookupCache:
-    PATH = Path(cmk.utils.paths.var_dir, "ipaddresses.cache")
+    PATH = cmk.utils.paths.var_dir / "ipaddresses.cache"
 
     def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
         self._cache = cache

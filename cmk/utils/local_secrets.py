@@ -129,7 +129,7 @@ class DistributedSetupSecret:
 
     @property
     def path(self) -> Path:
-        return Path(paths.var_dir) / "wato" / "automation_secret.mk"
+        return paths.var_dir / "wato" / "automation_secret.mk"
 
     def read_or_create(self) -> Password:
         if self.password is None:

@@ -7,7 +7,6 @@
 import ast
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 
 import pytest
 from flask import Flask
@@ -204,7 +203,7 @@ class TestPageAutomation:
 
 
 def test_automation_login(with_admin: tuple[UserId, str], flask_app: Flask) -> None:
-    Path(paths.var_dir, "wato", "automation_secret.mk").write_text(repr("pssst"))
+    (paths.var_dir / "wato/automation_secret.mk").write_text(repr("pssst"))
 
     with flask_app.app_context():
         client = flask_app.test_client(use_cookies=True)

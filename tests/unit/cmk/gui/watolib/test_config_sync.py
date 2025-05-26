@@ -98,22 +98,22 @@ def _create_sync_snapshot(
 @contextmanager
 def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Create some config files to be synchronized"""
-    conf_dir = Path(cmk.utils.paths.check_mk_config_dir, "wato")
+    conf_dir = cmk.utils.paths.check_mk_config_dir / "wato"
     conf_dir.mkdir(parents=True, exist_ok=True)
     with conf_dir.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
         f.write("all_hosts = []\n")
 
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
-    Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
+    (cmk.utils.paths.var_dir / "packages").mkdir(parents=True, exist_ok=True)
     frozen_aggregations_dir.mkdir(parents=True, exist_ok=True)
     topology_dir.mkdir(parents=True, exist_ok=True)
 
-    gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"
+    gui_conf_dir = cmk.utils.paths.default_config_dir / "multisite.d/wato"
     gui_conf_dir.mkdir(parents=True, exist_ok=True)
     with gui_conf_dir.joinpath("global.mk").open("w", encoding="utf-8") as f:
         f.write("# 123\n")
 
-    stored_passwords_dir = Path(cmk.utils.paths.var_dir)
+    stored_passwords_dir = cmk.utils.paths.var_dir
     with stored_passwords_dir.joinpath("stored_passwords").open("w", encoding="utf-8") as f:
         f.write("DUMMY_PWD_ENTRY \n")
 

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import functools
 import itertools
-import os
 import time
 from collections.abc import Callable, Generator, Iterator, Sequence
 from typing import Any, Literal, NamedTuple
@@ -1589,15 +1588,14 @@ def melt_short_intervals(entries: AVTimelineRows, duration: int, dont_merge: boo
 
 
 def save_annotations(annotations: AVAnnotations) -> None:
-    path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
-    store.save_object_to_file(path, annotations)
+    store.save_object_to_file(cmk.utils.paths.var_dir / "availability_annotations.mk", annotations)
 
 
 def load_annotations(lock: bool = False) -> AVAnnotations:
-    path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
-    if not os.path.exists(path):
+    path = cmk.utils.paths.var_dir / "availability_annotations.mk"
+    if not path.exists():
         # Support legacy old wrong name-clashing path
-        path = cmk.utils.paths.var_dir + "/web/statehist_annotations.mk"
+        path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
     return store.load_object_from_file(path, default={}, lock=lock)
 

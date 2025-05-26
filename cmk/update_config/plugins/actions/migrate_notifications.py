@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from pathlib import Path
 from typing import Any, cast, override
 
 from cmk.utils import tty
@@ -45,8 +44,8 @@ type Parameter = LegacyParameter | MigratedParameter
 class MigrateNotifications(UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
         super().__init__(name=name, title=title, sort_index=sort_index)
-        self._notifications_mk_path: Path = Path(check_mk_config_dir, "wato/notifications.mk")
-        self._notifications_mk_backup_path: Path = omd_root / "notifications_backup.mk"
+        self._notifications_mk_path = check_mk_config_dir / "wato/notifications.mk"
+        self._notifications_mk_backup_path = omd_root / "notifications_backup.mk"
 
     @override
     def __call__(self, logger: Logger) -> None:

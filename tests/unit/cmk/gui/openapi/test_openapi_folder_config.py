@@ -9,7 +9,6 @@ import urllib.parse
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
-from pathlib import Path
 
 import pytest
 
@@ -797,7 +796,7 @@ def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
     resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
     assert resp.json["id"] == "~a_duplicate-3"
 
-    wato_dir = Path(paths.omd_root, paths.check_mk_config_dir, "wato")
+    wato_dir = paths.check_mk_config_dir / "wato"
     assert (wato_dir / "a_duplicate").exists()
     assert (wato_dir / "a_duplicate-2").exists()
     assert (wato_dir / "a_duplicate-3").exists()

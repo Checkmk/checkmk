@@ -188,7 +188,7 @@ class CMKParser:
         """Parse fetched data."""
         console.debug(f"{tty.yellow}+{tty.normal} PARSE FETCHER RESULTS")
         output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
-        section_cache_path = Path(cmk.utils.paths.var_dir)
+        section_cache_path = cmk.utils.paths.var_dir
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         for source, raw_data in fetched:
@@ -393,7 +393,7 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(

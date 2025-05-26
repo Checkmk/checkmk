@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from pathlib import Path
-
 import pytest
 
 from cmk.ccc.user import UserId
@@ -22,7 +19,7 @@ from cmk.crypto.password import Password
 def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "id", UserId("dingdöng"))
-        store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
+        store_path = cmk.utils.paths.default_config_dir / "backup_keys.mk"
 
         assert not store_path.exists()
         mode = ModeBackupEditKey()

@@ -2835,7 +2835,7 @@ def test_load_config_folder_paths(folder_path_test_config: config.LoadedConfigFr
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,
 ) -> Iterator[config.LoadedConfigFragment]:
-    config_dir = Path(cmk.utils.paths.check_mk_config_dir)
+    config_dir = cmk.utils.paths.check_mk_config_dir
     config_dir.mkdir(parents=True, exist_ok=True)
 
     with cmk.utils.paths.main_config_file.open("w", encoding="utf-8") as f:
@@ -2974,7 +2974,7 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         ("sub3", "other", {HostName("hostA"): "setting3"}),
         ("sub4", "other", {HostName("hostB"): "setting4"}),
     ]
-    config_dir = Path(cmk.utils.paths.check_mk_config_dir)
+    config_dir = cmk.utils.paths.check_mk_config_dir
     wato_main_folder = config_dir / "wato"
     try:
         main_mk_file.touch()

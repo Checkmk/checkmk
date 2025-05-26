@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-
 import cmk.utils.paths
 
 
 class BackgroundJobDefines:
-    base_dir = os.path.join(cmk.utils.paths.var_dir, "background_jobs")
+    base_dir = str(cmk.utils.paths.var_dir / "background_jobs")
     process_name = (
         "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
     )

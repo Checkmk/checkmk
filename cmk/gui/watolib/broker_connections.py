@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from pathlib import Path
 from typing import TypedDict
 
 from livestatus import BrokerConnection, BrokerConnections, BrokerSite, ConnectionId
@@ -22,7 +21,7 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleCon
 class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
     def __init__(self) -> None:
         super().__init__(
-            config_file_path=Path(paths.default_config_dir + "/multisite.d/broker_connections.mk"),
+            config_file_path=paths.default_config_dir / "multisite.d/broker_connections.mk",
             config_variable="broker_connections",
             spec_class=BrokerConnections,
         )

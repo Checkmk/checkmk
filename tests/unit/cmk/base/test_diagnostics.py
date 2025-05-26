@@ -754,7 +754,7 @@ def test_diagnostics_element_checkmk_files_error(
     [
         (
             diagnostics.CheckmkConfigFilesDiagnosticsElement,
-            Path(cmk.utils.paths.default_config_dir),
+            cmk.utils.paths.default_config_dir,
             "test.conf",
         ),
         (
@@ -846,7 +846,7 @@ def test_diagnostics_element_performance_graphs_error(
         requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
     )
 
-    automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"
+    automation_dir = cmk.utils.paths.var_dir / "web/automation"
     automation_dir.mkdir(parents=True, exist_ok=True)
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")
@@ -898,7 +898,7 @@ def test_diagnostics_element_performance_graphs_content(
         requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
     )
 
-    automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"
+    automation_dir = cmk.utils.paths.var_dir / "web/automation"
     automation_dir.mkdir(parents=True, exist_ok=True)
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")

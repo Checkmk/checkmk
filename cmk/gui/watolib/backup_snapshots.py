@@ -31,7 +31,7 @@ from cmk.gui.watolib.audit_log import log_audit
 
 from cmk import trace
 
-var_dir = cmk.utils.paths.var_dir + "/wato/"
+var_dir = str(cmk.utils.paths.var_dir) + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
 backup_domains: dict[str, "DomainSpec"] = {}
@@ -512,7 +512,7 @@ def _get_default_backup_domains() -> dict[str, DomainSpec]:
 
 
 def snapshot_secret() -> bytes:
-    path = Path(cmk.utils.paths.default_config_dir, "snapshot.secret")
+    path = cmk.utils.paths.default_config_dir / "snapshot.secret"
     try:
         return path.read_bytes()
     except OSError:
@@ -536,7 +536,7 @@ def extract_snapshot(
             pass
 
     # We are using the var_dir, because tmp_dir might not have enough space
-    restore_dir = cmk.utils.paths.var_dir + "/wato/snapshots/restore_snapshot"
+    restore_dir = str(cmk.utils.paths.var_dir / "wato/snapshots/restore_snapshot")
     if not os.path.exists(restore_dir):
         os.makedirs(restore_dir)
 

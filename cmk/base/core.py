@@ -139,7 +139,7 @@ def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
         yield None  # No locking at all
         return
 
-    lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
+    lock_file = str(cmk.utils.paths.default_config_dir / "main.mk")
 
     if mode == "abort":
         with store.try_locked(lock_file) as result:

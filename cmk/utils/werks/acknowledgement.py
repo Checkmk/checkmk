@@ -12,8 +12,8 @@ import cmk.utils.paths
 from cmk.werks.models import Werk
 from cmk.werks.utils import write_precompiled_werks
 
-ACKNOWLEDGEMENT_PATH = Path(cmk.utils.paths.var_dir, "acknowledged_werks.mk")
-UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.json")
+ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir / "acknowledged_werks.mk"
+UNACKNOWLEDGED_WERKS_JSON = cmk.utils.paths.var_dir / "unacknowledged_werks.json"
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:

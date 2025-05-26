@@ -374,7 +374,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
     if core.name() == "nagios":
         objects_file = str(cmk.utils.paths.nagios_objects_file)
     else:
-        objects_file = cmk.utils.paths.var_dir + "/core/config"
+        objects_file = str(cmk.utils.paths.var_dir / "core/config")
 
     backup_path = None
     if os.path.exists(objects_file):

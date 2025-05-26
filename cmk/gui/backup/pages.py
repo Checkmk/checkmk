@@ -5,7 +5,6 @@
 """Pages for managing backup and restore of WATO"""
 
 from collections.abc import Collection
-from pathlib import Path
 
 import cmk.utils.paths
 
@@ -128,9 +127,7 @@ class PageAjaxBackupJobState(AjaxPage):
 
 
 def make_site_backup_keypair_store() -> handler.BackupKeypairStore:
-    return handler.BackupKeypairStore(
-        Path(cmk.utils.paths.default_config_dir, "backup_keys.mk"), "keys"
-    )
+    return handler.BackupKeypairStore(cmk.utils.paths.default_config_dir / "backup_keys.mk", "keys")
 
 
 class ModeBackupKeyManagement(handler.PageBackupKeyManagement, WatoMode):

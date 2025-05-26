@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from pathlib import Path
 from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
@@ -86,7 +85,7 @@ def _builtin_timeperiods() -> TimeperiodSpecs:
 # NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
 def load_timeperiods() -> TimeperiodSpecs:
     return add_builtin_timeperiods(
-        load_from_mk_file(Path(check_mk_config_dir, "wato", "timeperiods.mk"), "timeperiods", {})
+        load_from_mk_file(check_mk_config_dir / "wato/timeperiods.mk", "timeperiods", {})
     )
 
 

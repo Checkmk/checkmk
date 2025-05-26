@@ -7,7 +7,6 @@
 import abc
 from collections.abc import Mapping, Sequence
 from enum import Enum
-from pathlib import Path
 from typing import Any, TypeVar
 
 from cmk.ccc import store
@@ -556,7 +555,7 @@ def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:
 # taggroup_choice() for this tag group.
 #
 def _export_hosttags_to_php(cfg: TagConfigSpec) -> None:
-    php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
+    php_api_dir = cmk.utils.paths.var_dir / "wato/php-api"
     path = php_api_dir / "hosttags.php"
     php_api_dir.mkdir(mode=0o770, exist_ok=True, parents=True)
 

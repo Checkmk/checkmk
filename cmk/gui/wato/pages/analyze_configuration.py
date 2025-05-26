@@ -56,7 +56,7 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ModeAnalyzeConfig(WatoMode):
-    _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
+    _ack_path = str(cmk.utils.paths.var_dir / "acknowledged_bp_tests.mk")
 
     @classmethod
     def name(cls) -> str:

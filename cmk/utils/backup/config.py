@@ -102,7 +102,7 @@ class Config(BaseModel, frozen=True):
     def load(
         cls,
         *,
-        path_site: Path = Path(default_config_dir) / "backup.mk",
+        path_site: Path = default_config_dir / "backup.mk",
         path_cma_system: Path = Path("/etc/cma/backup.conf"),
     ) -> Config:
         return cls(

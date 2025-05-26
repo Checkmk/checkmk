@@ -5,7 +5,6 @@
 
 
 from dataclasses import asdict
-from pathlib import Path
 
 import pytest
 
@@ -210,7 +209,7 @@ def test_default_config_from_plugins() -> None:
 
 
 def test_load_config(request_context: None) -> None:
-    config_path = Path(cmk.utils.paths.default_config_dir, "multisite.mk")
+    config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
     config_path.unlink(missing_ok=True)
 
     cmk.gui.config.load_config()
@@ -238,7 +237,7 @@ def test_load_config_respects_local_plugin(request_context: None) -> None:
 
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_allows_local_plugin_setting(request_context: None) -> None:
-    with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
+    with (cmk.utils.paths.default_config_dir / "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
     assert active_config.ding == "ding"  # type: ignore[attr-defined, unused-ignore]

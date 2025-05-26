@@ -25,7 +25,6 @@ from __future__ import annotations
 import abc
 import copy
 import json
-import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, replace
@@ -2282,10 +2281,11 @@ declare(PagetypeTopics)
 
 
 def _no_bi_aggregate_active() -> bool:
-    enabled_info_file = "%s/num_enabled_aggregations" % os.path.join(
-        cmk.utils.paths.var_dir, "wato"
+    return bool(
+        not store.load_object_from_file(
+            cmk.utils.paths.var_dir / "wato/num_enabled_aggregations", default=None
+        )
     )
-    return bool(not store.load_object_from_file(enabled_info_file, default=None))
 
 
 #   .--Main menu-----------------------------------------------------------.

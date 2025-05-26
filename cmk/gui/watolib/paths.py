@@ -9,4 +9,4 @@ import cmk.utils.paths
 
 
 def wato_var_dir() -> Path:
-    return Path(cmk.utils.paths.var_dir, "wato")
+    return cmk.utils.paths.var_dir / "wato"

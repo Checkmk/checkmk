@@ -5,7 +5,6 @@
 
 import errno
 from logging import Logger
-from pathlib import Path
 from typing import override
 
 from cmk.utils import paths as paths_utils
@@ -25,7 +24,7 @@ class VersionSpecificCachesCleaner(UpdateAction):
             paths_utils.precompiled_checks_dir / "local",
         ]
 
-        walk_cache_dir = Path(paths_utils.var_dir, "snmp_cache")
+        walk_cache_dir = paths_utils.var_dir / "snmp_cache"
         if walk_cache_dir.exists():
             paths.extend(walk_cache_dir.iterdir())
 

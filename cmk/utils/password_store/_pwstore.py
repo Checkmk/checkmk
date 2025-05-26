@@ -43,7 +43,7 @@ class Password(TypedDict):
 
 def password_store_path() -> Path:
     """file where the user-managed passwords are stored."""
-    return Path(cmk.utils.paths.var_dir, "stored_passwords")
+    return cmk.utils.paths.var_dir / "stored_passwords"
 
 
 def core_password_store_path(config_path: ConfigPath) -> Path:
@@ -56,7 +56,7 @@ def core_password_store_path(config_path: ConfigPath) -> Path:
 
 def pending_password_store_path() -> Path:
     """file where user-managed passwords and the ones extracted from the configuration are merged."""
-    return Path(cmk.utils.paths.var_dir, "passwords_merged")
+    return cmk.utils.paths.var_dir / "passwords_merged"
 
 
 def save(passwords: Mapping[str, str], store_path: Path) -> None:

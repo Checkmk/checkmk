@@ -93,7 +93,7 @@ def load_custom_attr(
 
 
 def custom_attr_path(userid: UserId, key: str) -> str:
-    return var_dir + "/web/" + userid + "/" + key + ".mk"
+    return str(var_dir / "web" / userid / (key + ".mk"))
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
@@ -111,11 +111,11 @@ def rewrite_users(now: datetime) -> None:
 
 
 def _root_dir() -> Path:
-    return Path(cmk.utils.paths.check_mk_config_dir, "wato")
+    return cmk.utils.paths.check_mk_config_dir / "wato"
 
 
 def _multisite_dir() -> Path:
-    return Path(cmk.utils.paths.default_config_dir, "multisite.d/wato")
+    return cmk.utils.paths.default_config_dir / "multisite.d/wato"
 
 
 def get_authserials_lines() -> list[str]:
@@ -488,7 +488,7 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
         "transids.mk",
         "serial.mk",
     ]
-    directory = cmk.utils.paths.var_dir + "/web"
+    directory = str(cmk.utils.paths.var_dir / "web")
     for user_dir in os.listdir(directory):
         if user_dir in [".", ".."] or user_dir in updated_profiles:
             continue
@@ -514,8 +514,8 @@ def write_contacts_and_users_file(
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
     else:
-        check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
+        check_mk_config_dir = str(cmk.utils.paths.default_config_dir / "conf.d/wato")
+        multisite_config_dir = str(cmk.utils.paths.default_config_dir / "multisite.d/wato")
 
     non_contact_attributes_cache: dict[str | None, Sequence[str]] = {}
     multisite_attributes_cache: dict[str | None, Sequence[str]] = {}
@@ -783,4 +783,4 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
 
 
 def release_users_lock() -> None:
-    release_lock(cmk.utils.paths.check_mk_config_dir + "/wato/contacts.mk")
+    release_lock(cmk.utils.paths.check_mk_config_dir / "wato/contacts.mk")

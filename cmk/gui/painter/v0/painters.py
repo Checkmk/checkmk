@@ -1718,11 +1718,12 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
-        dirs = match_path_entries_with_item([Path(notes_dir)], host)
+        dirs = match_path_entries_with_item(
+            [cmk.utils.paths.default_config_dir / "notes/services"], host
+        )
         item = svc
     else:
-        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]
+        dirs = [cmk.utils.paths.default_config_dir / "notes/hosts"]
         item = host
 
     assert isinstance(item, str)

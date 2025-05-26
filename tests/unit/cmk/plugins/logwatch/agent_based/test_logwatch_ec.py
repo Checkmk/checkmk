@@ -741,7 +741,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     # we delete the original spool file after reading it.
     # here we want to make sure, that the spool file is recreated. otherwise messages from different
     # time would land into the same spool file and may not be correctly cleaned up.
-    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+    spool_dir = cmk.utils.paths.var_dir / "logwatch_spool/some_host_name"
 
     # create a spooled message:
     result, messages_forwarded = _forward_message(
@@ -779,7 +779,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
 
 def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # can be removed with checkmk 2.4.0
-    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+    spool_dir = cmk.utils.paths.var_dir / "logwatch_spool/some_host_name"
     # logwatch_ec with separate_checks = True creates one service per syslog application, but they
     # shared one folder for their spool files. this led to problems when writing spool-files
     # (overwriting each other) and reading spool-files (all items read all spool-files).

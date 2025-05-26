@@ -251,23 +251,23 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
     _touch(cmk.utils.paths.htpasswd_file)
     makedirs(cmk.utils.paths.autochecks_dir)
-    makedirs(Path(cmk.utils.paths.var_dir, "web"))
-    makedirs(Path(cmk.utils.paths.var_dir, "php-api"))
-    makedirs(Path(cmk.utils.paths.var_dir, "wato/php-api"))
-    makedirs(Path(cmk.utils.paths.var_dir, "wato/auth"))
+    makedirs(cmk.utils.paths.var_dir / "web")
+    makedirs(cmk.utils.paths.var_dir / "php-api")
+    makedirs(cmk.utils.paths.var_dir / "wato/php-api")
+    makedirs(cmk.utils.paths.var_dir / "wato/auth")
     makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
     makedirs(cmk.utils.paths.omd_root / "var/log")
     makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
-    makedirs(Path(cmk.utils.paths.default_config_dir, "conf.d/wato"))
-    makedirs(Path(cmk.utils.paths.default_config_dir, "multisite.d/wato"))
-    makedirs(Path(cmk.utils.paths.default_config_dir, "mkeventd.d/wato"))
+    makedirs(cmk.utils.paths.default_config_dir / "conf.d/wato")
+    makedirs(cmk.utils.paths.default_config_dir / "multisite.d/wato")
+    makedirs(cmk.utils.paths.default_config_dir / "mkeventd.d/wato")
     makedirs(cmk.utils.paths.local_dashboards_dir)
     makedirs(cmk.utils.paths.local_views_dir)
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         # needed for visuals.load()
         makedirs(cmk.utils.paths.local_reports_dir)
-    _touch(Path(cmk.utils.paths.default_config_dir, "mkeventd.mk"))
-    _touch(Path(cmk.utils.paths.default_config_dir, "multisite.mk"))
+    _touch(cmk.utils.paths.default_config_dir / "mkeventd.mk")
+    _touch(cmk.utils.paths.default_config_dir / "multisite.mk")
 
     _dump(
         Path(cmk.utils.paths.omd_root, "etc/omd/site.conf"),
@@ -307,7 +307,7 @@ CONFIG_TRACE_SEND_TARGET='local_site'
 CONFIG_TMPFS='on'""",
     )
     _dump(
-        Path(cmk.utils.paths.default_config_dir, "mkeventd.d/wato/rules.mk"),
+        cmk.utils.paths.default_config_dir / "mkeventd.d/wato/rules.mk",
         r"""
 # Written by WATO
 # encoding: utf-8

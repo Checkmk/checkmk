@@ -164,9 +164,9 @@ ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
-ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
+ACTIVATION_PERISTED_DIR = str(cmk.utils.paths.var_dir / "wato/activation")
 
-var_dir = cmk.utils.paths.var_dir + "/wato/"
+var_dir = cmk.utils.paths.var_dir / "wato"
 
 
 GENERAL_DIR_EXCLUDE = "__pycache__"
@@ -251,7 +251,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty=ReplicationPathType.FILE,
             ident="stored_passwords",
             site_path=os.path.relpath(
-                "%s/stored_passwords" % cmk.utils.paths.var_dir, cmk.utils.paths.omd_root
+                str(cmk.utils.paths.var_dir / "stored_passwords"), cmk.utils.paths.omd_root
             ),
         ),
         # Also replicate the user-settings of Multisite? While the replication
@@ -260,14 +260,16 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="usersettings",
-            site_path=os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
+            site_path=os.path.relpath(
+                str(cmk.utils.paths.var_dir / "web"), cmk.utils.paths.omd_root
+            ),
             excludes_exact_match=["last_login.mk", "report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="mkps",
             site_path=os.path.relpath(
-                cmk.utils.paths.var_dir + "/packages", cmk.utils.paths.omd_root
+                str(cmk.utils.paths.var_dir / "packages"), cmk.utils.paths.omd_root
             ),
         ),
         ReplicationPath.make(
@@ -373,7 +375,7 @@ def _save_site_replication_status(site_id: SiteId, repl_status: SiteReplicationS
 
 def _update_replication_status(site_id, vars_):
     """Updates one or more dict elements of a site in an atomic way."""
-    Path(var_dir).mkdir(mode=0o770, exist_ok=True)
+    var_dir.mkdir(mode=0o770, exist_ok=True)
 
     repl_status = _load_site_replication_status(site_id, lock=True)
     try:
@@ -385,15 +387,15 @@ def _update_replication_status(site_id, vars_):
 
 def clear_site_replication_status(site_id: SiteId) -> None:
     try:
-        os.unlink(_site_replication_status_path(site_id))
+        _site_replication_status_path(site_id).unlink()
     except FileNotFoundError:
         pass  # Not existant -> OK
 
     ActivateChanges().confirm_site_changes(site_id)
 
 
-def _site_replication_status_path(site_id: SiteId) -> str:
-    return f"{var_dir}replication_status_{site_id}.mk"
+def _site_replication_status_path(site_id: SiteId) -> Path:
+    return var_dir / f"replication_status_{site_id}.mk"
 
 
 def _load_replication_status(lock: bool = False) -> dict[SiteId, SiteReplicationStatus]:
@@ -3194,7 +3196,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: list[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
-        base_folder_path = f"{cmk.utils.paths.check_mk_config_dir}/wato"
+        base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
         default_sync_config = user_sync_default_config(omd_site())
         current_users = {}

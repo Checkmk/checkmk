@@ -6,7 +6,6 @@
 import glob
 import os
 import subprocess
-from pathlib import Path
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -31,8 +30,7 @@ def _git_messages() -> list[str]:
 
 def do_git_commit() -> None:
     author = f"{user.id} <{user.email}>"
-    git_dir = cmk.utils.paths.default_config_dir + "/.git"
-    if not os.path.exists(git_dir):
+    if not os.path.exists(cmk.utils.paths.default_config_dir / ".git"):
         logger.debug("GIT: Initializing")
         _git_command(["init"])
 
@@ -72,9 +70,9 @@ def do_git_commit() -> None:
 
 
 def _git_add_files() -> None:
-    path_pattern = os.path.join(cmk.utils.paths.default_config_dir, "*.d/wato")
+    path_pattern = os.path.join(str(cmk.utils.paths.default_config_dir), "*.d/wato")
     rel_paths = [
-        os.path.relpath(p, cmk.utils.paths.default_config_dir) for p in glob.glob(path_pattern)
+        os.path.relpath(p, str(cmk.utils.paths.default_config_dir)) for p in glob.glob(path_pattern)
     ]
     _git_command(["add", "--all", ".gitignore"] + rel_paths)
 
@@ -134,7 +132,7 @@ def _write_gitignore_files() -> None:
 
     Only files below the "wato" directories should be under git control. The files in
     etc/check_mk/*.mk should not be put under control."""
-    config_dir = Path(cmk.utils.paths.default_config_dir)
+    config_dir = cmk.utils.paths.default_config_dir
 
     with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
         f.write(

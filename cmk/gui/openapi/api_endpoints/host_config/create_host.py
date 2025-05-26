@@ -72,7 +72,7 @@ def create_host_v1(
         pprint_value=active_config.wato_pprint_config,
     )
     if bake_agent:
-        bakery.try_bake_agents_for_hosts([host_name])
+        bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
 
     host = Host.load_host(host_name)
     return serialize_host(host, compute_effective_attributes=False, compute_links=True)

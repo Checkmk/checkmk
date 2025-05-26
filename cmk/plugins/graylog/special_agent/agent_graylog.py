@@ -78,7 +78,7 @@ def handle_section(
         section_output = handle_function(args, _get_section_url(args, section_uri))
         if section_output:
             handle_output(section_output, section_name, args)
-    except requests.exceptions.RequestException as e:
+    except (requests.RequestException, requests.HTTPError, RuntimeError) as e:
         sys.stderr.write("Error: %s\n" % e)
         if args.debug:
             raise
@@ -157,7 +157,10 @@ def section_jvm(args: argparse.Namespace, url: str) -> dict[str, object]:
 
 
 def section_license(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
-    return _do_get(url, args).json()
+    try:
+        return _do_get(url, args).json()
+    except ValueError as e:
+        raise RuntimeError(f"Could not parse license response from API: '{e}'") from e
 
 
 def section_messages(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
@@ -217,8 +220,9 @@ def section_sources(args: argparse.Namespace, url: str) -> list[dict[str, Any]] 
             url,
             args,
         ).json()
-    except ValueError:
-        return []
+    except ValueError as e:
+        raise RuntimeError(f"Could not parse sources response from API: '{e}'") from e
+
     sources_in_range = {}
     source_since_argument = args.source_since
     if source_since_argument:
@@ -291,7 +295,7 @@ def _get_section_url(args: argparse.Namespace, section_uri: str) -> str:
 def _do_post(
     url: str, args: argparse.Namespace, json: dict[str, Any] | None = None
 ) -> requests.Response:
-    return requests.post(
+    response = requests.post(
         url,
         auth=(args.user, args.password),
         headers={
@@ -301,13 +305,17 @@ def _do_post(
         json=json,
         timeout=900,
     )
+    response.raise_for_status()
+    return response
 
 
 def _do_get(
     url: str,
     args: argparse.Namespace,
 ) -> requests.Response:
-    return requests.get(url, auth=(args.user, args.password), timeout=900)
+    response = requests.get(url, auth=(args.user, args.password), timeout=900)
+    response.raise_for_status()
+    return response
 
 
 def handle_output(

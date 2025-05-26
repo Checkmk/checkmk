@@ -7,9 +7,11 @@
 #include <string>
 
 #include "common/cfg_info.h"
+#include "tools/_process.h"
 #include "wnx/cfg.h"
 #include "wnx/cfg_details.h"
 #include "wnx/cma_core.h"
+#include "wnx/install_api.h"
 #include "wnx/windows_service_api.h"
 
 namespace fs = std::filesystem;
@@ -20,7 +22,6 @@ bool OnStart(AppType proposed_type, const std::wstring &config_file);
 inline bool OnStart(AppType type) { return OnStart(type, L""); }
 bool OnStartApp() { return OnStart(AppType::automatic); }
 bool OnStartTest() { return OnStart(AppType::test); }
-
 
 // internal global variables:
 namespace {
@@ -93,6 +94,23 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
             break;
         }
         case AppType::srv:
+            if (install::IsCleanInstallationRequired()) {
+                try {
+                    auto data_dir = fs::path(tools::win::GetSomeSystemFolder(
+                                        FOLDERID_ProgramData)) /
+                                    kAppDataCompanyName / kAppDataAppName;
+                    XLOG::l.i(
+                        "Clean installation is required, removing old files from {}",
+                        data_dir);
+                    std::error_code ec;
+                    fs::remove_all(data_dir, ec);
+                } catch (const std::exception &e) {
+                    XLOG::details::LogWindowsEventError(
+                        102, "Exception during clean installation {}",
+                        e.what());
+                    install::RemoveCleanInstallationFlag();
+                }
+            }
             GetCfg().initFolders(cma::srv::kServiceName, L"", L"");
             break;
         case AppType::automatic:

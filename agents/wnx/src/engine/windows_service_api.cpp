@@ -404,8 +404,7 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
         switch (fw_mode) {
             case FwMode::configure: {
                 // remove all rules with the same name
-                while (RemoveRule(name, app_name))
-                    ;
+                while (RemoveRule(name, app_name));
                 auto success = CreateInboundRule(name, app_name, -1);
                 LogFirewallCreate(success);
                 return 0;
@@ -414,8 +413,7 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
                 if (FindRule(name)) {
                     auto success = RemoveRule(name, app_name);
                     // remove all rules with the same name
-                    while (RemoveRule(name, app_name))
-                        ;
+                    while (RemoveRule(name, app_name));
                     LogFirewallRemove(success);
                     return 0;
                 }

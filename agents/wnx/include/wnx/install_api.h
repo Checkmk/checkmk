@@ -89,7 +89,8 @@ constexpr std::wstring_view kMsiMigrationDefault;
 constexpr std::wstring_view kMsiMigrationRequest = L"1";
 
 constexpr std::wstring_view kMsiCleanInstallationEntry = L"Clean_Installation";
-constexpr std::wstring_view kMsiCleanInstallationlRequest = L"yes";
+constexpr std::wstring_view kMsiCleanInstallationlRequest =
+    L"yes";  // Sync with InstallFolder.wxs!
 
 inline std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;

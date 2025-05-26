@@ -579,10 +579,9 @@ void ClearPostInstallFlag() {
 ///
 /// Must be called by any executable to check that installation is finalized
 bool IsCleanInstallationRequired() {
-    return std::wstring(registry::kMsiCleanInstallationEntry) ==
+    return std::wstring(registry::kMsiCleanInstallationlRequest) ==
            wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
-                                    registry::kMsiCleanInstallationEntry,
-                                    registry::kMsiCleanInstallationlRequest);
+                                    registry::kMsiCleanInstallationEntry, L"");
 }
 
 /// - remove clean install flag
@@ -590,7 +589,7 @@ bool IsCleanInstallationRequired() {
 /// Normally called only by service after installation Python module
 void RemoveCleanInstallationFlag() {
     wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
-                             registry::kMsiPostInstallRequired, L"");
+                             registry::kMsiCleanInstallationEntry, L"");
 }
 
 /// - checks that migration flag is set by MSI

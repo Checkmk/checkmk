@@ -29,7 +29,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
     TagGroup,
 )
-from cmk.gui.openapi.restful_objects.utils import endpoint_ident
+from cmk.gui.openapi.restful_objects.utils import endpoint_ident, format_to_routing_path
 from cmk.gui.utils.permission_verification import BasePerm
 
 
@@ -81,9 +81,10 @@ class EndpointDefinition:
 
     @property
     def ident(self) -> str:
+        # this must be consistent with the legacy endpoints, so the overwriting works correctly
         return endpoint_ident(
             method=self.metadata.method,
-            route_path=self.metadata.path,
+            route_path=format_to_routing_path(self.metadata.path),
             content_type=self.metadata.content_type,
         )
 

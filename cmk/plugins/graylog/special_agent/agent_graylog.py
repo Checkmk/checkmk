@@ -7,7 +7,8 @@ import argparse
 import json
 import sys
 import time
-from typing import NamedTuple
+from collections.abc import Callable
+from typing import Any, NamedTuple
 
 import requests
 import urllib3
@@ -46,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="alerts", uri="/streams/alerts?limit=300"),
         GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
@@ -62,6 +62,8 @@ def main(argv=None):
         GraylogSection(name="events", uri="/events/search"),
     ]
 
+    handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
+
     try:
         handle_request(args, sections)
     except Exception:
@@ -69,6 +71,51 @@ def main(argv=None):
             raise
 
     return 0
+
+
+def handle_section(
+    args: argparse.Namespace,
+    section_name: str,
+    section_uri: str,
+    handle_function: Callable[[argparse.Namespace, str], list[dict[str, Any]] | dict[str, Any]],
+) -> None:
+    if section_name not in args.sections:
+        return
+    try:
+        section_output = handle_function(args, section_uri)
+        handle_output(section_output, section_name, args)
+    except Exception:
+        if args.debug:
+            raise
+
+
+def section_alerts(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    url = _get_section_url(args, uri)
+    section_response = handle_response(url, args).json()
+    num_of_alerts = section_response.get("total", 0)
+    num_of_alerts_in_range = 0
+    alerts_since_argument = args.alerts_since
+    if alerts_since_argument:
+        url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
+        num_of_alerts_in_range = handle_response(url_alerts_in_range, args).json().get("total", 0)
+
+    alerts = {
+        "alerts": {
+            "num_of_alerts": num_of_alerts,
+            "has_since_argument": bool(alerts_since_argument),
+            "alerts_since": alerts_since_argument if alerts_since_argument else None,
+            "num_of_alerts_in_range": num_of_alerts_in_range,
+        }
+    }
+    return [alerts]
+
+
+def _get_base_url(args: argparse.Namespace) -> str:
+    return f"{args.proto}://{args.hostname}:{args.port}/api"
+
+
+def _get_section_url(args: argparse.Namespace, section_uri: str) -> str:
+    return f"{_get_base_url(args)}{section_uri}"
 
 
 def handle_request(args, sections):
@@ -186,27 +233,6 @@ def handle_request(args, sections):
             }
             handle_output([events], section.name, args)
 
-        if section.name == "alerts":
-            num_of_alerts = value.get("total", 0)
-            num_of_alerts_in_range = 0
-            alerts_since_argument = args.alerts_since
-
-            if alerts_since_argument:
-                url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
-                num_of_alerts_in_range = (
-                    handle_response(url_alerts_in_range, args).json().get("total", 0)
-                )
-
-            alerts = {
-                "alerts": {
-                    "num_of_alerts": num_of_alerts,
-                    "has_since_argument": bool(alerts_since_argument),
-                    "alerts_since": alerts_since_argument if alerts_since_argument else None,
-                    "num_of_alerts_in_range": num_of_alerts_in_range,
-                }
-            }
-            handle_output([alerts], section.name, args)
-
         if section.name == "sources":
             sources_in_range = {}
             source_since_argument = args.source_since
@@ -278,7 +304,9 @@ def handle_response(url, args, method="GET", events_since=86400):
     return response
 
 
-def handle_output(value, section, args):
+def handle_output(
+    value: list[dict[str, Any]] | dict[str, Any], section: str, args: argparse.Namespace
+) -> None:
     sys.stdout.write("<<<graylog_%s:sep(0)>>>\n" % section)
     if isinstance(value, list):
         for entry in value:

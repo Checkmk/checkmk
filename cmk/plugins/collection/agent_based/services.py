@@ -80,45 +80,31 @@ agent_section_services = AgentSection(
 )
 
 
-def _extract_wato_compatible_rules(
-    params: Sequence[Mapping[str, Any]],
-) -> Sequence[tuple[str | None, str | None, str | None]]:
-    return [
-        (pattern, rule.get("state"), rule.get("start_mode"))
-        # If no rule is set by user, *no* windows services should be discovered.
-        # Skip the default settings which are the last element of the list:
-        for rule in params[:-1]
-        for pattern in rule.get("services") or [None]
-    ]
-
-
-def _add_matching_services(
-    service: WinService,
-    pattern: str | None,
-    state: str | None,
-    mode: str | None,
-) -> DiscoveryResult:
-    if pattern:
+def _match_service(service: WinService, settings: Mapping[str, Any]) -> bool:
+    for pattern in settings.get("services", []):
         # First match name or description (optional since rule based config option available)
         expr = re.compile(pattern)
-        if not (expr.match(service.name) or expr.match(service.description)):
-            return
+        if expr.match(service.name) and expr.match(service.description):
+            return True
 
+    state = settings.get("state")
+    mode = settings.get("start_mode")
     if (state and state != service.state) or (mode and mode != service.start_type):
-        return
+        return False
 
-    yield Service(item=service.name)
+    return True
 
 
 def discovery_windows_services(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
-    rules = _extract_wato_compatible_rules(params)
-
     for service in section:
-        for rule in rules:
-            yield from _add_matching_services(service, *rule)
+        # If no rule is set by user, *no* windows services should be discovered.
+        # Skip the default settings which are the last element of the list:
+        for settings in params[:-1]:
+            if _match_service(service, settings):
+                yield Service(item=service.name)
 
 
 def check_windows_services_single(

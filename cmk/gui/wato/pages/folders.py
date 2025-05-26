@@ -13,10 +13,12 @@ from typing import override, TypeVar
 from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.labels import Labels
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.view_utils
-from cmk.gui import forms
+from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -1209,7 +1211,10 @@ class ModeFolder(WatoMode):
                             "This change must be activated via <a href='https://docs.checkmk.com"
                             "/latest/en/wato.html#activate_changes' target='_blank'>Activate cha"
                             "nges</a> before it becomes effective in monitoring."
-                        ),
+                        )
+                        if host.name()
+                        in [h["name"] for h in Query([Hosts.name]).fetchall(sites=sites.live())]
+                        else None,
                         confirm_text=_("Yes, delete host"),
                         cancel_text=_("No, keep host"),
                         suffix=host.name(),

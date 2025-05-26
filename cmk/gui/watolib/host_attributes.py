@@ -48,14 +48,14 @@ _ContactgroupName = str
 
 
 def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None:
-    host_attribute_topic_registry_.register(HostAttributeTopicBasicSettings)
-    host_attribute_topic_registry_.register(HostAttributeTopicAddress)
-    host_attribute_topic_registry_.register(HostAttributeTopicDataSources)
-    host_attribute_topic_registry_.register(HostAttributeTopicHostTags)
-    host_attribute_topic_registry_.register(HostAttributeTopicNetworkScan)
-    host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard)
-    host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes)
-    host_attribute_topic_registry_.register(HostAttributeTopicMetaData)
+    host_attribute_topic_registry_.register(HostAttributeTopicBasicSettings())
+    host_attribute_topic_registry_.register(HostAttributeTopicAddress())
+    host_attribute_topic_registry_.register(HostAttributeTopicDataSources())
+    host_attribute_topic_registry_.register(HostAttributeTopicHostTags())
+    host_attribute_topic_registry_.register(HostAttributeTopicNetworkScan())
+    host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard())
+    host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes())
+    host_attribute_topic_registry_.register(HostAttributeTopicMetaData())
 
 
 # Keep in sync with cmk.fetchers._ipmi.IPMICredentials
@@ -204,15 +204,12 @@ class HostAttributeTopic(abc.ABC):
         raise NotImplementedError()
 
 
-class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]) -> str:
-        return instance().ident
+class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeTopic]):
+    def plugin_name(self, instance: HostAttributeTopic) -> str:
+        return instance.ident
 
     def get_choices(self) -> Choices:
-        return [
-            (t.ident, t.title)
-            for t in sorted([t_class() for t_class in self.values()], key=lambda e: e.sort_index)
-        ]
+        return [(t.ident, t.title) for t in sorted(self.values(), key=lambda e: e.sort_index)]
 
 
 host_attribute_topic_registry = HostAttributeTopicRegistry()
@@ -349,7 +346,7 @@ class ABCHostAttribute(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def topic(self) -> type[HostAttributeTopic]:
+    def topic(self) -> HostAttributeTopic:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -566,7 +563,7 @@ def sorted_host_attributes() -> list[ABCHostAttribute]:
     """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
     return sorted(
         all_host_attributes(active_config).values(),
-        key=lambda a: (a.sort_index(), a.topic()().title),
+        key=lambda a: (a.sort_index(), a.topic().title),
     )
 
 
@@ -577,15 +574,17 @@ def host_attribute_choices() -> Choices:
 def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
-    needed_topics: set[type[HostAttributeTopic]] = set()
+    needed_topics: set[HostAttributeTopic] = set()
     for attr in all_host_attributes(active_config).values():
-        if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
+        if attr.topic().ident not in [t.ident for t in needed_topics] and attr.is_visible(
+            for_what, new
+        ):
             needed_topics.add(attr.topic())
 
     return [
         (t.ident, t.title)
         for t in sorted(
-            [t_class() for t_class in needed_topics],
+            needed_topics,
             key=lambda e: (e.sort_index, e.title),
         )
     ]
@@ -606,7 +605,7 @@ def get_sorted_host_attributes_by_topic(
         sorted_host_attributes(),
         key=functools.cmp_to_key(sort_host_attributes),
     ):
-        if attr.topic() == host_attribute_topic_registry[topic_id]:
+        if attr.topic().ident == host_attribute_topic_registry[topic_id].ident:
             sorted_attributes.append(attr)
     return sorted_attributes
 
@@ -617,7 +616,7 @@ def declare_host_attribute(
     show_in_table: bool = True,
     show_in_folder: bool = True,
     show_in_host_search: bool = True,
-    topic: str | type[HostAttributeTopic] | None = None,
+    topic: str | HostAttributeTopic | None = None,
     sort_index: int | None = None,
     show_in_form: bool = True,
     depends_on_tags: list[str] | None = None,
@@ -644,7 +643,7 @@ def declare_host_attribute(
     if topic is None or isinstance(topic, str):
         ident = str(topic).replace(" ", "_").lower() if topic else None
         attrs["_topic"] = _declare_host_attribute_topic(ident, topic)
-    elif issubclass(topic, HostAttributeTopic):
+    elif isinstance(topic, HostAttributeTopic):
         attrs["_topic"] = topic
     else:
         raise NotImplementedError()
@@ -685,13 +684,11 @@ def declare_host_attribute(
     host_attribute_registry.register(final_class)
 
 
-def _declare_host_attribute_topic(
-    ident: str | None, topic_title: str | None
-) -> type[HostAttributeTopic]:
+def _declare_host_attribute_topic(ident: str | None, topic_title: str | None) -> HostAttributeTopic:
     """We get the "topic title" here. Create a topic class dynamically and
     returns a reference to this class"""
     if ident is None:
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicBasicSettings()
 
     try:
         return host_attribute_topic_registry[ident]
@@ -707,8 +704,8 @@ def _declare_host_attribute_topic(
             "sort_index": 80,
         },
     )
-    host_attribute_topic_registry.register(topic_class)
-    return topic_class
+    host_attribute_topic_registry.register(topic_class())
+    return topic_class()
 
 
 @request_memoize()

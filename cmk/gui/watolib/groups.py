@@ -316,8 +316,8 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def title(self) -> str:
         return _("Permissions")
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicBasicSettings
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicBasicSettings()
 
     @classmethod
     def sort_index(cls) -> int:

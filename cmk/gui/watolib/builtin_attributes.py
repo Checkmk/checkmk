@@ -101,8 +101,8 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def _size(self):
         return 64
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicBasicSettings
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicBasicSettings()
 
     def is_show_more(self) -> bool:
         return True
@@ -134,8 +134,8 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 
 
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicAddress
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicAddress()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -205,8 +205,8 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
 
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicAddress
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicAddress()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -276,8 +276,8 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
 
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicAddress
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicAddress()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -336,8 +336,8 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
 
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicAddress
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicAddress()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -396,8 +396,8 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicDataSources
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicDataSources()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -457,8 +457,8 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "parents"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicBasicSettings
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicBasicSettings()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -584,8 +584,8 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def may_edit(self):
         return user.may("wato.manage_hosts")
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicNetworkScan
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicNetworkScan()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -840,8 +840,8 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "network_scan_result"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicNetworkScan
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicNetworkScan()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -950,8 +950,8 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_address"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicManagementBoard
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicManagementBoard()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1002,8 +1002,8 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_protocol"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicManagementBoard
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicManagementBoard()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1055,8 +1055,8 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_snmp_community"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicManagementBoard
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicManagementBoard()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1125,8 +1125,8 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "management_ipmi_credentials"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicManagementBoard
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicManagementBoard()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1167,8 +1167,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def is_show_more(self) -> bool:
         return not (has_wato_slave_sites() or is_wato_slave_site())
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicBasicSettings
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicBasicSettings()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1233,8 +1233,8 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_by"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicMetaData
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicMetaData()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1317,8 +1317,8 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "locked_attributes"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicMetaData
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicMetaData()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1363,8 +1363,8 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "meta_data"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicMetaData
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicMetaData()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1446,8 +1446,8 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self) -> type[HostAttributeTopicMetaData]:
-        return HostAttributeTopicMetaData
+    def topic(self) -> HostAttributeTopicMetaData:
+        return HostAttributeTopicMetaData()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1505,8 +1505,8 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "waiting_for_discovery"
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicCustomAttributes
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicCustomAttributes()
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1567,8 +1567,8 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def title(self) -> str:
         return _("Labels")
 
-    def topic(self) -> type[HostAttributeTopic]:
-        return HostAttributeTopicCustomAttributes
+    def topic(self) -> HostAttributeTopic:
+        return HostAttributeTopicCustomAttributes()
 
     @classmethod
     def sort_index(cls) -> int:

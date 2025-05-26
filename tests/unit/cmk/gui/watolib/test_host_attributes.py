@@ -380,8 +380,8 @@ def test_registered_host_attributes() -> None:
 
         # assert spec["class_name"] == attr_class.__name__
 
-        attr_topic_class = attr.topic()
-        assert spec["topic"] == attr_topic_class().title, attr.name()
+        attr_topic = attr.topic()
+        assert spec["topic"] == attr_topic.title, attr.name()
         assert spec["show_in_table"] == attr.show_in_table()
         assert spec["show_in_folder"] == attr.show_in_folder()
         assert spec["show_in_host_search"] == attr.show_in_host_search()
@@ -415,7 +415,7 @@ def test_legacy_register_rulegroup_with_defaults(
     assert attr.show_in_folder() is True
     assert attr.show_in_host_search() is True
     assert attr.show_in_form() is True
-    assert attr.topic() == attrs.HostAttributeTopicBasicSettings
+    assert attr.topic().ident == attrs.HostAttributeTopicBasicSettings().ident
     assert attr.depends_on_tags() == []
     assert attr.depends_on_roles() == []
     assert attr.editable() is True
@@ -451,7 +451,7 @@ def test_legacy_register_rulegroup_without_defaults(
         from_config=True,
     )
 
-    topic = attrs.host_attribute_topic_registry["xyz"]()
+    topic = attrs.host_attribute_topic_registry["xyz"]
     assert topic.title == "Xyz"
     assert topic.sort_index == 80
 
@@ -462,7 +462,7 @@ def test_legacy_register_rulegroup_without_defaults(
     assert attr.show_in_host_search() is False
     assert attr.show_in_form() is False
 
-    assert attr.topic()().title == "Xyz"
+    assert attr.topic().title == "Xyz"
     assert attr.depends_on_tags() == ["xxx"]
     assert attr.depends_on_roles() == ["guest"]
     assert attr.editable() is False

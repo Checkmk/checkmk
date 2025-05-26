@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/system
+  response:
+    body:
+      string: '{"detail":"Internal Server Error"}'
+    headers:
+      content-length:
+      - '34'
+      content-type:
+      - application/json
+      date:
+      - Mon, 19 May 2025 12:57:19 GMT
+      server:
+      - uvicorn
+    status:
+      code: 500
+      message: Internal Server Error
+version: 1

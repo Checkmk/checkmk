@@ -19,8 +19,8 @@ def test_vanilla_agents_filenames(site: Site, mocker: MockerFixture) -> None:
     # check against the installed site. so we have to make sure the version
     # matches: we mock the source code to reflect the site version.
     mocker.patch("cmk.gui.utils.agent.cmk_version", site.version.version)
-    mocker.patch("cmk.utils.paths.agents_dir", site.root.as_posix() + "/share/check_mk/agents")
+    mocker.patch("cmk.utils.paths.agents_dir", site.root / "share/check_mk/agents")
 
-    assert site.file_exists(str(agent.packed_agent_path_windows_msi().relative_to(site.root)))
-    assert site.file_exists(str(agent.packed_agent_path_linux_deb().relative_to(site.root)))
-    assert site.file_exists(str(agent.packed_agent_path_linux_rpm().relative_to(site.root)))
+    assert site.file_exists(agent.packed_agent_path_windows_msi().relative_to(site.root))
+    assert site.file_exists(agent.packed_agent_path_linux_deb().relative_to(site.root))
+    assert site.file_exists(agent.packed_agent_path_linux_rpm().relative_to(site.root))

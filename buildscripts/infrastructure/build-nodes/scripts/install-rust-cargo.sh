@@ -43,9 +43,6 @@ done
 # This adds all present targets to the build ID to make sure they are included
 # in the cached archive.
 BUILD_ID="$BUILD_ID-$DEFAULT_TARGET"
-for target in $ADDITIONAL_TARGETS; do
-    BUILD_ID="$BUILD_ID-$target"
-done
 
 build_package() {
     WORK_DIR=$(mktemp -d)
@@ -67,15 +64,6 @@ build_package() {
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
     "${CARGO_HOME}"/bin/rustup toolchain install $DEFAULT_TOOLCHAIN_VERSION $ADDITIONAL_TOOLCHAIN_VERSIONS
-
-    # Install additional targets for all versions
-    for target in $ADDITIONAL_TARGETS; do
-        "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain $DEFAULT_TOOLCHAIN_VERSION
-
-        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-            "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain "${toolchain_version}"
-        done
-    done
     "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION
     "${CARGO_HOME}"/bin/rustup update
 
@@ -90,12 +78,6 @@ build_package() {
     remove_doc_dirs "$DEFAULT_TOOLCHAIN"
     for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
         remove_doc_dirs "${toolchain_version}-${DEFAULT_TARGET}"
-    done
-    for target in $ADDITIONAL_TARGETS; do
-        remove_doc_dirs "${DEFAULT_TOOLCHAIN_VERSION}-${target}"
-        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-            remove_doc_dirs "${toolchain_version}-${target}"
-        done
     done
 }
 

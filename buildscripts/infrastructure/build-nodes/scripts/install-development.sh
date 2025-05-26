@@ -228,6 +228,11 @@ prepare_gplusplus_sources_list() {
     fi
 }
 
+strip_for_rust() {
+    # strip only the content of the latest created directory
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
+}
+
 install_for_python_dev() {
     print_green "Installing everything for Python development ..."
 

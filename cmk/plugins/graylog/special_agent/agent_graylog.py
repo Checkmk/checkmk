@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars/all"),
         GraylogSection(name="sources", uri="/sources"),
         GraylogSection(name="streams", uri="/streams"),
@@ -72,6 +71,7 @@ def main(argv=None):
         args, "license", "/plugins/org.graylog.plugins.license/licenses/status", section_license
     )
     handle_section(args, "messages", "/system/indexer/overview", section_messages)
+    handle_section(args, "nodes", "/cluster", section_nodes)
 
     try:
         handle_request(args, sections)
@@ -182,6 +182,38 @@ def section_messages(args: argparse.Namespace, uri: str) -> list[dict[str, Any]]
     return {"events": value.json().get("counts", {}).get("events", 0)}
 
 
+def section_nodes(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = handle_response(_get_section_url(args, uri), args).json()
+    # Add inputstate data
+    url_nodes = _get_base_url(args) + "/cluster/inputstates"
+    node_inputstates = handle_response(url_nodes, args).json()
+    node_list = []
+
+    for node_id, node_data in value.items():
+        current_node_data = {node_id: node_data.copy()}
+        node_journal_data_response = handle_response(
+            _get_base_url(args) + f"/cluster/{node_id}/journal",
+            args,
+        )
+        node_journal_data = node_journal_data_response.json()
+        current_node_data[node_id].update({"journal": node_journal_data})
+
+        # Assign inputstates to individual nodes present in cluster
+        if node_id not in node_inputstates:
+            continue
+
+        current_node_data[node_id].update({"inputstates": node_inputstates[node_id]})
+
+        if args.display_node_details == "node":
+            # Hand over node data to piggyback (and only that)
+            node_hostname = current_node_data[node_id]["hostname"]
+            handle_piggyback(current_node_data, args, node_hostname, "nodes")
+            continue
+
+        node_list.append(current_node_data)
+    return node_list
+
+
 def _get_base_url(args: argparse.Namespace) -> str:
     return f"{args.proto}://{args.hostname}:{args.port}/api"
 
@@ -206,39 +238,6 @@ def handle_request(args, sections):
             value = handle_response(url, args, "POST").json()
         else:
             value = handle_response(url, args).json()
-
-        if section.name == "nodes":
-            # Add journal data for each node
-            for node_id in value:
-                node_journal_data_response = handle_response(
-                    url_base + f"/cluster/{node_id}/journal", args
-                )
-                node_journal_data = node_journal_data_response.json()
-                value[node_id].update({"journal": node_journal_data})
-
-            # Add inputstate data
-            url_nodes = url_base + "/cluster/inputstates"
-            node_inputstates = handle_response(url_nodes, args).json()
-
-            node_list = []
-            for node, inputstates in node_inputstates.items():
-                # Assign inputstates to individual nodes present in cluster
-                if node not in value:
-                    continue
-
-                value[node].update({"inputstates": inputstates})
-                current_node_data = {node: value[node]}
-
-                if args.display_node_details == "node":
-                    # Hand over node data to piggyback (and only that)
-                    node_hostname = current_node_data["hostname"]
-                    handle_piggyback(current_node_data, args, node_hostname, section.name)
-                    continue
-
-                node_list.append(current_node_data)
-
-            if node_list:
-                handle_output(node_list, section.name, args)
 
         if section.name == "sidecars":
             sidecars = value.get("sidecars")

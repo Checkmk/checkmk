@@ -16,7 +16,7 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily, EndpointFamilyRegistry
 from cmk.gui.utils import permission_verification as permissions
 
-from .get_inventory_trees import get_inventory_trees
+from ._get_inventory_trees import get_inventory_trees
 
 INVENTORY_FAMILY = EndpointFamily(
     name="HW/SW Inventory",
@@ -27,7 +27,7 @@ from different data sources like the Linux agent and is handled by inventory plu
     doc_group="Monitoring",
 )
 
-ENDPOINT_INVENTORY_TREE = VersionedEndpoint(
+ENDPOINT_INVENTORY_TREES = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=collection_href("inventory"),
         link_relation="cmk/show",
@@ -54,4 +54,4 @@ def register(
     versioned_endpoint_registry: VersionedEndpointRegistry,
 ) -> None:
     endpoint_family_registry.register(INVENTORY_FAMILY)
-    versioned_endpoint_registry.register(ENDPOINT_INVENTORY_TREE)
+    versioned_endpoint_registry.register(ENDPOINT_INVENTORY_TREES)

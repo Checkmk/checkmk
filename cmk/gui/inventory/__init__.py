@@ -5,36 +5,19 @@
 
 from __future__ import annotations
 
-import json
 import shutil
-from collections.abc import Mapping, Sequence
 from datetime import timedelta
 from pathlib import Path
-from typing import Literal, TypedDict
 
-import livestatus
-
-from cmk.ccc.exceptions import MKException
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils.structured_data import (
-    ImmutableTree,
-    InventoryPaths,
-    SDFilterChoice,
-    SDRawTree,
-    serialize_tree,
-)
+from cmk.utils.structured_data import InventoryPaths
 
-from cmk.gui import sites
-from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.views.icon import IconRegistry
@@ -42,21 +25,24 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
-from . import _rulespec, _xml
+from . import _rulespec
 from ._icon import InventoryHistoryIcon, InventoryIcon
+from ._openapi import register as openapi_register
 from ._rulespec import RulespecGroupInventory
 from ._tree import (
     get_history,
+    get_raw_status_data_via_livestatus,
     get_short_inventory_filepath,
     InventoryPath,
     load_delta_tree,
     load_latest_delta_tree,
     load_tree,
-    make_filter_choices_from_api_request_paths,
     parse_internal_raw_path,
     TreeSource,
+    verify_permission,
 )
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from ._webapi import page_host_inv_api
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 __all__ = [
@@ -64,14 +50,16 @@ __all__ = [
     "RulespecGroupInventory",
     "TreeSource",
     "get_history",
+    "get_raw_status_data_via_livestatus",
     "get_short_inventory_filepath",
     "load_delta_tree",
-    "load_tree",
     "load_latest_delta_tree",
+    "load_tree",
     "parse_internal_raw_path",
+    "register",
     "vs_element_inventory_visible_raw_path",
     "vs_inventory_path_or_keys_help",
-    "inventory_of_host",
+    "verify_permission",
 ]
 
 
@@ -83,6 +71,8 @@ def register(
     rulespec_registry: RulespecRegistry,
     icon_and_action_registry: IconRegistry,
     cron_job_registry: CronJobRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
 ) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
     cron_job_registry.register(
@@ -98,49 +88,7 @@ def register(
     _rulespec.register(rulespec_group_registry, rulespec_registry)
     icon_and_action_registry.register(InventoryIcon)
     icon_and_action_registry.register(InventoryHistoryIcon)
-
-
-def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
-    if user.may("general.see_all"):
-        return
-
-    query = "GET hosts\nFilter: host_name = {}\nStats: state >= 0{}".format(
-        livestatus.lqencode(host_name),
-        "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
-    )
-
-    if site_id:
-        sites.live().set_only_sites([site_id])
-
-    try:
-        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
-    except livestatus.MKLivestatusNotFoundError:
-        raise MKAuthException(
-            _("No such inventory tree of host %s. You may also have no access to this host.")
-            % host_name
-        )
-    finally:
-        if site_id:
-            sites.live().set_only_sites()
-
-    if result[0] == 0:
-        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
-
-
-def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName) -> bytes:
-    query = (
-        "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
-        % livestatus.lqencode(host_name)
-    )
-    try:
-        sites.live().set_only_sites([site] if site else None)
-        result = sites.live().query(query)
-    finally:
-        sites.live().set_only_sites()
-
-    if result and result[0]:
-        return result[0][0]
-    return b""
+    openapi_register(endpoint_family_registry, versioned_endpoint_registry)
 
 
 # .
@@ -152,96 +100,6 @@ def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName)
 #   |  |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, | /_/   \_\_|  |___|   |
 #   |                                          |___/                       |
 #   '----------------------------------------------------------------------'
-
-
-def _check_for_valid_hostname(hostname: str) -> None:
-    """test hostname for invalid chars, raises MKUserError if invalid chars are found
-    >>> _check_for_valid_hostname("klappspaten")
-    >>> _check_for_valid_hostname("../../etc/passwd")
-    Traceback (most recent call last):
-    cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
-    """
-    try:
-        HostAddress(hostname)
-    except ValueError:
-        raise MKUserError(
-            None,
-            _(
-                'You need to provide a valid "host name". '
-                "Only letters, digits, dash, underscore and dot are allowed.",
-            ),
-        )
-
-
-class _HostInvAPIResponse(TypedDict):
-    result_code: Literal[0, 1]
-    result: str | Mapping[str, SDRawTree]
-
-
-def inventory_of_host(
-    site_id: SiteId | None, host_name: HostName, filters: Sequence[SDFilterChoice]
-) -> ImmutableTree:
-    verify_permission(site_id, host_name)
-    tree = load_tree(
-        host_name=host_name,
-        raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
-    )
-    return tree.filter(filters) if filters else tree
-
-
-def _write_json(resp):
-    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")))
-
-
-def _write_xml(resp):
-    dom = _xml.dict_to_document(resp)
-    response.set_data(dom.toprettyxml())
-
-
-def _write_python(resp):
-    response.set_data(repr(resp))
-
-
-def page_host_inv_api() -> None:
-    resp: _HostInvAPIResponse
-    try:
-        api_request = request.get_request()
-        if not (hosts := api_request.get("hosts")):
-            if (host_name := api_request.get("host")) is None:
-                raise MKUserError("host", _('You need to provide a "host".'))
-            hosts = [host_name]
-
-        result: dict[str, SDRawTree] = {}
-        for raw_host_name in hosts:
-            _check_for_valid_hostname(raw_host_name)
-            result[raw_host_name] = serialize_tree(
-                inventory_of_host(
-                    SiteId(raw_site_id) if (raw_site_id := api_request.get("site")) else None,
-                    HostName(raw_host_name),
-                    (
-                        make_filter_choices_from_api_request_paths(api_request["paths"])
-                        if "paths" in api_request
-                        else []
-                    ),
-                )
-            )
-
-        resp = {"result_code": 0, "result": result}
-
-    except MKException as e:
-        resp = {"result_code": 1, "result": "%s" % e}
-
-    except Exception as e:
-        if active_config.debug:
-            raise
-        resp = {"result_code": 1, "result": "%s" % e}
-
-    if html.output_format == "json":
-        _write_json(resp)
-    elif html.output_format == "xml":
-        _write_xml(resp)
-    else:
-        _write_python(resp)
 
 
 class InventoryHousekeeping:

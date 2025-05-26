@@ -11,8 +11,11 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
+import livestatus
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
@@ -31,8 +34,9 @@ from cmk.utils.structured_data import (
     SDPath,
 )
 
-from cmk.gui import userdb
+from cmk.gui import sites, userdb
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -209,6 +213,33 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     return permitted_paths
 
 
+def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
+    if user.may("general.see_all"):
+        return
+
+    query = "GET hosts\nFilter: host_name = {}\nStats: state >= 0{}".format(
+        livestatus.lqencode(host_name),
+        "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
+    )
+
+    if site_id:
+        sites.live().set_only_sites([site_id])
+
+    try:
+        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    except livestatus.MKLivestatusNotFoundError:
+        raise MKAuthException(
+            _("No such inventory tree of host %s. You may also have no access to this host.")
+            % host_name
+        )
+    finally:
+        if site_id:
+            sites.live().set_only_sites()
+
+    if result[0] == 0:
+        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
+
+
 def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
@@ -224,6 +255,33 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
         return merged_tree.filter(_make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree
+
+
+def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName) -> bytes:
+    query = (
+        "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
+        % livestatus.lqencode(host_name)
+    )
+    try:
+        sites.live().set_only_sites([site] if site else None)
+        result = sites.live().query(query)
+    finally:
+        sites.live().set_only_sites()
+
+    if result and result[0]:
+        return result[0][0]
+    return b""
+
+
+def inventory_of_host(
+    site_id: SiteId | None, host_name: HostName, filters: Sequence[SDFilterChoice]
+) -> ImmutableTree:
+    verify_permission(site_id, host_name)
+    tree = load_tree(
+        host_name=host_name,
+        raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
+    )
+    return tree.filter(filters) if filters else tree
 
 
 def get_short_inventory_filepath(host_name: HostName) -> Path:

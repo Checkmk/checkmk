@@ -11,11 +11,12 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import ImmutableTree
 
-from cmk.gui.inventory import inventory_of_host
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.restful_objects.constructors import collection_href
+
+from .._tree import inventory_of_host
 
 
 @dataclass(kw_only=True, slots=True)

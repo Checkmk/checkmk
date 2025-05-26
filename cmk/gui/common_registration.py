@@ -186,6 +186,8 @@ def register(
         rulespec_registry,
         icon_and_action_registry,
         cron_job_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
     )
     dashboard_registration.register(
         permission_section_registry,

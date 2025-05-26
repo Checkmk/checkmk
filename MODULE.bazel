@@ -440,6 +440,17 @@ http_archive(
 )
 
 http_archive(
+    name = "python",
+    build_file = "//omd/packages/Python:BUILD.Python.bazel",
+    sha256 = "56bfef1fdfc1221ce6720e43a661e3eb41785dd914ce99698d8c7896af4bdaa1",
+    strip_prefix = "Python-3.12.3",
+    urls = [
+        "https://www.python.org/ftp/python/3.12.3/Python-3.12.3.tar.xz",
+        UPSTREAM_MIRROR_URL + "Python-3.12.3.tar.xz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

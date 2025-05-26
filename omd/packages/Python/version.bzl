@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
+load("//:package_versions.bzl", "PYTHON_VERSION")
 
 __PYTHON_VERSION_ARRAY = PYTHON_VERSION.split(".")
 PYTHON_VERSION_MAJOR = __PYTHON_VERSION_ARRAY[0]

@@ -1,5 +1,5 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
+load("@@//:package_versions.bzl", "PYTHON_VERSION")
+load("@@//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 package(default_visibility = ["//visibility:public"])
@@ -47,8 +47,8 @@ configure_make(
         "DESTDIR=%s" % INSTALL_PREFIX,
     ],
     data = [
-        "@omd_packages//omd/packages/Python:pip",
-        "@omd_packages//omd/packages/Python:sitecustomize.py",
+        "@@//omd/packages/Python:pip",
+        "@@//omd/packages/Python:sitecustomize.py",
     ],
     env = {
         "PKG_CONFIG_PATH": ":".join([

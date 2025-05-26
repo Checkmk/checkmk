@@ -29,10 +29,6 @@ load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
 
 crypt_ssleay_workspace()
 
-load("//omd/packages/Python:Python_http.bzl", "python_workspace")
-
-python_workspace()
-
 load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios_workspace")
 
 pnp4nagios_workspace()

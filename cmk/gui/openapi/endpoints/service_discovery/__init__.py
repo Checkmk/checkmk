@@ -741,7 +741,7 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
         return job.get_status_snapshot()
 
     return fetch_service_discovery_background_job_status(
-        host.site_id(), host.name(), debug=active_config.debug
+        get_site_config(active_config, host.site_id()), host.name(), debug=active_config.debug
     )
 
 

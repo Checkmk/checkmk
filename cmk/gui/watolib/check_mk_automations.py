@@ -76,10 +76,13 @@ def _automation_serialized(
             cmdline=cmdline,
         )
 
+    site_config = get_site_config(active_config, siteid)
+
     return AutomationResponse(
         command=command,
         serialized_result=check_mk_remote_automation_serialized(
             site_id=siteid,
+            site_config=site_config,
             command=command,
             args=args,
             indata=indata,

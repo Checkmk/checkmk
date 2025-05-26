@@ -6,6 +6,8 @@
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
@@ -346,6 +348,7 @@ def _create_and_save_special_agent_bundle(
             _run_service_discovery(
                 host_name,
                 site_id,
+                site_config=get_site_config(active_config, site_id),
                 is_local=is_local,
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,
@@ -406,7 +409,13 @@ def _service_discovery_possible(site_id: SiteId, *, is_local: bool, debug: bool)
 
 
 def _run_service_discovery(
-    host_name: str, site_id: SiteId, *, is_local: bool, pprint_value: bool, debug: bool
+    host_name: str,
+    site_id: SiteId,
+    *,
+    site_config: SiteConfiguration,
+    is_local: bool,
+    pprint_value: bool,
+    debug: bool,
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
     if not is_local:
@@ -417,7 +426,10 @@ def _run_service_discovery(
             raise_errors=False,
             debug=debug,
         )
-        snapshot = fetch_service_discovery_background_job_status(site_id, host_name, debug=debug)
+
+        snapshot = fetch_service_discovery_background_job_status(
+            site_config, host_name, debug=debug
+        )
         if not snapshot.exists:
             raise Exception(
                 _("Could not find a running service discovery for host %s on remote site %s")
@@ -425,7 +437,7 @@ def _run_service_discovery(
             )
         while snapshot.is_active:
             snapshot = fetch_service_discovery_background_job_status(
-                site_id, host_name, debug=debug
+                site_config, host_name, debug=debug
             )
 
     check_table = get_check_table(

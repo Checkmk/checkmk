@@ -52,13 +52,12 @@ from cmk.gui.background_job import (
     JobStatusStates,
     JobTarget,
 )
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import get_site_config, is_replication_enabled
+from cmk.gui.site_config import is_replication_enabled
 from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
@@ -196,6 +195,7 @@ def _hilite_errors(outdata: str) -> str:
 def check_mk_remote_automation_serialized(
     *,
     site_id: SiteId,
+    site_config: SiteConfiguration,
     command: str,
     args: Sequence[str] | None,
     indata: object,
@@ -212,17 +212,16 @@ def check_mk_remote_automation_serialized(
             "cmk.automation.args": repr(args),
         },
     ):
-        site = get_site_config(active_config, site_id)
-        if "secret" not in site:
+        if "secret" not in site_config:
             raise MKGeneralException(
                 _('Cannot connect to site "%s": The site is not logged in')
-                % site.get("alias", site_id)
+                % site_config.get("alias", site_id)
             )
 
-        if not is_replication_enabled(site):
+        if not is_replication_enabled(site_config):
             raise MKGeneralException(
                 _('Cannot connect to site "%s": The replication is disabled')
-                % site.get("alias", site_id)
+                % site_config.get("alias", site_id)
             )
 
         sync(site_id)
@@ -231,7 +230,7 @@ def check_mk_remote_automation_serialized(
             # This will start a background job process on the remote site to execute the automation
             # asynchronously. It then polls the remote site, waiting for completion of the job.
             return _do_check_mk_remote_automation_in_background_job_serialized(
-                site_id,
+                site_config,
                 CheckmkAutomationRequest(command, args, indata, stdin_data, timeout, debug=debug),
                 debug=debug,
             )
@@ -240,7 +239,7 @@ def check_mk_remote_automation_serialized(
         return SerializedResult(
             _do_remote_automation_serialized(
                 site_id=site_id,
-                site=get_site_config(active_config, site_id),
+                site=site_config,
                 command="checkmk-automation",
                 vars_=[
                     ("automation", command),  # The Checkmk automation command
@@ -331,12 +330,12 @@ def _do_remote_automation_serialized(
 
 
 def fetch_service_discovery_background_job_status(
-    site_id: SiteId, hostname: str, *, debug: bool
+    site_config: SiteConfiguration, hostname: str, *, debug: bool
 ) -> BackgroundStatusSnapshot:
     details = json.loads(
         str(
             do_remote_automation(
-                site=get_site_config(active_config, site_id),
+                site=site_config,
                 command="service-discovery-job-snapshot",
                 vars_=[("hostname", hostname)],
                 debug=debug,
@@ -613,7 +612,7 @@ class CheckmkAutomationGetStatusResponse(NamedTuple):
 # - Service discovery of a single host (cmk.gui.wato.pages.services._get_check_table)
 # - Fetch agent / SNMP output (cmk.gui.wato.pages.fetch_agent_output.FetchAgentOutputBackgroundJob)
 def _do_check_mk_remote_automation_in_background_job_serialized(
-    site_id: SiteId,
+    site_config: SiteConfiguration,
     automation_request: CheckmkAutomationRequest,
     *,
     debug: bool,
@@ -622,8 +621,6 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     It starts the background job using one call. It then polls the remote site, waiting for
     completion of the job."""
-    site_config = get_site_config(active_config, site_id)
-
     job_id = _start_remote_automation_job(site_config, automation_request, debug=debug)
 
     auto_logger.info("Waiting for job completion")

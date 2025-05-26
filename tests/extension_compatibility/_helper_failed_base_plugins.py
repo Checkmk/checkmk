@@ -7,6 +7,6 @@ import json
 
 from cmk.utils import paths
 
-from cmk.base.config import load_all_plugins
+from cmk.base.config import load_all_pluginX
 
-print(json.dumps(load_all_plugins(str(paths.checks_dir)).errors))
+print(json.dumps(load_all_pluginX(paths.checks_dir).errors))

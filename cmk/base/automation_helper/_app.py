@@ -109,7 +109,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
     dependencies.state.last_reload_at = time.time()
 
-    plugins = config.load_all_plugins(str(paths.checks_dir))
+    plugins = config.load_all_pluginX(paths.checks_dir)
     dependencies.state.plugins = plugins
 
     tty.reinit()

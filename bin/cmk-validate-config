@@ -24,7 +24,7 @@ def main() -> int:
     try:
         main_modules.load_plugins()
         with disable_redis(), gui_context():
-            plugins = config.load_all_plugins(str(paths.checks_dir))
+            plugins = config.load_all_pluginX(paths.checks_dir)
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
             config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))

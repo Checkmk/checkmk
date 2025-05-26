@@ -144,8 +144,7 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        plugins = config.load_all_plugins(str(paths.checks_dir))
-    return plugins
+        return config.load_all_pluginX(paths.checks_dir)
 
 
 def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadingResult:

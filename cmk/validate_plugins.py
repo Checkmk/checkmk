@@ -31,7 +31,7 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
 )
 
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    load_all_plugins,
+    load_all_pluginX,
 )
 
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
@@ -89,7 +89,7 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 
 def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins = load_all_plugins(str(paths.checks_dir))
+    plugins = load_all_pluginX(paths.checks_dir)
     return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 

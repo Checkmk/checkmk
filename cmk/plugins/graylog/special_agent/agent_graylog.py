@@ -48,7 +48,6 @@ def main(argv=None):
     # Add new queries here
     sections = [
         GraylogSection(name="sources", uri="/sources"),
-        GraylogSection(name="streams", uri="/streams"),
         GraylogSection(name="events", uri="/events/search"),
     ]
 
@@ -72,6 +71,7 @@ def main(argv=None):
     handle_section(args, "messages", "/system/indexer/overview", section_messages)
     handle_section(args, "nodes", "/cluster", section_nodes)
     handle_section(args, "sidecars", "/sidecars/all", section_sidecars)
+    handle_section(args, "streams", "/streams", section_streams)
 
     try:
         handle_request(args, sections)
@@ -225,6 +225,10 @@ def section_sidecars(args: argparse.Namespace, uri: str) -> list[dict[str, Any]]
                 continue
             sidecar_list.append(sidecar)
     return sidecar_list
+
+
+def section_streams(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
 
 
 def _get_base_url(args: argparse.Namespace) -> str:

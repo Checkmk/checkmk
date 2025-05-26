@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
         GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
@@ -67,6 +66,9 @@ def main(argv=None):
         "cluster_traffic",
         "/system/cluster/traffic?days=1&daily=false",
         section_cluster_traffic,
+    )
+    handle_section(
+        args, "failures", "/system/indexer/failures/count/?since=%s" % since, section_failures
     )
 
     try:
@@ -139,6 +141,16 @@ def section_cluster_traffic(
     return handle_response(_get_section_url(args, uri), args).json()
 
 
+def section_failures(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    section_response = handle_response(_get_section_url(args, uri), args).json()
+    failures_url = _get_base_url(args) + "/system/indexer/failures?limit=30"
+    additional_response = handle_response(failures_url, args).json()
+    return {
+        "count": section_response.get("count", 0),
+        "ds_param_since": args.since,
+    } | additional_response
+
+
 def _get_base_url(args: argparse.Namespace) -> str:
     return f"{args.proto}://{args.hostname}:{args.port}/api"
 
@@ -163,15 +175,6 @@ def handle_request(args, sections):
             value = handle_response(url, args, "POST").json()
         else:
             value = handle_response(url, args).json()
-
-        # add failure details
-        if section.name == "failures":
-            url_failures = url_base + "/system/indexer/failures?limit=30"
-
-            value.update(handle_response(url_failures, args).json())
-
-            # add param from datasource for use in check output
-            value.update({"ds_param_since": args.since})
 
         if section.name == "nodes":
             # Add journal data for each node

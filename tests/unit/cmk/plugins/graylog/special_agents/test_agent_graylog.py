@@ -28,7 +28,7 @@ GRAYLOG_EXAMPLE_OUTPUT = """<<<graylog_alerts:sep(0)>>>
 <<<graylog_cluster_traffic:sep(0)>>>
 {"from": "2025-05-25T00:00:00.000Z", "to": "2025-05-26T09:50:34.394Z", "input": {"2025-05-26T09:00:00.000Z": 0}, "output": {"2025-05-26T09:00:00.000Z": 0}, "decoded": {"2025-05-26T09:00:00.000Z": 0}}
 <<<graylog_failures:sep(0)>>>
-{"count": 0, "failures": [], "total": 0, "ds_param_since": 1800}
+{"count": 0, "ds_param_since": 1800, "failures": [], "total": 0}
 <<<graylog_jvm:sep(0)>>>
 {"jvm.memory.heap.used": 153090864, "jvm.memory.heap.committed": 239075328, "jvm.memory.heap.init": 515899392, "jvm.memory.heap.max": 8250195968, "jvm.memory.heap.usage": 0.018556027589380044}
 <<<graylog_license:sep(0)>>>

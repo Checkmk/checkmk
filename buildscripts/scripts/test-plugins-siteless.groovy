@@ -56,6 +56,15 @@ def main() {
     // todo: build progress mins?
 
     stage("Prepare workspace") {
+        single_tests.prepare_workspace(
+            cleanup: [
+                "${WORKSPACE}/test-results",
+            ],
+            make_venv: false,
+        );
+    }
+
+    dir("${checkout_dir}") {
         inside_container(
             args: [
                 "--env HOME=/home/jenkins",
@@ -65,36 +74,25 @@ def main() {
             mount_credentials: true,
             privileged: true,
         ) {
-            single_tests.prepare_workspace(
-                cleanup: [
-                    "${WORKSPACE}/test-results",
-                ],
-                make_venv: false
-            );
-
-            dir("${checkout_dir}") {
-                try {
-                    stage("Run `make ${make_target}`") {
-                        dir("${checkout_dir}/tests") {
-                            single_tests.run_make_target(
-                                result_path: "${WORKSPACE}/test-results/${distro}",
-                                edition: edition,
-                                docker_tag: setup_values.docker_tag,
-                                version: "daily",
-                                distro: distro,
-                                branch_name: setup_values.safe_branch_name,
-                                make_target: make_target,
-                            );
-                        }
+            try {
+                stage("Run `make ${make_target}`") {
+                    dir("${checkout_dir}/tests") {
+                        single_tests.run_make_target(
+                            result_path: "${checkout_dir}/test-results/${distro}",
+                            edition: edition,
+                            docker_tag: setup_values.docker_tag,
+                            version: "daily",
+                            distro: distro,
+                            branch_name: setup_values.safe_branch_name,
+                            make_target: make_target,
+                        );
                     }
                 }
-                finally {
-                    stage("Archive / process test reports") {
-                        dir("${WORKSPACE}") {
-                            show_duration("archiveArtifacts") {
-                                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
-                            }
-                        }
+            }
+            finally {
+                stage("Archive / process test reports") {
+                    show_duration("archiveArtifacts") {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
                     }
                 }
             }

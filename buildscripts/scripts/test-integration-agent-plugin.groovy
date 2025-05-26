@@ -63,6 +63,15 @@ def main() {
     }
 
     stage("Prepare workspace") {
+        single_tests.prepare_workspace(
+            cleanup: [
+                "${WORKSPACE}/test-results",
+            ],
+            make_venv: false,
+        );
+    }
+
+    dir("${checkout_dir}") {
         inside_container(
             args: [
                 "--env HOME=/home/jenkins",
@@ -72,26 +81,17 @@ def main() {
             mount_credentials: true,
             privileged: true,
         ) {
-            single_tests.prepare_workspace(
-                cleanup: [
-                    "${WORKSPACE}/test-results",
-                ],
-                make_venv: true
-            );
-
-            dir("${checkout_dir}") {
-                stage("Run `make ${make_target}`") {
-                    dir("${checkout_dir}/tests") {
-                        single_tests.run_make_target(
-                            result_path: "${WORKSPACE}/test-results",
-                            edition: edition,
-                            docker_tag: setup_values.docker_tag,
-                            version: VERSION == "daily" ? version : cmk_version,
-                            // distro: distro,
-                            branch_name: setup_values.safe_branch_name,
-                            make_target: make_target,
-                        );
-                    }
+            stage("Run `make ${make_target}`") {
+                dir("${checkout_dir}/tests") {
+                    single_tests.run_make_target(
+                        result_path: "${checkout_dir}/test-results",
+                        edition: edition,
+                        docker_tag: setup_values.docker_tag,
+                        version: VERSION == "daily" ? version : cmk_version,
+                        // distro: distro,
+                        branch_name: setup_values.safe_branch_name,
+                        make_target: make_target,
+                    );
                 }
             }
         }

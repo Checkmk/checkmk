@@ -186,8 +186,8 @@ def _localize_sniff() -> None:
 
     paths = [
         cmk.utils.paths.default_config_dir,
-        cmk.utils.paths.web_dir + "/app",
-        cmk.utils.paths.lib_dir + "/python/cmk",
+        str(cmk.utils.paths.web_dir / "app"),
+        str(cmk.utils.paths.lib_dir / "python/cmk"),
     ]
     if cmk.utils.paths.local_web_dir.exists():
         paths.append(str(cmk.utils.paths.local_web_dir))

@@ -11,7 +11,7 @@ from cmk.utils.paths import local_web_dir, web_dir
 
 
 def theme_choices(
-    base_dirs: Iterable[Path] = (Path(web_dir), Path(local_web_dir)),
+    base_dirs: Iterable[Path] = (web_dir, local_web_dir),
 ) -> list[tuple[str, str]]:
     themes = {}
 

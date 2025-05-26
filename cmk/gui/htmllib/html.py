@@ -14,8 +14,7 @@ import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import lru_cache
-from pathlib import Path
-from typing import Any, Literal, overload
+from typing import Any, Literal
 
 from flask import current_app, session
 
@@ -266,7 +265,7 @@ class HTMLGenerator(HTMLWriter):
 
     @lru_cache
     def _load_vue_manifest(self) -> _Manifest:
-        base = Path(cmk.utils.paths.web_dir, "htdocs", "cmk-frontend-vue")
+        base = cmk.utils.paths.web_dir / "htdocs/cmk-frontend-vue"
         with (base / ".manifest.json").open() as fo:
             manifest = json.load(fo)
 
@@ -330,8 +329,8 @@ class HTMLGenerator(HTMLWriter):
     def _plugin_stylesheets() -> Iterable[str]:
         plugin_stylesheets = set()
         for directory in [
-            Path(cmk.utils.paths.web_dir, "htdocs", "css"),
-            cmk.utils.paths.local_web_dir / "htdocs" / "css",
+            cmk.utils.paths.web_dir / "htdocs/css",
+            cmk.utils.paths.local_web_dir / "htdocs/css",
         ]:
             if directory.exists():
                 for entry in directory.iterdir():
@@ -341,8 +340,8 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def _verify_file_exists_in_web_dirs(file_path: str) -> None:
-        path = _path(cmk.utils.paths.web_dir) / "htdocs" / file_path
-        local_path = _path(cmk.utils.paths.local_web_dir) / "htdocs" / file_path
+        path = cmk.utils.paths.web_dir / "htdocs" / file_path
+        local_path = cmk.utils.paths.local_web_dir / "htdocs" / file_path
         file_missing = not (path.exists() or local_path.exists())
         if file_missing:
             raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
@@ -1509,21 +1508,6 @@ class HTMLGenerator(HTMLWriter):
                 onchange=onchange,
             )
         )
-
-
-@overload
-def _path(path_or_str: Path) -> Path: ...
-
-
-@overload
-def _path(path_or_str: str) -> Path: ...
-
-
-def _path(path_or_str: Path | str) -> Path:
-    if isinstance(path_or_str, str):
-        return Path(path_or_str)
-    else:
-        return path_or_str
 
 
 html = request_local_attr("html", HTMLGenerator)

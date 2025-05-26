@@ -165,7 +165,7 @@ class ABCModeDownloadAgents(WatoMode):
         forms.container()
         for path in paths:
             os_path = path
-            relpath = path.replace(cmk.utils.paths.agents_dir + "/", "")
+            relpath = path.replace(str(cmk.utils.paths.agents_dir) + "/", "")
             filename = path.split("/")[-1]
 
             file_size = os.stat(os_path).st_size
@@ -194,7 +194,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return []
 
     def _walk_base_dirs(self) -> list[str]:
-        return [cmk.utils.paths.agents_dir]
+        return [str(cmk.utils.paths.agents_dir)]
 
     def _exclude_file_glob_patterns(self):
         return [
@@ -234,8 +234,8 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
 
     def _walk_base_dirs(self) -> list[str]:
         return [
-            cmk.utils.paths.agents_dir + "/windows",
-            cmk.utils.paths.agents_dir + "/robotmk/windows",
+            str(cmk.utils.paths.agents_dir / "windows"),
+            str(cmk.utils.paths.agents_dir / "robotmk/windows"),
         ]
 
 
@@ -251,7 +251,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
 
     def _walk_base_dirs(self) -> list[str]:
-        return [cmk.utils.paths.agents_dir]
+        return [str(cmk.utils.paths.agents_dir)]
 
     def _exclude_file_glob_patterns(self):
         return [

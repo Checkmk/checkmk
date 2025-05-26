@@ -43,10 +43,6 @@ _STR_PATHS: Final = {
     "cmk_addons_plugins_dir",
     "cmk_plugins_dir",
     "inventory_dir",
-    "legacy_check_manpages_dir",
-    "agents_dir",
-    "web_dir",
-    "lib_dir",
 }
 
 

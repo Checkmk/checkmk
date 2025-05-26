@@ -116,11 +116,11 @@ def _fake_version_and_paths() -> None:
             pass  # path is outside of omd_root
 
     # these use repo_path
-    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", repo_path() / "agents")
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", str(repo_path() / "checks"))
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", str(repo_path() / "inventory"))
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", repo_path() / "checkman")
 
     # patch `cmk.ccc.versions`
     logger.info("Patching `cmk.ccc.versions`.")

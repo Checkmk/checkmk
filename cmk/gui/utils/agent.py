@@ -12,18 +12,18 @@ import cmk.utils.paths
 
 
 def packed_agent_path_windows_msi() -> Path:
-    return Path(cmk.utils.paths.agents_dir) / "windows" / "check_mk_agent.msi"
+    return cmk.utils.paths.agents_dir / "windows/check_mk_agent.msi"
 
 
 def packed_agent_path_linux_deb() -> Path:
     return (
-        Path(cmk.utils.paths.agents_dir)
+        cmk.utils.paths.agents_dir
         / f"check-mk-agent_{Version.from_str(cmk_version).version_without_rc}-1_all.deb"
     )
 
 
 def packed_agent_path_linux_rpm() -> Path:
     return (
-        Path(cmk.utils.paths.agents_dir)
+        cmk.utils.paths.agents_dir
         / f"check-mk-agent-{Version.from_str(cmk_version).version_without_rc}-1.noarch.rpm"
     )

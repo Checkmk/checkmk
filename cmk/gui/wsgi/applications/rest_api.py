@@ -447,7 +447,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         filename = get_filename_from_url(get_url(environ)) or "index.html"
 
-        return send_from_directory(f"{paths.web_dir}/htdocs/openapi/swagger-ui-5.20.6/", filename)(
+        return send_from_directory(paths.web_dir / "htdocs/openapi/swagger-ui-5.20.6", filename)(
             environ, start_response
         )
 

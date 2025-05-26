@@ -738,7 +738,7 @@ def _add_template_attachments(
 
 
 def attach_file(icon: str) -> Attachment:
-    with open(web_dir + f"/htdocs/images/icons/{icon}", "rb") as file:
+    with open(web_dir / f"htdocs/images/icons/{icon}", "rb") as file:
         return Attachment(what="img", name=icon, contents=file.read(), how="inline")
 
 

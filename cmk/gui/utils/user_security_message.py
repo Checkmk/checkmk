@@ -430,7 +430,7 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
 
 def _get_attachments() -> list[Attachment]:
     attachments: list[Attachment] = []
-    with open(web_dir + "/htdocs/images/icons/checkmk_logo.png", "rb") as file:
+    with open(web_dir / "htdocs/images/icons/checkmk_logo.png", "rb") as file:
         attachments.append(
             Attachment(what="img", name="checkmk_logo.png", contents=file.read(), how="inline")
         )

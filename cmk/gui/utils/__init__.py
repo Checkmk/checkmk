@@ -51,7 +51,7 @@ _failed_plugins: dict[Path, tuple[str, str, BaseException]] = {}
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat: str, globalvars: dict) -> None:
     for plugins_path in [
-        Path(cmk.utils.paths.web_dir, "plugins", forwhat),
+        cmk.utils.paths.web_dir / "plugins" / forwhat,
         cmk.utils.paths.local_web_dir / "plugins" / forwhat,
     ]:
         if not plugins_path.exists():

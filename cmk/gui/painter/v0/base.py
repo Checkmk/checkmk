@@ -12,7 +12,6 @@ import re
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from html import unescape
-from pathlib import Path
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -557,7 +556,7 @@ class Cell:
             themes = theme.icon_themes()
             for file_path in [
                 cmk.utils.paths.local_web_dir / "htdocs" / filename,
-                Path(cmk.utils.paths.web_dir, "htdocs", filename),
+                cmk.utils.paths.web_dir / "htdocs" / filename,
             ]:
                 for path_in_theme in (str(file_path).replace(t, "facelift") for t in themes):
                     if os.path.exists(path_in_theme):

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -31,8 +30,8 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 @pytest.fixture(name="icon_dir")
 def fixture_icon_dir() -> None:
-    src_path = repo_path().joinpath("packages/cmk-frontend/src/themes")
-    target_path = Path(cmk.utils.paths.web_dir).joinpath("htdocs/themes")
+    src_path = repo_path() / "packages/cmk-frontend/src/themes"
+    target_path = cmk.utils.paths.web_dir / "htdocs/themes"
     target_path.parent.mkdir(parents=True, exist_ok=True)
     target_path.symlink_to(src_path)
 

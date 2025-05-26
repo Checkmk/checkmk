@@ -5,7 +5,6 @@
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia"""
 
 import argparse
-import os
 import sys
 
 # TODO: is there a better way to do this?
@@ -15,7 +14,7 @@ from cmk.utils.password_store import replace_passwords
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
-sys.path.append(os.path.join(cmk.utils.paths.agents_dir, "plugins"))
+sys.path.append(str(cmk.utils.paths.agents_dir / "plugins"))
 import mk_jolokia
 
 __version__ = "2.5.0b1"

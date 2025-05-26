@@ -7653,7 +7653,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         for theme_id in theme.icon_themes():
             dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme_id / "images"]
             if not only_local:
-                dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/themes" / theme_id / "images")
+                dirs.append(cmk.utils.paths.web_dir / "htdocs/themes" / theme_id / "images")
 
             for file_stem, category in self._get_icons_from_directories(
                 dirs, default_category="builtin"
@@ -7665,7 +7665,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
     def _available_user_icons(self, only_local: bool = False) -> Mapping[str, str]:
         dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
         if not only_local:
-            dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/images/icons")
+            dirs.append(cmk.utils.paths.web_dir / "htdocs/images/icons")
 
         return self._get_icons_from_directories(dirs, default_category="misc")
 

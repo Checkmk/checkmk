@@ -754,14 +754,23 @@ def test_diagnostics_element_checkmk_files_error(
     [
         (
             diagnostics.CheckmkConfigFilesDiagnosticsElement,
-            cmk.utils.paths.default_config_dir,
+            Path(cmk.utils.paths.default_config_dir),
             "test.conf",
         ),
-        (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
+        (
+            diagnostics.CheckmkLogFilesDiagnosticsElement,
+            cmk.utils.paths.log_dir,
+            "test.log",
+        ),
     ],
     ids=["conf", "log"],
 )
-def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir, test_filename):
+def test_diagnostics_element_checkmk_files_content(
+    tmp_path: Path,
+    diag_elem: type[diagnostics.ABCCheckmkFilesDiagnosticsElement],
+    test_dir: Path,
+    test_filename: str,
+) -> None:
     test_conf_dir = Path(test_dir) / "test"
     test_conf_dir.mkdir(parents=True, exist_ok=True)
     test_conf_filepath = test_conf_dir.joinpath(test_filename)
@@ -771,7 +780,7 @@ def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir
     relative_path = str(Path(test_dir).relative_to(cmk.utils.paths.omd_root))
     short_test_conf_filepath = str(Path(test_conf_filepath).relative_to(test_dir))
     diagnostics_element = diag_elem([short_test_conf_filepath])
-    tmppath = Path(tmp_path).joinpath("tmp")
+    tmppath = tmp_path / "tmp"
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = next(diagnostics_element.add_or_get_files(tmppath))
 

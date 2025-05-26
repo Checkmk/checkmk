@@ -267,9 +267,9 @@ def get_checkmk_licensing_files_map() -> CheckmkFilesMap:
 
 def get_checkmk_log_files_map() -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(cmk.utils.paths.log_dir):
+    for root, _dirs, files in os.walk(str(cmk.utils.paths.log_dir)):
         for file_name in files:
-            filepath = Path(root).joinpath(file_name)
+            filepath = Path(root) / file_name
             if (
                 filepath.suffix in (".log", ".1", ".state")
                 or filepath.name

@@ -7,7 +7,6 @@ from __future__ import annotations
 import ast
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from pathlib import Path
 from typing import NamedTuple, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -57,7 +56,7 @@ class AutochecksStore:
     def __init__(self, host_name: HostName) -> None:
         self._host_name = host_name
         self._store = ObjectStore(
-            Path(cmk.utils.paths.autochecks_dir, f"{host_name}.mk"),
+            cmk.utils.paths.autochecks_dir / f"{host_name}.mk",
             serializer=_AutochecksSerializer(),
         )
 

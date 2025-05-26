@@ -6,7 +6,6 @@
 
 import shutil
 from collections.abc import Mapping
-from pathlib import Path
 
 import pytest
 from pytest import MonkeyPatch
@@ -87,7 +86,7 @@ def test_do_create_config_nagios(
         duplicates=(),
     )
 
-    assert Path(cmk.utils.paths.nagios_objects_file).exists()
+    assert cmk.utils.paths.nagios_objects_file.exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 

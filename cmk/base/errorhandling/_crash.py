@@ -171,13 +171,11 @@ class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
 
 
 def _read_snmp_info(hostname: str) -> bytes | None:
-    cache_path = Path(cmk.utils.paths.snmpwalks_dir, hostname)
     try:
-        with cache_path.open(mode="rb") as f:
+        with (cmk.utils.paths.snmpwalks_dir / hostname).open(mode="rb") as f:
             return f.read()
     except OSError:
-        pass
-    return None
+        return None
 
 
 def _read_agent_output(hostname: HostName) -> AgentRawData | None:

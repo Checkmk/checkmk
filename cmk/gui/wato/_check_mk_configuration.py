@@ -407,7 +407,7 @@ ConfigVariableLogLevels = ConfigVariable(
             help=_(
                 "This setting decides which types of messages to log into the web log <tt>%s</tt>."
             )
-            % site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
+            % site_neutral_path(cmk.utils.paths.log_dir / "web.log"),
             elements=_web_log_level_elements(),
             optional_keys=[],
         ),
@@ -456,7 +456,7 @@ def _web_log_level_elements():
                 "The job scheduler manages regularly running tasks and the execution of "
                 "background jobs. Log entries of this component are written to <tt>%s</tt>."
             )
-            % site_neutral_path(f"{cmk.utils.paths.log_dir}/ui-job-scheduler/ui-job-scheduler.log"),
+            % site_neutral_path(cmk.utils.paths.log_dir / "ui-job-scheduler/ui-job-scheduler.log"),
         ),
         (
             "cmk.web.background-job",

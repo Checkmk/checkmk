@@ -79,7 +79,7 @@ def test_registered_background_jobs_attributes() -> None:
 
 
 @pytest.fixture(autouse=True)
-def job_base_dir(tmp_path, monkeypatch):
+def job_base_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     var_dir = tmp_path
 
     log_dir = var_dir / "log"
@@ -89,7 +89,7 @@ def job_base_dir(tmp_path, monkeypatch):
     job_dir.mkdir()
 
     # Patch for web.log. Sholdn't we do this for all web tests?
-    monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))
+    monkeypatch.setattr(cmk.utils.paths, "log_dir", log_dir)
 
     monkeypatch.setattr(BackgroundJobDefines, "base_dir", str(job_dir))
     return job_dir

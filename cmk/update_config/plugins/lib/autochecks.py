@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, TypeVar
 
 from cmk.ccc import debug
@@ -111,7 +110,7 @@ def _get_fixed_autochecks(
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
-    for autocheck_file in Path(paths.autochecks_dir).glob("*.mk"):
+    for autocheck_file in paths.autochecks_dir.glob("*.mk"):
         yield HostName(autocheck_file.stem)
 
 

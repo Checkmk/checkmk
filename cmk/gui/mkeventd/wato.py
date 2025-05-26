@@ -4626,7 +4626,7 @@ ConfigVariableEventConsoleLogLevel = ConfigVariable(
             "You can configure the Event Console to log more details about it's actions. "
             "These information are logged into the file <tt>%s</tt>"
         )
-        % site_neutral_path(cmk.utils.paths.log_dir + "/mkeventd.log"),
+        % site_neutral_path(cmk.utils.paths.log_dir / "mkeventd.log"),
         elements=_ec_log_level_elements(),
         optional_keys=[],
     ),

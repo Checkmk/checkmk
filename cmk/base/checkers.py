@@ -393,7 +393,6 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
@@ -423,7 +422,7 @@ class CMKFetcher:
                             self.selected_sections if not is_cluster else NO_SELECTION
                         ),
                         backend_override=self.snmp_backend_override,
-                        stored_walk_path=stored_walk_path,
+                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,
                     ),
                     is_cluster=current_host_name in hosts_config.clusters,

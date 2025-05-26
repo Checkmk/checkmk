@@ -1085,7 +1085,7 @@ def set_use_core_config(
     orig_autochecks_dir: Final = cmk.utils.paths.autochecks_dir
     orig_discovered_host_labels_dir: Final = cmk.utils.paths.discovered_host_labels_dir
     try:
-        cmk.utils.paths.autochecks_dir = str(autochecks_dir)
+        cmk.utils.paths.autochecks_dir = autochecks_dir
         cmk.utils.paths.discovered_host_labels_dir = discovered_host_labels_dir
         yield
     finally:

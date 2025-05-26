@@ -221,7 +221,7 @@ def dump_host(
     )
 
     oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+    stored_walk_path = cmk.utils.paths.snmpwalks_dir
     walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
     file_cache_path = cmk.utils.paths.data_source_cache_dir
     tcp_cache_path = cmk.utils.paths.tcp_cache_dir

@@ -250,7 +250,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
-    makedirs(Path(cmk.utils.paths.autochecks_dir))
+    makedirs(cmk.utils.paths.autochecks_dir)
     makedirs(Path(cmk.utils.paths.var_dir, "web"))
     makedirs(Path(cmk.utils.paths.var_dir, "php-api"))
     makedirs(Path(cmk.utils.paths.var_dir, "wato/php-api"))

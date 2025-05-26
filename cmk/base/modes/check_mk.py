@@ -631,7 +631,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             else config.lookup_ip_address(config_cache, hostname)
         )
         check_interval = config_cache.check_mk_check_interval(hostname)
-        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+        stored_walk_path = cmk.utils.paths.snmpwalks_dir
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         section_cache_path = Path(cmk.utils.paths.var_dir)
         file_cache_path = cmk.utils.paths.data_source_cache_dir
@@ -961,7 +961,7 @@ def mode_snmptranslate(walk_filename: str) -> None:
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
-    walk_path = Path(cmk.utils.paths.snmpwalks_dir) / walk_filename
+    walk_path = cmk.utils.paths.snmpwalks_dir / walk_filename
     if not walk_path.exists():
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
@@ -1038,14 +1038,13 @@ _SNMPWalkOptions = dict[str, list[OID]]
 
 
 def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
-    if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
-        os.makedirs(cmk.utils.paths.snmpwalks_dir)
+    cmk.utils.paths.snmpwalks_dir.mkdir(parents=True, exist_ok=True)
 
     # TODO: What about SNMP management boards?
     try:
         _do_snmpwalk_on(
             options,
-            cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
+            cmk.utils.paths.snmpwalks_dir / backend.hostname,
             backend=backend,
         )
     except Exception as e:
@@ -1055,12 +1054,12 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     cmk.utils.cleanup.cleanup_globals()
 
 
-def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
+def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
     console.verbose(f"{backend.hostname}:")
 
     oids = oids_to_walk(options)
 
-    with Path(filename).open("w", encoding="utf-8") as file:
+    with filename.open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(oids, backend=backend):
             for oid, value in rows:
                 file.write(f"{oid} {value}\n")
@@ -1099,7 +1098,6 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.load(discovery_rulesets=()).config_cache
-    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
@@ -1115,7 +1113,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         _do_snmpwalk(
             options,
             backend=snmp_factory.make_backend(
-                snmp_config, log.logger, stored_walk_path=stored_walk_path
+                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
             ),
         )
 
@@ -1193,7 +1191,6 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         )
 
     assert hostnames
-    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
@@ -1208,7 +1205,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
             backend_override=snmp_backend_override,
         )
         backend = snmp_factory.make_backend(
-            snmp_config, log.logger, stored_walk_path=stored_walk_path
+            snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
         )
         value = get_single_oid(oid, single_oid_cache={}, backend=backend, log=log.logger.debug)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
@@ -1295,13 +1292,13 @@ def mode_flush(hosts: list[HostName]) -> None:
             print_(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
-        log_dir = cmk.utils.paths.logwatch_dir + "/" + host
-        if os.path.exists(log_dir):
+        log_dir = cmk.utils.paths.logwatch_dir / host
+        if log_dir.exists():
             d = 0
-            for f in os.listdir(log_dir):
+            for f in os.listdir(str(log_dir)):
                 if f not in [".", ".."]:
                     try:
-                        os.remove(log_dir + "/" + f)
+                        (log_dir / f).unlink()
                         d += 1
                         flushed = True
                     except OSError:

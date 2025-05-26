@@ -125,7 +125,7 @@ _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
 notification_logdir = cmk.utils.paths.var_dir + "/notify"
 notification_spooldir = cmk.utils.paths.var_dir + "/notify/spool"
 notification_bulkdir = cmk.utils.paths.var_dir + "/notify/bulk"
-notification_log = cmk.utils.paths.log_dir + "/notify.log"
+notification_log = str(cmk.utils.paths.log_dir / "notify.log")
 
 notification_log_template = (
     "$CONTACTNAME$ - $NOTIFICATIONTYPE$ - $HOSTNAME$ $HOSTSTATE$ - $SERVICEDESC$ $SERVICESTATE$ "

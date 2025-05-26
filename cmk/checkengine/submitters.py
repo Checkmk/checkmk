@@ -182,10 +182,10 @@ class PipeSubmitter(Submitter):
         if cls._nagios_command_pipe is not None:
             return cls._nagios_command_pipe
 
-        if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
+        if not cmk.utils.paths.nagios_command_pipe_path.exists():
             cls._nagios_command_pipe = False  # False means: tried but failed to open
             raise MKGeneralException(
-                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path
+                f"Missing core command pipe '{cmk.utils.paths.nagios_command_pipe_path}'"
             )
 
         try:
@@ -283,7 +283,7 @@ class FileSubmitter(Submitter):
         flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
 
         for name, _seq in zip(cls._names, range(os.TMP_MAX)):
-            filepath = os.path.join(base_dir, "c" + name)
+            filepath = base_dir / ("c" + name)
             try:
                 checkresult_file_fd = os.open(filepath, flags, 0o600)
             except FileExistsError:
@@ -294,7 +294,7 @@ class FileSubmitter(Submitter):
                 yield checkresult_file_fd
             finally:
                 os.close(checkresult_file_fd)
-            with open(filepath + ".ok", "w"):
+            with open(str(filepath) + ".ok", "w"):
                 pass
 
             return

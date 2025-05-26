@@ -25,13 +25,6 @@ _STR_PATHS: Final = {
     "check_mk_config_dir",
     "modules_dir",
     "var_dir",
-    "log_dir",
-    "autochecks_dir",
-    "snmpwalks_dir",
-    "logwatch_dir",
-    "nagios_objects_file",
-    "nagios_command_pipe_path",
-    "check_result_path",
 }
 
 

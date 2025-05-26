@@ -361,7 +361,7 @@ def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostN
 @contextmanager
 def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
     if core.name() == "nagios":
-        objects_file = cmk.utils.paths.nagios_objects_file
+        objects_file = str(cmk.utils.paths.nagios_objects_file)
     else:
         objects_file = cmk.utils.paths.var_dir + "/core/config"
 

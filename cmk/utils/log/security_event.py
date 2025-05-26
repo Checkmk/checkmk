@@ -9,7 +9,6 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 from typing import assert_never, Literal
 
 from cmk.utils.jsontype import JsonSerializable
@@ -73,7 +72,7 @@ def log_security_event(event: SecurityEvent) -> None:
 def _get_logger() -> logging.Logger:
     logger = logging.getLogger("cmk_security")
     if not logger.handlers:  # delayed logger initialization
-        handler = logging.FileHandler(Path(log_dir, "security.log"), encoding="utf-8")
+        handler = logging.FileHandler(log_dir / "security.log", encoding="utf-8")
         handler.setFormatter(logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"))
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)

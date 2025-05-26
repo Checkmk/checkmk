@@ -1291,7 +1291,7 @@ class AutomationRenameHosts(Automation):
     ) -> list[str]:
         actions = []
 
-        if self._rename_host_file(autochecks_dir, oldname + ".mk", newname + ".mk"):
+        if self._rename_host_file(str(autochecks_dir), oldname + ".mk", newname + ".mk"):
             actions.append("autochecks")
 
         if self._rename_host_file(
@@ -1307,11 +1307,11 @@ class AutomationRenameHosts(Automation):
         actions.extend(move_piggyback_for_host_rename(cmk.utils.paths.omd_root, oldname, newname))
 
         # Logwatch
-        if self._rename_host_dir(logwatch_dir, oldname, newname):
+        if self._rename_host_dir(str(logwatch_dir), oldname, newname):
             actions.append("logwatch")
 
         # SNMP walks
-        if self._rename_host_file(snmpwalks_dir, oldname, newname):
+        if self._rename_host_file(str(snmpwalks_dir), oldname, newname):
             actions.append("snmpwalk")
 
         # HW/SW Inventory
@@ -2778,7 +2778,6 @@ class AutomationDiagHost(Automation):
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
@@ -2806,7 +2805,7 @@ class AutomationDiagHost(Automation):
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
                 backend_override=None,
-                stored_walk_path=stored_walk_path,
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 walk_cache_path=walk_cache_path,
             ),
             is_cluster=host_name in hosts_config.clusters,
@@ -3024,7 +3023,6 @@ class AutomationDiagHost(Automation):
             snmp_backend=snmp_config.snmp_backend,
         )
 
-        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         data = get_snmp_table(
             section_name=None,
             tree=BackendSNMPTree(
@@ -3032,7 +3030,9 @@ class AutomationDiagHost(Automation):
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(snmp_config, log.logger, stored_walk_path=stored_walk_path),
+            backend=make_snmp_backend(
+                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
+            ),
             log=log.logger.debug,
         )
 
@@ -3285,7 +3285,6 @@ class AutomationGetAgentOutput(Automation):
                 else config.lookup_ip_address(config_cache, hostname)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
-            stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
             section_cache_path = Path(var_dir)
             file_cache_path = cmk.utils.paths.data_source_cache_dir
@@ -3315,7 +3314,7 @@ class AutomationGetAgentOutput(Automation):
                         scan_config=snmp_scan_config,
                         selected_sections=NO_SELECTION,
                         backend_override=None,
-                        stored_walk_path=stored_walk_path,
+                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=walk_cache_path,
                     ),
                     is_cluster=hostname in hosts_config.clusters,
@@ -3395,7 +3394,10 @@ class AutomationGetAgentOutput(Automation):
                     hostname, ipaddress, SourceType.HOST, backend_override=None
                 )
                 backend = make_snmp_backend(
-                    snmp_config, log.logger, use_cache=False, stored_walk_path=stored_walk_path
+                    snmp_config,
+                    log.logger,
+                    use_cache=False,
+                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                 )
 
                 lines = []

@@ -12,8 +12,8 @@ from pathlib import Path
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.paths import tmp_dir
 
+from cmk.bi.filesystem import BIFileSystem, get_default_site_filesystem
 from cmk.bi.lib import (
     ABCBIStatusFetcher,
     BIHostData,
@@ -64,22 +64,13 @@ def fix_encoding(value: str) -> str:
 #   +----------------------------------------------------------------------+
 
 
-def get_cache_dir() -> Path:
-    cache_dir = tmp_dir / "bi_cache"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    return cache_dir
-
-
 class BIStructureFetcher:
-    def __init__(self, sites_callback: SitesCallback) -> None:
+    def __init__(self, sites_callback: SitesCallback, fs: BIFileSystem | None = None) -> None:
         self.sites_callback = sites_callback
         # The key may be a pattern / regex, so `str` is the correct type for the key.
         self._hosts: dict[str, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
-
-        self._site_cache_prefix = "bi_site_cache"
-        self._path_site_structure_data = Path(get_cache_dir(), "site_structure_data")
-        self._path_site_structure_data.mkdir(exist_ok=True)
+        self._fs = fs or get_default_site_filesystem()
 
     def cleanup(self) -> None:
         self._have_sites.clear()
@@ -181,9 +172,7 @@ class BIStructureFetcher:
 
         for site_id, hosts in site_data.items():
             self.add_site_data(site_id, hosts)
-            path = self._path_site_structure_data.joinpath(
-                self._site_data_filename(site_id, only_sites[site_id])
-            )
+            path = self._fs.cache.get_site_structure_data_path(site_id, only_sites[site_id])
             self._marshal_save_data(path, hosts)
 
     def _read_cached_data(self, required_program_starts: set[SiteProgramStart]) -> None:
@@ -216,9 +205,6 @@ class BIStructureFetcher:
     @classmethod
     def _service_structure_columns(cls) -> list[str]:
         return ["host_name", "description", "tags", "labels"]
-
-    def _site_data_filename(self, site_id: str, timestamp: int) -> str:
-        return "%s.%s.%d" % (self._site_cache_prefix, site_id, timestamp)
 
     def add_site_data(self, site_id: SiteId, hosts: Mapping[HostName, tuple]) -> None:
         # BIHostData
@@ -263,16 +249,15 @@ class BIStructureFetcher:
 
     def _get_site_data_files(self) -> list[tuple[Path, SiteProgramStart]]:
         data_files = []
-        for path_object in self._path_site_structure_data.iterdir():
+        for path_object in self._fs.cache.site_structure_data.iterdir():
             if path_object.is_dir():
                 continue
 
-            name = path_object.name
-            if not name.startswith(self._site_cache_prefix):
+            if not self._fs.cache.is_site_cache(path_object):
                 continue
 
             try:
-                _prefix, site_id, timestamp = name.split(".", 2)
+                _prefix, site_id, timestamp = path_object.name.split(".", 2)
             except ValueError:
                 path_object.unlink(missing_ok=True)
                 continue

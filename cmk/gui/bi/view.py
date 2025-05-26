@@ -9,7 +9,6 @@ from typing import Any, Literal
 
 from livestatus import OnlySites, SiteId
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.hostaddress import HostName
@@ -17,6 +16,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
+from cmk.gui.bi.filesystem import bi_fs
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
     BIAggrTreeState,
@@ -55,12 +55,10 @@ from cmk.gui.views.command.base import CommandSpecWithoutSite
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
 
-from cmk.bi.aggregation import BIAggregation
+from cmk.bi import storage
 from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.data_fetcher import get_cache_dir
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
-from cmk.bi.type_defs import frozen_aggregations_dir
 
 
 class DataSourceBIAggregations(ABCDataSource):
@@ -915,10 +913,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     bi_ref_aggregation, bi_ref_branch = found_aggr
 
     # Load other aggregation from disk
-    other_aggr_path = Path(get_cache_dir(), "compiled_aggregations", other_aggregation)
-    other_aggr = BIAggregation.create_trees_from_schema(
-        store.load_object_from_pickle_file(other_aggr_path, default={})
-    )
+    other_aggr = storage.AggregationStore(bi_fs.cache).get(other_aggregation)
 
     aggregations_are_equal = True
     for bi_other_branch in other_aggr.branches:
@@ -1165,9 +1160,13 @@ def command_freeze_aggregation_action(
         return None
 
     if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
-        if compiled_aggregation.frozen_info:
+        if frozen_info := compiled_aggregation.frozen_info:
+            frozen_path = storage.FrozenAggregationStore(bi_fs.var).get_branch_path(
+                aggregation_id=frozen_info.based_on_aggregation_id,
+                branch_title=compiled_aggregation.id,
+            )
             return (
-                [compiled_aggregation.frozen_info.based_on_branch_title],
+                [str(frozen_path)],
                 command.confirm_dialog_options(cmdtag, row, action_rows),
             )
 
@@ -1177,7 +1176,7 @@ def command_freeze_aggregation_action(
 def command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
     """Function that is called to execute this action"""
     assert isinstance(command, CommandSpecWithoutSite)
-    (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
+    Path(command).unlink(missing_ok=True)
 
 
 CommandFreezeAggregation = Command(

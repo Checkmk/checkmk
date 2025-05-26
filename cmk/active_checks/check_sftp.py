@@ -191,7 +191,6 @@ class CheckSftp:
         return CheckSftp.TransferOptions(local, remote)
 
     def connect(self, client: paramiko.SSHClient) -> paramiko.sftp_client.SFTPClient:
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
         client.connect(
             hostname=self.host,
             username=self.user,

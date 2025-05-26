@@ -40,3 +40,5 @@ Note that Bandit is picky about the exact format.
 | `BNS:d840de` | `B608` | Removing backticks from user input make sure the input can't escape from enclosing backtick. Bigquery treat `{tableid}` as an identifier rather than part of SQL syntax. |
 | `BNS:ccacbd` | `B302` | The data loaded by marshal.loads() is being parsed with a well-typed class and is not fed to any dangerous function. |
 | `BNS:4607da` | `B302` | Intended usage of marshal.loads(). |
+| `BNS:f60b87` | `B608` | False positive hardcoded SQL. |
+| `BNS:6f5399` | `B202` | False positive, it's a zipfile not tarfile. |

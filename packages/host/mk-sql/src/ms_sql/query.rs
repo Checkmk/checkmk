@@ -9,8 +9,9 @@ use crate::platform::Block;
 #[cfg(windows)]
 use crate::platform::odbc;
 
-use crate::types::{ComputerName, InstanceName};
+use crate::types::{ComputerName, Edition, InstanceName};
 
+use super::client::ManageEdition;
 use super::sqls::find_known_query;
 use super::{client::UniClient, sqls};
 use std::borrow::Borrow;
@@ -182,7 +183,7 @@ async fn _run_known_query<T: Borrow<sqls::Id>>(
     id: T,
 ) -> Result<Vec<UniAnswer>> {
     log::debug!("Query name: `{:?}`", id.borrow());
-    let query = find_known_query(id)?;
+    let query = find_known_query(id, &client.get_edition())?;
     exec_sql(client, query).await
 }
 
@@ -191,7 +192,7 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
     log::trace!("Query to run: `{}`", query);
     match client {
         UniClient::Std(client) => {
-            let stream = Query::new(query).query(client).await?;
+            let stream = Query::new(query).query(client.client()).await?;
             let tiberius_rows: Vec<Vec<Row>> = stream.into_results().await?;
             let answers: Vec<UniAnswer> = tiberius_rows.into_iter().map(UniAnswer::Rows).collect();
             Ok(answers)
@@ -229,19 +230,41 @@ pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<Compu
     Ok(result.map(ComputerName::from))
 }
 
-pub async fn obtain_instance_name(client: &mut UniClient) -> Result<Option<InstanceName>> {
-    let answers = run_custom_query(client, "select @@ServiceName").await?;
-
-    let result = match answers.first() {
+fn get_first_row(answers: &[UniAnswer]) -> Option<String> {
+    match answers.first() {
         Some(UniAnswer::Rows(rows)) => get_first_row_column(rows, 0),
         Some(UniAnswer::Block(block)) => block.get_first_row_column(0),
         None => None,
+    }
+}
+
+pub async fn obtain_server_edition(client: &mut UniClient) -> Result<Edition> {
+    let answers =
+        run_custom_query(client, "SELECT CAST(SERVERPROPERTY('Edition') AS NVARCHAR)").await?;
+    let result = get_first_row(&answers);
+    if &result.unwrap_or_default() == "SQL Azure" {
+        log::info!("Azure detected");
+        Ok(Edition::Azure)
+    } else {
+        Ok(Edition::Normal)
+    }
+}
+
+pub async fn obtain_instance_name(client: &mut UniClient) -> Result<InstanceName> {
+    let answers = match client.get_edition() {
+        Edition::Azure => run_custom_query(client,
+        "SELECT CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR)"
+        ).await?,
+        Edition::Normal => run_custom_query(client, "select @@ServiceName").await?,
+        Edition::Undefined => { anyhow::bail!("Edition is not defined") }
     };
 
-    if result.is_none() {
-        log::warn!("Instance name not found with query");
-    };
-    Ok(result.map(InstanceName::from))
+    let name = get_first_row(&answers).unwrap_or("???".to_string());
+    if &name == "???" {
+        log::error!("Instance name is unknown");
+    }
+
+    Ok(InstanceName::from(name))
 }
 
 pub async fn obtain_system_user(client: &mut UniClient) -> Result<Option<String>> {

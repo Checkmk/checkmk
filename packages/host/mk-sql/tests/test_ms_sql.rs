@@ -4,10 +4,11 @@
 
 mod common;
 use mk_sql::config::ms_sql::Discovery;
+use mk_sql::ms_sql::client::ManageEdition;
 use mk_sql::platform;
 #[cfg(windows)]
 use mk_sql::platform::odbc;
-use mk_sql::types::InstanceName;
+use mk_sql::types::{Edition, InstanceName};
 
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
@@ -69,7 +70,7 @@ fn test_section_select_query() {
     ] {
         assert_eq!(
             make_section(name)
-                .select_query(Some(custom_sql_path.to_owned()), 0)
+                .select_query(Some(custom_sql_path.to_owned()), 0, &Edition::Normal)
                 .unwrap(),
             "Bu!"
         );
@@ -328,6 +329,7 @@ fn make_section<S: Into<String>>(name: S) -> Section {
 }
 
 async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
+    assert_eq!(c.get_edition(), Edition::Normal);
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
@@ -372,7 +374,11 @@ async fn validate_database_names(instance: &SqlInstance, client: &mut UniClient)
 
 async fn validate_counters(instance: &SqlInstance, client: &mut UniClient) {
     let counters = instance
-        .generate_counters_section(client, find_known_query(sqls::Id::Counters).unwrap(), '|')
+        .generate_counters_section(
+            client,
+            find_known_query(sqls::Id::Counters, &Edition::Normal).unwrap(),
+            '|',
+        )
         .await;
     let result = counters.split('\n').collect::<Vec<&str>>();
     assert!(result[0].starts_with("None|utc_time|None|"));
@@ -385,7 +391,7 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut UniClien
     let blocked_sessions = &instance
         .generate_sessions_section(
             client,
-            find_known_query(sqls::Id::BlockedSessions).unwrap(),
+            find_known_query(sqls::Id::BlockedSessions, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -399,7 +405,7 @@ async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &
     let all_sessions = &instance
         .generate_sessions_section(
             client,
-            find_known_query(sqls::Id::WaitingTasks).unwrap(),
+            find_known_query(sqls::Id::WaitingTasks, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -435,7 +441,7 @@ async fn validate_table_spaces(
         .generate_table_spaces_section(
             endpoint,
             &databases,
-            find_known_query(sqls::Id::TableSpaces).unwrap(),
+            find_known_query(sqls::Id::TableSpaces, &Edition::Normal).unwrap(),
             ' ',
         )
         .await;
@@ -458,7 +464,11 @@ async fn validate_backup(instance: &SqlInstance, client: &mut UniClient) {
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
     let result = instance
-        .generate_backup_section(client, find_known_query(sqls::Id::Backup).unwrap(), '|')
+        .generate_backup_section(
+            client,
+            find_known_query(sqls::Id::Backup, &Edition::Normal).unwrap(),
+            '|',
+        )
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= (to_be_found.len() + 1), "{:?}", lines);
@@ -491,7 +501,7 @@ async fn validate_transaction_logs(
         .generate_transaction_logs_section(
             endpoint,
             &databases,
-            find_known_query(sqls::Id::TransactionLogs).unwrap(),
+            find_known_query(sqls::Id::TransactionLogs, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -525,7 +535,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endp
         .generate_datafiles_section(
             endpoint,
             &databases,
-            find_known_query(sqls::Id::Datafiles).unwrap(),
+            find_known_query(sqls::Id::Datafiles, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -563,7 +573,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
         .generate_databases_section(
             client,
             &databases,
-            find_known_query(sqls::Id::Databases).unwrap(),
+            find_known_query(sqls::Id::Databases, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -601,7 +611,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient
         .generate_databases_section(
             client,
             &databases,
-            find_known_query(sqls::Id::BadQuery).unwrap(),
+            find_known_query(sqls::Id::BadQuery, &Edition::Normal).unwrap(),
             '|',
         )
         .await;
@@ -630,7 +640,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
     let result = instance
         .generate_connections_section(
             client,
-            find_known_query(sqls::Id::Connections).unwrap(),
+            find_known_query(sqls::Id::Connections, &Edition::Normal).unwrap(),
             ' ',
         )
         .await;
@@ -654,7 +664,11 @@ async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
 
 async fn validate_connections_error(instance: &SqlInstance, client: &mut UniClient) {
     let result = instance
-        .generate_connections_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), ' ')
+        .generate_connections_section(
+            client,
+            find_known_query(sqls::Id::BadQuery, &Edition::Normal).unwrap(),
+            ' ',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -670,7 +684,7 @@ async fn validate_clusters(_instance: &SqlInstance, _client: &mut UniClient, _en
 
 async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
     let result = instance
-        .generate_unified_section(endpoint, &make_section(names::JOBS), None)
+        .generate_unified_section(endpoint, &make_section(names::JOBS), None, &Edition::Normal)
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
@@ -697,7 +711,8 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
         .generate_unified_section(
             endpoint,
             section,
-            sqls::find_known_query(sqls::Id::BadQuery).ok(),
+            sqls::find_known_query(sqls::Id::BadQuery, &Edition::Normal).ok(),
+            &Edition::Normal,
         )
         .await;
 
@@ -711,7 +726,7 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
 async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = make_section(names::MIRRORING);
     let lines: Vec<String> = instance
-        .generate_unified_section(endpoint, &section, None)
+        .generate_unified_section(endpoint, &section, None, &Edition::Normal)
         .await
         .split('\n')
         .map(|l| l.to_string())
@@ -724,7 +739,7 @@ async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint)
 async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = make_section(names::AVAILABILITY_GROUPS);
     let lines: Vec<String> = instance
-        .generate_unified_section(endpoint, &section, None)
+        .generate_unified_section(endpoint, &section, None, &Edition::Normal)
         .await
         .split('\n')
         .map(|l| l.to_string())
@@ -1530,7 +1545,7 @@ fn test_odbc() {
     );
     let r = odbc::execute(
         &s,
-        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        sqls::find_known_query(sqls::Id::TableSpaces, &Edition::Normal).unwrap(),
         None,
     )
     .unwrap();
@@ -1540,7 +1555,7 @@ fn test_odbc() {
 
     let r = odbc::execute(
         &s,
-        sqls::find_known_query(sqls::Id::ComputerName).unwrap(),
+        sqls::find_known_query(sqls::Id::ComputerName, &Edition::Normal).unwrap(),
         None,
     )
     .unwrap();
@@ -1561,7 +1576,7 @@ fn test_odbc_timeout() {
     let start = std::time::Instant::now();
     let r = odbc::execute(
         &s,
-        sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
+        sqls::find_known_query(sqls::Id::TableSpaces, &Edition::Normal).unwrap(),
         Some(1),
     );
     assert!(r.is_err());
@@ -1572,16 +1587,25 @@ fn test_odbc_timeout() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_odbc_high_level() {
-    use mk_sql::{ms_sql::instance::SqlInstanceProperties, types::HostName};
+    use mk_sql::{
+        ms_sql::{client::ManageEdition, instance::SqlInstanceProperties},
+        types::HostName,
+    };
 
-    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+    async fn create_client(name: &str) -> UniClient {
         let instance_name = InstanceName::from(name);
-        let mut client = create_odbc_client(
+        create_odbc_client(
             &HostName::from("localhost".to_string()),
             &instance_name,
             None,
         )
-        .unwrap();
+        .await
+        .unwrap()
+    }
+
+    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+        let instance_name = InstanceName::from(name);
+        let mut client = create_client(name).await;
         obtain_properties(&mut client, &instance_name).await
     }
 
@@ -1591,4 +1615,9 @@ async fn test_odbc_high_level() {
     assert!(odbc_wow.is_some());
     let odbc_main = get("MSSQLSERVER").await;
     assert!(odbc_main.is_some());
+
+    assert_eq!(
+        create_client("MSSQLSERVER").await.get_edition(),
+        Edition::Normal
+    );
 }

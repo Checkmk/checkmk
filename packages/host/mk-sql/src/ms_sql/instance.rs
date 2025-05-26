@@ -17,6 +17,9 @@ use crate::config::{
     CheckConfig,
 };
 use crate::emit;
+#[cfg(windows)]
+use crate::ms_sql::client::update_edition;
+use crate::ms_sql::client::ManageEdition;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
     run_known_query, Column, UniAnswer,
@@ -26,7 +29,7 @@ use crate::ms_sql::sqls;
 use crate::platform::odbc;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
+    ComputerName, Edition, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils::{self, prepare_error};
@@ -377,8 +380,7 @@ impl SqlInstance {
                 let real_name = obtain_instance_name(&mut client)
                     .await
                     .ok()
-                    .unwrap_or_default()
-                    .unwrap_or(InstanceName::from("???".to_string()));
+                    .unwrap_or(InstanceName::from("???"));
                 log::info!(
                     "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
                     self.full_name(),
@@ -464,7 +466,7 @@ impl SqlInstance {
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
-            create_odbc_client(&endpoint.conn().hostname(), &self.name, database)
+            create_odbc_client(&endpoint.conn().hostname(), &self.name, database).await
         }
     }
 
@@ -516,7 +518,8 @@ impl SqlInstance {
         section: &Section,
         databases: &[String],
     ) -> String {
-        if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
+        let edition = client.get_edition();
+        if let Some(query) = section.select_query(get_sql_dir(), self.version_major(), &edition) {
             let sep = section.sep();
             match section.name() {
                 names::INSTANCE => {
@@ -524,7 +527,13 @@ impl SqlInstance {
                         + &self.generate_details_entry(client, sep).await
                 }
                 names::COUNTERS => self.generate_counters_section(client, &query, sep).await,
-                names::BACKUP => self.generate_backup_section(client, &query, sep).await,
+                names::BACKUP => {
+                    if client.get_edition() == Edition::Azure {
+                        String::new()
+                    } else {
+                        self.generate_backup_section(client, &query, sep).await
+                    }
+                }
                 names::BLOCKED_SESSIONS => {
                     self.generate_sessions_section(client, &query, sep).await
                 }
@@ -540,7 +549,12 @@ impl SqlInstance {
                     databases, endpoint, section, &query, sep,
                 ),
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                    self.generate_unified_section(endpoint, section, None).await
+                    if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
+                        String::default()
+                    } else {
+                        self.generate_unified_section(endpoint, section, None, &edition)
+                            .await
+                    }
                 }
                 _ => self
                     .generate_custom_section(endpoint, section)
@@ -769,11 +783,11 @@ impl SqlInstance {
         sep: char,
     ) -> String {
         let chunks = if databases.len() >= 64 {
-            let max_chunk = (databases.len() + 3usize) / 4usize;
+            let max_chunk = databases.len().div_ceil(4usize);
             let min_chunk = 16usize;
             databases.chunks(std::cmp::max(min_chunk, max_chunk))
         } else if databases.len() >= 8 {
-            let max_chunk = (databases.len() + 1usize) / 2usize;
+            let max_chunk = databases.len().div_ceil(2usize);
             let min_chunk = 4usize;
             databases.chunks(std::cmp::max(min_chunk, max_chunk))
         } else {
@@ -808,35 +822,6 @@ impl SqlInstance {
                 .collect::<Vec<String>>()
                 .join("")
         })
-    }
-
-    pub async fn generate_database_indexed_section_async(
-        &self,
-        databases: &[String],
-        endpoint: &Endpoint,
-        section: &Section,
-        query: &str,
-        sep: char,
-    ) -> String {
-        match section.name() {
-            names::TRANSACTION_LOG => {
-                self.generate_transaction_logs_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::TABLE_SPACES => {
-                self.generate_table_spaces_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::DATAFILES => {
-                self.generate_datafiles_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::CLUSTERS => {
-                self.generate_clusters_section(endpoint, databases, query, sep)
-                    .await
-            }
-            _ => format!("{} not implemented\n", section.name()).to_string(),
-        }
     }
 
     pub async fn generate_transaction_logs_section(
@@ -1110,12 +1095,13 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
         query: Option<&str>,
+        edition: &Edition,
     ) -> String {
-        match self.create_client(endpoint, section.main_db()).await {
+        match self.create_client(endpoint, section.main_db(edition)).await {
             Ok(mut c) => {
                 let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
                     section
-                        .select_query(get_sql_dir(), self.version_major())
+                        .select_query(get_sql_dir(), self.version_major(), &c.get_edition())
                         .unwrap_or_default()
                 });
                 run_custom_query(&mut c, q)
@@ -1361,7 +1347,7 @@ pub async fn create_tcp_client(
     client.build().await
 }
 
-pub fn create_odbc_client(
+pub async fn create_odbc_client(
     hostname: &HostName,
     instance_name: &InstanceName,
     database: Option<String>,
@@ -1377,7 +1363,9 @@ pub fn create_odbc_client(
     {
         let connection_string =
             odbc::make_connection_string(Some(hostname), instance_name, database.as_deref(), None);
-        Ok(UniClient::Odbc(OdbcClient::new(connection_string)))
+        let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
+        update_edition(&mut client).await;
+        Ok(client)
     }
 }
 
@@ -2190,7 +2178,7 @@ async fn get_custom_instance_builder(
     let auth = endpoint.auth();
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
-        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None) {
+        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None).await {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -2374,7 +2362,7 @@ fn determine_reconnect(
 
     customizations
         .iter()
-        .filter(|(&k, _)| !found.contains(k))
+        .filter(|&(&k, _)| !found.contains(k))
         .map(|(&name, customization)| {
             log::info!("Add custom instance {} ", name);
             let builder = SqlInstanceBuilder::new().name(name.clone());
@@ -2513,7 +2501,7 @@ async fn _obtain_instance_builders(
         log::warn!("No instances found in registry, this means you have problem with permissions");
         log::warn!("Trying to add current instance");
         match obtain_instance_name(client).await {
-            Ok(Some(name)) => {
+            Ok(name) => {
                 let mut builder = SqlInstanceBuilder::new()
                     .name(name)
                     .port(Some(endpoint.conn().port()));
@@ -2523,11 +2511,6 @@ async fn _obtain_instance_builders(
                         .edition(&properties.edition);
                 }
                 builders = vec![builder];
-            }
-            Ok(None) => {
-                log::warn!(
-                    "No instance found in registry, this means you have problem with permissions"
-                );
             }
             Err(err) => {
                 log::error!("Can't confirm current instance: {err}");

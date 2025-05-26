@@ -7,6 +7,7 @@ use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
+use crate::types::Edition;
 use crate::{constants, types::InstanceName, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -113,20 +114,30 @@ impl Section {
 
     /// try to find the section's query in the sql directory for instance with the given version
     /// or in the known queries if custom sql query is not provided
-    pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+    pub fn select_query(
+        &self,
+        sql_dir: Option<PathBuf>,
+        instance_version: u32,
+        edition: &Edition,
+    ) -> Option<String> {
         match self.name.as_ref() {
-            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
+            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties, edition)
                 .map(str::to_string)
                 .ok(),
-            _ => self.find_query(sql_dir, instance_version),
+            _ => self.find_query(sql_dir, instance_version, edition),
         }
     }
 
-    fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+    fn find_query(
+        &self,
+        sql_dir: Option<PathBuf>,
+        instance_version: u32,
+        edition: &Edition,
+    ) -> Option<String> {
         self.find_provided_query(sql_dir, instance_version)
             .or_else(|| {
                 get_sql_id(&self.name)
-                    .and_then(Self::find_known_query)
+                    .and_then(|x| Self::find_known_query(x, edition))
                     .map(|s| s.to_owned())
             })
     }
@@ -152,8 +163,8 @@ impl Section {
         }
         None
     }
-    fn find_known_query(id: sqls::Id) -> Option<&'static str> {
-        sqls::find_known_query(id)
+    fn find_known_query(id: sqls::Id, edition: &Edition) -> Option<&'static str> {
+        sqls::find_known_query(id, edition)
             .map_err(|e| {
                 log::error!("{e}");
                 e
@@ -161,9 +172,15 @@ impl Section {
             .ok()
     }
 
-    pub fn main_db(&self) -> Option<String> {
+    pub fn main_db(&self, edition: &Edition) -> Option<String> {
         match self.name.as_ref() {
-            section::names::JOBS => Some("msdb"),
+            section::names::JOBS => {
+                if edition == &Edition::Azure {
+                    None
+                } else {
+                    Some("msdb")
+                }
+            }
             section::names::MIRRORING => Some("master"),
             _ => None,
         }
@@ -256,6 +273,7 @@ mod tests {
     use crate::config::ms_sql::Config;
     use crate::config::section;
     use crate::ms_sql::custom;
+    use crate::types::Edition;
 
     #[test]
     fn test_section_header() {
@@ -313,16 +331,35 @@ mod tests {
         ];
         for (name, ids) in test_set {
             assert_eq!(
-                make_section(name)
-                    .select_query(custom::get_sql_dir(), 0)
-                    .unwrap(),
-                find_known_query(ids).unwrap()
+                make_section(name).select_query(custom::get_sql_dir(), 0, &Edition::Normal),
+                Some(find_known_query(ids, &Edition::Normal).unwrap().to_string()),
+                "failed case {} {:?}",
+                name,
+                ids
             );
         }
         assert_eq!(
-            make_section("no_name").select_query(custom::get_sql_dir(), 0),
+            make_section("no_name").select_query(custom::get_sql_dir(), 0, &Edition::Normal),
             None
         )
+    }
+
+    #[test]
+    fn test_section_select_query_azure() {
+        let customized_for_azure = [
+            sqls::Id::Counters,
+            sqls::Id::CounterEntries,
+            sqls::Id::ClusterNodes,
+            sqls::Id::Mirroring,
+            sqls::Id::AvailabilityGroups,
+            sqls::Id::Clusters,
+        ];
+        for id in customized_for_azure {
+            assert_ne!(
+                find_known_query(id, &Edition::Azure).unwrap(),
+                find_known_query(id, &Edition::Normal).unwrap()
+            );
+        }
     }
 
     #[test]
@@ -356,5 +393,30 @@ mod tests {
     fn test_header_name() {
         assert_eq!(to_header_name(names::CLUSTERS), "cluster");
         assert_eq!(to_header_name("xxx"), "xxx");
+    }
+
+    #[test]
+    fn test_main_db() {
+        let ret: Vec<(String, Option<String>, Option<String>)> = section::Sections::default()
+            .sections()
+            .iter()
+            .map(|s| s.name().to_string())
+            .map(|n| {
+                let s = Section::new(&section::SectionBuilder::new(n.clone()).build(), Some(100));
+                (n, s.main_db(&Edition::Azure), s.main_db(&Edition::Normal))
+            })
+            .filter(|(_, azure, normal)| azure.is_some() || normal.is_some())
+            .collect();
+        assert_eq!(
+            ret,
+            vec![
+                (
+                    names::MIRRORING.to_string(),
+                    Some("master".to_string()),
+                    Some("master".to_string()),
+                ),
+                (names::JOBS.to_string(), None, Some("msdb".to_string()),),
+            ]
+        );
     }
 }

@@ -78,3 +78,10 @@ pub struct HostName(String);
 /// this is a string as defined by Tiberius API
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct CertPath(String);
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum Edition {
+    Azure,
+    Normal,
+    Undefined,
+}

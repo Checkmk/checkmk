@@ -3,9 +3,10 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint};
-use crate::types::{CertPath, HostName, Port};
+use crate::types::{CertPath, Edition, HostName, Port};
 use anyhow::Result;
 
+use crate::ms_sql::query::obtain_server_edition;
 #[cfg(windows)]
 use crate::types::InstanceName; // only on windows possible to connect by name
 #[cfg(windows)]
@@ -15,10 +16,43 @@ use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
 use super::defaults;
-pub type StdClient = tiberius::Client<Compat<TcpStream>>;
+type TiberiusClient = tiberius::Client<Compat<TcpStream>>;
+#[derive(Debug)]
+pub struct StdClient {
+    client: TiberiusClient,
+    edition: Edition,
+}
+
+impl StdClient {
+    pub fn new(client: TiberiusClient) -> Self {
+        Self {
+            client,
+            edition: Edition::Undefined,
+        }
+    }
+    pub fn client(&mut self) -> &mut TiberiusClient {
+        &mut self.client
+    }
+}
+
 #[derive(Debug)]
 pub struct OdbcClient {
     conn_string: String,
+    edition: Edition,
+}
+
+pub trait ManageEdition {
+    fn get_edition(&self) -> Edition;
+    fn set_edition(&mut self, edition: Edition);
+}
+
+impl ManageEdition for StdClient {
+    fn get_edition(&self) -> Edition {
+        self.edition.clone()
+    }
+    fn set_edition(&mut self, edition: Edition) {
+        self.edition = edition;
+    }
 }
 
 #[cfg(windows)]
@@ -28,6 +62,7 @@ impl OdbcClient {
     pub fn new(conn_string: impl ToString) -> Self {
         Self {
             conn_string: conn_string.to_string(),
+            edition: Edition::Undefined,
         }
     }
     pub fn conn_string(&self) -> &str {
@@ -35,10 +70,36 @@ impl OdbcClient {
     }
 }
 
+impl ManageEdition for OdbcClient {
+    fn get_edition(&self) -> Edition {
+        self.edition.clone()
+    }
+    fn set_edition(&mut self, edition: Edition) {
+        self.edition = edition;
+    }
+}
+
+// TODO: remove this and use dynamic dispatch
 #[derive(Debug)]
 pub enum UniClient {
-    Std(StdClient),
+    Std(Box<StdClient>),
     Odbc(OdbcClient),
+}
+
+impl ManageEdition for UniClient {
+    fn get_edition(&self) -> Edition {
+        match self {
+            UniClient::Std(client) => client.get_edition(),
+            UniClient::Odbc(client) => client.get_edition(),
+        }
+    }
+
+    fn set_edition(&mut self, edition: Edition) {
+        match self {
+            UniClient::Std(client) => client.set_edition(edition),
+            UniClient::Odbc(client) => client.set_edition(edition),
+        }
+    }
 }
 
 pub struct RemoteConnection<'a> {
@@ -409,10 +470,12 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<UniClien
         .map_err(|e| anyhow::anyhow!("Failed to connect to SQL Browser {}", e))?;
     tcp.set_nodelay(true)?; // in documentation and examples
 
-    StdClient::connect(config, tcp.compat_write())
+    let mut client = TiberiusClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
-        .map(UniClient::Std)
+        .map(|c| UniClient::Std(Box::new(StdClient::new(c))))?;
+    update_edition(&mut client).await;
+    Ok(client)
 }
 
 async fn connect_via_tcp(config: Config) -> Result<UniClient> {
@@ -431,7 +494,7 @@ async fn connect_via_tcp(config: Config) -> Result<UniClient> {
     // To be able to use Tokio's tcp, we're using the `compat_write` from
     // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
     // traits from the `futures` crate. The same is for upcoming NamedPipe
-    let result = StdClient::connect(config, tcp.compat_write())
+    let result = TiberiusClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e));
     if result.is_ok() {
@@ -439,7 +502,22 @@ async fn connect_via_tcp(config: Config) -> Result<UniClient> {
     } else {
         log::warn!("Connection success failed");
     }
-    result.map(UniClient::Std)
+    let mut client = result.map(|x| {
+        UniClient::Std(Box::new(StdClient {
+            client: x,
+            edition: Edition::Normal,
+        }))
+    })?;
+    update_edition(&mut client).await;
+    Ok(client)
+}
+
+pub async fn update_edition(client: &mut UniClient) {
+    let edition = obtain_server_edition(client).await.unwrap_or_else(|e| {
+        log::warn!("Failed to obtain server edition: {}", e);
+        Edition::Normal
+    });
+    client.set_edition(edition);
 }
 
 /// Create `local` connection to MS SQL `instance`

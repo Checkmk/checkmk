@@ -174,7 +174,6 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec
 
-from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 
 _DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"
@@ -1887,7 +1886,10 @@ class ModeRuleSearchForm(WatoMode):
                         mode=RegExp.infix,
                     ),
                 ),
-                ("rule_hosttags", HostTagCondition(title=_("Used host tags"))),
+                (
+                    "rule_hosttags",
+                    DictHostTagCondition(title=_("Used host tags"), help_txt=""),
+                ),
                 (
                     "rule_disabled",
                     DropdownChoice(

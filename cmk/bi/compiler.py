@@ -35,6 +35,12 @@ _LOGGER = logger.getChild("web.bi.compilation")
 _MAX_MULTIPROCESSING_POOL_SIZE = 8
 _AVAILABLE_MEMORY_RATIO = 0.75
 
+# We want to restrict the character length for identifiers that are also used as filenames, i.e.
+# aggregation ID and branch title. Filenames with more than 255 characters usually result in a
+# system error. We chose 240 as the character limit to account for an identifier with an attached
+# prefix or suffix.
+_IDENTIFIER_CHARACTER_LIMIT = 240
+
 
 class ConfigStatus(TypedDict):
     configfile_timestamp: float
@@ -297,6 +303,17 @@ class BICompiler:
                         )
                         % (branch_title, aggr_id, used_titles[branch_title])
                     )
+                if len(aggr_id) > _IDENTIFIER_CHARACTER_LIMIT:
+                    raise MKGeneralException(
+                        _("Aggregation title is too long (>%d chars): %s")
+                        % (_IDENTIFIER_CHARACTER_LIMIT, aggr_id)
+                    )
+                if len(branch_title) > _IDENTIFIER_CHARACTER_LIMIT:
+                    raise MKGeneralException(
+                        _("Branch title is too long (>%d chars): %s")
+                        % (_IDENTIFIER_CHARACTER_LIMIT, branch_title)
+                    )
+
                 used_titles[branch_title] = aggr_id
 
     def prepare_for_compilation(self, online_sites: set[SiteProgramStart]) -> None:

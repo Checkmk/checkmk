@@ -156,7 +156,7 @@ class ABCConfigDomain(abc.ABC):
         of all configuration variables of this config domain."""
         raise NotImplementedError()
 
-    def _get_global_config_var_names(self):
+    def _get_global_config_var_names(self) -> list[str]:
         """Returns a list of all global config variable names
         associated with this config domain."""
         return [

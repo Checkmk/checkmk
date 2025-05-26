@@ -470,18 +470,22 @@ def reload(hosts_to_update: Sequence[HostName] | None = None) -> results.ReloadR
     )
 
 
-def get_configuration(*config_var_names: str) -> results.GetConfigurationResult:
+def get_configuration(
+    config_var_names: Sequence[str],
+    *,
+    debug: bool,
+) -> results.GetConfigurationResult:
     return _deserialize(
         _automation_serialized(
             "get-configuration",
-            indata=list(config_var_names),
+            indata=config_var_names,
             # We must not call this through the automation helper,
             # see automation call execution.
             force_cli_interface=True,
-            debug=active_config.debug,
+            debug=debug,
         ),
         results.GetConfigurationResult,
-        debug=active_config.debug,
+        debug=debug,
     )
 
 

@@ -92,11 +92,13 @@ class ConfigDomainCoreSettings:
 
 
 @lru_cache
-def _core_config_default_globals(*config_var_names: str) -> Mapping[str, object]:
+def _core_config_default_globals(
+    config_var_names: Sequence[str], *, debug: bool
+) -> Mapping[str, object]:
     # Import cycle
     from cmk.gui.watolib.check_mk_automations import get_configuration
 
-    return get_configuration(*config_var_names).result
+    return get_configuration(config_var_names, debug=debug).result
 
 
 class ConfigDomainCore(ABCConfigDomain):
@@ -129,8 +131,10 @@ class ConfigDomainCore(ABCConfigDomain):
         )
 
     @override
-    def default_globals(self) -> GlobalSettings:
-        return _core_config_default_globals(*self._get_global_config_var_names())
+    def default_globals(self) -> Mapping[str, Any]:
+        return _core_config_default_globals(
+            tuple(self._get_global_config_var_names()), debug=active_config.debug
+        )
 
     @classmethod
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:

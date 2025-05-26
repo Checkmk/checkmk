@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import re
-import time
 
 import pytest
 
@@ -14,24 +12,16 @@ from tests.testlib.utils import get_services_with_status, write_file
 
 from tests.plugins_integration.checks import (
     dump_path_site,
+    execute_dcd_cycle,
     get_host_names,
     get_piggyback_hosts,
     read_cmk_dump,
     read_disk_dump,
+    read_piggyback_hosts_from_dump,
     setup_source_host_piggyback,
-    wait_for_dcd_pend_changes,
 )
 
 logger = logging.getLogger(__name__)
-
-
-def _read_piggyback_hosts_from_dump(dump: str) -> set[str]:
-    piggyback_hosts: set[str] = set()
-    pattern = r"<<<<(.*?)>>>>"
-    matches = re.findall(pattern, dump)
-    piggyback_hosts.update(matches)
-    piggyback_hosts.discard("")  # '<<<<>>>>' pattern will match an empty string
-    return piggyback_hosts
 
 
 def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
@@ -60,24 +50,6 @@ def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
     return dump
 
 
-def _wait_for_pb_host_deletion(site: Site, source_host_name: str, pb_host_name: str) -> None:
-    max_count = 30
-    counter = 0
-    while pb_host_name in get_piggyback_hosts(site, source_host_name) and counter < max_count:
-        logger.info(
-            "Waiting for PB host %s to be removed from the site. Count: %s/%s",
-            pb_host_name,
-            counter,
-            max_count,
-        )
-        time.sleep(5)
-        counter += 1
-
-    assert pb_host_name not in get_piggyback_hosts(site, source_host_name), (
-        f"Host {pb_host_name} was not removed from the site."
-    )
-
-
 @pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
 def test_plugin_piggyback(
     test_site_piggyback: Site,
@@ -89,7 +61,15 @@ def test_plugin_piggyback(
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
         piggyback_hostnames = get_piggyback_hosts(test_site_piggyback, source_host_name)
-        assert set(piggyback_hostnames) == _read_piggyback_hosts_from_dump(disk_dump)
+        piggyback_hostnames_from_dump = read_piggyback_hosts_from_dump(disk_dump)
+        pb_hosts_symmetric_diff = set(piggyback_hostnames).symmetric_difference(
+            piggyback_hostnames_from_dump
+        )
+        assert not pb_hosts_symmetric_diff, (
+            f"PB hosts found within the site: {piggyback_hostnames}\n"
+            f"PB hosts found in the dump: {piggyback_hostnames_from_dump}\n"
+            f"Symmetric difference: {pb_hosts_symmetric_diff}"
+        )
 
         for hostname in piggyback_hostnames:
             host_services = test_site_piggyback.get_host_services(hostname)
@@ -106,9 +86,10 @@ def test_plugin_piggyback(
         updated_dump = _rm_piggyback_host_from_dump(disk_dump, pb_host_to_rm)
         write_file(test_site_piggyback.path(dump_path_site / source_host_name), updated_dump)
 
-        assert pb_host_to_rm not in _read_piggyback_hosts_from_dump(updated_dump), (
+        assert pb_host_to_rm not in (pb_hosts := read_piggyback_hosts_from_dump(updated_dump)), (
             f"Host {pb_host_to_rm} was not removed from the agent dump."
         )
-
-        _wait_for_pb_host_deletion(test_site_piggyback, source_host_name, pb_host_to_rm)
-        wait_for_dcd_pend_changes(test_site_piggyback)
+        execute_dcd_cycle(test_site_piggyback, expected_pb_hosts=len(pb_hosts))
+        assert pb_host_to_rm not in get_piggyback_hosts(test_site_piggyback, source_host_name), (
+            f"Host {pb_host_to_rm} was not removed from the site."
+        )

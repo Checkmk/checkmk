@@ -146,11 +146,13 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
             logger.info('Rule "%s" created!', ruleset_name)
 
             logger.info("Setting dynamic configuration global settings...")
+            # set global settings for dynamic configuration: high timeout values to make DCD being
+            # only triggered manually within the test execution
             site.write_file(
                 "etc/check_mk/dcd.d/wato/global.mk",
-                "dcd_activate_changes_timeout = 30\n"
-                "dcd_bulk_discovery_timeout = 30\n"
-                "dcd_site_update_interval = 60\n",
+                "dcd_activate_changes_timeout = 3600\n"
+                "dcd_bulk_discovery_timeout = 3600\n"
+                "dcd_site_update_interval = 3600\n",
             )
 
             yield site

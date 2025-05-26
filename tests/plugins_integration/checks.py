@@ -8,7 +8,6 @@ import os
 import re
 import shlex
 import subprocess
-import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from enum import IntEnum
@@ -18,6 +17,7 @@ from typing import Any
 import pytest
 
 from tests.testlib.common.repo import qa_test_data_path
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -463,11 +463,15 @@ def setup_source_host_piggyback(
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)
 
     with _dcd_connector(site):
+        pb_hosts_from_dump = read_piggyback_hosts_from_dump(
+            read_disk_dump(source_host_name, piggyback=True)
+        )
         try:
-            _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
-            wait_for_dcd_pend_changes(site)
+            execute_dcd_cycle(site, expected_pb_hosts=len(pb_hosts_from_dump))
+            piggyback_hosts = get_piggyback_hosts(site, source_host_name)
+            assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host_name}"'
 
-            hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
+            hostnames = piggyback_hosts + [source_host_name]
             for hostname in hostnames:
                 assert site.get_host_services(hostname)["Check_MK"].state == 0
                 logger.info("Scheduling checks & checking for pending services...")
@@ -500,16 +504,15 @@ def setup_source_host_piggyback(
                 logger.info('Deleting source host "%s"...', source_host_name)
                 site.openapi.hosts.delete(source_host_name)
 
-                assert (
-                    run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode
-                    == 0
-                )
+                site.run(["rm", "-f", f"{dump_path_site}/{source_host_name}"])
 
                 site.openapi.changes.activate_and_wait_for_completion(
                     force_foreign_changes=True, strict=False
                 )
-                _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
-                wait_for_dcd_pend_changes(site)
+                execute_dcd_cycle(site, expected_pb_hosts=0)
+                assert not get_piggyback_hosts(site, source_host_name), (
+                    "Piggyback hosts still found: %s" % piggyback_hosts
+                )
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -594,44 +597,6 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_ for _ in site.openapi.hosts.get_all_names() if _ != source_host]
 
 
-def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
-    """Wait up to 60 seconds for DCD to discover new piggyback hosts."""
-    max_count = 60
-    count = 0
-    while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be discovered. Count: %s/%s", count, max_count)
-        time.sleep(1)
-        count += 1
-    if strict:
-        assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host}".'
-
-
-def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:
-    max_count = 30
-    count = 0
-    while piggyback_hosts := get_piggyback_hosts(site, source_host) and count < max_count:
-        logger.info("Waiting for all piggyback hosts to be removed. Count: %s/%s", count, max_count)
-        time.sleep(5)
-        count += 1
-    if strict:
-        assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
-
-
-def wait_for_dcd_pend_changes(site: Site) -> None:
-    """Wait for DCD to activate changes."""
-    max_count = 180
-    count = 0
-    while (n_pending_changes := len(site.openapi.changes.get_pending())) > 0 and count < max_count:
-        logger.info(
-            "Waiting for changes to be activated by the DCD connector. Count: %s/%s",
-            count,
-            max_count,
-        )
-        time.sleep(1)
-        count += 1
-    assert n_pending_changes == 0, "Pending changes found!"
-
-
 @contextmanager
 def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
     logger.info("Creating a DCD connection for piggyback hosts...")
@@ -662,3 +627,66 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
             test_site_piggyback.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=True
             )
+
+
+def execute_dcd_cycle(site: Site, expected_pb_hosts: int = 0) -> None:
+    """Execute a DCD cycle and wait for its completion.
+
+    Trigger a DCD cycle until:
+    1) One batch that computes all expected PB hosts is completed;
+    2) The last batch in the queue contains the expected number of PB hosts.
+
+    This is needed to ensure that the DCD has processed all piggyback hosts and those hosts persist
+    in the following batches.
+
+    Args:
+        site: The Site instance where the DCD cycle should be executed
+        expected_pb_hosts: The number of piggyback hosts expected to be discovered
+    """
+
+    def _wait_for_hosts_in_batch() -> bool:
+        site.run(["cmk-dcd", "--execute-cycle"])
+
+        logger.info(
+            "Waiting for DCD to compute the expected number of PB hosts.\nExpected PB hosts: %s",
+            expected_pb_hosts,
+        )
+        all_batches_stdout = site.check_output(["cmk-dcd", "--batches"]).strip("\n").split("\n")
+        logger.info("Latest DCD batches:\n%s", "\n".join(all_batches_stdout[-10:]))
+
+        # check if the last batch contains the expected number of PB hosts
+        if f"{expected_pb_hosts} hosts" in all_batches_stdout[-1]:
+            # check if there is at least one completed batch containing the expected number of PB
+            # hosts
+            for batch_stdout in all_batches_stdout:
+                if all(string in batch_stdout for string in ["Done", f"{expected_pb_hosts} hosts"]):
+                    return True
+        return False
+
+    max_count = 30
+    interval = 5
+
+    try:
+        wait_until(
+            _wait_for_hosts_in_batch,
+            (max_count * interval) + 1,
+            interval,
+            "dcd: wait for hosts in DCD batch",
+        )
+    except TimeoutError as excp:
+        excp.add_note(
+            f"The expected number of piggyback hosts was not computed within {max_count} cycles."
+        )
+
+
+def read_piggyback_hosts_from_dump(dump: str) -> set[str]:
+    """Read piggyback hosts from the agent dump.
+
+    A piggyback host is defined by the pattern '<<<<host_name>>>>' within the agent dump.
+    """
+    piggyback_hosts: set[str] = set()
+    pattern = r"<<<<(.*?)>>>>"
+    matches = re.findall(pattern, dump)
+    piggyback_hosts.update(matches)
+    piggyback_hosts.discard("")  # '<<<<>>>>' pattern will match an empty string
+    return piggyback_hosts

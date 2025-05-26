@@ -7,8 +7,8 @@ import argparse
 import json
 import sys
 import time
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Mapping, Sequence
+from typing import TypeAlias
 
 import requests
 import urllib3
@@ -18,6 +18,16 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
+JsonSerializable: TypeAlias = (
+    Mapping[str, "JsonSerializable"]
+    | Sequence["JsonSerializable"]
+    | str
+    | int
+    | float
+    | bool
+    | None
+)
+
 
 def _probe_api(args: argparse.Namespace) -> None:
     url = f"{args.proto}://{args.hostname}:{args.port}/api/system"
@@ -25,7 +35,7 @@ def _probe_api(args: argparse.Namespace) -> None:
     response.raise_for_status()
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
@@ -70,7 +80,7 @@ def handle_section(
     args: argparse.Namespace,
     section_name: str,
     section_uri: str,
-    handle_function: Callable[[argparse.Namespace, str], list[dict[str, Any]] | dict[str, Any]],
+    handle_function: Callable[[argparse.Namespace, str], JsonSerializable],
 ) -> None:
     if section_name not in args.sections:
         return
@@ -84,7 +94,7 @@ def handle_section(
             raise
 
 
-def section_alerts(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_alerts(args: argparse.Namespace, url: str) -> JsonSerializable:
     section_response = _do_get(url, args).json()
     num_of_alerts = section_response.get("total", 0)
     num_of_alerts_in_range = 0
@@ -104,31 +114,23 @@ def section_alerts(args: argparse.Namespace, url: str) -> list[dict[str, Any]] |
     return [alerts]
 
 
-def section_cluster_health(
-    args: argparse.Namespace, url: str
-) -> list[dict[str, Any]] | dict[str, Any]:
+def section_cluster_health(args: argparse.Namespace, url: str) -> JsonSerializable:
     return _do_get(url, args).json()
 
 
-def section_cluster_inputstates(
-    args: argparse.Namespace, url: str
-) -> list[dict[str, Any]] | dict[str, Any]:
+def section_cluster_inputstates(args: argparse.Namespace, url: str) -> JsonSerializable:
     return _do_get(url, args).json()
 
 
-def section_cluster_stats(
-    args: argparse.Namespace, url: str
-) -> list[dict[str, Any]] | dict[str, Any]:
+def section_cluster_stats(args: argparse.Namespace, url: str) -> JsonSerializable:
     return _do_get(url, args).json()
 
 
-def section_cluster_traffic(
-    args: argparse.Namespace, url: str
-) -> list[dict[str, Any]] | dict[str, Any]:
+def section_cluster_traffic(args: argparse.Namespace, url: str) -> JsonSerializable:
     return _do_get(url, args).json()
 
 
-def section_failures(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_failures(args: argparse.Namespace, url: str) -> JsonSerializable:
     section_response = _do_get(url, args).json()
     failures_url = _get_base_url(args) + "/system/indexer/failures?limit=30"
     additional_response = _do_get(failures_url, args).json()
@@ -138,7 +140,7 @@ def section_failures(args: argparse.Namespace, url: str) -> list[dict[str, Any]]
     } | additional_response
 
 
-def section_jvm(args: argparse.Namespace, url: str) -> dict[str, object]:
+def section_jvm(args: argparse.Namespace, url: str) -> JsonSerializable:
     value = _do_get(url, args).json()
     metric_data = value.get("metrics")
     if metric_data is None:
@@ -156,21 +158,21 @@ def section_jvm(args: argparse.Namespace, url: str) -> dict[str, object]:
     return new_value
 
 
-def section_license(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_license(args: argparse.Namespace, url: str) -> JsonSerializable:
     try:
         return _do_get(url, args).json()
     except ValueError as e:
         raise RuntimeError(f"Could not parse license response from API: '{e}'") from e
 
 
-def section_messages(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_messages(args: argparse.Namespace, url: str) -> JsonSerializable:
     value = _do_get(url, args)
     if value.status_code != 200:
         return value.json()
     return {"events": value.json().get("counts", {}).get("events", 0)}
 
 
-def section_nodes(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_nodes(args: argparse.Namespace, url: str) -> JsonSerializable:
     value = _do_get(url, args).json()
     # Add inputstate data
     url_nodes = _get_base_url(args) + "/cluster/inputstates"
@@ -202,7 +204,7 @@ def section_nodes(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | 
     return node_list
 
 
-def section_sidecars(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_sidecars(args: argparse.Namespace, url: str) -> JsonSerializable:
     value = _do_get(url, args).json()
     sidecar_list = []
     if sidecars := value.get("sidecars"):
@@ -214,12 +216,9 @@ def section_sidecars(args: argparse.Namespace, url: str) -> list[dict[str, Any]]
     return sidecar_list
 
 
-def section_sources(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_sources(args: argparse.Namespace, url: str) -> JsonSerializable:
     try:
-        sources_response = _do_get(
-            url,
-            args,
-        ).json()
+        sources_response = _do_get(url, args).json()
     except ValueError as e:
         raise RuntimeError(f"Could not parse sources response from API: '{e}'") from e
 
@@ -227,14 +226,7 @@ def section_sources(args: argparse.Namespace, url: str) -> list[dict[str, Any]] 
     source_since_argument = args.source_since
     if source_since_argument:
         url_sources_in_range = f"{url}?range={str(source_since_argument)}"
-        sources_in_range = (
-            _do_get(
-                url_sources_in_range,
-                args,
-            )
-            .json()
-            .get("sources", {})
-        )
+        sources_in_range = _do_get(url_sources_in_range, args).json().get("sources", {})
 
     results = {}
     for source, messages in sources_response.get("sources", {}).items():
@@ -253,11 +245,11 @@ def section_sources(args: argparse.Namespace, url: str) -> list[dict[str, Any]] 
     return {"sources": results} if args.display_source_details == "host" else []
 
 
-def section_streams(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_streams(args: argparse.Namespace, url: str) -> JsonSerializable:
     return _do_get(url, args).json()
 
 
-def section_events(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+def section_events(args: argparse.Namespace, url: str) -> JsonSerializable:
     value = _do_post(url, args).json()
     num_of_events = value.get("total_events", 0)
     num_of_events_in_range = 0
@@ -293,7 +285,7 @@ def _get_section_url(args: argparse.Namespace, section_uri: str) -> str:
 
 
 def _do_post(
-    url: str, args: argparse.Namespace, json: dict[str, Any] | None = None
+    url: str, args: argparse.Namespace, json: Mapping[str, object] | None = None
 ) -> requests.Response:
     response = requests.post(
         url,
@@ -318,9 +310,7 @@ def _do_get(
     return response
 
 
-def handle_output(
-    value: list[dict[str, Any]] | dict[str, Any], section: str, args: argparse.Namespace
-) -> None:
+def handle_output(value: JsonSerializable, section: str, args: argparse.Namespace) -> None:
     sys.stdout.write("<<<graylog_%s:sep(0)>>>\n" % section)
     if isinstance(value, list):
         for entry in value:
@@ -340,12 +330,17 @@ def handle_output(
     return
 
 
-def handle_piggyback(value, args, piggyback_name, section):
+def handle_piggyback(
+    value: JsonSerializable,
+    args: argparse.Namespace,
+    piggyback_name: str,
+    section: str,
+) -> None:
     sys.stdout.write("<<<<%s>>>>\n" % piggyback_name)
     handle_output(value, section, args)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     sections = [
         "alerts",
         "cluster_stats",

@@ -27,12 +27,7 @@ JsonSerializable: TypeAlias = (
     | bool
     | None
 )
-
-
-def _probe_api(args: argparse.Namespace) -> None:
-    url = f"{args.proto}://{args.hostname}:{args.port}/api/system"
-    response = requests.get(url, auth=(args.user, args.password), timeout=900)
-    response.raise_for_status()
+DEFAULT_HTTP_TIMEOUT = 60
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -40,68 +35,98 @@ def main(argv: Sequence[str] | None = None) -> int:
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
+    with requests.Session() as session:
+        session.auth = (args.user, args.password)
+        try:
+            _probe_api(args, session)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"Error: Request to Graylog API failed: '{e}'\n")
+            return 2
 
-    try:
-        _probe_api(args)
-    except requests.exceptions.RequestException as e:
-        sys.stderr.write(f"Error: Request to Graylog API failed: '{e}'\n")
-        return 2
+        # calculate time difference from now and args.since in ISO8601 Format
+        since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))
 
-    # calculate time difference from now and args.since in ISO8601 Format
-    since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))
-
-    handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
-    handle_section(args, "cluster_health", "/system/indexer/cluster/health", section_cluster_health)
-    handle_section(args, "cluster_inputstates", "/cluster/inputstates", section_cluster_inputstates)
-    handle_section(args, "cluster_stats", "/system/cluster/stats", section_cluster_stats)
-    handle_section(
-        args,
-        "cluster_traffic",
-        "/system/cluster/traffic?days=1&daily=false",
-        section_cluster_traffic,
-    )
-    handle_section(
-        args, "failures", "/system/indexer/failures/count/?since=%s" % since, section_failures
-    )
-    handle_section(args, "jvm", "/system/metrics/namespace/jvm.memory.heap", section_jvm)
-    handle_section(
-        args, "license", "/plugins/org.graylog.plugins.license/licenses/status", section_license
-    )
-    handle_section(args, "messages", "/system/indexer/overview", section_messages)
-    handle_section(args, "nodes", "/cluster", section_nodes)
-    handle_section(args, "sidecars", "/sidecars/all", section_sidecars)
-    handle_section(args, "sources", "/sources", section_sources)
-    handle_section(args, "streams", "/streams", section_streams)
-    handle_section(args, "events", "/events/search", section_events)
-    return 0
+        handle_section(args, session, "alerts", "/streams/alerts?limit=300", section_alerts)
+        handle_section(
+            args,
+            session,
+            "cluster_health",
+            "/system/indexer/cluster/health",
+            section_cluster_health,
+        )
+        handle_section(
+            args,
+            session,
+            "cluster_inputstates",
+            "/cluster/inputstates",
+            section_cluster_inputstates,
+        )
+        handle_section(
+            args, session, "cluster_stats", "/system/cluster/stats", section_cluster_stats
+        )
+        handle_section(
+            args,
+            session,
+            "cluster_traffic",
+            "/system/cluster/traffic?days=1&daily=false",
+            section_cluster_traffic,
+        )
+        handle_section(
+            args,
+            session,
+            "failures",
+            "/system/indexer/failures/count/?since=%s" % since,
+            section_failures,
+        )
+        handle_section(
+            args, session, "jvm", "/system/metrics/namespace/jvm.memory.heap", section_jvm
+        )
+        handle_section(
+            args,
+            session,
+            "license",
+            "/plugins/org.graylog.plugins.license/licenses/status",
+            section_license,
+        )
+        handle_section(args, session, "messages", "/system/indexer/overview", section_messages)
+        handle_section(args, session, "nodes", "/cluster", section_nodes)
+        handle_section(args, session, "sidecars", "/sidecars/all", section_sidecars)
+        handle_section(args, session, "sources", "/sources", section_sources)
+        handle_section(args, session, "streams", "/streams", section_streams)
+        handle_section(args, session, "events", "/events/search", section_events)
+        return 0
+    return 2
 
 
 def handle_section(
     args: argparse.Namespace,
+    session: requests.Session,
     section_name: str,
     section_uri: str,
-    handle_function: Callable[[argparse.Namespace, str], JsonSerializable],
+    handle_function: Callable[[argparse.Namespace, str, requests.Session], JsonSerializable],
 ) -> None:
     if section_name not in args.sections:
         return
     try:
-        section_output = handle_function(args, _get_section_url(args, section_uri))
+        section_output = handle_function(args, _get_section_url(args, section_uri), session)
         if section_output:
             handle_output(section_output, section_name, args)
-    except (requests.RequestException, requests.HTTPError, RuntimeError) as e:
+    except (requests.RequestException, RuntimeError) as e:
         sys.stderr.write("Error: %s\n" % e)
         if args.debug:
             raise
 
 
-def section_alerts(args: argparse.Namespace, url: str) -> JsonSerializable:
-    section_response = _do_get(url, args).json()
+def section_alerts(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    section_response = _do_get(url, args, session).json()
     num_of_alerts = section_response.get("total", 0)
     num_of_alerts_in_range = 0
     alerts_since_argument = args.alerts_since
     if alerts_since_argument:
         url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
-        num_of_alerts_in_range = _do_get(url_alerts_in_range, args).json().get("total", 0)
+        num_of_alerts_in_range = _do_get(url_alerts_in_range, args, session).json().get("total", 0)
 
     alerts = {
         "alerts": {
@@ -114,34 +139,44 @@ def section_alerts(args: argparse.Namespace, url: str) -> JsonSerializable:
     return [alerts]
 
 
-def section_cluster_health(args: argparse.Namespace, url: str) -> JsonSerializable:
-    return _do_get(url, args).json()
+def section_cluster_health(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    return _do_get(url, args, session).json()
 
 
-def section_cluster_inputstates(args: argparse.Namespace, url: str) -> JsonSerializable:
-    return _do_get(url, args).json()
+def section_cluster_inputstates(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    return _do_get(url, args, session).json()
 
 
-def section_cluster_stats(args: argparse.Namespace, url: str) -> JsonSerializable:
-    return _do_get(url, args).json()
+def section_cluster_stats(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    return _do_get(url, args, session).json()
 
 
-def section_cluster_traffic(args: argparse.Namespace, url: str) -> JsonSerializable:
-    return _do_get(url, args).json()
+def section_cluster_traffic(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    return _do_get(url, args, session).json()
 
 
-def section_failures(args: argparse.Namespace, url: str) -> JsonSerializable:
-    section_response = _do_get(url, args).json()
+def section_failures(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    section_response = _do_get(url, args, session).json()
     failures_url = _get_base_url(args) + "/system/indexer/failures?limit=30"
-    additional_response = _do_get(failures_url, args).json()
+    additional_response = _do_get(failures_url, args, session).json()
     return {
         "count": section_response.get("count", 0),
         "ds_param_since": args.since,
     } | additional_response
 
 
-def section_jvm(args: argparse.Namespace, url: str) -> JsonSerializable:
-    value = _do_get(url, args).json()
+def section_jvm(args: argparse.Namespace, url: str, session: requests.Session) -> JsonSerializable:
+    value = _do_get(url, args, session).json()
     metric_data = value.get("metrics")
     if metric_data is None:
         return {}
@@ -158,32 +193,37 @@ def section_jvm(args: argparse.Namespace, url: str) -> JsonSerializable:
     return new_value
 
 
-def section_license(args: argparse.Namespace, url: str) -> JsonSerializable:
+def section_license(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
     try:
-        return _do_get(url, args).json()
+        return _do_get(url, args, session).json()
     except ValueError as e:
         raise RuntimeError(f"Could not parse license response from API: '{e}'") from e
 
 
-def section_messages(args: argparse.Namespace, url: str) -> JsonSerializable:
-    value = _do_get(url, args)
+def section_messages(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    value = _do_get(url, args, session)
     if value.status_code != 200:
         return value.json()
     return {"events": value.json().get("counts", {}).get("events", 0)}
 
 
-def section_nodes(args: argparse.Namespace, url: str) -> JsonSerializable:
-    value = _do_get(url, args).json()
+def section_nodes(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    value = _do_get(url, args, session).json()
     # Add inputstate data
     url_nodes = _get_base_url(args) + "/cluster/inputstates"
-    node_inputstates = _do_get(url_nodes, args).json()
+    node_inputstates = _do_get(url_nodes, args, session).json()
     node_list = []
 
     for node_id, node_data in value.items():
         current_node_data = {node_id: node_data.copy()}
         node_journal_data_response = _do_get(
-            _get_base_url(args) + f"/cluster/{node_id}/journal",
-            args,
+            _get_base_url(args) + f"/cluster/{node_id}/journal", args, session
         )
         node_journal_data = node_journal_data_response.json()
         current_node_data[node_id].update({"journal": node_journal_data})
@@ -204,8 +244,10 @@ def section_nodes(args: argparse.Namespace, url: str) -> JsonSerializable:
     return node_list
 
 
-def section_sidecars(args: argparse.Namespace, url: str) -> JsonSerializable:
-    value = _do_get(url, args).json()
+def section_sidecars(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    value = _do_get(url, args, session).json()
     sidecar_list = []
     if sidecars := value.get("sidecars"):
         for sidecar in sidecars:
@@ -216,9 +258,11 @@ def section_sidecars(args: argparse.Namespace, url: str) -> JsonSerializable:
     return sidecar_list
 
 
-def section_sources(args: argparse.Namespace, url: str) -> JsonSerializable:
+def section_sources(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
     try:
-        sources_response = _do_get(url, args).json()
+        sources_response = _do_get(url, args, session).json()
     except ValueError as e:
         raise RuntimeError(f"Could not parse sources response from API: '{e}'") from e
 
@@ -226,7 +270,7 @@ def section_sources(args: argparse.Namespace, url: str) -> JsonSerializable:
     source_since_argument = args.source_since
     if source_since_argument:
         url_sources_in_range = f"{url}?range={str(source_since_argument)}"
-        sources_in_range = _do_get(url_sources_in_range, args).json().get("sources", {})
+        sources_in_range = _do_get(url_sources_in_range, args, session).json().get("sources", {})
 
     results = {}
     for source, messages in sources_response.get("sources", {}).items():
@@ -245,12 +289,16 @@ def section_sources(args: argparse.Namespace, url: str) -> JsonSerializable:
     return {"sources": results} if args.display_source_details == "host" else []
 
 
-def section_streams(args: argparse.Namespace, url: str) -> JsonSerializable:
-    return _do_get(url, args).json()
+def section_streams(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    return _do_get(url, args, session).json()
 
 
-def section_events(args: argparse.Namespace, url: str) -> JsonSerializable:
-    value = _do_post(url, args).json()
+def section_events(
+    args: argparse.Namespace, url: str, session: requests.Session
+) -> JsonSerializable:
+    value = _do_post(url, args, session).json()
     num_of_events = value.get("total_events", 0)
     num_of_events_in_range = 0
     events_since_argument = args.events_since
@@ -259,6 +307,7 @@ def section_events(args: argparse.Namespace, url: str) -> JsonSerializable:
             _do_post(
                 url=url,
                 args=args,
+                session=session,
                 json={"timerange": {"type": "relative", "range": events_since_argument}},
             )
             .json()
@@ -284,28 +333,32 @@ def _get_section_url(args: argparse.Namespace, section_uri: str) -> str:
     return f"{_get_base_url(args)}{section_uri}"
 
 
+def _probe_api(args: argparse.Namespace, session: requests.Session) -> None:
+    url = f"{_get_base_url(args)}/system"
+    _do_get(url, args, session)
+
+
 def _do_post(
-    url: str, args: argparse.Namespace, json: Mapping[str, object] | None = None
+    url: str,
+    args: argparse.Namespace,
+    session: requests.Session,
+    json: Mapping[str, object] | None = None,
 ) -> requests.Response:
-    response = requests.post(
+    response = session.post(
         url,
-        auth=(args.user, args.password),
         headers={
             "Content-Type": "application/json",
             "X-Requested-By": args.user,
         },
         json=json,
-        timeout=900,
+        timeout=DEFAULT_HTTP_TIMEOUT,
     )
     response.raise_for_status()
     return response
 
 
-def _do_get(
-    url: str,
-    args: argparse.Namespace,
-) -> requests.Response:
-    response = requests.get(url, auth=(args.user, args.password), timeout=900)
+def _do_get(url: str, args: argparse.Namespace, session: requests.Session) -> requests.Response:
+    response = session.get(url, timeout=DEFAULT_HTTP_TIMEOUT)
     response.raise_for_status()
     return response
 

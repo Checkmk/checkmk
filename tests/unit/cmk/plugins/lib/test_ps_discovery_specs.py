@@ -119,21 +119,21 @@ def test_get_discovery_specs() -> None:
             {},
         ]
     ) == [
-        (
-            "smss",
-            "~smss.exe",
-            None,
-            (None, False),
-            {},
-            {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        ps._InventorySpec(
+            description="smss",
+            pattern="~smss.exe",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        (
-            "svchost",
-            "svchost.exe",
-            None,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="svchost",
+            pattern="svchost.exe",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "cpulevels": (90.0, 98.0),
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
                 "handle_count": (1000, 2000),
@@ -145,35 +145,35 @@ def test_get_discovery_specs() -> None:
                 "virtual_levels": (1073741824000, 2147483648000),
             },
         ),
-        (
-            "firefox is on %s",
-            "~.*(fire)fox",
-            None,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="firefox is on %s",
+            pattern="~.*(fire)fox",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "process_info": "text",
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        (
-            "firefox is on %s",
-            "~.*(fire)fox",
-            None,
-            (None, False),
-            TEST_LABELS,
-            {
+        ps._InventorySpec(
+            description="firefox is on %s",
+            pattern="~.*(fire)fox",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit=TEST_LABELS,
+            default_params={
                 "process_info": "text",
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        (
-            "emacs %u",
-            "emacs",
-            False,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="emacs %u",
+            pattern="emacs",
+            user=False,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "cpu_average": 15,
                 "cpu_rescale_max": True,
                 "process_info": "html",
@@ -183,13 +183,13 @@ def test_get_discovery_specs() -> None:
                 "icon": "emacs.png",
             },
         ),
-        (
-            "cron",
-            "~.*cron",
-            "root",
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="cron",
+            pattern="~.*cron",
+            user="root",
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "max_age": (3600, 7200),
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
                 "resident_levels_perc": (25.0, 50.0),
@@ -197,51 +197,51 @@ def test_get_discovery_specs() -> None:
                 "resident_levels": (104857600, 209715200),
             },
         ),
-        (
-            "sshd",
-            "~.*sshd",
-            None,
-            (None, False),
-            {},
-            {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        ps._InventorySpec(
+            description="sshd",
+            pattern="~.*sshd",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        (
-            "PS counter",
-            None,
-            "zombie",
-            (None, False),
-            {},
-            {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        ps._InventorySpec(
+            description="PS counter",
+            pattern=None,
+            user="zombie",
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
-        (
-            "Checkhelpers %s",
-            r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
-            None,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="Checkhelpers %s",
+            pattern=r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "process_info": "text",
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        (
-            "Checkhelpers Overall",
-            r"~/omd/sites/\w+/lib/cmc/checkhelper",
-            None,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="Checkhelpers Overall",
+            pattern=r"~/omd/sites/\w+/lib/cmc/checkhelper",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "process_info": "text",
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
             },
         ),
-        (
-            "cron",
-            "/usr/sbin/cron",
-            None,
-            (None, False),
-            {},
-            {
+        ps._InventorySpec(
+            description="cron",
+            pattern="/usr/sbin/cron",
+            user=None,
+            cgroup=(None, False),
+            host_labels_explicit={},
+            default_params={
                 "cpu_rescale_max": "cpu_rescale_max_unspecified",
                 "levels": (1, 1, 20, 20),
             },

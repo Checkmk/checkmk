@@ -92,14 +92,16 @@ class PsInfo:
 
 Section = tuple[int, Sequence[tuple[PsInfo, Sequence[str]]], int]
 
-_InventorySpec = tuple[
-    str,
-    str | None,
-    str | Literal[False] | None,
-    tuple[str | None, bool],
-    Mapping[str, str],
-    Mapping[str, Any],
-]
+
+@dataclass(frozen=True, kw_only=True)
+class _InventorySpec:
+    description: str
+    pattern: str | None
+    user: str | Literal[False] | None
+    cgroup: tuple[str | None, bool]
+    host_labels_explicit: Mapping[str, str]
+    default_params: Mapping[str, Any]
+
 
 # process_lines: (Node, PsInfo, cmd_line, time)
 ProcessLine = tuple[str | None, PsInfo, Sequence[str], int]
@@ -109,13 +111,13 @@ def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_Invent
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
         inventory_specs.append(
-            (
-                value["descr"],
-                value.get("match"),
-                value.get("user"),
-                value.get("cgroup", (None, False)),
-                value.get("label", {}),
-                value["default_params"],
+            _InventorySpec(
+                description=value["descr"],
+                pattern=value.get("match"),
+                user=value.get("user"),
+                cgroup=value.get("cgroup", (None, False)),
+                host_labels_explicit=value.get("label", {}),
+                default_params=value["default_params"],
             )
         )
     return inventory_specs
@@ -133,14 +135,14 @@ def host_labels_ps(
     """
     specs = get_discovery_specs(params)
     for process_info, command_line in section[1]:
-        for _servicedesc, pattern, userspec, cgroupspec, labels, _default_params in specs:
+        for spec in specs:
             # First entry in line is the node name or None for non-clusters
-            if not process_attributes_match(process_info, userspec, cgroupspec):
+            if not process_attributes_match(process_info, spec.user, spec.cgroup):
                 continue
-            matches = process_matches(command_line, pattern)
+            matches = process_matches(command_line, spec.pattern)
             if not matches:
                 continue  # skip not matched lines
-            yield from (HostLabel(*item) for item in labels.items())
+            yield from (HostLabel(*item) for item in spec.host_labels_explicit.items())
 
 
 def minn(a, b):
@@ -522,34 +524,34 @@ def discover_ps(
     inventory_specs = get_discovery_specs(params)
 
     for process_info, command_line in section_ps[1]:
-        for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
-            if not process_attributes_match(process_info, userspec, cgroupspec):
+        for spec in inventory_specs:
+            if not process_attributes_match(process_info, spec.user, spec.cgroup):
                 continue
-            matches = process_matches(command_line, pattern)
+            matches = process_matches(command_line, spec.pattern)
             if not matches:
                 continue  # skip not matched lines
 
             # User capturing on rule
-            if userspec is False:
+            if spec.user is False:
                 i_userspec: None | str = process_info.user
             else:
-                i_userspec = userspec
+                i_userspec = spec.user
 
-            i_servicedesc = servicedesc.replace("%u", i_userspec or "")
+            i_servicedesc = spec.description.replace("%u", i_userspec or "")
 
             # Process capture
             match_groups = () if isinstance(matches, bool) else matches.groups()
 
-            i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
+            i_servicedesc = replace_service_description(i_servicedesc, match_groups, spec.pattern)
 
             # Problem here: We need to instantiate all subexpressions
             # with their actual values of the found process.
             inv_params = {
-                "process": pattern,
+                "process": spec.pattern,
                 "match_groups": match_groups,
                 "user": i_userspec,
-                "cgroup": cgroupspec,
-                **default_params,
+                "cgroup": spec.cgroup,
+                **spec.default_params,
             }
 
             yield Service(

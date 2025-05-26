@@ -72,20 +72,24 @@ def fetch_package(Map args) {
         build_node = "fra"
     }
 
-    upstream_build(
-        relative_job_name: "builders/build-cmk-distro-package",
-        build_params: [
-            /// currently CUSTOM_GIT_REF must match, but in the future
-            /// we should define dependency paths for build-cmk-distro-package
-            CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
-            EDITION: args.edition,
-            DISTRO: args.distro,
-        ],
-        build_params_no_check: [
-            CIPARAM_OVERRIDE_BUILD_NODE: build_node,
-        ],
-        dest: args.download_dir,
-    );
+    inside_container_minimal(safe_branch_name: args.safe_branch_name) {
+        upstream_build(
+            relative_job_name: "builders/build-cmk-distro-package",
+            build_params: [
+                /// currently CUSTOM_GIT_REF must match, but in the future
+                /// we should define dependency paths for build-cmk-distro-package
+                CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
+                EDITION: args.edition,
+                DISTRO: args.distro,
+            ],
+            build_params_no_check: [
+                CIPARAM_OVERRIDE_BUILD_NODE: build_node,
+            ],
+            dest: args.download_dir,
+            no_venv: true,          // run ci-artifacts call without venv
+            omit_build_venv: true,  // do not check or build a venv first
+        );
+    }
 }
 
 def run_make_target(Map args) {

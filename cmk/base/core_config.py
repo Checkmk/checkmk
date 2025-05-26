@@ -326,6 +326,10 @@ def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostN
         from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             agent_bakery,
         )
+        from cmk.base.cee.bakery.errorhandling import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            handle_bakery_exception,
+            handle_plugin_exception,
+        )
         from cmk.base.cee.bakery.load_plugins import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             load_core_plugins,
             load_v1_plugins,
@@ -344,18 +348,25 @@ def _bake_on_restart(config_cache: config.ConfigCache, all_hosts: Iterable[HostN
         config_cache, all_hosts=all_hosts, selected_hosts=None
     )
 
-    agent_bakery.bake_agents(
-        target_configs,
-        plugin_executor=agent_bakery.PluginExecutor(
-            v1_bakery_plugins=load_v1_plugins(),
-            core_bakelets=load_core_plugins(),
-        ),
-        bake_revision_mode=(
-            BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
-        ),
-        logging_level=config.agent_bakery_logging,
-        call_site="config creation",
-    )
+    try:
+        agent_bakery.bake_agents(
+            target_configs,
+            plugin_executor=agent_bakery.PluginExecutor(
+                v1_bakery_plugins=load_v1_plugins(),
+                core_bakelets=load_core_plugins(),
+                exception_handler=handle_plugin_exception,
+            ),
+            bake_revision_mode=(
+                BakeRevisionMode.INACTIVE
+                if config.apply_bake_revision
+                else BakeRevisionMode.DISABLED
+            ),
+            logging_level=config.agent_bakery_logging,
+            call_site="config creation",
+        )
+    except Exception as e:
+        # TODO: check how much of this functionality is actually needed *here*.
+        handle_bakery_exception(e)
 
 
 @contextmanager

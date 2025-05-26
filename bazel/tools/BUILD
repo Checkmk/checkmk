@@ -15,6 +15,7 @@ mypy_cli(
 # TODO: Collect here all formatters we're currently using
 format_multirun(
     name = "format",
+    python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     visibility = ["//visibility:public"],
 )

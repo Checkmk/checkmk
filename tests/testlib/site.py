@@ -1301,6 +1301,7 @@ class Site:
                 contactgroups=[],
                 roles=["admin"],
                 is_automation_user=True,
+                customer="global" if self.version.is_managed_edition() else None,
             )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
 

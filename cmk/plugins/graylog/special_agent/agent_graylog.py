@@ -8,7 +8,7 @@ import json
 import sys
 import time
 from collections.abc import Callable
-from typing import Any, NamedTuple
+from typing import Any
 
 import requests
 import urllib3
@@ -17,11 +17,6 @@ import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
-
-
-class GraylogSection(NamedTuple):
-    name: str
-    uri: str
 
 
 def _probe_api(args: argparse.Namespace) -> None:
@@ -44,9 +39,6 @@ def main(argv=None):
 
     # calculate time difference from now and args.since in ISO8601 Format
     since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))
-
-    # Add new queries here
-    sections: list[GraylogSection] = []
 
     handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
     handle_section(args, "cluster_health", "/system/indexer/cluster/health", section_cluster_health)
@@ -71,13 +63,6 @@ def main(argv=None):
     handle_section(args, "sources", "/sources", section_sources)
     handle_section(args, "streams", "/streams", section_streams)
     handle_section(args, "events", "/events/search", section_events)
-
-    try:
-        handle_request(args, sections)
-    except requests.exceptions.RequestException:
-        if args.debug:
-            raise
-
     return 0
 
 
@@ -90,23 +75,23 @@ def handle_section(
     if section_name not in args.sections:
         return
     try:
-        section_output = handle_function(args, section_uri)
+        section_output = handle_function(args, _get_section_url(args, section_uri))
         if section_output:
             handle_output(section_output, section_name, args)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        sys.stderr.write("Error: %s\n" % e)
         if args.debug:
             raise
 
 
-def section_alerts(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    url = _get_section_url(args, uri)
-    section_response = handle_response(url, args).json()
+def section_alerts(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    section_response = _do_get(url, args).json()
     num_of_alerts = section_response.get("total", 0)
     num_of_alerts_in_range = 0
     alerts_since_argument = args.alerts_since
     if alerts_since_argument:
         url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
-        num_of_alerts_in_range = handle_response(url_alerts_in_range, args).json().get("total", 0)
+        num_of_alerts_in_range = _do_get(url_alerts_in_range, args).json().get("total", 0)
 
     alerts = {
         "alerts": {
@@ -120,41 +105,41 @@ def section_alerts(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] |
 
 
 def section_cluster_health(
-    args: argparse.Namespace, uri: str
+    args: argparse.Namespace, url: str
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+    return _do_get(url, args).json()
 
 
 def section_cluster_inputstates(
-    args: argparse.Namespace, uri: str
+    args: argparse.Namespace, url: str
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+    return _do_get(url, args).json()
 
 
 def section_cluster_stats(
-    args: argparse.Namespace, uri: str
+    args: argparse.Namespace, url: str
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+    return _do_get(url, args).json()
 
 
 def section_cluster_traffic(
-    args: argparse.Namespace, uri: str
+    args: argparse.Namespace, url: str
 ) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+    return _do_get(url, args).json()
 
 
-def section_failures(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    section_response = handle_response(_get_section_url(args, uri), args).json()
+def section_failures(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    section_response = _do_get(url, args).json()
     failures_url = _get_base_url(args) + "/system/indexer/failures?limit=30"
-    additional_response = handle_response(failures_url, args).json()
+    additional_response = _do_get(failures_url, args).json()
     return {
         "count": section_response.get("count", 0),
         "ds_param_since": args.since,
     } | additional_response
 
 
-def section_jvm(args: argparse.Namespace, uri: str) -> dict[str, object]:
-    value = handle_response(_get_section_url(args, uri), args).json()
+def section_jvm(args: argparse.Namespace, url: str) -> dict[str, object]:
+    value = _do_get(url, args).json()
     metric_data = value.get("metrics")
     if metric_data is None:
         return {}
@@ -171,27 +156,27 @@ def section_jvm(args: argparse.Namespace, uri: str) -> dict[str, object]:
     return new_value
 
 
-def section_license(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+def section_license(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    return _do_get(url, args).json()
 
 
-def section_messages(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    value = handle_response(_get_section_url(args, uri), args)
+def section_messages(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = _do_get(url, args)
     if value.status_code != 200:
         return value.json()
     return {"events": value.json().get("counts", {}).get("events", 0)}
 
 
-def section_nodes(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    value = handle_response(_get_section_url(args, uri), args).json()
+def section_nodes(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = _do_get(url, args).json()
     # Add inputstate data
     url_nodes = _get_base_url(args) + "/cluster/inputstates"
-    node_inputstates = handle_response(url_nodes, args).json()
+    node_inputstates = _do_get(url_nodes, args).json()
     node_list = []
 
     for node_id, node_data in value.items():
         current_node_data = {node_id: node_data.copy()}
-        node_journal_data_response = handle_response(
+        node_journal_data_response = _do_get(
             _get_base_url(args) + f"/cluster/{node_id}/journal",
             args,
         )
@@ -214,8 +199,8 @@ def section_nodes(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | 
     return node_list
 
 
-def section_sidecars(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    value = handle_response(_get_section_url(args, uri), args).json()
+def section_sidecars(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = _do_get(url, args).json()
     sidecar_list = []
     if sidecars := value.get("sidecars"):
         for sidecar in sidecars:
@@ -226,13 +211,26 @@ def section_sidecars(args: argparse.Namespace, uri: str) -> list[dict[str, Any]]
     return sidecar_list
 
 
-def section_sources(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    sources_response = handle_response(_get_section_url(args, uri), args).json()
+def section_sources(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    try:
+        sources_response = _do_get(
+            url,
+            args,
+        ).json()
+    except ValueError:
+        return []
     sources_in_range = {}
     source_since_argument = args.source_since
     if source_since_argument:
-        url_sources_in_range = f"{_get_section_url(args, uri)}?range={str(source_since_argument)}"
-        sources_in_range = handle_response(url_sources_in_range, args).json().get("sources", {})
+        url_sources_in_range = f"{url}?range={str(source_since_argument)}"
+        sources_in_range = (
+            _do_get(
+                url_sources_in_range,
+                args,
+            )
+            .json()
+            .get("sources", {})
+        )
 
     results = {}
     for source, messages in sources_response.get("sources", {}).items():
@@ -251,22 +249,20 @@ def section_sources(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] 
     return {"sources": results} if args.display_source_details == "host" else []
 
 
-def section_streams(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    return handle_response(_get_section_url(args, uri), args).json()
+def section_streams(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    return _do_get(url, args).json()
 
 
-def section_events(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
-    section_url = _get_section_url(args, uri)
-    value = handle_response(section_url, args, method="POST").json()
+def section_events(args: argparse.Namespace, url: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = _do_post(url, args).json()
     num_of_events = value.get("total_events", 0)
     num_of_events_in_range = 0
     events_since_argument = args.events_since
     if events_since_argument:
         num_of_events_in_range = (
-            handle_response(
-                url=section_url,
+            _do_post(
+                url=url,
                 args=args,
-                method="POST",
                 json={"timerange": {"type": "relative", "range": events_since_argument}},
             )
             .json()
@@ -292,56 +288,26 @@ def _get_section_url(args: argparse.Namespace, section_uri: str) -> str:
     return f"{_get_base_url(args)}{section_uri}"
 
 
-def handle_request(args, sections):
-    url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
-
-    for section in sections:
-        if section.name not in args.sections:
-            continue
-
-        url = url_base + section.uri
-
-        # Fill the variable `value` with the response from the API.
-        # If sections require special or additional handling, this will
-        # be done afterwards.
-        value = handle_response(url, args).json()
-
-        if section.name not in ["nodes", "sidecars", "sources", "alerts", "events"]:
-            handle_output(value, section.name, args)
+def _do_post(
+    url: str, args: argparse.Namespace, json: dict[str, Any] | None = None
+) -> requests.Response:
+    return requests.post(
+        url,
+        auth=(args.user, args.password),
+        headers={
+            "Content-Type": "application/json",
+            "X-Requested-By": args.user,
+        },
+        json=json,
+        timeout=900,
+    )
 
 
-def handle_response(
+def _do_get(
     url: str,
     args: argparse.Namespace,
-    method: str = "GET",
-    json: dict[str, Any] | None = None,
 ) -> requests.Response:
-    if method == "POST":
-        try:
-            response = requests.post(
-                url,
-                auth=(args.user, args.password),
-                headers={
-                    "Content-Type": "application/json",
-                    "X-Requested-By": args.user,
-                },
-                json=json,
-                timeout=900,
-            )
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write("Error: %s\n" % e)
-            if args.debug:
-                raise
-
-    else:
-        try:
-            response = requests.get(url, auth=(args.user, args.password), timeout=900)
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write("Error: %s\n" % e)
-            if args.debug:
-                raise
-
-    return response
+    return requests.get(url, auth=(args.user, args.password), timeout=900)
 
 
 def handle_output(

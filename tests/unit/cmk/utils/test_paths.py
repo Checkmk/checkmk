@@ -32,17 +32,6 @@ _STR_PATHS: Final = {
     "nagios_objects_file",
     "nagios_command_pipe_path",
     "check_result_path",
-    "nagios_conf_dir",
-    "nagios_config_file",
-    "nagios_startscript",
-    "nagios_binary",
-    "htpasswd_file",
-    "livestatus_unix_socket",
-    "share_dir",
-    "checks_dir",
-    "cmk_addons_plugins_dir",
-    "cmk_plugins_dir",
-    "inventory_dir",
 }
 
 

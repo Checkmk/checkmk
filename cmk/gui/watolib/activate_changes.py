@@ -225,7 +225,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
             ident="htpasswd",
-            site_path=os.path.relpath(cmk.utils.paths.htpasswd_file, cmk.utils.paths.omd_root),
+            site_path=os.path.relpath(str(cmk.utils.paths.htpasswd_file), cmk.utils.paths.omd_root),
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
@@ -243,7 +243,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty=ReplicationPathType.FILE,
             ident="auth.serials",
             site_path=os.path.relpath(
-                "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                str(cmk.utils.paths.htpasswd_file.with_name("auth.serials")),
                 cmk.utils.paths.omd_root,
             ),
         ),

@@ -74,7 +74,7 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets()
-    plugins = load_all_plugins(paths.checks_dir)
+    plugins = load_all_plugins(str(paths.checks_dir))
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(
             hostname, all_rulesets, plugins.check_plugins

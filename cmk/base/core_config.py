@@ -10,7 +10,6 @@ import socket
 import sys
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.debug
@@ -375,7 +374,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 
         if (
             core.name() == "nagios"
-            and Path(cmk.utils.paths.nagios_config_file).exists()
+            and cmk.utils.paths.nagios_config_file.exists()
             and not do_check_nagiosconfig()
         ):
             broken_config_path = cmk.utils.paths.tmp_dir / "check_mk_objects.cfg.broken"

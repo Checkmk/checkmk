@@ -28,26 +28,23 @@ from cmk.gui.permissions import declare_permission
 
 
 def load_user_scripts(what: str) -> dict[str, Any]:
-    scripts: dict[str, Any] = {}
-    not_dir = cmk.utils.paths.share_dir + "/" + what
+    scripts = _load_user_scripts_from(
+        cmk.utils.paths.notifications_dir
+        if what == "notifications"
+        else (cmk.utils.paths.share_dir / what)
+    )
     try:
-        if what == "notifications":
-            # Support for setup.sh
-            not_dir = str(cmk.utils.paths.notifications_dir)
-    except Exception:
-        pass
-
-    scripts = _load_user_scripts_from(not_dir)
-    try:
-        local_dir = str(cmk.utils.paths.omd_root / "local/share/check_mk" / what)
-        scripts.update(_load_user_scripts_from(local_dir))
+        scripts.update(
+            _load_user_scripts_from(cmk.utils.paths.omd_root / "local/share/check_mk" / what)
+        )
     except Exception:
         pass
 
     return scripts
 
 
-def _load_user_scripts_from(adir: str) -> dict[str, Any]:
+def _load_user_scripts_from(directory: Path) -> dict[str, Any]:
+    adir = str(directory)
     scripts: dict[str, Any] = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):

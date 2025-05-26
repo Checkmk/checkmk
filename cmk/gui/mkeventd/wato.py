@@ -6,7 +6,6 @@
 import abc
 import ast
 import io
-import os
 import re
 import socket
 import sys
@@ -5187,9 +5186,9 @@ def mkeventd_update_notification_configuration(
     if not remote_console:
         remote_console = ""
 
-    path = cmk.utils.paths.nagios_conf_dir + "/mkeventd_notifications.cfg"
-    if not contactgroup and os.path.exists(path):
-        os.remove(path)
+    path = cmk.utils.paths.nagios_conf_dir / "mkeventd_notifications.cfg"
+    if not contactgroup and path.exists():
+        path.unlink()
     elif contactgroup:
         store.save_text_to_file(
             path,

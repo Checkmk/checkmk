@@ -5,7 +5,6 @@
 
 import traceback
 from datetime import datetime
-from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
@@ -135,7 +134,7 @@ def user_exists(username: UserId) -> bool:
     if user_exists_according_to_profile(username):
         return True
 
-    return Htpasswd(Path(cmk.utils.paths.htpasswd_file)).exists(username)
+    return Htpasswd(cmk.utils.paths.htpasswd_file).exists(username)
 
 
 def user_exists_according_to_profile(username: UserId) -> bool:

@@ -20,7 +20,7 @@ def print_(txt: str) -> None:
 
 def do_check_nagiosconfig() -> bool:
     """Execute nagios config verification to ensure the created check_mk_objects.cfg is valid"""
-    command = [cmk.utils.paths.nagios_binary, "-vp", cmk.utils.paths.nagios_config_file]
+    command = [str(cmk.utils.paths.nagios_binary), "-vp", str(cmk.utils.paths.nagios_config_file)]
     console.verbose(f"Running '{subprocess.list2cmdline(command)}'")
     print_("Validating Nagios configuration...")
 

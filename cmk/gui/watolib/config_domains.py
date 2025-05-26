@@ -265,7 +265,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         )
 
         try:
-            pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
+            pidfile = cmk.utils.paths.livestatus_unix_socket.with_name("liveproxyd.pid")
             try:
                 with pidfile.open(encoding="utf-8") as f:
                     pid = int(f.read().strip())

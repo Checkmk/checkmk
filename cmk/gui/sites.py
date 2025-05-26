@@ -415,18 +415,16 @@ def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) 
         return f"unix:{livestatus_unix_socket}proxy/{site_id}"
 
     if socket_spec[0] == "local":
-        return "unix:%s" % livestatus_unix_socket
+        return f"unix:{livestatus_unix_socket}"
 
     if socket_spec[0] == "unix":
         unix_family_spec, unix_address_spec = cast(UnixSocketInfo, socket_spec)
-        return "{}:{}".format(unix_family_spec, unix_address_spec["path"])
+        return f"{unix_family_spec}:{unix_address_spec['path']}"
 
     if socket_spec[0] in ("tcp", "tcp6"):
         tcp_family_spec, tcp_address_spec = cast(NetworkSocketInfo, socket_spec)
-        return "%s:%s:%d" % (
-            tcp_family_spec,
-            tcp_address_spec["address"][0],
-            tcp_address_spec["address"][1],
+        return (
+            f"{tcp_family_spec}:{tcp_address_spec['address'][0]}:{tcp_address_spec['address'][1]}"
         )
 
     raise NotImplementedError()

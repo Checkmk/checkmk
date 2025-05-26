@@ -119,7 +119,7 @@ def _multisite_dir() -> Path:
 
 
 def get_authserials_lines() -> list[str]:
-    authserials_path = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    authserials_path = cmk.utils.paths.htpasswd_file.with_name("auth.serials")
     if not authserials_path.exists():
         return []
     with authserials_path.open(encoding="utf-8") as f:
@@ -264,7 +264,7 @@ def _merge_users_and_contacts(
 
 
 def _add_passwords(users: Users) -> Users:
-    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    htpwd_entries = Htpasswd(cmk.utils.paths.htpasswd_file).load(allow_missing_file=True)
     for uid, password in htpwd_entries.items():
         if password.startswith("!"):
             locked = True
@@ -293,7 +293,7 @@ def _add_passwords(users: Users) -> Users:
 
 
 def _add_serials(users: Users) -> Users:
-    serials_file = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    serials_file = cmk.utils.paths.htpasswd_file.with_name("auth.serials")
     try:
         for line in serials_file.read_text(encoding="utf-8").splitlines():
             if ":" in line:
@@ -637,7 +637,7 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     serials = ""
     for user_id, user in updated_profiles.items():
         serials += "%s:%d\n" % (user_id, user.get("serial", 0))
-    save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
+    save_text_to_file(cmk.utils.paths.htpasswd_file.with_name("auth.serials"), serials)
 
 
 def create_cmk_automation_user(
@@ -757,8 +757,8 @@ def general_userdb_job(now: datetime) -> None:
     hooks.call("userdb-job")
 
     # Create initial auth.serials file, same issue as auth.php above
-    serials_file = "%s/auth.serials" % os.path.dirname(htpasswd_file)
-    if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
+    serials_file = htpasswd_file.with_name("auth.serials")
+    if not serials_file.exists() or serials_file.stat().st_size == 0:
         rewrite_users(now)
 
 

@@ -144,7 +144,7 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        plugins = config.load_all_plugins(paths.checks_dir)
+        plugins = config.load_all_plugins(str(paths.checks_dir))
     return plugins
 
 

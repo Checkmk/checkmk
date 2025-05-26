@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 from cmk.ccc.user import UserId
 
 import cmk.utils.paths
@@ -73,7 +71,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
 
     def __init__(self, cfg: HtpasswdUserConnectionConfig) -> None:
         super().__init__(cfg)
-        self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
+        self._htpasswd = Htpasswd(cmk.utils.paths.htpasswd_file)
 
     #
     # USERDB API METHODS

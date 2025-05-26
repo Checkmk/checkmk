@@ -221,7 +221,7 @@ def _schedule_discovery_check(host_name: HostName) -> None:
 
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(cmk.utils.paths.livestatus_unix_socket)
+        s.connect(str(cmk.utils.paths.livestatus_unix_socket))
         s.send(f"COMMAND [{now}] {command}\n".encode())
     except Exception:
         if cmk.ccc.debug.enabled():
@@ -1258,7 +1258,7 @@ class AutomationRenameHosts(Automation):
 
     def _core_is_running(self) -> bool:
         if config.monitoring_core == "nagios":
-            command = nagios_startscript + " status"
+            command = str(nagios_startscript) + " status"
         else:
             command = "omd status cmc"
         return (

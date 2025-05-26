@@ -33,7 +33,7 @@ from cmk.werks.utils import (
 
 from .acknowledgement import load_acknowledgements, UNACKNOWLEDGED_WERKS_JSON
 
-COMPILED_WERKS_DIR = Path(cmk.utils.paths.share_dir, "werks")
+COMPILED_WERKS_DIR = cmk.utils.paths.share_dir / "werks"
 
 
 def load(

@@ -105,7 +105,7 @@ def site_is_local(config: Config, site_id: SiteId) -> bool:
         return True
 
     if socket_info[0] == "unix":
-        return socket_info[1]["path"] == cmk.utils.paths.livestatus_unix_socket
+        return socket_info[1]["path"] == str(cmk.utils.paths.livestatus_unix_socket)
 
     return False
 

@@ -117,9 +117,9 @@ def _fake_version_and_paths() -> None:
 
     # these use repo_path
     monkeypatch.setattr("cmk.utils.paths.agents_dir", repo_path() / "agents")
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", str(repo_path() / "checks"))
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", repo_path() / "checks")
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", str(repo_path() / "inventory"))
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", repo_path() / "inventory")
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", repo_path() / "checkman")
 
     # patch `cmk.ccc.versions`
@@ -249,7 +249,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 
-    _touch(Path(cmk.utils.paths.htpasswd_file))
+    _touch(cmk.utils.paths.htpasswd_file)
     makedirs(Path(cmk.utils.paths.autochecks_dir))
     makedirs(Path(cmk.utils.paths.var_dir, "web"))
     makedirs(Path(cmk.utils.paths.var_dir, "php-api"))

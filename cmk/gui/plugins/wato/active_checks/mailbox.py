@@ -133,19 +133,19 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                 Alternative(
                     title=f"{protocol} server",
                     elements=[
-                        TextInput(
-                            title=("Unvalidated string (for use with makros)"),
-                            help=_(
-                                "Use a makro as (part of) server name. "
-                                "Macros must be in capital letters and start and end with '$'."
-                            ),
-                        ),
                         HostAddress(
                             title=f"{protocol} server",
                             allow_empty=False,
                             help=_(
                                 "You can specify a host name or IP address different from the IP "
                                 "address of the host this check will be assigned to."
+                            ),
+                        ),
+                        TextInput(
+                            title=("Unvalidated string (for use with makros)"),
+                            help=_(
+                                "Use a makro as (part of) server name. "
+                                "Macros must be in capital letters and start and end with '$'."
                             ),
                         ),
                     ],

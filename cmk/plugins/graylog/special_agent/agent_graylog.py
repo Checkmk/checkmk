@@ -48,7 +48,6 @@ def main(argv=None):
     # Add new queries here
     sections = [
         GraylogSection(name="sources", uri="/sources"),
-        GraylogSection(name="events", uri="/events/search"),
     ]
 
     handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
@@ -72,6 +71,7 @@ def main(argv=None):
     handle_section(args, "nodes", "/cluster", section_nodes)
     handle_section(args, "sidecars", "/sidecars/all", section_sidecars)
     handle_section(args, "streams", "/streams", section_streams)
+    handle_section(args, "events", "/events/search", section_events)
 
     try:
         handle_request(args, sections)
@@ -231,6 +231,35 @@ def section_streams(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] 
     return handle_response(_get_section_url(args, uri), args).json()
 
 
+def section_events(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    section_url = _get_section_url(args, uri)
+    value = handle_response(section_url, args, method="POST").json()
+    num_of_events = value.get("total_events", 0)
+    num_of_events_in_range = 0
+    events_since_argument = args.events_since
+    if events_since_argument:
+        num_of_events_in_range = (
+            handle_response(
+                url=section_url,
+                args=args,
+                method="POST",
+                json={"timerange": {"type": "relative", "range": events_since_argument}},
+            )
+            .json()
+            .get("total_events", 0)
+        )
+
+    events = {
+        "events": {
+            "num_of_events": num_of_events,
+            "has_since_argument": bool(events_since_argument),
+            "events_since": events_since_argument if events_since_argument else None,
+            "num_of_events_in_range": num_of_events_in_range,
+        }
+    }
+    return [events]
+
+
 def _get_base_url(args: argparse.Namespace) -> str:
     return f"{args.proto}://{args.hostname}:{args.port}/api"
 
@@ -251,37 +280,7 @@ def handle_request(args, sections):
         # Fill the variable `value` with the response from the API.
         # If sections require special or additional handling, this will
         # be done afterwards.
-        if section.name == "events":
-            value = handle_response(url, args, "POST").json()
-        else:
-            value = handle_response(url, args).json()
-
-        if section.name == "events":
-            num_of_events = value.get("total_events", 0)
-            num_of_events_in_range = 0
-            events_since_argument = args.events_since
-
-            if events_since_argument:
-                num_of_events_in_range = (
-                    handle_response(
-                        url=url,
-                        args=args,
-                        method="POST",
-                        events_since=args.events_since,
-                    )
-                    .json()
-                    .get("total_events", 0)
-                )
-
-            events = {
-                "events": {
-                    "num_of_events": num_of_events,
-                    "has_since_argument": bool(events_since_argument),
-                    "events_since": events_since_argument if events_since_argument else None,
-                    "num_of_events_in_range": num_of_events_in_range,
-                }
-            }
-            handle_output([events], section.name, args)
+        value = handle_response(url, args).json()
 
         if section.name == "sources":
             sources_in_range = {}
@@ -325,7 +324,12 @@ def handle_request(args, sections):
             handle_output(value, section.name, args)
 
 
-def handle_response(url, args, method="GET", events_since=86400):
+def handle_response(
+    url: str,
+    args: argparse.Namespace,
+    method: str = "GET",
+    json: dict[str, Any] | None = None,
+) -> requests.Response:
     if method == "POST":
         try:
             response = requests.post(
@@ -335,7 +339,7 @@ def handle_response(url, args, method="GET", events_since=86400):
                     "Content-Type": "application/json",
                     "X-Requested-By": args.user,
                 },
-                json={"timerange": {"type": "relative", "range": events_since}},
+                json=json,
                 timeout=900,
             )
         except requests.exceptions.RequestException as e:

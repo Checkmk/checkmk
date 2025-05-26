@@ -41,8 +41,8 @@ from cmk.gui.watolib.groups_io import (
 )
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
+    HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS,
     HostAttributeTopic,
-    HostAttributeTopicBasicSettings,
     HostContactGroupSpec,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
@@ -317,7 +317,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return _("Permissions")
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicBasicSettings()
+        return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
     def sort_index(cls) -> int:

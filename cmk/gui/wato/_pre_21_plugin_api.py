@@ -202,14 +202,6 @@ def register() -> None:
     for name in (
         "host_attribute_registry",
         "host_attribute_topic_registry",
-        "HostAttributeTopicAddress",
-        "HostAttributeTopicBasicSettings",
-        "HostAttributeTopicCustomAttributes",
-        "HostAttributeTopicDataSources",
-        "HostAttributeTopicHostTags",
-        "HostAttributeTopicManagementBoard",
-        "HostAttributeTopicMetaData",
-        "HostAttributeTopicNetworkScan",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.host_attributes.__dict__[name]
     for name in (

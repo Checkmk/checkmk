@@ -12,6 +12,7 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Hashable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
@@ -48,14 +49,14 @@ _ContactgroupName = str
 
 
 def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None:
-    host_attribute_topic_registry_.register(HostAttributeTopicBasicSettings())
-    host_attribute_topic_registry_.register(HostAttributeTopicAddress())
-    host_attribute_topic_registry_.register(HostAttributeTopicDataSources())
-    host_attribute_topic_registry_.register(HostAttributeTopicHostTags())
-    host_attribute_topic_registry_.register(HostAttributeTopicNetworkScan())
-    host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard())
-    host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes())
-    host_attribute_topic_registry_.register(HostAttributeTopicMetaData())
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_HOST_TAGS)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_META_DATA)
 
 
 # Keep in sync with cmk.fetchers._ipmi.IPMICredentials
@@ -184,24 +185,16 @@ def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
     return masked
 
 
-class HostAttributeTopic(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """Unique internal ID of this attribute. Only ASCII characters allowed."""
-        raise NotImplementedError()
+@dataclass(frozen=True, kw_only=True)
+class HostAttributeTopic:
+    """Host attribute topic"""
 
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        """Used as title for the attribute topics on the host edit page"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def sort_index(self) -> int:
-        """The topics are sorted by this number wherever displayed as a list"""
-        raise NotImplementedError()
+    """Unique internal ID of this attribute. Only ASCII characters allowed."""
+    ident: str
+    """Used as title for the attribute topics on the host edit page"""
+    title: str
+    """The topics are sorted by this number wherever displayed as a list"""
+    sort_index: int
 
 
 class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeTopic]):
@@ -216,116 +209,54 @@ host_attribute_topic_registry = HostAttributeTopicRegistry()
 
 
 # TODO: Move these plugins?
-class HostAttributeTopicBasicSettings(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "basic"
+HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS = HostAttributeTopic(
+    ident="basic",
+    title=_("Basic settings"),
+    sort_index=0,
+)
 
-    @property
-    def title(self) -> str:
-        return _("Basic settings")
+HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS = HostAttributeTopic(
+    ident="address",
+    title=_("Network address"),
+    sort_index=10,
+)
 
-    @property
-    def sort_index(self) -> int:
-        return 0
+HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES = HostAttributeTopic(
+    ident="monitoring_agents",
+    title=_("Monitoring agents"),
+    sort_index=20,
+)
 
+HOST_ATTRIBUTE_TOPIC_HOST_TAGS = HostAttributeTopic(
+    ident="host_tags",
+    title=_("Host tags"),
+    sort_index=30,
+)
 
-class HostAttributeTopicAddress(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "address"
+HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN = HostAttributeTopic(
+    ident="network_scan",
+    title=_("Network scan"),
+    sort_index=40,
+)
 
-    @property
-    def title(self) -> str:
-        return _("Network address")
+HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD = HostAttributeTopic(
+    ident="management_board",
+    title=_("Management board"),
+    sort_index=50,
+)
 
-    @property
-    def sort_index(self) -> int:
-        return 10
-
-
-class HostAttributeTopicDataSources(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "monitoring_agents"
-
-    @property
-    def title(self) -> str:
-        return _("Monitoring agents")
-
-    @property
-    def sort_index(self) -> int:
-        return 20
-
-
-class HostAttributeTopicHostTags(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "host_tags"
-
-    @property
-    def title(self) -> str:
-        return _("Host tags")
-
-    @property
-    def sort_index(self) -> int:
-        return 30
+HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES = HostAttributeTopic(
+    ident="custom_attributes",
+    title=_("Custom attributes"),
+    sort_index=35,
+)
 
 
-class HostAttributeTopicNetworkScan(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "network_scan"
-
-    @property
-    def title(self) -> str:
-        return _("Network scan")
-
-    @property
-    def sort_index(self) -> int:
-        return 40
-
-
-class HostAttributeTopicManagementBoard(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "management_board"
-
-    @property
-    def title(self) -> str:
-        return _("Management board")
-
-    @property
-    def sort_index(self) -> int:
-        return 50
-
-
-class HostAttributeTopicCustomAttributes(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "custom_attributes"
-
-    @property
-    def title(self) -> str:
-        return _("Custom attributes")
-
-    @property
-    def sort_index(self) -> int:
-        return 35
-
-
-class HostAttributeTopicMetaData(HostAttributeTopic):
-    @property
-    def ident(self) -> str:
-        return "meta_data"
-
-    @property
-    def title(self) -> str:
-        return _("Creation / Locking")
-
-    @property
-    def sort_index(self) -> int:
-        return 60
+HOST_ATTRIBUTE_TOPIC_META_DATA = HostAttributeTopic(
+    ident="meta_data",
+    title=_("Creation / Locking"),
+    sort_index=60,
+)
 
 
 class ABCHostAttribute(abc.ABC):
@@ -642,7 +573,7 @@ def declare_host_attribute(
 
     if topic is None or isinstance(topic, str):
         ident = str(topic).replace(" ", "_").lower() if topic else None
-        attrs["_topic"] = _declare_host_attribute_topic(ident, topic)
+        attrs["_topic"] = _declare_host_attribute_topic(ident, str(topic))
     elif isinstance(topic, HostAttributeTopic):
         attrs["_topic"] = topic
     else:
@@ -684,28 +615,22 @@ def declare_host_attribute(
     host_attribute_registry.register(final_class)
 
 
-def _declare_host_attribute_topic(ident: str | None, topic_title: str | None) -> HostAttributeTopic:
+def _declare_host_attribute_topic(ident: str | None, topic_title: str) -> HostAttributeTopic:
     """We get the "topic title" here. Create a topic class dynamically and
     returns a reference to this class"""
     if ident is None:
-        return HostAttributeTopicBasicSettings()
+        return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
-    try:
+    if ident in host_attribute_topic_registry:
         return host_attribute_topic_registry[ident]
-    except KeyError:
-        pass
 
-    topic_class = type(
-        "DynamicHostAttributeTopic%s" % ident.title(),
-        (HostAttributeTopic,),
-        {
-            "ident": ident,
-            "title": topic_title,
-            "sort_index": 80,
-        },
+    topic = HostAttributeTopic(
+        ident=ident,
+        title=topic_title,
+        sort_index=80,
     )
-    host_attribute_topic_registry.register(topic_class())
-    return topic_class()
+    host_attribute_topic_registry.register(topic)
+    return topic
 
 
 @request_memoize()

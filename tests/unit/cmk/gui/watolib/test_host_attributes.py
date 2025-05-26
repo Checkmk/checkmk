@@ -415,7 +415,7 @@ def test_legacy_register_rulegroup_with_defaults(
     assert attr.show_in_folder() is True
     assert attr.show_in_host_search() is True
     assert attr.show_in_form() is True
-    assert attr.topic().ident == attrs.HostAttributeTopicBasicSettings().ident
+    assert attr.topic().ident == attrs.HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS.ident
     assert attr.depends_on_tags() == []
     assert attr.depends_on_roles() == []
     assert attr.editable() is True

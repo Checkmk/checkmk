@@ -71,14 +71,14 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     host_attribute_choices,
+    HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS,
+    HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES,
+    HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD,
+    HOST_ATTRIBUTE_TOPIC_META_DATA,
+    HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES,
+    HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS,
+    HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN,
     HostAttributeTopic,
-    HostAttributeTopicAddress,
-    HostAttributeTopicBasicSettings,
-    HostAttributeTopicCustomAttributes,
-    HostAttributeTopicDataSources,
-    HostAttributeTopicManagementBoard,
-    HostAttributeTopicMetaData,
-    HostAttributeTopicNetworkScan,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
@@ -102,7 +102,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return 64
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicBasicSettings()
+        return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     def is_show_more(self) -> bool:
         return True
@@ -135,7 +135,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicAddress()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -206,7 +206,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicAddress()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -277,7 +277,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
 
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicAddress()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -337,7 +337,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
 class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicAddress()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -397,7 +397,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicDataSources()
+        return HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES
 
     @classmethod
     def sort_index(cls) -> int:
@@ -458,7 +458,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         return "parents"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicBasicSettings()
+        return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -585,7 +585,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return user.may("wato.manage_hosts")
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicNetworkScan()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN
 
     @classmethod
     def sort_index(cls) -> int:
@@ -841,7 +841,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         return "network_scan_result"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicNetworkScan()
+        return HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN
 
     @classmethod
     def sort_index(cls) -> int:
@@ -951,7 +951,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
         return "management_address"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicManagementBoard()
+        return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1003,7 +1003,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         return "management_protocol"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicManagementBoard()
+        return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1056,7 +1056,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
         return "management_snmp_community"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicManagementBoard()
+        return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1126,7 +1126,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
         return "management_ipmi_credentials"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicManagementBoard()
+        return HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1168,7 +1168,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return not (has_wato_slave_sites() or is_wato_slave_site())
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicBasicSettings()
+        return HOST_ATTRIBUTE_TOPIC_BASIC_SETTINGS
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1234,7 +1234,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         return "locked_by"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicMetaData()
+        return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1318,7 +1318,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         return "locked_attributes"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicMetaData()
+        return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1364,7 +1364,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         return "meta_data"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicMetaData()
+        return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1446,8 +1446,8 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self) -> HostAttributeTopicMetaData:
-        return HostAttributeTopicMetaData()
+    def topic(self) -> HostAttributeTopic:
+        return HOST_ATTRIBUTE_TOPIC_META_DATA
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1506,7 +1506,7 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
         return "waiting_for_discovery"
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicCustomAttributes()
+        return HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES
 
     @classmethod
     def sort_index(cls) -> int:
@@ -1568,7 +1568,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return _("Labels")
 
     def topic(self) -> HostAttributeTopic:
-        return HostAttributeTopicCustomAttributes()
+        return HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES
 
     @classmethod
     def sort_index(cls) -> int:

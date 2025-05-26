@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
         GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
@@ -70,6 +69,7 @@ def main(argv=None):
     handle_section(
         args, "failures", "/system/indexer/failures/count/?since=%s" % since, section_failures
     )
+    handle_section(args, "jvm", "/system/metrics/namespace/jvm.memory.heap", section_jvm)
 
     try:
         handle_request(args, sections)
@@ -151,6 +151,24 @@ def section_failures(args: argparse.Namespace, uri: str) -> list[dict[str, Any]]
     } | additional_response
 
 
+def section_jvm(args: argparse.Namespace, uri: str) -> dict[str, object]:
+    value = handle_response(_get_section_url(args, uri), args).json()
+    metric_data = value.get("metrics")
+    if metric_data is None:
+        return {}
+
+    new_value = {}
+    for metric in value["metrics"]:
+        metric_value = metric.get("metric", {}).get("value")
+        metric_name = metric.get("full_name")
+        if metric_value is None or metric_name is None:
+            continue
+
+        new_value.update({metric_name: metric_value})
+
+    return new_value
+
+
 def _get_base_url(args: argparse.Namespace) -> str:
     return f"{args.proto}://{args.hostname}:{args.port}/api"
 
@@ -208,22 +226,6 @@ def handle_request(args, sections):
 
             if node_list:
                 handle_output(node_list, section.name, args)
-
-        if section.name == "jvm":
-            metric_data = value.get("metrics")
-            if metric_data is None:
-                continue
-
-            new_value = {}
-            for metric in value["metrics"]:
-                metric_value = metric.get("metric", {}).get("value")
-                metric_name = metric.get("full_name")
-                if metric_value is None or metric_name is None:
-                    continue
-
-                new_value.update({metric_name: metric_value})
-
-            value = new_value
 
         if section.name == "sidecars":
             sidecars = value.get("sidecars")

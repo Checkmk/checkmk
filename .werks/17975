@@ -1,0 +1,14 @@
+Title: rule_search: allow none_of & one_of when searching for tags
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1749033187
+Edition: cre
+Level: 1
+Version: 2.2.0p44
+
+The refine search when searching for tags was broken.  If the rule had
+tags set using any_of or one_of, these rules would not be found. Also,
+the search itself did not allow for any_of or one_of.  With this werk
+we have now addressed both of these issues and you should now be able
+to search rules with these conditions.

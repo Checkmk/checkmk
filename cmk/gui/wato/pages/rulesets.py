@@ -62,7 +62,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato.utils import (
     DictHostTagCondition,
     flash,
-    HostTagCondition,
     LabelCondition,
     make_confirm_delete_link,
     mode_registry,
@@ -1633,7 +1632,10 @@ class ModeRuleSearchForm(WatoMode):
                         mode=RegExp.infix,
                     ),
                 ),
-                ("rule_hosttags", HostTagCondition(title=_("Used host tags"))),
+                (
+                    "rule_hosttags",
+                    DictHostTagCondition(title=_("Used host tags"), help_txt=""),
+                ),
                 (
                     "rule_disabled",
                     DropdownChoice(

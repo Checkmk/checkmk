@@ -30,7 +30,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1499'
+      - '793'
     status:
       code: 200
       message: OK
@@ -64,7 +64,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1870'
+      - '1188'
     status:
       code: 404
       message: Not Found
@@ -98,7 +98,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2936'
+      - '1278'
     status:
       code: 200
       message: OK
@@ -136,7 +136,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '10708'
+      - '6365'
     status:
       code: 200
       message: OK
@@ -172,7 +172,7 @@ interactions:
         intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
         avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
         hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054739,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":1626,"uptime_millis":1626062,"uptime_estimate":1626,"local_time":"2025-05-26T09:50:34.376Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":7028354,"bytes_out":15055882,"num_requests":22774},"memory":{"bits":64,"resident":123,"virtual":1506,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":282,"avg_obj_size":500.85460992907804,"data_size":141241,"storage_size":688128,"num_extents":null,"indexes":94,"index_size":1359872,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
+        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054739,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":7886,"uptime_millis":7886092,"uptime_estimate":7886,"local_time":"2025-05-26T11:34:54.406Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":32907686,"bytes_out":69124205,"num_requests":103538},"memory":{"bits":64,"resident":124,"virtual":1506,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":284,"avg_obj_size":498.84154929577466,"data_size":141671,"storage_size":688128,"num_extents":null,"indexes":94,"index_size":1359872,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
     headers:
       Content-Encoding:
       - gzip
@@ -187,7 +187,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '22278'
+      - '22982'
     status:
       code: 200
       message: OK
@@ -208,10 +208,10 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
   response:
     body:
-      string: '{"from":"2025-05-25T00:00:00.000Z","to":"2025-05-26T09:50:34.394Z","input":{"2025-05-26T09:00:00.000Z":0},"output":{"2025-05-26T09:00:00.000Z":0},"decoded":{"2025-05-26T09:00:00.000Z":0}}'
+      string: '{"from":"2025-05-25T00:00:00.000Z","to":"2025-05-26T11:34:54.429Z","input":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0},"output":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0},"decoded":{"2025-05-26T09:00:00.000Z":0,"2025-05-26T10:00:00.000Z":0,"2025-05-26T11:00:00.000Z":0}}'
     headers:
       Content-Length:
-      - '187'
+      - '361'
       Content-Type:
       - application/json
       X-Content-Type-Options:
@@ -253,7 +253,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1528'
+      - '2159'
     status:
       code: 200
       message: OK
@@ -287,7 +287,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2408'
+      - '2504'
     status:
       code: 200
       message: OK
@@ -308,7 +308,7 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
   response:
     body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":153090864},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.018556027589380044},"name":"usage","type":"gauge"}]}'
+      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":147000480},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.017817816760979998},"name":"usage","type":"gauge"}]}'
     headers:
       Content-Encoding:
       - gzip
@@ -323,7 +323,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '1996'
+      - '1638'
     status:
       code: 200
       message: OK
@@ -373,13 +373,13 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/count/total
+    uri: http://127.0.0.1:9000/api/system/indexer/overview
   response:
     body:
-      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
+      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
     headers:
       Content-Length:
-      - '50'
+      - '511'
       Content-Type:
       - application/json
       X-Content-Type-Options:
@@ -388,9 +388,11 @@ interactions:
       - DENY
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '16015'
     status:
-      code: 404
-      message: Not Found
+      code: 200
+      message: OK
 - request:
     body: null
     headers:
@@ -422,7 +424,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '9940'
+      - '7957'
     status:
       code: 200
       message: OK
@@ -456,7 +458,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '8068'
+      - '5561'
     status:
       code: 200
       message: OK
@@ -494,7 +496,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '11028'
+      - '5819'
     status:
       code: 200
       message: OK
@@ -528,7 +530,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2111'
+      - '983'
     status:
       code: 200
       message: OK
@@ -602,7 +604,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '4676'
+      - '2860'
     status:
       code: 200
       message: OK
@@ -629,7 +631,7 @@ interactions:
     uri: http://127.0.0.1:9000/api/events/search
   response:
     body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":86400,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":4,"context":{"event_definitions":{},"streams":{}}}'
+      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":86400,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":2,"context":{"event_definitions":{},"streams":{}}}'
     headers:
       Content-Length:
       - '337'

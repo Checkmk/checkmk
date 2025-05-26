@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars/all"),
         GraylogSection(name="sources", uri="/sources"),
@@ -72,6 +71,7 @@ def main(argv=None):
     handle_section(
         args, "license", "/plugins/org.graylog.plugins.license/licenses/status", section_license
     )
+    handle_section(args, "messages", "/system/indexer/overview", section_messages)
 
     try:
         handle_request(args, sections)
@@ -173,6 +173,13 @@ def section_jvm(args: argparse.Namespace, uri: str) -> dict[str, object]:
 
 def section_license(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
     return handle_response(_get_section_url(args, uri), args).json()
+
+
+def section_messages(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    value = handle_response(_get_section_url(args, uri), args)
+    if value.status_code != 200:
+        return value.json()
+    return {"events": value.json().get("counts", {}).get("events", 0)}
 
 
 def _get_base_url(args: argparse.Namespace) -> str:

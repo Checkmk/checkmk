@@ -254,6 +254,25 @@ class RuleConditions:
             tag_list.append(TagID("!%s" % tag_id) if is_not else tag_id)
         return tag_list
 
+    def tag_conditions_to_tags_list(self) -> set[TagID]:
+        tags: set[TagID] = set()
+        for condition in self.host_tags.values():
+            match condition:
+                case {"$or": list() as or_list}:
+                    tags.update({tag_id for tag_id in or_list if tag_id is not None})
+                case {"$nor": list() as nor_list}:
+                    tags.update(
+                        {TagID("!%s" % tag_id) for tag_id in nor_list if tag_id is not None}
+                    )
+                case {"$ne": str() as tag_id}:
+                    tags.add(TagID("!%s" % tag_id))
+                case str():
+                    tags.add(condition)
+                case _:
+                    raise MKGeneralException("Invalid tag condition: %s" % condition)
+
+        return tags
+
     # Compatibility code for pre 1.6 Setup code
     @property
     def host_list(self):
@@ -1450,11 +1469,25 @@ class Rule:
         if not _match_one_of_search_expression(search_options, "fulltext", to_search):
             return False
 
-        searching_host_tags = search_options.get("rule_hosttags")
-        if searching_host_tags:
-            for host_tag in searching_host_tags:
-                if host_tag not in self.conditions.tag_list:
-                    return False
+        if (searching_host_tags := search_options.get("rule_hosttags")) is not None:
+            conditions_tag_set = self.conditions.tag_conditions_to_tags_list()
+
+            for search_condition in searching_host_tags.values():
+                match search_condition:
+                    case {"$or": list() as one_of}:
+                        if conditions_tag_set.isdisjoint(set(one_of)):
+                            return False
+                    case {"$nor": list() as none_of}:
+                        if conditions_tag_set.isdisjoint({f"!{i}" for i in none_of}):
+                            return False
+                    case {"$ne": str() as not_equal}:
+                        if f"!{not_equal}" not in conditions_tag_set:
+                            return False
+                    case str():
+                        if search_condition not in conditions_tag_set:
+                            return False
+                    case _:
+                        raise MKGeneralException(f"Unknown search condition: {search_condition}")
 
         return True
 

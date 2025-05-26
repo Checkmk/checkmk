@@ -627,8 +627,12 @@ impl SqlInstance {
         match x {
             Ok(result) => result,
             Err(err) => {
-                log::error!("Failed to get counters: {}", err);
-                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+                log::error!("ERROR: Failed to get counters: {}", err);
+                format!(
+                    "{sep}{sep}{0}{sep}{1}\n{sep}{sep}{0}{sep}{1}\n",
+                    self.name, err
+                )
+                .to_string()
             }
         }
     }
@@ -1452,7 +1456,10 @@ fn validate_rows(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
 
 fn validate_rows_has_two_blocks(rows: Vec<UniAnswer>) -> Result<Vec<UniAnswer>> {
     if rows.len() != 2 || rows[0].is_empty() || rows[1].is_empty() {
-        Err(anyhow::anyhow!("Output from query is invalid"))
+        Err(anyhow::anyhow!(
+            "Output is malformed - contains not enough data in {} row",
+            rows.len()
+        ))
     } else {
         Ok(rows)
     }

@@ -269,12 +269,12 @@ def _perform_tests_for_site(
     # thread (One per site)
     logger.debug("[%s] Starting" % site_id)
     try:
-        if site_is_local(active_config, site_id):
+        if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
             automation = AutomationCheckAnalyzeConfig()
             ac_test_results = automation.execute(_TCheckAnalyzeConfig(categories=categories))
         else:
             raw_ac_test_results = do_remote_automation(
-                get_site_config(active_config, site_id),
+                site_config,
                 "check-analyze-config",
                 [("categories", json.dumps(categories))],
                 timeout=request_.request_timeout - 10,

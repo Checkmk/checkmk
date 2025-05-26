@@ -27,12 +27,12 @@ def remove_tls_registration(
         if not host_names:
             continue
 
-        if site_is_local(active_config, site_id):
+        if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
             _remove_tls_registration(host_names)
             continue
 
         do_remote_automation(
-            get_site_config(active_config, site_id),
+            site_config,
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
             debug=debug,

@@ -61,7 +61,9 @@ def get_login_slave_sites() -> list[SiteId]:
     """Returns a list of site ids which are Setup slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
-        if site_spec.get("user_login", True) and not site_is_local(active_config, site_id):
+        if site_spec.get("user_login", True) and not site_is_local(
+            get_site_config(active_config, site_id), site_id
+        ):
             login_sites.append(site_id)
     return login_sites
 
@@ -91,8 +93,8 @@ def get_site_config(config: Config, site_id: SiteId) -> SiteConfiguration:
     return s
 
 
-def site_is_local(config: Config, site_id: SiteId) -> bool:
-    socket_info = get_site_config(config, site_id)["socket"]
+def site_is_local(site_config: SiteConfiguration, site_id: SiteId) -> bool:
+    socket_info = site_config["socket"]
     if isinstance(socket_info, str):
         # Should be unreachable
         return False
@@ -114,7 +116,7 @@ def is_single_local_site() -> bool:
 
     # Also use Multisite mode if the one and only site is not local
     sitename = list(active_config.sites.keys())[0]
-    return site_is_local(active_config, sitename)
+    return site_is_local(get_site_config(active_config, sitename), sitename)
 
 
 def wato_site_ids() -> list[SiteId]:

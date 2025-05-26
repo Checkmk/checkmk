@@ -26,7 +26,7 @@ from cmk.checkengine.plugins import CheckPluginName
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -59,7 +59,7 @@ def _automation_serialized(
     if args is None:
         args = []
 
-    if not siteid or site_is_local(active_config, siteid):
+    if not siteid or site_is_local(get_site_config(active_config, siteid), siteid):
         cmdline, serialized_result = check_mk_local_automation_serialized(
             command=command,
             args=args,

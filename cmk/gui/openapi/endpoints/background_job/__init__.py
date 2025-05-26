@@ -74,12 +74,12 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     else:
         site_id = omd_site()
 
-    if not site_is_local(active_config, site_id):
+    if not site_is_local(site_config := get_site_config(active_config, site_id), site_id):
         snapshot = BackgroundStatusSnapshot.from_dict(
             json.loads(
                 str(
                     do_remote_automation(
-                        site=get_site_config(active_config, site_id),
+                        site=site_config,
                         command="fetch-background-job-snapshot",
                         vars_=[("job_id", job_id)],
                         debug=active_config.debug,

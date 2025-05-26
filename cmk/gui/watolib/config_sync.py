@@ -186,7 +186,7 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlo
         {
             "wato_enabled": not site_config.get("disable_wato", True),
             "userdb_automatic_sync": site_config.get(
-                "user_sync", user_sync_default_config(site_id)
+                "user_sync", user_sync_default_config(site_config, site_id)
             ),
             "user_login": site_config.get("user_login", False),
         }

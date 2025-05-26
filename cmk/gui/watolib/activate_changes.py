@@ -953,13 +953,13 @@ def _call_activate_changes_automation(
 ) -> ConfigWarnings:
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
-    if site_is_local(active_config, site_id):
+    if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
         return execute_activate_changes(domain_requests)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
-            get_site_config(active_config, site_id),
+            site_config,
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
             debug=active_config.debug,
@@ -1163,8 +1163,8 @@ class ActivateChanges:
         """Returns the list of sites that have changes (including offline sites)"""
         return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
-    def _site_is_logged_in(self, site_id, site):
-        return site_is_local(active_config, site_id) or "secret" in site
+    def _site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
+        return site_is_local(site, site_id) or "secret" in site
 
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
@@ -1179,14 +1179,14 @@ class ActivateChanges:
 
         return site_status, status
 
-    def _site_has_foreign_changes(self, site_id):
+    def _site_has_foreign_changes(self, site_id: SiteId) -> bool:
         changes = self._changes_of_site(site_id)
         return bool([c for c in changes if is_foreign_change(c) and not has_been_activated(c)])
 
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
     ) -> bool:
-        if site_is_local(active_config, site_id):
+        if site_is_local(get_site_config(active_config, site_id), site_id):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)
@@ -3198,7 +3198,9 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         base_dir = cmk.utils.paths.omd_root
         base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
-        default_sync_config = user_sync_default_config(omd_site())
+        default_sync_config = user_sync_default_config(
+            get_site_config(active_config, omd_site()), omd_site()
+        )
         current_users = {}
         keep_local_users = False
         active_connectors = []

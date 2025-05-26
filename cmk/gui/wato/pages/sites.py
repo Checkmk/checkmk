@@ -60,6 +60,7 @@ from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import (
     configured_sites,
     get_replication_site_id,
+    get_site_config,
     has_wato_slave_sites,
     is_replication_enabled,
     is_wato_slave_site,
@@ -1590,7 +1591,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 return
 
             if not is_replication_enabled(self._site) and not site_is_local(
-                active_config, self._site_id
+                get_site_config(active_config, self._site_id), self._site_id
             ):
                 html.show_error(
                     _(

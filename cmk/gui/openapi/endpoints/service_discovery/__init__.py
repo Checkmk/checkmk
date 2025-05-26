@@ -34,7 +34,7 @@ from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, ProblemException, serve_json
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -736,7 +736,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
-    if site_is_local(active_config, host.site_id()):
+    if site_is_local(get_site_config(active_config, host.site_id()), host.site_id()):
         job = ServiceDiscoveryBackgroundJob(host.name())
         return job.get_status_snapshot()
 

@@ -5,6 +5,8 @@
 
 from typing import Literal
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.site import omd_site, SiteId
 
 from cmk.gui.config import active_config
@@ -16,18 +18,20 @@ UserSyncConfig = Literal["all", "master"] | tuple[Literal["list"], list[str]] | 
 def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the Setup master site
-    default_cfg = user_sync_default_config(omd_site())
-    return get_site_config(active_config, omd_site()).get("user_sync", default_cfg)
+    default_cfg = user_sync_default_config(
+        site_config := get_site_config(active_config, omd_site()), omd_site()
+    )
+    return site_config.get("user_sync", default_cfg)
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".
 # Can be: None: (no sync), "all": all sites sync, "master": only master site sync
 # Take that option into account for compatibility reasons.
 # For remote sites in distributed setups, the default is to do no sync.
-def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
+def user_sync_default_config(site_config: SiteConfiguration, site_id: SiteId) -> UserSyncConfig:
     global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
     if global_user_sync == "master":
-        if site_is_local(active_config, site_name) and not is_wato_slave_site():
+        if site_is_local(site_config, site_id) and not is_wato_slave_site():
             user_sync_default: UserSyncConfig = "all"
         else:
             user_sync_default = None

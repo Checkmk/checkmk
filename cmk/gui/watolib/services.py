@@ -1080,7 +1080,7 @@ def get_check_table(
             use_git=active_config.wato_use_git,
         )
 
-    if site_is_local(active_config, host.site_id()):
+    if site_is_local(site_config := get_site_config(active_config, host.site_id()), host.site_id()):
         return execute_discovery_job(
             host.name(),
             action,
@@ -1093,7 +1093,7 @@ def get_check_table(
     return DiscoveryResult.deserialize(
         str(
             do_remote_automation(
-                get_site_config(active_config, host.site_id()),
+                site_config,
                 "service-discovery-job",
                 [
                     ("host_name", host.name()),

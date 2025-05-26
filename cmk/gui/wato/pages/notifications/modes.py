@@ -1684,7 +1684,8 @@ class ModeTestNotifications(ModeNotifications):
             if context["WHAT"] == "SERVICE":
                 self._add_missing_service_context(context)
 
-            if site_is_local(active_config, (site_id := SiteId(context["SITEOFHOST"]))):
+            site_id = SiteId(context["SITEOFHOST"])
+            if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
                 return (
                     context,
                     notification_test(
@@ -1697,7 +1698,7 @@ class ModeTestNotifications(ModeNotifications):
             remote_result = cast(
                 NotifyAnalysisInfo,
                 do_remote_automation(
-                    get_site_config(active_config, site_id),
+                    site_config,
                     "notification-test",
                     [
                         ("context", json.dumps(context)),
@@ -2425,7 +2426,7 @@ def _get_notification_sync_sites() -> list[SiteId]:
     return sorted(
         site_id
         for site_id in wato_slave_sites()
-        if not site_is_local(active_config, SiteId(site_id))
+        if not site_is_local(get_site_config(active_config, SiteId(site_id)), SiteId(site_id))
     )
 
 

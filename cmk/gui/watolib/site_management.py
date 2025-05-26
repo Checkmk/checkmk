@@ -37,7 +37,7 @@ from cmk.gui.config import active_config, prepare_raw_site_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import is_replication_enabled, site_is_local
+from cmk.gui.site_config import get_site_config, is_replication_enabled, site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
@@ -481,7 +481,7 @@ class ConfigurationConnection:
             direct_login_to_web_gui_allowed=internal_config["user_login"],
             user_sync=UserSync.from_internal(
                 internal_config=internal_config.get(
-                    "user_sync", "all" if site_is_local(active_config, site_id) else "disabled"
+                    "user_sync", "all" if site_is_local(internal_config, site_id) else "disabled"
                 )
             ),
             replicate_event_console=internal_config["replicate_ec"],
@@ -726,7 +726,9 @@ def add_changes_after_editing_site_connection(
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
-    if not replication_enabled and not site_is_local(active_config, site_id):
+    if not replication_enabled and not site_is_local(
+        get_site_config(active_config, site_id), site_id
+    ):
         clear_site_replication_status(site_id)
 
     if site_id != omd_site():

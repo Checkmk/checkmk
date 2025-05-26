@@ -18,7 +18,7 @@ import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.config import active_config
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.watolib.audit_log import log_audit, LogMessage
@@ -186,7 +186,9 @@ class ActivateChangesWriter:
                 "domain_settings": domain_settings or {},
                 "prevent_discard_changes": prevent_discard_changes,
                 "diff_text": diff_text,
-                "has_been_activated": site_is_local(active_config, site_id)
+                "has_been_activated": site_is_local(
+                    get_site_config(active_config, site_id), site_id
+                )
                 and need_restart is False
                 and need_apache_reload is False,
             }

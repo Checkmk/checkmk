@@ -439,7 +439,7 @@ def _rename_host_in_uuid_link_manager(
 ) -> list[str]:
     n_relinked = 0
     for site_id, renamings in renamings_by_site.items():
-        if site_is_local(active_config, site_id):
+        if site_is_local(get_site_config(active_config, site_id), site_id):
             n_relinked += len(get_uuid_link_manager().rename(renamings))
         else:
             n_relinked += int(

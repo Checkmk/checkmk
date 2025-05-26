@@ -46,6 +46,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
+    get_site_config,
     has_wato_slave_sites,
     is_replication_enabled,
     is_wato_slave_site,
@@ -263,7 +264,9 @@ class SiteManagement:
                     ),
                 ),
             ],
-            default_value="all" if site_is_local(active_config, site_id) else None,
+            default_value="all"
+            if site_is_local(get_site_config(active_config, site_id), site_id)
+            else None,
             help=_(
                 "By default the users are synchronized automatically in the interval configured "
                 "in the connection. For example the LDAP connector synchronizes the users every "
@@ -717,7 +720,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if is_replication_enabled(site):
             distributed = True
-        if site_is_local(active_config, siteid):
+        if site_is_local(site, siteid):
             create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
@@ -751,7 +754,7 @@ def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
     if not has_wato_slave_sites():
         return False
 
-    return is_replication_enabled(site) or site_is_local(active_config, site_id)
+    return is_replication_enabled(site) or site_is_local(site, site_id)
 
 
 def _delete_distributed_wato_file():

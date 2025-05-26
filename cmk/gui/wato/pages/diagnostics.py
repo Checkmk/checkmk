@@ -796,7 +796,7 @@ def _merge_results(
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            if site_is_local(active_config, site):
+            if site_is_local(get_site_config(active_config, site), site):
                 tarfile_localpath = result.tarfile_path
             else:
                 tarfile_localpath = _get_tarfile_from_remotesite(
@@ -878,11 +878,12 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
 def _get_diagnostics_dump_file(
     site: SiteId, tarfile_name: str, timeout: int, *, debug: bool
 ) -> bytes:
-    if site_is_local(active_config, site):
+    site_config = get_site_config(active_config, site)
+    if site_is_local(site_config, site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
     raw_response = do_remote_automation(
-        get_site_config(active_config, site),
+        site_config,
         "diagnostics-dump-get-file",
         [
             ("tarfile_name", tarfile_name),

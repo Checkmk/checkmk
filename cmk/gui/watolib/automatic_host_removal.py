@@ -110,7 +110,7 @@ def _hosts_to_be_removed(*, debug: bool) -> list[tuple[SiteId, list[Host]]]:
 
 
 def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]:
-    if site_is_local(active_config, site_id):
+    if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
         try:
             # evaluate the generator here to potentially catch the exception below
             hostnames = list(_hosts_to_be_removed_local(debug=debug))
@@ -125,7 +125,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]
         try:
             hostnames_serialized = str(
                 do_remote_automation(
-                    get_site_config(active_config, site_id),
+                    site_config,
                     "hosts-for-auto-removal",
                     [],
                     debug=debug,

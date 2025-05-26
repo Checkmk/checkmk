@@ -35,7 +35,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
 )
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
-from cmk.gui.site_config import is_replication_enabled, site_is_local
+from cmk.gui.site_config import get_site_config, is_replication_enabled, site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -332,7 +332,7 @@ def _create_and_save_special_agent_bundle(
         use_git=active_config.wato_use_git,
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
-    is_local = site_is_local(active_config, site_id)
+    is_local = site_is_local(get_site_config(active_config, site_id), site_id)
     if not _service_discovery_possible(site_id, is_local=is_local, debug=active_config.debug):
         progress_logger.log_new_progress_step(
             "service_discovery",

@@ -1,0 +1,109 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/system
+  response:
+    body:
+      string: '{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-26T09:23:36.957Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
+        6.11.0-26-generic","is_processing":true}'
+    headers:
+      Content-Length:
+      - '364'
+      Content-Type:
+      - application/json
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '1066'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/system/indexer/cluster/health
+  response:
+    body:
+      string: '{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}}'
+    headers:
+      Content-Length:
+      - '88'
+      Content-Type:
+      - application/json
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '1556'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/cluster/inputstates
+  response:
+    body:
+      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '5227'
+    status:
+      code: 200
+      message: OK
+version: 1

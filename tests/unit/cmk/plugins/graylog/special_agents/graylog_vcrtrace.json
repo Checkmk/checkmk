@@ -13,1031 +13,10 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/streams/alerts?limit=300
-  response:
-    body:
-      string: '{"type":"ApiError","message":"Stream <alerts> not found!"}'
-    headers:
-      Content-Length:
-      - '58'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1736'
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams/alerts?limit=300
-  response:
-    body:
-      string: '{"type":"ApiError","message":"Stream <alerts> not found!"}'
-    headers:
-      Content-Length:
-      - '58'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1472'
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/stats
-  response:
-    body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-16T13:20:14.099Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
-        version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
-        (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
-        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"1199.850","cpu_features":"fpu
-        vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush
-        dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc
-        art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf
-        tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg
-        fma cx16 xtpr pdcm sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes
-        xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs
-        ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase
-        tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb
-        intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
-        avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
-        hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054738,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":240331,"uptime_millis":240330659,"uptime_estimate":240330,"local_time":"2025-05-19T08:04:42.521Z","connections":{"current":10,"available":838850,"total_created":13},"network":{"bytes_in":62166906,"bytes_out":142331781,"num_requests":226826},"memory":{"bits":64,"resident":126,"virtual":1519,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":356,"avg_obj_size":498.7752808988764,"data_size":177564,"storage_size":704512,"num_extents":null,"indexes":94,"index_size":1384448,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '29339'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/stats
-  response:
-    body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-16T13:20:14.099Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
-        version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
-        (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
-        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"1199.850","cpu_features":"fpu
-        vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush
-        dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc
-        art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf
-        tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg
-        fma cx16 xtpr pdcm sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes
-        xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs
-        ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase
-        tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb
-        intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
-        avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
-        hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054738,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":240331,"uptime_millis":240330693,"uptime_estimate":240330,"local_time":"2025-05-19T08:04:42.555Z","connections":{"current":10,"available":838850,"total_created":13},"network":{"bytes_in":62170994,"bytes_out":142399557,"num_requests":226851},"memory":{"bits":64,"resident":126,"virtual":1519,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":356,"avg_obj_size":498.7752808988764,"data_size":177564,"storage_size":704512,"num_extents":null,"indexes":94,"index_size":1384448,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '21800'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
-  response:
-    body:
-      string: '{"from":"2025-05-18T00:00:00.000Z","to":"2025-05-19T08:04:42.578Z","input":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0},"output":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0},"decoded":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0}}'
-    headers:
-      Content-Length:
-      - '274'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
-  response:
-    body:
-      string: '{"from":"2025-05-18T00:00:00.000Z","to":"2025-05-19T08:04:42.589Z","input":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0},"output":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0},"decoded":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0}}'
-    headers:
-      Content-Length:
-      - '274'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures/count/
-  response:
-    body:
-      string: '{"count":0}'
-    headers:
-      Content-Length:
-      - '11'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1942'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures/count/
-  response:
-    body:
-      string: '{"count":0}'
-    headers:
-      Content-Length:
-      - '11'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2347'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures?limit=30
-  response:
-    body:
-      string: '{"failures":[],"total":0}'
-    headers:
-      Content-Length:
-      - '25'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2113'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures?limit=30
-  response:
-    body:
-      string: '{"failures":[],"total":0}'
-    headers:
-      Content-Length:
-      - '25'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2214'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
-  response:
-    body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":192217208},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":281018368},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.02329850208959303},"name":"usage","type":"gauge"}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1371'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
-  response:
-    body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":192217208},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":281018368},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.02329850208959303},"name":"usage","type":"gauge"}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1255'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/plugins/org.graylog.plugins.license/licenses/status
-  response:
-    body:
-      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
-    headers:
-      Content-Length:
-      - '50'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/plugins/org.graylog.plugins.license/licenses/status
-  response:
-    body:
-      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
-    headers:
-      Content-Length:
-      - '50'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/overview
-  response:
-    body:
-      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
-    headers:
-      Content-Length:
-      - '511'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '17646'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/overview
-  response:
-    body:
-      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
-    headers:
-      Content-Length:
-      - '511'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '20493'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-16T13:19:21.022Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}}'
-    headers:
-      Content-Length:
-      - '405'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '7392'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-16T13:19:21.022Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}}'
-    headers:
-      Content-Length:
-      - '405'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '7843'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-16T13:19:24.142Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}},{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-16T13:52:42.292Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '8755'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-16T13:19:24.142Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}},{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-16T13:52:42.292Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '7553'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/3b4fa139-8491-44af-90da-cf32061b50b9/journal
-  response:
-    body:
-      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-19T07:03:11.576Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
-    headers:
-      Content-Length:
-      - '424'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '8231'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/3b4fa139-8491-44af-90da-cf32061b50b9/journal
-  response:
-    body:
-      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-19T07:03:11.576Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
-    headers:
-      Content-Length:
-      - '424'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '6930'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/sidecars/all
-  response:
-    body:
-      string: '{"query":"","total":0,"only_active":false,"sort":null,"order":null,"sidecars":[],"filters":null,"pagination":{"total":0,"count":0,"page":1,"per_page":0}}'
-    headers:
-      Content-Length:
-      - '153'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1618'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/sidecars/all
-  response:
-    body:
-      string: '{"query":"","total":0,"only_active":false,"sort":null,"order":null,"sidecars":[],"filters":null,"pagination":{"total":0,"count":0,"page":1,"per_page":0}}'
-    headers:
-      Content-Length:
-      - '153'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '1864'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"queries": [{"query": {"type": "elasticsearch", "query_string": "*"},
-      "timerange": {"type": "relative", "range": null}, "search_types": [{"type":
-      "pivot", "rollup": true, "row_groups": [{"type": "values", "field": "source"}],
-      "series": [{"type": "count"}], "name": "source_aggregation"}]}]}'
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '291'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/views/search/sync
-  response:
-    body:
-      string: '{"execution":{"done":true,"cancelled":false,"completed_exceptionally":false},"results":{"8e50e52f-fdcc-4008-9e80-40bfff597d80":{"query":{"id":"8e50e52f-fdcc-4008-9e80-40bfff597d80","timerange":{"range":0,"type":"relative"},"filter":{"type":"or","filters":[{"type":"stream","id":"000000000000000000000001"}]},"filters":[],"query":{"type":"elasticsearch","query_string":"*"},"search_types":[{"timerange":null,"query":null,"streams":[],"id":"b926e980-0560-4755-ad0a-e34841750dff","name":"source_aggregation","series":[{"type":"count","id":"count()","field":null}],"sort":[],"rollup":true,"type":"pivot","row_groups":[{"type":"values","fields":["source"],"limit":15}],"column_groups":[],"filter":null,"filters":[]}]},"execution_stats":{"duration":9,"timestamp":"2025-05-19T08:04:42.926Z","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}},"search_types":{"b926e980-0560-4755-ad0a-e34841750dff":{"name":"source_aggregation","id":"b926e980-0560-4755-ad0a-e34841750dff","rows":[{"key":["172.20.0.1"],"values":[{"key":["count()"],"value":8,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":["foobar"],"values":[{"key":["count()"],"value":7,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":[],"values":[{"key":["count()"],"value":15,"rollup":true,"source":"row-inner"}],"source":"non-leaf"}],"total":15,"type":"pivot","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}}},"errors":[],"state":"COMPLETED"}},"id":"682ae61a44a4084bad03f9e5","owner":"admin","search_id":"682ae61a44a4084bad03f9e4"}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams
-  response:
-    body:
-      string: '{"total":3,"streams":[{"id":"000000000000000000000003","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all system events created by Graylog","created_at":"2025-05-16T08:59:53.236Z","disabled":false,"rules":[],"title":"All
-        system events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988554","is_editable":false,"is_default":false},{"id":"000000000000000000000002","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all events created by Graylog","created_at":"2025-05-16T08:59:53.203Z","disabled":false,"rules":[],"title":"All
-        events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988551","is_editable":false,"is_default":false},{"id":"000000000000000000000001","creator_user_id":"local:admin","outputs":[],"matching_type":"AND","description":"Contains
-        messages that are not explicitly routed to other streams","created_at":"2025-05-16T08:59:51.350Z","disabled":false,"rules":[],"title":"Default
-        Stream","content_pack":null,"remove_matches_from_default_stream":false,"index_set_id":"6826fe87552b937fa1988496","is_editable":true,"is_default":true}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '6823'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams
-  response:
-    body:
-      string: '{"total":3,"streams":[{"id":"000000000000000000000003","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all system events created by Graylog","created_at":"2025-05-16T08:59:53.236Z","disabled":false,"rules":[],"title":"All
-        system events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988554","is_editable":false,"is_default":false},{"id":"000000000000000000000002","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all events created by Graylog","created_at":"2025-05-16T08:59:53.203Z","disabled":false,"rules":[],"title":"All
-        events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988551","is_editable":false,"is_default":false},{"id":"000000000000000000000001","creator_user_id":"local:admin","outputs":[],"matching_type":"AND","description":"Contains
-        messages that are not explicitly routed to other streams","created_at":"2025-05-16T08:59:51.350Z","disabled":false,"rules":[],"title":"Default
-        Stream","content_pack":null,"remove_matches_from_default_stream":false,"index_set_id":"6826fe87552b937fa1988496","is_editable":true,"is_default":true}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '7437'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '0'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/events/search
-  response:
-    body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":3600,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":1,"context":{"event_definitions":{},"streams":{}}}'
-    headers:
-      Content-Length:
-      - '336'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
     uri: http://127.0.0.1:9000/api/system
   response:
     body:
-      string: '{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
+      string: '{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-26T09:23:36.957Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
         6.11.0-26-generic","is_processing":true}'
     headers:
       Content-Length:
@@ -1051,7 +30,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '4212'
+      - '1499'
     status:
       code: 200
       message: OK
@@ -1085,7 +64,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '4022'
+      - '1870'
     status:
       code: 404
       message: Not Found
@@ -1103,98 +82,13 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/stats
+    uri: http://127.0.0.1:9000/api/system/indexer/cluster/health
   response:
     body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-19T12:08:01.939Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
-        version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
-        (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
-        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"999.953","cpu_features":"fpu
-        vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush
-        dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc
-        art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf
-        tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg
-        fma cx16 xtpr pdcm sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes
-        xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs
-        ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase
-        tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb
-        intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
-        avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
-        hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054738,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":78,"uptime_millis":77770,"uptime_estimate":77,"local_time":"2025-05-19T12:08:34.327Z","connections":{"current":6,"available":838854,"total_created":9},"network":{"bytes_in":399364,"bytes_out":1010225,"num_requests":1712},"memory":{"bits":64,"resident":130,"virtual":1509,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":230,"avg_obj_size":575.4260869565218,"data_size":132348,"storage_size":696320,"num_extents":null,"indexes":94,"index_size":1372160,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '63812'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
-  response:
-    body:
-      string: '{"from":"2025-05-18T00:00:00.000Z","to":"2025-05-19T12:08:34.379Z","input":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"output":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"decoded":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures/count/
-  response:
-    body:
-      string: '{"count":0}'
+      string: '{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}}'
     headers:
       Content-Length:
-      - '11'
+      - '88'
       Content-Type:
       - application/json
       X-Content-Type-Options:
@@ -1204,178 +98,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '4945'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures?limit=30
-  response:
-    body:
-      string: '{"failures":[],"total":0}'
-    headers:
-      Content-Length:
-      - '25'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '5271'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
-  response:
-    body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":163537712},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.01982228211721431},"name":"usage","type":"gauge"}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '4488'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/plugins/org.graylog.plugins.license/licenses/status
-  response:
-    body:
-      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
-    headers:
-      Content-Length:
-      - '50'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/overview
-  response:
-    body:
-      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
-    headers:
-      Content-Length:
-      - '511'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '78534'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}}'
-    headers:
-      Content-Length:
-      - '405'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '20320'
+      - '2936'
     status:
       code: 200
       message: OK
@@ -1396,8 +119,8 @@ interactions:
     uri: http://127.0.0.1:9000/api/cluster/inputstates
   response:
     body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-19T12:07:45.222Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-19T12:07:45.220Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
         TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
     headers:
       Content-Encoding:
@@ -1413,270 +136,10 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '22221'
+      - '10708'
     status:
       code: 200
       message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/3b4fa139-8491-44af-90da-cf32061b50b9/journal
-  response:
-    body:
-      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-19T12:07:40.513Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
-    headers:
-      Content-Length:
-      - '424'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '16764'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/sidecars/all
-  response:
-    body:
-      string: '{"query":"","total":0,"only_active":false,"sort":null,"order":null,"sidecars":[],"filters":null,"pagination":{"total":0,"count":0,"page":1,"per_page":0}}'
-    headers:
-      Content-Length:
-      - '153'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '3780'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"queries": [{"query": {"type": "elasticsearch", "query_string": "*"},
-      "timerange": {"type": "relative", "range": null}, "search_types": [{"type":
-      "pivot", "rollup": true, "row_groups": [{"type": "values", "field": "source"}],
-      "series": [{"type": "count"}], "name": "source_aggregation"}]}]}'
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '291'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/views/search/sync
-  response:
-    body:
-      string: '{"execution":{"done":true,"cancelled":false,"completed_exceptionally":false},"results":{"1b627b11-4117-4144-82c4-671d17a8f7d1":{"query":{"id":"1b627b11-4117-4144-82c4-671d17a8f7d1","timerange":{"range":0,"type":"relative"},"filter":{"type":"or","filters":[{"type":"stream","id":"000000000000000000000001"}]},"filters":[],"query":{"type":"elasticsearch","query_string":"*"},"search_types":[{"timerange":null,"query":null,"streams":[],"id":"98f216b9-30ff-4d90-9a09-d7cd1b7518a4","name":"source_aggregation","series":[{"type":"count","id":"count()","field":null}],"sort":[],"rollup":true,"type":"pivot","row_groups":[{"type":"values","fields":["source"],"limit":15}],"column_groups":[],"filter":null,"filters":[]}]},"execution_stats":{"duration":42,"timestamp":"2025-05-19T12:08:34.751Z","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}},"search_types":{"98f216b9-30ff-4d90-9a09-d7cd1b7518a4":{"name":"source_aggregation","id":"98f216b9-30ff-4d90-9a09-d7cd1b7518a4","rows":[{"key":["172.20.0.1"],"values":[{"key":["count()"],"value":8,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":["foobar"],"values":[{"key":["count()"],"value":7,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":[],"values":[{"key":["count()"],"value":15,"rollup":true,"source":"row-inner"}],"source":"non-leaf"}],"total":15,"type":"pivot","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}}},"errors":[],"state":"COMPLETED"}},"id":"682b1f4201179817a4d69a74","owner":"admin","search_id":"682b1f4201179817a4d69a73"}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams
-  response:
-    body:
-      string: '{"total":3,"streams":[{"id":"000000000000000000000003","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all system events created by Graylog","created_at":"2025-05-16T08:59:53.236Z","disabled":false,"rules":[],"title":"All
-        system events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988554","is_editable":false,"is_default":false},{"id":"000000000000000000000002","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all events created by Graylog","created_at":"2025-05-16T08:59:53.203Z","disabled":false,"rules":[],"title":"All
-        events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988551","is_editable":false,"is_default":false},{"id":"000000000000000000000001","creator_user_id":"local:admin","outputs":[],"matching_type":"AND","description":"Contains
-        messages that are not explicitly routed to other streams","created_at":"2025-05-16T08:59:51.350Z","disabled":false,"rules":[],"title":"Default
-        Stream","content_pack":null,"remove_matches_from_default_stream":false,"index_set_id":"6826fe87552b937fa1988496","is_editable":true,"is_default":true}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '16538'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '0'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/events/search
-  response:
-    body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":3600,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":7,"context":{"event_definitions":{},"streams":{}}}'
-    headers:
-      Content-Length:
-      - '336'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system
-  response:
-    body:
-      string: '{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}'
-    headers:
-      Content-Length:
-      - '364'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2972'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams/alerts?limit=300
-  response:
-    body:
-      string: '{"type":"ApiError","message":"Stream <alerts> not found!"}'
-    headers:
-      Content-Length:
-      - '58'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '3064'
-    status:
-      code: 404
-      message: Not Found
 - request:
     body: null
     headers:
@@ -1694,10 +157,10 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/cluster/stats
   response:
     body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-19T12:08:01.939Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
+      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":0,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-26T09:23:40.506Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
         version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
         (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
-        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"999.953","cpu_features":"fpu
+        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"1155.080","cpu_features":"fpu
         vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush
         dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc
         art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf
@@ -1709,7 +172,7 @@ interactions:
         intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
         avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
         hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054738,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":374,"uptime_millis":373760,"uptime_estimate":373,"local_time":"2025-05-19T12:13:30.316Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":2031848,"bytes_out":5012208,"num_requests":7844},"memory":{"bits":64,"resident":131,"virtual":1510,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":230,"avg_obj_size":575.4260869565218,"data_size":132348,"storage_size":696320,"num_extents":null,"indexes":94,"index_size":1372160,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
+        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054739,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":1626,"uptime_millis":1626062,"uptime_estimate":1626,"local_time":"2025-05-26T09:50:34.376Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":7028354,"bytes_out":15055882,"num_requests":22774},"memory":{"bits":64,"resident":123,"virtual":1506,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":282,"avg_obj_size":500.85460992907804,"data_size":141241,"storage_size":688128,"num_extents":null,"indexes":94,"index_size":1359872,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
     headers:
       Content-Encoding:
       - gzip
@@ -1724,7 +187,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '34332'
+      - '22278'
     status:
       code: 200
       message: OK
@@ -1745,14 +208,12 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
   response:
     body:
-      string: '{"from":"2025-05-18T00:00:00.000Z","to":"2025-05-19T12:13:30.348Z","input":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"output":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"decoded":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0}}'
+      string: '{"from":"2025-05-25T00:00:00.000Z","to":"2025-05-26T09:50:34.394Z","input":{"2025-05-26T09:00:00.000Z":0},"output":{"2025-05-26T09:00:00.000Z":0},"decoded":{"2025-05-26T09:00:00.000Z":0}}'
     headers:
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '187'
       Content-Type:
       - application/json
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -1792,7 +253,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '3349'
+      - '1528'
     status:
       code: 200
       message: OK
@@ -1826,7 +287,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '3466'
+      - '2408'
     status:
       code: 200
       message: OK
@@ -1847,7 +308,7 @@ interactions:
     uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
   response:
     body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":169381296},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.02053057850467777},"name":"usage","type":"gauge"}]}'
+      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":153090864},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.018556027589380044},"name":"usage","type":"gauge"}]}'
     headers:
       Content-Encoding:
       - gzip
@@ -1862,7 +323,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '3105'
+      - '1996'
     status:
       code: 200
       message: OK
@@ -1912,563 +373,7 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/overview
-  response:
-    body:
-      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
-    headers:
-      Content-Length:
-      - '511'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '34465'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}}'
-    headers:
-      Content-Length:
-      - '405'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '14829'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-19T12:07:45.222Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-19T12:07:45.220Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '17711'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/3b4fa139-8491-44af-90da-cf32061b50b9/journal
-  response:
-    body:
-      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-19T12:07:40.513Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
-    headers:
-      Content-Length:
-      - '424'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '12859'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/sidecars/all
-  response:
-    body:
-      string: '{"query":"","total":0,"only_active":false,"sort":null,"order":null,"sidecars":[],"filters":null,"pagination":{"total":0,"count":0,"page":1,"per_page":0}}'
-    headers:
-      Content-Length:
-      - '153'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '3143'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: '{"queries": [{"query": {"type": "elasticsearch", "query_string": "*"},
-      "timerange": {"type": "relative", "range": null}, "search_types": [{"type":
-      "pivot", "rollup": true, "row_groups": [{"type": "values", "field": "source"}],
-      "series": [{"type": "count"}], "name": "source_aggregation"}]}]}'
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '291'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/views/search/sync
-  response:
-    body:
-      string: '{"execution":{"done":true,"cancelled":false,"completed_exceptionally":false},"results":{"e57d3b99-b7e4-4c4e-aa2c-1743d86cc1e9":{"query":{"id":"e57d3b99-b7e4-4c4e-aa2c-1743d86cc1e9","timerange":{"range":0,"type":"relative"},"filter":{"type":"or","filters":[{"type":"stream","id":"000000000000000000000001"}]},"filters":[],"query":{"type":"elasticsearch","query_string":"*"},"search_types":[{"timerange":null,"query":null,"streams":[],"id":"7ab81aaf-1347-41bc-8170-546bffd3c2ed","name":"source_aggregation","series":[{"type":"count","id":"count()","field":null}],"sort":[],"rollup":true,"type":"pivot","row_groups":[{"type":"values","fields":["source"],"limit":15}],"column_groups":[],"filter":null,"filters":[]}]},"execution_stats":{"duration":17,"timestamp":"2025-05-19T12:13:30.600Z","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}},"search_types":{"7ab81aaf-1347-41bc-8170-546bffd3c2ed":{"name":"source_aggregation","id":"7ab81aaf-1347-41bc-8170-546bffd3c2ed","rows":[{"key":["172.20.0.1"],"values":[{"key":["count()"],"value":8,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":["foobar"],"values":[{"key":["count()"],"value":7,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":[],"values":[{"key":["count()"],"value":15,"rollup":true,"source":"row-inner"}],"source":"non-leaf"}],"total":15,"type":"pivot","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}}},"errors":[],"state":"COMPLETED"}},"id":"682b206a01179817a4d69ced","owner":"admin","search_id":"682b206a01179817a4d69cec"}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams
-  response:
-    body:
-      string: '{"total":3,"streams":[{"id":"000000000000000000000003","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all system events created by Graylog","created_at":"2025-05-16T08:59:53.236Z","disabled":false,"rules":[],"title":"All
-        system events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988554","is_editable":false,"is_default":false},{"id":"000000000000000000000002","creator_user_id":"admin","outputs":[],"matching_type":"AND","description":"Stream
-        containing all events created by Graylog","created_at":"2025-05-16T08:59:53.203Z","disabled":false,"rules":[],"title":"All
-        events","content_pack":null,"remove_matches_from_default_stream":true,"index_set_id":"6826fe89552b937fa1988551","is_editable":false,"is_default":false},{"id":"000000000000000000000001","creator_user_id":"local:admin","outputs":[],"matching_type":"AND","description":"Contains
-        messages that are not explicitly routed to other streams","created_at":"2025-05-16T08:59:51.350Z","disabled":false,"rules":[],"title":"Default
-        Stream","content_pack":null,"remove_matches_from_default_stream":false,"index_set_id":"6826fe87552b937fa1988496","is_editable":true,"is_default":true}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '10146'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '0'
-      Content-Type:
-      - application/json
-      User-Agent:
-      - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/events/search
-  response:
-    body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":3600,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":5,"context":{"event_definitions":{},"streams":{}}}'
-    headers:
-      Content-Length:
-      - '336'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system
-  response:
-    body:
-      string: '{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
-        6.11.0-26-generic","is_processing":true}'
-    headers:
-      Content-Length:
-      - '364'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2759'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/streams/alerts?limit=300
-  response:
-    body:
-      string: '{"type":"ApiError","message":"Stream <alerts> not found!"}'
-    headers:
-      Content-Length:
-      - '58'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '2988'
-    status:
-      code: 404
-      message: Not Found
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/stats
-  response:
-    body:
-      string: '{"stream_count":3,"stream_rule_count":0,"stream_rule_count_by_stream":{"000000000000000000000001":0,"000000000000000000000002":0,"000000000000000000000003":0},"user_count":1,"output_count":0,"output_count_by_type":{},"dashboard_count":1,"input_count":1,"global_input_count":0,"input_count_by_type":{"org.graylog2.inputs.raw.tcp.RawTCPInput":1,"org.graylog2.inputs.raw.udp.RawUDPInput":1},"extractor_count":0,"extractor_count_by_type":{},"elasticsearch":{"cluster_name":"docker-cluster","cluster_version":"2.4.0","status":"Green","cluster_health":{"number_of_nodes":1,"number_of_data_nodes":1,"active_shards":12,"relocating_shards":0,"active_primary_shards":12,"initializing_shards":0,"unassigned_shards":0,"timed_out":false,"pending_tasks":0,"pending_tasks_time_in_queue":[]},"nodes_stats":{"total":1,"master_only":-1,"data_only":-1,"master_data":-1,"client":-1},"indices_stats":{"index_count":3,"store_size":70594,"field_data_size":3644,"id_cache_size":0}},"mongo":{"servers":["mongodb:27017"],"build_info":{"version":"5.0.31","git_version":"973237567d45610d6976d5d489dfaaef6a52c2f9","sys_info":"deprecated","loader_flags":null,"compiler_flags":null,"allocator":"tcmalloc","version_array":[5,0,31,0],"javascript_engine":"mozjs","bits":64,"debug":false,"max_bson_object_size":16777216},"host_info":{"system":{"current_time":"2025-05-19T12:08:01.939Z","hostname":"e89f83ee7383","cpu_addr_size":64,"mem_size_mb":31463,"num_cores":12,"cpu_arch":"x86_64","numa_enabled":false},"os":{"type":"Linux","name":"Ubuntu","version":"20.04"},"extra":{"version_string":"Linux
-        version 6.11.0-26-generic (buildd@lcy02-amd64-074) (x86_64-linux-gnu-gcc-13
-        (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42)
-        #26~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr 17 19:20:47 UTC 2","libc_version":"2.31","kernel_version":"6.11.0-26-generic","cpu_frequency_mhz":"999.953","cpu_features":"fpu
-        vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush
-        dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc
-        art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf
-        tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg
-        fma cx16 xtpr pdcm sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes
-        xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs
-        ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase
-        tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb
-        intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk
-        avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req
-        hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b
-        fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities","scheduler":null,"page_size":4096,"num_pages":8054738,"max_open_files":1048576}},"server_status":{"host":"e89f83ee7383","version":"5.0.31","process":"mongod","pid":1,"uptime":403,"uptime_millis":403303,"uptime_estimate":403,"local_time":"2025-05-19T12:13:59.859Z","connections":{"current":7,"available":838853,"total_created":10},"network":{"bytes_in":2200073,"bytes_out":5427965,"num_requests":8479},"memory":{"bits":64,"resident":131,"virtual":1510,"supported":true,"mapped":-1,"mapped_with_journal":-1},"storage_engine":{"name":"wiredTiger"}},"database_stats":{"db":"graylog","collections":38,"objects":230,"avg_obj_size":575.4260869565218,"data_size":132348,"storage_size":696320,"num_extents":null,"indexes":94,"index_size":1372160,"file_size":null,"ns_size_mb":null,"extent_free_list":null,"data_file_version":null}}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '33586'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/cluster/traffic?daily=false&days=1
-  response:
-    body:
-      string: '{"from":"2025-05-18T00:00:00.000Z","to":"2025-05-19T12:13:59.889Z","input":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"output":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0},"decoded":{"2025-05-19T07:00:00.000Z":0,"2025-05-19T08:00:00.000Z":0,"2025-05-19T09:00:00.000Z":0,"2025-05-19T11:00:00.000Z":0,"2025-05-19T12:00:00.000Z":0}}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures/count/
-  response:
-    body:
-      string: '{"count":0}'
-    headers:
-      Content-Length:
-      - '11'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '3566'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/failures?limit=30
-  response:
-    body:
-      string: '{"failures":[],"total":0}'
-    headers:
-      Content-Length:
-      - '25'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '4063'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/system/metrics/namespace/jvm.memory.heap
-  response:
-    body:
-      string: '{"total":5,"metrics":[{"full_name":"jvm.memory.heap.used","metric":{"value":158403480},"name":"used","type":"gauge"},{"full_name":"jvm.memory.heap.committed","metric":{"value":239075328},"name":"committed","type":"gauge"},{"full_name":"jvm.memory.heap.init","metric":{"value":515899392},"name":"init","type":"gauge"},{"full_name":"jvm.memory.heap.max","metric":{"value":8250195968},"name":"max","type":"gauge"},{"full_name":"jvm.memory.heap.usage","metric":{"value":0.019199965748013612},"name":"usage","type":"gauge"}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '3041'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/plugins/org.graylog.plugins.license/licenses/status
+    uri: http://127.0.0.1:9000/api/count/total
   response:
     body:
       string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
@@ -2500,44 +405,10 @@ interactions:
       User-Agent:
       - python-requests/2.32.3
     method: GET
-    uri: http://127.0.0.1:9000/api/system/indexer/overview
-  response:
-    body:
-      string: '{"deflector":{"current_target":"graylog_0","is_up":true},"indexer_cluster":{"health":{"status":"green","shards":{"active":12,"initializing":0,"relocating":0,"unassigned":0}},"name":"docker-cluster"},"counts":{"events":15},"indices":{"graylog_0":{"size":{"events":15,"deleted":0,"bytes":68930},"range":{"index_name":"graylog_0","begin":"1970-01-01T00:00:00.000Z","end":"1970-01-01T00:00:00.000Z","calculated_at":"2025-05-16T08:59:54.673Z","took_ms":0},"is_closed":false,"is_reopened":false,"is_deflector":true}}}'
-    headers:
-      Content-Length:
-      - '511'
-      Content-Type:
-      - application/json
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '33898'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
     uri: http://127.0.0.1:9000/api/cluster
   response:
     body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-19T12:07:40.301Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
+      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":{"facility":"graylog-server","codename":"Noir","node_id":"3b4fa139-8491-44af-90da-cf32061b50b9","cluster_id":"da859203-6f3c-4fb6-9499-85e7229b26fc","version":"5.0.13+083613e","started_at":"2025-05-26T09:23:36.957Z","hostname":"server","lifecycle":"running","lb_status":"alive","timezone":"Etc/UTC","operating_system":"Linux
         6.11.0-26-generic","is_processing":true}}'
     headers:
       Content-Length:
@@ -2551,45 +422,7 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '14001'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: null
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate
-      Authorization:
-      - Basic YWRtaW46cGFzc3dvcmQ=
-      Connection:
-      - keep-alive
-      User-Agent:
-      - python-requests/2.32.3
-    method: GET
-    uri: http://127.0.0.1:9000/api/cluster/inputstates
-  response:
-    body:
-      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-19T12:07:45.222Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-19T12:07:45.220Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
-        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
-    headers:
-      Content-Encoding:
-      - gzip
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      X-Content-Type-Options:
-      - nosniff
-      X-Frame-Options:
-      - DENY
-      X-Graylog-Node-ID:
-      - 3b4fa139-8491-44af-90da-cf32061b50b9
-      X-Runtime-Microseconds:
-      - '15723'
+      - '9940'
     status:
       code: 200
       message: OK
@@ -2610,7 +443,7 @@ interactions:
     uri: http://127.0.0.1:9000/api/cluster/3b4fa139-8491-44af-90da-cf32061b50b9/journal
   response:
     body:
-      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-19T12:07:40.513Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
+      string: '{"enabled":true,"append_events_per_second":0,"read_events_per_second":0,"uncommitted_journal_entries":0,"journal_size":0,"journal_size_limit":5368709120,"number_of_segments":1,"oldest_segment":"2025-05-26T09:23:37.027Z","journal_config":{"directory":"file:///usr/share/graylog/data/journal/","segment_size":104857600,"segment_age":3600000,"max_size":5368709120,"max_age":43200000,"flush_interval":1000000,"flush_age":60000}}'
     headers:
       Content-Length:
       - '424'
@@ -2623,7 +456,45 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '12378'
+      - '8068'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/cluster/inputstates
+  response:
+    body:
+      string: '{"3b4fa139-8491-44af-90da-cf32061b50b9":[{"id":"6827432a44a4084bad03a9d8","state":"RUNNING","started_at":"2025-05-26T09:23:38.678Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        UDP","content_pack":null,"created_at":"2025-05-16T13:52:42.276Z","type":"org.graylog2.inputs.raw.udp.RawUDPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":262144,"port":5555,"number_worker_threads":12,"override_source":"foobar","charset_name":"UTF-8","bind_address":"0.0.0.0"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"6827432a44a4084bad03a9d8"}},{"id":"68273b3848e232496b4733a9","state":"RUNNING","started_at":"2025-05-26T09:23:38.675Z","detailed_message":null,"message_input":{"title":"test","global":false,"name":"Raw/Plaintext
+        TCP","content_pack":null,"created_at":"2025-05-16T13:18:48.252Z","type":"org.graylog2.inputs.raw.tcp.RawTCPInput","creator_user_id":"admin","attributes":{"recv_buffer_size":1048576,"tcp_keepalive":false,"use_null_delimiter":false,"number_worker_threads":12,"tls_client_auth_cert_file":"","bind_address":"0.0.0.0","tls_cert_file":"","port":5555,"tls_key_file":"","tls_enable":false,"tls_key_password":"","max_message_size":2097152,"tls_client_auth":"disabled","override_source":null,"charset_name":"UTF-8"},"static_fields":{},"node":"3b4fa139-8491-44af-90da-cf32061b50b9","id":"68273b3848e232496b4733a9"}}]}'
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+      X-Graylog-Node-ID:
+      - 3b4fa139-8491-44af-90da-cf32061b50b9
+      X-Runtime-Microseconds:
+      - '11028'
     status:
       code: 200
       message: OK
@@ -2657,15 +528,12 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '2887'
+      - '2111'
     status:
       code: 200
       message: OK
 - request:
-    body: '{"queries": [{"query": {"type": "elasticsearch", "query_string": "*"},
-      "timerange": {"type": "relative", "range": null}, "search_types": [{"type":
-      "pivot", "rollup": true, "row_groups": [{"type": "values", "field": "source"}],
-      "series": [{"type": "count"}], "name": "source_aggregation"}]}]}'
+    body: null
     headers:
       Accept:
       - '*/*'
@@ -2675,26 +543,18 @@ interactions:
       - Basic YWRtaW46cGFzc3dvcmQ=
       Connection:
       - keep-alive
-      Content-Length:
-      - '291'
-      Content-Type:
-      - application/json
       User-Agent:
       - python-requests/2.32.3
-      X-Requested-By:
-      - admin
-    method: POST
-    uri: http://127.0.0.1:9000/api/views/search/sync
+    method: GET
+    uri: http://127.0.0.1:9000/api/sources
   response:
     body:
-      string: '{"execution":{"done":true,"cancelled":false,"completed_exceptionally":false},"results":{"e964fe44-d190-49b3-8a5b-c9aea37378cc":{"query":{"id":"e964fe44-d190-49b3-8a5b-c9aea37378cc","timerange":{"range":0,"type":"relative"},"filter":{"type":"or","filters":[{"type":"stream","id":"000000000000000000000001"}]},"filters":[],"query":{"type":"elasticsearch","query_string":"*"},"search_types":[{"timerange":null,"query":null,"streams":[],"id":"817b5a8b-63ec-4864-b1ad-a5b9db49a6eb","name":"source_aggregation","series":[{"type":"count","id":"count()","field":null}],"sort":[],"rollup":true,"type":"pivot","row_groups":[{"type":"values","fields":["source"],"limit":15}],"column_groups":[],"filter":null,"filters":[]}]},"execution_stats":{"duration":18,"timestamp":"2025-05-19T12:14:00.141Z","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}},"search_types":{"817b5a8b-63ec-4864-b1ad-a5b9db49a6eb":{"name":"source_aggregation","id":"817b5a8b-63ec-4864-b1ad-a5b9db49a6eb","rows":[{"key":["172.20.0.1"],"values":[{"key":["count()"],"value":8,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":["foobar"],"values":[{"key":["count()"],"value":7,"rollup":true,"source":"row-leaf"}],"source":"leaf"},{"key":[],"values":[{"key":["count()"],"value":15,"rollup":true,"source":"row-inner"}],"source":"non-leaf"}],"total":15,"type":"pivot","effective_timerange":{"from":"2025-05-16T13:19:36.021Z","to":"2025-05-16T13:53:51.550Z","type":"absolute"}}},"errors":[],"state":"COMPLETED"}},"id":"682b208801179817a4d69d2b","owner":"admin","search_id":"682b208801179817a4d69d2a"}'
+      string: '{"type":"ApiError","message":"HTTP 404 Not Found"}'
     headers:
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '50'
       Content-Type:
       - application/json
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -2702,8 +562,8 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
     status:
-      code: 200
-      message: OK
+      code: 404
+      message: Not Found
 - request:
     body: null
     headers:
@@ -2742,12 +602,12 @@ interactions:
       X-Graylog-Node-ID:
       - 3b4fa139-8491-44af-90da-cf32061b50b9
       X-Runtime-Microseconds:
-      - '9421'
+      - '4676'
     status:
       code: 200
       message: OK
 - request:
-    body: null
+    body: '{"timerange": {"type": "relative", "range": 86400}}'
     headers:
       Accept:
       - '*/*'
@@ -2758,7 +618,7 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '0'
+      - '51'
       Content-Type:
       - application/json
       User-Agent:
@@ -2769,10 +629,10 @@ interactions:
     uri: http://127.0.0.1:9000/api/events/search
   response:
     body:
-      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":3600,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":5,"context":{"event_definitions":{},"streams":{}}}'
+      string: '{"events":[],"used_indices":["gl-events_0","gl-system-events_0"],"parameters":{"page":1,"per_page":10,"timerange":{"range":86400,"type":"relative"},"query":"","filter":{"alerts":"include","event_definitions":[]},"sort_by":"timestamp","sort_direction":"desc"},"total_events":0,"duration":4,"context":{"event_definitions":{},"streams":{}}}'
     headers:
       Content-Length:
-      - '336'
+      - '337'
       Content-Type:
       - application/json
       X-Content-Type-Options:

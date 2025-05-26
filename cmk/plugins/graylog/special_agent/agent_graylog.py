@@ -47,10 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
-        GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
-        GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
-        GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic?days=1&daily=false"),
         GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
         GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
@@ -63,6 +59,15 @@ def main(argv=None):
     ]
 
     handle_section(args, "alerts", "/streams/alerts?limit=300", section_alerts)
+    handle_section(args, "cluster_health", "/system/indexer/cluster/health", section_cluster_health)
+    handle_section(args, "cluster_inputstates", "/cluster/inputstates", section_cluster_inputstates)
+    handle_section(args, "cluster_stats", "/system/cluster/stats", section_cluster_stats)
+    handle_section(
+        args,
+        "cluster_traffic",
+        "/system/cluster/traffic?days=1&daily=false",
+        section_cluster_traffic,
+    )
 
     try:
         handle_request(args, sections)
@@ -108,6 +113,30 @@ def section_alerts(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] |
         }
     }
     return [alerts]
+
+
+def section_cluster_health(
+    args: argparse.Namespace, uri: str
+) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
+
+
+def section_cluster_inputstates(
+    args: argparse.Namespace, uri: str
+) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
+
+
+def section_cluster_stats(
+    args: argparse.Namespace, uri: str
+) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
+
+
+def section_cluster_traffic(
+    args: argparse.Namespace, uri: str
+) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
 
 
 def _get_base_url(args: argparse.Namespace) -> str:

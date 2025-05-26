@@ -4,25 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from pathlib import Path
-
 from livestatus import LivestatusOutputFormat, LivestatusResponse
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 
-from cmk.utils.paths import default_config_dir
-
 from cmk.gui import sites
+from cmk.gui.bi.filesystem import bi_fs
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 
-from cmk.bi.aggregation import BIAggregation
-from cmk.bi.compiler import BICompiler, path_compiled_aggregations
+from cmk.bi.compiler import BICompiler
 from cmk.bi.computer import BIComputer
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.lib import SitesCallback
+from cmk.bi.storage import AggregationNotFound, AggregationStore
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 
@@ -36,7 +32,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(default_config_dir) / "multisite.d" / "wato" / "bi_config.bi")
+        return str(bi_fs.etc.config)
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
@@ -72,6 +68,7 @@ def load_compiled_branch(aggr_id: str, branch_title: str) -> BICompiledRule:
 
 @request_memoize(maxsize=10000)
 def _load_compiled_aggregation(aggr_id: str) -> BICompiledAggregation | None:
-    compiled_aggr_path = path_compiled_aggregations.joinpath(aggr_id)
-    data = store.load_object_from_pickle_file(compiled_aggr_path, default={})
-    return BIAggregation.create_trees_from_schema(data) if data else None
+    try:
+        return AggregationStore(bi_fs.cache).get(aggr_id)
+    except AggregationNotFound:
+        return None

@@ -1,4 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 cc_library(
     name = "livestatus_poller",
@@ -65,6 +67,35 @@ cc_shared_library(
         ":livestatus_base",
         "@re2",
     ],
+)
+
+pkg_files(
+    name = "livestatus_shared_files",
+    srcs = [":livestatus_shared"],
+    prefix = "lib",
+    renames = {":livestatus_shared": "liblivestatus.so.0.1"},
+)
+
+pkg_mklink(
+    name = "liblivestatus.so.0",
+    link_name = "lib/liblivestatus.so.0",
+    target = "liblivestatus.so.0.1",
+)
+
+pkg_mklink(
+    name = "liblivestatus.so",
+    link_name = "lib/liblivestatus.so",
+    target = "liblivestatus.so.0.1",
+)
+
+pkg_tar(
+    name = "livestatus_pkg",
+    srcs = [
+        "liblivestatus.so",
+        "liblivestatus.so.0",
+        ":livestatus_shared_files",
+    ],
+    visibility = ["//visibility:public"],
 )
 
 cc_test(

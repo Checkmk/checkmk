@@ -68,6 +68,7 @@ create_venv(
                "//packages/cmk-server-side-calls:pkg_tar",
                "//packages/cmk-trace:pkg_tar",
                "//packages/cmk-werks:pkg_tar",
+               "//packages/livestatus:livestatus_pkg",
                "//packages/neb:neb_pkg",
                "//packages/unixcat:unixcat_tar",
                ":license_info",

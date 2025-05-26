@@ -192,7 +192,6 @@ include \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
     packages/appliance/appliance.make \
-    packages/livestatus/livestatus.make \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
     packages/rabbitmq/rabbitmq.make

@@ -36,7 +36,6 @@ PACKAGES := \
     omd \
     pnp4nagios \
     heirloom-mailx \
-    livestatus \
     robotmk \
     xmlsec1 \
     rabbitmq

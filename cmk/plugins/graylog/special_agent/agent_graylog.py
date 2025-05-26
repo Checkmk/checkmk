@@ -47,7 +47,6 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars/all"),
@@ -70,6 +69,9 @@ def main(argv=None):
         args, "failures", "/system/indexer/failures/count/?since=%s" % since, section_failures
     )
     handle_section(args, "jvm", "/system/metrics/namespace/jvm.memory.heap", section_jvm)
+    handle_section(
+        args, "license", "/plugins/org.graylog.plugins.license/licenses/status", section_license
+    )
 
     try:
         handle_request(args, sections)
@@ -167,6 +169,10 @@ def section_jvm(args: argparse.Namespace, uri: str) -> dict[str, object]:
         new_value.update({metric_name: metric_value})
 
     return new_value
+
+
+def section_license(args: argparse.Namespace, uri: str) -> list[dict[str, Any]] | dict[str, Any]:
+    return handle_response(_get_section_url(args, uri), args).json()
 
 
 def _get_base_url(args: argparse.Namespace) -> str:

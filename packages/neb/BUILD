@@ -1,4 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
 
 define_from_flag(
@@ -82,6 +84,19 @@ cc_shared_library(
         ":neb_base",
         ":neb_version",
     ],
+)
+
+pkg_files(
+    name = "neb_shared_files",
+    srcs = [":neb_shared"],
+    prefix = "lib/mk-livestatus/",
+    renames = {":neb_shared": "livestatus.o"},
+)
+
+pkg_tar(
+    name = "neb_pkg",
+    srcs = [":neb_shared_files"],
+    visibility = ["//visibility:public"],
 )
 
 alias(

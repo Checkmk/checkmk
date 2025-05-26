@@ -37,7 +37,6 @@ PACKAGES := \
     pnp4nagios \
     heirloom-mailx \
     livestatus \
-    neb \
     robotmk \
     xmlsec1 \
     rabbitmq

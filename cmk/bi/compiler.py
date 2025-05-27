@@ -47,17 +47,17 @@ class BICompiler:
         bi_configuration_file: Path,
         sites_callback: SitesCallback,
         fs: BIFileSystem | None = None,
+        redis_client: Redis[str] | None = None,
     ) -> None:
         self._sites_callback = sites_callback
         self._fs = fs or get_default_site_filesystem()
+        self._redis_client: Redis[str] = redis_client or get_redis_client()
 
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
 
         self._aggregation_store = storage.AggregationStore(self._fs.cache)
         self._metadata_store = storage.MetadataStore(self._fs)
         self._frozen_store = storage.FrozenAggregationStore(self._fs.var)
-
-        self._redis_client: Redis[str] = get_redis_client()
 
         self._bi_packs = BIAggregationPacks(bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback, self._fs)

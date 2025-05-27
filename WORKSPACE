@@ -13,10 +13,6 @@ load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf_workspace")
 
 libgsf_workspace()
 
-load("//omd/packages/lcab:lcab_http.bzl", "lcab_workspace")
-
-lcab_workspace()
-
 load("//omd/packages/msitools:msitools_http.bzl", "msitools_workspace")
 
 msitools_workspace()

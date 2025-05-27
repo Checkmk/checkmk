@@ -451,6 +451,17 @@ http_archive(
 )
 
 http_archive(
+    name = "lcab",
+    build_file = "//omd/packages/lcab:BUILD.lcab.bazel",
+    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
+    strip_prefix = "lcab-1.0b12",
+    urls = [
+        "http://archlinux.c3sl.ufpr.br/other/lcab/lcab-1.0b12.tar.gz",
+        UPSTREAM_MIRROR_URL + "lcab-1.0b12.tar.gz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

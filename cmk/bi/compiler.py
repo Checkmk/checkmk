@@ -49,7 +49,6 @@ class BICompiler:
         fs: BIFileSystem | None = None,
     ) -> None:
         self._sites_callback = sites_callback
-        self._bi_configuration_file = bi_configuration_file
         self._fs = fs or get_default_site_filesystem()
 
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
@@ -60,7 +59,7 @@ class BICompiler:
 
         self._redis_client: Redis[str] | None = None
 
-        self._bi_packs = BIAggregationPacks(self._bi_configuration_file)
+        self._bi_packs = BIAggregationPacks(bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback)
         self.bi_searcher = BISearcher()
 

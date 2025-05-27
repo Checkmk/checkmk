@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
+import time
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -12,6 +14,9 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_rate,
+    get_value_store,
+    GetRateError,
     render,
     Result,
     Service,
@@ -30,7 +35,9 @@ def discover_bazel_cache(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_bazel_cache(section: Section) -> CheckResult:
+def check_bazel_cache_impl(
+    section: Section, value_store: MutableMapping[str, Any], current_time: float
+) -> CheckResult:
     if not section:
         yield Result(state=State.UNKNOWN, summary="No Bazel Cache Metrics data")
         return
@@ -75,6 +82,19 @@ def check_bazel_cache(section: Section) -> CheckResult:
         render_func=render.bytes,
         label="Total number of bytes removed from disk backend",
     )
+
+    try:
+        key = "bazel_remote_disk_cache_overwritten_bytes_total"
+        read_ops_per_sec = get_rate(value_store, f"last_{key}", current_time, section[key])
+        yield from check_levels(
+            read_ops_per_sec,
+            metric_name=f"{metric_name_prefix}bazel_remote_disk_cache_overwritten_bytes_rate",
+            render_func=render.iobandwidth,
+            label="Change of the number of bytes removed from disk backend",
+        )
+    except GetRateError:
+        pass
+
     yield from check_levels(
         section["bazel_remote_disk_cache_size_bytes"],
         metric_name=f"{metric_name_prefix}bazel_remote_disk_cache_size_bytes",
@@ -161,12 +181,16 @@ def check_bazel_cache(section: Section) -> CheckResult:
     )
 
 
+def check_bazel_cache(section: Section) -> CheckResult:
+    yield from check_bazel_cache_impl(section, get_value_store(), time.time())
+
+
 agent_section_bazel_cache = AgentSection(
     name="bazel_cache_metrics",
     parse_function=parse_bazel_cache,
 )
 
-check_plugin_bazel_cache_go = CheckPlugin(
+check_plugin_bazel_cache = CheckPlugin(
     name="bazel_cache_metrics",
     service_name="Bazel Cache Metrics",
     discovery_function=discover_bazel_cache,

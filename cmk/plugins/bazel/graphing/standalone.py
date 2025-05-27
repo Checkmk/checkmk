@@ -23,7 +23,6 @@ name_prefix_bazel_cache_status = "bazel_cache_status_"
 name_prefix_bazel_cache_metrics = "bazel_cache_metrics_"
 name_prefix_bazel_cache_go = "bazel_cache_go_"
 
-
 metric_bazel_curr_size = Metric(
     name=f"{name_prefix_bazel_cache_status}curr_size",
     title=Title("Current size"),
@@ -61,7 +60,6 @@ metric_bazel_uncompressed_size = Metric(
     color=Color.PURPLE,
 )
 
-
 metric_bazel_remote_azblob_cache_hits = Metric(
     name=f"{name_prefix_bazel_cache_metrics}bazel_remote_azblob_cache_hits",
     title=Title("azblob backend cache hits"),
@@ -98,6 +96,14 @@ metric_bazel_remote_disk_cache_overwritten_bytes_total = Metric(
     unit=BYTES_UNIT,
     color=Color.PURPLE,
 )
+
+metric_bazel_remote_disk_cache_overwritten_bytes_rate = Metric(
+    name=f"{name_prefix_bazel_cache_metrics}bazel_remote_disk_cache_overwritten_bytes_rate",
+    title=Title("Rate of disk backend bytes removed or overwritten"),
+    unit=BYTES_UNIT,
+    color=Color.PURPLE,
+)
+
 metric_bazel_remote_disk_cache_size_bytes = Metric(
     name=f"{name_prefix_bazel_cache_metrics}bazel_remote_disk_cache_size_bytes",
     title=Title("Disk backend size"),
@@ -170,7 +176,6 @@ metric_process_virtual_memory_max_bytes = Metric(
     unit=BYTES_UNIT,
     color=Color.PURPLE,
 )
-
 
 metric_go_gc_duration_seconds_count = Metric(
     name=f"{name_prefix_bazel_cache_go}go_gc_duration_seconds_count",

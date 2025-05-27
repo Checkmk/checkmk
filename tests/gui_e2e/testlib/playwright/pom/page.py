@@ -212,6 +212,12 @@ class MainMenu(LocatorHelper):
         """main menu -> Open help -> show more(optional) -> sub menu"""
         return self._sub_menu("Help", sub_menu, show_more=False, exact=exact)
 
+    def rest_api_help_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
+        """main menu -> Open help -> REST API -> sub menu"""
+        rest_api_text = "REST API"
+        self.help_menu(rest_api_text)
+        return self._sub_menu(rest_api_text, sub_menu, show_more=False, exact=exact)
+
     def _searchbar(self, menu: Literal["Setup", "Monitor"], searchbar_name: str) -> Locator:
         self._sub_menu(menu, sub_menu=None).click()
         _location = self.locator().get_by_role(role="textbox", name=searchbar_name)
@@ -306,15 +312,15 @@ class MainMenu(LocatorHelper):
 
     @property
     def help_rest_api_intro(self) -> Locator:
-        return self.help_menu("REST API introduction")
+        return self.rest_api_help_menu("Introduction")
 
     @property
     def help_rest_api_docs(self) -> Locator:
-        return self.help_menu("REST API documentation")
+        return self.rest_api_help_menu("Documentation")
 
     @property
     def help_rest_api_gui(self) -> Locator:
-        return self.help_menu("REST API interactive GUI")
+        return self.rest_api_help_menu("Interactive GUI")
 
     @property
     def help_saas_status_page(self) -> Locator:

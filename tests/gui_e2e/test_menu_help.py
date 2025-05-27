@@ -16,9 +16,8 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
 
 @dataclass
 class HelpMenuButton:
-    def __init__(self, name: str, url_pattern: str) -> None:
-        self.name = name
-        self.url_pattern = url_pattern
+    name: str
+    url_pattern: str
 
 
 @pytest.fixture(

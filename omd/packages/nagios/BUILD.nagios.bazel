@@ -60,20 +60,23 @@ configure_make(
     visibility = ["//visibility:public"],
 )
 
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/nagios:merge-nagios-config",
-        "@omd_packages//omd/packages/nagios:diskspace",
-    ],
-    outs = [
-        "bin/merge-nagios-config",
-        "share/diskspace/nagios",
-    ],
-    cmd = """
-        mkdir -p $(RULEDIR)/bin
-        cp --dereference $(execpath @omd_packages//omd/packages/nagios:merge-nagios-config) $$(realpath $(RULEDIR))/bin
-        mkdir -p $(RULEDIR)/share/diskspace/
-        cp --dereference $(execpath @omd_packages//omd/packages/nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/nagios
-    """,
+filegroup(
+    name = "gen_dir",
+    srcs = [":nagios"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "nagiostats_bin",
+    srcs = [":nagios"],
+    output_group = "nagiostats",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "nagios_bin",
+    srcs = [":nagios"],
+    output_group = "nagios",
+    visibility = ["//visibility:public"],
 )

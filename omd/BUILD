@@ -43,6 +43,7 @@ create_venv(
                "//omd/packages/mod_wsgi",
                "//omd/packages/monitoring-plugins",
                "//omd/packages/msitools",
+               "//omd/packages/nagios",
                "//omd/packages/navicli",
                "//omd/packages/net-snmp:net-snmp_tar",
                "//omd/packages/nrpe",

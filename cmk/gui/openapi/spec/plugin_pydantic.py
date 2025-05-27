@@ -7,7 +7,7 @@ import hashlib
 import warnings
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import is_dataclass
-from typing import Any, cast, ClassVar, is_typeddict
+from typing import Any, cast, ClassVar, is_typeddict, Literal
 
 import apispec
 import pydantic_core
@@ -20,6 +20,8 @@ from pydantic_core import core_schema, PydanticOmit, PydanticSerializationError
 from cmk.utils.object_diff import make_diff
 
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
+
+type Direction = Literal["inbound", "outbound"]
 
 # these two are not publicly exported by pydantic, so we redefine them here
 type _CoreSchemaField = (
@@ -59,14 +61,24 @@ def _register_schema(spec: APISpec, name: str, schema: dict[str, object]) -> Non
             raise DuplicateComponentNameError(f"{e}\nNew: {schema!r}\nDiff:\n{diff}") from None
 
 
-def _get_json_schema(spec: APISpec, adapter: TypeAdapter) -> dict[str, object]:
+def _get_json_schema(
+    spec: APISpec, adapter: TypeAdapter, direction: Direction
+) -> dict[str, object]:
+    # There's a difference in pydantic between inbound and outbound schemas. Validators only affect
+    # inbound schemas, and often the serialization won't even be supported by the custom types.
+    # At the same time, we don't want to specify validators for outbound schemas (or vice versa).
+    # So we need to know the direction every time we generate a schema.
+    # If there are inconsistencies between the inbound and outbound schemas, an error will be raised
+    # when the schema is registered (in this function). Shared schemas should allow for round trip
+    # serialization, so the inbound and outbound schemas should be the same. The most likely fix is
+    # to either add a validator or `WithJsonSchema(..., mode="serialization")` to the field.
     try:
         with warnings.catch_warnings(action="error", category=PydanticJsonSchemaWarning):
             json_schema = adapter.json_schema(
                 by_alias=True,
                 ref_template="#/components/schemas/{model}",
                 schema_generator=CheckmkGenerateJsonSchema,
-                mode="serialization",
+                mode="serialization" if direction == "outbound" else "validation",
             )
     except PydanticJsonSchemaWarning as e:
         title = _try_get_title(adapter.core_schema) or "<unknown>"
@@ -287,24 +299,28 @@ class CheckmkPydanticResolver:
     a return statement.
     """
 
-    # TypeAdapter id -> (schema_name, schema)
-    refs: ClassVar[dict[int, tuple[str, dict[str, object]]]] = {}
+    # (TypeAdapter id, direction) -> (schema_name, schema)
+    refs: ClassVar[dict[tuple[int, Direction], tuple[str, dict[str, object]]]] = {}
 
     def __init__(self, spec: apispec.APISpec) -> None:
         self.spec = spec
 
-    def resolve_nested_schema(self, maybe_adapter: TypeAdapter | object) -> object:
+    def resolve_nested_schema(
+        self, maybe_adapter: TypeAdapter | object, direction: Direction
+    ) -> object:
         if isinstance(maybe_adapter, TypeAdapter):
-            schema_name, _ = self.get_cached_adapter_schema(adapter=maybe_adapter)
+            schema_name, _ = self.get_cached_adapter_schema(maybe_adapter, direction)
             return {"$ref": f"#/components/schemas/{schema_name}"}
 
         # do not touch other cases, as they should in most cases be Marshmallow schemas
         return maybe_adapter
 
-    def get_cached_adapter_schema(self, adapter: TypeAdapter) -> tuple[str, dict[str, object]]:
-        key = id(adapter)
+    def get_cached_adapter_schema(
+        self, adapter: TypeAdapter, direction: Direction
+    ) -> tuple[str, dict[str, object]]:
+        key = id(adapter), direction
         if key not in self.refs:
-            json_schema = _get_json_schema(self.spec, adapter)
+            json_schema = _get_json_schema(self.spec, adapter, direction)
             if "title" in json_schema:
                 title = json_schema["title"]
                 assert isinstance(title, str)
@@ -319,27 +335,24 @@ class CheckmkPydanticResolver:
 
         return self.refs[key]
 
-    def resolve_schema(self, data: dict[str, Any] | Any) -> None:
+    def resolve_schema(self, data: dict[str, Any] | Any, direction: Direction) -> None:
         """Resolves a Pydantic model in an OpenAPI component or header.
 
         This method modifies the input dictionary, data, to translate
         Pydantic models to OpenAPI schema objects or reference objects.
-
-        Args:
-            data (Any): _description_
         """
         if not isinstance(data, dict):
             return
 
         # OAS 2 component or OAS 3 parameter or header
         if "schema" in data:
-            data["schema"] = self.resolve_schema_dict(data["schema"])
+            data["schema"] = self.resolve_schema_dict(data["schema"], direction)
 
         # OAS 3 component except header
         if self.spec.openapi_version.major >= 3 and "content" in data:
             for content in data["content"].values():
                 if "schema" in content:
-                    content["schema"] = self.resolve_schema_dict(content["schema"])
+                    content["schema"] = self.resolve_schema_dict(content["schema"], direction)
 
     def resolve_operations(
         self,
@@ -404,7 +417,7 @@ class CheckmkPydanticResolver:
             if self.spec.openapi_version.major >= 3:
                 self.resolve_callback(operation.get("callbacks", {}))
                 if "requestBody" in operation:
-                    self.resolve_schema(operation["requestBody"])
+                    self.resolve_schema(operation["requestBody"], direction="inbound")
             for response in operation.get("responses", {}).values():
                 self.resolve_response(response)
 
@@ -415,7 +428,9 @@ class CheckmkPydanticResolver:
             if "schema" in parameter:
                 schema = parameter["schema"]
                 if isinstance(schema, TypeAdapter):
-                    _, parameter["schema"] = self.get_cached_adapter_schema(schema)
+                    _, parameter["schema"] = self.get_cached_adapter_schema(
+                        schema, direction="inbound"
+                    )
 
             # TODO: might need to do this, when we remove the marshmallow plugin
             #       but while we still have marshmallow this might break the plugin
@@ -434,29 +449,31 @@ class CheckmkPydanticResolver:
                     self.resolve_operations(path)
 
     def resolve_response(self, response: Any) -> None:
-        self.resolve_schema(response)
+        self.resolve_schema(response, direction="outbound")
         if "headers" in response:
             for header in response["headers"].values():
-                self.resolve_schema(header)
+                self.resolve_schema(header, direction="outbound")
 
-    def resolve_schema_dict(self, schema: dict | TypeAdapter | object) -> object:
+    def resolve_schema_dict(
+        self, schema: dict | TypeAdapter | object, direction: Direction
+    ) -> object:
         """Resolve the schemas and ignore anything which is not related to the Pydantic plugin
         such as Marshmallow schemas, etc.
         """
         if not isinstance(schema, dict):
-            return self.resolve_nested_schema(schema)
+            return self.resolve_nested_schema(schema, direction)
 
         if schema.get("type") == "array" and "items" in schema:
-            schema["items"] = self.resolve_schema_dict(schema["items"])
+            schema["items"] = self.resolve_schema_dict(schema["items"], direction)
         if schema.get("type") == "object" and "properties" in schema:
             schema["properties"] = {
-                k: self.resolve_schema_dict(v) for k, v in schema["properties"].items()
+                k: self.resolve_schema_dict(v, direction) for k, v in schema["properties"].items()
             }
         for keyword in ("oneOf", "anyOf", "allOf"):
             if keyword in schema:
-                schema[keyword] = [self.resolve_schema_dict(s) for s in schema[keyword]]
+                schema[keyword] = [self.resolve_schema_dict(s, direction) for s in schema[keyword]]
         if "not" in schema:
-            schema["not"] = self.resolve_schema_dict(schema["not"])
+            schema["not"] = self.resolve_schema_dict(schema["not"], direction)
         return schema
 
 

@@ -249,7 +249,7 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
     if schema is not None:
         # TypeAdapter: this is only used during spec generation
         json_schema = TypeAdapter(schema).json_schema(  # nosemgrep: type-adapter-detected
-            by_alias=True, mode="serialization", schema_generator=CheckmkGenerateJsonSchema
+            by_alias=True, mode="validation", schema_generator=CheckmkGenerateJsonSchema
         )
         # TODO: inline $defs
         assert json_schema.get("$defs") is None, "$defs not yet supported in this context"

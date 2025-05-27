@@ -10,7 +10,7 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.utils.structured_data import InventoryPaths
 
-from cmk.gui.inventory import InventoryHousekeeping
+from cmk.gui.inventory._housekeeping import InventoryHousekeeping
 
 
 def test_nothing_to_do(tmp_path: Path) -> None:

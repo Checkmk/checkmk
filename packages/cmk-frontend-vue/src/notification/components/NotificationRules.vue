@@ -12,14 +12,24 @@ defineProps<{
 </script>
 
 <template>
-  <div class="notification_rules">
-    <div v-for="(section, index) in rule_sections" :key="index" class="section rulesets">
+  <div class="notification-rules">
+    <div
+      v-for="(section, index) in rule_sections"
+      :key="index"
+      class="notification-rules__section rulesets"
+    >
       <h3 class="table">{{ section['i18n'] }}</h3>
-      <table v-for="(topic, key) in section['topics']" :key="key" class="table ruleset">
+      <table
+        v-for="(topic, key) in section['topics']"
+        :key="key"
+        class="notification-rules__table ruleset"
+      >
         <thead>
           <tr>
             <th>
-              <div v-if="topic.i18n" class="text ruleset_section ruleset">{{ topic.i18n }}</div>
+              <div v-if="topic.i18n" class="notification-rules__ruleset-topic text ruleset">
+                {{ topic.i18n }}
+              </div>
             </th>
           </tr>
         </thead>
@@ -44,11 +54,11 @@ defineProps<{
 </template>
 
 <style scoped>
-div.notification_rules {
+.notification-rules {
   display: flex;
   flex-grow: 1;
 
-  div.section {
+  .notification-rules__section {
     flex-grow: 1;
     flex-basis: 0;
     border: 1px solid var(--default-border-color);
@@ -63,7 +73,7 @@ div.notification_rules {
     max-width: calc(100% - 20px);
   }
 
-  .ruleset_section {
+  .notification-rules__ruleset-topic {
     margin-top: var(--spacing-half);
     font-weight: var(--font-weight-bold);
   }

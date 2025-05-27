@@ -13,9 +13,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="core_stats">
+  <div class="notification-core-stats">
     <h3 class="table">{{ stats['i18n']['title'] }}</h3>
-    <div class="content">
+    <div class="notification-core-stats__content">
       <p v-if="stats['sites'].length === 0">
         <CmkIcon name="checkmark" size="small" />
         {{ stats['i18n']['ok_msg'] }}
@@ -24,7 +24,7 @@ defineProps<{
         <CmkIcon name="crit-problem" size="small" />
         {{ stats['i18n']['warning_msg'] }}
       </p>
-      <div v-if="stats['sites']!.length !== 0" class="table">
+      <div v-if="stats['sites']!.length !== 0" class="notification-core-stats__table">
         <table class="data even0">
           <thead>
             <tr class="data even0">
@@ -48,11 +48,11 @@ defineProps<{
 </template>
 
 <style scoped>
-.core_stats {
+.notification-core-stats {
   padding-top: var(--spacing);
   border: 1px solid var(--default-border-color);
 
-  .content {
+  .notification-core-stats__content {
     padding: 0;
 
     > p {
@@ -60,29 +60,31 @@ defineProps<{
     }
   }
 
-  .table thead,
-  .table tbody tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
+  .notification-core-stats__table {
+    thead,
+    tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
 
-  .table tbody {
-    display: block;
-    max-height: 120px;
-    overflow-y: auto;
-  }
+    tbody {
+      display: block;
+      max-height: 120px;
+      overflow-y: auto;
+    }
 
-  .table td:first-child {
-    max-width: 50%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
+    td:first-child {
+      max-width: 50%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
 
-  .table td:last-child {
-    white-space: nowrap;
-    width: 50%;
+    td:last-child {
+      white-space: nowrap;
+      width: 50%;
+    }
   }
 }
 </style>

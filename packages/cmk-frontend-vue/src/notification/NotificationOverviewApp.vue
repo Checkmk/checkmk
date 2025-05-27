@@ -50,7 +50,7 @@ function toggleContent() {
     v-if="fallback_warning"
     :properties="fallback_warning"
   ></NotificationFallbackWarning>
-  <h3 class="notification-overview__header table" @click.prevent="toggleContent()">
+  <h3 class="notification-overview__header" @click.prevent="toggleContent()">
     <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     {{ overview_title_i18n }}
   </h3>
@@ -71,19 +71,14 @@ function toggleContent() {
   display: flex;
   margin-bottom: 24px;
 }
-.h3 {
-  background-color: none;
-}
+
 .notification-overview__header {
   margin: 0 0 12px 0;
+  font-size: var(--font-size-normal);
   cursor: pointer;
 }
+
 .notification-overview__stats-container {
   max-width: min-content;
-}
-.button {
-  height: 8px;
-  width: 8px;
-  padding: 0px 8px;
 }
 </style>

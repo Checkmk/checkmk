@@ -15,17 +15,15 @@ defineProps<{
 <template>
   <div class="notification-stats">
     <div class="notification-stats__section">
-      <h3 class="table">{{ notification_stats['i18n']['failed_notifications'] }}</h3>
-      <div class="notification-stats__content content">
-        <p
-          v-if="notification_stats['num_failed_notifications'] === 0"
-          class="notification-stats__count"
-        >
-          <CmkIcon name="checkmark" size="xlarge" />
-          {{ notification_stats['num_failed_notifications'] }}
-        </p>
-        <p v-else class="notification-stats__count">
-          <CmkIcon name="crit-problem" size="xlarge" />
+      <h3>{{ notification_stats['i18n']['failed_notifications'] }}</h3>
+      <div class="notification-stats__content">
+        <p class="notification-stats__count">
+          <CmkIcon
+            v-if="notification_stats['num_failed_notifications'] === 0"
+            name="checkmark"
+            size="xlarge"
+          />
+          <CmkIcon v-else name="crit-problem" size="xlarge" />
           {{ notification_stats['num_failed_notifications'] }}
         </p>
         <a
@@ -37,7 +35,7 @@ defineProps<{
     </div>
     <div class="notification-stats__section">
       <h3 class="table">{{ notification_stats['i18n']['sent_notifications'] }}</h3>
-      <div class="notification-stats__content content">
+      <div class="notification-stats__content">
         <p class="notification-stats__count">
           {{ notification_stats['num_sent_notifications'] }}
         </p>
@@ -67,13 +65,16 @@ defineProps<{
       margin-right: 4px;
     }
 
-    .table {
+    h3 {
       margin-top: 0;
+      font-size: var(--font-size-normal);
     }
   }
 
   .notification-stats__content {
     height: 113px;
+    padding: 10px;
+    box-sizing: border-box;
     align-content: center;
     text-align: center;
 

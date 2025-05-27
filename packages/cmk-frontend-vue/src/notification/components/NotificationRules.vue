@@ -18,16 +18,12 @@ defineProps<{
       :key="index"
       class="notification-rules__section rulesets"
     >
-      <h3 class="table">{{ section['i18n'] }}</h3>
-      <table
-        v-for="(topic, key) in section['topics']"
-        :key="key"
-        class="notification-rules__table ruleset"
-      >
+      <h3>{{ section['i18n'] }}</h3>
+      <table v-for="(topic, key) in section['topics']" :key="key" class="notification-rules__table">
         <thead>
           <tr>
             <th>
-              <div v-if="topic.i18n" class="notification-rules__ruleset-topic text ruleset">
+              <div v-if="topic.i18n" class="notification-rules__ruleset-topic">
                 {{ topic.i18n }}
               </div>
             </th>
@@ -38,7 +34,7 @@ defineProps<{
             <td colspan="2">
               <div v-for="(rule, idx) in topic['rules']" :key="idx" class="ruleset">
                 <div class="text">
-                  <a :href="rule['link']">{{ rule['i18n'] }}</a>
+                  <a :href="rule['link']" :title="rule['i18n']">{{ rule['i18n'] }}</a>
                   <span class="dots"
                     >.....................................................................</span
                   >
@@ -64,9 +60,9 @@ defineProps<{
     border: 1px solid var(--default-border-color);
     margin-left: 4px;
 
-    .table {
+    h3 {
       margin-top: 0;
-      width: auto;
+      font-size: var(--font-size-normal);
     }
   }
   div.ruleset > div.text {
@@ -74,12 +70,9 @@ defineProps<{
   }
 
   .notification-rules__ruleset-topic {
-    margin-top: var(--spacing-half);
+    margin: var(--spacing-half) var(--spacing) 0 var(--spacing);
+    float: left;
     font-weight: var(--font-weight-bold);
-  }
-
-  .table {
-    width: 100%;
   }
 }
 </style>

@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, WithJsonSchema
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -40,10 +40,14 @@ from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttribut
 from cmk.gui.watolib.host_attributes import HostAttributes
 
 HostNameOrIPv4 = Annotated[
-    HostAddress, TypedPlainValidator(str, HostAddressConverter(allow_ipv6=False))
+    HostAddress,
+    TypedPlainValidator(str, HostAddressConverter(allow_ipv6=False)),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
 ]
 HostNameOrIPv6 = Annotated[
-    HostAddress, TypedPlainValidator(str, HostAddressConverter(allow_ipv4=False))
+    HostAddress,
+    TypedPlainValidator(str, HostAddressConverter(allow_ipv4=False)),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
 ]
 
 
@@ -119,7 +123,13 @@ class BaseHostAttributeModel:
     )
 
     parents: (
-        Sequence[Annotated[HostName, TypedPlainValidator(str, HostConverter.host_name)]]
+        Sequence[
+            Annotated[
+                HostName,
+                TypedPlainValidator(str, HostConverter.host_name),
+                WithJsonSchema({"type": "string"}, mode="serialization"),
+            ]
+        ]
         | ApiOmitted
     ) = api_field(description="A list of parents of this host.", default_factory=ApiOmitted)
 
@@ -192,7 +202,12 @@ class BaseHostAttributeModel:
     )
 
     management_address: (
-        Annotated[HostAddress, TypedPlainValidator(str, HostAddressConverter())] | ApiOmitted
+        Annotated[
+            HostAddress,
+            TypedPlainValidator(str, HostAddressConverter()),
+            WithJsonSchema({"type": "string"}, mode="serialization"),
+        ]
+        | ApiOmitted
     ) = api_field(
         description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
         default_factory=ApiOmitted,

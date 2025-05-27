@@ -508,11 +508,16 @@ class NetworkScanModel:
         description="Set the maximum number of concurrent pings sent to target IP addresses.",
         # default=100,
     )
-    run_as: Annotated[UserId, TypedPlainValidator(str, UserConverter.active)] | ApiOmitted = (
-        api_field(
-            description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
-            default_factory=ApiOmitted,
-        )
+    run_as: (
+        Annotated[
+            UserId,
+            TypedPlainValidator(str, UserConverter.active),
+            WithJsonSchema({"type": "string"}, mode="serialization"),
+        ]
+        | ApiOmitted
+    ) = api_field(
+        description="Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder.",
+        default_factory=ApiOmitted,
     )
     tag_criticality: Annotated[
         str | ApiOmitted, AfterValidator(TagConverter.tag_criticality_presence)

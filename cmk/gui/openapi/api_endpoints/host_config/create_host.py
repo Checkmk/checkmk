@@ -32,7 +32,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @dataclass(kw_only=True, slots=True)
-class CreateHost:
+class CreateHostModel:
     host_name: Annotated[HostName, TypedPlainValidator(str, HostConverter.not_exists)] = api_field(
         description="The hostname or IP address of the host to be created.",
     )
@@ -41,14 +41,14 @@ class CreateHost:
         example="/folder/subfolder",
     )
     attributes: HostUpdateAttributeModel = api_field(
-        default_factory=HostUpdateAttributeModel,
+        default_factory=lambda: HostUpdateAttributeModel(dynamic_fields={}),
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         example={"ipaddress": "192.168.0.123"},
     )
 
 
 def create_host_v1(
-    body: CreateHost,
+    body: CreateHostModel,
     bake_agent: Annotated[
         bool,
         QueryParam(

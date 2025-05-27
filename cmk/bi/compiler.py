@@ -334,7 +334,9 @@ class BICompiler:
             if lookup_lock.owned():
                 lookup_lock.release()
 
-    def _generate_part_of_aggregation_lookup(self, compiled_aggregations):
+    def _generate_part_of_aggregation_lookup(
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
+    ) -> None:
         part_of_aggregation_map: dict[str, list[str]] = {}
         for aggr_id, compiled_aggregation in compiled_aggregations.items():
             for branch in compiled_aggregation.branches:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import enum
 import errno
 import os
@@ -80,48 +79,39 @@ def test_object_store_default(io: type[FileIo], exists: bool, tmp_path: Path) ->
     assert a.read_obj(default="zz") == "zz"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_file_not_existing(
-    tmp_path: Path, path_type: type[str] | type[Path]
-) -> None:
-    data = store.load_object_from_file(path_type(tmp_path / "x"), default=None)
+def test_load_data_from_file_not_existing(tmp_path: Path) -> None:
+    data = store.load_object_from_file(tmp_path / "x", default=None)
     assert data is None
 
-    data = store.load_object_from_file(path_type(tmp_path / "x"), default="DEFAULT")
+    data = store.load_object_from_file(tmp_path / "x", default="DEFAULT")
     assert data == "DEFAULT"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_file_empty(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+def test_load_data_from_file_empty(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     locked_file.write_text("", encoding="utf-8")
-    data = store.load_object_from_file(path_type(tmp_path / "x"), default="DEF")
+    data = store.load_object_from_file(tmp_path / "x", default="DEF")
     assert data == "DEF"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_not_locked(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+def test_load_data_not_locked(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
     locked_file.write_text("[1, 2]", encoding="utf-8")
 
-    store.load_object_from_file(path_type(locked_file), default=None)
-    assert store.have_lock(path_type(locked_file)) is False
+    store.load_object_from_file(locked_file, default=None)
+    assert store.have_lock(locked_file) is False
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_file_locking(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+def test_load_data_from_file_locking(tmp_path: Path) -> None:
     locked_file = tmp_path / "locked_file"
     locked_file.write_text("[1, 2]", encoding="utf-8")
 
-    data = store.load_object_from_file(path_type(locked_file), default=None, lock=True)
+    data = store.load_object_from_file(locked_file, default=None, lock=True)
     assert data == [1, 2]
-    assert store.have_lock(path_type(locked_file)) is True
+    assert store.have_lock(locked_file) is True
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_not_permitted_file(
-    tmp_path: Path, path_type: type[str] | type[Path]
-) -> None:
+def test_load_data_from_not_permitted_file(tmp_path: Path) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
     cmk.ccc.debug.disable()
 
@@ -130,20 +120,19 @@ def test_load_data_from_not_permitted_file(
     os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
-        store.load_object_from_file(path_type(locked_file), default=None)
+        store.load_object_from_file(locked_file, default=None)
     assert str(locked_file) in f"{e!s}"
     assert "Permission denied" in f"{e!s}"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_file_dict(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+def test_load_data_from_file_dict(tmp_path: Path) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
     cmk.ccc.debug.disable()
 
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())
 
-    data = store.load_object_from_file(path_type(locked_file), default=None)
+    data = store.load_object_from_file(locked_file, default=None)
     assert isinstance(data, dict)
     assert data["1"] == 2
     assert isinstance(data["ä"], str)
@@ -159,9 +148,8 @@ def test_load_mk_file(tmp_path: Path) -> None:
     assert config["abc"] == "äbc"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_save_data_to_file_pretty(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    path = path_type(tmp_path / "test")
+def test_save_data_to_file_pretty(tmp_path: Path) -> None:
+    path = tmp_path / "test"
 
     data = {
         "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
@@ -176,9 +164,8 @@ def test_save_data_to_file_pretty(tmp_path: Path, path_type: type[str] | type[Pa
     assert store.load_object_from_file(path, default=None) == data
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_save_data_to_file_not_pretty(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    path = path_type(tmp_path / "test")
+def test_save_data_to_file_not_pretty(tmp_path: Path) -> None:
+    path = tmp_path / "test"
 
     data = {
         "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
@@ -193,7 +180,6 @@ def test_save_data_to_file_not_pretty(tmp_path: Path, path_type: type[str] | typ
     assert store.load_object_from_file(path, default=None) == data
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
 @pytest.mark.parametrize(
     "data",
     [
@@ -203,25 +189,20 @@ def test_save_data_to_file_not_pretty(tmp_path: Path, path_type: type[str] | typ
         [b"foob\xc3\xa4r"],
     ],
 )
-def test_save_data_to_file(
-    tmp_path: Path,
-    path_type: type[str] | type[Path],
-    data: None | Sequence[str | int],
-) -> None:
-    path = path_type(tmp_path / "lala")
+def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> None:
+    path = tmp_path / "lala"
     store.save_object_to_file(path, data)
     assert store.load_object_from_file(path, default=None) == data
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
 @pytest.mark.parametrize(
     "data",
     [
         "föö",
     ],
 )
-def test_save_text_to_file(tmp_path: Path, path_type: type[str] | type[Path], data: str) -> None:
-    path = path_type(tmp_path / "lala")
+def test_save_text_to_file(tmp_path: Path, data: str) -> None:
+    path = tmp_path / "lala"
     store.save_text_to_file(path, data)
     assert store.load_text_from_file(path) == data
 
@@ -231,28 +212,11 @@ def test_save_text_to_file(tmp_path: Path, path_type: type[str] | type[Path], da
 )
 @pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
 def test_load_world_writable_file(tmp_path: Path, load_fun: Callable, permissions: int) -> None:
-    path = str(tmp_path / "writeme.txt")
+    path = tmp_path / "writeme.txt"
     store.save_text_to_file(path, "")
     os.chmod(path, permissions)
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
         load_fun(path, default="")
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-@pytest.mark.parametrize(
-    "data",
-    [
-        None,
-        b"foob\xc3\xa4r",
-    ],
-)
-def test_save_text_to_file_bytes(
-    tmp_path: Path, path_type: type[str] | type[Path], data: object
-) -> None:
-    path = path_type(tmp_path / "lala")
-    with pytest.raises(TypeError) as e:
-        store.save_text_to_file(path, data)  # type: ignore[arg-type]
-    assert "content argument must be Text, not bytes" in "%s" % e
 
 
 @pytest.mark.parametrize(
@@ -265,23 +229,6 @@ def test_save_bytes_to_file(tmp_path: Path, data: bytes) -> None:
     path = tmp_path / "lala"
     store.save_bytes_to_file(path, data)
     assert store.load_bytes_from_file(path, default=b"") == data
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
-@pytest.mark.parametrize(
-    "data",
-    [
-        None,
-        "föö",
-    ],
-)
-def test_save_bytes_to_file_unicode(
-    tmp_path: Path, path_type: type[str] | type[Path], data: object
-) -> None:
-    path = path_type(tmp_path / "lala")
-    with pytest.raises(TypeError) as e:
-        store.save_bytes_to_file(path, data)  # type: ignore[arg-type]
-    assert "content argument must be bytes, not Text" in "%s" % e
 
 
 def test_save_mk_file(tmp_path: Path) -> None:

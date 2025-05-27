@@ -1533,8 +1533,8 @@ class Folder(FolderProtocol):
     def hosts_file_path_without_extension(self) -> str:
         return self.filesystem_path() + "/hosts"
 
-    def rules_file_path(self) -> str:
-        return self.filesystem_path() + "/rules.mk"
+    def rules_file_path(self) -> Path:
+        return Path(self.filesystem_path()) / "rules.mk"
 
     def add_to_dictionary(self, dictionary: dict[PathWithoutSlash, Folder]) -> None:
         dictionary[self.path()] = self
@@ -1581,7 +1581,7 @@ class Folder(FolderProtocol):
             get_wato_redis_client(self.tree).save_folder_info(self)
 
     def has_rules(self) -> bool:
-        return Path(self.rules_file_path()).exists()
+        return self.rules_file_path().exists()
 
     def is_empty(self) -> bool:
         return not (self.has_hosts() or self.has_subfolders() or self.has_rules())
@@ -2805,8 +2805,8 @@ class FolderLookupCache:
     def __init__(self, tree: FolderTree) -> None:
         self._folder_tree = tree
 
-    def _path(self) -> str:
-        return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
+    def _path(self) -> Path:
+        return cmk.utils.paths.tmp_dir / "wato/wato_host_folder_lookup.cache"
 
     def get(self, host_name: HostName) -> Host | None:
         """This function tries to create a host object using its name from a lookup cache.
@@ -2845,7 +2845,7 @@ class FolderLookupCache:
     def get_cache(self) -> dict[HostName, str]:
         if "folder_lookup_cache_dict" not in g:
             cache_path = self._path()
-            if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
+            if not cache_path.exists() or cache_path.stat().st_size == 0:
                 self.build()
             try:
                 g.folder_lookup_cache_dict = store.load_object_from_pickle_file(
@@ -2857,7 +2857,7 @@ class FolderLookupCache:
         return g.folder_lookup_cache_dict
 
     def rebuild_outdated(self, max_age: int) -> None:
-        cache_path = Path(self._path())
+        cache_path = self._path()
         if cache_path.exists() and time.time() - cache_path.stat().st_mtime < max_age:
             return
 
@@ -2879,10 +2879,7 @@ class FolderLookupCache:
         store.save_bytes_to_file(self._path(), pickle.dumps(folder_lookup))
 
     def delete(self) -> None:
-        try:
-            os.unlink(self._path())
-        except FileNotFoundError:
-            pass
+        self._path().unlink(missing_ok=True)
 
     def add_hosts(self, host2path_list: Iterable[tuple[HostName, str]]) -> None:
         cache = self.get_cache()

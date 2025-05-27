@@ -205,7 +205,7 @@ class DataCache(abc.ABC):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
-        store.save_text_to_file(str(self._cache_file), json_dump)
+        store.save_text_to_file(self._cache_file, json_dump)
 
 
 class _NullContext:

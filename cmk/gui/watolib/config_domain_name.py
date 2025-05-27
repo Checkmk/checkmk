@@ -96,15 +96,13 @@ class ABCConfigDomain(abc.ABC):
     def config_dir(self) -> Path:
         raise NotImplementedError()
 
-    def config_file(self, site_specific: bool) -> str:
-        if site_specific:
-            return os.path.join(self.config_dir(), "sitespecific.mk")
-        return os.path.join(self.config_dir(), "global.mk")
+    def config_file(self, site_specific: bool) -> Path:
+        return self.config_dir() / ("sitespecific.mk" if site_specific else "global.mk")
 
     def load_full_config(
         self, site_specific: bool = False, custom_site_path: str | None = None
     ) -> GlobalSettings:
-        filename = Path(self.config_file(site_specific))
+        filename = self.config_file(site_specific)
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
 
@@ -138,15 +136,13 @@ class ABCConfigDomain(abc.ABC):
     ) -> None:
         filename = self.config_file(site_specific)
         if custom_site_path:
-            filename = os.path.join(
-                custom_site_path, os.path.relpath(filename, cmk.utils.paths.omd_root)
-            )
+            filename = Path(custom_site_path) / os.path.relpath(filename, cmk.utils.paths.omd_root)
 
         output = wato_fileheader()
         for varname, value in settings.items():
             output += f"{varname} = {pprint.pformat(value)}\n"
 
-        Path(filename).parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_text_to_file(filename, output)
 
     def save_site_globals(

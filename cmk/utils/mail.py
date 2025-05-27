@@ -15,6 +15,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate, parseaddr
+from pathlib import Path
 from typing import Literal, NamedTuple, TypeVar
 
 from cmk.ccc import version as cmk_version
@@ -135,7 +136,7 @@ def _sendmail_path() -> str:
 def default_from_address() -> str:
     environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
     if cmk_version.is_cma():
-        return load_text_from_file("/etc/nullmailer/default-from", environ_default).replace(
+        return load_text_from_file(Path("/etc/nullmailer/default-from"), environ_default).replace(
             "\n", ""
         )
 

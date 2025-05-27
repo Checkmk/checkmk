@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 import traceback
 from pathlib import Path
@@ -389,9 +388,7 @@ class ConfigDomainApache(ABCConfigDomain):
             output += "ServerLimit %d\n" % config["apache_process_tuning"]["number_of_processes"]
             output += "MaxClients %d\n" % config["apache_process_tuning"]["number_of_processes"]
 
-        config_file_path = os.path.join(
-            cmk.utils.paths.omd_root, "etc/apache/conf.d", "zzz_check_mk.conf"
-        )
+        config_file_path = cmk.utils.paths.omd_root / "etc/apache/conf.d/zzz_check_mk.conf"
         store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
@@ -507,9 +504,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         for key, val in sorted(config.get("rrdcached_tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 
-        config_file_path = os.path.join(
-            cmk.utils.paths.omd_root, "etc/rrdcached.d", "zzz_check_mk.conf"
-        )
+        config_file_path = cmk.utils.paths.omd_root / "etc/rrdcached.d/zzz_check_mk.conf"
         store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):

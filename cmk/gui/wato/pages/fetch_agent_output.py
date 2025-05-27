@@ -5,7 +5,6 @@
 
 import abc
 import ast
-import os
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -375,9 +374,8 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
                 raise MKTimeout
             raise MKGeneralException()
 
-        preview_filepath = os.path.join(
-            job_interface.get_work_dir(),
-            AgentOutputPage.file_name(self._site_id, self._host_name, self._agent_type),
+        preview_filepath = Path(job_interface.get_work_dir()) / AgentOutputPage.file_name(
+            self._site_id, self._host_name, self._agent_type
         )
 
         store.save_bytes_to_file(

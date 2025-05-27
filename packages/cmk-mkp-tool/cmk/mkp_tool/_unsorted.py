@@ -103,7 +103,7 @@ class PackageStore:
     def store(
         self,
         file_content: bytes,
-        persisting_function: Callable[[str, bytes], object],
+        persisting_function: Callable[[Path, bytes], object],
         overwrite: bool = False,
     ) -> Manifest:
         package = extract_manifest(file_content)
@@ -116,7 +116,7 @@ class PackageStore:
             raise PackageError(f"Package {package.name} {package.version} exists on the site!")
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
-        persisting_function(str(local_package_path), file_content)
+        persisting_function(local_package_path, file_content)
 
         return package
 
@@ -215,7 +215,7 @@ def create(
     manifest: Manifest,
     path_config: PathConfig,
     package_store: PackageStore,
-    persisting_function: Callable[[str, bytes], object],
+    persisting_function: Callable[[Path, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
@@ -240,7 +240,7 @@ def edit(
     new_manifest: Manifest,
     path_config: PathConfig,
     package_store: PackageStore,
-    persisting_function: Callable[[str, bytes], object],
+    persisting_function: Callable[[Path, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
@@ -277,7 +277,7 @@ def _create_enabled_mkp_from_installed_package(
     package_store: PackageStore,
     manifest: Manifest,
     path_config: PathConfig,
-    persisting_function: Callable[[str, bytes], object],
+    persisting_function: Callable[[Path, bytes], object],
     *,
     version_packaged: str,
 ) -> None:

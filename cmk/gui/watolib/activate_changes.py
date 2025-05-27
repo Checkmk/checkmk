@@ -1209,7 +1209,7 @@ class ActivateChanges:
     def _last_activation_state(self, site_id: SiteId) -> SiteActivationState:
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
-            ActivateChangesManager.persisted_site_state_path(site_id), default={}
+            Path(ActivateChangesManager.persisted_site_state_path(site_id)), default={}
         )
 
     def _get_last_change_id(self) -> str:
@@ -1614,7 +1614,7 @@ class ActivateChangesManager(ActivateChanges):
                 None,
                 f"Unknown activation process: {activation_id!r} not found",
             )
-        return store.load_object_from_file(info_path, default={})
+        return store.load_object_from_file(Path(info_path), default={})
 
     def _set_persisted_changes(self) -> None:
         """Sets the persisted_changes, which are a subset of self._changes."""
@@ -1640,7 +1640,7 @@ class ActivateChangesManager(ActivateChanges):
             mode=0o770, parents=True, exist_ok=True
         )
         to_file = {key: getattr(self, key) for key in self.info_keys}
-        store.save_object_to_file(self._info_path(self._activation_id), to_file)
+        store.save_object_to_file(Path(self._info_path(self._activation_id)), to_file)
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
@@ -1822,7 +1822,7 @@ class ActivateChangesManager(ActivateChanges):
         if self._activation_id is None:
             raise Exception("activation ID is not set")
         return store.load_object_from_file(
-            ActivateChangesManager.site_state_path(self._activation_id, site_id), default={}
+            Path(ActivateChangesManager.site_state_path(self._activation_id, site_id)), default={}
         )
 
     @staticmethod
@@ -2501,8 +2501,9 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
 
 
 def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivationState) -> None:
-    state_path = ActivateChangesManager.site_state_path(activation_id, site_id)
-    store.save_object_to_file(state_path, state)
+    store.save_object_to_file(
+        Path(ActivateChangesManager.site_state_path(activation_id, site_id)), state
+    )
 
 
 @tracer.instrument("execute_activate_changes")

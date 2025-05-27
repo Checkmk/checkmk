@@ -12,6 +12,7 @@ import logging
 import os
 import time
 from collections.abc import Container, Sequence
+from pathlib import Path
 from typing import Any, Final, Literal, NewType, TypedDict
 
 from livestatus import SiteConfigurations
@@ -392,13 +393,13 @@ class LoggedInUser:
         if self.confdir is None:
             return
 
-        path = self.confdir + "/rowselection"
+        path = self.confdir / "rowselection"
         try:
             for f in os.listdir(path):
                 if f[1] != "." and f.endswith(".mk"):
-                    p = path + "/" + f
-                    if time.time() - os.stat(p).st_mtime > active_config.selection_livetime:
-                        os.unlink(p)
+                    p = path / f
+                    if time.time() - p.stat().st_mtime > active_config.selection_livetime:
+                        p.unlink()
         except OSError:
             pass  # no directory -> no cleanup
 
@@ -479,7 +480,7 @@ class LoggedInUser:
         if self.confdir is None:
             return deflt
 
-        path = self.confdir + "/" + name + ".mk"
+        path = self.confdir / (name + ".mk")
 
         # The user files we load with this function are mostly some kind of persisted states.  In
         # case a file is corrupted for some reason we rather start over with the default instead of
@@ -505,7 +506,7 @@ class LoggedInUser:
             return 0
 
         try:
-            return os.stat(self.confdir + "/" + name + ".mk").st_mtime
+            return (self.confdir / (name + ".mk")).stat().st_mtime
         except FileNotFoundError:
             return 0
 
@@ -562,13 +563,13 @@ class LoggedInNobody(LoggedInUser):
         raise TypeError("The profiles of LoggedInNobody cannot be saved")
 
 
-def _confdir_for_user_id(user_id: UserId | None) -> str | None:
+def _confdir_for_user_id(user_id: UserId | None) -> Path | None:
     if user_id is None:
         return None
 
     confdir = cmk.utils.paths.profile_dir / user_id
     confdir.mkdir(mode=0o770, exist_ok=True)
-    return str(confdir)
+    return confdir
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:

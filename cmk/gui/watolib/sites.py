@@ -699,7 +699,7 @@ def _create_nagvis_backends(sites_config):
             cfg.append("verify_tls_ca_path=%s" % ConfigDomainCACertificates.trusted_cas_file)
 
     store.save_text_to_file(
-        "%s/etc/nagvis/conf.d/cmk_backends.ini.php" % cmk.utils.paths.omd_root, "\n".join(cfg)
+        cmk.utils.paths.omd_root / "etc/nagvis/conf.d/cmk_backends.ini.php", "\n".join(cfg)
     )
 
 

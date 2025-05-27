@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import time
 from multiprocessing.pool import Pool
+from pathlib import Path
 from typing import TypedDict
 
 import psutil
@@ -43,7 +44,7 @@ class ConfigStatus(TypedDict):
 class BICompiler:
     def __init__(
         self,
-        bi_configuration_file: str,
+        bi_configuration_file: Path,
         sites_callback: SitesCallback,
         fs: BIFileSystem | None = None,
     ) -> None:

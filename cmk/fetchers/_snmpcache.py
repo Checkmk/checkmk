@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """SNMP caching"""
 
-import os
 from pathlib import Path
 
 from cmk.ccc import store
@@ -43,10 +42,8 @@ def write_single_oid_cache(
 ) -> None:
     if not _g_single_oid_cache:
         return
-
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-    cache_path = f"{cache_dir}/{host_name}.{ipaddress}"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = cache_dir / f"{host_name}.{ipaddress}"
     store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 

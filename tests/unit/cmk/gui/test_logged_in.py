@@ -254,7 +254,7 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@checkmk.com"
     assert monitoring_user.confdir
-    assert monitoring_user.confdir.endswith("/web/test")
+    assert str(monitoring_user.confdir).endswith("/web/test")
 
     assert monitoring_user.role_ids == ["user"]
     assert monitoring_user.get_attribute("roles") == ["user"]

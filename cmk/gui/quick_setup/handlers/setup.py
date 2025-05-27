@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import os
 import traceback
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -260,8 +259,8 @@ class CompleteActionResult(BaseModel):
 
     @classmethod
     def load_from_job_result(cls, job_id: str) -> "CompleteActionResult":
-        work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
-        if not os.path.exists(work_dir):
+        work_dir = Path(BackgroundJobDefines.base_dir) / job_id
+        if not work_dir.exists():
             raise MKInternalError(None, _("Action result not found"))
         content = store.load_text_from_file(cls._file_path(work_dir))
         try:
@@ -271,15 +270,12 @@ class CompleteActionResult(BaseModel):
                 None, f"Error reading action result with content: {content}"
             ) from e
 
-    def save_to_file(self, work_dir: str) -> None:
+    def save_to_file(self, work_dir: Path) -> None:
         store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())
 
     @staticmethod
-    def _file_path(work_dir: str) -> str:
-        return os.path.join(
-            work_dir,
-            "validation_and_action_result.json",
-        )
+    def _file_path(work_dir: Path) -> Path:
+        return work_dir / "validation_and_action_result.json"
 
 
 def verify_custom_validators_and_complete_quick_setup(
@@ -360,7 +356,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
                         message=exception_message,
                         traceback=traceback.format_exc(),
                     )
-                ).save_to_file(job_interface.get_work_dir())
+                ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Starting Quick setup action..."))
@@ -378,7 +374,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
-        action_result.save_to_file(job_interface.get_work_dir())
+        action_result.save_to_file(Path(job_interface.get_work_dir()))
         job_interface.send_result_message("Job finished.")
 
 

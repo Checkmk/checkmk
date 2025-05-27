@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Iterator, Sequence
+from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -19,7 +19,7 @@ from cmk.gui.sidebar import UserSidebarSnapin
 @pytest.fixture(scope="function", autouse=True)
 def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "confdir", "")
+        m.setattr(user, "confdir", Path(""))
         m.setattr(user, "may", lambda x: True)
         yield
 

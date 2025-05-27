@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -659,13 +658,13 @@ def test_load_custom_attr_not_existing_with_default(user_id: UserId) -> None:
 
 
 def test_load_custom_attr_from_file(user_id: UserId) -> None:
-    with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
+    with userdb.custom_attr_path(user_id, "a").open("w") as f:
         f.write("xyz\n")
     assert userdb.load_custom_attr(user_id=user_id, key="a", parser=str) == "xyz"
 
 
 def test_load_custom_attr_convert(user_id: UserId) -> None:
-    with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
+    with userdb.custom_attr_path(user_id, "a").open("w") as f:
         f.write("xyz\n")
     assert (
         userdb.load_custom_attr(

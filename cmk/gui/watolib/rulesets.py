@@ -342,7 +342,7 @@ class RulesetCollection:
     def _load_folder_rulesets(
         self, folder: Folder, only_varname: RulesetName | None = None
     ) -> None:
-        path = Path(folder.rules_file_path())
+        path = folder.rules_file_path()
 
         if not path.exists():
             return  # Do not initialize rulesets when no rule at all exists
@@ -441,7 +441,7 @@ class RulesetCollection:
         *,
         pprint_value: bool,
     ) -> bool:
-        RuleConfigFile(Path(folder.rules_file_path())).save_rulesets_and_unknown_rulesets(
+        RuleConfigFile(folder.rules_file_path()).save_rulesets_and_unknown_rulesets(
             rulesets, unknown_rulesets, pprint_value=pprint_value
         )
 
@@ -1727,7 +1727,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         folder = self.folder
         path = folder.rules_file_path()
         loaded_file_config = store.load_mk_file(
-            Path(path),
+            path,
             default={
                 **RulesetCollection._context_helpers(folder),
                 **RulesetCollection._prepare_empty_rulesets(),
@@ -1775,10 +1775,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         try:
             # Remove empty rules files. This prevents needless reads
             if not content:
-                try:
-                    os.unlink(rules_file_path)
-                except FileNotFoundError:
-                    pass
+                rules_file_path.unlink(missing_ok=True)
                 return
             store.save_mk_file(
                 rules_file_path,

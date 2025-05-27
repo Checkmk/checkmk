@@ -251,7 +251,13 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     def config_dir(self) -> Path:
         return cmk.utils.paths.default_config_dir / "liveproxyd.d/wato"
 
-    def save(self, settings, site_specific=False, custom_site_path=None):
+    @override
+    def save(
+        self,
+        settings: GlobalSettings,
+        site_specific: bool = False,
+        custom_site_path: str | None = None,
+    ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
 
@@ -307,7 +313,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         }
 
     @staticmethod
-    def connection_params_defaults():
+    def connection_params_defaults() -> GlobalSettings:
         return {
             "channels": 5,
             "heartbeat": (5, 2.0),
@@ -393,12 +399,19 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 )
             )
 
-    def config_file(self, site_specific=False):
-        if site_specific:
-            return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
-        return os.path.join(self.config_dir(), "ca-certificates.mk")
+    @override
+    def config_file(self, site_specific: bool) -> Path:
+        return self.config_dir() / (
+            "ca-certificates_sitespecific.mk" if site_specific else "ca-certificates.mk"
+        )
 
-    def save(self, settings, site_specific=False, custom_site_path=None):
+    @override
+    def save(
+        self,
+        settings: GlobalSettings,
+        site_specific: bool = False,
+        custom_site_path: str | None = None,
+    ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
         current_config = settings.get(
@@ -721,14 +734,14 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         return []
 
-    def _load_site_config(self):
+    def _load_site_config(self) -> dict[str, object]:
         return self._load_omd_config(self.omd_config_dir / "site.conf")
 
-    def _load_omd_config(self, file_path: Path) -> dict:
+    def _load_omd_config(self, file_path: Path) -> dict[str, object]:
         if not file_path.exists():
             return {}
 
-        settings = {}
+        settings = dict[str, object]()
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
@@ -757,7 +770,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     #
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
-    def _from_omd_config(self, omd_config):
+    def _from_omd_config(self, omd_config: dict[str, Any]) -> dict[str, object]:
         settings: dict[str, Any] = {}
 
         for key, value in omd_config.items():
@@ -838,7 +851,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     # Bring the Setup internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
-    def _to_omd_config(self, settings):
+    def _to_omd_config(self, settings: GlobalSettings) -> GlobalSettings:
         # Convert to OMD key
         settings = {key.upper()[5:]: val for key, val in settings.items()}
 
@@ -898,7 +911,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             else:
                 settings["TRACE_SEND"] = "off"
 
-        omd_config = {}
+        omd_config = dict[str, object]()
         for key, value in settings.items():
             if isinstance(value, bool):
                 omd_config[key] = "on" if value else "off"

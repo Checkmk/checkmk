@@ -60,7 +60,7 @@ _HandlerFunction = Callable[
     [
         argparse.Namespace,
         PathConfig | None,
-        Callable[[str, bytes], None],
+        Callable[[Path, bytes], None],
     ],
     int,
 ]
@@ -70,7 +70,7 @@ _SiteExclusiveHandlerFunction = Callable[
         SiteContext,
         argparse.Namespace,
         PathConfig | None,
-        Callable[[str, bytes], None],
+        Callable[[Path, bytes], None],
     ],
     int,
 ]
@@ -80,7 +80,7 @@ def partial(wrappee: _SiteExclusiveHandlerFunction, site_context: SiteContext) -
     def wrapped(
         args: argparse.Namespace,
         path_config: PathConfig | None,
-        persisting_function: Callable[[str, bytes], None],
+        persisting_function: Callable[[Path, bytes], None],
     ) -> int:
         return wrappee(site_context, args, path_config, persisting_function)
 
@@ -93,7 +93,7 @@ _SiteOptionalHandlerFunction = Callable[
         SiteContext | None,
         argparse.Namespace,
         PathConfig | None,
-        Callable[[str, bytes], None],
+        Callable[[Path, bytes], None],
     ],
     int,
 ]
@@ -105,7 +105,7 @@ def partial_opt(
     def wrapped(
         args: argparse.Namespace,
         path_config: PathConfig | None,
-        persisting_function: Callable[[str, bytes], None],
+        persisting_function: Callable[[Path, bytes], None],
     ) -> int:
         return wrappee(site_context, args, path_config, persisting_function)
 
@@ -163,7 +163,7 @@ def _to_text(manifest: Manifest) -> str:
 def _command_path_config_template(
     _args: argparse.Namespace,
     _path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Write a template for the path config to stdout"""
     sys.stdout.write(f"{make_path_config_template().to_toml()}\n")
@@ -190,7 +190,7 @@ def _command_find(
     site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show information about local files"""
     if path_config is None:
@@ -229,7 +229,7 @@ def _args_inspect(
 def _command_inspect(
     args: argparse.Namespace,
     _path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show manifest of an MKP file"""
     file_path: Path = args.file
@@ -254,7 +254,7 @@ def _command_show_all(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show all manifests"""
     if path_config is None:
@@ -285,7 +285,7 @@ def _command_show(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show manifest of a stored package"""
     if path_config is None:
@@ -304,7 +304,7 @@ def _command_files(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show all files beloning to a package"""
     if path_config is None:
@@ -335,7 +335,7 @@ def _command_list(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Show a table of all known files, including the deployment state"""
     if path_config is None:
@@ -395,7 +395,7 @@ def _command_add(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    persisting_function: Callable[[str, bytes], None],
+    persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Add an MKP to the collection of managed MKPs"""
     if path_config is None:
@@ -428,7 +428,7 @@ def _command_release(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
     if path_config is None:
@@ -442,7 +442,7 @@ def _command_remove(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Remove a package from the site"""
     if path_config is None:
@@ -463,7 +463,7 @@ def _command_disable_outdated(
     site_context: SiteContext,
     _args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Disable MKP packages that are declared to be outdated with the new version.
 
@@ -490,7 +490,7 @@ def _command_update_active(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Disable MKP packages that are not suitable for this version, and enable others.
 
@@ -582,7 +582,7 @@ def _command_enable(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Enable a disabled package"""
     if path_config is None:
@@ -608,7 +608,7 @@ def _command_disable(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Disable an enabled package"""
     if path_config is None:
@@ -641,7 +641,7 @@ def _command_template(
     site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
+    _persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Create a template of a package manifest
 
@@ -684,7 +684,7 @@ def _command_package(
     site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    persisting_function: Callable[[str, bytes], None],
+    persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Create an .mkp file from the provided manifest.
 
@@ -713,7 +713,7 @@ def _command_package(
 
     if site_context is None:
         persisting_function(
-            f"{args.target_dir / format_file_name(package.id)}",
+            args.target_dir / format_file_name(package.id),
             package_bytes,
         )
         _logger.info("Successfully wrote package file")
@@ -853,7 +853,7 @@ def set_up_logging(verbosity: int) -> None:
 def main(
     path_config: PathConfig | None = None,
     site_context: SiteContext | None = None,
-    persisting_function: Callable[[str, bytes], None] = simple_file_write,
+    persisting_function: Callable[[Path, bytes], None] = simple_file_write,
 ) -> int:
     args = _parse_arguments(sys.argv[1:] or ["--help"], site_context)
     set_up_logging(args.verbose)

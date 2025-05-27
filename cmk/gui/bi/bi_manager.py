@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from pathlib import Path
+
 from livestatus import LivestatusOutputFormat, LivestatusResponse
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -31,8 +33,8 @@ class BIManager:
         self.computer = BIComputer(self.compiler.compiled_aggregations, self.status_fetcher)
 
     @classmethod
-    def bi_configuration_file(cls) -> str:
-        return str(bi_fs.etc.config)
+    def bi_configuration_file(cls) -> Path:
+        return bi_fs.etc.config
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:

@@ -2,7 +2,6 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import os
 import typing
 import urllib
 from collections.abc import Iterable
@@ -522,9 +521,9 @@ def fixture_locked_rule_id() -> Iterable[str]:
         debug=False,
     )
 
-    rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
+    rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
     content: str | None = None
-    if os.path.exists(rules_mk):
+    if rules_mk.exists():
         with open(rules_mk) as f:
             content = f.read()
     id_ = "f893cdfc-00c8-4d93-943b-05c4edc52068"
@@ -554,7 +553,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
     store.save(all_bundles, pprint_value=False)
 
     if content is None:
-        os.remove(rules_mk)
+        rules_mk.unlink()
     else:
         save_mk_file(rules_mk, content)
 

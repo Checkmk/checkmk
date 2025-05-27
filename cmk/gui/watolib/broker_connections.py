@@ -56,7 +56,7 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
         connections_dict = {k: asdict(v) for k, v in cfg.items()}
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path),
+            self._config_file_path,
             self._config_variable,
             connections_dict,
             pprint_value,

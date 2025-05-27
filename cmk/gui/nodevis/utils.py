@@ -53,7 +53,7 @@ class BILayoutManagement:
     @classmethod
     def save_layouts(cls) -> None:
         store.save_to_mk_file(
-            str(BILayoutManagement._config_file),
+            BILayoutManagement._config_file,
             "bi_layouts",
             active_config.bi_layouts,
             pprint_value=True,

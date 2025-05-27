@@ -150,7 +150,7 @@ class BIAggregationPack:
 
 
 class BIAggregationPacks:
-    def __init__(self, bi_configuration_file: str) -> None:
+    def __init__(self, bi_configuration_file: Path) -> None:
         super().__init__()
         self.packs: dict[str, BIAggregationPack] = {}
         self._bi_configuration_file = bi_configuration_file
@@ -305,7 +305,7 @@ class BIAggregationPacks:
                     bi_aggregation.node.action.rule_id = new_id
 
     def load_config(self) -> None:
-        if not Path(self._bi_configuration_file).exists():
+        if not self._bi_configuration_file.exists():
             self._load_config(bi_sample_config)
             return
         self._load_config(store.load_object_from_file(self._bi_configuration_file, default=None))

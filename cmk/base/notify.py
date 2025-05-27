@@ -122,10 +122,10 @@ _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
 #   '----------------------------------------------------------------------'
 
 # Default settings
-notification_logdir = str(cmk.utils.paths.var_dir / "notify")
-notification_spooldir = str(cmk.utils.paths.var_dir / "notify/spool")
+notification_logdir = cmk.utils.paths.var_dir / "notify"
+notification_spooldir = cmk.utils.paths.var_dir / "notify/spool"
 notification_bulkdir = str(cmk.utils.paths.var_dir / "notify/bulk")
-notification_log = str(cmk.utils.paths.log_dir / "notify.log")
+notification_log = cmk.utils.paths.log_dir / "notify.log"
 
 notification_log_template = (
     "$CONTACTNAME$ - $NOTIFICATIONTYPE$ - $HOSTNAME$ $HOSTSTATE$ - $SERVICEDESC$ $SERVICESTATE$ "
@@ -231,10 +231,8 @@ def do_notify(
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
-    if not os.path.exists(notification_logdir):
-        os.makedirs(notification_logdir)
-    if not os.path.exists(notification_spooldir):
-        os.makedirs(notification_spooldir)
+    notification_logdir.mkdir(parents=True, exist_ok=True)
+    notification_spooldir.mkdir(parents=True, exist_ok=True)
     _initialize_logging(logging_level)
 
     try:
@@ -442,13 +440,13 @@ def notify_notify(
 
     logger.debug(events.render_context_dump(enriched_context))
 
-    enriched_context["LOGDIR"] = notification_logdir
+    enriched_context["LOGDIR"] = str(notification_logdir)
 
     # Spool notification to remote host, if this is enabled
     if spooling in ("remote", "both"):
         create_spool_file(
             logger,
-            Path(notification_spooldir),
+            notification_spooldir,
             NotificationForward({"context": enriched_context, "forward": True}),
         )
 
@@ -1005,7 +1003,7 @@ def _process_notifications(
                     elif spooling in ("local", "both"):
                         create_spool_file(
                             logger,
-                            Path(notification_spooldir),
+                            notification_spooldir,
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),
                         )
                     else:
@@ -1880,7 +1878,7 @@ def handle_spoolfile(
         if not Path(spoolfile).exists():
             logger.warning("Skipping missing spoolfile %s.", notif_uuid[:8])
             return 2
-        data = store.load_object_from_file(spoolfile, default={}, lock=True)
+        data = store.load_object_from_file(Path(spoolfile), default={}, lock=True)
         if not data:
             logger.warning("Skipping empty spool file %s", notif_uuid[:8])
             return 2
@@ -2273,7 +2271,7 @@ def notify_bulk(
     unhandled_uuids: UUIDs = []
     for mtime, notify_uuid in uuids:
         try:
-            params, context = store.load_object_from_file(dirname + "/" + notify_uuid, default=None)
+            params, context = store.load_object_from_file(Path(dirname) / notify_uuid, default=None)
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
@@ -2412,10 +2410,10 @@ def call_bulk_notification_script(
 
 
 def store_notification_backlog(raw_context: EventContext, *, backlog_size: int) -> None:
-    path = notification_logdir + "/backlog.mk"
+    path = notification_logdir / "backlog.mk"
     if not backlog_size:
-        if os.path.exists(path):
-            os.remove(path)
+        if path.exists():
+            path.unlink()
         return
 
     backlog = store.load_object_from_file(
@@ -2427,7 +2425,7 @@ def store_notification_backlog(raw_context: EventContext, *, backlog_size: int) 
 
 
 def raw_context_from_backlog(nr: int) -> EventContext:
-    backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
+    backlog = store.load_object_from_file(notification_logdir / "backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
         console.error(f"No notification number {nr} in backlog.", file=sys.stderr)

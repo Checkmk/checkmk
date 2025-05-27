@@ -75,30 +75,30 @@ def load_custom_attr(
     load_text_from_file can be replaced by a simpler operation
     """
     attr_path = custom_attr_path(user_id, key)
-    if not os.path.exists(attr_path):
+    if not attr_path.exists():
         return None
 
     if lock:
-        result = load_text_from_file(Path(attr_path), lock=lock)
+        result = load_text_from_file(attr_path, lock=lock)
     else:
         # Simpler operation if no lock is required. Does NOT check file permissions
         # These are only considered critical in case of pickled data
         # Files in the ~/var/check_mk/web/{username} do and WILL never contain pickled data
         try:
-            with open(str(attr_path)) as file_object:
+            with open(attr_path) as file_object:
                 result = file_object.read()
         except (FileNotFoundError, OSError):
             return None
     return None if result == "" else parser(result.strip())
 
 
-def custom_attr_path(userid: UserId, key: str) -> str:
-    return str(var_dir / "web" / userid / (key + ".mk"))
+def custom_attr_path(userid: UserId, key: str) -> Path:
+    return var_dir / "web" / userid / (key + ".mk")
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
     path = custom_attr_path(userid, key)
-    Path(path).parent.mkdir(mode=0o770, exist_ok=True)
+    path.parent.mkdir(mode=0o770, exist_ok=True)
     save_text_to_file(path, f"{val}\n")
 
 
@@ -307,10 +307,7 @@ def _add_serials(users: Users) -> Users:
 
 
 def remove_custom_attr(userid: UserId, key: str) -> None:
-    try:
-        os.unlink(custom_attr_path(userid, key))
-    except OSError:
-        pass  # Ignore non existing files
+    custom_attr_path(userid, key).unlink(missing_ok=True)
 
 
 def get_online_user_ids(now: datetime) -> list[UserId]:
@@ -511,11 +508,11 @@ def write_contacts_and_users_file(
     updated_profiles = _add_custom_macro_attributes(profiles)
 
     if custom_default_config_dir:
-        check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
+        check_mk_config_dir = Path(custom_default_config_dir) / "conf.d/wato"
+        multisite_config_dir = Path(custom_default_config_dir) / "multisite.d/wato"
     else:
-        check_mk_config_dir = str(cmk.utils.paths.default_config_dir / "conf.d/wato")
-        multisite_config_dir = str(cmk.utils.paths.default_config_dir / "multisite.d/wato")
+        check_mk_config_dir = cmk.utils.paths.default_config_dir / "conf.d/wato"
+        multisite_config_dir = cmk.utils.paths.default_config_dir / "multisite.d/wato"
 
     non_contact_attributes_cache: dict[str | None, Sequence[str]] = {}
     multisite_attributes_cache: dict[str | None, Sequence[str]] = {}
@@ -559,7 +556,7 @@ def write_contacts_and_users_file(
 
     # Checkmk's monitoring contacts
     save_to_mk_file(
-        "{}/{}".format(check_mk_config_dir, "contacts.mk"),
+        check_mk_config_dir / "contacts.mk",
         "contacts",
         contacts,
         pprint_value=active_config.wato_pprint_config,
@@ -567,7 +564,7 @@ def write_contacts_and_users_file(
 
     # GUI specific user configuration
     save_to_mk_file(
-        "{}/{}".format(multisite_config_dir, "users.mk"),
+        multisite_config_dir / "users.mk",
         "multisite_users",
         users,
         pprint_value=active_config.wato_pprint_config,

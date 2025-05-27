@@ -20,5 +20,5 @@ def read_path_config(cfg_file: Path = _DEFAULT_PATH) -> PathConfig:
         raise PackageError(f"Missing configuration file: {cfg_file}") from exc
 
 
-def simple_file_write(file: str, content: bytes) -> None:
-    Path(file).write_bytes(content)
+def simple_file_write(file: Path, content: bytes) -> None:
+    file.write_bytes(content)

@@ -374,7 +374,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
     def save(self, cfg: list[ConfigurableUserConnectionSpec], pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path),
+            self._config_file_path,
             self._config_variable,
             cfg,
             pprint_value,

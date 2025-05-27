@@ -62,16 +62,6 @@ def main() {
     // todo: add error to description
     // todo: build progress mins?
 
-    stage("Prepare workspace") {
-        single_tests.prepare_workspace(
-            cleanup: [
-                "${WORKSPACE}/test-results",
-                "${checkout_dir}/${download_dir}"
-            ],
-            make_venv: false,
-        );
-    }
-
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(

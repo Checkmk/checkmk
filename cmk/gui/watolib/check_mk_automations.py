@@ -7,6 +7,8 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeVar
 
+from livestatus import SiteConfiguration
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
@@ -47,6 +49,7 @@ def _automation_serialized(
     command: str,
     *,
     site_id: SiteId,
+    site_config: SiteConfiguration,
     args: Sequence[str] | None = None,
     indata: Any = "",
     stdin_data: str | None = None,
@@ -59,7 +62,7 @@ def _automation_serialized(
     if args is None:
         args = []
 
-    if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+    if site_is_local(site_config, site_id):
         cmdline, serialized_result = check_mk_local_automation_serialized(
             command=command,
             args=args,
@@ -174,6 +177,7 @@ def discovery(
         _automation_serialized(
             "service-discovery",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[
                 *(("@scan",) if scan else ()),
                 *(("@raiseerrors",) if raise_errors else ()),
@@ -199,6 +203,7 @@ def special_agent_discovery_preview(
         _automation_serialized(
             "special-agent-discovery-preview",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=None,
             stdin_data=special_agent_preview_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
@@ -225,6 +230,7 @@ def local_discovery_preview(
         _automation_serialized(
             "service-discovery-preview",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[
                 *(("@nofetch",) if prevent_fetching else ()),
                 *(("@raiseerrors",) if raise_errors else ()),
@@ -242,6 +248,7 @@ def autodiscovery(site_id: SiteId, *, debug: bool) -> results.AutodiscoveryResul
         _automation_serialized(
             "autodiscovery",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             debug=debug,
         ),
         results.AutodiscoveryResult,
@@ -259,6 +266,7 @@ def set_autochecks_v2(
         _automation_serialized(
             "set-autochecks-v2",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=None,
             stdin_data=checks.serialize(),
             debug=debug,
@@ -279,6 +287,7 @@ def update_host_labels(
         _automation_serialized(
             "update-host-labels",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name],
             indata={label.name: label.to_dict() for label in host_labels},
             debug=debug,
@@ -298,6 +307,7 @@ def rename_hosts(
         _automation_serialized(
             "rename-hosts",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             indata=name_pairs,
             non_blocking_http=True,
             debug=debug,
@@ -318,6 +328,7 @@ def get_services_labels(
         _automation_serialized(
             "get-services-labels",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name, *service_names],
             debug=debug,
         ),
@@ -333,6 +344,7 @@ def get_service_name(
         _automation_serialized(
             "get-service-name",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[host_name, str(check_plugin_name), repr(item)],
             debug=debug,
         ),
@@ -352,6 +364,7 @@ def analyse_service(
         _automation_serialized(
             "analyse-service",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name, service_name],
             debug=debug,
         ),
@@ -370,6 +383,7 @@ def analyse_host(
         _automation_serialized(
             "analyse-host",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name],
             debug=debug,
         ),
@@ -388,6 +402,7 @@ def analyze_host_rule_matches(
         _automation_serialized(
             "analyze-host-rule-matches",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[host_name],
             indata=rules,
             debug=debug,
@@ -409,6 +424,7 @@ def analyze_service_rule_matches(
         _automation_serialized(
             "analyze-service-rule-matches",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[host_name, service_or_item],
             indata=(rules, service_labels),
             debug=debug,
@@ -425,6 +441,7 @@ def analyze_host_rule_effectiveness(
         _automation_serialized(
             "analyze-host-rule-effectiveness",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[],
             indata=rules,
             debug=debug,
@@ -443,6 +460,7 @@ def delete_hosts(
         _automation_serialized(
             "delete-hosts",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=host_names,
             debug=debug,
         ),
@@ -456,6 +474,7 @@ def restart(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> resul
         _automation_serialized(
             "restart",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=hosts_to_update,
             debug=debug,
         ),
@@ -469,6 +488,7 @@ def reload(hosts_to_update: Sequence[HostName] | None, *, debug: bool) -> result
         _automation_serialized(
             "reload",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=hosts_to_update,
             debug=debug,
         ),
@@ -486,6 +506,7 @@ def get_configuration(
         _automation_serialized(
             "get-configuration",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             indata=config_var_names,
             # We must not call this through the automation helper,
             # see automation call execution.
@@ -502,6 +523,7 @@ def update_merged_password_file(*, debug: bool) -> results.UpdatePasswordsMerged
         _automation_serialized(
             "update-passwords-merged-file",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             debug=debug,
         ),
         results.UpdatePasswordsMergedFileResult,
@@ -514,6 +536,7 @@ def get_check_information(*, debug: bool) -> results.GetCheckInformationResult:
         _automation_serialized(
             "get-check-information",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             debug=debug,
         ),
         results.GetCheckInformationResult,
@@ -532,6 +555,7 @@ def get_section_information(*, debug: bool) -> results.GetSectionInformationResu
         _automation_serialized(
             "get-section-information",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             debug=debug,
         ),
         results.GetSectionInformationResult,
@@ -558,6 +582,7 @@ def scan_parents(
         _automation_serialized(
             "scan-parents",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[
                 str(timeout),
                 str(probes),
@@ -582,6 +607,7 @@ def diag_special_agent(
         _automation_serialized(
             "diag-special-agent",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=None,
             stdin_data=diag_special_agent_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
@@ -604,6 +630,7 @@ def diag_host(
         _automation_serialized(
             "diag-host",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name, test, *args],
             debug=debug,
         ),
@@ -624,6 +651,7 @@ def active_check(
         _automation_serialized(
             "active-check",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name, check_type, item],
             sync=False,
             debug=debug,
@@ -638,6 +666,7 @@ def update_dns_cache(site_id: SiteId, *, debug: bool) -> results.UpdateDNSCacheR
         _automation_serialized(
             "update-dns-cache",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             debug=debug,
         ),
         results.UpdateDNSCacheResult,
@@ -657,6 +686,7 @@ def get_agent_output(
         _automation_serialized(
             "get-agent-output",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=[host_name, agent_type],
             timeout=timeout,
             debug=debug,
@@ -673,6 +703,7 @@ def notification_replay(
         _automation_serialized(
             "notification-replay",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[str(notification_number)],
             debug=debug,
         ),
@@ -688,6 +719,7 @@ def notification_analyse(
         _automation_serialized(
             "notification-analyse",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[str(notification_number)],
             debug=debug,
         ),
@@ -706,6 +738,7 @@ def notification_test(
         _automation_serialized(
             "notification-test",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[json.dumps(raw_context), dispatch],
             debug=debug,
         ),
@@ -719,6 +752,7 @@ def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.Notificat
         _automation_serialized(
             "notification-get-bulks",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             args=[str(int(only_ripe))],
             debug=debug,
         ),
@@ -738,6 +772,7 @@ def create_diagnostics_dump(
         _automation_serialized(
             "create-diagnostics-dump",
             site_id=site_id,
+            site_config=get_site_config(active_config, site_id),
             args=serialized_params,
             timeout=timeout,
             non_blocking_http=True,
@@ -758,6 +793,7 @@ def bake_agents(
         _automation_serialized(
             "bake-agents",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             indata="" if indata is None else indata,
             force_cli_interface=force_automation_cli_interface,
             debug=debug,
@@ -774,6 +810,7 @@ def find_unknown_check_parameter_rule_sets(
         _automation_serialized(
             "find-unknown-check-parameter-rule-sets",
             site_id=omd_site(),
+            site_config=get_site_config(active_config, omd_site()),
             debug=debug,
         ),
         results.UnknownCheckParameterRuleSetsResult,

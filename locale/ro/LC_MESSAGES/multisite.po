@@ -2729,6 +2729,10 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "Grupuri de resurse AIX HACMP"
 
+#, fuzzy
+msgid "AIX network interfaces"
+msgstr "Interfețe de rețea"
+
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX: TGZ (.tar.gz)"
 
@@ -6181,6 +6185,9 @@ msgstr "Permiteți certificatele autofirmate"
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
 "Permiteți utilizatorului să utilizeze acțiunea \"Remove all\" downtimes"
+
+msgid "Allow to add or edit elements that contain HTML"
+msgstr ""
 
 #, python-format
 msgid "Allow to see the icon %s in the host and service views"
@@ -19979,6 +19986,10 @@ msgstr "Înregistrările de program dezactivate nu sunt executate."
 msgid "Disabled sections"
 msgstr "Secțiuni pentru persoane cu handicap"
 
+#, fuzzy
+msgid "Disabled sections (AIX agent)"
+msgstr "Secțiuni dezactivate (agent Linux)"
+
 msgid "Disabled sections (Linux agent)"
 msgstr "Secțiuni dezactivate (agent Linux)"
 
@@ -20118,6 +20129,10 @@ msgstr "Disc"
 
 msgid "Disk I/O operations"
 msgstr "Operațiuni de I/O pe disc"
+
+#, fuzzy
+msgid "Disk I/O statistics for AIX"
+msgstr "Statistici NFS IO"
 
 msgid "Disk ID"
 msgstr "ID disc"
@@ -25387,6 +25402,10 @@ msgstr "Modele de grupare a fișierelor"
 msgid "File huge pages"
 msgstr "Reguli"
 
+#, fuzzy
+msgid "File information"
+msgstr "Obțineți informații despre..."
+
 msgid "File modified"
 msgstr "Fișier modificat"
 
@@ -27236,6 +27255,11 @@ msgstr "Acordă acces de citire la toate hărțile."
 msgid "Grants read access to all rotations."
 msgstr "Acordă acces de citire la toate rotațiile."
 
+msgid ""
+"Grants the access to add or edit elements that contain HTML. Enabling this "
+"for other users except admins is considered a security risk. "
+msgstr ""
+
 msgid "Granule size"
 msgstr "Dimensiunea granulelor"
 
@@ -27589,6 +27613,9 @@ msgstr "HA"
 #, fuzzy
 msgid "HA status"
 msgstr "Starea gazdei"
+
+msgid "HACMP cluster for AIX"
+msgstr ""
 
 msgid "HARD"
 msgstr "HARD"
@@ -32443,6 +32470,11 @@ msgstr ""
 "formularului, pentru a permite verificării să identifice elementul de "
 "formular corect."
 
+msgid ""
+"If this checkbox is activated, log messages received via OTLP are converted "
+"into syslog format and forwarded to the Event Console."
+msgstr ""
+
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr ""
 "Dacă această eroare persistă, vă rugăm să contactați echipa de asistență "
@@ -36697,6 +36729,10 @@ msgstr "Solicitări IPv6"
 msgid "LISTEN"
 msgstr "ASCULTĂ"
 
+#, fuzzy
+msgid "LPAR statistics for AIX"
+msgstr "Statistici RMON"
+
 msgid "LRU moved objects"
 msgstr "Obiecte mutate LRU"
 
@@ -39025,6 +39061,10 @@ msgstr "Înregistrarea miezului"
 msgid "Logging of the notification mechanics"
 msgstr "Înregistrarea în jurnal a mecanicii de notificare"
 
+#, fuzzy
+msgid "Logical Volume Manager for AIX"
+msgstr "Grup de volume logice"
+
 msgid "Logical Volume Pool"
 msgstr "Grup de volume logice"
 
@@ -39501,6 +39541,10 @@ msgid ""
 msgstr ""
 "MKP-urile pun în aplicare versiunea semantică. Vă rugăm să consultați "
 "%ssemver.org%s pentru detalii."
+
+#, fuzzy
+msgid "MP statistics for AIX"
+msgstr "Statistici RMON"
 
 msgid "MQTT broker statistics"
 msgstr "Statisticile brokerului MQTT"
@@ -41275,6 +41319,10 @@ msgstr "Utilizarea memoriei"
 msgid "Memory usage for %s hosts"
 msgstr "Utilizarea memoriei pentru gazdele %s"
 
+#, fuzzy
+msgid "Memory usage for AIX"
+msgstr "Utilizarea memoriei pentru gazdele %s"
+
 msgid "Memory usage growth"
 msgstr "Creșterea utilizării memoriei"
 
@@ -42817,6 +42865,10 @@ msgstr "Date scrise"
 msgid "NFS latency"
 msgstr "Latență de sincronizare"
 
+#, fuzzy
+msgid "NFS mounts"
+msgstr "%s alte %s"
+
 msgid "NFS operations"
 msgstr "Operațiuni NFS"
 
@@ -43024,6 +43076,10 @@ msgstr "Descoperirea NTP"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr "Sincronizarea timpului NTP sau timesyncd"
+
+#, fuzzy
+msgid "NTP time synchronization"
+msgstr "Starea de sincronizare a timpului NTP"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -44911,6 +44967,11 @@ msgstr ""
 #, fuzzy
 msgid "Note: The maximum allowed file size is 10MB. "
 msgstr "Valoarea maximă admisă este %s."
+
+msgid ""
+"Note: This will also enable the dynamic configuration, which regularly "
+"activates all pending changes on the selected site."
+msgstr ""
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -49081,6 +49142,10 @@ msgstr "Pagini"
 
 msgid "Pages per second"
 msgstr "Pagini pe secundă"
+
+#, fuzzy
+msgid "Paging statistics for AIX"
+msgstr "Statistici privind întreruperile"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Sesiuni active Palo Alto"
@@ -56686,6 +56751,7 @@ msgstr "Grafice de timp de căutare"
 msgid "Search whole subtree below the base DN"
 msgstr "Căutarea întregului subarbore sub DN de bază"
 
+#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -56700,6 +56766,7 @@ msgid ""
 "tg: Host tag\n"
 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
 "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -57389,6 +57456,10 @@ msgstr "Trimiterea evenimentelor către o gazdă syslog la distanță"
 
 msgid "Send host metrics to Graphite"
 msgstr "Trimiteți parametrii gazdă către Graphite"
+
+#, fuzzy
+msgid "Send log messages to event console"
+msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
 msgid "Send message"
 msgstr "Trimiteți un mesaj"
@@ -59062,12 +59133,12 @@ msgid "Show / hide notification context"
 msgstr "Afișați / ascundeți contextul de notificare"
 
 #, fuzzy
-msgid "Show HW/SW Inventory history of this host"
-msgstr "Afișați inventarul hardware/software al acestei gazde"
+msgid "Show HW/SW Inventory history"
+msgstr "Istoricul de inventariere a gazdei"
 
 #, fuzzy
-msgid "Show HW/SW Inventory of this host"
-msgstr "Afișați inventarul hardware/software al acestei gazde"
+msgid "Show HW/SW Inventory tree"
+msgstr "Inventarul HW/SW"
 
 msgid "Show MK Livestatus error messages"
 msgstr "Afișați mesajele de eroare MK Livestatus"
@@ -82076,6 +82147,10 @@ msgstr "Nume VM"
 msgid "VM snapshot summary"
 msgstr "Rezumat instantaneu VM"
 
+#, fuzzy
+msgid "VM statistics for AIX"
+msgstr "Statistici RMON"
+
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"
 
@@ -89788,6 +89863,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Show HW/SW Inventory history of this host"
+#~ msgstr "Afișați inventarul hardware/software al acestei gazde"
+
+#, fuzzy
+#~ msgid "Show HW/SW Inventory of this host"
+#~ msgstr "Afișați inventarul hardware/software al acestei gazde"
 
 #~ msgid "General Permissions"
 #~ msgstr "Permisiuni generale"

@@ -2738,6 +2738,10 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "Groupes de ressources AIX HACMP"
 
+#, fuzzy
+msgid "AIX network interfaces"
+msgstr "Interfaces réseau"
+
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX : TGZ (.tar.gz)"
 
@@ -6209,6 +6213,9 @@ msgstr "Ajouter un certificat CA ou auto-signé"
 
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr "Autoriser l'utilisateur à utiliser l'action \"Remove all\" ; downtimes"
+
+msgid "Allow to add or edit elements that contain HTML"
+msgstr ""
 
 #, python-format
 msgid "Allow to see the icon %s in the host and service views"
@@ -20088,6 +20095,10 @@ msgstr "Les entrées de calendrier désactivées ne sont pas exécutées."
 msgid "Disabled sections"
 msgstr "Sections désactivées"
 
+#, fuzzy
+msgid "Disabled sections (AIX agent)"
+msgstr "Sections désactivées (agent Linux)"
+
 msgid "Disabled sections (Linux agent)"
 msgstr "Sections désactivées (agent Linux)"
 
@@ -20227,6 +20238,10 @@ msgstr "Disque"
 
 msgid "Disk I/O operations"
 msgstr "Opérations d'E/S sur le disque"
+
+#, fuzzy
+msgid "Disk I/O statistics for AIX"
+msgstr "Statistiques NFS IO"
 
 msgid "Disk ID"
 msgstr "ID du disque"
@@ -25508,6 +25523,10 @@ msgstr "Modèles de regroupement de fichiers"
 msgid "File huge pages"
 msgstr "Modèles de fichiers"
 
+#, fuzzy
+msgid "File information"
+msgstr "Récupérer des informations sur..."
+
 msgid "File modified"
 msgstr "Fichier modifié"
 
@@ -27378,6 +27397,11 @@ msgstr "Accorde un accès en lecture à toutes les cartes."
 msgid "Grants read access to all rotations."
 msgstr "Accorde un accès en lecture à toutes les rotations."
 
+msgid ""
+"Grants the access to add or edit elements that contain HTML. Enabling this "
+"for other users except admins is considered a security risk. "
+msgstr ""
+
 msgid "Granule size"
 msgstr "Taille des granules"
 
@@ -27732,6 +27756,9 @@ msgstr "HA"
 #, fuzzy
 msgid "HA status"
 msgstr "Statut de l'hôte"
+
+msgid "HACMP cluster for AIX"
+msgstr ""
 
 msgid "HARD"
 msgstr "HARD"
@@ -32636,6 +32663,11 @@ msgstr ""
 "formulaire ici, afin de permettre au contrôle d'identifier l'élément de "
 "formulaire correct."
 
+msgid ""
+"If this checkbox is activated, log messages received via OTLP are converted "
+"into syslog format and forwarded to the Event Console."
+msgstr ""
+
 #, fuzzy
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr ""
@@ -36890,6 +36922,10 @@ msgstr "Demandes d'IPv6"
 msgid "LISTEN"
 msgstr "ÉCOUTEZ"
 
+#, fuzzy
+msgid "LPAR statistics for AIX"
+msgstr "Statistiques RMON"
+
 msgid "LRU moved objects"
 msgstr "Objets déplacés LRU"
 
@@ -39245,6 +39281,10 @@ msgstr "Enregistrement du noyau"
 msgid "Logging of the notification mechanics"
 msgstr "Journalisation des mécanismes de notification"
 
+#, fuzzy
+msgid "Logical Volume Manager for AIX"
+msgstr "Pool de volumes logiques"
+
 msgid "Logical Volume Pool"
 msgstr "Pool de volumes logiques"
 
@@ -39719,6 +39759,10 @@ msgid ""
 msgstr ""
 "Les MKP appliquent le versionnement sémantique. Veuillez vous référer à "
 "%ssemver.org%s pour plus de détails."
+
+#, fuzzy
+msgid "MP statistics for AIX"
+msgstr "Statistiques RMON"
 
 msgid "MQTT broker statistics"
 msgstr "Statistiques du courtier MQTT"
@@ -41519,6 +41563,10 @@ msgstr "Utilisation de la mémoire"
 msgid "Memory usage for %s hosts"
 msgstr "Utilisation de la mémoire pour %s hôtes"
 
+#, fuzzy
+msgid "Memory usage for AIX"
+msgstr "Utilisation de la mémoire pour %s hôtes"
+
 msgid "Memory usage growth"
 msgstr "Augmentation de l'utilisation de la mémoire"
 
@@ -43060,6 +43108,10 @@ msgstr "Données écrites"
 msgid "NFS latency"
 msgstr "Latence de synchronisation"
 
+#, fuzzy
+msgid "NFS mounts"
+msgstr "%s autres %s"
+
 msgid "NFS operations"
 msgstr "Opérations NFS"
 
@@ -43267,6 +43319,10 @@ msgstr "Découverte du NTP"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr "Synchronisation horaire NTP ou timesyncd"
+
+#, fuzzy
+msgid "NTP time synchronization"
+msgstr "État de la synchronisation temporelle NTP"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -45161,6 +45217,11 @@ msgstr ""
 msgid "Note: The maximum allowed file size is 10MB. "
 msgstr ""
 "Remarque : la taille maximale autorisée pour les fichiers est de 10 MB. "
+
+msgid ""
+"Note: This will also enable the dynamic configuration, which regularly "
+"activates all pending changes on the selected site."
+msgstr ""
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -49365,6 +49426,10 @@ msgstr "Pages"
 
 msgid "Pages per second"
 msgstr "Pages par seconde"
+
+#, fuzzy
+msgid "Paging statistics for AIX"
+msgstr "Statistiques sur les pannes"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto Active Sessions"
@@ -57068,6 +57133,7 @@ msgstr "Graphiques de temps de recherche"
 msgid "Search whole subtree below the base DN"
 msgstr "Recherche dans tout le sous-arbre sous le DN de base"
 
+#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -57082,6 +57148,7 @@ msgid ""
 "tg: Host tag\n"
 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
 "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -57757,6 +57824,10 @@ msgstr "Envoyer des événements à un hôte syslog distant"
 
 msgid "Send host metrics to Graphite"
 msgstr "Envoi des métriques de l'hôte à Graphite"
+
+#, fuzzy
+msgid "Send log messages to event console"
+msgstr "Envoyer des événements à la console d'événements locale"
 
 msgid "Send message"
 msgstr "Envoyer un message"
@@ -59403,12 +59474,12 @@ msgid "Show / hide notification context"
 msgstr "Afficher / masquer le contexte de notification"
 
 #, fuzzy
-msgid "Show HW/SW Inventory history of this host"
-msgstr "Afficher l'inventaire du matériel/logiciel de cet hôte"
+msgid "Show HW/SW Inventory history"
+msgstr "Historique de l'inventaire de l'hôte"
 
 #, fuzzy
-msgid "Show HW/SW Inventory of this host"
-msgstr "Afficher l'inventaire du matériel/logiciel de cet hôte"
+msgid "Show HW/SW Inventory tree"
+msgstr "Inventaire HW/SW"
 
 msgid "Show MK Livestatus error messages"
 msgstr "Afficher les messages d'erreur de MK Livestatus"
@@ -82605,6 +82676,10 @@ msgstr "Nom de la VM"
 msgid "VM snapshot summary"
 msgstr "Résumé de l'instantané de la VM"
 
+#, fuzzy
+msgid "VM statistics for AIX"
+msgstr "Statistiques RMON"
+
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"
 
@@ -90393,6 +90468,14 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Show HW/SW Inventory history of this host"
+#~ msgstr "Afficher l'inventaire du matériel/logiciel de cet hôte"
+
+#, fuzzy
+#~ msgid "Show HW/SW Inventory of this host"
+#~ msgstr "Afficher l'inventaire du matériel/logiciel de cet hôte"
 
 #~ msgid "General Permissions"
 #~ msgstr "Permissions générales"

@@ -2707,6 +2707,10 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP Resource-Gruppen"
 
+#, fuzzy
+msgid "AIX network interfaces"
+msgstr "Netzwerkschnittstellen"
+
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX: TGZ (.tar.gz)"
 
@@ -6026,6 +6030,9 @@ msgstr "Selbstsignierte Zertifikat zulassen"
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
 "Dem Nutzer erlauben die Aktion \"Alle Wartungszeiten entfernen\" auszuführen"
+
+msgid "Allow to add or edit elements that contain HTML"
+msgstr ""
 
 #, python-format
 msgid "Allow to see the icon %s in the host and service views"
@@ -19288,6 +19295,10 @@ msgstr "Deaktivierte Einträge werden nicht ausgeführt."
 msgid "Disabled sections"
 msgstr "Deaktivierte Sektionen"
 
+#, fuzzy
+msgid "Disabled sections (AIX agent)"
+msgstr "Deaktivierte Sektionen (Linux Agent)"
+
 msgid "Disabled sections (Linux agent)"
 msgstr "Deaktivierte Sektionen (Linux Agent)"
 
@@ -19420,6 +19431,10 @@ msgstr "Platte"
 
 msgid "Disk I/O operations"
 msgstr "Platten-I/O-Operationen"
+
+#, fuzzy
+msgid "Disk I/O statistics for AIX"
+msgstr "NFS E/A-Statistiken"
 
 msgid "Disk ID"
 msgstr "Platten-ID"
@@ -24501,6 +24516,10 @@ msgstr "Dateigruppierungs-Patterns"
 msgid "File huge pages"
 msgstr "Große Seiten archivieren"
 
+#, fuzzy
+msgid "File information"
+msgstr "Informationen abrufen"
+
 msgid "File modified"
 msgstr "Datei modifiziert"
 
@@ -26310,6 +26329,11 @@ msgstr "Lesezugriff auf alle Karten gewähren."
 msgid "Grants read access to all rotations."
 msgstr "Gewährt Lesezugriff auf alle Rotationen."
 
+msgid ""
+"Grants the access to add or edit elements that contain HTML. Enabling this "
+"for other users except admins is considered a security risk. "
+msgstr ""
+
 msgid "Granule size"
 msgstr "Detaillierte Größe"
 
@@ -26656,6 +26680,9 @@ msgstr "HA"
 
 msgid "HA status"
 msgstr "HA-Zustand"
+
+msgid "HACMP cluster for AIX"
+msgstr ""
 
 msgid "HARD"
 msgstr "HART"
@@ -31135,6 +31162,11 @@ msgstr ""
 "dann geben Sie bitte den Namen des Formulars hier an, damit der Check es "
 "richtig identifizieren kann."
 
+msgid ""
+"If this checkbox is activated, log messages received via OTLP are converted "
+"into syslog format and forwarded to the Event Console."
+msgstr ""
+
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr ""
 "Wenn dieser Fehler weiter besteht, wenden Sie sich bitte an das Checkmk "
@@ -35247,6 +35279,10 @@ msgstr "Listenanfragen"
 msgid "LISTEN"
 msgstr "LISTEN"
 
+#, fuzzy
+msgid "LPAR statistics for AIX"
+msgstr "RMON-Statistiken"
+
 msgid "LRU moved objects"
 msgstr "LRU bewegte Objekte"
 
@@ -37518,6 +37554,10 @@ msgstr "Logging des Kerns"
 msgid "Logging of the notification mechanics"
 msgstr "Logging der Benachrichtigungslogik"
 
+#, fuzzy
+msgid "Logical Volume Manager for AIX"
+msgstr "Logical Volume Pool"
+
 msgid "Logical Volume Pool"
 msgstr "Logical Volume Pool"
 
@@ -37973,6 +38013,10 @@ msgid ""
 msgstr ""
 "MKPs erzwingen semantische Versionierung. Einzelheiten finden Sie unter "
 "%ssemver.org%s."
+
+#, fuzzy
+msgid "MP statistics for AIX"
+msgstr "RMON-Statistiken"
 
 msgid "MQTT broker statistics"
 msgstr "MQTT-Broker-Statistiken"
@@ -39692,6 +39736,10 @@ msgstr "Speicherauslastung"
 msgid "Memory usage for %s hosts"
 msgstr "Speicherauslastung für %s Hosts"
 
+#, fuzzy
+msgid "Memory usage for AIX"
+msgstr "Speicherauslastung für %s Hosts"
+
 msgid "Memory usage growth"
 msgstr "Zunahme der Speicherauslastung"
 
@@ -41162,6 +41210,10 @@ msgstr "Geschriebene NFS-Daten"
 msgid "NFS latency"
 msgstr "NFS-Latenz"
 
+#, fuzzy
+msgid "NFS mounts"
+msgstr "andere NFS-Optionen"
+
 msgid "NFS operations"
 msgstr "NFS Operationen"
 
@@ -41326,6 +41378,10 @@ msgstr "NTP-Erkennung"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr "NTP oder timesyncd Zeitsynchronisation"
+
+#, fuzzy
+msgid "NTP time synchronization"
+msgstr "Zustand der NTP Zeitsynchronisation"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -43137,6 +43193,11 @@ msgstr ""
 
 msgid "Note: The maximum allowed file size is 10MB. "
 msgstr "Hinweis: Die maximal erlaubte Dateigröße beträgt 10MB. "
+
+msgid ""
+"Note: This will also enable the dynamic configuration, which regularly "
+"activates all pending changes on the selected site."
+msgstr ""
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -47007,6 +47068,10 @@ msgstr "Seiten"
 
 msgid "Pages per second"
 msgstr "Seiten pro Sekunde"
+
+#, fuzzy
+msgid "Paging statistics for AIX"
+msgstr "Ausfall-Statistiken"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto active Sessions"
@@ -54263,6 +54328,7 @@ msgstr "Suche nach Zeitgraphen"
 msgid "Search whole subtree below the base DN"
 msgstr "Gesamten Teilbaum unter Basis DN durchsuchen"
 
+#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -54277,6 +54343,7 @@ msgid ""
 "tg: Host tag\n"
 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
 "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -54958,6 +55025,10 @@ msgstr "Ereignisse an Remote-Syslog-Host senden"
 
 msgid "Send host metrics to Graphite"
 msgstr "Host-Metriken an Graphite senden"
+
+#, fuzzy
+msgid "Send log messages to event console"
+msgstr "Sende Ereignisse an lokale Event Console"
 
 msgid "Send message"
 msgstr "Nachricht senden"
@@ -56519,11 +56590,12 @@ msgid "Show / hide notification context"
 msgstr "Benachrichtigungskontext zeigen / verstecken"
 
 #, fuzzy
-msgid "Show HW/SW Inventory history of this host"
-msgstr "HW-/SW-Inventur dieses Hosts anzeigen"
+msgid "Show HW/SW Inventory history"
+msgstr "Historie der HW-/SW-Inventur"
 
-msgid "Show HW/SW Inventory of this host"
-msgstr "HW-/SW-Inventur dieses Hosts anzeigen"
+#, fuzzy
+msgid "Show HW/SW Inventory tree"
+msgstr "HW-/SW-Inventur ausführen"
 
 msgid "Show MK Livestatus error messages"
 msgstr "Zeige MK Livestatus Fehlermeldungen"
@@ -78733,6 +78805,10 @@ msgstr "VM-Name"
 msgid "VM snapshot summary"
 msgstr "Zusammenfassung der VM-Schnappschüsse"
 
+#, fuzzy
+msgid "VM statistics for AIX"
+msgstr "RMON-Statistiken"
+
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"
 
@@ -86411,6 +86487,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, fuzzy
+#~ msgid "Show HW/SW Inventory history of this host"
+#~ msgstr "HW-/SW-Inventur dieses Hosts anzeigen"
+
+#~ msgid "Show HW/SW Inventory of this host"
+#~ msgstr "HW-/SW-Inventur dieses Hosts anzeigen"
 
 #~ msgid "General Permissions"
 #~ msgstr "Globale Berechtigungen"

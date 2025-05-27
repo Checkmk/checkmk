@@ -241,7 +241,7 @@ function getSoftwareFromInstaller {
                 foreach ($field in $fields) {
                     $values += $product.InstallProperty($field)
                 }
-                Write-Output ($values -join "`0")
+                Write-Output ($values -join "$([char]31)")
             }
             else {
                 # Using Products method
@@ -250,7 +250,7 @@ function getSoftwareFromInstaller {
                 foreach ($field in $fields) {
                     $values += $installer.ProductInfo($productCode, $field)
                 }
-                Write-Output ($values -join "`0")
+                Write-Output ($values -join "$([char]31)")
             }
         }
         catch {
@@ -311,7 +311,7 @@ function getSoftwareFromRegistry {
                 }
 
                 if ($booleanContent) {
-                    Write-Output ($values -join "`0")
+                    Write-Output ($values -join "$([char]31)")
                 }
             }
         }
@@ -394,7 +394,7 @@ startSection "win_ip_r" 124 $timeUntil
 getRouteTable
 
 # Installed Software
-startSection "win_wmi_software" 0 $timeUntil
+startSection "win_wmi_software" 31 $timeUntil
 getSoftwareFromInstaller @("ProductName", "Publisher", "VersionString", "InstallDate", "Language")
 
 # Windows Updates
@@ -402,7 +402,7 @@ startSection "win_wmi_updates" 44 $timeUntil
 getUpdates
 
 # Search Registry
-startSection "win_reg_uninstall" 0 $timeUntil
+startSection "win_reg_uninstall" 31 $timeUntil
 getSoftwareFromRegistry
 
 # Search exes

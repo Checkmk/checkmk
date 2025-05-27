@@ -7,6 +7,7 @@
 import abc
 import copy
 from collections.abc import Collection, Iterator
+from dataclasses import asdict
 from typing import Final, overload
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -55,6 +56,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+from cmk.shared_typing.mode_host import ModeHost, ModeHostI18n
 
 from ...watolib.configuration_bundle_store import is_locked_by_quick_setup
 from ._host_attributes import configure_attributes
@@ -260,6 +263,20 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.div(lock_message, class_="info")
 
         self._page_form_quick_setup_warning()
+
+        html.vue_app(
+            app_name="host",
+            data=asdict(
+                ModeHost(
+                    i18n=ModeHostI18n(
+                        error_host_not_dns_resolvable=_(
+                            "Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set 'No IP' in the 'Network address' section."
+                        ),
+                        success_host_dns_resolvable=_("Name is DNS-resolvable"),
+                    ),
+                )
+            ),
+        )
 
         with html.form_context("edit_host", method="POST"):
             html.prevent_password_auto_completion()

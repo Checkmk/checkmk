@@ -7,19 +7,28 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
+from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 check_info = {}
 
+Section = Mapping[str, Any]
 
-def parse_jolokia_jvm_threading(string_table):
+
+def parse_jolokia_jvm_threading(string_table: StringTable) -> Section:
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
@@ -35,12 +44,14 @@ def parse_jolokia_jvm_threading(string_table):
     return parsed
 
 
-def discover_jolokia_jvm_threading(section):
+def discover_jolokia_jvm_threading(section: Section) -> LegacyDiscoveryResult:
     yield from ((instance, {}) for instance, data in section.items() if data.get("Threading"))
 
 
-def check_jolokia_jvm_threading(item, params, parsed):
-    if not (instance_data := parsed.get(item)):
+def check_jolokia_jvm_threading(
+    item: str, params: Mapping[str, object], section: Section
+) -> LegacyCheckResult:
+    if not (instance_data := section.get(item)):
         return
     data = instance_data.get("Threading", {})
     count = data.get("ThreadCount")
@@ -79,19 +90,27 @@ check_info["jolokia_jvm_threading"] = LegacyCheckDefinition(
 )
 
 
-def discover_jolokia_jvm_threading_pool(parsed):
-    for instance in parsed:
-        threadpool_data = parsed[instance].get("ThreadPool", {})
+def discover_jolokia_jvm_threading_pool(section: Section) -> LegacyDiscoveryResult:
+    for instance, instance_data in section.items():
+        threadpool_data = instance_data.get("ThreadPool", {})
         for name in threadpool_data:
             yield f"{instance} ThreadPool {name}", {}
 
 
-def check_jolokia_jvm_threading_pool(item, params, parsed):
+def check_jolokia_jvm_threading_pool(
+    item: str,
+    params: dict[str, tuple[str, tuple[int, int]]],
+    section: Section,
+) -> LegacyCheckResult:
     instance, pool_name = item.split(" ThreadPool ", 1)
-    thread_pools = parsed.get(instance, {}).get("ThreadPool", {})
+    thread_pools = section.get(instance, {}).get("ThreadPool", {})
     threadpool_info = thread_pools.get(pool_name, {})
     max_threads = threadpool_info.get("maxThreads")
     if max_threads is None:
+        return
+
+    if max_threads == -1:
+        yield 0, "Maximum threads: not set (unlimited)"
         return
 
     yield 0, "Maximum threads: %d" % max_threads
@@ -103,10 +122,11 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
         value = threadpool_info.get(key)
         if value is None:
             continue
-        warn, crit = params.get(key, (None, None))
-        if warn is not None:
-            warn *= max_threads / 100.0
-            crit *= max_threads / 100.0
+
+        levels_type, (warn, crit) = params.get(key, (None, (None, None)))
+        if warn is not None and levels_type == "percentage":
+            warn = max_threads * warn / 100.0
+            crit = max_threads * crit / 100.0
 
         yield check_levels(
             value,
@@ -126,6 +146,6 @@ check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
     check_function=check_jolokia_jvm_threading_pool,
     check_ruleset_name="jvm_tp",
     check_default_parameters={
-        "currentThreadsBusy": (80, 90),
+        "currentThreadsBusy": ("percentage", (80, 90)),
     },
 )

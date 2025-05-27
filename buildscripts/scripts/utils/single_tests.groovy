@@ -46,23 +46,6 @@ def common_prepare(Map args) {
     return [safe_branch_name: safe_branch_name, docker_tag: docker_tag];
 }
 
-def prepare_workspace(Map args) {
-    dir("${checkout_dir}") {
-        if (args.containsKey("cleanup")) {
-            args["cleanup"].each { directory ->
-                sh("rm -rf ${directory}");
-            }
-        }
-
-        if (args.containsKey("make_venv")) {
-            if (args["make_venv"]) {
-                // Initialize our virtual environment before parallelization
-                sh("make .venv");
-            }
-        }
-    }
-}
-
 def fetch_package(Map args) {
     // this is a quick fix for FIPS based tests, see CMK-20851
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;

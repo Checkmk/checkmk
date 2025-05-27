@@ -16,10 +16,11 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NoReturn
 
-from pydantic import GetCoreSchemaHandler, TypeAdapter
-from pydantic_core import core_schema, CoreSchema
+from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler, TypeAdapter
+from pydantic_core import CoreSchema, PydanticOmit
+from pydantic_core.core_schema import is_instance_schema
 
 
 class ApiOmitted:
@@ -39,7 +40,13 @@ class ApiOmitted:
     def __get_pydantic_core_schema__(
         cls, _source_type: type[Any], _handler: GetCoreSchemaHandler
     ) -> CoreSchema:
-        return core_schema.is_instance_schema(cls)
+        return is_instance_schema(cls)
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> NoReturn:
+        raise PydanticOmit()
 
     def __new__(cls, *args: object, **kwargs: object) -> "ApiOmitted":
         # Singleton pattern to ensure only one instance of ApiOmitted exists
@@ -70,4 +77,6 @@ def json_dump_without_omitted[T](
     """
     # This will be called at most once per REST-API request
     adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
+    # TODO: Rework how we deal with omitted values once pydantic supports either `PydanticOmit`
+    #       in serializers or implements `exclude_if`
     return adapter.dump_json(instance, by_alias=True, exclude_defaults=True, round_trip=is_testing)

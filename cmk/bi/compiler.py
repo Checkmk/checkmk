@@ -57,7 +57,7 @@ class BICompiler:
         self._metadata_store = storage.MetadataStore(self._fs)
         self._frozen_store = storage.FrozenAggregationStore(self._fs.var)
 
-        self._redis_client: Redis[str] | None = None
+        self._redis_client: Redis[str] = get_redis_client()
 
         self._bi_packs = BIAggregationPacks(bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback, self._fs)
@@ -308,22 +308,14 @@ class BICompiler:
 
         return current_configstatus
 
-    def _get_redis_client(self) -> Redis[str]:
-        if self._redis_client is None:
-            self._redis_client = get_redis_client()
-        return self._redis_client
-
     def is_part_of_aggregation(self, host_name: str, service_description: str) -> bool:
         self._check_redis_lookup_integrity()
         return bool(
-            self._get_redis_client().exists(
-                f"bi:aggregation_lookup:{host_name}:{service_description}"
-            )
+            self._redis_client.exists(f"bi:aggregation_lookup:{host_name}:{service_description}")
         )
 
     def _check_redis_lookup_integrity(self):
-        client = self._get_redis_client()
-        if client.exists("bi:aggregation_lookup"):
+        if self._redis_client.exists("bi:aggregation_lookup"):
             return True
 
         # The following scenario only happens if the redis daemon loses its data
@@ -331,10 +323,10 @@ class BICompiler:
         # What happens if multiple apache process want to read the cache at the same time:
         # - One apache gets the lock, updates the cache
         # - The other apache wait till the cache has been updated
-        lookup_lock = client.lock("bi:aggregation_lookup_lock")
+        lookup_lock = self._redis_client.lock("bi:aggregation_lookup_lock")
         try:
             lookup_lock.acquire()
-            if not client.exists("bi:aggregation_lookup"):
+            if not self._redis_client.exists("bi:aggregation_lookup"):
                 self.load_compiled_aggregations()
                 self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
             return None
@@ -355,17 +347,15 @@ class BICompiler:
                         f"{aggr_id}\t{branch.properties.title}"
                     )
 
-        client = self._get_redis_client()
-
         # The main task here is to add/update/remove keys without causing other processes
         # to wait for the updated data. There is no tempfile -> live mechanism.
         # Updates are done on the live data via pipeline, using transactions.
 
         # Fetch existing keys
-        existing_keys = set(client.scan_iter("bi:aggregation_lookup:*"))
+        existing_keys = set(self._redis_client.scan_iter("bi:aggregation_lookup:*"))
 
         # Update keys
-        pipeline = client.pipeline()
+        pipeline = self._redis_client.pipeline()
         for key, values in part_of_aggregation_map.items():
             pipeline.sadd(key, *values)
         pipeline.set("bi:aggregation_lookup", "1")

@@ -55,15 +55,6 @@ def main() {
     // todo: add error to description
     // todo: build progress mins?
 
-    stage("Prepare workspace") {
-        single_tests.prepare_workspace(
-            cleanup: [
-                "${WORKSPACE}/test-results",
-            ],
-            make_venv: false,
-        );
-    }
-
     dir("${checkout_dir}") {
         inside_container(
             args: [

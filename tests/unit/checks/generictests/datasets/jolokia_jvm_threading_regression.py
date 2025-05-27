@@ -65,7 +65,7 @@ checks = {
     "pool": [
         (
             "JIRA ThreadPool http-nio-8080",
-            {"currentThreadsBusy": (5, 90)},
+            {"currentThreadsBusy": ("percentage", (5, 90))},
             [
                 (0, "Maximum threads: 150", []),
                 (

@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-permission_section_sidebar_snapins = PermissionSection(
+PERMISSION_SECTION_SIDEBAR_SNAPINS = PermissionSection(
     name="sidesnap",
     title=_("Sidebar elements"),
     do_sort=True,

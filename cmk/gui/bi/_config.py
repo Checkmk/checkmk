@@ -84,7 +84,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.wato import ContactGroupSelection, permission_section_wato, TileMenuRenderer
+from cmk.gui.wato import ContactGroupSelection, PERMISSION_SECTION_WATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.groups_io import load_contact_group_information
@@ -141,7 +141,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=permission_section_wato,
+            section=PERMISSION_SECTION_WATO,
             name="bi_rules",
             title=_l("Business Intelligence rules and aggregations"),
             description=_l(
@@ -154,7 +154,7 @@ def register(
 
     permission_registry.register(
         Permission(
-            section=permission_section_wato,
+            section=PERMISSION_SECTION_WATO,
             name="bi_admin",
             title=_l("Business Intelligence administration"),
             description=_l(

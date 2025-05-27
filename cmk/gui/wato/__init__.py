@@ -95,7 +95,7 @@ from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
 from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
-from ._permissions import permission_section_wato as permission_section_wato
+from ._permissions import PERMISSION_SECTION_WATO as PERMISSION_SECTION_WATO
 from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
 from ._rulespec_groups import (
     RulespecGroupCheckParametersApplications as RulespecGroupCheckParametersApplications,

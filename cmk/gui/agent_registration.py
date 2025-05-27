@@ -49,10 +49,10 @@ CONNECTION_MODE_FIELD = _AgentConnectionField(
 
 
 def register(permission_section_registry: PermissionSectionRegistry) -> None:
-    permission_section_registry.register(permission_section_agent_registration)
+    permission_section_registry.register(PERMISSION_SECTION_AGENT_REGISTRATION)
 
 
-permission_section_agent_registration = PermissionSection(
+PERMISSION_SECTION_AGENT_REGISTRATION = PermissionSection(
     name="agent_registration",
     title=_("Agent registration"),
 )

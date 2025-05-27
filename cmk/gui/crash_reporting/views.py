@@ -34,7 +34,7 @@ from cmk.gui.views.command import (
     Command,
     CommandActionResult,
     CommandGroupVarious,
-    permission_section_action,
+    PERMISSION_SECTION_ACTION,
 )
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
 from cmk.gui.visuals.filter import Filter
@@ -325,7 +325,7 @@ SorterCrashTime = Sorter(
 
 PermissionActionDeleteCrashReport = permission_registry.register(
     Permission(
-        section=permission_section_action,
+        section=PERMISSION_SECTION_ACTION,
         name="delete_crash_report",
         title=_l("Delete crash reports"),
         description=_l("Delete crash reports created by Checkmk"),

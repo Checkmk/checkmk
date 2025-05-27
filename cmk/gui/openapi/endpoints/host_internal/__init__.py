@@ -20,7 +20,7 @@ from cmk.utils.agent_registration import (
     HostAgentConnectionMode,
 )
 
-from cmk.gui.agent_registration import permission_section_agent_registration
+from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -40,7 +40,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 permission_registry.register(
     Permission(
-        section=permission_section_agent_registration,
+        section=PERMISSION_SECTION_AGENT_REGISTRATION,
         name="register_any_existing_host",
         title=_l("Register any existing host"),
         description=_l("This permission allows the registration of any existing host."),
@@ -51,7 +51,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=permission_section_agent_registration,
+        section=PERMISSION_SECTION_AGENT_REGISTRATION,
         name="register_managed_existing_host",
         title=_l("Register managed existing host"),
         description=_l(

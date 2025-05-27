@@ -6,7 +6,7 @@
 from .base import Command, CommandActionResult, CommandSpec
 from .commands import (
     CommandGroupVarious,
-    permission_section_action,
+    PERMISSION_SECTION_ACTION,
     PermissionActionDowntimes,
     register,
 )
@@ -35,7 +35,7 @@ __all__ = [
     "get_command_groups",
     "should_show_command_form",
     "core_command",
-    "permission_section_action",
+    "PERMISSION_SECTION_ACTION",
     "PermissionActionDowntimes",
     "register",
 ]

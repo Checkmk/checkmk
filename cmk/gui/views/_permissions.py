@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-permission_section_views = PermissionSection(
+PERMISSION_SECTION_VIEWS = PermissionSection(
     name="view",
     title=_("Views"),
     do_sort=True,

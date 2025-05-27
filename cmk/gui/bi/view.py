@@ -50,7 +50,7 @@ from cmk.gui.views.command import (
     CommandActionResult,
     CommandGroup,
     CommandSpec,
-    permission_section_action,
+    PERMISSION_SECTION_ACTION,
 )
 from cmk.gui.views.command.base import CommandSpecWithoutSite
 from cmk.gui.visuals import get_livestatus_filter_headers
@@ -1091,7 +1091,7 @@ def compute_output_message(effective_state, rule):
 
 PermissionFreezeAggregation = permission_registry.register(
     Permission(
-        section=permission_section_action,
+        section=PERMISSION_SECTION_ACTION,
         name="aggregation_freeze",
         title=_l("Freeze aggregations"),
         description=_l("Freeze aggregations"),

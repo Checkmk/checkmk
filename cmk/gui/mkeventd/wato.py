@@ -203,7 +203,7 @@ from .config_domain import ConfigDomainEventConsole, EVENT_CONSOLE
 from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, eventd_configuration, service_levels
 from .livestatus import execute_command
-from .permission_section import permission_section_event_console
+from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
 def register(
@@ -3767,7 +3767,7 @@ def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
 #   '----------------------------------------------------------------------'
 
 ConfigureECPermission = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="config",
     title=_l("Configuration of Event Console"),
     description=_l("This permission allows to configure the global settings of the event console."),
@@ -3776,7 +3776,7 @@ ConfigureECPermission = Permission(
 
 
 ConfigureECRulesPermission = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="edit",
     title=_l("Configuration of event rules"),
     description=_l(
@@ -3787,7 +3787,7 @@ ConfigureECRulesPermission = Permission(
 
 
 ActivateECPermission = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="activate",
     title=_l("Activate changes for event console"),
     description=_l(
@@ -3799,7 +3799,7 @@ ActivateECPermission = Permission(
 )
 
 SwitchSlaveReplicationPermission = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="switchmode",
     title=_l("Switch slave replication mode"),
     description=_l(

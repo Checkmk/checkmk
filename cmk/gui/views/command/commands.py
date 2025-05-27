@@ -78,7 +78,7 @@ def register(
     command_registry.register(CommandRemoveDowntimesHostServicesTable)
     command_registry.register(CommandRemoveDowntimesDowntimesTable)
     command_registry.register(CommandRemoveComments)
-    permission_section_registry.register(permission_section_action)
+    permission_section_registry.register(PERMISSION_SECTION_ACTION)
     permission_registry.register(PermissionActionReschedule)
     permission_registry.register(PermissionActionNotifications)
     permission_registry.register(PermissionActionEnableChecks)
@@ -105,7 +105,7 @@ class CommandGroupVarious(CommandGroup):
         return 20
 
 
-permission_section_action = PermissionSection(
+PERMISSION_SECTION_ACTION = PermissionSection(
     name="action",
     title=_("Commands on host and services"),
     do_sort=True,
@@ -122,7 +122,7 @@ permission_section_action = PermissionSection(
 #   '----------------------------------------------------------------------'
 
 PermissionActionReschedule = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="reschedule",
     title=_l("Reschedule checks"),
     description=_l("Reschedule host and service checks"),
@@ -222,7 +222,7 @@ CommandReschedule = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionNotifications = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="notifications",
     title=_l("Enable/disable notifications"),
     description=_l("Enable and disable notifications on hosts and services"),
@@ -316,7 +316,7 @@ CommandNotifications = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionEnableChecks = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="enablechecks",
     title=_l("Enable/disable checks"),
     description=_l("Enable and disable active or passive checks on hosts and services"),
@@ -448,7 +448,7 @@ CommandTogglePassiveChecks = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionClearModifiedAttributes = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="clearmodattr",
     title=_l("Reset modified attributes"),
     description=_l(
@@ -521,7 +521,7 @@ CommandClearModifiedAttributes = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionFakeChecks = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="fakechecks",
     title=_l("Fake check results"),
     description=_l("Manually submit check results for host and service checks"),
@@ -695,7 +695,7 @@ CommandFakeCheckResult = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionCustomNotification = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="customnotification",
     title=_l("Send custom notification"),
     description=_l(
@@ -783,7 +783,7 @@ CommandCustomNotification = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionAcknowledge = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="acknowledge",
     title=_l("Acknowledge"),
     description=_l("Acknowledge host and service problems and remove acknowledgements"),
@@ -1167,7 +1167,7 @@ CommandRemoveAcknowledgments = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionAddComment = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="addcomment",
     title=_l("Add comments"),
     description=_l("Add comments to hosts or services, and remove comments"),
@@ -1243,7 +1243,7 @@ CommandAddComment = Command(
 #   '----------------------------------------------------------------------'
 
 PermissionActionDowntimes = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="downtimes",
     title=_l("Set/remove downtimes"),
     description=_l("Schedule and remove downtimes on hosts and services"),
@@ -1251,7 +1251,7 @@ PermissionActionDowntimes = Permission(
 )
 
 PermissionRemoveAllDowntimes = Permission(
-    section=permission_section_action,
+    section=PERMISSION_SECTION_ACTION,
     name="remove_all_downtimes",
     title=_l("Remove all downtimes"),
     description=_l('Allow the user to use the action "Remove all" downtimes'),

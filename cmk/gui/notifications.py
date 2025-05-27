@@ -47,7 +47,7 @@ def register(
     page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
 ) -> None:
     page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
-    permission_section_registry.register(permission_section_notification_plugins)
+    permission_section_registry.register(PERMISSION_SECTION_NOTIFICATION_PLUGINS)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -64,7 +64,7 @@ g_columns: list[str] = [
     "comment",
 ]
 
-permission_section_notification_plugins = PermissionSection(
+PERMISSION_SECTION_NOTIFICATION_PLUGINS = PermissionSection(
     name="notification_plugin",
     title=_("Notification plug-ins"),
     do_sort=True,

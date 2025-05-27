@@ -32,7 +32,7 @@ from ._helpers import write_snapin_exception as write_snapin_exception
 from ._master_control import MasterControlSnapin
 from ._performance import Performance
 from ._permission_section import (
-    permission_section_sidebar_snapins as permission_section_sidebar_snapins,
+    PERMISSION_SECTION_SIDEBAR_SNAPINS as PERMISSION_SECTION_SIDEBAR_SNAPINS,
 )
 from ._registry import all_snapins as all_snapins
 from ._registry import CustomSnapins as CustomSnapins

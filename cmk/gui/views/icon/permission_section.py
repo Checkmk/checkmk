@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-permission_section_icons_and_actions = PermissionSection(
+PERMISSION_SECTION_ICONS_AND_ACTIONS = PermissionSection(
     name="icons_and_actions",
     title=_("Icons and Actions"),
     do_sort=True,

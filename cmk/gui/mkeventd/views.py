@@ -72,7 +72,7 @@ from cmk.gui.visuals.filter import Filter
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices
 from .livestatus import execute_command
-from .permission_section import permission_section_event_console
+from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
 def register(
@@ -278,7 +278,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows: Rows) -> None:
 
 
 PermissionECSeeAll = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="seeall",
     title=_("See all events"),
     description=_(
@@ -289,7 +289,7 @@ PermissionECSeeAll = Permission(
 )
 
 PermissionECSeeUnrelated = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="seeunrelated",
     title=_("See events not related to a known host"),
     description=_(
@@ -301,7 +301,7 @@ PermissionECSeeUnrelated = Permission(
 )
 
 PermissionECSeeInTacticalOverview = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="see_in_tactical_overview",
     title=_("See events in the sidebar element 'Overview'"),
     description=_(
@@ -1253,7 +1253,7 @@ class PainterHistoryAddinfo(Painter):
 #   '----------------------------------------------------------------------'
 
 PermissionECUpdateEvent = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="update",
     title=_l("Update an event"),
     description=_l("Needed for acknowledging and changing the comment and contact of an event"),
@@ -1262,7 +1262,7 @@ PermissionECUpdateEvent = Permission(
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 PermissionECUpdateComment = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="update_comment",
     title=_l("Update an event: change comment"),
     description=_l("Needed for changing a comment when updating an event"),
@@ -1271,7 +1271,7 @@ PermissionECUpdateComment = Permission(
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 PermissionECUpdateContact = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="update_contact",
     title=_l("Update an event: change contact"),
     description=_l("Needed for changing a contact when updating an event"),
@@ -1382,7 +1382,7 @@ CommandECUpdateEvent = ECCommand(
 )
 
 PermissionECChangeEventState = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="changestate",
     title=_l("Change event state"),
     description=_l(
@@ -1455,7 +1455,7 @@ CommandECChangeState = ECCommand(
 )
 
 PermissionECCustomActions = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="actions",
     title=_l("Perform custom action"),
     description=_l(
@@ -1509,7 +1509,7 @@ CommandECCustomAction = ECCommand(
 )
 
 PermissionECArchiveEvent = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="delete",
     title=_l("Archive an event"),
     description=_l("Finally archive an event without any further action"),
@@ -1552,7 +1552,7 @@ CommandECArchiveEvent = ECCommand(
 )
 
 PermissionECArchiveEventsOfHost = Permission(
-    section=permission_section_event_console,
+    section=PERMISSION_SECTION_EVENT_CONSOLE,
     name="archive_events_of_hosts",
     title=_l("Archive events of hosts"),
     description=_l("Archive all open events of all hosts shown in host views"),

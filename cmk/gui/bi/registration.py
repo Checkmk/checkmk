@@ -20,7 +20,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 from . import _config, _filters, _icons, _openapi, _snapins, _valuespecs
 from ._host_rename import rename_host_in_bi
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
-from .permissions import permission_section_bi, PermissionBISeeAll
+from .permissions import PERMISSION_SECTION_BI, PermissionBISeeAll
 from .view import (
     CommandFreezeAggregation,
     CommandGroupAggregations,
@@ -94,7 +94,7 @@ def register(
     painter_option_registry.register(PainterOptionAggrTreeType())
     painter_option_registry.register(PainterOptionAggrWrap())
 
-    permission_section_registry.register(permission_section_bi)
+    permission_section_registry.register(PERMISSION_SECTION_BI)
     permission_registry.register(PermissionBISeeAll)
 
     command_group_registry.register(CommandGroupAggregations)

@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.permissions import PermissionSection
 
-permission_section_event_console = PermissionSection(
+PERMISSION_SECTION_EVENT_CONSOLE = PermissionSection(
     name="mkeventd",
     title=_("Event Console"),
 )

@@ -44,7 +44,7 @@ from cmk.gui import sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
-from cmk.gui.default_permissions import permission_section_general
+from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -713,7 +713,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="edit_" + cls.type_name(),
                 title=_l("Customize and use %s") % title_lower,
                 description=_l("Allows to create own %s, customize built-in %s and use them.")
@@ -724,7 +724,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="publish_" + cls.type_name(),
                 title=_l("Publish %s") % title_lower,
                 description=_l("Make %s visible and usable for all users.") % title_lower,
@@ -734,7 +734,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="publish_to_groups_" + cls.type_name(),
                 title=_l("Publish %s to allowed contact groups") % title_lower,
                 description=_l(
@@ -747,7 +747,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="publish_to_foreign_groups_" + cls.type_name(),
                 title=_l("Publish %s to foreign contact groups") % title_lower,
                 description=_l(
@@ -760,7 +760,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="publish_to_sites_" + cls.type_name(),
                 title=_l("Publish %s to users of selected sites") % title_lower,
                 description=_l(
@@ -775,7 +775,7 @@ class Overridable(Base[_T_OverridableConfig]):
         # TODO: Bug: This permission does not seem to be used
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="see_user_" + cls.type_name(),
                 title=_l("See user %s") % title_lower,
                 description=_l("Is needed for seeing %s that other users have created.")
@@ -786,7 +786,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="force_" + cls.type_name(),
                 title=_l("Modify built-in %s") % title_lower,
                 description=_l("Make own published %s override built-in %s for all users.")
@@ -797,7 +797,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="edit_foreign_" + cls.type_name(),
                 title=_l("Edit foreign %s") % title_lower,
                 description=_("Allows to view and edit %s created by other users.") % title_lower,
@@ -807,7 +807,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
         permission_registry.register(
             Permission(
-                section=permission_section_general,
+                section=PERMISSION_SECTION_GENERAL,
                 name="delete_foreign_" + cls.type_name(),
                 title=_l("Delete foreign %s") % title_lower,
                 description=_l("Allows to delete %s created by other users.") % title_lower,

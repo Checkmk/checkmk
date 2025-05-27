@@ -2607,6 +2607,10 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP リソースグループ"
 
+#, fuzzy
+msgid "AIX network interfaces"
+msgstr "ネットワークインターフェース"
+
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX: TGZ (.tar.gz)"
 
@@ -5925,6 +5929,9 @@ msgstr "自己署名証明書を許可する"
 
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr "ダウンタイムを\"すべて削除 \"のアクションを許可する"
+
+msgid "Allow to add or edit elements that contain HTML"
+msgstr ""
 
 #, python-format
 msgid "Allow to see the icon %s in the host and service views"
@@ -19047,6 +19054,10 @@ msgstr "無効なスケジュールエントリは実行されていません。
 msgid "Disabled sections"
 msgstr "無効なセクション"
 
+#, fuzzy
+msgid "Disabled sections (AIX agent)"
+msgstr "無効なセクション(Linuxエージェント)"
+
 msgid "Disabled sections (Linux agent)"
 msgstr "無効なセクション(Linuxエージェント)"
 
@@ -19157,6 +19168,10 @@ msgstr "ディスク"
 
 msgid "Disk I/O operations"
 msgstr "ディスクI / O操作"
+
+#, fuzzy
+msgid "Disk I/O statistics for AIX"
+msgstr "NFS IO統計"
 
 msgid "Disk ID"
 msgstr "ディスクID"
@@ -24147,6 +24162,10 @@ msgstr "ファイルのグループ化パターン"
 msgid "File huge pages"
 msgstr "巨大なページをファイル"
 
+#, fuzzy
+msgid "File information"
+msgstr "関する情報を取得する..."
+
 msgid "File modified"
 msgstr "ファイルが変更されました"
 
@@ -25926,6 +25945,11 @@ msgstr "すべてのマップへの読み取りアクセスを許可する。"
 msgid "Grants read access to all rotations."
 msgstr "すべてのローテーションへの読み取りアクセスを許可する。"
 
+msgid ""
+"Grants the access to add or edit elements that contain HTML. Enabling this "
+"for other users except admins is considered a security risk. "
+msgstr ""
+
 msgid "Granule size"
 msgstr "グラニューサイズ"
 
@@ -26274,6 +26298,9 @@ msgstr "H.ダウン"
 
 msgid "HA"
 msgstr "HA"
+
+msgid "HACMP cluster for AIX"
+msgstr ""
 
 msgid "HARD"
 msgstr "ハード"
@@ -34918,6 +34945,10 @@ msgstr "IPv6リクエスト"
 msgid "LISTEN"
 msgstr "聴く"
 
+#, fuzzy
+msgid "LPAR statistics for AIX"
+msgstr "RMON統計"
+
 msgid "LRU moved objects"
 msgstr "LRUはオブジェクトを移動しました"
 
@@ -37134,6 +37165,10 @@ msgstr "コアのロギング"
 msgid "Logging of the notification mechanics"
 msgstr "通知メカニズムのロギング"
 
+#, fuzzy
+msgid "Logical Volume Manager for AIX"
+msgstr "論理ボリュームプール"
+
 msgid "Logical Volume Pool"
 msgstr "論理ボリュームプール"
 
@@ -37582,6 +37617,10 @@ msgid ""
 msgstr ""
 "MKPはセマンティックバージョニングを実施します。詳しくは %ssemver.org%s を参照"
 "してください。"
+
+#, fuzzy
+msgid "MP statistics for AIX"
+msgstr "RMON統計"
 
 msgid "MQTT broker statistics"
 msgstr "MQTTブローカー統計"
@@ -39277,6 +39316,10 @@ msgstr "メモリ使用量"
 msgid "Memory usage for %s hosts"
 msgstr "%s ホストのメモリ使用量"
 
+#, fuzzy
+msgid "Memory usage for AIX"
+msgstr "%s ホストのメモリ使用量"
+
 msgid "Memory usage growth"
 msgstr "メモリ使用量の増加"
 
@@ -40729,6 +40772,10 @@ msgstr "書き込まれたデータ"
 msgid "NFS latency"
 msgstr "同期レイテンシ"
 
+#, fuzzy
+msgid "NFS mounts"
+msgstr "%sその他%s"
+
 msgid "NFS operations"
 msgstr "NFS操作"
 
@@ -40935,6 +40982,10 @@ msgstr "NTPディスカバリー"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr "NTPまたはtimesyncd時刻同期"
+
+#, fuzzy
+msgid "NTP time synchronization"
+msgstr "NTP時刻同期の状態"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -42743,6 +42794,11 @@ msgstr ""
 #, fuzzy
 msgid "Note: The maximum allowed file size is 10MB. "
 msgstr "最大許容値は %sです。"
+
+msgid ""
+"Note: This will also enable the dynamic configuration, which regularly "
+"activates all pending changes on the selected site."
+msgstr ""
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -46703,6 +46759,10 @@ msgstr "ページ"
 
 msgid "Pages per second"
 msgstr "1秒あたりのページ数"
+
+#, fuzzy
+msgid "Paging statistics for AIX"
+msgstr "停止統計"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Altoアクティブセッション"
@@ -53996,6 +54056,7 @@ msgstr "時間グラフの検索"
 msgid "Search whole subtree below the base DN"
 msgstr "ベースDN以下のサブツリー全体を検索"
 
+#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -54010,6 +54071,7 @@ msgid ""
 "tg: Host tag\n"
 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
 "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -77584,6 +77646,10 @@ msgstr "VM名"
 
 msgid "VM snapshot summary"
 msgstr "VMスナップショットの概要"
+
+#, fuzzy
+msgid "VM statistics for AIX"
+msgstr "RMON統計"
 
 msgid "VM, Cloud, Container"
 msgstr "VM、クラウド、コンテナ"

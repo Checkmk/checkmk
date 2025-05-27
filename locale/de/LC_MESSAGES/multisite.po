@@ -2708,6 +2708,10 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP Resource-Gruppen"
 
+#, fuzzy
+msgid "AIX network interfaces"
+msgstr "Netzwerkschnittstellen"
+
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX: TGZ (.tar.gz)"
 
@@ -6094,6 +6098,9 @@ msgstr "Selbstsignierte Zertifikat zulassen"
 msgid "Allow the user to use the action \"Remove all\" downtimes"
 msgstr ""
 "Dem Nutzer erlauben die Aktion \"Alle Wartungszeiten entfernen\" auszuführen"
+
+msgid "Allow to add or edit elements that contain HTML"
+msgstr ""
 
 #, python-format
 msgid "Allow to see the icon %s in the host and service views"
@@ -19551,6 +19558,10 @@ msgstr "Deaktivierte Einträge werden nicht ausgeführt."
 msgid "Disabled sections"
 msgstr "Deaktivierte Sektionen"
 
+#, fuzzy
+msgid "Disabled sections (AIX agent)"
+msgstr "Deaktivierte Sektionen (Linux Agent)"
+
 msgid "Disabled sections (Linux agent)"
 msgstr "Deaktivierte Sektionen (Linux Agent)"
 
@@ -19662,6 +19673,10 @@ msgstr "Platte"
 
 msgid "Disk I/O operations"
 msgstr "Platten-I/O-Operationen"
+
+#, fuzzy
+msgid "Disk I/O statistics for AIX"
+msgstr "NFS E/A-Statistiken"
 
 msgid "Disk ID"
 msgstr "Platten-ID"
@@ -24756,6 +24771,10 @@ msgstr "Dateigruppierungs-Patterns"
 msgid "File huge pages"
 msgstr "Große Seiten archivieren"
 
+#, fuzzy
+msgid "File information"
+msgstr "Beziehe Informationen über..."
+
 msgid "File modified"
 msgstr "Datei modifiziert"
 
@@ -26584,6 +26603,11 @@ msgstr "Lesezugriff auf alle Karten gewähren."
 msgid "Grants read access to all rotations."
 msgstr "Gewährt Lesezugriff auf alle Rotationen."
 
+msgid ""
+"Grants the access to add or edit elements that contain HTML. Enabling this "
+"for other users except admins is considered a security risk. "
+msgstr ""
+
 msgid "Granule size"
 msgstr "Detaillierte Größe"
 
@@ -26937,6 +26961,9 @@ msgstr "H.Unten"
 
 msgid "HA"
 msgstr "HA"
+
+msgid "HACMP cluster for AIX"
+msgstr ""
 
 msgid "HARD"
 msgstr "HART"
@@ -35800,6 +35827,10 @@ msgstr "IPv6-Anfragen"
 msgid "LISTEN"
 msgstr "LISTEN"
 
+#, fuzzy
+msgid "LPAR statistics for AIX"
+msgstr "RMON-Statistiken"
+
 msgid "LRU moved objects"
 msgstr "LRU bewegte Objekte"
 
@@ -38061,6 +38092,10 @@ msgstr "Logging des Kerns"
 msgid "Logging of the notification mechanics"
 msgstr "Logging der Benachrichtigungslogik"
 
+#, fuzzy
+msgid "Logical Volume Manager for AIX"
+msgstr "Logical Volume Pool"
+
 msgid "Logical Volume Pool"
 msgstr "Logical Volume Pool"
 
@@ -38514,6 +38549,10 @@ msgid ""
 msgstr ""
 "MKPs erzwingen semantische Versionierung. Einzelheiten finden Sie unter "
 "%ssemver.org%s."
+
+#, fuzzy
+msgid "MP statistics for AIX"
+msgstr "RMON-Statistiken"
 
 msgid "MQTT broker statistics"
 msgstr "MQTT-Broker-Statistiken"
@@ -40238,6 +40277,10 @@ msgstr "Speicherauslastung"
 msgid "Memory usage for %s hosts"
 msgstr "Speicherauslastung für %s Hosts"
 
+#, fuzzy
+msgid "Memory usage for AIX"
+msgstr "Speicherauslastung für %s Hosts"
+
 msgid "Memory usage growth"
 msgstr "Zunahme der Speicherauslastung"
 
@@ -41705,6 +41748,10 @@ msgstr "Geschriebene Daten"
 msgid "NFS latency"
 msgstr "Sync-Latenz"
 
+#, fuzzy
+msgid "NFS mounts"
+msgstr "%s andere %s"
+
 msgid "NFS operations"
 msgstr "NFS Operationen"
 
@@ -41911,6 +41958,10 @@ msgstr "NTP-Erkennung"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr "NTP oder timesyncd Zeitsynchronisation"
+
+#, fuzzy
+msgid "NTP time synchronization"
+msgstr "Zustand der NTP Zeitsynchronisation"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -43751,6 +43802,11 @@ msgstr ""
 #, fuzzy
 msgid "Note: The maximum allowed file size is 10MB. "
 msgstr "Der maximal erlaubte Wert ist %s."
+
+msgid ""
+"Note: This will also enable the dynamic configuration, which regularly "
+"activates all pending changes on the selected site."
+msgstr ""
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -47783,6 +47839,10 @@ msgstr "Seiten"
 
 msgid "Pages per second"
 msgstr "Seiten pro Sekunde"
+
+#, fuzzy
+msgid "Paging statistics for AIX"
+msgstr "Ausfall-Statistiken"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto active Sessions"
@@ -55187,6 +55247,7 @@ msgstr "Suche nach Zeitgraphen"
 msgid "Search whole subtree below the base DN"
 msgstr "Gesamten Teilbaum unter Basis DN durchsuchen"
 
+#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -55201,6 +55262,7 @@ msgid ""
 "tg: Host tag\n"
 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
 "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -79665,6 +79727,10 @@ msgstr "VM-Name"
 
 msgid "VM snapshot summary"
 msgstr "Zusammenfassung der VM-Schnappschüsse"
+
+#, fuzzy
+msgid "VM statistics for AIX"
+msgstr "RMON-Statistiken"
 
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"

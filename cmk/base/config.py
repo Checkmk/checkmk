@@ -4329,30 +4329,6 @@ class CEEConfigCache(ConfigCache):
 
         return self.__lnx_remote_alert_handlers.setdefault(host_name, _impl())
 
-    def rtc_secret(self, host_name: HostName) -> str | None:
-        def _impl() -> str | None:
-            default: Sequence[RuleSpec[object]] = []
-            if not (
-                settings := self.ruleset_matcher.get_host_values(
-                    host_name,
-                    agent_config.get("real_time_checks", default),
-                    self.label_manager.labels_of_host,
-                )
-            ):
-                return None
-            match settings[0]["encryption"]:
-                case ("disabled", None):
-                    return None
-                case ("enabled", password_spec):
-                    return password_store.extract(password_spec)
-                case unknown_value:
-                    raise ValueError(unknown_value)
-
-        with contextlib.suppress(KeyError):
-            return self.__rtc_secret[host_name]
-
-        return self.__rtc_secret.setdefault(host_name, _impl())
-
     def rrd_config_of_service(
         self, host_name: HostName, service_name: ServiceName
     ) -> RRDObjectConfig | None:

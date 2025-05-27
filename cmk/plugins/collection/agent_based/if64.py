@@ -59,9 +59,10 @@ snmp_section_if64 = SNMPSection(
     supersedes=["if", "statgrab_net", "if32_with_alias"],
 )
 
-# Note: This section is by default deactivated (hard-coded in
-# cmk.base.config.disabled_snmp_sections) to reduce SNMP traffic. To activate it, use the SNMP
-# Rulespec snmp_exclude_sections.
+# Note: This section is by default deactivated
+# (hard-coded in the defaul config `disabled_snmp_sections`)
+# to reduce SNMP traffic.
+# To activate it, use the ruleset `snmp_exclude_sections`.
 snmp_section_if64adm = SimpleSNMPSection(
     name="if64adm",
     parse_function=parse_if64adm,

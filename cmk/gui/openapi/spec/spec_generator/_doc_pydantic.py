@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
 from apispec import APISpec
-from pydantic import TypeAdapter
+from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model.api_field import api_field
@@ -202,9 +202,14 @@ def _to_operation_dict(
     if schema_definitions.model.has_response_schema:
         header_parameters.append(CONTENT_TYPE)
 
-    header_parameters.extend(_get_parameters("header", schema_definitions.get_type("headers")))
-    path_parameters = _get_parameters("path", schema_definitions.get_type("path"))
-    query_parameters = _get_parameters("query", schema_definitions.get_type("query"))
+    try:
+        header_parameters.extend(_get_parameters("header", schema_definitions.get_type("headers")))
+        path_parameters = _get_parameters("path", schema_definitions.get_type("path"))
+        query_parameters = _get_parameters("query", schema_definitions.get_type("query"))
+    except PydanticInvalidForJsonSchema as e:
+        raise PydanticInvalidForJsonSchema(
+            f"Failed to generate schema for {spec_endpoint.operation_id} parameters: {e.message}"
+        ) from e
 
     operation_spec["parameters"] = [*header_parameters, *path_parameters, *query_parameters]
 

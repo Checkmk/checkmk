@@ -2,27 +2,75 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import hashlib
 import warnings
-from collections.abc import Callable, Sequence
-from typing import Any, cast, ClassVar
+from collections.abc import Callable, Iterator, Sequence
+from dataclasses import is_dataclass
+from typing import Any, cast, ClassVar, is_typeddict
 
 import apispec
+import pydantic_core
 from apispec import APISpec
-from pydantic import TypeAdapter
-from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
-from pydantic_core import core_schema, PydanticSerializationError
+from apispec.exceptions import DuplicateComponentNameError
+from pydantic import BaseModel, PydanticInvalidForJsonSchema, TypeAdapter
+from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue, PydanticJsonSchemaWarning
+from pydantic_core import core_schema, PydanticOmit, PydanticSerializationError
+
+from cmk.utils.object_diff import make_diff
 
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 
+# these two are not publicly exported by pydantic, so we redefine them here
+type _CoreSchemaField = (
+    core_schema.ModelField
+    | core_schema.DataclassField
+    | core_schema.TypedDictField
+    | core_schema.ComputedField
+)
+type _CoreSchemaOrField = core_schema.CoreSchema | _CoreSchemaField
+
+
+def _try_get_title(schema: core_schema.CoreSchema) -> str | None:
+    if schema["type"] == "definitions":
+        return _try_get_title(schema["schema"])
+    if "config" in schema and "title" in schema["config"]:
+        return schema["config"]["title"]
+    if "cls_name" in schema:
+        return schema["cls_name"]
+    if "cls" in schema and isinstance(schema["cls"], type):
+        return schema["cls"].__name__
+    if "name" in schema:
+        return schema["name"]
+
+    return None
+
+
+def _register_schema(spec: APISpec, name: str, schema: dict[str, object]) -> None:
+    """Register a schema in the APISpec components.
+
+    Adds some context in case there is a difference between the schemas.
+    """
+    if spec.components.schemas.get(name) != schema:
+        try:
+            spec.components.schema(name, schema)
+        except DuplicateComponentNameError as e:
+            diff = make_diff(spec.components.schemas[name], schema)
+            raise DuplicateComponentNameError(f"{e}\nNew: {schema!r}\nDiff:\n{diff}") from None
+
 
 def _get_json_schema(spec: APISpec, adapter: TypeAdapter) -> dict[str, object]:
-    json_schema = adapter.json_schema(
-        by_alias=True,
-        ref_template="#/components/schemas/{model}",
-        schema_generator=CheckmkGenerateJsonSchema,
-        mode="serialization",
-    )
+    try:
+        with warnings.catch_warnings(action="error", category=PydanticJsonSchemaWarning):
+            json_schema = adapter.json_schema(
+                by_alias=True,
+                ref_template="#/components/schemas/{model}",
+                schema_generator=CheckmkGenerateJsonSchema,
+                mode="serialization",
+            )
+    except PydanticJsonSchemaWarning as e:
+        title = _try_get_title(adapter.core_schema) or "<unknown>"
+        raise PydanticJsonSchemaWarning(f"{title}: {e}") from None
 
     # The schema names must be unique, otherwise an error will be raised on registration. This is
     # good, because we don't want to have references to the wrong schema elsewhere. The solution
@@ -35,14 +83,11 @@ def _get_json_schema(spec: APISpec, adapter: TypeAdapter) -> dict[str, object]:
     if defs := json_schema.pop("$defs", None):
         assert isinstance(defs, dict)
         for k, v in defs.items():
-            if spec.components.schemas.get(k) == v:
-                continue
-            spec.components.schema(k, v)
+            _register_schema(spec, k, v)
 
     name = json_schema.get("title")
-    assert isinstance(name, str)
-    if spec.components.schemas.get(name) != json_schema:
-        spec.components.schema(name, json_schema)
+    assert isinstance(name, str), f"Expected title for schema: {json_schema!r}"
+    _register_schema(spec, name, json_schema)
 
     return json_schema
 
@@ -56,6 +101,21 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
        * supporting `default_factory`
        * handling `ApiOmitted` as a default value
     """
+
+    def __init__(self, by_alias: bool, ref_template: str) -> None:
+        super().__init__(by_alias, ref_template)
+        # track the current path in the schema, so that we can raise helpful errors
+        self._path: list[str] = []
+
+    ignored_warning_kinds = set()  # we don't want to ignore any warnings
+
+    def handle_invalid_for_json_schema(
+        self, schema: _CoreSchemaOrField, error_info: str
+    ) -> JsonSchemaValue:
+        # include the model/field name in the error message
+        raise PydanticInvalidForJsonSchema(
+            f"Cannot generate a JsonSchema for {'.'.join(self._path)}: {error_info}"
+        )
 
     def _contains_omitted(self, schema: core_schema.CoreSchema) -> bool:
         match schema["type"]:
@@ -146,6 +206,77 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
 
         json_schema["default"] = encoded_default
         return json_schema
+
+    def encode_default(self, dft: Any) -> Any:
+        type_ = type(dft)
+        config = self._config
+        adapter = TypeAdapter(  # nosemgrep: type-adapter-detected
+            type_,
+            config=(
+                None  # can't set config if the type itself supports configs
+                if issubclass(type_, BaseModel) or is_dataclass(type_) or is_typeddict(type_)
+                else config.config_dict
+            ),
+        )
+
+        # We exclude defaults, because that's how omitted values are removed.
+        return pydantic_core.to_jsonable_python(
+            adapter.dump_python(dft, mode="json", by_alias=True, exclude_defaults=True),
+            timedelta_mode=config.ser_json_timedelta,
+            bytes_mode=config.ser_json_bytes,
+        )
+
+    def _named_required_fields_schema(
+        self, named_required_fields: Sequence[tuple[str, bool, _CoreSchemaField]]
+    ) -> JsonSchemaValue:
+        # NOTE: the only change here is that we modify self._path
+        properties: dict[str, JsonSchemaValue] = {}
+        required_fields: list[str] = []
+        for name, required, field in named_required_fields:
+            self._path.append(name)
+            if self.by_alias:
+                name = self._get_alias_name(field, name)
+            try:
+                field_json_schema = self.generate_inner(field).copy()
+            except PydanticOmit:
+                self._path.pop()
+                continue
+            self._path.pop()
+            if "title" not in field_json_schema and self.field_title_should_be_set(field):
+                title = self.get_title_from_name(name)
+                field_json_schema["title"] = title
+            field_json_schema = self.handle_ref_overrides(field_json_schema)
+            properties[name] = field_json_schema
+            if required:
+                required_fields.append(name)
+
+        json_schema = {"type": "object", "properties": properties}
+        if required_fields:
+            json_schema["required"] = required_fields
+        return json_schema
+
+    @contextlib.contextmanager
+    def _replace_path(self, schema: core_schema.CoreSchema) -> Iterator[None]:
+        """Replace the current path with the schema title or class name.
+
+        This is used to provide better error messages when generating JSON schemas.
+        """
+        old_path = self._path
+        self._path = [_try_get_title(schema) or "<unknown>"]
+        yield
+        self._path = old_path
+
+    def typed_dict_schema(self, schema: core_schema.TypedDictSchema) -> JsonSchemaValue:
+        with self._replace_path(schema):
+            return super().typed_dict_schema(schema)
+
+    def model_schema(self, schema: core_schema.ModelSchema) -> JsonSchemaValue:
+        with self._replace_path(schema):
+            return super().model_schema(schema)
+
+    def dataclass_schema(self, schema: core_schema.DataclassSchema) -> JsonSchemaValue:
+        with self._replace_path(schema):
+            return super().dataclass_schema(schema)
 
 
 class CheckmkPydanticResolver:

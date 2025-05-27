@@ -79,4 +79,5 @@ def json_dump_without_omitted[T](
     adapter = TypeAdapter(instance_type)  # nosemgrep: type-adapter-detected
     # TODO: Rework how we deal with omitted values once pydantic supports either `PydanticOmit`
     #       in serializers or implements `exclude_if`
+    # NOTE: keep in sync with CheckmkGenerateJsonSchema.encode_default for correct schemas
     return adapter.dump_json(instance, by_alias=True, exclude_defaults=True, round_trip=is_testing)

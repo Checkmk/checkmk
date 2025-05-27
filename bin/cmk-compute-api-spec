@@ -5,7 +5,8 @@
 
 import sys
 
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.spec.spec_generator import main
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(APIVersion.V1))

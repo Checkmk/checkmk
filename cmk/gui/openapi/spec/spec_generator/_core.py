@@ -429,10 +429,9 @@ from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 
 Ident = tuple[str, str]
-__version__ = "1.0"
 
 
-def main() -> int:
+def main(version: APIVersion) -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occurred during plug-in loading: {errors}")
@@ -441,21 +440,21 @@ def main() -> int:
         for target in get_args(EndpointTarget):
             store.save_object_to_file(
                 spec_path(target),
-                _generate_spec(_make_spec(), target, omd_site()),
+                _generate_spec(version, _make_spec(version), target, omd_site()),
                 pretty=False,
             )
     return 0
 
 
 def _generate_spec(
-    spec: APISpec, target: EndpointTarget, site: SiteId, validate: bool = True
+    version: APIVersion, spec: APISpec, target: EndpointTarget, site: SiteId, validate: bool = True
 ) -> dict[str, Any]:
     undocumented_tag_groups = set("Undocumented Endpoint")
 
     if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
         undocumented_tag_groups.add("Checkmk Internal")
 
-    populate_spec(APIVersion.V1, spec, target, undocumented_tag_groups, str(omd_site()))
+    populate_spec(version, spec, target, undocumented_tag_groups, str(omd_site()))
     generated_spec = spec.to_dict()
     _add_cookie_auth(generated_spec, site)
     if not validate:
@@ -562,10 +561,10 @@ _SECURITY_SCHEMES = {
 }
 
 
-def _make_spec() -> APISpec:
+def _make_spec(version: APIVersion) -> APISpec:
     spec = APISpec(
         "Checkmk REST-API",
-        __version__,
+        f"{version.numeric_value}.0",
         "3.1.1",
         plugins=[
             CheckmkPydanticPlugin(),

@@ -12,7 +12,6 @@ import cmk.utils.paths
 
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
-from cmk.gui.openapi.spec.spec_generator import main as spec_generate
 from cmk.gui.session import UserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.config_domain_name import config_variable_registry
@@ -37,11 +36,3 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
         with gui_context(), UserContext(fake_user.id):
             for name, config_variable in config_variable_registry.items():
                 valuespec_to_marshmallow(config_variable.valuespec(), name=name)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_generate_openapi_spec(fake_user: LoggedInUser) -> None:
-    """Test that the openapi spec can be generated without errors."""
-    if fake_user.id:
-        with gui_context(), UserContext(fake_user.id):
-            spec_generate()

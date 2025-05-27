@@ -91,9 +91,9 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
 
         return cfg
 
+    # TODO: Why is this not implemented by overriding validate()?
     def read_file_and_validate(self) -> None:
-        cfg = self._load_file(lock=False)
-        for role in cfg.values():
+        for role in self.load_for_reading().values():
             if "basedon" in role and role["basedon"] in builtin_role_ids:
                 role["basedon"] = BuiltInUserRoleValues(role["basedon"])
 

@@ -508,8 +508,8 @@ class IPField(fields.String):
             self.validation_results.append(self.make_error("should_be_ipv6", ip=value))
 
 
-def load_passwords_for_validation():
-    return [pw_id for pw_id, _ in PasswordStore()._load_file().items()]
+def load_passwords_for_validation() -> set[str]:
+    return set(PasswordStore().load_for_reading())
 
 
 class PasswordStoreIDField(fields.String):

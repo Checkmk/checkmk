@@ -69,8 +69,7 @@ class WatoConfigFile(ABC, Generic[_G]):
         return self._config_file_path.relative_to(omd_root).as_posix()
 
     def read_file_and_validate(self) -> None:
-        cfg = self._load_file(lock=False)
-        self.validate(cfg)
+        self.validate(self.load_for_reading())
 
 
 # NOTE: Variance is wrong, we confuse list <=> Sequence below.

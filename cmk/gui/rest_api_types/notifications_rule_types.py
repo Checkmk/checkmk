@@ -1788,18 +1788,19 @@ class NotificationBulkingAlwaysParams:
     subject_for_bulk_notifications: CheckboxWithStrValue
     max_bulk_size: int
     notification_bulks_based_on: list[GroupbyType]
-    notification_bulks_based_on_custom_macros: list[str]
+    notification_bulks_based_on_custom_macros: list[str] | None
     time_horizon: int
 
     def __iter__(self) -> Iterator:
-        yield (
-            "subject_for_bulk_notifications",
-            self.subject_for_bulk_notifications.api_response(),
-        )
-        for k, v in self.__dict__.items():
-            if k in ("subject_for_bulk_notifications"):
-                continue
-            yield k, v
+        yield "subject_for_bulk_notifications", self.subject_for_bulk_notifications.api_response()
+        yield "max_bulk_size", self.max_bulk_size
+        yield "notification_bulks_based_on", self.notification_bulks_based_on
+        yield "time_horizon", self.time_horizon
+        if self.notification_bulks_based_on_custom_macros is not None:
+            yield (
+                "notification_bulks_based_on_custom_macros",
+                self.notification_bulks_based_on_custom_macros,
+            )
 
 
 @dataclass
@@ -1808,7 +1809,7 @@ class NotificationBulkingTimeoutParams:
     subject_for_bulk_notifications: CheckboxWithStrValue
     max_bulk_size: int
     notification_bulks_based_on: list[GroupbyType]
-    notification_bulks_based_on_custom_macros: list[str]
+    notification_bulks_based_on_custom_macros: list[str] | None
     bulk_outside_timeperiod: BulkOutsideTimePeriod
 
     def __iter__(self) -> Iterator:
@@ -1817,11 +1818,15 @@ class NotificationBulkingTimeoutParams:
             self.subject_for_bulk_notifications.api_response(),
         )
         yield "bulk_outside_timeperiod", self.bulk_outside_timeperiod.api_response()
+        yield "time_period", self.time_period
+        yield "max_bulk_size", self.max_bulk_size
+        yield "notification_bulks_based_on", self.notification_bulks_based_on
 
-        for k, v in self.__dict__.items():
-            if k in ("subject_for_bulk_notifications", "bulk_outside_timeperiod"):
-                continue
-            yield k, v
+        if self.notification_bulks_based_on_custom_macros is not None:
+            yield (
+                "notification_bulks_based_on_custom_macros",
+                self.notification_bulks_based_on_custom_macros,
+            )
 
 
 @dataclass
@@ -1830,7 +1835,7 @@ class BulkOutsideTimePeriod:
     subject_for_bulk_notifications: CheckboxWithStrValue
     max_bulk_size: int
     notification_bulks_based_on: list[GroupbyType]
-    notification_bulks_based_on_custom_macros: list[str]
+    notification_bulks_based_on_custom_macros: list[str] | None
     time_horizon: int
 
     @classmethod
@@ -1845,7 +1850,7 @@ class BulkOutsideTimePeriod:
             ),
             max_bulk_size=data["count"],
             notification_bulks_based_on=data["groupby"],
-            notification_bulks_based_on_custom_macros=data["groupby_custom"],
+            notification_bulks_based_on_custom_macros=data.get("groupby_custom"),
             time_horizon=data["interval"],
         )
 
@@ -1863,33 +1868,40 @@ class BulkOutsideTimePeriod:
             ),
             max_bulk_size=value["max_bulk_size"],
             notification_bulks_based_on=value["notification_bulks_based_on"],
-            notification_bulks_based_on_custom_macros=value[
+            notification_bulks_based_on_custom_macros=value.get(
                 "notification_bulks_based_on_custom_macros"
-            ],
+            ),
             time_horizon=value["time_horizon"],
         )
 
     def api_response(self) -> BulkOutsideAPIValueType:
         r: BulkOutsideAPIValueType = {"state": self.state}
         if self.state == "enabled":
-            r["value"] = {
-                "subject_for_bulk_notifications": self.subject_for_bulk_notifications.api_response(),
-                "max_bulk_size": self.max_bulk_size,
-                "notification_bulks_based_on": self.notification_bulks_based_on,
-                "notification_bulks_based_on_custom_macros": self.notification_bulks_based_on_custom_macros,
-                "time_horizon": self.time_horizon,
-            }
+            r["value"] = BulkOutsideAPIAttrs(
+                subject_for_bulk_notifications=self.subject_for_bulk_notifications.api_response(),
+                max_bulk_size=self.max_bulk_size,
+                notification_bulks_based_on=self.notification_bulks_based_on,
+                time_horizon=self.time_horizon,
+            )
+
+            if self.notification_bulks_based_on_custom_macros is not None:
+                r["value"]["notification_bulks_based_on_custom_macros"] = (
+                    self.notification_bulks_based_on_custom_macros
+                )
+
         return r
 
     def to_mk_file_format(self) -> AlwaysBulkParameters:
         r = AlwaysBulkParameters(
             count=self.max_bulk_size,
             groupby=self.notification_bulks_based_on,
-            groupby_custom=self.notification_bulks_based_on_custom_macros,
             interval=self.time_horizon,
         )
         if (bulk_subject := self.subject_for_bulk_notifications.to_mk_file_format()) is not None:
             r["bulk_subject"] = bulk_subject
+
+        if (groupby_custom := self.notification_bulks_based_on_custom_macros) is not None:
+            r["groupby_custom"] = groupby_custom
 
         return r
 
@@ -1900,7 +1912,7 @@ class BulkOutsideTimePeriod:
             subject_for_bulk_notifications=CheckboxWithStrValue(),
             max_bulk_size=0,
             notification_bulks_based_on=[],
-            notification_bulks_based_on_custom_macros=[],
+            notification_bulks_based_on_custom_macros=None,
             time_horizon=0,
         )
 
@@ -1958,7 +1970,7 @@ class CheckboxNotificationBulking:
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=bulk_params["count"],
                 notification_bulks_based_on=bulk_params["groupby"],
-                notification_bulks_based_on_custom_macros=bulk_params["groupby_custom"],
+                notification_bulks_based_on_custom_macros=bulk_params.get("groupby_custom"),
                 time_horizon=bulk_params["interval"],
             )
         elif is_timeperiod_bulk(bulk_params):
@@ -1967,7 +1979,7 @@ class CheckboxNotificationBulking:
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=bulk_params["count"],
                 notification_bulks_based_on=bulk_params["groupby"],
-                notification_bulks_based_on_custom_macros=bulk_params["groupby_custom"],
+                notification_bulks_based_on_custom_macros=bulk_params.get("groupby_custom"),
                 bulk_outside_timeperiod=BulkOutsideTimePeriod.from_mk_file_format(
                     bulk_params.get("bulk_outside")
                 ),
@@ -1992,9 +2004,9 @@ class CheckboxNotificationBulking:
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=params["max_bulk_size"],
                 notification_bulks_based_on=params["notification_bulks_based_on"],
-                notification_bulks_based_on_custom_macros=params[
+                notification_bulks_based_on_custom_macros=params.get(
                     "notification_bulks_based_on_custom_macros"
-                ],
+                ),
                 time_horizon=params["time_horizon"],
             )
 
@@ -2004,9 +2016,9 @@ class CheckboxNotificationBulking:
                 subject_for_bulk_notifications=subject_for_bulk_notifications,
                 max_bulk_size=params["max_bulk_size"],
                 notification_bulks_based_on=params["notification_bulks_based_on"],
-                notification_bulks_based_on_custom_macros=params[
+                notification_bulks_based_on_custom_macros=params.get(
                     "notification_bulks_based_on_custom_macros"
-                ],
+                ),
                 bulk_outside_timeperiod=BulkOutsideTimePeriod.from_api_request(
                     params["bulk_outside_timeperiod"]
                 ),
@@ -2028,8 +2040,10 @@ class CheckboxNotificationBulking:
         r = {
             "count": self.bulk.max_bulk_size,
             "groupby": self.bulk.notification_bulks_based_on,
-            "groupby_custom": self.bulk.notification_bulks_based_on_custom_macros,
         }
+
+        if self.bulk.notification_bulks_based_on_custom_macros is not None:
+            r["groupby_custom"] = self.bulk.notification_bulks_based_on_custom_macros
 
         if (
             bulk_subject := self.bulk.subject_for_bulk_notifications.to_mk_file_format()

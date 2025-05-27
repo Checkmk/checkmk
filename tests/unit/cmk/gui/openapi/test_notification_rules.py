@@ -549,7 +549,6 @@ bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
                 "check_type",
                 "ec_contact",
             ],
-            "notification_bulks_based_on_custom_macros": ["macro3", "macro4"],
             "bulk_outside_timeperiod": {
                 "state": "enabled",
                 "value": {

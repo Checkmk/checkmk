@@ -8,8 +8,11 @@ import pickle
 import shutil
 import uuid
 from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final, NewType
+
+from redis import Redis
 
 from cmk.ccc import store
 
@@ -119,3 +122,68 @@ class MetadataStore:
             last_change = max(last_change, path_object.stat().st_mtime)
 
         return last_change
+
+
+class LookupStore:
+    def __init__(self, redis_client: Redis) -> None:
+        self._redis_client = redis_client
+        self._lookup_key = "bi:aggregation_lookup"
+        self._lookup_key_lock = "bi:aggregation_lookup_lock"
+
+    def base_lookup_key_exists(self) -> bool:
+        return bool(self._redis_client.exists(self._lookup_key))
+
+    def aggregation_lookup_exists(self, host_name: str, service_description: str | None) -> bool:
+        lookup_key = self._get_aggregation_lookup_key(host_name, service_description)
+        return bool(self._redis_client.exists(lookup_key))
+
+    @contextmanager
+    def get_aggregation_lookup_lock(self) -> Generator:
+        lock = self._redis_client.lock(self._lookup_key_lock)
+        try:
+            lock.acquire()
+            yield
+        finally:
+            if lock.owned():
+                lock.release()
+
+    def generate_aggregation_lookups(
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
+    ) -> None:
+        # The main task here is to add/update/remove keys without causing other processes
+        # to wait for the updated data. There is no tempfile -> live mechanism.
+        # Updates are done on the live data via pipeline, using transactions.
+        part_of_aggregation_map = self._get_aggregation_lookup_map(compiled_aggregations)
+
+        # Fetch existing keys
+        existing_keys = set(self._redis_client.scan_iter(f"{self._lookup_key}:*"))
+
+        # Update keys
+        pipeline = self._redis_client.pipeline()
+        for key, values in part_of_aggregation_map.items():
+            pipeline.sadd(key, *values)
+        pipeline.set(self._lookup_key, "1")
+
+        if obsolete_keys := existing_keys - set(part_of_aggregation_map.keys()):
+            pipeline.delete(*obsolete_keys)
+
+        pipeline.execute()
+
+    def _get_aggregation_lookup_key(self, host_name: str, service_description: str | None) -> str:
+        return f"{self._lookup_key}:{host_name}:{service_description}"
+
+    def _get_aggregation_lookup_map(
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
+    ) -> dict[str, list[str]]:
+        aggregation_lookup_map: dict[str, list[str]] = {}
+        for aggr_id, compiled_aggregation in compiled_aggregations.items():
+            for branch in compiled_aggregation.branches:
+                for _, host_name, service_description in branch.required_elements():
+                    # This information can be used to selectively load the relevant compiled
+                    # aggregation for any host/service. Right now it is only an indicator if this
+                    # host/service is part of an aggregation
+                    key = self._get_aggregation_lookup_key(host_name, service_description)
+                    value = f"{aggr_id}\t{branch.properties.title}"
+                    aggregation_lookup_map.setdefault(key, []).append(value)
+
+        return aggregation_lookup_map

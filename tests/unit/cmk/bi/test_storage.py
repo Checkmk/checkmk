@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from fakeredis import FakeRedis
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -17,6 +18,7 @@ from cmk.bi.storage import (
     AggregationStore,
     FrozenAggregationStore,
     generate_identifier,
+    LookupStore,
     MetadataStore,
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
@@ -122,6 +124,37 @@ class TestMetadataStore:
     def test_last_config_change_general_config(self, metadata_store: MetadataStore) -> None:
         (metadata_store.fs.etc.multisite / "general.mk").touch()
         assert metadata_store.get_last_config_change() > 0.0
+
+
+class TestLookupStore:
+    @pytest.fixture
+    def lookup_store(self) -> LookupStore:
+        return LookupStore(FakeRedis())
+
+    def get_compiled_aggregrations(self) -> dict[str, BICompiledAggregation]:
+        return {"heute": _build_aggregation("heute", branches=[_build_branch("Host heute")])}
+
+    def test_base_lookup_key_does_not_exists(self, lookup_store: LookupStore) -> None:
+        assert not lookup_store.base_lookup_key_exists()
+
+    def test_base_lookup_key_exists(self, lookup_store: LookupStore) -> None:
+        lookup_store.generate_aggregation_lookups({})
+        assert lookup_store.base_lookup_key_exists()
+
+    def test_lookup_aggregation_does_not_exists(self, lookup_store: LookupStore) -> None:
+        assert not lookup_store.aggregation_lookup_exists("foo", "bar")
+
+    def test_lookup_aggregation_exists(self, lookup_store: LookupStore) -> None:
+        compiled_aggregations = self.get_compiled_aggregrations()
+        lookup_store.generate_aggregation_lookups(compiled_aggregations)
+        assert lookup_store.aggregation_lookup_exists("heute", None)
+
+    def test_lookup_aggregation_exists_with_lock(self, lookup_store: LookupStore) -> None:
+        with lookup_store.get_aggregation_lookup_lock():
+            compiled_aggregations = self.get_compiled_aggregrations()
+            lookup_store.generate_aggregation_lookups(compiled_aggregations)
+
+        assert lookup_store.aggregation_lookup_exists("heute", None)
 
 
 def test_identifier_handles_long_aggregation_ids() -> None:

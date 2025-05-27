@@ -51,13 +51,13 @@ class BICompiler:
     ) -> None:
         self._sites_callback = sites_callback
         self._fs = fs or get_default_site_filesystem()
-        self._redis_client = redis_client or get_redis_client()
 
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
 
         self._aggregation_store = storage.AggregationStore(self._fs.cache)
         self._metadata_store = storage.MetadataStore(self._fs)
         self._frozen_store = storage.FrozenAggregationStore(self._fs.var)
+        self._lookup_store = storage.LookupStore(redis_client or get_redis_client())
 
         self._bi_packs = BIAggregationPacks(bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback, self._fs)
@@ -153,7 +153,7 @@ class BICompiler:
             compiled_aggregation.branches = []
 
         if computed_new_frozen_branch:
-            self._generate_part_of_aggregation_lookup(updated_aggregations)
+            self._lookup_store.generate_aggregation_lookups(updated_aggregations)
 
         return updated_aggregations
 
@@ -201,7 +201,7 @@ class BICompiler:
                 self._store_compiled_aggregation(compiled_aggregation)
 
             self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
-            self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
+            self._lookup_store.generate_aggregation_lookups(self._compiled_aggregations)
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
         self._cleanup_vanished_aggregations()
@@ -309,63 +309,17 @@ class BICompiler:
         return current_configstatus
 
     def is_part_of_aggregation(self, host_name: str, service_description: str) -> bool:
-        self._check_redis_lookup_integrity()
-        return bool(
-            self._redis_client.exists(f"bi:aggregation_lookup:{host_name}:{service_description}")
-        )
-
-    def _check_redis_lookup_integrity(self) -> None:
-        if self._redis_client.exists("bi:aggregation_lookup"):
-            return None
-
-        # The following scenario only happens if the redis daemon loses its data
-        # In the normal workflow the lookup cache is updated after the compilation phase
-        # What happens if multiple apache process want to read the cache at the same time:
-        # - One apache gets the lock, updates the cache
-        # - The other apache wait till the cache has been updated
-        lookup_lock = self._redis_client.lock("bi:aggregation_lookup_lock")
-        try:
-            lookup_lock.acquire()
-            if not self._redis_client.exists("bi:aggregation_lookup"):
+        if not self._lookup_store.base_lookup_key_exists():
+            # The following scenario only happens if the redis daemon loses its data
+            # In the normal workflow the lookup cache is updated after the compilation phase
+            # What happens if multiple apache process want to read the cache at the same time:
+            # - One apache gets the lock, updates the cache
+            # - The other apache wait till the cache has been updated
+            with self._lookup_store.get_aggregation_lookup_lock():
                 self.load_compiled_aggregations()
-                self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
-            return None
-        finally:
-            if lookup_lock.owned():
-                lookup_lock.release()
+                self._lookup_store.generate_aggregation_lookups(self._compiled_aggregations)
 
-    def _generate_part_of_aggregation_lookup(
-        self, compiled_aggregations: dict[str, BICompiledAggregation]
-    ) -> None:
-        part_of_aggregation_map: dict[str, list[str]] = {}
-        for aggr_id, compiled_aggregation in compiled_aggregations.items():
-            for branch in compiled_aggregation.branches:
-                for _site, host_name, service_description in branch.required_elements():
-                    # This information can be used to selectively load the relevant compiled
-                    # aggregation for any host/service. Right now it is only an indicator if this
-                    # host/service is part of an aggregation
-                    key = f"bi:aggregation_lookup:{host_name}:{service_description}"
-                    part_of_aggregation_map.setdefault(key, []).append(
-                        f"{aggr_id}\t{branch.properties.title}"
-                    )
-
-        # The main task here is to add/update/remove keys without causing other processes
-        # to wait for the updated data. There is no tempfile -> live mechanism.
-        # Updates are done on the live data via pipeline, using transactions.
-
-        # Fetch existing keys
-        existing_keys = set(self._redis_client.scan_iter("bi:aggregation_lookup:*"))
-
-        # Update keys
-        pipeline = self._redis_client.pipeline()
-        for key, values in part_of_aggregation_map.items():
-            pipeline.sadd(key, *values)
-        pipeline.set("bi:aggregation_lookup", "1")
-
-        if obsolete_keys := existing_keys - set(part_of_aggregation_map.keys()):
-            pipeline.delete(*obsolete_keys)
-
-        pipeline.execute()
+        return self._lookup_store.aggregation_lookup_exists(host_name, service_description)
 
 
 def _get_multiprocessing_pool_size(aggregation_count: int) -> int:

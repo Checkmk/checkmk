@@ -70,9 +70,9 @@ def do_git_commit() -> None:
 
 
 def _git_add_files() -> None:
-    path_pattern = os.path.join(str(cmk.utils.paths.default_config_dir), "*.d/wato")
+    path_pattern = cmk.utils.paths.default_config_dir / "*.d/wato"
     rel_paths = [
-        os.path.relpath(p, str(cmk.utils.paths.default_config_dir)) for p in glob.glob(path_pattern)
+        os.path.relpath(p, cmk.utils.paths.default_config_dir) for p in glob.glob(str(path_pattern))
     ]
     _git_command(["add", "--all", ".gitignore"] + rel_paths)
 

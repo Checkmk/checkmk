@@ -315,7 +315,7 @@ class ProgramSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=os.path.join(self._file_cache_path, str(self.host_name)),
+            path_template=str(self._file_cache_path / self.host_name),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=file_cache_options.use_only_cache,
@@ -416,7 +416,7 @@ class TCPSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=os.path.join(self._file_cache_path, str(self.host_name)),
+            path_template=str(self._file_cache_path / self.host_name),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=(

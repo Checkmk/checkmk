@@ -104,7 +104,7 @@ class FileLoader:
         return int(os.stat(path).st_mtime) == header.origin_mtime
 
     def _precompiled_plugin_path(self, path: str) -> str:
-        return os.path.join(str(self._precompile_path), "builtin", os.path.basename(path))
+        return str(self._precompile_path / "builtin" / os.path.basename(path))
 
 
 @dataclasses.dataclass

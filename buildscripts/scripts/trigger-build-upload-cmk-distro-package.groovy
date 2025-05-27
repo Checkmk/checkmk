@@ -38,7 +38,6 @@ def main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
-    def incremented_counter = "";
     def setup_values = single_tests.common_prepare(version: "daily");
     def all_editions = ["enterprise", "managed", "raw", params.EDITION].unique();
 
@@ -57,17 +56,11 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    stage("Prepare workspace") {
-        sh("rm -rf ${checkout_dir}/${download_dir}");
 
-        dir("${checkout_dir}") {
-            incremented_counter = cmd_output("git rev-list HEAD --count");
-        }
-        if (build_node == "fips") {
-            // Do not start builds on FIPS node
-            println("Detected build node 'fips', switching this to 'fra'.");
-            build_node = "fra"
-        }
+    if (build_node == "fips") {
+        // Do not start builds on FIPS node
+        println("Detected build node 'fips', switching this to 'fra'.");
+        build_node = "fra"
     }
 
     def stages = all_editions.collectEntries { edition ->

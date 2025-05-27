@@ -50,10 +50,12 @@ def _bi_searcher() -> Iterator[BISearcher]:
 
 
 @pytest.fixture(scope="function")
-def bi_searcher_with_sample_config(bi_searcher: BISearcher) -> Iterator[BISearcher]:
+def bi_searcher_with_sample_config(
+    bi_searcher: BISearcher, fs: BIFileSystem
+) -> Iterator[BISearcher]:
     from .bi_test_data import sample_config
 
-    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
+    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK, fs)
     structure_fetcher.add_site_data(SiteId("heute"), sample_config.bi_structure_states)
     bi_searcher.set_hosts(structure_fetcher.hosts)
     yield bi_searcher
@@ -66,8 +68,8 @@ def bi_status_fetcher() -> Iterator[BIStatusFetcher]:
 
 
 @pytest.fixture(scope="function")
-def bi_structure_fetcher() -> Iterator[BIStructureFetcher]:
-    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
+def bi_structure_fetcher(fs: BIFileSystem) -> Iterator[BIStructureFetcher]:
+    structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK, fs)
     yield structure_fetcher
 
 

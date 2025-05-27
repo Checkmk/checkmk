@@ -14,7 +14,7 @@ from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusRespo
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
-from cmk.bi.filesystem import BIFileSystem, get_default_site_filesystem
+from cmk.bi.filesystem import BIFileSystem
 from cmk.bi.lib import (
     ABCBIStatusFetcher,
     BIHostData,
@@ -66,12 +66,12 @@ def fix_encoding(value: str) -> str:
 
 
 class BIStructureFetcher:
-    def __init__(self, sites_callback: SitesCallback, fs: BIFileSystem | None = None) -> None:
+    def __init__(self, sites_callback: SitesCallback, fs: BIFileSystem) -> None:
         self.sites_callback = sites_callback
         # The key may be a pattern / regex, so `str` is the correct type for the key.
         self._hosts: dict[str, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
-        self._fs = fs or get_default_site_filesystem()
+        self._fs = fs
 
     def cleanup(self) -> None:
         self._have_sites.clear()

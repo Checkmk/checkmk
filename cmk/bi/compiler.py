@@ -60,7 +60,7 @@ class BICompiler:
         self._redis_client: Redis[str] | None = None
 
         self._bi_packs = BIAggregationPacks(bi_configuration_file)
-        self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback)
+        self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback, self._fs)
         self.bi_searcher = BISearcher()
 
     @property

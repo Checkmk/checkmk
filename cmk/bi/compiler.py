@@ -51,7 +51,7 @@ class BICompiler:
     ) -> None:
         self._sites_callback = sites_callback
         self._fs = fs or get_default_site_filesystem()
-        self._redis_client: Redis[str] = redis_client or get_redis_client()
+        self._redis_client = redis_client or get_redis_client()
 
         self._compiled_aggregations: dict[str, BICompiledAggregation] = {}
 

@@ -13,10 +13,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Final
 
-from livestatus import SiteConfiguration, SiteConfigurations
-
 import cmk.ccc.version as cmk_version
-from cmk.ccc.site import omd_site, url_prefix
 
 import cmk.utils.tags
 from cmk.utils import paths
@@ -166,10 +163,6 @@ def load_config() -> None:
     # Set default values for all user-changable configuration settings
     raw_config = get_default_config()
 
-    # Initialize sites with default site configuration. Need to do it here to
-    # override possibly deleted sites
-    raw_config["sites"] = default_single_site_configuration()
-
     # Load assorted experimental parameters if any
     experimental_config = cmk.utils.paths.make_experimental_config_file()
     if experimental_config.exists():
@@ -300,27 +293,3 @@ def _config_plugin_modules() -> list[ModuleType]:
         )
         and module is not None
     ]
-
-
-def default_single_site_configuration() -> SiteConfigurations:
-    return SiteConfigurations(
-        {
-            omd_site(): SiteConfiguration(
-                {
-                    "alias": _("Local site %s") % omd_site(),
-                    "socket": ("local", None),
-                    "disable_wato": True,
-                    "disabled": False,
-                    "insecure": False,
-                    "url_prefix": url_prefix(),
-                    "multisiteurl": "",
-                    "persist": False,
-                    "replicate_ec": False,
-                    "replication": None,
-                    "timeout": 5,
-                    "user_login": True,
-                    "proxy": None,
-                }
-            )
-        }
-    )

@@ -15,6 +15,7 @@ def test_registered_generators() -> None:
         "acknowledge_initial_werks",
         "contact_groups",
         "basic_wato_config",
+        "create_local_site_connection",
         "create_registration_automation_user",
         "ec_sample_rule_pack",
     ]
@@ -32,6 +33,7 @@ def test_get_sorted_generators() -> None:
     expected = [
         "contact_groups",
         "basic_wato_config",
+        "create_local_site_connection",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

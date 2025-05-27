@@ -305,7 +305,12 @@ def triggering_events() -> QuickSetupStage:
                                             help_text=Help(
                                                 "Notifications are sent only for event types "
                                                 "defined by the 'Notified events for "
-                                                "hosts' ruleset"
+                                                "hosts' ruleset. "
+                                                "Note: Host events do not match "
+                                                "this rule if a service filter "
+                                                "matches. However, if an exclude "
+                                                "service filter matches, host events are "
+                                                "still matched by the rule."
                                             ),
                                             prefill=DefaultValue([]),
                                             single_choice_type=CascadingSingleChoice,
@@ -694,6 +699,20 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                     Collapsible(
                         title=_("Service filters"),
                         items=[
+                            ConditionalNotificationDialogWidget(
+                                items=[
+                                    Dialog(
+                                        text=_(
+                                            "Note: Host events do not match "
+                                            "this rule if a service filter "
+                                            "matches. However, if an exclude "
+                                            "filter matches, host events are "
+                                            "still matched by the rule."
+                                        ),
+                                    )
+                                ],
+                                target="svc_filter",
+                            ),
                             FormSpecWrapper(
                                 id=FormSpecId("service_filters"),
                                 form_spec=DictionaryExtended(
@@ -923,7 +942,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                     },
                                 ),
-                            )
+                            ),
                         ],
                     ),
                 ],
@@ -1442,6 +1461,7 @@ def recipient() -> QuickSetupStage:
                         ),
                     )
                 ],
+                target="recipient",
             ),
             FormSpecWrapper(
                 id=FormSpecId("recipient"),

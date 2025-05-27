@@ -85,6 +85,13 @@ export interface ConditionalNotificationStageWidgetProps extends CompositeWidget
   condition: boolean
 }
 
+type ConditionalNotificationDialogWidgetTarget = 'svc_filter' | 'recipient'
+
+export interface ConditionalNotificationDialogWidgetProps
+  extends ConditionalNotificationStageWidgetProps {
+  target: ConditionalNotificationDialogWidgetTarget
+}
+
 type SingleWidgetSpec =
   | TextWidgetProps
   | NoteTextWidgetProps

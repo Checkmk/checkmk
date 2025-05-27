@@ -33,11 +33,13 @@ def test_discover_bazel_cache(section: bc.Section) -> None:
 
 
 def test_check_bazel_cache_status_is_ok(section: bc.Section) -> None:
-    assert Result(state=State.OK, summary="Bazel Cache is OK") in bc.check_bazel_cache(section)
+    assert Result(state=State.OK, summary="Bazel Cache is OK") in bc.check_bazel_cache_impl(
+        section, {}, 0
+    )
 
 
 def test_check_bazel_cache_has_valid_azblob_results(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
     assert Result(state=State.OK, summary="Total number of azblob backend cache hits: 0") in temp
     assert Metric("bazel_cache_metrics_bazel_remote_azblob_cache_hits", 0.0) in temp
     assert Result(state=State.OK, summary="Total number of azblob backend cache missess: 0") in temp
@@ -48,7 +50,7 @@ def test_check_bazel_cache_has_valid_azblob_results(section: bc.Section) -> None
 
 
 def test_check_bazel_cache_has_valid_http_cache_results(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
     assert Result(state=State.OK, summary="Total number of HTTP backend cache hits: 0") in temp
     assert Metric("bazel_cache_metrics_bazel_remote_http_cache_hits", 0.0) in temp
     assert Result(state=State.OK, summary="Total number of HTTP backend cache missess: 0") in temp
@@ -56,16 +58,40 @@ def test_check_bazel_cache_has_valid_http_cache_results(section: bc.Section) -> 
 
 
 def test_check_bazel_cache_has_valid_s3_cache_results(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
     assert Result(state=State.OK, summary="Total number of S3 backend cache hits: 0 B") in temp
     assert Metric("bazel_cache_metrics_bazel_remote_s3_cache_hits", 0.0) in temp
     assert Result(state=State.OK, summary="Total number of S3 backend cache missess: 0") in temp
     assert Metric("bazel_cache_metrics_bazel_remote_s3_cache_misses", 0.0) in temp
 
 
+def test_check_bazel_cache_disk_rate_not_in_result_with_empty_value_store(
+    section: bc.Section,
+) -> None:
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
+    assert (
+        Metric("bazel_cache_metrics_bazel_remote_disk_cache_overwritten_bytes_rate", 0.0)
+        not in temp
+    )
+
+
+def test_check_bazel_cache_has_disk_rate_with_populated_value_store(section: bc.Section) -> None:
+    value_store = {"last_bazel_remote_disk_cache_overwritten_bytes_total": (0, 24401)}
+    temp = list(bc.check_bazel_cache_impl(section, value_store, 1))
+    assert Metric("bazel_cache_metrics_bazel_remote_disk_cache_overwritten_bytes_rate", 0.0) in temp
+
+
+def test_check_bazel_cache_disk_rate_increases_from_previous_value(section: bc.Section) -> None:
+    value_store = {"last_bazel_remote_disk_cache_overwritten_bytes_total": (0, 23401)}
+    temp = list(bc.check_bazel_cache_impl(section, value_store, 1))
+    assert (
+        Metric("bazel_cache_metrics_bazel_remote_disk_cache_overwritten_bytes_rate", 1000.0) in temp
+    )
+
+
 def test_check_bazel_cache_has_correct_timestamp(section: bc.Section) -> None:
     with time_machine.travel(TEST_TIME_2024):
-        temp = list(bc.check_bazel_cache(section))
+        temp = list(bc.check_bazel_cache_impl(section, {}, 0))
         assert (
             Result(
                 state=State.OK,
@@ -77,7 +103,7 @@ def test_check_bazel_cache_has_correct_timestamp(section: bc.Section) -> None:
 
 
 def test_check_bazel_cache_has_valid_disk_cache_results(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
     assert Metric("bazel_cache_metrics_bazel_remote_disk_cache_evicted_bytes_total", 0.0) in temp
     assert (
         Result(
@@ -113,7 +139,7 @@ def test_check_bazel_cache_has_valid_disk_cache_results(section: bc.Section) -> 
 
 
 def test_check_bazel_cache_has_valid_process_info(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
     assert (
         Result(state=State.OK, summary="Total user and system CPU time spent in seconds: 7.63 KiB")
         in temp
@@ -140,7 +166,7 @@ def test_check_bazel_cache_has_valid_process_info(section: bc.Section) -> None:
 
 
 def test_check_bazel_cache_has_misc_info(section: bc.Section) -> None:
-    temp = list(bc.check_bazel_cache(section))
+    temp = list(bc.check_bazel_cache_impl(section, {}, 0))
 
     assert (
         Result(state=State.OK, summary="Total number of incoming AC get cache request hits: 56728")

@@ -10,7 +10,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
-    live.set_sites(["local"])
+    live.set_sites(["NO_SITE"])
     live.add_table(
         "hosts",
         [
@@ -29,7 +29,7 @@ def test_local_table_assoc(patch_omd_site: None, mock_livestatus: MockLiveStatus
                 "contact_groups": ["all"],
             }
         ],
-        site="local",
+        site="NO_SITE",
     )
     live.expect_query(
         [

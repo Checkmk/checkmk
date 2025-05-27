@@ -23,6 +23,9 @@ class CleanUpSiteAttributes(UpdateAction):
             site_spec.setdefault("socket", ("local", None))
             site_spec.setdefault("url_prefix", "../")  # relative URL from /check_mk/
             site_spec["id"] = site_id
+            site_spec.setdefault("message_broker_port", 5672)
+            site_spec.setdefault("url_prefix", f"/{site_id}/")
+            site_spec.setdefault("proxy", None)
 
         site_mgmt.save_sites(
             configured_sites,

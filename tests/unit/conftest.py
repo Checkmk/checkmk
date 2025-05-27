@@ -339,10 +339,14 @@ sites.update(%r)
                         "multisiteurl": "",
                         "persist": False,
                         "replicate_ec": False,
+                        "replicate_mkps": False,
                         "replication": None,
                         "timeout": 5,
                         "user_login": True,
                         "proxy": None,
+                        "user_sync": "all",
+                        "status_host": None,
+                        "message_broker_port": 5672,
                     }
                 )
             }

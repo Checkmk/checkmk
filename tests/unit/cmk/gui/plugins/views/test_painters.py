@@ -1876,7 +1876,7 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) 
                 "host_address": "127.0.0.1",
                 "service_description": "SomeService",
                 "host_name": "heute",
-                "site": "my_site",
+                "site": "NO_SITE",
             },
             ["A Service note", "One more service note"],
             id="Service note for dedicated host",
@@ -1889,7 +1889,7 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) 
                 "host_address": "127.0.0.1",
                 "service_description": "AnotherService",
                 "host_name": "some_host",
-                "site": "my_site",
+                "site": "NO_SITE",
             },
             ["Another service note", "Last service note"],
             id="Service note for multiple hosts",
@@ -1901,7 +1901,7 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) 
             {
                 "host_address": "127.0.0.1",
                 "host_name": "this_host",
-                "site": "my_site",
+                "site": "NO_SITE",
             },
             ["First host node", "Second host node"],
             id="A host note for dedicated host",
@@ -1913,7 +1913,7 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) 
             {
                 "host_address": "127.0.0.1",
                 "host_name": "another_host",
-                "site": "my_site",
+                "site": "NO_SITE",
             },
             ["First host node", "Second host node", "And so on"],
             id="A host note for multiple hosts",
@@ -2165,7 +2165,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     row: Row = {
         "host_name": host_name,
         "service_description": service_name,
-        "site": "my_site",
+        "site": "NO_SITE",
         "host_address": "127.0.0.1",
     }
 

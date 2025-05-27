@@ -46,6 +46,9 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
             f"/{old_site_id}/", f"/{new_site_id}/"
         )
 
+        # 1. Update the "id" attribute
+        site_spec["id"] = new_site_id
+
     # Iterate all sites and check for status host entries refering to the renamed site
     for this_site_id, site_cfg in all_sites.items():
         status_host = site_cfg.get("status_host")

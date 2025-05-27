@@ -347,12 +347,12 @@ class BasicSettings:
         if version.edition(paths.omd_root) is version.Edition.CME and self.customer is not None:
             yield "customer", self.customer
 
-    def to_internal(self) -> SiteConfiguration:
-        configid: SiteConfiguration = {"alias": self.alias, "id": SiteId(self.site_id)}
-        if version.edition(paths.omd_root) is version.Edition.CME and self.customer is not None:
-            configid["customer"] = self.customer
+    def to_internal(self, internal_config: SiteConfiguration) -> None:
+        internal_config["alias"] = self.alias
+        internal_config["id"] = SiteId(self.site_id)
 
-        return configid
+        if version.edition(paths.omd_root) is version.Edition.CME and self.customer is not None:
+            internal_config["customer"] = self.customer
 
 
 @dataclass
@@ -407,17 +407,18 @@ class StatusConnection:
 
             yield k, v
 
-    def to_internal(self) -> SiteConfiguration:
-        statusconnection: SiteConfiguration = {
-            "status_host": self.status_host.to_internal(),
-            "socket": self.connection.to_internal(),
-            "proxy": self.proxy.to_internal(),
-            "disabled": self.disable_in_status_gui,
-            "timeout": self.connect_timeout,
-            "persist": self.persistent_connection,
-            "url_prefix": self.url_prefix,
-        }
-        return statusconnection
+    def to_internal(self, internal_config: SiteConfiguration) -> None:
+        internal_config.update(
+            {
+                "status_host": self.status_host.to_internal(),
+                "socket": self.connection.to_internal(),
+                "proxy": self.proxy.to_internal(),
+                "disabled": self.disable_in_status_gui,
+                "timeout": self.connect_timeout,
+                "persist": self.persistent_connection,
+                "url_prefix": self.url_prefix,
+            }
+        )
 
 
 @dataclass
@@ -506,19 +507,20 @@ class ConfigurationConnection:
 
             yield k, v
 
-    def to_internal(self) -> SiteConfiguration:
-        configconnection: SiteConfiguration = {
-            "replication": "slave" if self.enable_replication else None,
-            "multisiteurl": self.url_of_remote_site,
-            "disable_wato": self.disable_remote_configuration,
-            "insecure": self.ignore_tls_errors,
-            "user_login": self.direct_login_to_web_gui_allowed,
-            "user_sync": self.user_sync.to_internal(),
-            "replicate_ec": self.replicate_event_console,
-            "replicate_mkps": self.replicate_extensions,
-            "message_broker_port": self.message_broker_port,
-        }
-        return configconnection
+    def to_internal(self, internal_config: SiteConfiguration) -> None:
+        internal_config.update(
+            {
+                "replication": "slave" if self.enable_replication else None,
+                "multisiteurl": self.url_of_remote_site,
+                "disable_wato": self.disable_remote_configuration,
+                "insecure": self.ignore_tls_errors,
+                "user_login": self.direct_login_to_web_gui_allowed,
+                "user_sync": self.user_sync.to_internal(),
+                "replicate_ec": self.replicate_event_console,
+                "replicate_mkps": self.replicate_extensions,
+                "message_broker_port": self.message_broker_port,
+            }
+        )
 
 
 @dataclass
@@ -558,11 +560,40 @@ class SiteConfig:
             yield "secret", self.secret
 
     def to_internal(self) -> SiteConfiguration:
-        internal_config: SiteConfiguration = (
-            self.basic_settings.to_internal()
-            | self.status_connection.to_internal()
-            | self.configuration_connection.to_internal()
+        internal_config = SiteConfiguration(
+            {
+                "id": SiteId(""),
+                "alias": "",
+                "url_prefix": "",
+                "disabled": False,
+                "insecure": False,
+                "multisiteurl": "",
+                "persist": False,
+                "proxy": {},
+                "message_broker_port": 5672,
+                "user_sync": "all",
+                "status_host": None,
+                "replicate_mkps": True,
+                "replicate_ec": True,
+                "socket": (
+                    "tcp",
+                    NetworkSocketDetails(
+                        address=("", 6557),
+                        tls=(
+                            "encrypted",
+                            TLSParams(verify=True),
+                        ),
+                    ),
+                ),
+                "timeout": 5,
+                "disable_wato": True,
+                "user_login": True,
+                "replication": None,
+            }
         )
+        self.basic_settings.to_internal(internal_config)
+        self.status_connection.to_internal(internal_config)
+        self.configuration_connection.to_internal(internal_config)
         if self.secret:
             internal_config["secret"] = self.secret
         return internal_config

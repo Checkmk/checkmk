@@ -329,6 +329,31 @@ def test_get_replication_paths_defaults(
     )
 
 
+def default_site_config() -> SiteConfiguration:
+    return SiteConfiguration(
+        {
+            "id": SiteId("mysite"),
+            "alias": "Site mysite",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/mysite/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": "slave",
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_sync": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+        }
+    )
+
+
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
 def test_get_replication_components(
@@ -338,13 +363,12 @@ def test_get_replication_components(
     replicate_mkps: bool | None,
     request_context: None,
 ) -> None:
-    partial_site_config = SiteConfiguration({})
-    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    site_config = default_site_config()
 
     if replicate_ec is not None:
-        partial_site_config["replicate_ec"] = replicate_ec
+        site_config["replicate_ec"] = replicate_ec
     if replicate_mkps is not None:
-        partial_site_config["replicate_mkps"] = replicate_mkps
+        site_config["replicate_mkps"] = replicate_mkps
 
     expected = _expected_replication_paths(edition)
 
@@ -357,7 +381,7 @@ def test_get_replication_components(
         ]
 
     assert sorted(
-        activate_changes._get_replication_components(partial_site_config),
+        activate_changes._get_replication_components(site_config),
         key=lambda replication_path: replication_path.ident,
     ) == sorted(
         expected,
@@ -392,9 +416,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/check_mk/multisite.d/sites.mk": (
                 33200,
-                374,
+                469,
                 None,
-                "b2c737b768b538967cff6562c197bfec92ea68137a3272d7d613d885b757e2f4",
+                "cd09dfad3023a964a239bfb1e938ccf13954eefff3a90db7db2c15b38601bf0d",
             ),
             "etc/check_mk/mkeventd.d/wato/rules.mk": (
                 33200,
@@ -995,6 +1019,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         pytest.param(
             {
                 "remote_1": SiteConfiguration(
+                    id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
                     disabled=False,
@@ -1002,9 +1027,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1/remote_1/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
                     message_broker_port=5673,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1016,6 +1043,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
             },
             {},
@@ -1024,7 +1052,8 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         ),
         pytest.param(
             {
-                "remote_1": SiteConfiguration(
+                SiteId("remote_1"): SiteConfiguration(
+                    id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
                     disabled=False,
@@ -1032,8 +1061,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1:5001/remote_1/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
+                    message_broker_port=5672,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1045,6 +1077,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
             },
             {},
@@ -1054,6 +1087,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         pytest.param(
             {
                 "remote_1": SiteConfiguration(
+                    id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
                     disabled=False,
@@ -1061,9 +1095,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1/remote_1/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
                     message_broker_port=5673,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1075,8 +1111,10 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
                 "remote_2": SiteConfiguration(
+                    id=SiteId("remote_2"),
                     alias="remote site 2",
                     disable_wato=True,
                     disabled=False,
@@ -1084,9 +1122,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1/remote_2/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
                     message_broker_port=5674,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1098,6 +1138,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
             },
             BrokerConnections(
@@ -1115,7 +1156,8 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
         ),
         pytest.param(
             {
-                "remote_1": SiteConfiguration(
+                SiteId("remote_1"): SiteConfiguration(
+                    id=SiteId("remote_1"),
                     alias="remote site",
                     disable_wato=True,
                     disabled=False,
@@ -1123,9 +1165,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1/remote_1/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
                     message_broker_port=5673,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1137,8 +1181,10 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
-                "remote_2": SiteConfiguration(
+                SiteId("remote_2"): SiteConfiguration(
+                    id=SiteId("remote_2"),
                     alias="remote site 2",
                     disable_wato=True,
                     disabled=False,
@@ -1146,9 +1192,11 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                     multisiteurl="http://127.0.0.1: 5001/remote_2/check_mk/",
                     persist=False,
                     replicate_ec=True,
+                    replicate_mkps=True,
                     replication="slave",
                     message_broker_port=5674,
                     secret="watosecret",
+                    status_host=None,
                     timeout=2,
                     user_login=True,
                     url_prefix="/heute/",
@@ -1160,6 +1208,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
+                    user_sync="all",
                 ),
             },
             BrokerConnections(

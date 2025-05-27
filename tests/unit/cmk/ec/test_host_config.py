@@ -67,7 +67,7 @@ def _test_table() -> list[dict[str, object]]:
 def fixture_livestatus(
     patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
 ) -> MockLiveStatusConnection:
-    mock_livestatus.set_sites(["local"])
+    mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table("hosts", _test_table())
     return mock_livestatus
 
@@ -167,9 +167,9 @@ def test_host_config_get_canonical_name_is_cached_updated(
         assert host_config.get_canonical_name("heute alias") == HostName("heute")
 
         # Update the config to simulate a config change
-        live.tables["hosts"]["local"][0]["alias"] = "new alias"
-        live.tables["status"]["local"][0]["program_start"] = (
-            live.tables["status"]["local"][0]["program_start"] + 10
+        live.tables["hosts"]["NO_SITE"][0]["alias"] = "new alias"
+        live.tables["status"]["NO_SITE"][0]["program_start"] = (
+            live.tables["status"]["NO_SITE"][0]["program_start"] + 10
         )
 
         # Original alias is not matching anymore, cache is updated

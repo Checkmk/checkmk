@@ -47,7 +47,7 @@ class TestPredictionQuerier:
                     f"prediction_file:file:{metric}/everyday-lower.info": expected_prediction_info.model_dump_json().encode(),
                 }
             ],
-            site=SiteName("local"),
+            site=SiteName("NO_SITE"),
         )
         mock_livestatus.expect_query(
             "GET services\n"
@@ -98,7 +98,7 @@ class TestPredictionQuerier:
                     f"prediction_file:file:{metric}/day-1234-lower": expected_prediction_data.model_dump_json().encode(),
                 }
             ],
-            site=SiteName("local"),
+            site=SiteName("NO_SITE"),
         )
         mock_livestatus.expect_query(
             "GET services\n"

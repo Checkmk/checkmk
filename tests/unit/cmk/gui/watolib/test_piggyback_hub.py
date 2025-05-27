@@ -18,12 +18,37 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.piggyback_hub import _validate_piggyback_hub_config, compute_new_config
 
 
+def default_site_config() -> SiteConfiguration:
+    return SiteConfiguration(
+        {
+            "id": SiteId("mysite"),
+            "alias": "Site mysite",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/mysite/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": "slave",
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_sync": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+        }
+    )
+
+
 def test_update_sites_with_hub_config() -> None:
     global_settings = {"piggyback_hub_enabled": True}
     configured_sites = {
-        SiteId("site1"): SiteConfiguration(globals={"piggyback_hub_enabled": True}),
-        SiteId("site2"): SiteConfiguration(globals={"piggyback_hub_enabled": False}),
-        SiteId("site3"): SiteConfiguration(globals={}),
+        SiteId("site1"): default_site_config() | {"globals": {"piggyback_hub_enabled": True}},
+        SiteId("site2"): default_site_config() | {"globals": {"piggyback_hub_enabled": False}},
+        SiteId("site3"): default_site_config() | {"globals": {}},
     }
     hosts_sites = {
         HostAddress("host1"): SiteId("site1"),

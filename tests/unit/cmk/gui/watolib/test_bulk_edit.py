@@ -19,7 +19,7 @@ def test_search_text_matches() -> None:
         folder=FolderTree().root_folder(),
         host_name=HostName("test_host"),
         attributes=HostAttributes(
-            site=SiteId("test_site_id"),
+            site=SiteId("NO_SITE"),
             alias="test_alias",
             ipaddress=HostAddress(""),
             labels={"cmk/check_mk_server": "yes", "cmk/os_name": "Ubuntu"},
@@ -33,4 +33,4 @@ def test_search_text_matches() -> None:
     assert _search_text_matches(host, "ip-v4-only")  # match tag group
     assert _search_text_matches(host, "Ubuntu")  # match host label
     assert _search_text_matches(host, "Custom Attribute")  # match custom attribute
-    assert _search_text_matches(host, "test_site_id")  # match site id
+    assert _search_text_matches(host, "NO_SITE")  # match site id

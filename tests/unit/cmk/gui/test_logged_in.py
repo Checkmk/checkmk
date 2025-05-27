@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.users import create_and_destroy_user
 
-from livestatus import SiteConfigurations
+from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -155,15 +155,88 @@ def test_unauthenticated_users_authorized_sites(
     assert user.authorized_sites(
         SiteConfigurations(
             {
-                SiteId("site1"): {},
+                SiteId("site1"): (
+                    site1_config := SiteConfiguration(
+                        {
+                            "id": SiteId("site1"),
+                            "alias": "Local site site1",
+                            "socket": ("local", None),
+                            "disable_wato": True,
+                            "disabled": False,
+                            "insecure": False,
+                            "url_prefix": "/site1/",
+                            "multisiteurl": "",
+                            "persist": False,
+                            "replicate_ec": False,
+                            "replicate_mkps": False,
+                            "replication": None,
+                            "timeout": 5,
+                            "user_login": True,
+                            "proxy": None,
+                            "user_sync": "all",
+                            "status_host": None,
+                            "message_broker_port": 5672,
+                        }
+                    )
+                ),
             }
         )
     ) == {
-        "site1": {},
+        "site1": {
+            "id": SiteId("site1"),
+            "alias": "Local site site1",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/site1/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": None,
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_sync": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+        },
     }
+    site2_config = SiteConfiguration(
+        {
+            "id": SiteId("site2"),
+            "alias": "Local site site2",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/site2/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": None,
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_sync": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+        }
+    )
 
-    monkeypatch.setattr("cmk.gui.site_config.enabled_sites", lambda: {"site1": {}, "site2": {}})
-    assert user.authorized_sites() == {"site1": {}, "site2": {}}
+    monkeypatch.setattr(
+        "cmk.gui.site_config.enabled_sites",
+        lambda: {
+            "site1": site1_config,
+            "site2": site2_config,
+        },
+    )
+    assert user.authorized_sites() == {
+        "site1": site1_config,
+        "site2": site2_config,
+    }
 
 
 @pytest.mark.usefixtures("request_context")

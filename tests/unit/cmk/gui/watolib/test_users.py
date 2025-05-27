@@ -6,10 +6,13 @@ from collections.abc import Generator
 
 import pytest
 
+from livestatus import SiteConfiguration, SiteConfigurations
+
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserObject, UserSpec
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
@@ -34,9 +37,44 @@ def _reset_site_changes(sites: list[SiteId]) -> None:
 
 
 @pytest.fixture(name="sites")
-def setup_site_changes() -> Generator[list[SiteId], None, None]:
-    _reset_site_changes(ALL_SITES)
-    yield ALL_SITES
+def setup_site_changes(monkeypatch: pytest.MonkeyPatch) -> Generator[list[SiteId], None, None]:
+    def extend_site_context(m: pytest.MonkeyPatch) -> None:
+        m.setattr(
+            active_config,
+            "sites",
+            SiteConfigurations(
+                {
+                    site_id: SiteConfiguration(
+                        {
+                            "id": site_id,
+                            "alias": "No Site",
+                            "socket": ("local", None),
+                            "disable_wato": True,
+                            "disabled": False,
+                            "insecure": False,
+                            "url_prefix": f"/{site_id}/",
+                            "multisiteurl": "",
+                            "persist": False,
+                            "replicate_ec": False,
+                            "replicate_mkps": False,
+                            "replication": None,
+                            "timeout": 5,
+                            "user_login": True,
+                            "proxy": None,
+                            "user_sync": "all",
+                            "status_host": None,
+                            "message_broker_port": 5672,
+                        }
+                    )
+                    for site_id in ALL_SITES
+                }
+            ),
+        )
+
+    with monkeypatch.context() as m:
+        extend_site_context(m)
+        _reset_site_changes(ALL_SITES)
+        yield ALL_SITES
 
 
 def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
@@ -57,7 +95,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
                     "is_new_user": True,
                 }
             },
-            [],
+            [SITE1, SITE2, SITE3],
             id="no sites => all sites change",
         ),
         pytest.param(
@@ -98,7 +136,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
                     "is_new_user": True,
                 },
             },
-            [],
+            [SITE1, SITE2, SITE3],
             id="all sites change because of one user",
         ),
     ],
@@ -151,7 +189,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
     [
         pytest.param(
             [USER1_ID],
-            [],
+            [SITE1, SITE2, SITE3],
             id="global user",
         ),
         pytest.param(
@@ -161,7 +199,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         ),
         pytest.param(
             [USER1_ID, USER2_ID],
-            [],
+            [SITE1, SITE2, SITE3],
             id="two users, one global",
         ),
     ],

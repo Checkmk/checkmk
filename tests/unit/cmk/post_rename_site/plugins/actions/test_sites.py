@@ -43,6 +43,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
         SiteConfigurations(
             {
                 SiteId("heute"): SiteConfiguration(
+                    id=SiteId("heute"),
                     alias="Die central Site",
                     disable_wato=True,
                     disabled=False,
@@ -50,12 +51,16 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
                     multisiteurl="",
                     persist=False,
                     replicate_ec=False,
+                    replicate_mkps=False,
                     replication=None,
+                    message_broker_port=5672,
                     timeout=10,
                     user_login=True,
                     url_prefix="/heute/",
                     proxy=None,
                     socket=("local", None),
+                    status_host=None,
+                    user_sync="all",
                 ),
             }
         ),
@@ -69,7 +74,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
     assert "heute" not in all_sites
     assert "haha" in all_sites
 
-    # url_prefix is updated
+    assert all_sites[SiteId("haha")]["id"] == "haha"
     assert all_sites[SiteId("haha")]["url_prefix"] == "/haha/"
 
 
@@ -79,6 +84,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
         SiteConfigurations(
             {
                 SiteId("stable"): SiteConfiguration(
+                    id=SiteId("stable"),
                     alias="Die central Site",
                     socket=("local", None),
                     proxy=None,
@@ -88,6 +94,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     status_host=None,
                     disabled=False,
                     replication=None,
+                    message_broker_port=5672,
                     multisiteurl="",
                     disable_wato=True,
                     insecure=False,
@@ -97,6 +104,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     replicate_mkps=False,
                 ),
                 SiteId("remote"): SiteConfiguration(
+                    id=SiteId("remote"),
                     alias="Die remote Site 1",
                     socket=(
                         "tcp",
@@ -111,6 +119,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     status_host=(SiteId("stable"), "af"),
                     disabled=False,
                     replication="slave",
+                    message_broker_port=5672,
                     multisiteurl="http://localhost/remote/check_mk/",
                     disable_wato=True,
                     insecure=False,

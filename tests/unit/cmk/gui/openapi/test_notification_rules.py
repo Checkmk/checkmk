@@ -384,7 +384,6 @@ def conditions_set_3() -> APIConditions:
 
 
 @managedtest
-@pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 @pytest.mark.parametrize("testdata", [conditions_set_1(), conditions_set_2(), conditions_set_3()])
 def test_create_and_update_rule_with_conditions_data_200(
@@ -392,6 +391,7 @@ def test_create_and_update_rule_with_conditions_data_200(
     testdata: APIConditions,
 ) -> None:
     setup_site_data(clients)
+    clients.HostConfig.create(host_name="example.com", folder="/")
 
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)

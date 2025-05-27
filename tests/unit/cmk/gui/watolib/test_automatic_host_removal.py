@@ -33,7 +33,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleO
 
 @pytest.fixture(scope="function", autouse=True)
 def fixture_sitenames(mocker: MockerFixture) -> None:
-    mocker.patch.object(automatic_host_removal, "wato_site_ids", lambda: ["local"])
+    mocker.patch.object(automatic_host_removal, "wato_site_ids", lambda: ["NO_SITE"])
 
 
 @pytest.fixture(name="activate_changes_mock")
@@ -134,7 +134,7 @@ def fixture_setup_rules() -> None:
 
 @pytest.fixture(name="setup_livestatus_mock")
 def fixture_setup_livestatus_mock(mock_livestatus: MockLiveStatusConnection) -> None:
-    mock_livestatus.set_sites(["local"])
+    mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table(
         "services",
         [

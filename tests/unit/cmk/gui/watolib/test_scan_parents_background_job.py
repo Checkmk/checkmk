@@ -33,7 +33,7 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
 
     hostname = HostName("host1")
     root = folder_tree().root_folder()
-    root.create_hosts([(hostname, {"site": SiteId(hostname)}, None)], pprint_value=False)
+    root.create_hosts([(hostname, {"site": SiteId("NO_SITE")}, None)], pprint_value=False)
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"
 
@@ -78,8 +78,8 @@ def test_scan_parents_job(
     # THEN
     with application_and_request_context():
         updated_host = folder_tree().root_folder().host(host.name())
-        assert updated_host is not None and updated_host.parents() == [f"gw-{host.id()}-123-0-0-1"]
+        assert updated_host is not None and updated_host.parents() == ["gw-NO_SITE-123-0-0-1"]
 
     suppress_bake_agents_in_background.assert_called_once_with(
-        [f"gw-{host.id()}-123-0-0-1"], debug=False
+        ["gw-NO_SITE-123-0-0-1"], debug=False
     )

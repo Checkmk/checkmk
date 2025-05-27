@@ -83,7 +83,7 @@ def wato_slave_sites() -> SiteConfigurations:
 
 
 def get_site_config(config: Config, site_id: SiteId) -> SiteConfiguration:
-    s: SiteConfiguration = config.sites.get(site_id, {})
+    s: SiteConfiguration = config.sites[site_id]
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)

@@ -19,7 +19,7 @@ def test_local_connection_mocked(
     mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
     live = mock_livestatus
-    live.set_sites(["local"])
+    live.set_sites(["NO_SITE"])
     live.expect_query(
         [
             "GET status",

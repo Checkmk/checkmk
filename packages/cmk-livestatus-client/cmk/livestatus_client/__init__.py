@@ -23,7 +23,7 @@ from datetime import datetime
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
 
 from cmk.ccc.site import SiteId
 
@@ -78,15 +78,12 @@ class ProxyConfig(TypedDict, total=False):
     tcp: ProxyConfigTcp
 
 
-class SiteConfiguration(TypedDict, total=False):
-    """SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])"""
-
+class SiteConfiguration(TypedDict):
     alias: str
-    ca_file_path: str | None
-    customer: str
+    customer: NotRequired[str]  # CME specific attribute: Not set in other editions
     disable_wato: bool
     disabled: bool
-    globals: SiteGlobals
+    globals: NotRequired[SiteGlobals]  # Set when configuring site specific global settings
     id: SiteId
     insecure: bool
     multisiteurl: str
@@ -96,7 +93,7 @@ class SiteConfiguration(TypedDict, total=False):
     replicate_mkps: bool
     replication: str | None
     message_broker_port: int
-    secret: str
+    secret: NotRequired[str]  # Set when doing the site login
     status_host: tuple[SiteId, str] | None
     timeout: int
     url_prefix: str
@@ -107,9 +104,11 @@ class SiteConfiguration(TypedDict, total=False):
     # probably be moved into the SingleSiteConnection
     socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
 
-    # Livestatus specific
-    cache: bool
-    tls: TLSInfo
+    # There are actually transforms in place to convert from Checkmk managed config to the
+    # livestatus client (see cmk.gui.sites._site_config_for_livestatus). Would be desirable to
+    # clean up this conversion or make independent types of it.
+    cache: NotRequired[bool]
+    tls: NotRequired[TLSInfo]
 
 
 def sanitize_site_configuration(config: SiteConfiguration) -> dict[str, object]:
@@ -1471,9 +1470,14 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context."
             )
+        omd_site = os.getenv("OMD_SITE")
+        if not omd_site:
+            raise MKLivestatusConfigError(
+                "OMD_SITE is not set. You are not running in OMD context."
+            )
         super().__init__(
             "unix:" + omd_root + "/tmp/run/live",  # nosec B108 # BNS:7a2427
-            SiteId("local"),
+            SiteId(omd_site),
             *args,
             **kwargs,
         )

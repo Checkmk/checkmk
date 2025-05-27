@@ -244,7 +244,7 @@ def test_create_socket_no_cert(tmp_path: Path) -> None:
 
 def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
-    live.set_sites(["local"])
+    live.set_sites(["NO_SITE"])
     live.add_table(
         "status",
         [

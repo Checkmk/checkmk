@@ -24,7 +24,7 @@ def test_clean_up_missing_alias() -> None:
     site_mgmt.save_sites(
         SiteConfigurations(
             {
-                SiteId("abc"): SiteConfiguration(
+                SiteId("abc"): SiteConfiguration(  # type: ignore[typeddict-item]
                     {
                         "id": SiteId("abc"),
                         "socket": ("local", None),
@@ -62,7 +62,7 @@ def test_clean_up_missing_socket() -> None:
     site_mgmt.save_sites(
         SiteConfigurations(
             {
-                SiteId("abc"): SiteConfiguration(
+                SiteId("abc"): SiteConfiguration(  # type: ignore[typeddict-item]
                     {
                         "id": SiteId("abc"),
                         "alias": "abc",
@@ -100,7 +100,7 @@ def test_clean_up_missing_url_prefix() -> None:
     site_mgmt.save_sites(
         SiteConfigurations(
             {
-                SiteId("abc"): SiteConfiguration(
+                SiteId("abc"): SiteConfiguration(  # type: ignore[typeddict-item]
                     {
                         "id": SiteId("abc"),
                         "alias": "abc",
@@ -138,7 +138,7 @@ def test_clean_up_missing_id() -> None:
     site_mgmt.save_sites(
         SiteConfigurations(
             {
-                SiteId("abc"): SiteConfiguration(
+                SiteId("abc"): SiteConfiguration(  # type: ignore[typeddict-item]
                     {
                         "alias": "abc",
                         "socket": ("local", None),

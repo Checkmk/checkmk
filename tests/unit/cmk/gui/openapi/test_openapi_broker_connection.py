@@ -2,12 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Iterator
+
 import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
 )
+
+from tests.unit.cmk.web_test_app import SetConfig
+
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
 
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo, SiteConnectionInfo
 
@@ -18,19 +27,62 @@ TEST_CONNECTION_CONFIG = BrokerConnectionInfo(
 )
 
 
-@pytest.fixture(name="create_test_broker_connection", scope="function")
-def _create_broker_connection(monkeypatch: MonkeyPatch, clients: ClientRegistry) -> None:
-    # fake existent sites ids
-    monkeypatch.setattr(
-        "cmk.gui.fields.definitions.SiteField._validate",
-        lambda x, y: None,
-    )
+@pytest.fixture(name="create_site_configs")
+def _create_site_configs(set_config: SetConfig) -> Iterator[None]:
+    with set_config(
+        sites=site_configs(
+            [
+                SiteId("NO_SITE"),
+                SiteId("remote_1"),
+                SiteId("remote_2"),
+                SiteId("remote_3"),
+                SiteId("remote_4"),
+            ]
+        )
+    ):
+        yield
+
+
+@pytest.fixture(name="create_test_broker_connection")
+def _create_broker_connection(
+    monkeypatch: MonkeyPatch,
+    clients: ClientRegistry,
+    create_site_configs: None,
+) -> None:
     clients.BrokerConnection.create(
         {
             "connection_id": TEST_CONNECTION_ID,
             "connection_config": TEST_CONNECTION_CONFIG,
         }
     )
+
+
+def site_configs(site_ids: list[SiteId]) -> dict[SiteId, SiteConfiguration]:
+    return {
+        site_id: SiteConfiguration(
+            {
+                "id": site_id,
+                "alias": str(site_id),
+                "socket": ("local", None),
+                "disable_wato": True,
+                "disabled": False,
+                "insecure": False,
+                "url_prefix": f"/{site_id}/",
+                "multisiteurl": "",
+                "persist": False,
+                "replicate_ec": False,
+                "replicate_mkps": False,
+                "replication": None,
+                "timeout": 5,
+                "user_login": True,
+                "proxy": None,
+                "user_sync": "all",
+                "status_host": None,
+                "message_broker_port": 5672,
+            }
+        )
+        for site_id in site_ids
+    }
 
 
 def test_openapi_get_empty_broker_connections(clients: ClientRegistry) -> None:
@@ -70,15 +122,15 @@ def test_openapi_get_non_existent_broker_connection(
         (
             "conn1",
             BrokerConnectionInfo(
-                connecter=SiteConnectionInfo(site_id="heute_remote_1"),
-                connectee=SiteConnectionInfo(site_id="heute_remote_2"),
+                connecter=SiteConnectionInfo(site_id="remote_1"),
+                connectee=SiteConnectionInfo(site_id="remote_2"),
             ),
         ),
         (
             "conn2",
             BrokerConnectionInfo(
-                connecter=SiteConnectionInfo(site_id="heute_remote_2"),
-                connectee=SiteConnectionInfo(site_id="heute_remote_3"),
+                connecter=SiteConnectionInfo(site_id="remote_2"),
+                connectee=SiteConnectionInfo(site_id="remote_3"),
             ),
         ),
     ],
@@ -86,15 +138,10 @@ def test_openapi_get_non_existent_broker_connection(
 def test_openapi_create_broker_connection(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
+    create_site_configs: None,
     connection_id: str,
     connection_config: BrokerConnectionInfo,
 ) -> None:
-    # fake existent sites ids
-    monkeypatch.setattr(
-        "cmk.gui.fields.definitions.SiteField._validate",
-        lambda x, y: None,
-    )
-
     res = clients.BrokerConnection.create(
         {
             "connection_id": connection_id,
@@ -146,14 +193,15 @@ def test_openapi_create_broker_connection_sites_already_connected(
 
 
 def test_openapi_create_broker_connection_same_sites(
-    clients: ClientRegistry, create_test_broker_connection: None
+    clients: ClientRegistry,
+    create_test_broker_connection: None,
 ) -> None:
     res = clients.BrokerConnection.create(
         {
             "connection_id": "new_id",
             "connection_config": BrokerConnectionInfo(
-                connecter=SiteConnectionInfo(site_id="heute_remote_2"),
-                connectee=SiteConnectionInfo(site_id="heute_remote_2"),
+                connecter=SiteConnectionInfo(site_id="remote_2"),
+                connectee=SiteConnectionInfo(site_id="remote_2"),
             ),
         },
         expect_ok=False,

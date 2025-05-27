@@ -115,7 +115,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
-    ConfigDomainLiveproxy,
     finalize_all_settings_per_site,
 )
 from cmk.gui.watolib.global_settings import (
@@ -206,6 +205,17 @@ class ModeEditSite(WatoMode):
         elif self._new:
             self._site = SiteConfiguration(
                 {
+                    "id": SiteId(""),
+                    "alias": "",
+                    "url_prefix": "",
+                    "disabled": False,
+                    "insecure": False,
+                    "multisiteurl": "",
+                    "persist": False,
+                    "proxy": {},
+                    "message_broker_port": 5672,
+                    "user_sync": "all",
+                    "status_host": None,
                     "replicate_mkps": True,
                     "replicate_ec": True,
                     "socket": (
@@ -224,14 +234,6 @@ class ModeEditSite(WatoMode):
                     "replication": None,
                 }
             )
-
-            if ConfigDomainLiveproxy.enabled():
-                self._site.update(
-                    {
-                        "proxy": {},
-                        "timeout": 2,
-                    }
-                )
 
         else:
             assert self._site_id is not None

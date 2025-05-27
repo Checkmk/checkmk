@@ -23,7 +23,6 @@ usage() {
     echo "  -u, --unit-tests            run unit tests"
     echo "  -F, --check-format          check for correct formatting"
     echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
-    echo "  -I F,..., --features=F,...  list of features to activate"
     echo "  -a, --all                   shortcut for -b -u -F -l all"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
@@ -39,11 +38,10 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_CLIPPY=no
-    FEATURES=""
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecbuFl:I:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecbuFl:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -85,10 +83,6 @@ parse_options() {
                 done
                 shift 2
                 ;;
-            '-I' | '--features')
-                FEATURES="$2"
-                shift 2
-                ;;
             '-a' | '--all')
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
@@ -121,7 +115,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -150,11 +144,6 @@ $RUSTFLAGS \
     export RUSTFLAGS
 }
 
-# TODO: Port all cargo call sites to bazel
-run_cargo_cmd_with_explicit_package() {
-    cargo "${1}" --package "${PWD##*/}" "${@:2}"
-}
-
 run_format() {
     bazel run \
         --ui_event_filters=-info,-stderr \
@@ -177,14 +166,14 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
+    test ${RUN_CLEAN} = yes && true
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all
     test ${RUN_UNIT_TESTS} = yes && bazel test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_DOCUMENTATION} = yes && bazel build :doc
     true
 }
 

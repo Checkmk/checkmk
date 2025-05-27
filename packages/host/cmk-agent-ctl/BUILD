@@ -1,5 +1,5 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:platform_transition_binary.bzl", "platform_transition_binary")
 
@@ -136,4 +136,10 @@ platform_transition_binary(
     binary = ":cmk-agent-ctl",
     platform = "//bazel/platforms:x86_64-unknown-linux-musl",
     visibility = ["//visibility:public"],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":cmk-agent-ctl-lib",
+    rustdoc_flags = ["--document-private-items"],
 )

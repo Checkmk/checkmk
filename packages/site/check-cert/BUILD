@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
@@ -74,4 +74,13 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-cert-lib"],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":check-cert-lib",
+    rustdoc_flags = [
+        '--cfg=feature="vendored"',
+        "--document-private-items",
+    ],
 )

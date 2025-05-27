@@ -1,25 +1,18 @@
+ROBOTMK_FILES = [
+    "artifact/rcc/linux64/rcc",
+    "artifact/rcc/windows64/rcc.exe",
+    "artifact/rmk_linux64/robotmk_agent_plugin",
+    "artifact/rmk_linux64/robotmk_scheduler",
+    "artifact/rmk_windows64/robotmk_agent_plugin.exe",
+    "artifact/rmk_windows64/robotmk_scheduler.exe",
+]
+
 filegroup(
     name = "package_source_files",
-    srcs = glob([
-        "**",
-    ]),
+    srcs = ROBOTMK_FILES,
 )
 
-genrule(
-    name = "build",
-    srcs = [":package_source_files"],
-    outs = [
-        "robotmk_scheduler",
-        "robotmk_scheduler.exe",
-        "robotmk_agent_plugin",
-        "robotmk_agent_plugin.exe",
-        "rcc",
-        "rcc.exe",
-    ],
-    cmd = """
-         target_path=$$(realpath $(RULEDIR));
-         cd external/$$(dirname $$(echo $(rlocationpaths :package_source_files) | awk '{print $$1}'))/artifact/;
-         cp rmk_linux64/robotmk_scheduler rmk_windows64/robotmk_scheduler.exe rmk_linux64/robotmk_agent_plugin rmk_windows64/robotmk_agent_plugin.exe rcc/linux64/rcc rcc/windows64/rcc.exe $${target_path};
-    """,
-    visibility = ["//visibility:public"],
+exports_files(
+    ROBOTMK_FILES,
+    visibility = ["@@//omd:__subpackages__"],
 )

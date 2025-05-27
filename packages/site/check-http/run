@@ -17,7 +17,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment     setup environment"
     echo "  -c, --clean                 remove artifacts first"
     echo "  -b, --build                 build executable"
     echo "  -u, --unit-tests            run unit tests"
@@ -32,7 +31,6 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_SETUP_ENVIRONMENT=no
     RUN_CLEAN=no
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
@@ -41,7 +39,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecbuFl:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbuFl:afDj:h' --long 'clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -50,10 +48,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
-                shift
-                ;;
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
@@ -115,33 +109,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
-}
-
-# TODO: This needs some serious massaging, some stuff probably don't even belong
-# here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
-run_setup_environment() {
-    REPO_DIR="$(git rev-parse --show-toplevel)"
-
-    # When executed via "make deb", e.g. during local builds, these are set and
-    # confuse cargo.
-    unset MAKEFLAGS DESTDIR
-
-    if [ -e "/opt/rust/rustup" ]; then
-        # Make sure we don't use "$HOME/.cargo" accidentally (expands to
-        # /.cargo, if HOME is not set). On a jenkins node, .cargo should be
-        # created under /home/jenkins/shared_cargo_folder in order to reuse it
-        # between workspaces, see run-in-docker.sh.
-        : "${CARGO_HOME:="${REPO_DIR}/shared_cargo_folder/.cargo"}"
-        export CARGO_HOME
-    fi
-
-    export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
-    RUSTFLAGS="
-$RUSTFLAGS \
---remap-path-prefix=${REPO_DIR}=/builddir \
---remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
-    export RUSTFLAGS
+    readonly RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_format() {
@@ -165,7 +133,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && true
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all

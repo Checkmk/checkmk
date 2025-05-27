@@ -486,7 +486,7 @@ STAGES:
     - NAME: "Package check-cert"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
       DIR: "packages/site/check-cert"
-      COMMAND: "./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
+      COMMAND: "./run --all &> ${RESULTS}/check-cert.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-cert files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
@@ -494,7 +494,7 @@ STAGES:
     - NAME: "Package check-http"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
       DIR: "packages/site/check-http"
-      COMMAND: "./run --setup-environment --all &> ${RESULTS}/check-http.txt"
+      COMMAND: "./run --all &> ${RESULTS}/check-http.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-http files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
@@ -533,7 +533,7 @@ STAGES:
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
       DIR: "packages/host/cmk-agent-ctl"
-      COMMAND: "./run --setup-environment --all &> ${RESULTS}/cmk-agent-ctl.txt"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-agent-ctl.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-ctl files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
@@ -679,7 +679,7 @@ STAGES:
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
       DIR: "packages/host/mk-sql"
-      COMMAND: "./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
+      COMMAND: "./run --all &> ${RESULTS}/mk-sql.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"

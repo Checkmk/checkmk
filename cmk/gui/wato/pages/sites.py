@@ -265,10 +265,8 @@ class ModeEditSite(WatoMode):
         vs.validate_value(raw_site_spec, "site")
 
         site_spec = cast(SiteConfiguration, raw_site_spec)
-        # Extract the ID. It is not persisted in the site value
         if self._new:
             self._site_id = site_spec["id"]
-        del site_spec["id"]
 
         return site_spec
 

@@ -44,6 +44,20 @@ from cmk.plugins.mssql.agent_based.mssql_counters_transactions import (
 
 ValueStore = dict[str, Any]
 
+error_string_table_crash = [
+    ["None", "None", "MSSQLSERVER", "Some Error"],
+]
+
+error_string_table_1 = [
+    ["None", "None", "MSSQLSERVER", "ERROR:Some Error"],
+]
+
+error_string_table_2 = [
+    ["None", "None", "MSSQLSERVER", "ERROR:Some Error"],
+    ["None", "None", "MSSQLSERVER", "ERROR:Some Error"],
+    ["dont care", "dont care too", "MSSQLSERVER", "ERROR:Some Error"],
+]
+
 big_string_table = [
     ["None", "utc_time", "None", "19.08.2020 14:25:04"],
     [
@@ -53,9 +67,11 @@ big_string_table = [
         "180475",
     ],
     ["MSSQL_VEEAMSQL2012:Memory_Broker_Clerks", "simulation_benefit", "Buffer_Pool", "0"],
+    ["dont care", "dont care too", "MSSQLSERVER", "ERROR:Some Error"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "buffer_cache_hit_ratio", "None", "3090"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "buffer_cache_hit_ratio_base", "None", "3090"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "page_lookups/sec", "None", "6649047653"],
+    ["dont care", "dont care too", "MSSQLSERVER", "ERROR:Some Error"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "readahead_pages/sec", "None", "1424319"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "readahead_pages/sec", "None", "3220650"],
     ["MSSQL_VEEAMSQL2012:Buffer_Manager", "page_writes/sec", "None", "3066377"],
@@ -349,6 +365,13 @@ def test_parse_mssql_counters(
     string_table: StringTable, expected_parsed_data: Mapping[tuple[str, str], Mapping[str, float]]
 ) -> None:
     assert parse_mssql_counters(string_table) == expected_parsed_data
+
+
+def test_parse_mssql_counters_errors() -> None:
+    with pytest.raises(ValueError):
+        assert not parse_mssql_counters(error_string_table_crash)
+    assert not parse_mssql_counters(error_string_table_1)
+    assert not parse_mssql_counters(error_string_table_2)
 
 
 @pytest.mark.parametrize(

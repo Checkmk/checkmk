@@ -108,6 +108,7 @@ def parse_mssql_counters(string_table: StringTable) -> Section:
     ('MSSQL_VEEAMSQL2012', 'tempdb') {'log_file(s)_size_(kb)': 13624}
     ('MSSQL_VEEAMSQL2012:Database_Replica', '_Total') {'redo_bytes_remaining': 0}
     """
+    # ATTENTION! "ERROR:" is a part of the internal protocol, change it in sync with corresponding plugin
     valid_rows = (row for row in string_table if len(row) >= 4 and not row[-1].startswith("ERROR:"))
     parsed: Section = {}
     for obj, counter, instance, *values in valid_rows:

@@ -21,7 +21,7 @@
                 },
                 "fallback_warning": {
                     "type": "object",
-                    "$ref": "#/$defs/fallback_warning"
+                    "$ref": "#/$defs/notification_fallback_warning"
                 },
                 "notification_stats": {
                     "type": "object",
@@ -29,7 +29,7 @@
                 },
                 "core_stats": {
                     "type": "object",
-                    "$ref": "#/$defs/core_stats"
+                    "$ref": "#/$defs/notification_core_stats"
                 },
                 "rule_sections": {
                     "type": "array",
@@ -69,12 +69,12 @@
             },
             "required": ["parameters", "i18n"]
         },
-        "fallback_warning": {
+        "notification_fallback_warning": {
             "type": "object",
             "properties": {
                 "i18n": {
                     "type": "object",
-                    "$ref": "#/$defs/fallback_warning_i18n"
+                    "$ref": "#/$defs/notification_fallback_warning_i18n"
                 },
                 "setup_link": {
                     "type": "string"
@@ -85,7 +85,7 @@
             },
             "required": ["i18n", "setup_link", "do_not_show_again_link"]
         },
-        "fallback_warning_i18n": {
+        "notification_fallback_warning_i18n": {
             "type": "object",
             "properties": {
                 "title": {
@@ -159,7 +159,7 @@
                 "failed_notifications_link_title"
             ]
         },
-        "core_stats": {
+        "notification_core_stats": {
             "type": "object",
             "properties": {
                 "sites": {
@@ -170,12 +170,12 @@
                 },
                 "i18n": {
                     "type": "object",
-                    "$ref": "#/$defs/core_stats_i18n"
+                    "$ref": "#/$defs/notification_core_stats_i18n"
                 }
             },
             "required": ["sites", "i18n"]
         },
-        "core_stats_i18n": {
+        "notification_core_stats_i18n": {
             "type": "object",
             "properties": {
                 "title": {

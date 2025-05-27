@@ -174,10 +174,10 @@ from cmk.gui.watolib.users import notification_script_choices
 
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.shared_typing.notifications import (
-    CoreStats,
-    CoreStatsI18n,
-    FallbackWarning,
-    FallbackWarningI18n,
+    NotificationCoreStats,
+    NotificationCoreStatsI18n,
+    NotificationFallbackWarning,
+    NotificationFallbackWarningI18n,
     NotificationParametersOverview,
     Notifications,
     NotificationStats,
@@ -1018,8 +1018,8 @@ def _get_vue_data() -> Notifications:
     return Notifications(
         overview_title_i18n=_("Notification overview"),
         fallback_warning=(
-            FallbackWarning(
-                i18n=FallbackWarningI18n(
+            NotificationFallbackWarning(
+                i18n=NotificationFallbackWarningI18n(
                     title=_("No fallback email address configured"),
                     message=_(
                         "Without a fallback email address, you may miss alerts "
@@ -1074,9 +1074,9 @@ def _get_vue_data() -> Notifications:
                 failed_notifications_link_title=_("View failed notifications"),
             ),
         ),
-        core_stats=CoreStats(
+        core_stats=NotificationCoreStats(
             sites=sites_with_disabled_notifications,
-            i18n=CoreStatsI18n(
+            i18n=NotificationCoreStatsI18n(
                 title=_("Core status of notifications"),
                 sites_column_title=_("Sites"),
                 status_column_title=_("Notification core status"),

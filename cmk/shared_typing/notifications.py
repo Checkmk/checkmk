@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 
 @dataclass(kw_only=True)
-class FallbackWarningI18n:
+class NotificationFallbackWarningI18n:
     title: str
     message: str
     setup_link_title: str
@@ -32,7 +32,7 @@ class NotificationStatsI18n:
 
 
 @dataclass(kw_only=True)
-class CoreStatsI18n:
+class NotificationCoreStatsI18n:
     title: str
     sites_column_title: str
     status_column_title: str
@@ -49,8 +49,8 @@ class Rule:
 
 
 @dataclass(kw_only=True)
-class FallbackWarning:
-    i18n: FallbackWarningI18n
+class NotificationFallbackWarning:
+    i18n: NotificationFallbackWarningI18n
     setup_link: str
     do_not_show_again_link: str
 
@@ -65,9 +65,9 @@ class NotificationStats:
 
 
 @dataclass(kw_only=True)
-class CoreStats:
+class NotificationCoreStats:
     sites: list[str]
-    i18n: CoreStatsI18n
+    i18n: NotificationCoreStatsI18n
 
 
 @dataclass(kw_only=True)
@@ -86,10 +86,10 @@ class RuleSection:
 class Notifications:
     overview_title_i18n: str
     notification_stats: NotificationStats
-    core_stats: CoreStats
+    core_stats: NotificationCoreStats
     rule_sections: list[RuleSection]
     user_id: str
-    fallback_warning: Optional[FallbackWarning] = None
+    fallback_warning: Optional[NotificationFallbackWarning] = None
 
 
 @dataclass(kw_only=True)

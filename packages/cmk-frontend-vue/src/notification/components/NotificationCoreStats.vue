@@ -5,10 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
-import type { CoreStats } from 'cmk-shared-typing/typescript/notifications'
+import type { NotificationCoreStats } from 'cmk-shared-typing/typescript/notifications'
 
 defineProps<{
-  stats: CoreStats
+  stats: NotificationCoreStats
 }>()
 </script>
 

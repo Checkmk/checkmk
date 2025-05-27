@@ -15,18 +15,18 @@ export interface NotificationTypeDefs {
 }
 export interface Notifications {
   overview_title_i18n: string;
-  fallback_warning?: FallbackWarning;
+  fallback_warning?: NotificationFallbackWarning;
   notification_stats: NotificationStats;
-  core_stats: CoreStats;
+  core_stats: NotificationCoreStats;
   rule_sections: RuleSection[];
   user_id: string;
 }
-export interface FallbackWarning {
-  i18n: FallbackWarningI18N;
+export interface NotificationFallbackWarning {
+  i18n: NotificationFallbackWarningI18N;
   setup_link: string;
   do_not_show_again_link: string;
 }
-export interface FallbackWarningI18N {
+export interface NotificationFallbackWarningI18N {
   title: string;
   message: string;
   setup_link_title: string;
@@ -45,11 +45,11 @@ export interface NotificationStatsI18N {
   sent_notifications_link_title: string;
   failed_notifications_link_title: string;
 }
-export interface CoreStats {
+export interface NotificationCoreStats {
   sites: string[];
-  i18n: CoreStatsI18N;
+  i18n: NotificationCoreStatsI18N;
 }
-export interface CoreStatsI18N {
+export interface NotificationCoreStatsI18N {
   title: string;
   sites_column_title: string;
   status_column_title: string;

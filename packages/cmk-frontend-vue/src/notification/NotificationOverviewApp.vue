@@ -4,25 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type {
-  NotificationStats,
-  CoreStats,
-  RuleSection,
-  FallbackWarning
-} from 'cmk-shared-typing/typescript/notifications'
-import NotificationStatsComponent from '@/notification/components/NotificationStats.vue'
-import CoreStatistics from '@/notification/components/CoreStats.vue'
+import type * as NotificationTypes from 'cmk-shared-typing/typescript/notifications'
+import NotificationStats from '@/notification/components/NotificationStats.vue'
+import NotificationCoreStats from '@/notification/components/NotificationCoreStats.vue'
 import NotificationRules from '@/notification/components/NotificationRules.vue'
-import FallbackWarningComponent from '@/notification/components/FallbackWarning.vue'
+import NotificationFallbackWarning from '@/notification/components/NotificationFallbackWarning.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import { ref, onMounted } from 'vue'
 
 const props = defineProps<{
   overview_title_i18n: string
-  fallback_warning: FallbackWarning | null
-  notification_stats: NotificationStats
-  core_stats: CoreStats
-  rule_sections: RuleSection[]
+  fallback_warning: NotificationTypes.NotificationFallbackWarning | null
+  notification_stats: NotificationTypes.NotificationStats
+  core_stats: NotificationTypes.NotificationCoreStats
+  rule_sections: NotificationTypes.RuleSection[]
   user_id: string
 }>()
 const isContentVisible = ref(true)
@@ -51,21 +46,21 @@ function toggleContent() {
 </script>
 
 <template>
-  <FallbackWarningComponent
+  <NotificationFallbackWarning
     v-if="fallback_warning"
     :properties="fallback_warning"
-  ></FallbackWarningComponent>
+  ></NotificationFallbackWarning>
   <h3 class="table overview_header" @click.prevent="toggleContent()">
     <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     {{ overview_title_i18n }}
   </h3>
   <div v-if="isContentVisible" class="overview_container">
     <div class="stats_container">
-      <NotificationStatsComponent
+      <NotificationStats
         :notification_stats="notification_stats"
         :toggle_content="toggleContent"
-      ></NotificationStatsComponent>
-      <CoreStatistics :stats="core_stats"></CoreStatistics>
+      ></NotificationStats>
+      <NotificationCoreStats :stats="core_stats"></NotificationCoreStats>
     </div>
     <NotificationRules :rule_sections="rule_sections" :collapse="toggleContent"></NotificationRules>
   </div>

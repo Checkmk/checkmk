@@ -4,13 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { FallbackWarning } from 'cmk-shared-typing/typescript/notifications'
+import type { NotificationFallbackWarning } from 'cmk-shared-typing/typescript/notifications'
 import CmkDialog from '@/components/CmkDialog.vue'
 
 const WARNING_KEY = 'notification_fallback'
 
 const props = defineProps<{
-  properties: FallbackWarning
+  properties: NotificationFallbackWarning
 }>()
 
 function openInSameTab(url: string) {

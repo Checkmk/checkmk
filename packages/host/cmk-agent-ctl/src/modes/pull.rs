@@ -334,10 +334,7 @@ async fn _pull_loop(
         };
 
         if !is_addr_allowed(&remote, &pull_state.config.allowed_ip) {
-            warn!(
-                "{}: Rejecting pull request - connection from IP is not allowed.",
-                remote
-            );
+            warn!("{remote}: Rejecting pull connection - IP is not allowed.");
             continue;
         }
 
@@ -354,7 +351,8 @@ async fn _pull_loop(
             }
 
             ConnectionMode::Active(crypto_mode) => {
-                info!("{}: Handling pull request.", remote);
+                info!("{remote} (pull): Handling connection.");
+                debug!("{remote} (pull): Acquiring connection slot.");
                 let ip_addr = remote.ip();
                 let sem = guard.obtain_connection_semaphore(ip_addr);
 
@@ -370,15 +368,15 @@ async fn _pull_loop(
                     );
                     tokio::spawn(async move {
                         if let Err(err) = io_future.await {
-                            warn!("Failed processing task {task_num} from ip {ip_addr:?} ({err})");
+                            warn!("{remote} (pull): Failed processing task #{task_num} ({err})");
                         } else {
-                            debug!("Successfully processed task {task_num} from ip {ip_addr:?}");
+                            debug!("{remote} (pull): Successfully processed task #{task_num}");
                         };
                         drop(permit);
                     });
-                    debug!("{}: Handling pull request DONE (Task started).", remote);
+                    debug!("{remote} (pull): Task #{task_num} started.");
                 } else {
-                    warn!("Too many active connections at ip_addr {}", ip_addr);
+                    warn!("{remote} (pull): Too many active connections. Rejecting.");
                     continue;
                 }
             }

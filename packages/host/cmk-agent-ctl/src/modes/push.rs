@@ -45,7 +45,7 @@ pub fn handle_push_cycle(
     .context("Error compressing agent output")?;
 
     for (site_id, connection) in registry.get_push_connections() {
-        info!("{}: Pushing agent output", site_id);
+        info!("{site_id} (push): Sending agent output");
         let site_url = site_spec::make_site_url(site_id, &connection.receiver_port)
             .context("Failed to construct URL for pushing data")?;
         if let Err(error) = (agent_receiver_api::Api {
@@ -57,7 +57,7 @@ pub fn handle_push_cycle(
             &monitoring_data::compression_header_info().push,
             &compressed_mon_data,
         ) {
-            warn!("{}: Error pushing agent output. ({})", site_url, error);
+            warn!("{site_url} (push): Error sending agent output. ({error})");
         };
     }
     Ok(())

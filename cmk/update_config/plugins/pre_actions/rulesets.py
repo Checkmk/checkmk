@@ -137,6 +137,8 @@ def _validate_rule_values(
         # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
         # could be missing only temporarily, so better not remove it.
         "ignored_checks",
+        "snmp_exclude_sections",  # same as "ignored_checks".
+        "snmp_check_interval",  # same as "ignored_checks".
     }
 
     for ruleset in all_rulesets.get_rulesets().values():

@@ -2,10 +2,6 @@
 
 /// file: notify.groovy
 
-email_address_team_ci = [ "timotheus.bachinger@checkmk.com", "frans.fuerst@checkmk.com", "jonas.scharpf@checkmk.com" ];
-email_address_team_qa = [ "matteo.stifano@checkmk.com", "rene.slowenski@checkmk.com" ];
-email_address_team_werks = [ "benedikt.seidl@checkmk.com" ];
-
 def notify_maintainer_of_package(maintainers, package_name, build_url) {
     try {
         mail(
@@ -30,6 +26,9 @@ def notify_error(error) {
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
     def projectname = currentBuild.fullProjectName;
+
+    def email_address_team_werks = ["benedikt.seidl@checkmk.com"];
+
     try {
         def isChangeValidation = projectname.contains("cv");
         def isTesting = projectname.contains("Testing");
@@ -87,12 +86,12 @@ def notify_error(error) {
 
             /// Inform QA if something's wrong with those jobs
             if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
-                notify_emails.addAll(email_address_team_qa);
+                notify_emails.addAll(TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
             }
 
             /// fallback - for investigation
             /* groovylint-disable DuplicateListLiteral */
-            notify_emails = notify_emails ?: email_address_team_ci;
+            notify_emails = notify_emails ?: TEAM_CI_MAIL.split(",");
             /* groovylint-enable DuplicateListLiteral */
 
             print("|| error-reporting: notify_emails ${notify_emails}");

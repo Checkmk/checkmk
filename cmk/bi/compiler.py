@@ -314,9 +314,9 @@ class BICompiler:
             self._redis_client.exists(f"bi:aggregation_lookup:{host_name}:{service_description}")
         )
 
-    def _check_redis_lookup_integrity(self):
+    def _check_redis_lookup_integrity(self) -> None:
         if self._redis_client.exists("bi:aggregation_lookup"):
-            return True
+            return None
 
         # The following scenario only happens if the redis daemon loses its data
         # In the normal workflow the lookup cache is updated after the compilation phase

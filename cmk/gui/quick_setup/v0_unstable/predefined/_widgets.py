@@ -92,7 +92,7 @@ def _host_name_dict_element(
             custom_validate=(
                 validators.LengthInRange(
                     min_value=1,
-                    max_value=253,
+                    max_value=240,
                     error_msg=Message(
                         "The %s is required but not specified or too long. Please enter a name that is not yet in use and is no longer than 253 characters."
                     )

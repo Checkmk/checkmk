@@ -154,18 +154,18 @@ def register(
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
-    help_learning_items: Callable[[], TopicMenuTopicEntries],
-    help_developer_items: Callable[[], TopicMenuTopicEntries],
-    help_about_checkmk_items: Callable[[], TopicMenuTopicEntries],
+    help_learning_entries: Callable[[], TopicMenuTopicEntries],
+    help_developer_entries: Callable[[], TopicMenuTopicEntries],
+    help_about_checkmk_entries: Callable[[], TopicMenuTopicEntries],
 ) -> None:
     hooks.register_thread_cache_cleanup()
     pagetypes.register(mega_menu_registry)
     help_menu.register(
         mega_menu_registry,
         help_info_line,
-        help_learning_items,
-        help_developer_items,
-        help_about_checkmk_items,
+        help_learning_entries,
+        help_developer_entries,
+        help_about_checkmk_entries,
     )
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)

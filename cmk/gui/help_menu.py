@@ -29,9 +29,9 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextl
 def register(
     mega_menu_registry: MegaMenuRegistry,
     info_line: Callable[[], str],
-    learning_items: Callable[[], TopicMenuTopicEntries],
-    developer_items: Callable[[], TopicMenuTopicEntries],
-    about_checkmk_items: Callable[[], TopicMenuTopicEntries],
+    learning_entries: Callable[[], TopicMenuTopicEntries],
+    developer_entries: Callable[[], TopicMenuTopicEntries],
+    about_checkmk_entries: Callable[[], TopicMenuTopicEntries],
 ) -> None:
     mega_menu_registry.register(
         MegaMenu(
@@ -39,7 +39,7 @@ def register(
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
-            topics=_help_menu_topics(learning_items, developer_items, about_checkmk_items),
+            topics=_help_menu_topics(learning_entries, developer_entries, about_checkmk_entries),
             info_line=info_line,
         )
     )
@@ -49,7 +49,7 @@ def default_info_line() -> str:
     return f"{edition(paths.omd_root).title} {__version__}{_license_status()}"
 
 
-def default_learning_items() -> TopicMenuTopicEntries:
+def default_learning_entries() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="beginners_guide",
@@ -94,7 +94,7 @@ def default_learning_items() -> TopicMenuTopicEntries:
     ]
 
 
-def default_developer_items() -> TopicMenuTopicEntries:
+def default_developer_entries() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="plugin_api_introduction",
@@ -174,7 +174,7 @@ def default_developer_items() -> TopicMenuTopicEntries:
     ]
 
 
-def default_about_checkmk_items() -> TopicMenuTopicEntries:
+def default_about_checkmk_entries() -> TopicMenuTopicEntries:
     return [
         TopicMenuItem(
             name="change_log",
@@ -187,9 +187,9 @@ def default_about_checkmk_items() -> TopicMenuTopicEntries:
 
 
 def _help_menu_topics(
-    learning_items: Callable[[], TopicMenuTopicEntries],
-    developer_items: Callable[[], TopicMenuTopicEntries],
-    about_checkmk_items: Callable[[], TopicMenuTopicEntries],
+    learning_entries: Callable[[], TopicMenuTopicEntries],
+    developer_entries: Callable[[], TopicMenuTopicEntries],
+    about_checkmk_entries: Callable[[], TopicMenuTopicEntries],
 ) -> Callable[[], list[TopicMenuTopic]]:
     def _fun() -> list[TopicMenuTopic]:
         return [
@@ -197,13 +197,13 @@ def _help_menu_topics(
                 name="learning_checkmk",
                 title=_("Learning Checkmk"),
                 icon="learning_checkmk",
-                entries=learning_items(),
+                entries=learning_entries(),
             ),
             TopicMenuTopic(
                 name="developer_resources",
                 title=_("Developer resources"),
                 icon="developer_resources",
-                entries=developer_items(),
+                entries=developer_entries(),
             ),
             TopicMenuTopic(
                 name="ideas_portal",
@@ -224,7 +224,7 @@ def _help_menu_topics(
                 name="about_checkmk",
                 title=_("About Checkmk"),
                 icon="about_checkmk",
-                entries=about_checkmk_items(),
+                entries=about_checkmk_entries(),
             ),
         ]
 

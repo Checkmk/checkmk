@@ -30,10 +30,10 @@ from cmk.gui.features import Features, features_registry
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose_dictionary_spec
 from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
-    default_about_checkmk_items,
-    default_developer_items,
+    default_about_checkmk_entries,
+    default_developer_entries,
     default_info_line,
-    default_learning_items,
+    default_learning_entries,
 )
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
@@ -185,9 +185,9 @@ def register(edition: Edition) -> None:
         user_attribute_registry,
         quick_setup_registry,
         default_info_line,
-        default_learning_items,
-        default_developer_items,
-        default_about_checkmk_items,
+        default_learning_entries,
+        default_developer_entries,
+        default_about_checkmk_entries,
     )
 
     features_registry.register(

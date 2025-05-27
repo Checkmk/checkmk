@@ -62,15 +62,6 @@ def main() {
         build_node = "fra"
     }
 
-    stage("Prepare workspace") {
-        single_tests.prepare_workspace(
-            cleanup: [
-                "${WORKSPACE}/test-results",
-            ],
-            make_venv: false,
-        );
-    }
-
     dir("${checkout_dir}") {
         inside_container(
             args: [

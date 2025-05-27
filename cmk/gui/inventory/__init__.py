@@ -10,14 +10,12 @@ from datetime import timedelta
 import cmk.utils.paths
 
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.i18n import _
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
+from cmk.gui.visuals.info import VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec
@@ -38,6 +36,7 @@ from ._tree import (
     verify_permission,
 )
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from ._visuals import VisualInfoInventoryHistory
 from ._webapi import page_host_inv_api
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
@@ -85,21 +84,3 @@ def register(
     icon_and_action_registry.register(InventoryIcon)
     icon_and_action_registry.register(InventoryHistoryIcon)
     openapi_register(endpoint_family_registry, versioned_endpoint_registry)
-
-
-class VisualInfoInventoryHistory(VisualInfo):
-    @property
-    def ident(self) -> str:
-        return "invhist"
-
-    @property
-    def title(self) -> str:
-        return _("Inventory history")
-
-    @property
-    def title_plural(self) -> str:
-        return _("Inventory histories")
-
-    @property
-    def single_spec(self) -> list[tuple[str, ValueSpec]]:
-        return []

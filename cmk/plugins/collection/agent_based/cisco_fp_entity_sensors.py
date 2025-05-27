@@ -88,6 +88,7 @@ snmp_section_cisco_fp_entity_sensors = SNMPSection(
                 OIDEnd(),
                 "1",  # entPhySensorType
                 "2",  # entPhySensorScale
+                "3",  # entPhySensorPrecision
                 "4",  # entPhySensorValue
                 "5",  # entPhySensorOperStatus
                 "6",  # entPhySensorUnitsDisplay

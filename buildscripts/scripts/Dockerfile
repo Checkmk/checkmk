@@ -9,7 +9,7 @@
 # minimal-alpine-checkmk-ci-2.4.0:latest bash
 #
 
-FROM artifacts.lan.tribe29.com:4000/python@sha256:1e5c1003284738564008fec60124f2a1a81bfda5b872bf334467ed8689783b18
+FROM artifacts.lan.tribe29.com:4000/python@sha256:723368287c1c3bc77152bf56bd7fe72c44ab55efebc60b1bc148cc19ecd49b71
 # 119MB
 # alpine:3.21 around 190MB
 # python:3.11.6-slim around 1100MB

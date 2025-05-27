@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, Literal, NewType, NotRequired, TypedDict
+from typing import Any, cast, Literal, NewType, NotRequired, override, TypedDict
 
 from cmk.ccc import store
 
@@ -370,6 +370,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
             spec_class=ConfigurableUserConnectionSpec,
         )
 
+    @override
     def save(self, cfg: list[ConfigurableUserConnectionSpec], pprint_value: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(

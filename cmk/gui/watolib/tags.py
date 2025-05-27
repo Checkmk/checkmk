@@ -7,7 +7,7 @@
 import abc
 from collections.abc import Mapping, Sequence
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, override, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -43,11 +43,14 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
             spec_class=TagConfigSpec,
         )
 
-    def _load_file(self, lock: bool = False) -> TagConfigSpec:
+    @override
+    def _load_file(self, *, lock: bool) -> TagConfigSpec:
+        # NOTE: Typing chaos...
+        default: TagConfigSpec = {}  # type: ignore[typeddict-item]
         cfg = store.load_from_mk_file(
             self._config_file_path,
             key=self._config_variable,
-            default={},
+            default=default,
             lock=lock,
         )
         if not cfg:
@@ -55,6 +58,7 @@ class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
 
         return cfg
 
+    @override
     def save(self, cfg: TagConfigSpec, pprint_value: bool) -> None:
         self._save_gui_config(cfg, pprint_value)
         self._save_base_config(cfg, pprint_value)

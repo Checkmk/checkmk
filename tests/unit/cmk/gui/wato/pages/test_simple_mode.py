@@ -5,7 +5,7 @@
 from collections.abc import Sequence
 from os import devnull
 from pathlib import Path
-from typing import TypedDict
+from typing import override, TypedDict
 from unittest.mock import MagicMock
 
 import pytest
@@ -47,12 +47,14 @@ class SomeStore(WatoSimpleConfigFile[SomeSpec]):
         super().__init__(config_file_path=Path(devnull), config_variable="foo", spec_class=SomeSpec)
         self._value = value
 
-    def _load_file(self, lock: bool) -> dict[str, SomeSpec]:
+    @override
+    def _load_file(self, *, lock: bool) -> dict[str, SomeSpec]:
         return {self._config_variable: self._value}
 
     # def validate(self, raw: object) -> SomeSpec:
     #     return SomeSpec(**vars(raw))
 
+    @override
     def save(self, cfg: dict[str, SomeSpec], pprint_value: bool) -> None:
         self._value = cfg[self._config_variable]
 

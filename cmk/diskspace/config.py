@@ -25,7 +25,10 @@ def read_config(path: Path) -> Config:
 
     raw_config = load_mk_file(
         path / "sitespecific.mk",
-        load_mk_file(path / "global.mk", DEFAULT_CONFIG.model_dump(exclude_none=True)),
+        default=load_mk_file(
+            path / "global.mk", default=DEFAULT_CONFIG.model_dump(exclude_none=True), lock=False
+        ),
+        lock=False,
     )
     if "diskspace_cleanup" not in raw_config:
         return DEFAULT_CONFIG

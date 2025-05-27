@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import TypedDict
+from typing import override, TypedDict
 
 from livestatus import BrokerConnection, BrokerConnections, BrokerSite, ConnectionId
 
@@ -26,7 +26,8 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
             spec_class=BrokerConnections,
         )
 
-    def _load_file(self, lock: bool) -> BrokerConnections:
+    @override
+    def _load_file(self, *, lock: bool) -> BrokerConnections:
         if not self._config_file_path.exists():
             return BrokerConnections({})
 
@@ -34,7 +35,7 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
             connections_from_file := store.load_from_mk_file(
                 self._config_file_path,
                 key=self._config_variable,
-                default={},
+                default=dict[str, dict[str, dict[str, SiteId]]](),
                 lock=lock,
             )
         ) is None:
@@ -50,6 +51,7 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
             }
         )
 
+    @override
     def save(self, cfg: BrokerConnections, pprint_value: bool) -> None:
         connections_dict = {k: asdict(v) for k, v in cfg.items()}
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)

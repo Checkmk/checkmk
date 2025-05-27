@@ -5,6 +5,7 @@
 
 import subprocess
 from collections.abc import Mapping
+from typing import override
 
 from cmk.ccc import store
 
@@ -49,7 +50,8 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         user_groups = userdb.contactgroups_of_user(user.id)
         return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
 
-    def _load_file(self, lock: bool = False) -> dict[str, Password]:
+    @override
+    def _load_file(self, *, lock: bool) -> dict[str, Password]:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
@@ -64,6 +66,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         )
         return cfg
 
+    @override
     def save(self, cfg: Mapping[str, Password], pprint_value: bool) -> None:
         """The actual passwords are stored in a separate file for special treatment
 

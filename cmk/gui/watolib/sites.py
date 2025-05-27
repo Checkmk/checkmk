@@ -9,7 +9,7 @@ import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple
+from typing import Any, cast, NamedTuple, override
 
 from livestatus import (
     BrokerConnection,
@@ -92,14 +92,15 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
             spec_class=SiteConfigurations,
         )
 
-    def _load_file(self, lock: bool) -> SiteConfigurations:
+    @override
+    def _load_file(self, *, lock: bool) -> SiteConfigurations:
         if not self._config_file_path.exists():
             return default_single_site_configuration()
 
         sites_from_file = store.load_from_mk_file(
             self._config_file_path,
             key=self._config_variable,
-            default={},
+            default=SiteConfigurations({}),
             lock=lock,
         )
 

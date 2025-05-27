@@ -14,7 +14,7 @@ import re
 from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, assert_never, cast, Final, Literal
+from typing import Any, assert_never, cast, Final, Literal, override
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -1722,12 +1722,13 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
             str(self._config_file_path.parent.relative_to(root_dir)).strip(".")
         )
 
-    def _load_file(self, lock: bool) -> Mapping[RulesetName, Any]:
+    @override
+    def _load_file(self, *, lock: bool) -> Mapping[RulesetName, Any]:
         folder = self.folder
         path = folder.rules_file_path()
         loaded_file_config = store.load_mk_file(
-            path,
-            {
+            Path(path),
+            default={
                 **RulesetCollection._context_helpers(folder),
                 **RulesetCollection._prepare_empty_rulesets(),
             },
@@ -1744,6 +1745,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
     ) -> None:
         self._save_and_validate_folder(self.folder, rulesets, unknown_rulesets, pprint_value)
 
+    @override
     def save(self, cfg: Mapping[RulesetName, Any], pprint_value: bool) -> None:
         self._save_and_validate_folder(self.folder, cfg, {}, pprint_value)
 

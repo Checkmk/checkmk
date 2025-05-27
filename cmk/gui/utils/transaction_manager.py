@@ -39,7 +39,7 @@ class TransactionIDValidationFailureEvent(SecurityEvent):
 
 
 class ReaderProtocol(Protocol):
-    def __call__(self, lock: bool) -> list[str]: ...
+    def __call__(self, *, lock: bool) -> list[str]: ...
 
 
 class TransactionManager:

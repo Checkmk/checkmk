@@ -232,8 +232,8 @@ def test_openapi_create_rule(
     assert ext["properties"] == values["properties"]
     assert ext["conditions"].items() >= values["conditions"].items()
     # Check that the format on disk is as expected.
-    rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
-    environ = load_mk_file(rules_mk, default={})
+    rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
+    environ = load_mk_file(rules_mk, default={}, lock=False)
     stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},

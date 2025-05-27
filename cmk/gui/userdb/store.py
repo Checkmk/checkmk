@@ -697,7 +697,7 @@ def convert_idle_timeout(value: str) -> int | bool | None:
 
 
 def load_contacts() -> dict[str, UserContactDetails]:
-    return load_from_mk_file(_contacts_filepath(), "contacts", {})
+    return load_from_mk_file(_contacts_filepath(), key="contacts", default={}, lock=False)
 
 
 def _contacts_filepath() -> Path:
@@ -705,7 +705,9 @@ def _contacts_filepath() -> Path:
 
 
 def load_multisite_users() -> dict[str, UserDetails]:
-    return load_from_mk_file(_multisite_dir() / "users.mk", "multisite_users", {})
+    return load_from_mk_file(
+        _multisite_dir() / "users.mk", key="multisite_users", default={}, lock=False
+    )
 
 
 def _convert_start_url(value: str) -> str:

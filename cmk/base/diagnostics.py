@@ -1008,7 +1008,9 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         # We 'encrypt' only license thingies at the moment, so there is currently no need to
         # sanitize encrypted files
         elif str(rel_filepath) == "multisite.d/sites.mk":
-            sites = store.load_from_mk_file(filepath, "sites", {})
+            sites = store.load_from_mk_file(
+                filepath, key="sites", default=livestatus.SiteConfigurations({}), lock=False
+            )
             store.save_to_mk_file(
                 tmp_filepath,
                 "sites",

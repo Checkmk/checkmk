@@ -150,12 +150,12 @@ def test_load_data_from_file_dict(tmp_path: Path, path_type: type[str] | type[Pa
     assert data["ä"] == "ß"
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_load_mk_file(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+def test_load_mk_file(tmp_path: Path) -> None:
     locked_file = tmp_path / "test"
     locked_file.write_bytes(b"# encoding: utf-8\nabc = '\xc3\xa4bc'\n")
 
-    config = store.load_mk_file(path_type(locked_file), default={})
+    config = store.load_mk_file(locked_file, default={}, lock=False)
+
     assert config["abc"] == "äbc"
 
 
@@ -284,18 +284,22 @@ def test_save_bytes_to_file_unicode(
     assert "content argument must be bytes, not Text" in "%s" % e
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_save_mk_file(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    path = path_type(tmp_path / "lala")
+def test_save_mk_file(tmp_path: Path) -> None:
+    path = tmp_path / "lala"
     store.save_mk_file(path, "x = 1")
-    assert store.load_mk_file(path, default={}) == {"x": 1}
+
+    actual = store.load_mk_file(path, default={}, lock=False)
+
+    assert actual == {"x": 1}
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_save_to_mk_file(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    path = path_type(tmp_path / "huhu")
+def test_save_to_mk_file(tmp_path: Path) -> None:
+    path = tmp_path / "huhu"
     store.save_to_mk_file(path, "x", {"a": 1})
-    assert store.load_mk_file(path, default={"x": {"a": 2, "y": 1}}) == {"x": {"a": 1, "y": 1}}
+
+    actual = store.load_mk_file(path, default={"x": {"a": 2, "y": 1}}, lock=False)
+
+    assert actual == {"x": {"a": 1, "y": 1}}
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

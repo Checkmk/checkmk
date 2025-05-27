@@ -88,16 +88,11 @@ tracer = trace.get_tracer()
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
-def load_mk_file(
-    path: Path | str, default: Mapping[str, object], lock: bool = False
-) -> Mapping[str, object]:
+def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Mapping[str, object]:
     with tracer.span(
         f"load_mk_file[{path}]",
         attributes={"cmk.file.path": str(path)},
     ):
-        if not isinstance(path, Path):
-            path = Path(path)
-
         if default is None:  # leave this for now, we still have a lot of `Any`s flying around
             raise MKGeneralException(
                 _(
@@ -124,8 +119,9 @@ def load_mk_file(
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
-def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = False) -> Any:
-    return load_mk_file(path, {key: default}, lock=lock)[key]
+def load_from_mk_file[T](path: Path, *, key: str, default: T, lock: bool) -> T:
+    # NOTE: The whole typing of the file contents in this module is basically a lie...
+    return load_mk_file(path, default={key: default}, lock=lock)[key]  # type: ignore[return-value]
 
 
 def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:

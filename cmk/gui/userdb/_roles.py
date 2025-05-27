@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, override, TypedDict
 
 from cmk.ccc import store
 
@@ -73,11 +73,14 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
             spec_class=dict[RoleName, CustomUserRole | BuiltInUserRole],
         )
 
-    def _load_file(self, lock: bool = False) -> Roles:
+    @override
+    def _load_file(self, *, lock: bool) -> Roles:
+        # NOTE: Typing chaos...
+        default: Roles = _get_builtin_roles()  # type: ignore[assignment]
         cfg = store.load_from_mk_file(
             self._config_file_path,
             key=self._config_variable,
-            default=_get_builtin_roles(),
+            default=default,
             lock=lock,
         )
         # Make sure that "general." is prefixed to the general permissions
@@ -97,6 +100,7 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
             if "basedon" in role and role["basedon"] in builtin_role_ids:
                 role["basedon"] = BuiltInUserRoleValues(role["basedon"])
 
+    @override
     def save(self, cfg: Roles, pprint_value: bool) -> None:
         active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)

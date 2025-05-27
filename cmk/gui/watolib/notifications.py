@@ -27,7 +27,7 @@ import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, cast, NotRequired, TypedDict
+from typing import Any, cast, NotRequired, override, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.user import UserId
@@ -94,11 +94,12 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
             spec_class=EventRule,
         )
 
-    def _load_file(self, lock: bool) -> list[EventRule]:
+    @override
+    def _load_file(self, *, lock: bool) -> list[EventRule]:
         notification_rules = store.load_from_mk_file(
             self._config_file_path,
             key=self._config_variable,
-            default=[],
+            default=list[Any](),  # Sigh... :-/
             lock=lock,
         )
         # Convert to new plug-in configuration format

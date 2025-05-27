@@ -35,7 +35,7 @@ def update_host_custom_attrs(*, pprint_value: bool) -> None:
 def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:
     vars_ = store.load_mk_file(
         multisite_dir() / "custom_attrs.mk",
-        {
+        default={
             "wato_user_attrs": [],
             "wato_host_attrs": [],
         },

@@ -26,11 +26,11 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 def _migrate_from_tuple(params: object) -> Mapping[str, object]:
     match params:
-        case (str(host), str(user), str(secret), {**rest}):
+        case (str(host), str(user), (str(secret_type), str(secret)), {**rest}):
             return {
                 "host": host,
                 "user": user,
-                "secret": secret,
+                "secret": (secret_type, secret),
                 **{str(k): v for k, v in rest.items()},
             }
         case dict():

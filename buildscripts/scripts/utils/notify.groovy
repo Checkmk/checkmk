@@ -7,6 +7,8 @@ def notify_error(error) {
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
     def projectname = currentBuild.fullProjectName;
+    def email_address_team_werks = ["benedikt.seidl@checkmk.com"];
+
     try {
         def isChangeValidation = projectname.contains("cv");
         def isTesting = projectname.contains("Testing");
@@ -59,23 +61,16 @@ def notify_error(error) {
 
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
-                notify_emails += "benedikt.seidl@checkmk.com";
+                notify_emails.addAll(email_address_team_werks);
             }
 
             /// Inform QA if something's wrong with those jobs
             if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
-                notify_emails += "matteo.stifano@checkmk.com";
-                notify_emails += "rene.slowenski@checkmk.com";
+                notify_emails.addAll(TEAM_QA_MAIL.replaceAll(',', ' ').split(' ').grep());
             }
 
             /// fallback - for investigation
-            /* groovylint-disable DuplicateListLiteral */
-            notify_emails = notify_emails ?: [
-                "timotheus.bachinger@checkmk.com",
-                "frans.fuerst@checkmk.com",
-                "jonas.scharpf@checkmk.com",
-            ];
-            /* groovylint-enable DuplicateListLiteral */
+            notify_emails = notify_emails ?: TEAM_CI_MAIL.split(",");
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 

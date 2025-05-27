@@ -340,7 +340,7 @@ waitmax() {
     shift
 
     # Run command in background
-    ksh -c "$*" &
+    ksh93 -c "$*" &
     PID=$!
 
     # Wait for termination within TIMOUT seconds
@@ -678,9 +678,9 @@ section_aix_hacmp() {
         if ! echo "${cluster_cmd_output}" | grep -q "not installed"; then
             # now the following commands should be available
             if inpath cllsnode; then
-                nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
+                nodes=$(cllsnode | grep -i "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
             else
-                nodes=$(/usr/es/sbin/cluster/utilities/cllsnode | grep "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
+                nodes=$(/usr/es/sbin/cluster/utilities/cllsnode | grep -i "NODE" | sed -e s/NODE//g -e s/Node//g -e s/://g)
             fi
 
             list_active_nodes=""

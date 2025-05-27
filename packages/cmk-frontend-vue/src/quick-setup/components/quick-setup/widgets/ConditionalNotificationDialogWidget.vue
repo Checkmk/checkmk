@@ -4,17 +4,54 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { CompositeWidgetProps } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+import type { ConditionalNotificationDialogWidgetProps } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types.ts'
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 import { formDataKey } from '@/quick-setup/keys.ts'
 import ConditionalNotificationStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationStageWidget.vue'
 
-const props = defineProps<CompositeWidgetProps>()
+const props = defineProps<ConditionalNotificationDialogWidgetProps>()
 
 const formData = inject(formDataKey)
 
-function showConditionalNotificationDialogWidget(
+const computedCondition = computed(() => {
+  if (props.target === 'recipient') {
+    return showConditionalNotificationDialogRecipientWidget
+  }
+  return showConditionalNotificationDialogServiceFilterWidget
+})
+
+function showConditionalNotificationDialogServiceFilterWidget(
+  formData: { [key: number]: StageData } | undefined
+) {
+  if (!formData) {
+    return false
+  }
+  for (const stageValue of Object.values(formData)) {
+    if (!('triggering_events' in stageValue)) {
+      continue
+    }
+
+    const triggeringEvents = stageValue['triggering_events']
+    if (Array.isArray(triggeringEvents)) {
+      if (0 in triggeringEvents && triggeringEvents[0] === 'all_events') {
+        return true
+      }
+
+      if (
+        0 in triggeringEvents &&
+        triggeringEvents[0] === 'specific_events' &&
+        1 in triggeringEvents &&
+        'host_events' in triggeringEvents[1]
+      ) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+function showConditionalNotificationDialogRecipientWidget(
   formData: { [key: number]: StageData } | undefined
 ) {
   if (!formData) {
@@ -46,7 +83,7 @@ function showConditionalNotificationDialogWidget(
 
 <template>
   <ConditionalNotificationStageWidget
-    :condition="showConditionalNotificationDialogWidget(formData)"
+    :condition="computedCondition(formData)"
     :items="props.items"
     :data="props?.data || {}"
     :errors="props.errors || {}"

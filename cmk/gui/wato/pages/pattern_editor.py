@@ -86,7 +86,10 @@ class ModePatternEditor(WatoMode):
             return super().breadcrumb()
 
     def _from_vars(self) -> None:
-        self._hostname = HostName(self._vs_host().from_html_vars("host"))
+        try:
+            self._hostname = HostName(self._vs_host().from_html_vars("host"))
+        except ValueError as e:
+            raise MKUserError("host", str(e))
         self._vs_host().validate_value(self._hostname, "host")
 
         # TODO: validate all fields

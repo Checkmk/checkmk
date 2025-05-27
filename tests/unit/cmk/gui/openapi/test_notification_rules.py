@@ -532,7 +532,6 @@ bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
             "subject_for_bulk_notifications": {"state": "enabled", "value": "time_period_subject"},
             "max_bulk_size": 333,
             "notification_bulks_based_on": ["host", "service", "check_type", "ec_contact"],
-            "notification_bulks_based_on_custom_macros": ["macro3", "macro4"],
             "bulk_outside_timeperiod": {
                 "state": "enabled",
                 "value": {

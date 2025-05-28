@@ -1450,7 +1450,7 @@ def initialize_agent_ca(site: SiteContext) -> None:
 
 
 def config_change(
-    version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks
+    version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks, verbose: bool
 ) -> list[str]:
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
@@ -1469,7 +1469,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, key, value, save=False)
+            config_set_value(site, key, value, verbose, save=False)
             changed.append(key)
 
         save_site_conf(site)
@@ -1508,7 +1508,9 @@ def validate_config_change_commands(
             bail_out(f"Invalid value for '{value} for {key}'. {error_from_config_choice.error}\n")
 
 
-def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> list[str]:
+def config_set(
+    site: SiteContext, config_hooks: ConfigHooks, args: Arguments, verbose: bool
+) -> list[str]:
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
         config_usage()
@@ -1530,7 +1532,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, hook_name, value)
+    config_set_value(site, hook_name, value, verbose)
     return [hook_name]
 
 
@@ -1550,7 +1552,7 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
     return OK(None)
 
 
-def config_set_all(site: SiteContext, ignored_hooks: list | None = None) -> None:
+def config_set_all(site: SiteContext, verbose: bool, ignored_hooks: list | None = None) -> None:
     if ignored_hooks is None:
         ignored_hooks = []
 
@@ -1562,13 +1564,13 @@ def config_set_all(site: SiteContext, ignored_hooks: list | None = None) -> None
         if hook_name in ignored_hooks:
             continue
 
-        _config_set(site, hook_name)
+        _config_set(site, hook_name, verbose)
 
 
-def _config_set(site: SiteContext, hook_name: str) -> None:
+def _config_set(site: SiteContext, hook_name: str, verbose: bool) -> None:
     value = site.conf[hook_name]
 
-    exitcode, output = call_hook(site, hook_name, ["set", value])
+    exitcode, output = call_hook(site, hook_name, ["set", value], verbose)
     if exitcode:
         return
 
@@ -1578,9 +1580,11 @@ def _config_set(site: SiteContext, hook_name: str) -> None:
     putenv("CONFIG_" + hook_name, site.conf[hook_name])
 
 
-def config_set_value(site: SiteContext, hook_name: str, value: str, save: bool = True) -> None:
+def config_set_value(
+    site: SiteContext, hook_name: str, value: str, verbose: bool, save: bool = True
+) -> None:
     site.conf[hook_name] = value
-    _config_set(site, hook_name)
+    _config_set(site, hook_name, verbose)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
         _update_cmk_core_config(site)
@@ -1625,7 +1629,7 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
         sys.stdout.write("\n")
 
 
-def config_configure(site: SiteContext, config_hooks: ConfigHooks) -> Iterator[str]:
+def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool) -> Iterator[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: str | None = ""
     menu_open = False
@@ -1669,7 +1673,7 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks) -> Iterator[s
             )
             if change:
                 try:
-                    yield from config_configure_hook(site, config_hooks, current_hook_name)
+                    yield from config_configure_hook(site, config_hooks, current_hook_name, verbose)
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1679,7 +1683,7 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks) -> Iterator[s
 
 
 def config_configure_hook(
-    site: SiteContext, config_hooks: ConfigHooks, hook_name: str
+    site: SiteContext, config_hooks: ConfigHooks, hook_name: str, verbose: bool
 ) -> Iterator[str]:
     if not site.is_stopped():
         if not dialog_yesno(
@@ -1709,9 +1713,9 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, hook.name, new_value)
+        config_set_value(site, hook.name, new_value, verbose)
         save_site_conf(site)
-        config_hooks = load_hook_dependencies(site, config_hooks)
+        config_hooks = load_hook_dependencies(site, config_hooks, verbose)
         yield hook_name
 
 
@@ -2186,7 +2190,7 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site_home, site.name)
 
-    site.set_config(load_config(site))
+    site.set_config(load_config(site, global_opts.verbose))
     if config_settings:  # add specific settings
         for hook_name, value in config_settings.items():
             site.conf[hook_name] = value
@@ -2225,7 +2229,9 @@ def finalize_site(
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_site_as_user(version_info, site, command_type, ignored_hooks=["TMPFS"])
+            finalize_site_as_user(
+                version_info, site, command_type, verbose, ignored_hooks=["TMPFS"]
+            )
             sys.exit(0)
         except Exception as e:
             bail_out("Failed to finalize site: %s" % e)
@@ -2237,7 +2243,7 @@ def finalize_site(
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    site.set_config(load_config(site))
+    site.set_config(load_config(site, verbose))
     site_home = SitePaths.from_site_name(site.name).home
     register_with_system_apache(
         version_info,
@@ -2255,6 +2261,7 @@ def finalize_site_as_user(
     version_info: VersionInfo,
     site: SiteContext,
     command_type: CommandType,
+    verbose: bool,
     ignored_hooks: list[str] | None = None,
 ) -> None:
     # Mount and create contents of tmpfs. This must be done as normal
@@ -2266,7 +2273,7 @@ def finalize_site_as_user(
 
     # Run all hooks in order to setup things according to the
     # configuration settings
-    config_set_all(site, ignored_hooks)
+    config_set_all(site, verbose, ignored_hooks)
     initialize_site_ca(site)
     initialize_agent_ca(site)
     save_site_conf(site)
@@ -2404,7 +2411,7 @@ def main_update_apache_config(
     _args: object,
     _options: object,
 ) -> None:
-    site.set_config(load_config(site))
+    site.set_config(load_config(site, global_opts.verbose))
     site_paths = SitePaths.from_site_name(site.name)
     site_home = site_paths.home
     if _is_apache_enabled(site):
@@ -2547,7 +2554,7 @@ def main_mv_or_cp(
     sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
-    new_site.set_config(load_config(new_site))
+    new_site.set_config(load_config(new_site, global_opts.verbose))
     set_environment(new_site)
 
     # Entry for tmps in /etc/fstab
@@ -2896,10 +2903,10 @@ def main_update(
 
         # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
         # new settings and default values.
-        site.set_config(load_config(site))
+        site.set_config(load_config(site, global_opts.verbose))
 
         # Let hooks of the new(!) version do their work and update configuration.
-        config_set_all(site)
+        config_set_all(site, global_opts.verbose)
         save_site_conf(site)
 
         # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
@@ -3085,7 +3092,7 @@ def main_init_action(
         if is_disabled(site_paths.apache_conf):
             continue
 
-        site.set_config(load_config(site))
+        site.set_config(load_config(site, global_opts.verbose))
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
@@ -3209,19 +3216,19 @@ def main_config(
     else:
         need_start = False
 
-    config_hooks = load_config_hooks(site)
+    config_hooks = load_config_hooks(site, global_opts.verbose)
     set_hooks: list[str] = []
     if len(args) == 0:
-        set_hooks = list(config_configure(site, config_hooks))
+        set_hooks = list(config_configure(site, config_hooks, global_opts.verbose))
     else:
         command = args[0]
         args = args[1:]
         if command == "show":
             config_show(site, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, config_hooks, args)
+            set_hooks = config_set(site, config_hooks, args, global_opts.verbose)
         elif command == "change":
-            set_hooks = config_change(version_info, site, config_hooks)
+            set_hooks = config_change(version_info, site, config_hooks, global_opts.verbose)
         else:
             config_usage()
 
@@ -3330,7 +3337,7 @@ def _restore_backup_from_tar(
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        site.set_config(load_config(site))
+        site.set_config(load_config(site, global_opts.verbose))
         orig_apache_port = site.conf["APACHE_TCP_PORT"]
 
         prepare_restore_as_site_user(site, options)
@@ -3361,7 +3368,7 @@ def _restore_backup_from_tar(
 
         tar.extract(tarinfo, path=site_home)
 
-    site.set_config(load_config(site))
+    site.set_config(load_config(site, global_opts.verbose))
 
     # give new user all files
     chown_tree(site_home, site.name)
@@ -3394,7 +3401,9 @@ def _restore_backup_from_tar(
     if is_root():
         postprocess_restore_as_root(version_info, site, options, global_opts.verbose)
     else:
-        postprocess_restore_as_site_user(version_info, site, options, orig_apache_port)
+        postprocess_restore_as_site_user(
+            version_info, site, options, orig_apache_port, global_opts.verbose
+        )
 
     return site
 
@@ -3538,7 +3547,11 @@ def postprocess_restore_as_root(
 
 
 def postprocess_restore_as_site_user(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions, orig_apache_port: str
+    version_info: VersionInfo,
+    site: SiteContext,
+    options: CommandOptions,
+    orig_apache_port: str,
+    verbose: bool,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
@@ -3553,6 +3566,7 @@ def postprocess_restore_as_site_user(
             if "reuse" in options
             else CommandType.restore_as_new_site
         ),
+        verbose,
     )
 
 
@@ -4273,7 +4287,7 @@ def exec_other_omd(version: str) -> NoReturn:
 #   '----------------------------------------------------------------------'
 
 
-def _site_environment(site_name: str, command: Command) -> SiteContext:
+def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteContext:
     site = SiteContext(site_name)
     site_home = SitePaths.from_site_name(site.name).home
     if command.site_must_exist and not site_exists(Path(site_home)):
@@ -4303,7 +4317,7 @@ def _site_environment(site_name: str, command: Command) -> SiteContext:
         elif omdlib.__version__ != v:
             exec_other_omd(v)
 
-    site.set_config(load_config(site))
+    site.set_config(load_config(site, verbose))
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user privileges. That way
@@ -4461,14 +4475,14 @@ def main() -> None:
             if len(args) >= 1:
                 site_name = args[0]
                 args = args[1:]
-                site = _site_environment(site_name, command)
+                site = _site_environment(site_name, command, global_opts.verbose)
             elif command.needs_site == 1:
                 bail_out("omd: please specify site.")
             else:
                 site = RootContext()
         else:
             site_name = site_name_from_uid()
-            site = _site_environment(site_name, command)
+            site = _site_environment(site_name, command, global_opts.verbose)
     else:
         site = RootContext()
 

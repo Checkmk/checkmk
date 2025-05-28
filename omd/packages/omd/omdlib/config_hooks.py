@@ -15,7 +15,6 @@ depends - exits with 1, if this hook misses its dependent hook settings
 """
 
 import dataclasses
-import logging
 import os
 import re
 import subprocess
@@ -35,13 +34,10 @@ from cmk.ccc.version import edition
 
 import cmk.utils.resulttype as result
 from cmk.utils import paths
-from cmk.utils.log import VERBOSE
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
-
-logger = logging.getLogger("cmk.omd")
 
 ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError
@@ -147,7 +143,7 @@ def save_site_conf(site: "SiteContext") -> None:
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site: "SiteContext") -> ConfigHooks:
+def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
     hook_files = []
@@ -157,7 +153,7 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     for hook_name in hook_files:
         try:
             if hook_name[0] != ".":
-                hook = _config_load_hook(site, hook_name)
+                hook = _config_load_hook(site, hook_name, verbose)
                 # only load configuration hooks
                 if hook.choices is not None:
                     config_hooks[hook_name] = hook
@@ -165,13 +161,14 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
             raise
         except Exception:
             pass
-    config_hooks = load_hook_dependencies(site, config_hooks)
+    config_hooks = load_hook_dependencies(site, config_hooks, verbose)
     return config_hooks
 
 
 def _config_load_hook(
     site: "SiteContext",
     hook_name: str,
+    verbose: bool,
 ) -> ConfigHook:
     unstructured = {"deprecated": False}
 
@@ -197,7 +194,7 @@ def _config_load_hook(
             else:
                 description_active = False
 
-    hook_info = call_hook(site, hook_name, ["choices"])[1]
+    hook_info = call_hook(site, hook_name, ["choices"], verbose)[1]
     return ConfigHook(
         choices=_parse_hook_choices(hook_info),
         name=hook_name,
@@ -239,10 +236,12 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return choices
 
 
-def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:
+def load_hook_dependencies(
+    site: "SiteContext", config_hooks: ConfigHooks, verbose: bool
+) -> ConfigHooks:
     for hook_name in sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
-        exitcode, _content = call_hook(site, hook_name, ["depends"])
+        exitcode, _content = call_hook(site, hook_name, ["depends"], verbose)
         if exitcode:
             hook.unstructured["active"] = False
         else:
@@ -250,7 +249,7 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
     return config_hooks
 
 
-def load_config(site: "SiteContext") -> Config:
+def load_config(site: "SiteContext", verbose: bool) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
@@ -262,7 +261,7 @@ def load_config(site: "SiteContext") -> Config:
         for hook_name in sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
                 config[hook_name] = call_hook(
-                    site, hook_name, ["default", edition(paths.omd_root).short]
+                    site, hook_name, ["default", edition(paths.omd_root).short], verbose
                 )[1]
     return config
 
@@ -300,7 +299,9 @@ def hook_exists(site: "SiteContext", hook_name: str) -> bool:
     return os.path.exists(hook_file)
 
 
-def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHookResult:
+def call_hook(
+    site: "SiteContext", hook_name: str, args: list[str], verbose: bool
+) -> ConfigHookResult:
     if not site.hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
@@ -314,7 +315,8 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
         }
     )
 
-    logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
+    if verbose:
+        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd))
 
     completed_process = subprocess.run(
         cmd,

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Load plug-in names into this module to have a single set of default settings
-
-from .alert_handling import *  # noqa: F403
-from .base import *  # noqa: F403
-from .cmc import *  # noqa: F403
-from .customer import *  # noqa: F403
-from .notify import *  # noqa: F403
+# In each site the ID of the current customer is available through this
+# variable. This is set during WATO snapshot creation.
+current_customer = "provider"

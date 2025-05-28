@@ -9,7 +9,6 @@ import contextlib
 import errno
 import fnmatch
 import io
-import logging
 import os
 import shutil
 import socket
@@ -25,10 +24,7 @@ from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
 from omdlib.type_defs import CommandOptions
 
-from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-
-logger = logging.getLogger("cmk.omd")
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
@@ -37,15 +33,7 @@ def ensure_mkbackup_lock_dir_rights() -> None:
         shutil.chown(mkbackup_lock_dir, group="omd")
         mkbackup_lock_dir.chmod(0o0770)
     except PermissionError:
-        logger.log(
-            VERBOSE,
-            "Unable to create %s needed for mkbackup. "
-            "This may be due to the fact that your SITE "
-            "User isn't allowed to create the backup directory. "
-            "You could resolve this issue by running 'sudo omd start' as root "
-            "(and not as SITE user).",
-            mkbackup_lock_dir,
-        )
+        pass
 
 
 def backup_site_to_tarfile(

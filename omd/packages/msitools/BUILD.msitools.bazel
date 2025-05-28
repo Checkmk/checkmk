@@ -74,3 +74,24 @@ configure_make(
         },
     ),
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":msitools"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "msibuild",
+    srcs = [":msitools"],
+    output_group = "msibuild",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "msiinfo",
+    srcs = [":msitools"],
+    output_group = "msiinfo",
+    visibility = ["//visibility:public"],
+)

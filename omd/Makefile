@@ -27,7 +27,6 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     erlang \
     cpp-libs \
-    msitools \
     apache-omd \
     check_mk \
     nagios \

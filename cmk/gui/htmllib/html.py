@@ -253,8 +253,7 @@ class HTMLGenerator(HTMLWriter):
                 HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
             self.javascript_file(js_url)
 
-        if "main" in javascripts:
-            self._inject_vue_frontend()
+        self._inject_vue_frontend()
 
         self.set_js_csrf_token()
 

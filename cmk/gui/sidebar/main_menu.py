@@ -22,7 +22,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicSegment
+from cmk.gui.type_defs import (
+    Icon,
+    MegaMenu,
+    TopicMenuItem,
+    TopicMenuTopic,
+    TopicMenuTopicSegment,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
@@ -60,7 +66,7 @@ class MainMenuRenderer:
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=[menu_item.name],
-                popup_group="main_menu_popup",
+                popup_group="popup_menu_handler",
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
             )
@@ -85,7 +91,7 @@ class MainMenuRenderer:
     def _get_main_menu_items(self) -> list[MainMenuItem]:
         items: list[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
-            if not menu.topics():
+            if menu.topics and not menu.topics():
                 continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
 
             if menu.hide():
@@ -109,14 +115,28 @@ class MainMenuRenderer:
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
         with output_funnel.plugged():
             menu = mega_menu_registry[menu_item.name]
+            classes = []
+            onclick = ""
+            if menu.vue_app:
+                onclick = "cmk.popup_menu.close_popup()"
+            else:
+                classes.append("popup_menu")
+
+            if user.get_attribute("nav_hide_icons_title"):
+                classes.append("min")
+
             html.open_div(
                 id_="popup_menu_%s" % menu_item.name,
-                class_=(
-                    ["popup_menu", "main_menu_popup"]
-                    + (["min"] if user.get_attribute("nav_hide_icons_title") else [])
-                ),
+                onclick=onclick,
+                class_=[
+                    "popup_menu_handler",
+                ]
+                + classes,
             )
-            MegaMenuRenderer().show(menu)
+            if menu.vue_app:
+                html.vue_app(app_name=menu.vue_app.name, data=menu.vue_app.data)
+            else:
+                MegaMenuRenderer().show(menu)
             html.close_div()
             return output_funnel.drain()
 
@@ -197,7 +217,8 @@ class MegaMenuRenderer:
         html.close_div()
         if menu.info_line:
             html.span(menu.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
-        topics = menu.topics()
+        if menu.topics:
+            topics = menu.topics()
         if any_show_more_items(topics):
             html.open_div()
             html.more_button(

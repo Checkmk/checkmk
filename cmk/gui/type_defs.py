@@ -636,15 +636,22 @@ class TopicMenuTopic(NamedTuple):
     hide: bool = False
 
 
+class MegaMenuVueApp(NamedTuple):
+    name: str
+    data: dict = {}
+    class_: list[str] = []
+
+
 class MegaMenu(NamedTuple):
     name: str
     title: str | LazyString
     icon: Icon
     sort_index: int
-    topics: Callable[[], list[TopicMenuTopic]]
+    topics: Callable[[], list[TopicMenuTopic]] | None
     search: ABCMegaMenuSearch | None = None
     info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False
+    vue_app: MegaMenuVueApp | None = None
     onopen: str | None = None
 
 

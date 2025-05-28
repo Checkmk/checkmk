@@ -164,7 +164,7 @@ export function on_click_collapse_topic(topic: string) {
             add_class(li, "hidden");
         }
     });
-    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
+    resize_mega_menu_popup(current_topic.closest(".popup_menu_handler"));
 }
 
 export function on_click_show_all_results(

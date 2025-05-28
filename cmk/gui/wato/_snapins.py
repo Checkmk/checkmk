@@ -171,7 +171,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        topic_generator: Callable[[], Iterable[TopicMenuTopic]],
+        topic_generator: Callable[[], Iterable[TopicMenuTopic]] | None,
     ) -> None:
         super().__init__(name)
         self._topic_generator = topic_generator
@@ -187,7 +187,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                     *topic_menu_item.megamenu_search_terms,
                 ],
             )
-            for topic_menu_topic in self._topic_generator()
+            for topic_menu_topic in (self._topic_generator() if self._topic_generator else [])
             for topic_menu_item in get_main_menu_items_prefixed_by_segment(topic_menu_topic)
         )
 

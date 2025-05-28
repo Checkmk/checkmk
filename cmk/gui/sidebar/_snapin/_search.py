@@ -1433,7 +1433,11 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
                 title=topic_menu_item.title,
                 url=topic_menu_item.url,
             )
-            for topic_menu_topic in mega_menu_registry["monitoring"].topics()
+            for topic_menu_topic in (
+                mega_menu_registry["monitoring"].topics()
+                if mega_menu_registry["monitoring"].topics
+                else []
+            )
             for topic_menu_item in get_main_menu_items_prefixed_by_segment(topic_menu_topic)
             if any(
                 query.lower() in match_text.lower()
@@ -1510,16 +1514,17 @@ class MenuSearchResultsRenderer(abc.ABC):
                 menu.icon if menu.icon else default_icons[1],
             )
 
-            for topic in menu.topics():
-                mapping[topic.title] = (
-                    topic.icon if topic.icon else default_icons[0],
-                    topic.icon if topic.icon else default_icons[1],
-                )
-                for item in topic.entries:
-                    mapping[item.title] = (
+            if menu.topics:
+                for topic in menu.topics():
+                    mapping[topic.title] = (
                         topic.icon if topic.icon else default_icons[0],
-                        item.icon if item.icon else default_icons[1],
+                        topic.icon if topic.icon else default_icons[1],
                     )
+                    for item in topic.entries:
+                        mapping[item.title] = (
+                            topic.icon if topic.icon else default_icons[0],
+                            item.icon if item.icon else default_icons[1],
+                        )
         for module_class in main_module_registry.values():
             module = module_class()
             if module.title not in mapping:

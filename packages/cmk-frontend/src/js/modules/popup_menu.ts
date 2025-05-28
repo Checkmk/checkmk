@@ -514,7 +514,7 @@ export function initialize_mega_menus() {
 }
 
 function resize_all_mega_menu_popups() {
-    for (const popup of querySelectorAllByClassName("main_menu_popup")) {
+    for (const popup of querySelectorAllByClassName("popup_menu_handler")) {
         resize_mega_menu_popup(popup);
     }
 }
@@ -703,7 +703,7 @@ export function mega_menu_reset_default_expansion(main_menu_name: string) {
 
     remove_class(main_menu, "extended_topic");
     mega_menu_hide_entries(main_menu.id);
-    resize_mega_menu_popup(main_menu.closest(".main_menu_popup")!);
+    resize_mega_menu_popup(main_menu.closest(".popup_menu_handler")!);
 }
 
 export function mega_menu_hide_entries(menu_id: string) {

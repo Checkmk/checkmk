@@ -329,7 +329,7 @@ class Registry:
         for line in resp:
             print(line)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.client = docker.client.from_env()
         self.credentials = get_credentials()
         match self.editions:

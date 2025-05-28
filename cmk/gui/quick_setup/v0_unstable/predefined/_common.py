@@ -86,6 +86,7 @@ def _find_id_in_form_data(form_data: Any, target_key: str) -> None | str:
     if isinstance(form_data, dict):
         for key, value in form_data.items():
             if key == target_key:
+                assert isinstance(value, str)
                 return value
             result = _find_id_in_form_data(value, target_key)
             if result is not None:

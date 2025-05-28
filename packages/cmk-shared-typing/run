@@ -144,7 +144,7 @@ run_build() {
         if [[ "$file" == "source/graph_designer.json" ]]; then
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
-                --output "${PYTHON_DESTINATION}/cee/${target_base}.py" \
+                --output "${PYTHON_DESTINATION}/${target_base}.py" \
                 --target-python-version 3.12 \
                 --output-model-type=pydantic.BaseModel \
                 --collapse-root-models \
@@ -153,17 +153,11 @@ run_build() {
                 --use-double-quotes \
                 --use-default \
                 --use-one-literal-as-default \
-                --custom-file-header-path header_cee_py.txt \
+                --custom-file-header-path header_py.txt \
                 --custom-formatters "utils.format" \
                 --enum-field-as-literal all \
                 --use-generic-container-types \
                 --use-union-operator
-            npm run json2ts -- \
-                --additionalProperties=false \
-                --declareExternallyReferenced \
-                --bannerComment "$(cat header_cee_ts.txt)" \
-                --cwd source/ "${file}" \
-                -o "typescript/${target_base}.ts"
         else
             datamodel-codegen --input "$file" \
                 --input-file-type jsonschema \
@@ -179,13 +173,13 @@ run_build() {
                 --use-subclass-enum \
                 --custom-file-header-path header_py.txt \
                 --custom-formatters "utils.format"
-            npm run json2ts -- \
-                --additionalProperties=false \
-                --declareExternallyReferenced \
-                --bannerComment "$(cat header_ts.txt)" \
-                --cwd source/ "${file}" \
-                -o "typescript/${target_base}.ts"
         fi
+        npm run json2ts -- \
+            --additionalProperties=false \
+            --declareExternallyReferenced \
+            --bannerComment "$(cat header_ts.txt)" \
+            --cwd source/ "${file}" \
+            -o "typescript/${target_base}.ts"
     done
 
     if [ "$CI" == "true" ]; then

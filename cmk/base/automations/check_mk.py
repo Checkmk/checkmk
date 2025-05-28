@@ -51,7 +51,6 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
-    base_autochecks_dir,
     base_discovered_host_labels_dir,
     counters_dir,
     data_source_cache_dir,
@@ -992,7 +991,7 @@ def _execute_autodiscovery(
 
     core = create_core(config.monitoring_core)
     with config.set_use_core_config(
-        autochecks_dir=base_autochecks_dir,
+        autochecks_dir=autochecks_dir,
         discovered_host_labels_dir=base_discovered_host_labels_dir,
     ):
         try:

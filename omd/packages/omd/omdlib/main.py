@@ -11,7 +11,6 @@ import contextlib
 import errno
 import fcntl
 import io
-import logging
 import os
 import pty
 import pwd
@@ -126,11 +125,9 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 
-import cmk.utils.log
 from cmk.utils import tty
 from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
-from cmk.utils.log import VERBOSE
 from cmk.utils.resulttype import Error, OK, Result
 
 from cmk.crypto.password import Password
@@ -138,9 +135,6 @@ from cmk.crypto.password_hashing import hash_password
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]
-
-cmk.utils.log.setup_console_logging()
-logger = logging.getLogger("cmk.omd")
 
 
 class StateMarkers:
@@ -2128,8 +2122,6 @@ def main_init(
             "Please call 'omd disable %s' first." % site.name
         )
 
-    is_verbose = logger.isEnabledFor(VERBOSE)
-
     if not site.is_empty():
         if not global_opts.force:
             bail_out(
@@ -2147,7 +2139,7 @@ def main_init(
         for entry in os.listdir(site_home):
             if entry not in [".", ".."]:
                 path = site_home + "/" + entry
-                if is_verbose:
+                if global_opts.verbose:
                     sys.stdout.write("\n   deleting %s..." % path)
                 if os.path.islink(path) or not os.path.isdir(path):
                     os.remove(path)
@@ -4455,9 +4447,6 @@ def main() -> None:
         sys.exit(1)
 
     args = main_args[1:]
-
-    if global_opts.verbose:
-        logger.setLevel(VERBOSE)
 
     command = _get_command(main_args[0])
 

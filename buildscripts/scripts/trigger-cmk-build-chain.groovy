@@ -57,15 +57,14 @@ def main() {
     ];
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
+    assert edition in ["enterprise", "raw", "managed", "cloud"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = edition != "managed";
 
-    // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
-    def run_comp_tests = !(edition in ["saas", "managed"]);
-    def run_image_tests = !(edition in ["saas", "managed"]);
+    def run_comp_tests = !(edition in ["managed"]);
+    def run_image_tests = !(edition in ["managed"]);
     def run_update_tests = (edition in ["enterprise", "cloud"]);
 
     print(
@@ -138,13 +137,6 @@ def main() {
             job: "${base_folder}/build-cmk-packages",
             parameters: job_parameters
         );
-    }[0]
-
-    success &= smart_stage(
-            name: "Trigger Saas Gitlab jobs",
-            condition: success && edition == "saas",
-            raiseOnError: false,) {
-        build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);
     }[0]
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

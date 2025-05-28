@@ -75,7 +75,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--edition",
         required=True,
-        choices=["raw", "enterprise", "managed", "cloud", "saas"],
+        choices=["raw", "enterprise", "managed", "cloud"],
         help="Checkmk edition to build",
     )
     parser.add_argument("--version", required=True, help="Version to build e.g. '2023.10.19'")
@@ -510,10 +510,6 @@ def main() -> None:
             suffix = ".cce"
             registry = ""
             folder = "checkmk"
-        case "saas":
-            suffix = ".cse"
-            registry = "artifacts.lan.tribe29.com:4000"
-            folder = ""
         case _:
             raise Exception(f"ERROR: Unknown edition '{args.edition}'")
 

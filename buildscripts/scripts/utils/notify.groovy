@@ -49,11 +49,6 @@ def notify_error(error) {
                 it != "weblate@checkmk.com" && it.endsWith("@checkmk.com")
             });
 
-            /// Inform cloud devs if cloud burns
-            if (projectname.contains("build-cmk-cloud-images") || projectname.contains("saas")) {
-                notify_emails += "aws-saas-checkmk-dev@checkmk.com";
-            }
-
             /// Inform nile devs if our extensions fail
             if (projectname.contains("test-extension-compatibility")) {
                 notify_emails.addAll(TEAM_NILE_MAIL.split(","));

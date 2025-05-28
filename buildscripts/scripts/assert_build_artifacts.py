@@ -10,7 +10,6 @@ from argparse import Namespace as Args
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
-from os import environ
 from pathlib import Path
 from typing import NamedTuple
 
@@ -117,14 +116,6 @@ class Registry:
             case ["raw", "cloud", "managed"]:
                 self.url = "https://docker.io"
                 self.image_exists = self.image_exists_docker_hub
-            case ["saas"]:
-                self.url = "https://artifacts.lan.tribe29.com:4000"
-                self.image_exists = self.image_exists_enterprise
-                # For nexus, d-intern is not authorized
-                self.credentials = Credentials(
-                    username=environ["NEXUS_USER"],
-                    password=environ["NEXUS_PASSWORD"],
-                )
             case _:
                 raise RuntimeError(f"Cannnot match editions to registry: {self.editions}")
 
@@ -176,8 +167,6 @@ def build_docker_image_name_and_registry(
                 return "checkmk/"
             case "enterprise":
                 return f"{ed}/"
-            case "saas":
-                return ""
             case _:
                 raise RuntimeError(f"Unknown edition {ed}")
 
@@ -249,9 +238,6 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         ),
         Registry(
             editions=["raw", "cloud", "managed"],
-        ),
-        Registry(
-            editions=["saas"],
         ),
     ]
     for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):

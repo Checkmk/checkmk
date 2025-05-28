@@ -32,7 +32,6 @@ def main() {
         'enterprise': 'cee',
         'cloud': 'cce',
         'managed': 'cme',
-        'saas': 'cse',
     ];
 
     def make_target = "test-gui-e2e-${short_editions[edition]}-docker";

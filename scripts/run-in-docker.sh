@@ -50,7 +50,7 @@ if [ "$USER" != "jenkins" ]; then
         -e HOME="${REPO_DIR}/build_user_home/" \
         "
 
-    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${REPO_DIR}/build_user_home/.docker"
+    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${REPO_DIR}/build_user_home/.docker:ro"
 else
     # Needed for .cargo which is shared between workspaces
     SHARED_CARGO_FOLDER="${HOME}/shared_cargo_folder"
@@ -64,7 +64,7 @@ else
     GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 
-    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}"
+    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}:ro"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"

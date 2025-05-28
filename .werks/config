@@ -3,7 +3,6 @@ editions = [
     ( "cee",          "Enterprise Edition" ),
     ( "cme",          "Managed Services Edition" ),
     ( "cce",          "Cloud Edition" ),
-    ( "cse",          "Saas Edition" ),
 ]
 
 components = [

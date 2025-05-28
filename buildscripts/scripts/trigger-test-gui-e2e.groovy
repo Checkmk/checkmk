@@ -46,8 +46,8 @@ def main() {
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
-    def all_editions = ["enterprise", "cloud", "managed", "raw", "saas"];
-    def selected_editions_default = ["enterprise", "cloud", "saas"];
+    def all_editions = ["enterprise", "cloud", "managed", "raw"];
+    def selected_editions_default = ["enterprise", "cloud"];
     def params_editions = params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep();
     def selected_editions = [];
     if (params_editions) {

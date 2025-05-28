@@ -1548,10 +1548,7 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
     return OK(None)
 
 
-def config_set_all(site: SiteContext, verbose: bool, ignored_hooks: list | None = None) -> None:
-    if ignored_hooks is None:
-        ignored_hooks = []
-
+def config_set_all(site: SiteContext, verbose: bool, ignored_hooks: Sequence[str]) -> None:
     for hook_name in sort_hooks(list(site.conf.keys())):
         # Hooks may vanish after and up- or downdate
         if not hook_exists(site, hook_name):
@@ -2258,7 +2255,7 @@ def finalize_site_as_user(
     site: SiteContext,
     command_type: CommandType,
     verbose: bool,
-    ignored_hooks: list[str] | None = None,
+    ignored_hooks: Sequence[str],
 ) -> None:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -2904,7 +2901,7 @@ def main_update(
             site.set_config(load_config(site, global_opts.verbose))
 
             # Let hooks of the new(!) version do their work and update configuration.
-            config_set_all(site, global_opts.verbose)
+            config_set_all(site, global_opts.verbose, ())
             save_site_conf(site)
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
@@ -3568,6 +3565,7 @@ def postprocess_restore_as_site_user(
             else CommandType.restore_as_new_site
         ),
         verbose,
+        (),
     )
 
 

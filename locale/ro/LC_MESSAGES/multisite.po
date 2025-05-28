@@ -32261,6 +32261,11 @@ msgstr ""
 "formularului, pentru a permite verificării să identifice elementul de "
 "formular corect."
 
+msgid ""
+"If this checkbox is activated, log messages received via OTLP are converted "
+"into syslog format and forwarded to the Event Console."
+msgstr ""
+
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr ""
 "Dacă această eroare persistă, vă rugăm să contactați echipa de asistență "
@@ -57056,6 +57061,10 @@ msgstr "Trimiterea evenimentelor către o gazdă syslog la distanță"
 
 msgid "Send host metrics to Graphite"
 msgstr "Trimiteți parametrii gazdă către Graphite"
+
+#, fuzzy
+msgid "Send log messages to event console"
+msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
 msgid "Send message"
 msgstr "Trimiteți un mesaj"

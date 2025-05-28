@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0p43"
+__version__ = "2.2.0p44"
 
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module pyrfc.

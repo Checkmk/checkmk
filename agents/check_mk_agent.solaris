@@ -300,7 +300,7 @@ export_utility_functions() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.2.0p43"
+    echo "Version: 2.2.0p44"
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"

@@ -8,6 +8,7 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from random import randint
 from typing import Final, Literal
 
 import docker.client  # type: ignore[import-untyped]
@@ -463,7 +464,9 @@ def _oracle(
     with OracleDatabase(
         client,
         checkmk,
-        name="oracle",
+        name=f"oracle_for_{checkmk.name}"
+        if checkmk is not None and checkmk.name
+        else f"oracle_{randint(10000000, 99999999)}",
         temp_dir=tmp_path_session,
     ) as oracle_db:
         yield oracle_db

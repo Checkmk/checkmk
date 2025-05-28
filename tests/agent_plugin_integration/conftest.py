@@ -7,6 +7,7 @@ import os
 from collections.abc import Iterator
 from contextlib import nullcontext
 from pathlib import Path
+from random import randint
 
 import docker  # type: ignore[import-untyped]
 import docker.models  # type: ignore[import-untyped]
@@ -15,6 +16,7 @@ import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
 from tests.testlib.docker import CheckmkApp
+from tests.testlib.version import version_from_env
 
 logger = logging.getLogger()
 
@@ -27,7 +29,11 @@ def _docker_client() -> docker.DockerClient:
 @pytest.fixture(name="checkmk", scope="session")
 def _checkmk(client: docker.DockerClient) -> Iterator[CheckmkApp | None]:
     with (
-        CheckmkApp(client, name="checkmk", ports={"8000/tcp": 9000})
+        CheckmkApp(
+            client,
+            name=f"checkmk-{version_from_env().branch}_{randint(10000000, 99999999)}",
+            ports={"8000/tcp": 9000},
+        )
         if os.getenv("AGENT_PLUGIN_E2E", "0") == "1"
         else nullcontext()
     ) as checkmk:

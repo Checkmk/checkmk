@@ -265,7 +265,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         self._page_form_quick_setup_warning()
 
         html.vue_app(
-            app_name="host",
+            app_name="mode_host",
             data=asdict(
                 ModeHost(
                     i18n=ModeHostI18n(

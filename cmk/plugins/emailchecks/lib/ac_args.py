@@ -26,7 +26,7 @@ class OAuth2:
     tenant_id: str
 
 
-MailboxAuth = BasicAuth | OAuth2
+MailboxAuth = BasicAuth | OAuth2 | None
 
 
 class Scope(StrEnum):
@@ -42,7 +42,7 @@ SEND_PROTOCOLS = {"SMTP", "EWS"}
 class TRXConfig:
     server: str
     address: str
-    auth: BasicAuth | OAuth2
+    auth: MailboxAuth
     protocol: Literal["IMAP", "POP3", "EWS", "SMTP"]
     port: int
     tls: bool
@@ -140,7 +140,7 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
     )
 
 
-def _parse_auth(raw: Mapping[str, object]) -> BasicAuth | OAuth2:
+def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
     match raw:
         case {
             "username": None,
@@ -164,6 +164,13 @@ def _parse_auth(raw: Mapping[str, object]) -> BasicAuth | OAuth2:
             "tenant_id": None,
         }:
             return BasicAuth(username, _parse_secret(password, password_reference))
+        case {
+            "username": None,
+            "password": None,
+            "password_reference": None,
+            "protocol": "SMTP",
+        }:
+            return None
         case _:
             raise RuntimeError(
                 "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"

@@ -141,17 +141,6 @@ def host_service_graph_popup_cmk(
     )
 
 
-def _render_graph_or_error_html(
-    graph_artwork: GraphArtwork,
-    graph_data_range: GraphDataRange,
-    graph_render_config: GraphRenderConfig,
-) -> HTML:
-    try:
-        return _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
-    except Exception as e:
-        return render_graph_error_html(e)
-
-
 def render_graph_error_html(msg_or_exc: Exception | str, title: str | None = None) -> HTML:
     if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
         msg = "%s" % msg_or_exc
@@ -863,9 +852,7 @@ def _render_graph_content_html(
             registered_metrics,
             graph_display_id=graph_display_id,
         )
-        main_graph_html = _render_graph_or_error_html(
-            graph_artwork, graph_data_range, graph_render_config
-        )
+        main_graph_html = _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
 
         if graph_render_config.show_time_range_previews:
             output += HTMLWriter.render_div(

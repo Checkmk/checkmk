@@ -84,7 +84,7 @@ editions:
         weekly: *daily_reduced
         testbuild: []
     saas:
-        release: ["ubuntu-24.04"]
+        release: *daily_saas
         daily: *daily_saas
         daily_tests: *daily_saas
         daily_update_tests: [*daily_saas]

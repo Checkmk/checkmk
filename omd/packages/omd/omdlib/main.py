@@ -2309,7 +2309,7 @@ def main_rm(
         if not kill:
             bail_out("User '%s' still logged in or running processes." % site.name)
         else:
-            kill_site_user_processes(site.name)
+            kill_site_user_processes(site.name, global_opts.verbose)
 
     if tmpfs_mounted(site.name):
         unmount_tmpfs(site, kill=kill)
@@ -3502,7 +3502,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
 
     sys.stdout.write("Stopping site processes...\n")
     call_init_scripts(site_home, "stop")
-    kill_site_user_processes(site.name)
+    kill_site_user_processes(site.name, verbose)
     ok()
 
     unmount_tmpfs(site)

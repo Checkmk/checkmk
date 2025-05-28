@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
-import logging
 import os
 import signal
 import sys
@@ -15,10 +14,6 @@ from contextlib import suppress
 import psutil
 
 from omdlib.console import ok
-
-from cmk.utils.log import VERBOSE
-
-logger = logging.getLogger("cmk.omd")
 
 
 def terminate_site_user_processes(username: str, verbose: bool) -> None:
@@ -67,13 +62,14 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
         ok()
 
 
-def kill_site_user_processes(username: str) -> None:
+def kill_site_user_processes(username: str, verbose: bool) -> None:
     processes = _site_user_processes(username)
     tries = 5
     while tries > 0 and processes:
         for process in processes[:]:
             try:
-                logger.log(VERBOSE, "Killing process %d...", process.pid)
+                if verbose:
+                    sys.stdout.write(f"Killing process {process.pid}...")
                 os.kill(process.pid, signal.SIGKILL)
             except OSError as e:
                 if e.errno == errno.ESRCH:

@@ -40,6 +40,8 @@ SYSTEM_TESTS := \
     test-update-cse \
     test-update-cross-edition-cee-to-cce \
     test-update-cross-edition-cee-to-cme \
+    test-update-cross-edition-cre-to-cce \
+    test-update-cross-edition-cre-to-cee \
     test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \

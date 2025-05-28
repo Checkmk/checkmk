@@ -7,7 +7,14 @@ def build_make_target(edition, cross_edition_target="") {
     def suffix = "-docker";
     switch(edition) {
         case 'raw':
-            return prefix + "cre" + suffix;
+            switch(cross_edition_target) {
+                case 'cce':
+                case 'cee':
+                    // from CRE to CCE or CEE
+                    return prefix + "cross-edition-cre-to-" + cross_edition_target + suffix;
+                default:
+                    return prefix + "cre" + suffix;
+            }
         case 'enterprise':
             switch(cross_edition_target) {
                 case 'cce':

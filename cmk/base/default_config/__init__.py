@@ -5,13 +5,10 @@
 
 # Load plug-in names into this module to have a single set of default settings
 
+from .alert_handling import *  # noqa: F403
 from .base import *  # noqa: F403
+from .cmc import *  # noqa: F403
 from .notify import *  # noqa: F403
-
-try:
-    from .cee import *  # type: ignore[import-not-found, import-untyped, unused-ignore]  # noqa: F403
-except ImportError:
-    pass  # It's OK in non CEE editions
 
 try:
     from .cme import *  # type: ignore[import-not-found, import-untyped, unused-ignore]  # noqa: F403

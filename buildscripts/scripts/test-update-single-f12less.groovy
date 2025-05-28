@@ -55,7 +55,7 @@ def main() {
     def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
     if (cross_edition_target) {
         // see CMK-18366
-        distro = "ubuntu-22.04";
+        distro = "ubuntu-24.04";
     }
     def make_target = build_make_target(edition, cross_edition_target);
     def download_dir = "package_download";

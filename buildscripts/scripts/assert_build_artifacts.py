@@ -47,6 +47,7 @@ class Registry:
     credentials: Credentials = field(init=False)
     client: docker.DockerClient = field(init=False)
     image_exists: Callable[[DockerImage, str], bool] = field(init=False)
+    timeout: int | None = None
 
     def image_exists_docker_hub(self, image: DockerImage, _edition: str) -> bool:
         sys.stdout.write(f"Test if {image.full_name()} is available...")
@@ -100,7 +101,8 @@ class Registry:
         return True
 
     def __post_init__(self):
-        self.client = docker.client.from_env()
+        kwargs = {"timeout": self.timeout} if self.timeout else {}
+        self.client = docker.client.from_env(**kwargs)
         self.credentials = get_credentials()
         match self.editions:
             case ["enterprise"]:
@@ -244,6 +246,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     registries = [
         Registry(
             editions=["enterprise"],
+            timeout=300,  # Our enterprise registry is a bit _slow_, let's give it some more time
         ),
         Registry(
             editions=["raw", "cloud", "managed"],

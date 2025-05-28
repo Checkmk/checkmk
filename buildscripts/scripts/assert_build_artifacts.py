@@ -149,7 +149,7 @@ def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str,
         file_name = (
             f"check-mk-{edition}-{args.version}.{Edition.from_long_edition(edition).short}.tar.gz"
         )
-        internal_only = edition in loaded_yaml["internal_editions"]
+        internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
 
@@ -161,7 +161,7 @@ def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str,
             continue
 
         file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
-        internal_only = edition in loaded_yaml["internal_editions"]
+        internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only
 
@@ -203,10 +203,9 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
                 Edition.from_long_edition(edition), version=args.version
             )
-            internal_only = (
-                distro in loaded_yaml.get("internal_distros", [])
-                or edition in loaded_yaml["internal_editions"]
-            )
+            internal_only = distro in loaded_yaml.get(
+                "internal_distros", []
+            ) or edition in loaded_yaml.get("internal_editions", [])
             yield package_name, internal_only
             yield hash_file(package_name), internal_only
 

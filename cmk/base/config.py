@@ -703,7 +703,7 @@ def _perform_post_config_loading_actions(
         cmc_illegal_chars=cmc_illegal_chars,
         all_hosts=all_hosts,
         clusters=clusters,
-        shadow_hosts=_get_shadow_hosts(),
+        shadow_hosts=shadow_hosts,
         service_dependencies=service_dependencies,
     )
 
@@ -1111,14 +1111,6 @@ def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
     with contextlib.suppress(KeyError):
         return cache[cache_id]
     return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
-
-
-def _get_shadow_hosts() -> ShadowHosts:
-    try:
-        # Only available with CEE
-        return shadow_hosts  # type: ignore[name-defined,unused-ignore]
-    except NameError:
-        return {}
 
 
 # .
@@ -2730,7 +2722,7 @@ class ConfigCache:
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
-        for shadow_host_name, shadow_host_spec in list(_get_shadow_hosts().items()):
+        for shadow_host_name, shadow_host_spec in shadow_hosts.items():
             self._hosttags[shadow_host_name] = tuple(
                 set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
             )

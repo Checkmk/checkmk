@@ -17,7 +17,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -c, --clean                 remove artifacts first"
     echo "  -b, --build                 build executable"
     echo "  -u, --unit-tests            run unit tests"
     echo "  -F, --check-format          check for correct formatting"
@@ -31,7 +30,6 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_CLEAN=no
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
@@ -39,7 +37,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cbuFl:afDj:h' --long 'clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -48,10 +46,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-c' | '--clean')
-                RUN_CLEAN=yes
-                shift
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -109,7 +103,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_format() {
@@ -133,7 +127,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_CLEAN} = yes && true
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all
     test ${RUN_UNIT_TESTS} = yes && bazel test :all

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-05-23 00:51+0000\n"
+"PO-Revision-Date: 2025-05-27 22:51+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2707,9 +2707,8 @@ msgstr "AIX"
 msgid "AIX HACMP Resource Groups"
 msgstr "AIX HACMP Resource-Gruppen"
 
-#, fuzzy
 msgid "AIX network interfaces"
-msgstr "Netzwerkschnittstellen"
+msgstr "AIX Netzwerkschnittstellen"
 
 msgid "AIX: TGZ (.tar.gz)"
 msgstr "AIX: TGZ (.tar.gz)"
@@ -11268,6 +11267,11 @@ msgstr ""
 msgid "Cannot render image"
 msgstr "Kann Bild nicht darstellen"
 
+msgid ""
+"Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
+"'No IP' in the 'Network address' section."
+msgstr ""
+
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr "Daten können nicht von der ntop REST API abgerufen werden: %s"
@@ -19295,9 +19299,8 @@ msgstr "Deaktivierte Einträge werden nicht ausgeführt."
 msgid "Disabled sections"
 msgstr "Deaktivierte Sektionen"
 
-#, fuzzy
 msgid "Disabled sections (AIX agent)"
-msgstr "Deaktivierte Sektionen (Linux Agent)"
+msgstr "Deaktivierte Sektionen (AIX-Agent)"
 
 msgid "Disabled sections (Linux agent)"
 msgstr "Deaktivierte Sektionen (Linux Agent)"
@@ -19432,9 +19435,8 @@ msgstr "Platte"
 msgid "Disk I/O operations"
 msgstr "Platten-I/O-Operationen"
 
-#, fuzzy
 msgid "Disk I/O statistics for AIX"
-msgstr "NFS E/A-Statistiken"
+msgstr "Festplatten E/A-Statistiken für AIX"
 
 msgid "Disk ID"
 msgstr "Platten-ID"
@@ -19494,7 +19496,7 @@ msgid "Disk latency"
 msgstr "Plattenlatenz"
 
 msgid "Disk mount state"
-msgstr "Einhängezustand der Platte"
+msgstr "Mount-Zustand der Platte"
 
 msgid "Disk percentage usage"
 msgstr "Festplatte prozentuale Nutzung"
@@ -20463,6 +20465,9 @@ msgstr "Dokument Count-Delta"
 
 msgid "Document count growth per minute"
 msgstr "Zuwachs der Dokumentenanzahl pro Minute zählen"
+
+msgid "Documentation"
+msgstr "Dokumentation"
 
 msgid "Documentation URL"
 msgstr "URL zur Dokumentation"
@@ -22101,7 +22106,7 @@ msgstr ""
 "indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel des Azure-Tags "
 "sucht, oder Sie können den Import von Azure-Tags ganz deaktivieren."
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "Enable this option to import the AWS tags for EC2 and ELB instances as host "
 "labels for the respective piggyback hosts. The label syntax is 'cmk/aws/tag/"
@@ -22111,18 +22116,14 @@ msgid ""
 "pattern which Checkmk searches for in the key of the AWS tag, or you can "
 "disable the import of AWS tags altogether."
 msgstr ""
-"Standardmäßig importiert Checkmk alle Azure-Merkmale als Host-/Service-"
-"Label. Die importierten Merkmale werden als Host-Label für Ressourcengruppen "
-"und VMs, die als Hosts überwacht werden, und als Service-Label für "
-"Ressourcen, die als Services überwacht werden, hinzugefügt. Die Label-Syntax "
-"lautet 'cmk/azure/tag/{key}:{value}'.<br>Zusätzlich erhält jeder Host, der "
-"eine Ressourcengruppe repräsentiert, das Host-Label 'cmk/azure/"
-"resource_group:{rg_name}', und VMs, die als Hosts überwacht werden, erhalten "
-"das Host-Label 'cmk/azure/vm:instance', was unabhängig von dieser Option "
-"geschieht.<br> Sie können die importierten Merkmale weiter einschränken, "
-"indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel des Azure-"
-"Merkmals sucht, oder Sie können den Import von Azure-Merkmalen ganz "
-"deaktivieren."
+"Aktivieren Sie diese Option, um die AWS-Tags für EC2- und ELB-Instanzen als "
+"Host-Label für die jeweiligen Piggyback-Hosts zu importieren. Die Label-"
+"Syntax lautet 'cmk/aws/tag/{key}:{value}'.<br>Zusätzlich erhalten die "
+"Piggyback-Hosts für EC2-Instanzen das Host-Label 'cmk/aws/ec2:instance', was "
+"unabhängig von dieser Option erfolgt.<br>Sie können die importierten "
+"Merkmale weiter einschränken, indem Sie ein Muster angeben, nach dem Checkmk "
+"im Schlüssel des AWS-Merkmals sucht, oder Sie können den Import von AWS-"
+"Merkmalen ganz deaktivieren."
 
 msgid "Enable this package"
 msgstr "Aktiviere dieses Paket"
@@ -23481,7 +23482,7 @@ msgid "Expected mode state."
 msgstr "Erwarteter Moduszustand."
 
 msgid "Expected mount options"
-msgstr "Erwartete Mountoptionen"
+msgstr "Erwartete Mount-Optionen"
 
 msgid "Expected node"
 msgstr "Erwarteter Knoten"
@@ -24516,9 +24517,8 @@ msgstr "Dateigruppierungs-Patterns"
 msgid "File huge pages"
 msgstr "Große Seiten archivieren"
 
-#, fuzzy
 msgid "File information"
-msgstr "Informationen abrufen"
+msgstr "Datei-Informationen"
 
 msgid "File modified"
 msgstr "Datei modifiziert"
@@ -26371,9 +26371,9 @@ msgstr "Graphlinien"
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Graph not found '%s'"
-msgstr "Graphoptionen"
+msgstr "Graph nicht gefunden '%s'"
 
 msgid "Graph options"
 msgstr "Graphoptionen"
@@ -30243,23 +30243,18 @@ msgstr "IP-Adresse oder Name des Tunnelendpunkts"
 msgid "IP addresses"
 msgstr "IP-Adressen"
 
-#, fuzzy
 msgid "IP group active calls in"
 msgstr "Aktive eingehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP group active calls out"
 msgstr "Aktive ausgehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP group calls in"
 msgstr "Eingehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP group calls in/out"
 msgstr "Eingehende/ausgehende IP Group Aufrufe"
 
-#, fuzzy
 msgid "IP group calls out"
 msgstr "Ausgehende IP Group Aufrufe"
 
@@ -30287,49 +30282,41 @@ msgstr "IP Version"
 msgid "IP2Tel"
 msgstr "IP2Tel"
 
-#, fuzzy
 msgid "IP2Tel Number of Attempted SIP/H323 calls"
-msgstr "Anzahl der versuchten SIP/H323 Anrufe"
+msgstr "Anzahl der versuchten IP2Tel SIP/H323 Anrufe"
 
-#, fuzzy
 msgid "IP2Tel Number of Attempted SIP/H323 fax calls"
-msgstr "Anzahl der versuchten SIP/H323 Faxanrufe"
+msgstr "Anzahl der versuchten IP2Tel SIP/H323 Faxanrufe"
 
-#, fuzzy
 msgid "IP2Tel Number of Destination Busy SIP/H323 calls"
-msgstr "Anzahl der besetzten SIP/H323-Anrufe"
+msgstr "Anzahl der besetzten IP2Tel SIP/H323-Anrufe"
 
-#, fuzzy
 msgid "IP2Tel Number of No Answer SIP/H323 calls"
-msgstr "Anzahl nicht angenommener SIP/H323-Anrufe"
+msgstr "Anzahl nicht angenommener IP2Tel SIP/H323-Anrufe"
 
-#, fuzzy
 msgid ""
 "IP2Tel Number of No Route SIP/H323 calls. Most likely to be due to wrong "
 "number"
 msgstr ""
-"Anzahl der nicht weitergeleiteten SIP/H323-Anrufe. Höchstwahrscheinlich "
-"aufgrund einer falschen Nummer"
+"Anzahl der nicht weitergeleiteten IP2Tel SIP/H323-Anrufe. "
+"Höchstwahrscheinlich aufgrund einer falschen Nummer"
 
-#, fuzzy
 msgid "IP2Tel Number of No capability match between peers on SIP/H323 calls"
 msgstr ""
-"Anzahl der nicht übereinstimmenden Fähigkeiten zwischen Peers bei SIP/H323-"
-"Anrufen"
+"Anzahl der nicht übereinstimmenden Fähigkeiten zwischen Peers bei IP2Tel SIP/"
+"H323-Anrufen"
 
-#, fuzzy
 msgid "IP2Tel Number of SIP/H323 fax success calls"
-msgstr "Anzahl erfolgreicher SIP/H323 Faxanrufe"
+msgstr "Anzahl erfolgreicher IP2Tel SIP/H323 Faxanrufe"
 
-#, fuzzy
 msgid ""
 "IP2Tel Number of established (connected and voice activated) SIP/H323 calls"
 msgstr ""
-"Anzahl der aufgebauten (verbundenen und sprachaktivierten) SIP/H323-Anrufe"
+"Anzahl der aufgebauten (verbundenen und sprachaktivierten) IP2Tel SIP/H323-"
+"Anrufe"
 
-#, fuzzy
 msgid "IP2Tel Number of failed SIP/H323 calls"
-msgstr "Anzahl fehlgeschlagener SIP/H323 Anrufe"
+msgstr "Anzahl fehlgeschlagener IP2Tel SIP/H323 Anrufe"
 
 msgid "IP2Tel Total duration of SIP/H323 calls"
 msgstr "IP2Tel Gesamtdauer der SIP/H323 Anrufe"
@@ -30501,9 +30488,8 @@ msgstr "Symbol im Monitoring"
 msgid "Icons"
 msgstr "Symbole"
 
-#, fuzzy
 msgid "Icons and Actions"
-msgstr "%d Symbole und Aktionen"
+msgstr "Symbole und Aktionen"
 
 msgid "Ideas Portal"
 msgstr "Ideen-Portal"
@@ -33709,6 +33695,10 @@ msgstr "Prometheus-Integration"
 msgid "Integration team"
 msgstr "Integrationsteam"
 
+#, fuzzy
+msgid "Interactive GUI"
+msgstr "REST-API interaktive Ansicht"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -33852,6 +33842,10 @@ msgstr "Überwachter Zeitraum"
 
 msgid "Interval:"
 msgstr "Intervall:"
+
+#, fuzzy
+msgid "Introduction"
+msgstr "Einführung in die REST-API"
 
 msgid "Invalid (Not loaded)"
 msgstr "Ungültig (Nicht geladen)"
@@ -34904,25 +34898,20 @@ msgstr "Jolokia"
 msgid "Jolokia Server"
 msgstr "Jolokia-Server"
 
-#, fuzzy
 msgid "Journal age"
-msgstr "Auftragsalter"
+msgstr "Journal-Alter"
 
-#, fuzzy
 msgid "Journal age limit"
-msgstr "Regel-Limit"
+msgstr "Limit des Journal-Alters"
 
-#, fuzzy
 msgid "Journal size"
-msgstr "Gesamtgröße"
+msgstr "Journal-Größe"
 
-#, fuzzy
 msgid "Journal size limit"
-msgstr "Zeitbegrenzung für Abfrage"
+msgstr "Limit der Journal-Größe"
 
-#, fuzzy
 msgid "Journal usage"
-msgstr "Port-Auslastung"
+msgstr "Journal-Auslastung"
 
 msgid "July"
 msgstr "Juli"
@@ -35279,9 +35268,8 @@ msgstr "Listenanfragen"
 msgid "LISTEN"
 msgstr "LISTEN"
 
-#, fuzzy
 msgid "LPAR statistics for AIX"
-msgstr "RMON-Statistiken"
+msgstr "LPAR-Statistiken für AIX"
 
 msgid "LRU moved objects"
 msgstr "LRU bewegte Objekte"
@@ -37554,9 +37542,8 @@ msgstr "Logging des Kerns"
 msgid "Logging of the notification mechanics"
 msgstr "Logging der Benachrichtigungslogik"
 
-#, fuzzy
 msgid "Logical Volume Manager for AIX"
-msgstr "Logical Volume Pool"
+msgstr "Logical Volume Manager für AIX"
 
 msgid "Logical Volume Pool"
 msgstr "Logical Volume Pool"
@@ -38014,9 +38001,8 @@ msgstr ""
 "MKPs erzwingen semantische Versionierung. Einzelheiten finden Sie unter "
 "%ssemver.org%s."
 
-#, fuzzy
 msgid "MP statistics for AIX"
-msgstr "RMON-Statistiken"
+msgstr "MP-Statistiken für AIX"
 
 msgid "MQTT broker statistics"
 msgstr "MQTT-Broker-Statistiken"
@@ -39736,9 +39722,8 @@ msgstr "Speicherauslastung"
 msgid "Memory usage for %s hosts"
 msgstr "Speicherauslastung für %s Hosts"
 
-#, fuzzy
 msgid "Memory usage for AIX"
-msgstr "Speicherauslastung für %s Hosts"
+msgstr "Speicherauslastung für AIX"
 
 msgid "Memory usage growth"
 msgstr "Zunahme der Speicherauslastung"
@@ -40557,9 +40542,8 @@ msgstr "Überwachung & Graphen für einzelne Lanes"
 msgid "Monitor (min. 1)"
 msgstr "Monitor (min. 1)"
 
-#, fuzzy
 msgid "Monitor Acropolis State"
-msgstr "Monitoring-Zustand"
+msgstr "Zustand von Acropolis überwachen"
 
 msgid "Monitor Android devices"
 msgstr "Überwache Android-Geräte"
@@ -40967,7 +40951,7 @@ msgid "Motion Detectors"
 msgstr "Bewegungsmelder"
 
 msgid "Mount options"
-msgstr "Mount Optionen"
+msgstr "Mount-Optionen"
 
 msgid "Mount point"
 msgstr "Mount-Punkt"
@@ -41210,9 +41194,8 @@ msgstr "Geschriebene NFS-Daten"
 msgid "NFS latency"
 msgstr "NFS-Latenz"
 
-#, fuzzy
 msgid "NFS mounts"
-msgstr "andere NFS-Optionen"
+msgstr "NFS-Mounts"
 
 msgid "NFS operations"
 msgstr "NFS Operationen"
@@ -41379,9 +41362,8 @@ msgstr "NTP-Erkennung"
 msgid "NTP or timesyncd time synchronisation"
 msgstr "NTP oder timesyncd Zeitsynchronisation"
 
-#, fuzzy
 msgid "NTP time synchronization"
-msgstr "Zustand der NTP Zeitsynchronisation"
+msgstr "NTP Zeitsynchronisation"
 
 msgid "NagVis"
 msgstr "NagVis"
@@ -41465,6 +41447,9 @@ msgstr "Name/Beschreibung"
 
 msgid "Name / IP address"
 msgstr "Name / IP-Adresse"
+
+msgid "Name is DNS-resolvable"
+msgstr ""
 
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Name der Alert-Regeln/Alert-Regelgruppen"
@@ -42708,9 +42693,8 @@ msgstr "Nein, nicht klonen"
 msgid "No, keep current name"
 msgstr "Nein, aktuellen Namen beibehalten"
 
-#, fuzzy
 msgid "No, keep host"
-msgstr "Ntop Host"
+msgstr "Nein, Host behalten"
 
 msgid "No-TxCredits errors"
 msgstr "No-TXCredits Fehler"
@@ -47069,9 +47053,8 @@ msgstr "Seiten"
 msgid "Pages per second"
 msgstr "Seiten pro Sekunde"
 
-#, fuzzy
 msgid "Paging statistics for AIX"
-msgstr "Ausfall-Statistiken"
+msgstr "Paging-Statistiken für AIX"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto active Sessions"
@@ -49923,9 +49906,8 @@ msgstr "Levels für Provisionierung"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
-#, fuzzy
 msgid "Proxmox VE CPU Utilization"
-msgstr "CPU-Auslastung"
+msgstr "CPU-Auslastung für Proxmox VE"
 
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Knoten-Info"
@@ -50228,13 +50210,11 @@ msgstr "In Warteschlange"
 msgid "Queued alerts"
 msgstr "Alerts in Warteschlange"
 
-#, fuzzy
 msgid "Queued application messages"
-msgstr "Benachrichtigungen in Warteschlange"
+msgstr "Anwendungsbenachrichtigungen in Warteschlange"
 
-#, fuzzy
 msgid "Queued broker messages"
-msgstr "Senden von Nutzernachrichten"
+msgstr "Broker-Nachrichten in Warteschlange"
 
 msgid "Queued for update"
 msgstr "Warteschlange für Update"
@@ -50357,6 +50337,9 @@ msgid ""
 msgstr ""
 "RCC-Profilkonfiguration: RCC-Profile können Einstellungen für diese "
 "spezielle RCC-Umgebung festlegen, z. B. Proxy-Einstellungen."
+
+msgid "REST API"
+msgstr "REST-API"
 
 msgid "REST API communication"
 msgstr "REST-API-Kommunikation"
@@ -52914,11 +52897,10 @@ msgstr "Robotmk KPI Erkennung"
 msgid "Robotmk KPI monitoring"
 msgstr "Robotmk KPI Monitoring"
 
-#, fuzzy
 msgid ""
 "Robotmk is only supported in combination with the Checkmk Micro Core (CMC)."
 msgstr ""
-"Der Loglevel für die Behandlung von Benachrichtigungen im Checkmk Micro Core"
+"Robotmk wird nur in Verbindung mit dem Checkmk Micro Core (CMC) unterstützt."
 
 msgid "Robotmk logs"
 msgstr "Robotmk-Protokolle"
@@ -54328,7 +54310,6 @@ msgstr "Suche nach Zeitgraphen"
 msgid "Search whole subtree below the base DN"
 msgstr "Gesamten Teilbaum unter Basis DN durchsuchen"
 
-#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
 "hosts, services or host and service groups.\n"
@@ -54360,6 +54341,7 @@ msgstr ""
 "tg: Host-Merkmal\n"
 "hl: Host-Label (z. B. hl: cmk/os_family:linux)\n"
 "sl: Service-Label (z. B. sl: cmk/os_family:linux)\n"
+"st: Service-Status (z. B. st: crit [ok|warn|crit|unkn|pend])\n"
 "\n"
 "Beachten Sie, dass der Einfachheit halber '*' durch '.*' ersetzt wird."
 
@@ -55026,9 +55008,8 @@ msgstr "Ereignisse an Remote-Syslog-Host senden"
 msgid "Send host metrics to Graphite"
 msgstr "Host-Metriken an Graphite senden"
 
-#, fuzzy
 msgid "Send log messages to event console"
-msgstr "Sende Ereignisse an lokale Event Console"
+msgstr "Sende Log-Nachrichten an Event Console"
 
 msgid "Send message"
 msgstr "Nachricht senden"
@@ -56589,13 +56570,11 @@ msgstr "Zeige %ss für Services"
 msgid "Show / hide notification context"
 msgstr "Benachrichtigungskontext zeigen / verstecken"
 
-#, fuzzy
 msgid "Show HW/SW Inventory history"
-msgstr "Historie der HW-/SW-Inventur"
+msgstr "Zeige Historie der HW-/SW-Inventur"
 
-#, fuzzy
 msgid "Show HW/SW Inventory tree"
-msgstr "HW-/SW-Inventur ausführen"
+msgstr "Zeige HW-/SW-Inventurbaum"
 
 msgid "Show MK Livestatus error messages"
 msgstr "Zeige MK Livestatus Fehlermeldungen"
@@ -56711,6 +56690,10 @@ msgstr "Dynamisch anzeigen"
 
 msgid "Show empty groups"
 msgstr "Leere Gruppen anzeigen"
+
+#, fuzzy, python-format
+msgid "Show entries for %s"
+msgstr "Services des Hosts %s anzeigen"
 
 msgid "Show failed notifications"
 msgstr "Fehlgeschlagene Benachrichtigungen anzeigen"
@@ -58339,7 +58322,7 @@ msgid ""
 "the option <tt>commit</tt> is being ignored since it is modified by the "
 "power saving algorithms."
 msgstr ""
-"Bestimmen Sie alle erwarteten Mount-Opionen. Wenn die Liste der gefundenen "
+"Bestimmen Sie alle erwarteten Mount-Optionen. Wenn die Liste der gefundenen "
 "Optionen von dieser Liste abweicht dann gibt der Check WARN oder CRIT aus. "
 "Die Option <tt>commit</tt> wird ignoriert, da diese von Stromspar-"
 "Algorithmen verändert wird."
@@ -59972,9 +59955,8 @@ msgstr "Statement"
 msgid "States"
 msgstr "Zustände"
 
-#, fuzzy
 msgid "States of Nutanix Host"
-msgstr "Zustand eines Hosts"
+msgstr "Zustände des Nutanix Hosts"
 
 msgid "States other than the above"
 msgstr "Andere States als die oben genannten"
@@ -61548,7 +61530,7 @@ msgid "Temporarily frozen"
 msgstr "Vorübergehend eingefroren"
 
 msgid "Temporary filesystem mounted"
-msgstr "temporäres Dateisystem gemountet"
+msgstr "Temporäres Dateisystem eingebunden"
 
 msgid "Temporary local destination"
 msgstr "Vorläufiges lokales Ziel"
@@ -61559,7 +61541,6 @@ msgstr "Tenant-ID / Verzeichnis-ID"
 msgid "TenantID"
 msgstr "TenantID"
 
-#, fuzzy
 msgid "TenantId"
 msgstr "TenantID"
 
@@ -66386,7 +66367,7 @@ msgstr ""
 "Ihrer Webhook-URL: https://connect.signl4.com/webhook/[TEAM_SECRET]"
 
 msgid "The temporary filesystem is mounted"
-msgstr "Das temporäre Dateisystem ist eingehängt"
+msgstr "Das temporäre Dateisystem ist eingebunden"
 
 msgid ""
 "The temporary filesystem is not mounted. Your installation may work with "
@@ -67745,10 +67726,10 @@ msgid ""
 "similar. But you will have to care about mounting the network share on your "
 "own."
 msgstr ""
-"Dies kann ein lokales Verzeichnis Ihrer wahl sein. SIe können diese Option "
-"ebenfalls nutzen, wenn Sie Ihr Backup auf einer Netzwerkfreigabe, wie NFS, "
-"Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
-"Netzwerkfreigabe selbstständig unter dem gewählten Pfad einbinden."
+"Dies kann ein lokales Verzeichnis Ihrer Wahl sein. Sie können diese Option "
+"auch verwenden, wenn Sie Ihr Backup auf einer Netzwerkfreigabe mit NFS, "
+"Samba oder ähnlichem speichern möchten. Sie müssen sich dann aber selbst um "
+"das Einbinden der Netzwerkfreigabe kümmern."
 
 msgid ""
 "This can happen if the configuration bundle was deleted and some underlying "
@@ -69414,13 +69395,12 @@ msgstr ""
 "Zertifikaten prüfen, welche in Java Jar-Containern enthalten sind. Dafür "
 "wird der Kommandozeilenbefehl <tt>jarsigner -verify</tt> verwendet."
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
 "licenses and serviceplans using the MgGraph PowerShell module."
 msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
-"365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
+"365-Lizenzen und Servicepläne mit dem MgGraph PowerShell-Modul zu sammeln."
 
 msgid ""
 "This plug-in can be used to collect information of all running MSSQL servers "
@@ -70378,7 +70358,7 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Dieses Regelpaket wird über das MKP %s bereitgestellt."
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "This rule provides a simple way to add files to agent bakery packages "
 "without the need to write a bakery plugin.<br><i>Custom files</i> are "
@@ -70436,30 +70416,38 @@ msgstr ""
 "Agenteninstallation zugeordnet sind.<br>Für Dateien, die unter einem "
 "<i>logischen Pfad</i> platziert werden, gelten auch die "
 "Eigentumsverhältnisse und Berechtigungen, die auf der Agenteninstallation "
-"basieren.<br>Eigentum und Berechtigungen in der Dateistruktur der Checkmk-"
-"Instanz spielen keine Rolle, mit einer Ausnahme: Ausführbare Flags für "
-"Dateien bleiben erhalten.<br><br>Überblick der <i>logischen Pfade</i> und "
-"ihrer Ziele:<ul><li><tt>lib</tt>: Interne Agentendateien (<tt>MK_LIBDIR</tt> "
-"auf dem Host)</li><li><tt>bin</tt>: Ausführbare Dateien (<tt>MK_BIN</tt> auf "
-"dem Host)</li><li><tt>var</tt>: Laufzeitdaten (<tt>MK_VARDIR</tt> auf dem "
-"Host)</li><li><tt>config</tt>: Konfigurationsdateien (<tt>MK_CONFDIR</tt> "
-"auf dem Host)</li><li><tt>lib/plugins</tt>: Agenten-Plugins</li><li><tt>lib/"
-"local</tt>: Lokale Checks</li></ul><b>Beispiel</b>: Angenommen, Sie "
-"platzieren die folgenden Dateien:<br><tt>{omd_root}/local/share/check_mk/"
-"agents/custom/myset/bin/some_executable</tt><br><tt>{omd_root}/local/share/"
-"check_mk/agents/custom/myset/lib/local/my_local_check</tt><br><tt>{omd_root}/"
-"local/share/check_mk/agents/custom/myset/some_file</tt><br>und aktivieren "
-"<i>myset</i> in dieser Regel.<br>Dann werden die folgenden Dateien auf den "
-"Ziel-Hosts verteilt, wenn die Agentenpfade nicht weiter konfiguriert werden:"
-"<br><tt>/usr/bin/some_executable</tt><br><tt>/usr/lib/check_mk_agent/local/"
+"basieren.<br><br><h2>Zuordnung unter Linux/Unix:</h2><br>Eigentum und "
+"Berechtigungen in der Dateistruktur der Checkmk-Instanz spielen keine Rolle, "
+"mit einer Ausnahme: Ausführbare Merkmale für Dateien bleiben erhalten."
+"<br><br>Überblick der <i>logischen Pfade</i> und ihrer Ziele:"
+"<ul><li><tt>lib</tt>: Interne Agentendateien (<tt>MK_LIBDIR</tt> auf dem "
+"Host)</li><li><tt>bin</tt>: Ausführbare Dateien (<tt>MK_BIN</tt> auf dem "
+"Host)</li><li><tt>var</tt>: Laufzeitdaten (<tt>MK_VARDIR</tt> auf dem Host)</"
+"li><li><tt>config</tt>: Konfigurationsdateien (<tt>MK_CONFDIR</tt> auf dem "
+"Host)</li><li><tt>lib/plugins</tt>: Agenten-Plugins</li><li><tt>lib/local</"
+"tt>: Lokale Checks</li></ul><b>Beispiel</b>: Angenommen, Sie platzieren die "
+"folgenden Dateien:<br><tt>{omd_root}/local/share/check_mk/agents/custom/"
+"myset/bin/some_executable</tt><br><tt>{omd_root}/local/share/check_mk/agents/"
+"custom/myset/lib/local/my_local_check</tt><br><tt>{omd_root}/local/share/"
+"check_mk/agents/custom/myset/some_file</tt><br>und aktivieren <i>myset</i> "
+"in dieser Regel.<br>Dann werden die folgenden Dateien auf den Ziel-Hosts "
+"verteilt, wenn die Agentenpfade nicht weiter konfiguriert werden:<br><tt>/"
+"usr/bin/some_executable</tt><br><tt>/usr/lib/check_mk_agent/local/"
 "my_local_check</tt><br><tt>/usr/lib/check_mk_agent/some_file</tt><br>Beim "
 "Aktivieren der einzelnen Verzeichnisverteilung im Regelsatz <i>Agentenpaket "
 "anpassen</i>:<br><tt>/opt/checkmk/agent/default/package/bin/some_executable</"
 "tt><br><tt>/opt/checkmk/agent/default/package/local/my_local_check</"
 "tt><br><tt>/opt/checkmk/agent/default/package/some_file</"
-"tt><br><br><b>Hinweis</b>: Bei der Verwendung des Windows-Agenten verweisen "
-"alle logischen Pfade auf denselben Ort - das Installationsverzeichnis des "
-"Agenten."
+"tt><br><br><h2>Zuordnung unter Windows:</h2><br>Anders als bei der Linux/"
+"Unix-Agenteninstallation werden bei der Windows-Agenteninstallation feste "
+"Pfade verwendet, so dass es auch eine feste Zuordnung von logischem Pfad zu "
+"Ordnern auf dem Host gibt.<br>Wie andere Agentenplugins werden "
+"benutzerdefinierte Dateien in das Arbeitsverzeichnis unter <tt>C:"
+"\\ProgramData\\checkmk\\agent</tt>:<ul><li><tt>lib</tt>: <tt>..\\agent</tt></"
+"li><li><tt>bin</tt>: <tt>..\\agent\\bin</tt></li><li><tt>var</tt>: <tt>.."
+"\\agent</tt></li><li><tt>config</tt>: <tt>..\\agent\\config</tt></"
+"li><li><tt>lib/plugins</tt>: <tt>..\\agent\\plugins</tt></li><li><tt>lib/"
+"local</tt>: <tt>..\\agent\\local</tt></li></ul> installiert."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
@@ -75035,7 +75023,7 @@ msgid ""
 "truncate"
 msgstr ""
 "Inhalt bei dieser Anzahl von Zeichen abschneiden. Ein Nullwert bedeutet, "
-"dass nicht abgeschnitten wird"
+"dass nicht abgeschnitten wird."
 
 msgid "Trunk"
 msgstr "Rumpf"
@@ -75975,7 +75963,7 @@ msgid "Unmonitored services"
 msgstr "Nicht überwachte Services"
 
 msgid "Unmounted"
-msgstr "Nicht montiert"
+msgstr "Nicht eingebunden"
 
 msgid "Unoptimized connections"
 msgstr "Nicht optimierte Verbindungen"
@@ -75983,9 +75971,8 @@ msgstr "Nicht optimierte Verbindungen"
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
 
-#, fuzzy
 msgid "Unprocessed messages in journal"
-msgstr "Verarbeitete Nachrichten löschen"
+msgstr "Nicht-verarbeitete Nachrichten im Journal"
 
 msgid "Unreachable"
 msgstr "Nicht erreichbar"
@@ -76587,9 +76574,8 @@ msgstr "Obergrenzen für die Datendateigröße"
 msgid "Upper levels for dead letter errors"
 msgstr "Obergrenzen für Dead Letter Errors"
 
-#, fuzzy
 msgid "Upper levels for disk journal usage"
-msgstr "Obergrenzen für die Festplattennutzung"
+msgstr "Obergrenzen für die Auslastung des Festplatten-Journals"
 
 msgid "Upper levels for disk usage"
 msgstr "Obergrenzen für die Festplattennutzung"
@@ -77870,11 +77856,14 @@ msgid ""
 "memory and you should only configure as many apache processes as your system "
 "can handle in high load situations."
 msgstr ""
-"Mit dieser Option können Sie die maximale Anzahl an Client-Anfragen "
-"konfigurieren (Anzahl an Apache-Prozessen), die der Apache zeitgleich "
-"bearbeiten kann. Wenn Sie viele parallele Anfragen haben, kann es gut sein "
-"diesen Wert anzupassen. Alledings müßsen Sie darauf achten, dass das System "
-"den Speicherbedarf der Apache-Prozesse erfüllen kann."
+"Verwenden Sie diesen Wert, um die maximale Anzahl von Apache-Client-Anfragen "
+"einzustellen, die gleichzeitig verarbeitet werden (maximale Anzahl von "
+"Apache-Serverprozessen, die gestartet werden dürfen). Bei vielen parallel "
+"eingehenden Anfragen kann es eine gute Idee sein, diesen Wert zu erhöhen. "
+"Seien Sie dabei aber vorsichtig, denn mehr ist nicht immer besser. Die "
+"Apache-Prozesse benötigen in der Regel eine ordentliche Menge an "
+"Arbeitsspeicher, und Sie sollten nur so viele Apache-Prozesse konfigurieren, "
+"wie Ihr System in Hochlastsituationen verarbeiten kann."
 
 msgid "Use unit of first entry"
 msgstr "Einheit des ersten Eintrags verwenden"
@@ -86767,9 +86756,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "RCU"
 #~ msgstr "RCU"
 
-#~ msgid "REST API"
-#~ msgstr "REST-API"
-
 #~ msgid "RPM packaging"
 #~ msgstr "RPM-Paketierung"
 
@@ -87620,9 +87606,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Complete variable list"
 #~ msgstr "Vollständige Variablenliste"
-
-#~ msgid "Documentation"
-#~ msgstr "Dokumentation"
 
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "Sammle Metriken für Datenträgerlatenzzeit"

@@ -11731,6 +11731,11 @@ msgstr ""
 msgid "Cannot render image"
 msgstr "Impossible de rendre l'image"
 
+msgid ""
+"Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
+"'No IP' in the 'Network address' section."
+msgstr ""
+
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr "Impossible de récupérer les données de l'API REST de ntop : %s"
@@ -21375,6 +21380,10 @@ msgstr "delta du nombre de documents"
 
 msgid "Document count growth per minute"
 msgstr "Croissance du nombre de documents par minute"
+
+#, fuzzy
+msgid "Documentation"
+msgstr "URL de la documentation"
 
 msgid "Documentation URL"
 msgstr "URL de la documentation"
@@ -35255,6 +35264,10 @@ msgstr "Intégration de Prometheus"
 msgid "Integration team"
 msgstr "Clé d'intégration"
 
+#, fuzzy
+msgid "Interactive GUI"
+msgstr "Interface graphique interactive REST API"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -35402,6 +35415,10 @@ msgstr "Intervalle à surveiller"
 
 msgid "Interval:"
 msgstr "Intervalle :"
+
+#, fuzzy
+msgid "Introduction"
+msgstr "Introduction à l'API REST"
 
 msgid "Invalid (Not loaded)"
 msgstr "Invalide (non chargé)"
@@ -43415,6 +43432,9 @@ msgstr "Nom / Description"
 
 msgid "Name / IP address"
 msgstr "Nom / adresse IP"
+
+msgid "Name is DNS-resolvable"
+msgstr ""
 
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Nom des règles d'alerte/groupes de règles d'alerte"
@@ -52903,6 +52923,9 @@ msgid ""
 "specific RCC environment, for example proxy settings."
 msgstr ""
 
+msgid "REST API"
+msgstr "API REST"
+
 msgid "REST API communication"
 msgstr "Communication avec l'API REST"
 
@@ -59603,6 +59626,10 @@ msgstr "Montrer la dynamique"
 
 msgid "Show empty groups"
 msgstr "Afficher les groupes vides"
+
+#, fuzzy, python-format
+msgid "Show entries for %s"
+msgstr "Afficher les services de l'hôte %s"
 
 msgid "Show failed notifications"
 msgstr "Afficher les notifications d'échec"
@@ -90709,9 +90736,6 @@ msgstr ""
 #~ msgid "RCU"
 #~ msgstr "UCR"
 
-#~ msgid "REST API"
-#~ msgstr "API REST"
-
 #~ msgid "RPM packaging"
 #~ msgstr "Emballage RPM"
 
@@ -91350,10 +91374,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Complete variable list"
 #~ msgstr "Liste complète des variables (pour les tests)"
-
-#, fuzzy
-#~ msgid "Documentation"
-#~ msgstr "URL de la documentation"
 
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "Collecte de données de performance pour la latence des disques"

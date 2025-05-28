@@ -11701,6 +11701,11 @@ msgstr ""
 msgid "Cannot render image"
 msgstr "Nu se poate reda imaginea"
 
+msgid ""
+"Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
+"'No IP' in the 'Network address' section."
+msgstr ""
+
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr "Nu se pot prelua date de la ntop REST API: %s."
@@ -21264,6 +21269,10 @@ msgstr "Numărul de documente delta"
 
 msgid "Document count growth per minute"
 msgstr "Creșterea numărului de documente pe minut"
+
+#, fuzzy
+msgid "Documentation"
+msgstr "URL de documentare"
 
 msgid "Documentation URL"
 msgstr "URL de documentare"
@@ -35073,6 +35082,10 @@ msgstr "Integrarea Prometheus"
 msgid "Integration team"
 msgstr "Cheia de integrare"
 
+#, fuzzy
+msgid "Interactive GUI"
+msgstr "REST API interactiv GUI"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -35222,6 +35235,10 @@ msgstr "Interval de monitorizare"
 
 msgid "Interval:"
 msgstr "Interval:"
+
+#, fuzzy
+msgid "Introduction"
+msgstr "Introducere REST API"
 
 msgid "Invalid (Not loaded)"
 msgstr "Invalid (Neîncărcat)"
@@ -43172,6 +43189,9 @@ msgstr "Denumire / Descriere"
 
 msgid "Name / IP address"
 msgstr "Nume / adresă IP"
+
+msgid "Name is DNS-resolvable"
+msgstr ""
 
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Denumirea regulilor de alertă/grupurilor de reguli de alertă"
@@ -52580,6 +52600,9 @@ msgstr ""
 "Configurarea profilului RCC: Profilurile RCC pot defini setările pentru "
 "acest mediu RCC specific, de exemplu, setările Proxy. <br>."
 
+msgid "REST API"
+msgstr "REST API"
+
 msgid "REST API communication"
 msgstr "Comunicarea REST API"
 
@@ -59259,6 +59282,10 @@ msgstr "Arată dinamic"
 
 msgid "Show empty groups"
 msgstr "Afișarea grupurilor goale"
+
+#, fuzzy, python-format
+msgid "Show entries for %s"
+msgstr "Afișează serviciile gazdei %s"
 
 msgid "Show failed notifications"
 msgstr "Afișați notificările eșuate"
@@ -90111,9 +90138,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgid "RCU"
 #~ msgstr "RCU"
 
-#~ msgid "REST API"
-#~ msgstr "REST API"
-
 #~ msgid "RPM packaging"
 #~ msgstr "Ambalaje RPM"
 
@@ -90785,10 +90809,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Complete variable list"
 #~ msgstr "Lista completă de variabile (pentru testare)"
-
-#, fuzzy
-#~ msgid "Documentation"
-#~ msgstr "URL de documentare"
 
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "Colectați date de performanță pentru latența discului"

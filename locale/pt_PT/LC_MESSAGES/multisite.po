@@ -11681,6 +11681,11 @@ msgstr ""
 msgid "Cannot render image"
 msgstr "Não é possível renderizar imagem"
 
+msgid ""
+"Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
+"'No IP' in the 'Network address' section."
+msgstr ""
+
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr "Não é possível recuperar dados do ntop REST API: %s"
@@ -21227,6 +21232,10 @@ msgstr "Delta de contagem de documentos"
 
 msgid "Document count growth per minute"
 msgstr "Crescimento da contagem de documentos por minuto"
+
+#, fuzzy
+msgid "Documentation"
+msgstr "URL da documentação"
 
 msgid "Documentation URL"
 msgstr "URL da documentação"
@@ -34965,6 +34974,10 @@ msgstr "Integração do Prometheus"
 msgid "Integration team"
 msgstr "Chave de Integração"
 
+#, fuzzy
+msgid "Interactive GUI"
+msgstr "GUI interativa REST API"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -35111,6 +35124,10 @@ msgstr "Intervalo para monitorar"
 
 msgid "Interval:"
 msgstr "Intervalo:"
+
+#, fuzzy
+msgid "Introduction"
+msgstr "Introdução à API REST"
 
 msgid "Invalid (Not loaded)"
 msgstr "Inválido (Não carregado)"
@@ -43081,6 +43098,9 @@ msgstr "Nome / Descrição"
 
 msgid "Name / IP address"
 msgstr "Nome / endereço IP"
+
+msgid "Name is DNS-resolvable"
+msgstr ""
 
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "Nome das regras de alerta/grupos de regras de alerta"
@@ -52458,6 +52478,9 @@ msgid ""
 "specific RCC environment, for example proxy settings."
 msgstr ""
 
+msgid "REST API"
+msgstr "API REST"
+
 msgid "REST API communication"
 msgstr "Comunicação da API REST"
 
@@ -59092,6 +59115,10 @@ msgstr "Mostrar dinâmica"
 
 msgid "Show empty groups"
 msgstr "Mostrar grupos vazios"
+
+#, fuzzy, python-format
+msgid "Show entries for %s"
+msgstr "Mostrar serviços do anfitrião %s"
 
 msgid "Show failed notifications"
 msgstr "Mostrar notificações de falhas"
@@ -89793,9 +89820,6 @@ msgstr "Use SSL para a conexão."
 #~ msgid "RCU"
 #~ msgstr "RCU"
 
-#~ msgid "REST API"
-#~ msgstr "API REST"
-
 #~ msgid "RPM packaging"
 #~ msgstr "Embalagem RPM"
 
@@ -90454,10 +90478,6 @@ msgstr "Use SSL para a conexão."
 #, fuzzy
 #~ msgid "Complete variable list"
 #~ msgstr "Lista completa de variáveis (para testes)"
-
-#, fuzzy
-#~ msgid "Documentation"
-#~ msgstr "URL da documentação"
 
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "Recolher dados de desempenho para a latência do disco"

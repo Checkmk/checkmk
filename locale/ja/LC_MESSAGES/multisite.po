@@ -11089,6 +11089,11 @@ msgstr ""
 msgid "Cannot render image"
 msgstr "画像をレンダリングできません"
 
+msgid ""
+"Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set "
+"'No IP' in the 'Network address' section."
+msgstr ""
+
 #, python-format
 msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr "ntop REST APIからデータを取得できません: %s"
@@ -20157,6 +20162,10 @@ msgstr "ドキュメント数のデルタ"
 
 msgid "Document count growth per minute"
 msgstr "1分あたりのドキュメント数の増加"
+
+#, fuzzy
+msgid "Documentation"
+msgstr "ドキュメントURL"
 
 msgid "Documentation URL"
 msgstr "ドキュメントURL"
@@ -33415,6 +33424,10 @@ msgstr "Prometheus統合"
 msgid "Integration team"
 msgstr "統合キー"
 
+#, fuzzy
+msgid "Interactive GUI"
+msgstr "RESTAPIインタラクティブGUI"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -33559,6 +33572,10 @@ msgstr "監視する間隔"
 
 msgid "Interval:"
 msgstr "間隔:"
+
+#, fuzzy
+msgid "Introduction"
+msgstr "REST API紹介"
 
 msgid "Invalid (Not loaded)"
 msgstr "無効(ロードされていません)"
@@ -41209,6 +41226,9 @@ msgstr "名前/説明"
 
 msgid "Name / IP address"
 msgstr "名前/IPアドレス"
+
+msgid "Name is DNS-resolvable"
+msgstr ""
 
 msgid "Name of Alert rules/Alert rule groups"
 msgstr "アラートルール名/アラートルールグループ名"
@@ -50223,6 +50243,9 @@ msgstr ""
 "RCC profile configuration: RCCプロファイルは、例えばプロキシ設定など、特定の"
 "RCC環境の設定を定義することができる。"
 
+msgid "REST API"
+msgstr "REST API"
+
 msgid "REST API communication"
 msgstr "REST API通信"
 
@@ -56610,6 +56633,10 @@ msgstr "ダイナミック表示"
 
 msgid "Show empty groups"
 msgstr "空のグループを表示する"
+
+#, fuzzy, python-format
+msgid "Show entries for %s"
+msgstr "ホスト %s のサービスを表示する"
 
 msgid "Show failed notifications"
 msgstr "失敗した通知を表示する"
@@ -85672,9 +85699,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 #~ msgid "RCU"
 #~ msgstr "RCU"
 
-#~ msgid "REST API"
-#~ msgstr "REST API"
-
 #~ msgid "RPM packaging"
 #~ msgstr "RPMパッケージ"
 
@@ -86340,10 +86364,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 #, fuzzy
 #~ msgid "Complete variable list"
 #~ msgstr "完全な変数リスト(テスト用)"
-
-#, fuzzy
-#~ msgid "Documentation"
-#~ msgstr "ドキュメントURL"
 
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "ディスク遅延のパフォーマンスデータを収集する"

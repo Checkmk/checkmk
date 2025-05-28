@@ -1454,7 +1454,7 @@ def config_change(
 ) -> list[str]:
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
-    if not site.is_stopped():
+    if not site.is_stopped(verbose):
         site_was_stopped = True
         site_home = SitePaths.from_site_name(site.name).home
         call_init_scripts(site_home, "stop")
@@ -1516,7 +1516,7 @@ def config_set(
         config_usage()
         return []
 
-    if not site.is_stopped():
+    if not site.is_stopped(verbose):
         sys.stderr.write("Cannot change config variables while site is running.\n")
         return []
 
@@ -1685,7 +1685,7 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool
 def config_configure_hook(
     site: SiteContext, config_hooks: ConfigHooks, hook_name: str, verbose: bool
 ) -> Iterator[str]:
-    if not site.is_stopped():
+    if not site.is_stopped(verbose):
         if not dialog_yesno(
             "You cannot change configuration value while the "
             "site is running. Do you want me to stop the site now?"
@@ -1722,7 +1722,7 @@ def config_configure_hook(
 def init_action(
     version_info: VersionInfo,
     site: SiteContext,
-    _global_opts: object,
+    global_opts: GlobalOptions,
     command: Literal["start", "stop", "reload", "restart", "status"],
     args: Arguments,
     options: CommandOptions,
@@ -1745,7 +1745,9 @@ def init_action(
     # OMD guarantees that we are in OMD_ROOT
     with contextlib.chdir(site_home):
         if command == "status":
-            return check_status(site_home, display=True, daemon=daemon, bare="bare" in options)
+            return check_status(
+                site_home, global_opts.verbose, display=True, daemon=daemon, bare="bare" in options
+            )
         return call_init_scripts(site_home, command, daemon)
 
 
@@ -2367,7 +2369,7 @@ def main_disable(
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
-    if not site.is_stopped():
+    if not site.is_stopped(global_opts.verbose):
         call_init_scripts(site_home, "stop")
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
@@ -2472,7 +2474,7 @@ def main_mv_or_cp(
     new_site_home = SitePaths.from_site_name(new_site.name).home
     sitename_must_be_valid(new_site.name, Path(new_site_home), reuse)
 
-    if not old_site.is_stopped():
+    if not old_site.is_stopped(global_opts.verbose):
         bail_out(f"Cannot {action} site '{old_site.name}' while it is running.")
 
     pids = find_processes_of_user(old_site.name)
@@ -2731,7 +2733,7 @@ def main_update(
 ) -> None:
     conflict_mode = _get_conflict_mode(options)
 
-    if not site.is_stopped():
+    if not site.is_stopped(global_opts.verbose):
         bail_out("Please completely stop '%s' before updating it." % site.name)
 
     # Unmount tmp. We need to recreate the files and directories
@@ -2999,7 +3001,7 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
 def main_umount(
     _version_info: object,
     site: SiteContext | RootContext,
-    _global_opts: object,
+    global_opts: GlobalOptions,
     _args: object,
     options: CommandOptions,
 ) -> None:
@@ -3017,7 +3019,7 @@ def main_umount(
                 continue
 
             # Skip the site even when it is partly running
-            if not site.is_stopped():
+            if not site.is_stopped(global_opts.verbose):
                 sys.stderr.write(
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name
                 )
@@ -3030,7 +3032,7 @@ def main_umount(
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
-        if not site.is_stopped():
+        if not site.is_stopped(global_opts.verbose):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % site.name)
         unmount_tmpfs(site, kill="kill" in options)
     sys.exit(exit_status)
@@ -3210,7 +3212,11 @@ def main_config(
     _options: object,
 ) -> None:
     site_home = str(SitePaths.from_site_name(site.name).home)
-    if (not args or args[0] != "show") and not site.is_stopped() and global_opts.force:
+    if (
+        (not args or args[0] != "show")
+        and not site.is_stopped(global_opts.verbose)
+        and global_opts.force
+    ):
         need_start = True
         call_init_scripts(site_home, "stop")
     else:
@@ -3331,7 +3337,7 @@ def _restore_backup_from_tar(
         sys.stdout.write(f"Restoring site {site.name} from {source_descr}...\n")
         sys.stdout.flush()
 
-        prepare_restore_as_root(version_info, site, options)
+        prepare_restore_as_root(version_info, site, options, global_opts.verbose)
 
     else:
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
@@ -3340,7 +3346,7 @@ def _restore_backup_from_tar(
         site.set_config(load_config(site, global_opts.verbose))
         orig_apache_port = site.conf["APACHE_TCP_PORT"]
 
-        prepare_restore_as_site_user(site, options)
+        prepare_restore_as_site_user(site, options, global_opts.verbose)
 
     site_home = str(SitePaths.from_site_name(site.name).home)
     # Now extract all files
@@ -3456,7 +3462,7 @@ def main_restore(
 
 
 def prepare_restore_as_root(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions
+    version_info: VersionInfo, site: SiteContext, options: CommandOptions, verbose: bool
 ) -> None:
     reuse = False
     if "reuse" in options:
@@ -3469,7 +3475,7 @@ def prepare_restore_as_root(
     sitename_must_be_valid(site.name, Path(site_home), reuse)
 
     if reuse:
-        if not site.is_stopped() and "kill" not in options:
+        if not site.is_stopped(verbose) and "kill" not in options:
             bail_out("Cannot restore '%s' while it is running." % (site.name))
         else:
             with subprocess.Popen(["omd", "stop", site.name]):
@@ -3488,8 +3494,8 @@ def prepare_restore_as_root(
     os.mkdir(site_home)
 
 
-def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions) -> None:
-    if not site.is_stopped() and "kill" not in options:
+def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:
+    if not site.is_stopped(verbose) and "kill" not in options:
         bail_out("Cannot restore site while it is running.")
     site_home = SitePaths.from_site_name(site.name).home
     verify_directory_write_access(site_home)
@@ -4404,7 +4410,7 @@ def _run_command(
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_su(object(), site, object(), object(), object())
             case "umount":
-                main_umount(object(), site, object(), object(), command_options)
+                main_umount(object(), site, global_opts, object(), command_options)
             case "backup":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_backup(

@@ -117,9 +117,9 @@ class SiteContext(AbstractSiteContext):
         """Determines whether a specific site is set to autostart."""
         return self.conf.get("AUTOSTART", "on") == "on"
 
-    def is_stopped(self) -> bool:
+    def is_stopped(self, verbose: bool) -> bool:
         """Check if site is completely stopped"""
-        return check_status(self._paths.home, display=False) == 1
+        return check_status(self._paths.home, verbose, display=False) == 1
 
     @property
     def skel_permissions(self) -> Permissions:

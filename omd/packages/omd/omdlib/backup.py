@@ -44,7 +44,9 @@ def backup_site_to_tarfile(
     verbose: bool,
 ) -> None:
     site_home = SitePaths.from_site_name(site.name).home
-    _backup_site_to_tarfile(site.name, site_home, site.is_stopped(), fh, mode, options, verbose)
+    _backup_site_to_tarfile(
+        site.name, site_home, site.is_stopped(verbose), fh, mode, options, verbose
+    )
 
 
 def _backup_site_to_tarfile(

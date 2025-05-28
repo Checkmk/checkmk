@@ -286,26 +286,6 @@ def _title_info_elements(
             yield service_description, service_url
 
 
-def _show_html_graph_title(
-    graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig
-) -> None:
-    title = text_with_links_to_user_translated_html(
-        _render_graph_title_elements(
-            graph_artwork,
-            graph_render_config,
-            explicit_title=graph_render_config.explicit_title,
-        ),
-        separator=HTML.without_escaping(" / "),
-    )
-    if not title:
-        return
-
-    html.div(
-        title,
-        class_=["title"] + (["inline"] if graph_render_config.show_title == "inline" else []),
-    )
-
-
 def _graph_legend_enabled(
     graph_render_config: GraphRenderConfig, graph_artwork: GraphArtwork
 ) -> bool:
@@ -331,7 +311,21 @@ def _show_graph_html_content(
     )
 
     if graph_render_config.show_controls:
-        _show_graph_add_to_icon_for_popup(graph_artwork, graph_data_range, graph_render_config)
+        # Data will be transferred via URL and Javascript magic eventually
+        # to our function popup_add_element (htdocs/reporting.py)
+        # argument report_name --> provided by popup system
+        # further arguments:
+        html.popup_trigger(
+            content=html.render_icon("menu", _("Add to ...")),
+            ident="add_visual",
+            method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
+            data=[
+                "pnpgraph",
+                None,
+                _graph_ajax_context(graph_artwork, graph_data_range, graph_render_config),
+            ],
+            style="z-index:2",
+        )  # Ensures that graph canvas does not cover it
 
     v_axis_label = graph_artwork.vertical_axis["axis_label"]
     if v_axis_label:
@@ -347,8 +341,28 @@ def _show_graph_html_content(
     if graph_render_config.show_controls and graph_render_config.resizable:
         html.img(src=theme.url("images/resize_graph.png"), class_="resize")
 
-    _show_html_graph_title(graph_artwork, graph_render_config)
-    _show_graph_canvas(graph_render_config.size)
+    if title := text_with_links_to_user_translated_html(
+        _render_graph_title_elements(
+            graph_artwork,
+            graph_render_config,
+            explicit_title=graph_render_config.explicit_title,
+        ),
+        separator=HTML.without_escaping(" / "),
+    ):
+        html.div(
+            title,
+            class_=["title"] + (["inline"] if graph_render_config.show_title == "inline" else []),
+        )
+
+    # Create canvas where actual graph will be rendered
+    graph_width: float = graph_render_config.size[0] * html_size_per_ex
+    graph_height: float = graph_render_config.size[1] * html_size_per_ex
+    html.canvas(
+        "",
+        style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
+        width=str(graph_width * 2),
+        height=str(graph_height * 2),
+    )
 
     # Note: due to "omit_zero_metrics" the graph might not have any curves
     if _graph_legend_enabled(graph_render_config, graph_artwork):
@@ -361,43 +375,6 @@ def _show_graph_html_content(
         html.close_div()
 
     html.close_div()
-
-
-def _show_graph_add_to_icon_for_popup(
-    graph_artwork: GraphArtwork,
-    graph_data_range: GraphDataRange,
-    graph_render_config: GraphRenderConfig,
-) -> None:
-    icon_html = html.render_icon("menu", _("Add to ..."))
-    element_type_name = "pnpgraph"
-
-    # Data will be transferred via URL and Javascript magic eventually
-    # to our function popup_add_element (htdocs/reporting.py)
-    # argument report_name --> provided by popup system
-    # further arguments:
-    html.popup_trigger(
-        content=icon_html,
-        ident="add_visual",
-        method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
-        data=[
-            element_type_name,
-            None,
-            _graph_ajax_context(graph_artwork, graph_data_range, graph_render_config),
-        ],
-        style="z-index:2",
-    )  # Ensures that graph canvas does not cover it
-
-
-def _show_graph_canvas(size: tuple[int, int]) -> None:
-    """Create canvas where actual graph will be rendered"""
-    graph_width: float = size[0] * html_size_per_ex
-    graph_height: float = size[1] * html_size_per_ex
-    html.canvas(
-        "",
-        style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
-        width=str(graph_width * 2),
-        height=str(graph_height * 2),
-    )
 
 
 def _show_pin_time(graph_artwork: GraphArtwork, config: GraphRenderConfig) -> bool:

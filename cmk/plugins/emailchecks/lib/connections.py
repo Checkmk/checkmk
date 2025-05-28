@@ -254,7 +254,10 @@ def _make_account(
                 ),
                 default_timezone=EWSTimeZone("Europe/Berlin"),
             )
-
+        case None:
+            raise RuntimeError(
+                "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
+            )
         case other:
             assert_never(other)
 
@@ -638,6 +641,7 @@ def _make_connection(config: TRXConfig, timeout: int) -> EWS | IMAP | POP3 | SMT
                     auth=config.auth,
                 )
             case "EWS":
+                assert isinstance(config.auth, (BasicAuth, OAuth2))
                 return EWS(
                     primary_smtp_address=config.address,
                     server=config.server,
@@ -647,12 +651,13 @@ def _make_connection(config: TRXConfig, timeout: int) -> EWS | IMAP | POP3 | SMT
                 )
 
             case "SMTP":
+                assert isinstance(config.auth, BasicAuth) or config.auth is None
                 return SMTP(
                     server=config.server,
                     port=config.port,
                     timeout=timeout,
                     tls=config.tls,
-                    auth=config.auth if isinstance(config.auth, BasicAuth) else None,
+                    auth=config.auth,
                 )
             case other:
                 assert_never(other)

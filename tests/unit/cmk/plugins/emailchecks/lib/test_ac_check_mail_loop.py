@@ -8,9 +8,32 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.plugins.emailchecks.lib import check_mail_loop
+from cmk.plugins.emailchecks.lib.ac_args import parse_trx_arguments, Scope
+from cmk.plugins.emailchecks.lib.connections import make_send_connection, SMTP
 from cmk.plugins.emailchecks.lib.utils import _active_check_main_core
 
 # pylint: disable=protected-access
+
+
+def test_ac_check_mail_main_loop__SMTP_without_auth__connection_possible() -> None:
+    argv = [
+        "--send-server",
+        "foo",
+        "--send-protocol",
+        "SMTP",
+        "--mail-from",
+        "from",
+        "--mail-to",
+        "to",
+    ]
+    parser = check_mail_loop.create_argument_parser()
+
+    args = parser.parse_args(argv)
+    send = parse_trx_arguments(args, Scope.SEND)
+    timeout = 1
+
+    expected = SMTP(server="foo", port=25, timeout=timeout, tls=False, auth=None)
+    assert expected == make_send_connection(send, timeout)
 
 
 def test_ac_check_mail_main_loop_failed_to_send_mail() -> None:

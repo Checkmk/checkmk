@@ -7,7 +7,7 @@ import copy
 import json
 import time
 import traceback
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -412,33 +412,34 @@ def _get_scalars(
     return scalars
 
 
-def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
+def _compute_graph_legend_styles(graph_render_config: GraphRenderConfig) -> Iterator[str]:
     """Render legend that describe the metrics"""
     graph_width = graph_render_config.size[0] * html_size_per_ex
-    font_size_style = "font-size: %dpt;" % graph_render_config.font_size
-
-    scalars = _get_scalars(graph_artwork, graph_render_config)
 
     if graph_render_config.show_vertical_axis or graph_render_config.show_controls:
         legend_margin_left = 49
     else:
         legend_margin_left = 0
 
-    style = []
     legend_width = graph_width - legend_margin_left
 
     # In case there is no margin show: Add some to the legend since it looks
     # ugly when there is no space between the outer graph border and the legend
     if not graph_render_config.show_margin:
         legend_width -= 5 * 2
-        style.append("margin: 8px 5px 5px 5px")
+        yield "margin: 8px 5px 5px 5px"
 
-    style.append("width:%dpx" % legend_width)
+    yield "width:%dpx" % legend_width
 
     if legend_margin_left:
-        style.append("margin-left:%dpx" % legend_margin_left)
+        yield "margin-left:%dpx" % legend_margin_left
 
-    html.open_table(class_="legend", style=style)
+
+def _show_graph_legend(graph_artwork: GraphArtwork, graph_render_config: GraphRenderConfig) -> None:
+    font_size_style = "font-size: %dpt;" % graph_render_config.font_size
+    scalars = _get_scalars(graph_artwork, graph_render_config)
+
+    html.open_table(class_="legend", style=list(_compute_graph_legend_styles(graph_render_config)))
 
     # Render the title row
     html.open_tr()

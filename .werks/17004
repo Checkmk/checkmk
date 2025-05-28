@@ -5,7 +5,7 @@ Component: multisite
 Date: 1736247830
 Edition: cre
 Level: 1
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 Using the "Quicksearch" sidebar element to look for hosts with a specific host label (e.g. with a search string "hl:label:key") links users to the "Host search" view, filtered by the specified label ("label:key").
 Yet, adding more entries to the label filter on the "Host search" view was broken and resulted in an unfiltered view.

@@ -5,7 +5,7 @@ Component: wato
 Date: 1743500271
 Edition: cre
 Level: 1
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 In a previous werk (#17817) we introduced an update action that would
 remove any user profiles that weren't also current Checkmk users, in

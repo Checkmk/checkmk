@@ -5,7 +5,7 @@ Component: checks
 Date: 1743491776
 Edition: cre
 Level: 1
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 The apc_symmetra rule to monitor aspects of an APC Symmetra UPS 
 did not result in any services when running on the v7 firmware.

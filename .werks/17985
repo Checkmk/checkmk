@@ -5,7 +5,7 @@ Component: checks
 Date: 1745832863
 Edition: cre
 Level: 1
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 The jar_signature agent plugin (configured by the <em>"Signatures of certificates in JAR files"</em> bakery rule) prepends <code>JAVA_HOME/bin</code> to the <code>PATH</code> environment variable. A user with write permission to that directory could replace legitimate commands with their own malicious scripts and execute them as root.
 

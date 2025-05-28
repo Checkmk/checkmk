@@ -5,7 +5,7 @@ Component: omd
 Date: 1744016046
 Edition: cre
 Level: 1
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 On SUSE Linux Enterprise Server 15 systems, the <code>zypper</code> command would crash with the following error message when executed as a site user:
 

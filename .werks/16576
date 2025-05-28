@@ -5,7 +5,7 @@ Component: deb
 Date: 1743447395
 Edition: cre
 Level: 2
-Version: 2.2.0p42
+Version: 2.2.0p43
 
 This change fixes issues in the detection of the systemd environment which makes
 the package installation deploy and enable the systemd unit <code>omd.service</code> again.

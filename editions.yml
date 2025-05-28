@@ -24,17 +24,13 @@ daily_reduced: &daily_reduced
     - "debian-10"
     - "sles-15sp6"
 
-daily_saas: &daily_saas
-    - "ubuntu-22.04"
-    - "ubuntu-24.04"
-
 # Builds for those distros will only be available internally for development purpose
 # internal_distros: &internal_distros
 #     - "ubuntu-23.10"
 
 # Currently, all builds of the saas edition should stay completley internal
-internal_editions:
-    - "saas"
+# internal_editions:
+#     - "saas"
 
 # README:
 # - the following sections defines what will be build/tested under which "use-case"
@@ -70,12 +66,6 @@ editions:
         daily: *daily_reduced
         daily_tests: *daily_reduced
         weekly: *daily_reduced
-        testbuild: []
-    saas:
-        release: ["ubuntu-22.04"]
-        daily: *daily_saas
-        daily_tests: *daily_saas
-        weekly: *daily_saas
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

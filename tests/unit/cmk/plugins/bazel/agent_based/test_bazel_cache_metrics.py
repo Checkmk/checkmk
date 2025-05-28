@@ -32,73 +32,135 @@ def test_discover_bazel_cache(section: bc.Section) -> None:
     assert list(bc.discover_bazel_cache(section)) == [Service()]
 
 
-def test_check_bazel_cache(section: bc.Section) -> None:
+def test_check_bazel_cache_status_is_ok(section: bc.Section) -> None:
+    assert Result(state=State.OK, summary="Bazel Cache is OK") in bc.check_bazel_cache(section)
+
+
+def test_check_bazel_cache_has_valid_azblob_results(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+    assert Result(state=State.OK, summary="Total number of azblob backend cache hits: 0") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_azblob_cache_hits", 0.0) in temp
+    assert Result(state=State.OK, summary="Total number of azblob backend cache missess: 0") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_azblob_cache_misses", 0.0) in temp
+    assert (
+        Result(state=State.OK, summary="Total number of azblob backend cache missess: 0 B") in temp
+    )
+
+
+def test_check_bazel_cache_has_valid_http_cache_results(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+    assert Result(state=State.OK, summary="Total number of HTTP backend cache hits: 0") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_http_cache_hits", 0.0) in temp
+    assert Result(state=State.OK, summary="Total number of HTTP backend cache missess: 0") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_http_cache_misses", 0.0) in temp
+
+
+def test_check_bazel_cache_has_valid_s3_cache_results(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+    assert Result(state=State.OK, summary="Total number of S3 backend cache hits: 0 B") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_s3_cache_hits", 0.0) in temp
+    assert Result(state=State.OK, summary="Total number of S3 backend cache missess: 0") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_s3_cache_misses", 0.0) in temp
+
+
+def test_check_bazel_cache_has_correct_timestamp(section: bc.Section) -> None:
     with time_machine.travel(TEST_TIME_2024):
-        assert list(bc.check_bazel_cache(section)) == [
-            Result(state=State.OK, summary="Bazel Cache is OK"),
-            Result(state=State.OK, summary="Total number of azblob backend cache hits: 0"),
-            Metric("bazel_cache_metrics_bazel_remote_azblob_cache_hits", 0.0),
-            Result(state=State.OK, summary="Total number of azblob backend cache missess: 0"),
-            Metric("bazel_cache_metrics_bazel_remote_azblob_cache_misses", 0.0),
-            Result(state=State.OK, summary="Total number of azblob backend cache missess: 0 B"),
-            Metric("bazel_cache_metrics_bazel_remote_disk_cache_evicted_bytes_total", 0.0),
-            Result(
-                state=State.OK,
-                summary="Number of bytes in the disk backend if they were uncompressed: 621 GiB",
-            ),
-            Metric("bazel_cache_metrics_bazel_remote_disk_cache_logical_bytes", 666901065728.0),
-            Result(
-                state=State.OK, summary="Idle time of last item in the LRU cache: 64 days 12 hours"
-            ),
-            Metric(
-                "bazel_cache_metrics_bazel_remote_disk_cache_longest_item_idle_time_seconds",
-                5574440.0,
-            ),
-            Result(
-                state=State.OK, summary="Total number of bytes removed from disk backend: 23.8 KiB"
-            ),
-            Metric("bazel_cache_metrics_bazel_remote_disk_cache_overwritten_bytes_total", 24401.0),
-            Result(state=State.OK, summary="Number of bytes in the disk backend: 264 GiB"),
-            Metric("bazel_cache_metrics_bazel_remote_disk_cache_size_bytes", 283044515840.0),
-            Result(state=State.OK, summary="Total number of HTTP backend cache hits: 0"),
-            Metric("bazel_cache_metrics_bazel_remote_http_cache_hits", 0.0),
-            Result(state=State.OK, summary="Total number of HTTP backend cache missess: 0"),
-            Metric("bazel_cache_metrics_bazel_remote_http_cache_misses", 0.0),
-            Result(
-                state=State.OK, summary="Total number of incoming AC get cache request hits: 56728"
-            ),
-            Metric(
-                "bazel_cache_metrics_bazel_remote_incoming_requests_total_kind_ac_method_get_status_hit",
-                56728.0,
-            ),
-            Result(
-                state=State.OK, summary="Total number of incoming AC get cache request misses: 1544"
-            ),
-            Metric(
-                "bazel_cache_metrics_bazel_remote_incoming_requests_total_kind_ac_method_get_status_miss",
-                1544.0,
-            ),
-            Result(state=State.OK, summary="Total number of S3 backend cache hits: 0 B"),
-            Metric("bazel_cache_metrics_bazel_remote_s3_cache_hits", 0.0),
-            Result(state=State.OK, summary="Total number of S3 backend cache missess: 0"),
-            Metric("bazel_cache_metrics_bazel_remote_s3_cache_misses", 0.0),
-            Result(
-                state=State.OK, summary="Total user and system CPU time spent in seconds: 7.63 KiB"
-            ),
-            Metric("bazel_cache_metrics_process_cpu_seconds_total", 7810.0),
-            Result(state=State.OK, summary="Maximum number of open file descriptors: 1048576"),
-            Metric("bazel_cache_metrics_process_max_fds", 1048576.0),
-            Result(state=State.OK, summary="Number of open file descriptors: 12"),
-            Metric("bazel_cache_metrics_process_open_fds", 12.0),
-            Result(state=State.OK, summary="Resident memory size: 7.42 GiB"),
-            Metric("bazel_cache_metrics_process_resident_memory_bytes", 7968219136.0),
+        temp = list(bc.check_bazel_cache(section))
+        assert (
             Result(
                 state=State.OK,
                 summary="Start time of the process since unix epoch: 2024-04-25 08:43:01",
-            ),
-            Metric("bazel_cache_metrics_process_start_time_seconds", 1714027381.0),
-            Result(state=State.OK, summary="Virtual memory size: 54.1 GiB"),
-            Metric("bazel_cache_metrics_process_virtual_memory_bytes", 58050449408.0),
-            Result(state=State.OK, summary="Maximum amount of virtual memory available: 16.0 EiB"),
-            Metric("bazel_cache_metrics_process_virtual_memory_max_bytes", 1.8446744073709552e19),
-        ]
+            )
+            in temp
+        )
+        assert Metric("bazel_cache_metrics_process_start_time_seconds", 1714027381.0) in temp
+
+
+def test_check_bazel_cache_has_valid_disk_cache_results(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+    assert Metric("bazel_cache_metrics_bazel_remote_disk_cache_evicted_bytes_total", 0.0) in temp
+    assert (
+        Result(
+            state=State.OK,
+            summary="Number of bytes in the disk backend if they were uncompressed: 621 GiB",
+        )
+        in temp
+    )
+    assert (
+        Metric("bazel_cache_metrics_bazel_remote_disk_cache_logical_bytes", 666901065728.0) in temp
+    )
+    assert (
+        Result(state=State.OK, summary="Idle time of last item in the LRU cache: 64 days 12 hours")
+        in temp
+    )
+    assert (
+        Metric(
+            "bazel_cache_metrics_bazel_remote_disk_cache_longest_item_idle_time_seconds",
+            5574440.0,
+        )
+        in temp
+    )
+    assert (
+        Result(state=State.OK, summary="Total number of bytes removed from disk backend: 23.8 KiB")
+        in temp
+    )
+    assert (
+        Metric("bazel_cache_metrics_bazel_remote_disk_cache_overwritten_bytes_total", 24401.0)
+        in temp
+    )
+    assert Result(state=State.OK, summary="Number of bytes in the disk backend: 264 GiB") in temp
+    assert Metric("bazel_cache_metrics_bazel_remote_disk_cache_size_bytes", 283044515840.0) in temp
+
+
+def test_check_bazel_cache_has_valid_process_info(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+    assert (
+        Result(state=State.OK, summary="Total user and system CPU time spent in seconds: 7.63 KiB")
+        in temp
+    )
+    assert Metric("bazel_cache_metrics_process_cpu_seconds_total", 7810.0) in temp
+    assert (
+        Result(state=State.OK, summary="Maximum number of open file descriptors: 1048576") in temp
+    )
+    assert Metric("bazel_cache_metrics_process_max_fds", 1048576.0) in temp
+    assert Result(state=State.OK, summary="Number of open file descriptors: 12") in temp
+    assert Metric("bazel_cache_metrics_process_open_fds", 12.0) in temp
+    assert Result(state=State.OK, summary="Resident memory size: 7.42 GiB") in temp
+    assert Metric("bazel_cache_metrics_process_resident_memory_bytes", 7968219136.0) in temp
+    assert Result(state=State.OK, summary="Virtual memory size: 54.1 GiB") in temp
+    assert Metric("bazel_cache_metrics_process_virtual_memory_bytes", 58050449408.0) in temp
+    assert (
+        Result(state=State.OK, summary="Maximum amount of virtual memory available: 16.0 EiB")
+        in temp
+    )
+    assert (
+        Metric("bazel_cache_metrics_process_virtual_memory_max_bytes", 1.8446744073709552e19)
+        in temp
+    )
+
+
+def test_check_bazel_cache_has_misc_info(section: bc.Section) -> None:
+    temp = list(bc.check_bazel_cache(section))
+
+    assert (
+        Result(state=State.OK, summary="Total number of incoming AC get cache request hits: 56728")
+        in temp
+    )
+    assert (
+        Metric(
+            "bazel_cache_metrics_bazel_remote_incoming_requests_total_kind_ac_method_get_status_hit",
+            56728.0,
+        )
+        in temp
+    )
+    assert (
+        Result(state=State.OK, summary="Total number of incoming AC get cache request misses: 1544")
+        in temp
+    )
+    assert (
+        Metric(
+            "bazel_cache_metrics_bazel_remote_incoming_requests_total_kind_ac_method_get_status_miss",
+            1544.0,
+        )
+        in temp
+    )

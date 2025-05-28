@@ -462,6 +462,17 @@ http_archive(
 )
 
 http_archive(
+    name = "xinetd",
+    build_file = "//omd/packages/xinetd:BUILD.xinetd.bazel",
+    sha256 = "2baa581010bc70361abdfa37f121e92aeb9c5ce67f9a71913cebd69359cc9654",
+    strip_prefix = "xinetd-2.3.15.4",
+    urls = [
+        "https://github.com/openSUSE/xinetd/releases/download/2.3.15.4/xinetd-2.3.15.4.tar.xz",
+        UPSTREAM_MIRROR_URL + "xinetd-2.3.15.4.tar.xz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

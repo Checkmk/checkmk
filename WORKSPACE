@@ -33,10 +33,6 @@ load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
 mod_fcgid_workspace()
 
-load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd_workspace")
-
-xinetd_workspace()
-
 load("//omd/packages/nagios:nagios_http.bzl", "nagios_workspace")
 
 nagios_workspace()

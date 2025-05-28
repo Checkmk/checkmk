@@ -692,13 +692,18 @@ class UserGraphDataRangeStore:
         ).unlink(missing_ok=True)
 
 
-def _resolve_graph_recipe_with_error_handling(
+def render_graphs_from_specification_html(
     graph_specification: GraphSpecification,
+    graph_data_range: GraphDataRange,
+    graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-) -> Sequence[GraphRecipe] | HTML:
+    *,
+    render_async: bool = True,
+    graph_display_id: str = "",
+) -> HTML:
     try:
-        return graph_specification.recipes(registered_metrics, registered_graphs)
+        graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r"
@@ -711,25 +716,6 @@ def _resolve_graph_recipe_with_error_handling(
         )
     except Exception as e:
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
-
-
-def render_graphs_from_specification_html(
-    graph_specification: GraphSpecification,
-    graph_data_range: GraphDataRange,
-    graph_render_config: GraphRenderConfig,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    *,
-    render_async: bool = True,
-    graph_display_id: str = "",
-) -> HTML:
-    graph_recipes = _resolve_graph_recipe_with_error_handling(
-        graph_specification,
-        registered_metrics,
-        registered_graphs,
-    )
-    if isinstance(graph_recipes, HTML):
-        return graph_recipes  # This is to html.write the exception
 
     return _render_graphs_from_definitions(
         graph_recipes,
@@ -1105,13 +1091,21 @@ def host_service_graph_dashlet_cmk(
 
     graph_data_range = make_graph_data_range((start_time, end_time), graph_render_config.size[1])
 
-    graph_recipes = _resolve_graph_recipe_with_error_handling(
-        graph_specification,
-        registered_metrics,
-        registered_graphs,
-    )
-    if isinstance(graph_recipes, HTML):
-        return graph_recipes  # This is to html.write the exception
+    try:
+        graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
+    except MKLivestatusNotFoundError:
+        return render_graph_error_html(
+            "%s\n\n%s: %r"
+            % (
+                _("Cannot fetch data via Livestatus"),
+                _("The graph specification is"),
+                graph_specification,
+            ),
+            _("Cannot calculate graph recipes"),
+        )
+    except Exception as e:
+        return render_graph_error_html(e, _("Cannot calculate graph recipes"))
+
     if graph_recipes:
         graph_recipe = graph_recipes[0]
     else:

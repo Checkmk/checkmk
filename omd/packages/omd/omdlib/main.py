@@ -3573,7 +3573,7 @@ def postprocess_restore_as_site_user(
 def main_cleanup(
     version_info: VersionInfo,
     _site: object,
-    _global_opts: object,
+    global_opts: GlobalOptions,
     _args: object,
     _options: object,
     versions_path: Path = Path("/omd/versions/"),
@@ -3582,7 +3582,7 @@ def main_cleanup(
     if package_manager is None:
         bail_out("Command is not supported on this platform")
 
-    all_installed_packages = package_manager.get_all_installed_packages()
+    all_installed_packages = package_manager.get_all_installed_packages(global_opts.verbose)
 
     for version in omd_versions(versions_path):
         if version == default_version(versions_path):
@@ -3618,7 +3618,7 @@ def main_cleanup(
             continue
 
         sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty.bold, version, tty.normal))
-        package_manager.uninstall(matching_installed_packages[0])
+        package_manager.uninstall(matching_installed_packages[0], global_opts.verbose)
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
@@ -4413,7 +4413,7 @@ def _run_command(
             case "restore":
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
-                main_cleanup(version_info, object(), object(), object(), object())
+                main_cleanup(version_info, object(), global_opts, object(), object())
     except MKTerminate as e:
         bail_out(str(e))
     except KeyboardInterrupt:

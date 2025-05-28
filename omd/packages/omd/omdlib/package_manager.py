@@ -4,16 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import logging
 import os
 import subprocess
 import sys
 from collections.abc import Sequence
 from typing import Literal, override
-
-from cmk.utils.log import VERBOSE
-
-logger = logging.getLogger("cmk.omd")
 
 
 def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
@@ -67,21 +62,22 @@ class PackageManager(abc.ABC):
         return _PackageManagerDEB()
 
     @abc.abstractmethod
-    def uninstall(self, package_name: str) -> None:
+    def uninstall(self, package_name: str, verbose: bool) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_all_installed_packages(self) -> list[str]:
+    def get_all_installed_packages(self, verbose: bool) -> list[str]:
         raise NotImplementedError()
 
-    def _execute_uninstall(self, cmd: list[str]) -> None:
-        p = self._execute(cmd)
+    def _execute_uninstall(self, cmd: list[str], verbose: bool) -> None:
+        p = self._execute(cmd, verbose)
         output = p.communicate()[0]
         if p.wait() != 0:
             sys.exit("Failed to uninstall package:\n%s" % output)
 
-    def _execute(self, cmd: list[str]) -> subprocess.Popen:
-        logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
+    def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen:
+        if verbose:
+            sys.stdout.write("Executing: " + subprocess.list2cmdline(cmd))
 
         return subprocess.Popen(
             cmd,
@@ -96,12 +92,12 @@ class PackageManager(abc.ABC):
 
 class _PackageManagerDEB(PackageManager):
     @override
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["apt-get", "-y", "purge", package_name])
+    def uninstall(self, package_name: str, verbose: bool) -> None:
+        self._execute_uninstall(["apt-get", "-y", "purge", package_name], verbose)
 
     @override
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["dpkg", "-l"])
+    def get_all_installed_packages(self, verbose: bool) -> list[str]:
+        p = self._execute(["dpkg", "-l"], verbose)
         output = p.communicate()[0]
         if p.wait() != 0:
             sys.exit("Failed to get all installed packages:\n%s" % output)
@@ -117,11 +113,11 @@ class _PackageManagerDEB(PackageManager):
 
 
 class _PackageManagerRPM(PackageManager):
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["rpm", "-e", package_name])
+    def uninstall(self, package_name: str, verbose: bool) -> None:
+        self._execute_uninstall(["rpm", "-e", package_name], verbose)
 
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["rpm", "-qa"])
+    def get_all_installed_packages(self, verbose: bool) -> list[str]:
+        p = self._execute(["rpm", "-qa"], verbose)
         output = p.communicate()[0]
 
         if p.wait() != 0:

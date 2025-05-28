@@ -5,13 +5,16 @@
 use reqwest::{
     redirect::{Action, Attempt, Policy},
     tls::Version as TlsVersion,
-    Client, Proxy, Result as ReqwestResult, Url, Version,
+    Client, ClientBuilder, Proxy, Result as ReqwestResult, Url, Version,
 };
+use rustls::{RootCertStore, SupportedProtocolVersion};
+use rustls_native_certs::load_native_certs;
 use std::time::Duration;
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     sync::{Arc, Mutex},
 };
+use webpki_roots::TLS_SERVER_ROOTS;
 
 #[derive(Clone)]
 pub enum OnRedirect {
@@ -61,6 +64,69 @@ impl ClientAdapter {
     }
 }
 
+fn build_rustls_tls_config(
+    protocol_versions: &[&'static SupportedProtocolVersion],
+) -> rustls::ClientConfig {
+    let builder = rustls::ClientConfig::builder_with_provider(
+        rustls::crypto::aws_lc_rs::default_provider().into(),
+    )
+    .with_protocol_versions(protocol_versions)
+    .unwrap();
+
+    // Add Web PKI certs of trusted
+    let mut cert_store = RootCertStore::from_iter(TLS_SERVER_ROOTS.iter().cloned());
+
+    // Add the native certs from the local system
+    let native_certs = load_native_certs();
+    if native_certs.certs.len() > 0 {
+        cert_store.add_parsable_certificates(native_certs.certs);
+    }
+
+    let mut config = builder
+        .with_root_certificates(cert_store)
+        .with_no_client_auth();
+
+    config.alpn_protocols = vec![b"h2".into(), "http/1.1".into()];
+    config.enable_early_data = true;
+    config
+}
+
+fn configure_tls(
+    client: ClientBuilder,
+    min_version: Option<TlsVersion>,
+    max_version: Option<TlsVersion>,
+) -> ReqwestResult<ClientBuilder> {
+    let min = min_version.unwrap_or(TlsVersion::TLS_1_2);
+    let max = max_version.unwrap_or(TlsVersion::TLS_1_3);
+
+    let client = if Some(TlsVersion::TLS_1_0) == min_version
+        || Some(TlsVersion::TLS_1_1) == min_version
+        || Some(TlsVersion::TLS_1_0) == max_version
+        || Some(TlsVersion::TLS_1_1) == max_version
+    {
+        // Caveat: Enforcing TLS 1.0 or 1.1 may still fail, even with native_tls!
+        // The availability of TLS versions + required cipher suites relies on the
+        // system's OpenSSL version and config.
+        client.use_native_tls()
+    } else {
+        let mut protocol_versions: Vec<&'static SupportedProtocolVersion> = Vec::new();
+
+        if min == TlsVersion::TLS_1_2 || max == TlsVersion::TLS_1_2 {
+            protocol_versions.push(&rustls::version::TLS12);
+        } else if max == TlsVersion::TLS_1_3 || min == TlsVersion::TLS_1_3 {
+            protocol_versions.push(&rustls::version::TLS13);
+        } else {
+            log::error!("Unsupported TLS version for rusttls, falling back to TLSv1.2 / TLSv1.3; Supplied: {:?} / {:?}", min, max);
+            protocol_versions.push(&rustls::version::TLS12);
+            protocol_versions.push(&rustls::version::TLS13);
+        }
+
+        client.use_preconfigured_tls(build_rustls_tls_config(&protocol_versions))
+    };
+
+    Ok(client.min_tls_version(min).max_tls_version(max))
+}
+
 fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(cfg.disable_certificate_verification);
@@ -84,25 +150,7 @@ fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> Reqwest
         client
     };
 
-    let client = if let Some(version) = cfg.min_tls_version {
-        match version {
-            TlsVersion::TLS_1_0 | TlsVersion::TLS_1_1 => {
-                // Caveat: Enforcing TLS 1.0 or 1.1 may still fail, even with native_tls!
-                // The availability of TLS versions + required cipher suites relies on the
-                // system's OpenSSL version and config.
-                client.use_native_tls().min_tls_version(version)
-            }
-            _ => client.use_rustls_tls().min_tls_version(version),
-        }
-    } else {
-        client.use_rustls_tls()
-    };
-
-    let client = if let Some(version) = cfg.max_tls_version {
-        client.max_tls_version(version)
-    } else {
-        client
-    };
+    let client = configure_tls(client, cfg.min_tls_version, cfg.max_tls_version)?;
 
     let client = match cfg.version {
         // See IETF RFC 9113, Section 3:
@@ -124,7 +172,7 @@ fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> Reqwest
         },
     };
 
-    client
+    let client = client
         .timeout(cfg.timeout)
         .user_agent(cfg.user_agent)
         .redirect(get_policy(
@@ -133,8 +181,9 @@ fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> Reqwest
             cfg.force_ip,
             record_redirect,
         ))
-        .tls_info(cfg.collect_tls_info)
-        .build()
+        .tls_info(cfg.collect_tls_info);
+
+    Ok(client.build().unwrap())
 }
 
 fn get_proxy(

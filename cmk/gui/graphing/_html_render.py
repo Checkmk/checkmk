@@ -141,7 +141,7 @@ def host_service_graph_popup_cmk(
     )
 
 
-def render_graph_error_html(msg_or_exc: Exception | str, title: str | None = None) -> HTML:
+def render_graph_error_html(*, title: str, msg_or_exc: Exception | str) -> HTML:
     if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
         msg = "%s" % msg_or_exc
 
@@ -151,9 +151,6 @@ def render_graph_error_html(msg_or_exc: Exception | str, title: str | None = Non
         msg = traceback.format_exc()
     else:
         msg = msg_or_exc
-
-    if title is None:
-        title = _("Cannot display graph")
 
     return HTMLWriter.render_div(
         HTMLWriter.render_div(title, class_="title") + HTMLWriter.render_pre(msg),
@@ -706,16 +703,18 @@ def render_graphs_from_specification_html(
         graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
-            "%s\n\n%s: %r"
-            % (
-                _("Cannot fetch data via Livestatus"),
-                _("The graph specification is"),
-                graph_specification,
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=(
+                "%s\n\n%s: %r"
+                % (
+                    _("Cannot fetch data via Livestatus"),
+                    _("The graph specification is"),
+                    graph_specification,
+                )
             ),
-            _("Cannot calculate graph recipes"),
         )
     except Exception as e:
-        return render_graph_error_html(e, _("Cannot calculate graph recipes"))
+        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
 
     return _render_graphs_from_definitions(
         graph_recipes,
@@ -828,8 +827,6 @@ def _render_graph_content_html(
     *,
     graph_display_id: str = "",
 ) -> HTML:
-    output = HTML.empty()
-
     try:
         graph_artwork = compute_graph_artwork(
             graph_recipe,
@@ -841,7 +838,7 @@ def _render_graph_content_html(
         main_graph_html = _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
 
         if graph_render_config.show_time_range_previews:
-            output += HTMLWriter.render_div(
+            return HTMLWriter.render_div(
                 main_graph_html
                 + _render_time_range_selection(
                     graph_recipe,
@@ -851,19 +848,19 @@ def _render_graph_content_html(
                 ),
                 class_="graph_with_timeranges",
             )
-        else:
-            output += main_graph_html
+        return main_graph_html
 
     except MKLivestatusNotFoundError:
-        output += render_graph_error_html(
-            _("Cannot fetch data via Livestatus"), _("Cannot create graph")
+        return render_graph_error_html(
+            title=_("Cannot create graph"),
+            msg_or_exc=_("Cannot fetch data via Livestatus"),
         )
+
     except MKMissingDataError as e:
         return html.render_message(str(e))
 
     except Exception as e:
-        output += render_graph_error_html(e, _("Cannot create graph"))
-    return output
+        return render_graph_error_html(title=_("Cannot create graph"), msg_or_exc=e)
 
 
 def _render_time_range_selection(
@@ -1062,7 +1059,7 @@ def host_service_graph_dashlet_cmk(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
     graph_display_id: str = "",
-) -> HTML | None:
+) -> HTML:
     width_var = request.get_float_input_mandatory("width", 0.0)
     width = int(width_var / html_size_per_ex)
 
@@ -1095,16 +1092,18 @@ def host_service_graph_dashlet_cmk(
         graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
-            "%s\n\n%s: %r"
-            % (
-                _("Cannot fetch data via Livestatus"),
-                _("The graph specification is"),
-                graph_specification,
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=(
+                "%s\n\n%s: %r"
+                % (
+                    _("Cannot fetch data via Livestatus"),
+                    _("The graph specification is"),
+                    graph_specification,
+                )
             ),
-            _("Cannot calculate graph recipes"),
         )
     except Exception as e:
-        return render_graph_error_html(e, _("Cannot calculate graph recipes"))
+        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
 
     if graph_recipes:
         graph_recipe = graph_recipes[0]
@@ -1127,18 +1126,13 @@ def host_service_graph_dashlet_cmk(
                 graph_artwork,
             )
             if (graph_height := int(height - legend_height)) <= 0:
-                html.write_html(
-                    render_graph_error_html(
-                        title=_("Dashlet too short to render graph"),
-                        msg_or_exc=_(
-                            "Either increase the dashlet height or disable the graph legend."
-                        ),
-                    )
+                return render_graph_error_html(
+                    title=_("Dashlet too short to render graph"),
+                    msg_or_exc=_("Either increase the dashlet height or disable the graph legend."),
                 )
-                return None
             graph_render_config.size = (width, graph_height)
 
-    html_code = _render_graphs_from_definitions(
+    return _render_graphs_from_definitions(
         [graph_recipe],
         graph_data_range,
         graph_render_config,
@@ -1146,5 +1140,3 @@ def host_service_graph_dashlet_cmk(
         render_async=False,
         graph_display_id=graph_display_id,
     )
-    html.write_html(html_code)
-    return None

@@ -30,6 +30,7 @@ PACKAGES := \
     msitools \
     apache-omd \
     check_mk \
+    nagios \
     monitoring-plugins \
     check-cert \
     omd \

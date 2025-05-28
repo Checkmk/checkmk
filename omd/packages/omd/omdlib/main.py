@@ -24,7 +24,18 @@ import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, override
+from typing import (
+    assert_never,
+    BinaryIO,
+    cast,
+    Final,
+    IO,
+    Literal,
+    NamedTuple,
+    NoReturn,
+    override,
+    TextIO,
+)
 from uuid import uuid4
 
 import omdlib
@@ -152,56 +163,47 @@ def bail_out(message: str) -> NoReturn:
 # during past updates
 # TODO: Replace this with regular logging mechanics
 class Log(io.StringIO):
-    def __init__(self, fd: int, logfile: str) -> None:
+    color_replace: Final = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
+
+    def __init__(self, logfile: TextIO, std_stream: TextIO) -> None:
         super().__init__()
-        self.log = open(logfile, "a", encoding="utf-8")
-        self.fd = fd
-
-        if self.fd == 1:
-            self.orig = sys.stdout
-            sys.stdout = self
-        else:
-            self.orig = sys.stderr
-            sys.stderr = self
-
-        self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
-
-    @override
-    def __del__(self) -> None:
-        if self.fd == 1:
-            sys.stdout = self.orig
-        else:
-            sys.stderr = self.orig
-        self.log.close()
+        self._std_stream = std_stream
+        self._logfile = logfile
 
     # TODO: Ensure we get Text here
     @override
     def write(self, data: str) -> int:
         text = data
-        self.orig.write(text)
-        self.log.write(self.color_replace.sub("", text))
+        self._std_stream.write(text)
+        self._logfile.write(self.color_replace.sub("", text))
         return len(text)
 
     @override
     def flush(self) -> None:
-        self.log.flush()
-        self.orig.flush()
+        self._logfile.flush()
+        self._std_stream.flush()
 
 
-g_stdout_log: Log | None = None
-g_stderr_log: Log | None = None
+@contextlib.contextmanager
+def with_update_logging_stdout(logfile: Path) -> Iterator[None]:
+    original = sys.stdout
+    try:
+        with open(logfile, "a") as file:
+            sys.stdout = Log(logfile=file, std_stream=original)
+            yield
+    finally:
+        sys.stdout = original
 
 
-def start_logging(logfile: str) -> None:
-    global g_stdout_log, g_stderr_log
-    g_stdout_log = Log(1, logfile)
-    g_stderr_log = Log(2, logfile)
-
-
-def stop_logging() -> None:
-    global g_stdout_log, g_stderr_log
-    g_stdout_log = None
-    g_stderr_log = None
+@contextlib.contextmanager
+def with_update_logging_stderr(logfile: Path) -> Iterator[None]:
+    original = sys.stderr
+    try:
+        with open(logfile, "a") as file:
+            sys.stderr = Log(logfile=file, std_stream=original)
+            yield
+    finally:
+        sys.stderr = original
 
 
 class CommandType(Enum):
@@ -2837,121 +2839,122 @@ def main_update(
         bail_out("Aborted.")
 
     is_tty = sys.stdout.isatty()
-    start_logging(site_home + "/var/log/update.log")
-
-    sys.stdout.write(
-        f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Updating site '{site.name}' from version {from_version} to {to_version}...\n\n"
-    )
-
-    # Now apply changes of skeleton files. This can be done
-    # in two ways:
-    # 1. creating a patch from the old default files to the new
-    #    default files and applying that to the current files
-    # 2. creating a patch from the old default files to the current
-    #    files and applying that to the new default files
-    # We implement the first method.
-
-    # In case the version_meta is stored in the site and it's the data of the
-    # old version we are facing, use these files instead of the files from the
-    # version directory. This makes updates possible without the old version.
-    old_permissions = site.skel_permissions
-    new_permissions = load_skel_permissions_from(skel_permissions_file_path(to_version))
-
-    from_skelroot = site.version_skel_dir
-    to_skelroot = "/omd/versions/%s/skel" % to_version
-
-    with ManageUpdate(
-        site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
-    ) as mu:
-        # First walk through skeleton files of new version
-        for relpath in walk_skel(to_skelroot, depth_first=False):
-            _execute_update_file(
-                relpath,
-                site,
-                conflict_mode,
-                from_version,
-                to_version,
-                from_edition,
-                to_edition,
-                old_permissions,
-                new_permissions,
-            )
-
-        # Now handle files present in old but not in new skel files
-        for relpath in walk_skel(from_skelroot, depth_first=True, exclude_if_in=to_skelroot):
-            _execute_update_file(
-                relpath,
-                site,
-                conflict_mode,
-                from_version,
-                to_version,
-                from_edition,
-                to_edition,
-                old_permissions,
-                new_permissions,
-            )
-
-        # Change symbolic link pointing to new version
-        create_version_symlink(site_home, to_version)
-        save_version_meta_data(site, to_version)
-
-        # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
-        # new settings and default values.
-        site.set_config(load_config(site, global_opts.verbose))
-
-        # Let hooks of the new(!) version do their work and update configuration.
-        config_set_all(site, global_opts.verbose)
-        save_site_conf(site)
-
-        # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
-        # initialized tmpfs.
-        mu.prepare_and_populate_tmpfs(version_info, site)
-
-        additional_update_env = {
-            "OMD_TO_EDITION": to_edition,
-            "OMD_TO_VERSION": to_version,
-        }
-        command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
-        sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
-        returncode = _call_script(
-            is_tty,
-            {
-                **os.environ,
-                "OMD_ROOT": site_home,
-                "OMD_SITE": site.name,
-                **additional_update_env,
-            },
-            command,
-        )
-        if returncode != 0:
-            sys.exit(returncode)
-        sys.stdout.write(
-            f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
-        )
-
-    call_scripts(
-        site,
-        "update-pre-hooks",
-        open_pty=is_tty,
-        add_env=additional_update_env,
-    )
-
-    call_scripts(site, "post-update", open_pty=is_tty)
-
-    if from_edition != to_edition and edition_has_enforced_licensing(
-        to_ed := Edition.from_long_edition(to_edition)
+    with (
+        with_update_logging_stdout(Path(site_home) / "var/log/update.log"),
+        with_update_logging_stderr(Path(site_home) / "var/log/update.log"),
     ):
         sys.stdout.write(
-            f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
-            f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
-            f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
-            f"must purchase a license. In case you already have a license, please enter your "
-            f"license credentials on the product's licensing page "
-            f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"
+            f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Updating site '{site.name}' from version {from_version} to {to_version}...\n\n"
         )
 
-    sys.stdout.write("Finished update.\n\n")
-    stop_logging()
+        # Now apply changes of skeleton files. This can be done
+        # in two ways:
+        # 1. creating a patch from the old default files to the new
+        #    default files and applying that to the current files
+        # 2. creating a patch from the old default files to the current
+        #    files and applying that to the new default files
+        # We implement the first method.
+
+        # In case the version_meta is stored in the site and it's the data of the
+        # old version we are facing, use these files instead of the files from the
+        # version directory. This makes updates possible without the old version.
+        old_permissions = site.skel_permissions
+        new_permissions = load_skel_permissions_from(skel_permissions_file_path(to_version))
+
+        from_skelroot = site.version_skel_dir
+        to_skelroot = "/omd/versions/%s/skel" % to_version
+
+        with ManageUpdate(
+            site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
+        ) as mu:
+            # First walk through skeleton files of new version
+            for relpath in walk_skel(to_skelroot, depth_first=False):
+                _execute_update_file(
+                    relpath,
+                    site,
+                    conflict_mode,
+                    from_version,
+                    to_version,
+                    from_edition,
+                    to_edition,
+                    old_permissions,
+                    new_permissions,
+                )
+
+            # Now handle files present in old but not in new skel files
+            for relpath in walk_skel(from_skelroot, depth_first=True, exclude_if_in=to_skelroot):
+                _execute_update_file(
+                    relpath,
+                    site,
+                    conflict_mode,
+                    from_version,
+                    to_version,
+                    from_edition,
+                    to_edition,
+                    old_permissions,
+                    new_permissions,
+                )
+
+            # Change symbolic link pointing to new version
+            create_version_symlink(site_home, to_version)
+            save_version_meta_data(site, to_version)
+
+            # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
+            # new settings and default values.
+            site.set_config(load_config(site, global_opts.verbose))
+
+            # Let hooks of the new(!) version do their work and update configuration.
+            config_set_all(site, global_opts.verbose)
+            save_site_conf(site)
+
+            # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
+            # initialized tmpfs.
+            mu.prepare_and_populate_tmpfs(version_info, site)
+
+            additional_update_env = {
+                "OMD_TO_EDITION": to_edition,
+                "OMD_TO_VERSION": to_version,
+            }
+            command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
+            sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
+            returncode = _call_script(
+                is_tty,
+                {
+                    **os.environ,
+                    "OMD_ROOT": site_home,
+                    "OMD_SITE": site.name,
+                    **additional_update_env,
+                },
+                command,
+            )
+            if returncode != 0:
+                sys.exit(returncode)
+            sys.stdout.write(
+                f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
+            )
+
+        call_scripts(
+            site,
+            "update-pre-hooks",
+            open_pty=is_tty,
+            add_env=additional_update_env,
+        )
+
+        call_scripts(site, "post-update", open_pty=is_tty)
+
+        if from_edition != to_edition and edition_has_enforced_licensing(
+            to_ed := Edition.from_long_edition(to_edition)
+        ):
+            sys.stdout.write(
+                f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
+                f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
+                f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
+                f"must purchase a license. In case you already have a license, please enter your "
+                f"license credentials on the product's licensing page "
+                f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"
+            )
+
+        sys.stdout.write("Finished update.\n\n")
 
 
 def _update_cmk_core_config(site: SiteContext) -> None:

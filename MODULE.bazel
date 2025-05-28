@@ -473,6 +473,17 @@ http_archive(
 )
 
 http_archive(
+    name = "libgsf",
+    build_file = "//omd/packages/libgsf:BUILD.libgsf.bazel",
+    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
+    strip_prefix = "libgsf-1.14.44",
+    urls = [
+        "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
+        UPSTREAM_MIRROR_URL + "libgsf-1.14.44.tar.xz",
+    ],
+)
+
+http_archive(
     name = "shellcheck",
     build_file_content = """
 exports_files([

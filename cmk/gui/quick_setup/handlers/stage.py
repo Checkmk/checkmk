@@ -9,7 +9,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from pydantic import BaseModel, ValidationError
 
@@ -296,6 +296,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
     job_prefix = "quick_setup_stage_action"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Run Quick Setup Stage Action")
 
@@ -514,13 +515,16 @@ def start_quick_setup_stage_action_job_on_remote(
 class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJobArgs]):
     """Start a Quick Setup stage action in the background on a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "start-quick-setup-stage-action"
 
+    @override
     def get_request(self) -> QuickSetupStageActionJobArgs:
         api_request = request.get_request()
         return QuickSetupStageActionJobArgs.model_validate_json(api_request["args"])
 
+    @override
     def execute(self, api_request: QuickSetupStageActionJobArgs) -> str:
         return start_quick_setup_stage_job(
             quick_setup_id=api_request.quick_setup_id,
@@ -535,11 +539,16 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
 class AutomationQuickSetupStageActionResult(AutomationCommand[str]):
     """Fetch the result of a Quick Setup stage action from a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "fetch-quick-setup-stage-action-result"
 
+    @override
     def get_request(self) -> str:
-        return request.get_request()["job_id"]
+        job_id = request.get_request()["job_id"]
+        assert isinstance(job_id, str)
+        return job_id
 
+    @override
     def execute(self, api_request: str) -> str:
         return StageActionResult.load_from_job_result(api_request).model_dump_json()

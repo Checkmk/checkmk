@@ -26,7 +26,7 @@ from cmk.rulesets.v1.form_specs import (
 
 
 class _ServiceChoices:
-    def __init__(self):
+    def __init__(self) -> None:
         self.global_services = [
             MultipleChoiceElement(name="ce", title=Title("Costs and usage (CE)")),
         ]

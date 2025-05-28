@@ -6,6 +6,7 @@ import traceback
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel, ValidationError
 
@@ -322,6 +323,7 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     job_prefix = "quick_setup_action"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Run Quick Setup Action")
 

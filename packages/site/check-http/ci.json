@@ -1,4 +1,4 @@
 {
-    "command_line": "./run --setup-environment --clean --all --features=reqwest/native-tls-vendored",
+    "command_line": "./run --all",
     "maintainers": ["team-main@checkmk.com"]
 }

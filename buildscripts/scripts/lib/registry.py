@@ -58,6 +58,7 @@ class Registry:
     client: docker.DockerClient = field(init=False)
     image_exists: Callable[[DockerImage, str], bool] = field(init=False)
     get_image_tags: Callable[[str], Iterator[DockerTag]] = field(init=False)
+    timeout: int | None = None
 
     def delete_image(self, image: DockerImage) -> None:
         tag = image.tag
@@ -332,7 +333,8 @@ class Registry:
             print(line)
 
     def __post_init__(self) -> None:
-        self.client = docker.client.from_env()
+        kwargs = {"timeout": self.timeout} if self.timeout else {}
+        self.client = docker.client.from_env(**kwargs)
         self.credentials = get_credentials()
         match self.editions:
             case ["enterprise"]:
@@ -372,6 +374,7 @@ def get_default_registries() -> list[Registry]:
     return [
         Registry(
             editions=["enterprise"],
+            timeout=300,  # Our enterprise registry is a bit _slow_, let's give it some more time
         ),
         Registry(
             editions=["raw", "cloud", "managed"],

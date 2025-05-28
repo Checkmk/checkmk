@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import abc
 import os
 from pathlib import Path
-from typing import override
 
 from omdlib.init_scripts import check_status
 from omdlib.site_paths import SitePaths
@@ -23,28 +21,12 @@ from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import Edition
 
 
-class AbstractSiteContext(abc.ABC):
-    """Object wrapping site specific information"""
-
-    def __init__(self) -> None:
-        super().__init__()
+class SiteContext:
+    def __init__(self, sitename: str) -> None:
         self._config_loaded = False
         self._config: Config = {}
-
-    @property
-    @abc.abstractmethod
-    def tmp_dir(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def real_dir(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def real_tmp_dir(self) -> str:
-        raise NotImplementedError()
+        self._sitename = sitename
+        self._paths = SitePaths.from_site_name(sitename)
 
     @property
     def conf(self) -> Config:
@@ -52,21 +34,6 @@ class AbstractSiteContext(abc.ABC):
         if not self._config_loaded:
             raise Exception("Config not loaded yet")
         return self._config
-
-    @abc.abstractmethod
-    def set_config(self, config: Config) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def is_empty(self) -> bool:
-        raise NotImplementedError()
-
-
-class SiteContext(AbstractSiteContext):
-    def __init__(self, sitename: str) -> None:
-        super().__init__()
-        self._sitename = sitename
-        self._paths = SitePaths.from_site_name(sitename)
 
     @property
     def name(self) -> str:
@@ -101,12 +68,10 @@ class SiteContext(AbstractSiteContext):
             "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
-    @override
     def set_config(self, config: Config) -> None:
         self._config = config
         self._config_loaded = True
 
-    @override
     def is_empty(self) -> bool:
         for entry in os.listdir(self._paths.home):
             if entry not in [".", ".."]:
@@ -160,27 +125,5 @@ class SiteContext(AbstractSiteContext):
             return f.read().strip()
 
 
-class RootContext(AbstractSiteContext):
-    @property
-    @override
-    def tmp_dir(self) -> str:
-        return "/tmp"  # nosec B108 # BNS:13b2c8
-
-    @property
-    @override
-    def real_dir(self) -> str:
-        """Absolute base path (without trailing slash)"""
-        return "/"
-
-    @property
-    @override
-    def real_tmp_dir(self) -> str:
-        return "%s/tmp" % self.real_dir
-
-    @override
-    def set_config(self, config: Config) -> None:
-        pass
-
-    @override
-    def is_empty(self) -> bool:
-        return False
+class RootContext:
+    pass

@@ -8,12 +8,7 @@ import os
 
 import pytest
 
-from omdlib.contexts import RootContext, SiteContext
-
-
-def test_root_context() -> None:
-    site = RootContext()
-    assert site.real_dir == "/"
+from omdlib.contexts import SiteContext
 
 
 def test_site_context() -> None:

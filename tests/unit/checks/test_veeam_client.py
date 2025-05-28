@@ -64,7 +64,7 @@ def test_inventory_veeam_client(
                 "hour 0 minutes, Average Speed: 100 B/s",
                 [("totalsize", 100), ("duration", 3600), ("avgspeed", 100)],
             ],
-            id="section without StopTime or LastBackupAge",
+            id="section without StopTime",
         ),
         pytest.param(
             "JOB_NAME",
@@ -73,7 +73,7 @@ def test_inventory_veeam_client(
                 ["JobName", "JOB_NAME"],
                 ["TotalSizeByte", "100"],
                 ["StartTime", "01.02.2015 20:05:45"],
-                ["LastBackupAge", "5"],
+                ["StopTime", "01.02.2015 21:05:45"],
                 ["DurationDDHHMMSS", "00:01:00:00"],
                 ["AvgSpeedBps", "100"],
                 ["DisplayName", "name"],
@@ -84,7 +84,27 @@ def test_inventory_veeam_client(
                 "1 hour 0 minutes, Average Speed: 100 B/s",
                 [("totalsize", 100), ("duration", 3600), ("avgspeed", 100)],
             ],
-            id="section success LastBackupAge",
+            id="section success StopTime",
+        ),
+        pytest.param(
+            "JOB_NAME",
+            [
+                ["Status", "Success"],
+                ["JobName", "JOB_NAME"],
+                ["TotalSizeByte", "100"],
+                ["StartTime", "01.02.2015 20:05:45"],
+                ["StopTime", "01.02.2015 21.05.45"],
+                ["DurationDDHHMMSS", "00:01:00:00"],
+                ["AvgSpeedBps", "100"],
+                ["DisplayName", "name"],
+            ],
+            [
+                0,
+                "Status: Success, Size (total): 100 B, Last backup: 5 seconds ago, Duration: "
+                "1 hour 0 minutes, Average Speed: 100 B/s",
+                [("totalsize", 100), ("duration", 3600), ("avgspeed", 100)],
+            ],
+            id="section success StopTime different time separator (.)",
         ),
         pytest.param(
             "JOB_NAME",
@@ -105,26 +125,6 @@ def test_inventory_veeam_client(
                 [("totalsize", 100), ("avgspeed", 100)],
             ],
             id="section in progress StopTime",
-        ),
-        pytest.param(
-            "JOB_NAME",
-            [
-                ["Status", "InProgress"],
-                ["JobName", "JOB_NAME"],
-                ["TotalSizeByte", "100"],
-                ["StartTime", "01.02.2015 20:05:45"],
-                ["LastBackupAge", "300"],
-                ["DurationDDHHMMSS", "00:01:00:00"],
-                ["AvgSpeedBps", "100"],
-                ["DisplayName", "name"],
-            ],
-            [
-                2,
-                "Status: InProgress, Size (total): 100 B, Last backup: 5 minutes 0 seconds "
-                "ago(!!) (Warn/Crit: 20 seconds/40 seconds), Average Speed: 100 B/s",
-                [("totalsize", 100), ("avgspeed", 100)],
-            ],
-            id="section in progress LastBackupAge",
         ),
     ],
 )

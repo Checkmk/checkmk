@@ -545,6 +545,10 @@ class AlertModel(BaseModel):
     """
 
     name: str
+    acknowledge: bool
+    acknowledger: str = ""
+    suppress: bool
+    suppressor: str = ""
 
 
 class SvmTrafficCountersModel(BaseModel):

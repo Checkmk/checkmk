@@ -1,0 +1,24 @@
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+genrule(
+    name = "build",
+    srcs = [
+        ":all_srcs",
+    ],
+    outs = [
+        "rabbitmq.tar.gz",
+    ],
+    cmd = """
+        tar --dereference --hard-dereference -czf $$(realpath $(RULEDIR))/rabbitmq.tar.gz  \
+            -C external/$$(dirname $$(echo $(rlocationpaths :all_srcs) | awk '{print $$1}')) \
+            --exclude=LICENSE* \
+            --exclude=INSTALL* \
+            --exclude=BUILD* \
+            --exclude=WORKSPACE* \
+            .;
+    """,
+    visibility = ["//visibility:public"],
+)

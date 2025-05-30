@@ -36,7 +36,6 @@ PACKAGES := \
     heirloom-mailx \
     robotmk \
     xmlsec1 \
-    rabbitmq
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

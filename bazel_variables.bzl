@@ -66,6 +66,7 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
     ],
     "cce": [
         "//omd/packages/maintenance:skel.permissions",
@@ -74,6 +75,7 @@ edition_skel_permissions = {
         "//omd/packages/jaeger:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
     ],
     "cee": [
         "//omd/packages/maintenance:skel.permissions",
@@ -82,6 +84,7 @@ edition_skel_permissions = {
         "//omd/packages/jaeger:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
     ],
     "cme": [
         "//omd/packages/maintenance:skel.permissions",
@@ -90,6 +93,7 @@ edition_skel_permissions = {
         "//omd/packages/jaeger:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
     ],
     "cse": [
         "//omd/packages/maintenance:skel.permissions",
@@ -97,5 +101,6 @@ edition_skel_permissions = {
         "//omd/packages/stunnel:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
     ],
 }

@@ -421,7 +421,7 @@ http_archive(
 
 http_archive(
     name = "rabbitmq",
-    build_file = "//omd/packages/rabbitmq:BUILD",
+    build_file = "//omd/packages/rabbitmq:BUILD.rabbitmq.bazel",
     sha256 = "7bfc742e3d227e8a2b1ea2a0b5ef3ba4b6a7987d5e220e0fbf0919d29b6ed43c",
     strip_prefix = "rabbitmq_server-3.13.6",
     urls = [

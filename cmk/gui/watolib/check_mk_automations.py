@@ -438,14 +438,14 @@ def analyze_host_rule_effectiveness(
 
 
 def delete_hosts(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_names: Sequence[HostName],
     debug: bool,
 ) -> results.DeleteHostsResult:
     return _deserialize(
         _automation_serialized(
             "delete-hosts",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=host_names,
             debug=debug,
         ),
@@ -530,7 +530,7 @@ def get_check_information_cached(*, debug: bool) -> Mapping[CheckPluginName, Map
     return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
-def get_section_information(*, debug: bool) -> results.GetSectionInformationResult:
+def _get_section_information(*, debug: bool) -> results.GetSectionInformationResult:
     return _deserialize(
         _automation_serialized(
             "get-section-information",
@@ -544,7 +544,7 @@ def get_section_information(*, debug: bool) -> results.GetSectionInformationResu
 
 @request_memoize()
 def get_section_information_cached(*, debug: bool) -> Mapping[str, Mapping[str, str]]:
-    return get_section_information(debug=debug).section_infos
+    return _get_section_information(debug=debug).section_infos
 
 
 def scan_parents(

@@ -311,7 +311,7 @@ class TestHostConverter:
             with SuperUserContext():
                 root_folder.delete_hosts(
                     [HostName(host_name)],
-                    automation=lambda _site, _hosts, _debug: DeleteHostsResult(),
+                    automation=lambda _automation_config, _hosts, _debug: DeleteHostsResult(),
                     pprint_value=False,
                     debug=False,
                 )

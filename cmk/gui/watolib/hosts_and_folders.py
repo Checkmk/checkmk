@@ -80,6 +80,11 @@ from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -2499,7 +2504,10 @@ class Folder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
+        automation: Callable[
+            [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
+            ABCAutomationResult,
+        ],
         pprint_value: bool,
         debug: bool,
         allow_locked_deletion: bool = False,
@@ -2592,12 +2600,15 @@ class Folder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
+        automation: Callable[
+            [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
+            ABCAutomationResult,
+        ],
         debug: bool,
     ) -> None:
         for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
             automation(
-                site_id,
+                make_automation_config(active_config.sites[site_id]),
                 site_host_names,
                 debug,
             )
@@ -3044,7 +3055,10 @@ class SearchFolder(FolderProtocol):
         self,
         host_names: Sequence[HostName],
         *,
-        automation: Callable[[SiteId, Sequence[HostName], bool], ABCAutomationResult],
+        automation: Callable[
+            [LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName], bool],
+            ABCAutomationResult,
+        ],
         pprint_value: bool,
         debug: bool,
     ) -> None:

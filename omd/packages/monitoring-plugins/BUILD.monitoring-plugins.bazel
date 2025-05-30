@@ -121,3 +121,10 @@ configure_make(
     visibility = VISIBILITY,
     deps = ["@openssl"],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":monitoring-plugins"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)

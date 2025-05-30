@@ -191,7 +191,6 @@ def load_config() -> None:
     for p in filelist:
         _load_config_file_to(p, raw_config)
 
-    raw_config["sites"] = prepare_raw_site_config(raw_config["sites"])
     raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(raw_config["wato_tags"])
 
     # TODO: Temporary local hack to transform the values to the correct type. This needs
@@ -301,20 +300,6 @@ def _config_plugin_modules() -> list[ModuleType]:
         )
         and module is not None
     ]
-
-
-def prepare_raw_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
-    if not site_config:
-        # Prevent problem when user has deleted all sites from his
-        # configuration and sites is {}. We assume a default single site
-        # configuration in that case.
-        return default_single_site_configuration()
-    return _migrate_old_site_config(site_config)
-
-
-def _migrate_old_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
-    # Fresh migration code can be added here
-    return site_config
 
 
 def default_single_site_configuration() -> SiteConfigurations:

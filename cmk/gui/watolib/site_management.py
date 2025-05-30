@@ -33,7 +33,7 @@ from cmk.ccc.user import UserId
 
 from cmk.utils import paths
 
-from cmk.gui.config import active_config, prepare_raw_site_config
+from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -608,8 +608,7 @@ class SitesApiMgr:
         self, site_id: SiteId, site_config: SiteConfiguration, *, pprint_value: bool
     ) -> None:
         self.site_mgmt.validate_configuration(site_id, site_config, self.all_sites)
-        sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
-        self.all_sites.update(sites)
+        self.all_sites[site_id] = site_config
         self.site_mgmt.save_sites(self.all_sites, activate=True, pprint_value=pprint_value)
 
     def get_connected_sites_to_update(

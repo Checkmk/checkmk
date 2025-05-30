@@ -25,7 +25,7 @@ import livestatus
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.caching
 import cmk.utils.paths
@@ -315,6 +315,37 @@ CONFIG_TMPFS='on'""",
 rule_packs += \
 [{'id': 'default', 'title': 'Default rule pack', 'rules': [], 'disabled': False, 'hits': 0}]
 """,
+    )
+    _dump(
+        cmk.utils.paths.default_config_dir / "multisite.d/sites.mk",
+        r"""
+# Written by conftest.py
+# encoding: utf-8
+
+sites.update(%r)
+        """
+        % livestatus.SiteConfigurations(
+            {
+                SiteId("NO_SITE"): livestatus.SiteConfiguration(
+                    {
+                        "id": SiteId("NO_SITE"),
+                        "alias": "Local site NO_SITE",
+                        "socket": ("local", None),
+                        "disable_wato": True,
+                        "disabled": False,
+                        "insecure": False,
+                        "url_prefix": "/NO_SITE/",
+                        "multisiteurl": "",
+                        "persist": False,
+                        "replicate_ec": False,
+                        "replication": None,
+                        "timeout": 5,
+                        "user_login": True,
+                        "proxy": None,
+                    }
+                )
+            }
+        ),
     )
 
     yield

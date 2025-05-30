@@ -9,7 +9,7 @@ import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, override
+from typing import Any, cast, NamedTuple
 
 from livestatus import (
     BrokerConnection,
@@ -35,9 +35,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui import hooks, log
 from cmk.gui.config import (
     active_config,
-    default_single_site_configuration,
     load_config,
-    prepare_raw_site_config,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -91,23 +89,6 @@ class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
             config_variable="sites",
             spec_class=SiteConfigurations,
         )
-
-    @override
-    def _load_file(self, *, lock: bool) -> SiteConfigurations:
-        if not self._config_file_path.exists():
-            return default_single_site_configuration()
-
-        sites_from_file = store.load_from_mk_file(
-            self._config_file_path,
-            key=self._config_variable,
-            default=SiteConfigurations({}),
-            lock=lock,
-        )
-
-        if not sites_from_file:
-            return default_single_site_configuration()
-
-        return prepare_raw_site_config(sites_from_file)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

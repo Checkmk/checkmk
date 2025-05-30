@@ -445,9 +445,9 @@ def load_license_csv(package_path: str, cmk_version: str) -> list[dict[str, str]
         _get_file_from_package(
             package_path,
             cmk_version,
-            "omd/bill-of-materials.json"
+            "omd/bill-of-materials.csv"
             if package_path.endswith(".tar.gz")
-            else "share/doc/bill-of-materials.json",
+            else "share/doc/bill-of-materials.csv",
         ).decode("utf-8")
     )
     reader = csv.DictReader(license_file)

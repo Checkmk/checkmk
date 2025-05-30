@@ -53,14 +53,14 @@ WERKS_260: dict[int, Werk] = {}
 def test_update_livecycle() -> None:
     # we start with a 2.4.0:
     unacknowledged_werks: dict[int, Werk] = {}  # does not exist in 2.3.0
-    acknowledge_werks = set([11, 12])  # some very early werks have been acknowledged
+    acknowledge_werks = {11, 12}  # some very early werks have been acknowledged
 
     # update from 2.3.0 to 2.4.0:
     # (this means, we have to backport this action into the 2.4.0!)
     unacknowledged_werks = load_unacknowledged_werks(
         acknowledge_werks, {**WERKS_240, **unacknowledged_werks}
     )
-    assert set(unacknowledged_werks.keys()) == set([30, 40])
+    assert set(unacknowledged_werks.keys()) == {30, 40}
 
     acknowledge_werks.add(30)  # user acknowledges one werk, but not all of them
 
@@ -68,7 +68,7 @@ def test_update_livecycle() -> None:
     unacknowledged_werks = load_unacknowledged_werks(
         acknowledge_werks, {**WERKS_250, **unacknowledged_werks}
     )
-    assert set(unacknowledged_werks.keys()) == set([40, 50, 60])
+    assert set(unacknowledged_werks.keys()) == {40, 50, 60}
 
 
 def test_version_of_werk_keeps_first_incompatible_version(
@@ -108,7 +108,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
 
     werks = werks_load()
     # we only see all werks from 2.4.0:
-    assert set(werks) == set([30, 35, 40])
+    assert set(werks) == {30, 35, 40}
 
     # let's update to 2.5.0:
     save_werks_to_site(WERKS_250)
@@ -117,7 +117,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
 
     werks = werks_load()
     # we see werks from 2.5.0 and one from 2.4.0:
-    assert set(werks) == set([30, 50, 55, 60])
+    assert set(werks) == {30, 50, 55, 60}
     # werk 30 is available in both: 2.5.0 and 2.4.0, but we want to see the 2.4.0 version here,
     # as this is the first time when the customer missed to acknowledge it.
     assert werks[30].version == "2.4.0p3"
@@ -133,7 +133,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
         [50], acknowledged_werks_mk=acknowledge_werks_file
     )
     werks = werks_load()
-    assert set(werks) == set([60])
+    assert set(werks) == {60}
 
     # the user acknowledges the last 2.5.0 werk, and updates again
     # we expect that the site werks file is now empty

@@ -44,7 +44,7 @@ def _find_host_tree_paths(
         if stat := _compute_file_path_stat(tree_path.legacy):
             yield _HostTreePath(raw_host_name, tree_path, stat)
 
-    yield from (set(file_paths) - set(p for _h, tp in all_tree_paths for p in (tp.path, tp.legacy)))
+    yield from (set(file_paths) - {p for _h, tp in all_tree_paths for p in (tp.path, tp.legacy)})
 
 
 def _iter_host_tree_paths_or_unknown_file_paths(

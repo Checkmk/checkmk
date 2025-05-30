@@ -1863,8 +1863,8 @@ def test_openapi_built_in_host_attributes_in_sync() -> None:
 
 
 def test_openapi_built_in_tag_groups_in_sync() -> None:
-    built_in_tag_group_keys = set(
+    built_in_tag_group_keys = {
         "tag_" + tag_group.id for tag_group in BuiltinTagConfig().get_tag_groups()
-    )
+    }
     assert built_in_tag_group_keys == set(BuiltInHostTagGroups.__annotations__)
     assert built_in_tag_group_keys == set(BaseHostTagGroup().fields.keys())

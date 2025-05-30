@@ -1,4 +1,4 @@
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@@//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -13,8 +13,8 @@ configure_make(
     name = "net-snmp",
     args = ["-j4"],
     build_data = [
-        "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
-        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
+        "@@//omd/packages/perl-modules:perl-modules.tar",
+        "@@//omd/packages/python3-modules:python3-modules.tar",
     ],
     configure_in_place = True,
     configure_options = [
@@ -42,10 +42,10 @@ configure_make(
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
-        "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
-        "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
-        "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PERL_MODULES_TAR": "$(execpath @@//omd/packages/perl-modules:perl-modules.tar)",
+        "PYTHON_MODULES_TAR": "$(execpath @@//omd/packages/python3-modules:python3-modules.tar)",
+        "PERL_DIR": "$$(dirname $(execpath @@//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
+        "PYTHONPATH": "$$(dirname $(execpath @@//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [

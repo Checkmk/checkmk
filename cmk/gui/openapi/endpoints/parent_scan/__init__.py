@@ -77,6 +77,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
                 ping_probes=body["performance"]["ping_probes"],
                 gateway_folder_path=gateway_folder_path,
             ),
+            site_configs=active_config.sites,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
         )

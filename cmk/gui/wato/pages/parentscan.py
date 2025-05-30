@@ -160,6 +160,7 @@ class ModeParentScan(WatoMode):
                     self._get_selected_hosts(),
                     self._job,
                     self._settings,
+                    site_configs=active_config.sites,
                     pprint_value=active_config.wato_pprint_config,
                     debug=active_config.debug,
                 )

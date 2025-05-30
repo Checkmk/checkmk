@@ -71,6 +71,28 @@ def test_scan_parents_job(
         hosts=[host],
         job=ParentScanBackgroundJob(),
         settings=settings,
+        site_configs={
+            SiteId("NO_SITE"): {
+                "id": SiteId("NO_SITE"),
+                "alias": "Local site NO_SITE",
+                "socket": ("local", None),
+                "disable_wato": True,
+                "disabled": False,
+                "insecure": False,
+                "url_prefix": "/NO_SITE/",
+                "multisiteurl": "",
+                "persist": False,
+                "replicate_ec": False,
+                "replicate_mkps": False,
+                "replication": None,
+                "timeout": 5,
+                "user_login": True,
+                "proxy": None,
+                "user_sync": "all",
+                "status_host": None,
+                "message_broker_port": 5672,
+            }
+        },
         pprint_value=False,
         debug=False,
     )

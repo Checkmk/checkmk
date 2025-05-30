@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
+
+from livestatus import SiteConfiguration
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -32,7 +34,12 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.automations import AnnotatedHostName
+from cmk.gui.watolib.automations import (
+    AnnotatedHostName,
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
@@ -47,6 +54,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 @dataclass(frozen=True)
 class ParentScanTask:
     site_id: SiteId
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig
     host_folder_path: str
     host_name: AnnotatedHostName
 
@@ -155,7 +163,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self, task: ParentScanTask, settings: ParentScanSettings, *, debug: bool
     ) -> Sequence[GatewayResult]:
         return scan_parents(
-            site_id=task.site_id,
+            automation_config=task.automation_config,
             host_name=task.host_name,
             timeout=settings.timeout,
             probes=settings.probes,
@@ -362,6 +370,7 @@ def start_parent_scan(
     job: ParentScanBackgroundJob,
     settings: ParentScanSettings,
     *,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     pprint_value: bool,
     debug: bool,
 ) -> Result[None, AlreadyRunningError | StartupError]:
@@ -370,7 +379,12 @@ def start_parent_scan(
             callable=parent_scan_job_entry_point,
             args=ParentScanJobArgs(
                 tasks=[
-                    ParentScanTask(host.site_id(), host.folder().path(), host.name())
+                    ParentScanTask(
+                        site_id=host.site_id(),
+                        automation_config=make_automation_config(site_configs[host.site_id()]),
+                        host_folder_path=host.folder().path(),
+                        host_name=host.name(),
+                    )
                     for host in hosts
                 ],
                 settings=settings,

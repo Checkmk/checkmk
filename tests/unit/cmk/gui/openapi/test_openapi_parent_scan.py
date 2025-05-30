@@ -10,6 +10,8 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+from cmk.gui.watolib.automations import LocalAutomationConfig
+
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_parent_scan_background(
@@ -42,7 +44,7 @@ def test_openapi_parent_scan_background(
     automation.assert_has_calls(
         [
             call(
-                site_id="NO_SITE",
+                automation_config=LocalAutomationConfig(),
                 host_name="foobar",
                 timeout=8,
                 probes=2,
@@ -52,7 +54,7 @@ def test_openapi_parent_scan_background(
             ),
             call().results.__iter__(),
             call(
-                site_id="NO_SITE",
+                automation_config=LocalAutomationConfig(),
                 host_name="sample",
                 timeout=8,
                 probes=2,

@@ -547,7 +547,7 @@ def get_section_information_cached(*, debug: bool) -> Mapping[str, Mapping[str, 
 
 def scan_parents(
     *,
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     timeout: int,
     probes: int,
@@ -558,7 +558,7 @@ def scan_parents(
     return _deserialize(
         _automation_serialized(
             "scan-parents",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[
                 str(timeout),
                 str(probes),

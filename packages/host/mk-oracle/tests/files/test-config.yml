@@ -1,0 +1,16 @@
+---
+system:
+  logging:
+    level: "warn" # optional, default: "info"
+    max_size: 1000000
+    max_count: 5
+orasql:
+  main: # mandatory, defines main SQL check to be executed
+    options: # optional
+      max_connections: 6 # optional, default: absent, 6
+      max_queries: 16 # optional, for the future use
+  target: # mandatory
+    connection:
+      name: localhost
+    authentication: 
+      user: "" # mandatory

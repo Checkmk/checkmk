@@ -9,6 +9,7 @@ host_crates.from_cargo(
         "//packages/host:Cargo.toml",
         "//packages/host/cmk-agent-ctl:Cargo.toml",
         "//packages/host/mk-sql:Cargo.toml",
+        "//packages/host/mk-oracle:Cargo.toml",
     ],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )

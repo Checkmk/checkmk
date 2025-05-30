@@ -1,0 +1,61 @@
+{
+    "workbench.colorCustomizations": {
+        "[Bluloco Light Italic]": {},
+        "activityBar.activeBackground": "#0f63d9",
+        "activityBar.background": "#0f63d9",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#770836",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#0f63d9",
+        "statusBar.background": "#0c4da9",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#0f63d9",
+        "statusBarItem.remoteBackground": "#0c4da9",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#0c4da9",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#0c4da999",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#0c4da9",
+    "cSpell.words": [
+        "badvalue",
+        "DATABASEPROPERTYEX",
+        "datafiles",
+        "failoverpartner",
+        "FILEPROPERTY",
+        "orasql",
+        "prio",
+        "tablespaces",
+        "transactionlogs"
+    ],
+    "files.autoSave": "afterDelay",
+    "editor.formatOnSave": true,
+    "cmake.configureOnOpen": false,
+    "rustTestExplorer.logpanel": true,
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    },
+    "rust-analyzer.checkOnSave": true
+}

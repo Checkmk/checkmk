@@ -139,7 +139,9 @@ class SyncRemoteSitesJob:
         """Some basic preliminary check to decide quickly whether to start the job"""
         return bool(wato_slave_sites())
 
-    def do_execute(self, *, debug: bool) -> None:
+    def do_execute(
+        self, *, sites: Sequence[tuple[SiteId, RemoteAutomationConfig]], debug: bool
+    ) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
             prev_last_timestamps = self._last_audit_log_timestamps_store.load()
 
@@ -148,7 +150,7 @@ class SyncRemoteSitesJob:
             last_audit_logs,
             last_site_changes,
             last_timestamps,
-        ) = self._get_remote_changes(prev_last_timestamps, debug=debug)
+        ) = self._get_remote_changes(sites, prev_last_timestamps, debug=debug)
 
         if failed_sites:
             logger.error("Failed to get changes from sites: %s.", ", ".join(sorted(failed_sites)))
@@ -164,7 +166,7 @@ class SyncRemoteSitesJob:
             logger.debug(
                 "Removing site changes from sites: %s.", ", ".join(site_changes_synced_sites)
             )
-            self._clear_site_changes_from_remote_sites(last_site_changes, debug=debug)
+            self._clear_site_changes_from_remote_sites(sites, last_site_changes, debug=debug)
 
         with store.locked(self._last_audit_log_timestamps_path):
             self._last_audit_log_timestamps_store.write(last_timestamps)
@@ -178,7 +180,11 @@ class SyncRemoteSitesJob:
         )
 
     def _get_remote_changes(
-        self, prev_last_timestamps: dict[SiteId, int], *, debug: bool
+        self,
+        sites: Sequence[tuple[SiteId, RemoteAutomationConfig]],
+        prev_last_timestamps: dict[SiteId, int],
+        *,
+        debug: bool,
     ) -> tuple[
         set[SiteId],
         Mapping[SiteId, AuditLogs],
@@ -186,19 +192,18 @@ class SyncRemoteSitesJob:
         Mapping[SiteId, int],
     ]:
         now = int(time.time())
-        wato_slave_site_ids = set(wato_slave_sites())
 
         failed_sites: set[SiteId] = set()
         last_audit_logs: dict[SiteId, AuditLogs] = {}
         last_site_changes: dict[SiteId, SiteChangeSequence] = {}
 
-        for site_id in wato_slave_site_ids:
+        for site_id, automation_config in sites:
             since = prev_last_timestamps.get(site_id, now)
             logger.debug("Getting audit logs from site %s since %s", site_id, since)
             logger.debug("Getting site changes from site %s", site_id)
 
             try:
-                sync_result = self._sync_remote_site(site_id, since, debug=debug)
+                sync_result = self._sync_remote_site(automation_config, since, debug=debug)
             except Exception as e:
                 failed_sites.add(site_id)
                 logger.error(
@@ -220,22 +225,27 @@ class SyncRemoteSitesJob:
 
         # Housekeeping:
         # Remove entries for which the timestamp is older than a 30 days if and only if the site
-        # is not active, ie. not in 'wato_slave_site_ids'.
+        # is not active, ie. not in list of replication sites
+        site_ids = set(dict(sites).keys())
         last_timestamps = {
             site_id: timestamp
             for site_id, timestamp in prev_last_timestamps.items()
-            if site_id in wato_slave_site_ids or (now - timestamp) < (30 * 7 * 24 * 3600)
+            if site_id in site_ids or (now - timestamp) < (30 * 7 * 24 * 3600)
         }
 
         return failed_sites, last_audit_logs, last_site_changes, last_timestamps
 
     def _sync_remote_site(
-        self, site_id: SiteId, last_audit_log_timestamp: int, *, debug: bool
+        self,
+        automation_config: RemoteAutomationConfig,
+        last_audit_log_timestamp: int,
+        *,
+        debug: bool,
     ) -> SyncRemoteSitesResult:
         return SyncRemoteSitesResult.from_json(
             str(
                 do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+                    automation_config,
                     "sync-remote-site",
                     [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
                     debug=debug,
@@ -269,12 +279,17 @@ class SyncRemoteSitesJob:
             logger.debug("Wrote %s %s entries from site %s", num_entries, change_name, site_id)
 
     def _clear_site_changes_from_remote_sites(
-        self, last_site_changes: LastSiteChanges, *, debug: bool
+        self,
+        sites: Sequence[tuple[SiteId, RemoteAutomationConfig]],
+        last_site_changes: LastSiteChanges,
+        *,
+        debug: bool,
     ) -> None:
+        automation_configs = dict(sites)
         for site_id, site_changes in last_site_changes.items():
             if site_changes:
                 do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+                    automation_configs[site_id],
                     "clear-site-changes",
                     [("last_change_id", str(site_changes[-1]["id"]))],
                     debug=debug,
@@ -312,4 +327,10 @@ def _execute_sync_remote_sites() -> None:
         logger.debug("Job shall not start")
         return
 
-    SyncRemoteSitesJob().do_execute(debug=active_config.debug)
+    SyncRemoteSitesJob().do_execute(
+        sites=[
+            (site_id, RemoteAutomationConfig.from_site_config(site_config))
+            for site_id, site_config in wato_slave_sites().items()
+        ],
+        debug=active_config.debug,
+    )

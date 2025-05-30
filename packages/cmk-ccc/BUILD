@@ -212,6 +212,22 @@ py_test(
     ],
 )
 
+py_test(
+    name = "store-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_store.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "debug",
+        "store",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-ccc",

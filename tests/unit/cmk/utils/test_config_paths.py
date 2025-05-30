@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-from cmk.utils.config_path import _LatestConfigPath, ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:
@@ -117,18 +117,18 @@ class TestLatestConfigPath:
         yield LATEST_CONFIG
         (cmk.utils.paths.core_helper_config_dir / "serial.mk").unlink(missing_ok=True)
 
-    def test_str(self, config_path: _LatestConfigPath) -> None:
+    def test_str(self, config_path: ConfigPath) -> None:
         assert str(config_path) == "latest"
 
-    def test_repr(self, config_path: _LatestConfigPath) -> None:
+    def test_repr(self, config_path: ConfigPath) -> None:
         assert isinstance(repr(config_path), str)
 
-    def test_eq(self, config_path: _LatestConfigPath) -> None:
+    def test_eq(self, config_path: ConfigPath) -> None:
         assert config_path == type(config_path)()
         assert config_path == Path(config_path)
         assert config_path != VersionedConfigPath(0)
 
-    def test_hash(self, config_path: _LatestConfigPath) -> None:
+    def test_hash(self, config_path: ConfigPath) -> None:
         assert isinstance(hash(config_path), int)
         assert hash(config_path) == hash(LATEST_CONFIG)
         assert hash(config_path) != hash(VersionedConfigPath(0))

@@ -122,7 +122,7 @@ Once done, you are ready for the next chapter.
     The number one rule is to *put each piece of work on its own branch*.
     Please note that in general, we only accept changes which are based on the *master* branch.
     There is one (rare) exception, namely bug fixes which *only* affect older branches.
-    So lets start like this:
+    So let's start like this:
 
     ```console
     $ git checkout master
@@ -365,7 +365,7 @@ They make it hard to understand which names are really available and needed in t
 
 ### Comments
 
-* Document the non-obvious. Don't document the how, do document the why.
+* Document the non-obvious. Document why, not how.
 * Use doc-strings for classes and methods.
 
 ### Doctests
@@ -468,9 +468,9 @@ def worst_service_state(*states: int, default: int) -> int:
 The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
 `ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format-python`.
 
-This make target will then format your code base as well as sort the import statements.
+This make target will then format your codebase as well as sort the import statements.
 
-*NOTE*: You will also find other `pyproject.toml` files in our code base (at the time of writing, e.g. under `packges/cmk-*`).
+*NOTE*: You will also find other `pyproject.toml` files in our codebase (at the time of writing, e.g. under `packges/cmk-*`).
 Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
 
 #### Manual ruff formatting invocation: Single file
@@ -487,7 +487,7 @@ $ ruff check --fix [the_file.py]
 
 #### Integration with CI
 
-Our CI executes `ruff` formatting/sorting test on the whole code base:
+Our CI executes `ruff` formatting/sorting test on the whole codebase:
 
 ```console
 $ make -C tests test-format-python
@@ -612,7 +612,7 @@ Microsoft has documentation for [approved verbs](https://docs.microsoft.com/en-u
 The Google/ChromiumOS style guides allow for `class::function()` style names, but do note that this does not appear to be portable.
 No workaround is suggested at this time, but we expect something like `__class_function()` may be suitable.
 
-Do not use the `function` keyword.  It is non-portable and considered obsolete.
+Do not use the `function` keyword. It is non-portable and considered obsolete.
 
 Bad:
 
@@ -801,7 +801,7 @@ $ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -c
 
 * We are loosely aiming for "POSIX plus simple named arrays"
 
-* `echo` is a portability nightmare.  Prefer `printf` instead.
+* `echo` is a portability nightmare. Prefer `printf` instead.
 
 * Existing scripts have been written using a variety of shells.
   Scripts that use `bash` have tended to be written for `bash` 3.x.

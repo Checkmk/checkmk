@@ -100,7 +100,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.broker_certificates import (
     broker_certificate_sync_registry,
     BrokerCertificateSync,
@@ -683,15 +687,14 @@ def _set_sync_state(
 
 
 def _get_config_sync_state(
-    site_id: SiteId, replication_paths: Sequence[ReplicationPath]
+    automation_config: RemoteAutomationConfig, replication_paths: Sequence[ReplicationPath]
 ) -> tuple[ConfigSyncFileInfos, int]:
     """Get the config file states from the remote sites
 
     Calls the automation call "get-config-sync-state" on the remote site,
     which is handled by AutomationGetConfigSyncState."""
-    site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
-        RemoteAutomationConfig.from_site_config(site),
+        automation_config,
         "get-config-sync-state",
         [("replication_paths", repr([r.serialize() for r in replication_paths]))],
         debug=active_config.debug,
@@ -703,6 +706,7 @@ def _get_config_sync_state(
 
 def _synchronize_files(
     site_id: SiteId,
+    automation_config: RemoteAutomationConfig,
     files_to_sync: list[str],
     files_to_delete: list[str],
     remote_config_generation: int,
@@ -716,9 +720,8 @@ def _synchronize_files(
 
     sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-    site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
-        RemoteAutomationConfig.from_site_config(site),
+        automation_config,
         "receive-config-sync",
         [
             ("site_id", site_id),
@@ -745,6 +748,7 @@ def fetch_sync_state(
     site_activation_state: SiteActivationState,
     central_file_infos: ConfigSyncFileInfos,
     origin_span: trace.Span,
+    automation_config: RemoteAutomationConfig,
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -760,7 +764,7 @@ def fetch_sync_state(
             site_logger.debug("Starting config sync (%r)", site_activation_state)
 
             remote_file_infos, remote_config_generation = _get_config_sync_state(
-                site_id, replication_paths
+                automation_config, replication_paths
             )
             site_logger.debug("Received %d file infos from remote", len(remote_file_infos))
 
@@ -822,6 +826,7 @@ def synchronize_files(
     site_activation_state: SiteActivationState,
     sync_start: float,
     origin_span: trace.Span,
+    automation_config: RemoteAutomationConfig,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -850,6 +855,7 @@ def synchronize_files(
             )
             _synchronize_files(
                 site_id,
+                automation_config,
                 sync_delta.to_sync_new + sync_delta.to_sync_changed,
                 sync_delta.to_delete,
                 remote_config_generation,
@@ -924,7 +930,9 @@ def _get_domains_needing_activation(
     return domain_requests
 
 
-def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
+def _get_omd_domain_background_job_result(
+    automation_config: RemoteAutomationConfig,
+) -> Sequence[str]:
     """
     OMD domain needs restart of the whole site so the apache connection gets lost.
     A background job is started and we have to wait for the result
@@ -932,7 +940,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
     while True:
         try:
             raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
-                RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+                automation_config,
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
                 debug=active_config.debug,
@@ -952,17 +960,19 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
 
 
 def _call_activate_changes_automation(
-    site_id: SiteId, site_changes_activate_until: Sequence[ChangeSpec]
+    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    site_changes_activate_until: Sequence[ChangeSpec],
 ) -> ConfigWarnings:
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
-    if site_is_local(site_config := active_config.sites[site_id], site_id):
+    if isinstance(automation_config, LocalAutomationConfig):
         return execute_activate_changes(domain_requests)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
-            RemoteAutomationConfig.from_site_config(site_config),
+            automation_config,
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
             debug=active_config.debug,
@@ -978,7 +988,7 @@ def _call_activate_changes_automation(
     assert isinstance(response, dict)
     if any(request.name == OMDDomainName and request.settings for request in domain_requests):
         response.setdefault(OMDDomainName, []).extend(
-            _get_omd_domain_background_job_result(site_id)
+            _get_omd_domain_background_job_result(automation_config)
         )
 
     return response
@@ -986,6 +996,7 @@ def _call_activate_changes_automation(
 
 def _do_activate(
     site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
     site_activation_state: SiteActivationState,
 ) -> ConfigWarnings:
@@ -993,7 +1004,9 @@ def _do_activate(
 
     start = time.time()
 
-    configuration_warnings = _call_activate_changes_automation(site_id, site_changes_activate_until)
+    configuration_warnings = _call_activate_changes_automation(
+        site_id, automation_config, site_changes_activate_until
+    )
 
     duration = time.time() - start
     update_activation_time(site_id, ACTIVATION_TIME_RESTART, duration)
@@ -1005,6 +1018,7 @@ def activate_site_changes(
     prevent_activate: bool,
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -1022,7 +1036,10 @@ def activate_site_changes(
             else:
                 if activate_changes.is_activate_needed_until(site_id):
                     configuration_warnings = _do_activate(
-                        site_id, site_changes_activate_until, site_activation_state
+                        site_id,
+                        automation_config,
+                        site_changes_activate_until,
+                        site_activation_state,
                     )
                 _confirm_activated_changes(site_id, site_changes_activate_until)
 
@@ -2203,7 +2220,12 @@ def sync_and_activate(
             activate_site_changes={},
         )
 
+        automation_configs = {
+            site_id: make_automation_config(active_config.sites[site_id])
+            for site_id in site_activation_states
+        }
         for site_id, site_activation_state in site_activation_states.items():
+            automation_config = automation_configs[site_id]
             if activate_changes.is_sync_needed(site_id):
                 async_result = task_pool.apply_async(
                     func=copy_request_context(fetch_sync_state),
@@ -2212,6 +2234,7 @@ def sync_and_activate(
                         site_activation_state,
                         site_central_file_infos[site_id],
                         trace.get_current_span(),
+                        automation_config,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2224,6 +2247,7 @@ def sync_and_activate(
                         prevent_activate,
                         site_activation_state,
                         trace.get_current_span(),
+                        automation_config,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2249,6 +2273,7 @@ def sync_and_activate(
                 remote_config_generation_per_site,
                 site_snapshot_settings,
                 task_pool,
+                automation_configs,
             )
 
     except Exception:
@@ -2362,6 +2387,7 @@ def _handle_active_tasks(
     remote_config_generation_per_site: MutableMapping[SiteId, int],
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
+    automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
 ) -> None:
     for site_id, async_result in list(active_tasks["fetch_sync_state"].items()):
         if not async_result.ready():
@@ -2404,6 +2430,7 @@ def _handle_active_tasks(
                 activation_state,
                 sync_start_time,
                 trace.get_current_span(),
+                automation_configs[site_id],
             ),
             error_callback=_error_callback,
         )
@@ -2423,6 +2450,7 @@ def _handle_active_tasks(
                 prevent_activate,
                 activation_state,
                 trace.get_current_span(),
+                automation_configs[site_id],
             ),
             error_callback=_error_callback,
         )

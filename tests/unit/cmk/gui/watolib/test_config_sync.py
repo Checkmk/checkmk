@@ -27,6 +27,7 @@ import cmk.gui.mkeventd.wato
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
+from cmk.gui.watolib.automations import RemoteAutomationConfig
 
 from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
@@ -562,7 +563,15 @@ def test_synchronize_site(
             remote_site=SiteId("unit_remote_1"),
             edition=edition,
         ) as snapshot_settings:
-            _synchronize_site(activation_manager, site_id, snapshot_settings, file_filter_func)
+            _synchronize_site(
+                activation_manager,
+                site_id,
+                snapshot_settings,
+                file_filter_func,
+                RemoteAutomationConfig.from_site_config(
+                    active_config.sites[SiteId("unit_remote_1")]
+                ),
+            )
 
 
 def _synchronize_site(
@@ -570,6 +579,7 @@ def _synchronize_site(
     site_id: SiteId,
     snapshot_settings: config_sync.SnapshotSettings,
     file_filter_func: Callable[[str], bool] | None,
+    automation_config: RemoteAutomationConfig,
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
@@ -582,6 +592,7 @@ def _synchronize_site(
         site_activation_state,
         {},
         current_span,
+        automation_config,
     )
 
     assert fetch_state_result is not None
@@ -604,6 +615,7 @@ def _synchronize_site(
         site_activation_state,
         sync_start,
         current_span,
+        automation_config,
     )
     assert sync_result is not None
 

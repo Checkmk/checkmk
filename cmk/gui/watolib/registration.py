@@ -53,6 +53,7 @@ from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync
+from .host_match_item_generator import MatchItemGeneratorHosts
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
@@ -63,7 +64,6 @@ from .hosts_and_folders import (
     find_usages_of_contact_group_in_hosts_and_folders,
     FolderValidators,
     FolderValidatorsRegistry,
-    MatchItemGeneratorHosts,
     rebuild_folder_lookup_cache,
 )
 from .notifications import (

@@ -143,21 +143,21 @@ py_binary(
 ]]
 
 py_binary(
-    name = "generate_licenses_csv_py",
-    srcs = ["license_sources/generate_licenses_csv.py"],
+    name = "generate_bom_csv_py",
+    srcs = ["license_sources/generate_bom_csv.py"],
 )
 
 run_binary(
-    name = "generate_licenses_csv",
+    name = "generate_bom_csv",
     srcs = ["bill-of-materials.json"],
-    outs = ["Licenses.csv"],
+    outs = ["bill-of-materials.csv"],
     args = [
         "--bom",
         "$(location bill-of-materials.json)",
         "--out",
-        "$(location Licenses.csv)",
+        "$(location bill-of-materials.csv)",
     ],
-    tool = ":generate_licenses_csv_py",
+    tool = ":generate_bom_csv_py",
 )
 
 filegroup(
@@ -168,8 +168,8 @@ filegroup(
 )
 
 py_binary(
-    name = "build_license_texts_pdf_py",
-    srcs = ["license_sources/build_license_texts_pdf.py"],
+    name = "build_bom_texts_pdf_py",
+    srcs = ["license_sources/build_bom_texts_pdf.py"],
     data = [
         "license_sources/Calibri.ttf",
         "license_sources/checkmk_logo.svg",
@@ -182,24 +182,24 @@ py_binary(
 )
 
 run_binary(
-    name = "build_license_texts_pdf",
-    srcs = [":generate_licenses_csv"],
+    name = "build_bom_texts_pdf",
+    srcs = [":generate_bom_csv"],
     outs = ["License_texts.pdf"],
     args = [
         "--pdf",
         "$(location License_texts.pdf)",
         "--csv",
-        "$(location :generate_licenses_csv)",
+        "$(location :generate_bom_csv)",
     ],
-    tool = ":build_license_texts_pdf_py",
+    tool = ":build_bom_texts_pdf_py",
 )
 
 pkg_tar(
     name = "license_info",
     srcs = [
         "bill-of-materials.json",
-        ":build_license_texts_pdf",
-        ":generate_licenses_csv",
+        ":build_bom_texts_pdf",
+        ":generate_bom_csv",
     ],
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",

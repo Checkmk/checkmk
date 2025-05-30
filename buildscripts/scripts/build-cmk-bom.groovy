@@ -92,8 +92,8 @@ def main() {
             stage("Create license.csv") {
                 inside_container() {
                     sh("""
-                        bazel build //omd:generate_licenses_csv
-                        cp bazel-bin/omd/Licenses.csv omd/
+                        bazel build //omd:generate_bom_csv
+                        cp bazel-bin/omd/bill-of-materials.csv omd/
                     """);
                 }
             }
@@ -103,7 +103,7 @@ def main() {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "${relative_bom_path}, omd/Licenses.csv",
+                    artifacts: "${relative_bom_path}, omd/bill-of-materials.csv",
                     fingerprint: true,
                 );
             }

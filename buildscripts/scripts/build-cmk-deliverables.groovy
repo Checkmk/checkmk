@@ -242,7 +242,7 @@ def main() {
             // TODO: We should really let bazel generate the correct file name - we're already passing edition and version to bazel build
             sh("""
                 cp omd/bill-of-materials.json check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.json
-                cp omd/Licenses.csv check-mk-${params.EDITION}-${cmk_version}-licenses.csv
+                cp omd/bill-of-materials.csv check-mk-${params.EDITION}-${cmk_version}-bill-of-materials.csv
             """);
         }
 

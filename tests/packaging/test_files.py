@@ -452,7 +452,9 @@ def test_bom_csv_synchronous(package_path: str, cmk_version: str) -> None:
         _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
     )
     license_file = io.StringIO(
-        _get_file_from_package(package_path, cmk_version, "share/doc/Licenses.csv").decode("utf-8")
+        _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.csv").decode(
+            "utf-8"
+        )
     )
     reader = csv.DictReader(license_file)
     license_csv = list(reader)

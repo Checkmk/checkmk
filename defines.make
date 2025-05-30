@@ -81,7 +81,6 @@ GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PA
 # NOTE: When you update the Python version, please take care of the following things:
 # * the python version is now centralized within bazel, see package_versions.bzl
 # * update test_03_pip_interpreter_version
-# * update omd/Licenses.csv, too.
 PYTHON_VERSION  := $(shell sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/package_versions.bzl)
 
 # convenience stuff derived from PYTHON_VERSION

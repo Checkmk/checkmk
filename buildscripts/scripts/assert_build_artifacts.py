@@ -27,7 +27,7 @@ from buildscripts.scripts.lib.registry import (
     Registry,
 )
 
-MetaFileTypes = Literal["bill-of-materials.json", "licenses.csv"]
+MetaFileExtension = Literal["json", "csv"]
 
 
 def hash_file(artifact_name: str) -> str:
@@ -89,23 +89,23 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             yield hash_file(package_name), internal_only
 
 
-def meta_file_name(edition: str, version: str, file_type: MetaFileTypes) -> str:
-    return f"check-mk-{edition}-{version}-{file_type}"
+def meta_file_name(edition: str, version: str, extension: MetaFileExtension) -> str:
+    return f"check-mk-{edition}-{version}-bill-of-materials.{extension}"
 
 
 def build_meta_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        bom_file_name = meta_file_name(edition, args.version, "bill-of-materials.json")
-        license_file_name = meta_file_name(edition, args.version, "licenses.csv")
+        bom_file_name = meta_file_name(edition, args.version, "json")
+        csv_file_name = meta_file_name(edition, args.version, "csv")
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield bom_file_name, internal_only
         yield hash_file(bom_file_name), internal_only
-        yield license_file_name, internal_only
-        yield hash_file(license_file_name), internal_only
+        yield csv_file_name, internal_only
+        yield hash_file(csv_file_name), internal_only
 
 
 def build_meta_file_latest_mapping(
-    args: Args, loaded_yaml: dict, file_type: MetaFileTypes
+    args: Args, loaded_yaml: dict, file_type: MetaFileExtension
 ) -> dict[str, str]:
     base_version = Version.from_str(args.version).base
     return {
@@ -117,12 +117,14 @@ def build_meta_file_latest_mapping(
     }
 
 
-def build_license_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
+def build_csv_latest_mapping(args: Args, loaded_yaml: dict) -> dict[str, str]:
     base_version = Version.from_str(args.version).base
     return {
         meta_file_name(
-            edition, f"{'' if args.version_agnostic else f'{base_version}-'}latest", "licenses.csv"
-        ): meta_file_name(edition, args.version, "licenses.csv")
+            edition,
+            f"{'' if args.version_agnostic else f'{base_version}-'}latest",
+            "csv",
+        ): meta_file_name(edition, args.version, "csv")
         for edition in loaded_yaml["editions"]
         if edition not in loaded_yaml.get("internal_editions", [])
     }
@@ -232,8 +234,8 @@ def dump_meta_artifacts_mapping(args: Args, loaded_yaml: dict) -> None:
     print(
         json.dumps(
             {
-                **build_meta_file_latest_mapping(args, loaded_yaml, "bill-of-materials.json"),
-                **build_meta_file_latest_mapping(args, loaded_yaml, "licenses.csv"),
+                **build_meta_file_latest_mapping(args, loaded_yaml, "json"),
+                **build_meta_file_latest_mapping(args, loaded_yaml, "csv"),
             }
         )
     )

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import atexit
 import hashlib
 import logging
 import sys
@@ -185,6 +186,14 @@ class HPMSAConnection:
         LOGGER.debug("RESPONSE.text\n%s", response.text)
         return response
 
+    def logout(self) -> None:
+        try:
+            session_key = self._session.headers.pop("sessionKey")
+        except KeyError:
+            LOGGER.warning("Tried to logout without an active session.")
+        else:
+            self.get(f"logout/{str(session_key)}")
+
 
 def main(argv=None):
     replace_passwords()
@@ -193,6 +202,8 @@ def main(argv=None):
 
     connection = HPMSAConnection(args.hostaddress, opt_timeout, args.debug)
     connection.login(args.username, args.password)
+    atexit.register(connection.logout)
+
     parser = HTMLObjectParser()
 
     for element in api_get_objects:

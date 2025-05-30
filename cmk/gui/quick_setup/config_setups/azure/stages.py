@@ -5,6 +5,10 @@
 
 from collections.abc import Mapping, Sequence
 
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
@@ -235,6 +239,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
@@ -243,6 +248,7 @@ def recap_found_services(
         parameter_form=azure.formspec(),
         collect_params=azure_collect_params,
         progress_logger=progress_logger,
+        site_configs=site_configs,
         debug=debug,
     )
     azure_service_interest = ServiceInterest(r"(?i).*azure.*", "services")
@@ -284,7 +290,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, ____, _____, ______: [
+                    lambda *args, **kwargs: [
                         Text(text=_("Skipped the configuration test.")),
                         Text(
                             text=_(

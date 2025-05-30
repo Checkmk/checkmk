@@ -5,6 +5,10 @@
 
 from collections.abc import Mapping, Sequence
 
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
@@ -265,6 +269,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
@@ -273,6 +278,7 @@ def recap_found_services(
         parameter_form=quick_setup_aws_form_spec(),
         collect_params=aws_collect_params_with_defaults,
         progress_logger=progress_logger,
+        site_configs=site_configs,
         debug=debug,
     )
     progress_logger.log_new_progress_step(
@@ -316,7 +322,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda __, ___, parsed_data, ____, _____: _save_and_activate_recap(
+                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],

@@ -334,6 +334,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         form_spec_map=form_spec_map,
         built_stages=built_stages,
         progress_logger=None,
+        site_configs=active_config.sites,
         debug=active_config.debug,
     )
     return _serve_action_result(

@@ -496,6 +496,7 @@ def _execute_service_discovery(
                 discovery_result=discovery_result,
                 host=host,
                 raise_errors=False,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )

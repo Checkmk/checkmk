@@ -5,6 +5,8 @@
 
 from collections.abc import Callable, Mapping, Sequence
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.site import omd_site, SiteId
 
 from cmk.automations.results import SpecialAgentDiscoveryPreviewResult
@@ -23,6 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     ServiceInterest,
 )
+from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
@@ -36,6 +39,7 @@ def get_service_discovery_preview(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
     *,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> SpecialAgentDiscoveryPreviewResult:
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
@@ -48,7 +52,7 @@ def get_service_discovery_preview(
         "test_connection", "Use input data to test connection to datasource"
     )
     service_discovery_result = special_agent_discovery_preview(
-        SiteId(site_id) if site_id else omd_site(),
+        make_automation_config(site_configs[SiteId(site_id) if site_id else omd_site()]),
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),

@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
@@ -25,6 +29,7 @@ def recaps_form_spec(
     stage_index: StageIndex,
     parsed_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     quick_setup = quick_setup_registry.get(quick_setup_id)

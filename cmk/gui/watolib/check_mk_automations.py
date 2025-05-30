@@ -193,7 +193,7 @@ def discovery(
 
 
 def special_agent_discovery_preview(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     special_agent_preview_input: results.DiagSpecialAgentInput,
     *,
     debug: bool,
@@ -201,7 +201,7 @@ def special_agent_discovery_preview(
     return _deserialize(
         _automation_serialized(
             "special-agent-discovery-preview",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=None,
             stdin_data=special_agent_preview_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
@@ -240,11 +240,11 @@ def local_discovery_preview(
     )
 
 
-def autodiscovery(site_id: SiteId, *, debug: bool) -> results.AutodiscoveryResult:
+def autodiscovery(*, debug: bool) -> results.AutodiscoveryResult:
     return _deserialize(
         _automation_serialized(
             "autodiscovery",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=LocalAutomationConfig(),
             debug=debug,
         ),
         results.AutodiscoveryResult,
@@ -253,7 +253,7 @@ def autodiscovery(site_id: SiteId, *, debug: bool) -> results.AutodiscoveryResul
 
 
 def set_autochecks_v2(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     checks: SetAutochecksInput,
     *,
     debug: bool,
@@ -261,7 +261,7 @@ def set_autochecks_v2(
     return _deserialize(
         _automation_serialized(
             "set-autochecks-v2",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=None,
             stdin_data=checks.serialize(),
             debug=debug,
@@ -272,7 +272,7 @@ def set_autochecks_v2(
 
 
 def update_host_labels(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     host_labels: Sequence[HostLabel],
     *,
@@ -281,7 +281,7 @@ def update_host_labels(
     return _deserialize(
         _automation_serialized(
             "update-host-labels",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name],
             indata={label.name: label.to_dict() for label in host_labels},
             debug=debug,

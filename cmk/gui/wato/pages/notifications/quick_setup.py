@@ -6,6 +6,9 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, cast, Final, get_args, Literal
 
+from livestatus import SiteConfiguration
+
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 
 from cmk.utils.notify_types import HostEventType, ServiceEventType
@@ -384,6 +387,7 @@ def custom_recap_formspec_triggering_events(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
@@ -404,6 +408,7 @@ def custom_recap_formspec_triggering_events(
         stage_index,
         cleaned_stages_form_data,
         progress_logger,
+        site_configs,
         debug=debug,
     )
 
@@ -478,6 +483,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
@@ -486,7 +492,7 @@ def custom_recap_formspec_filter_for_hosts_and_services(
         if len(form_data) > 0
     }
     return recaps.recaps_form_spec(
-        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger, debug
+        quick_setup_id, stage_index, cleaned_stages_form_data, progress_logger, site_configs, debug
     )
 
 

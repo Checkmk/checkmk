@@ -303,6 +303,7 @@ class Discovery:
             transition.old_autochecks,
             transition.new_autochecks,
             need_sync=transition.need_sync,
+            automation_config=automation_config,
             debug=debug,
         )
 
@@ -468,6 +469,7 @@ class Discovery:
         autochecks_table: SetAutochecksInput,
         *,
         need_sync: bool,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         debug: bool,
     ) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (
@@ -475,11 +477,7 @@ class Discovery:
             len(autochecks_table.target_services),
         )
         self._add_service_change(message, need_sync, old_autochecks, autochecks_table)
-        set_autochecks_v2(
-            self._host.site_id(),
-            autochecks_table,
-            debug=debug,
-        )
+        set_autochecks_v2(automation_config, autochecks_table, debug=debug)
 
     def _add_service_change(
         self,
@@ -613,7 +611,9 @@ def perform_fix_all(
     Handle fix all ('Accept All' on UI) discovery action
     """
     with _service_discovery_context(host, pprint_value=pprint_value):
-        _perform_update_host_labels(discovery_result.labels_by_host, debug=debug)
+        _perform_update_host_labels(
+            discovery_result.labels_by_host, automation_config=automation_config, debug=debug
+        )
         Discovery(
             host,
             DiscoveryAction.FIX_ALL,
@@ -643,12 +643,15 @@ def perform_host_label_discovery(
     *,
     host: Host,
     raise_errors: bool,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
-        _perform_update_host_labels(discovery_result.labels_by_host, debug=debug)
+        _perform_update_host_labels(
+            discovery_result.labels_by_host, automation_config=automation_config, debug=debug
+        )
         discovery_result = get_check_table(
             host,
             action,
@@ -772,7 +775,10 @@ def initial_discovery_result(
 
 
 def _perform_update_host_labels(
-    labels_by_nodes: Mapping[HostName, Sequence[HostLabel]], *, debug: bool
+    labels_by_nodes: Mapping[HostName, Sequence[HostLabel]],
+    *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    debug: bool,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
         if (host := Host.host(host_name)) is None:
@@ -792,12 +798,7 @@ def _perform_update_host_labels(
             site_id=host.site_id(),
             use_git=active_config.wato_use_git,
         )
-        update_host_labels(
-            host.site_id(),
-            host.name(),
-            host_labels,
-            debug=debug,
-        )
+        update_host_labels(automation_config, host.name(), host_labels, debug=debug)
 
 
 def _apply_state_change(

@@ -462,6 +462,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     discovery_result=discovery_result,
                     host=host,
                     raise_errors=raise_errors,
+                    automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
                 )

@@ -31,6 +31,8 @@ from cmk.automations.results import (
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
+from cmk.gui.watolib.automations import LocalAutomationConfig
+
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
@@ -1157,7 +1159,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         "Uptime": AutocheckEntry(CheckPluginName("uptime"), None, {}, {}),
     }
     mock_set_autochecks.assert_called_once_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         SetAutochecksInput(
             sample_host_name,
             expected_autochecks,
@@ -1185,7 +1187,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         },
     }
     mock_set_autochecks.assert_called_once_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         SetAutochecksInput(
             sample_host_name,
             expected_autochecks_2,

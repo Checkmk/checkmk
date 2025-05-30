@@ -67,7 +67,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         )
 
     def execute(self, job_interface: BackgroundProcessInterface, *, debug: bool) -> None:
-        result = autodiscovery(self.site_id, debug=debug)
+        result = autodiscovery(debug=debug)
 
         if not result.hosts:
             job_interface.send_result_message(_("No hosts to be discovered"))

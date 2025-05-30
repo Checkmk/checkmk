@@ -345,7 +345,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
     }
     mock_set_autochecks.assert_called_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         SetAutochecksInput(
             sample_host_name,
             sample_autochecks,
@@ -605,7 +605,7 @@ def test_perform_discovery_single_update(
         "Memory": AutocheckEntry(CheckPluginName("mem_linux"), None, {}, {}),
     }
     mock_set_autochecks.assert_called_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         SetAutochecksInput(
             sample_host_name,
             sample_autochecks,
@@ -827,7 +827,7 @@ def test_perform_discovery_action_update_services(
         )
     }
     mock_set_autochecks.assert_called_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         SetAutochecksInput(
             sample_host_name,
             sample_autochecks,
@@ -927,12 +927,13 @@ def test_perform_discovery_action_update_host_labels(
         ),
         host=sample_host,
         raise_errors=True,
+        automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
     )
 
     mock_update_host_labels.assert_called_once_with(
-        "NO_SITE",
+        LocalAutomationConfig(),
         sample_host_name,
         [
             # HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),

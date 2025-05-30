@@ -18,6 +18,7 @@ from livestatus import SiteConfiguration
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
+from cmk.ccc.site import SiteId
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -206,6 +207,7 @@ def recap_stage(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
     progress_logger: ProgressLogger,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> Sequence[Widget]:
     parsed_formspec = form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
@@ -217,6 +219,7 @@ def recap_stage(
                 stage_index,
                 parsed_formspec,
                 progress_logger,
+                site_configs,
                 debug,
             )
         )
@@ -260,6 +263,7 @@ def verify_custom_validators_and_recap_stage(
     form_spec_map: FormspecMap,
     built_stages: Sequence[QuickSetupStage],
     progress_logger: ProgressLogger | None,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     debug: bool,
 ) -> StageActionResult:
     if progress_logger is None:
@@ -288,6 +292,7 @@ def verify_custom_validators_and_recap_stage(
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
+        site_configs=site_configs,
         debug=debug,
     )
     return response
@@ -339,7 +344,11 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         with job_interface.gui_context():
             localize(self._language)
             try:
-                self._run_quick_setup_stage_action(job_interface, debug=active_config.debug)
+                self._run_quick_setup_stage_action(
+                    job_interface,
+                    site_configs=active_config.sites,
+                    debug=active_config.debug,
+                )
             except Exception as e:
                 job_interface.get_logger().debug(
                     "Exception raised while the Quick setup stage action: %s", e
@@ -353,7 +362,11 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                 ).save_to_file(Path(job_interface.get_work_dir()))
 
     def _run_quick_setup_stage_action(
-        self, job_interface: BackgroundProcessInterface, *, debug: bool
+        self,
+        job_interface: BackgroundProcessInterface,
+        *,
+        site_configs: Mapping[SiteId, SiteConfiguration],
+        debug: bool,
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick stage action..."))
 
@@ -371,6 +384,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
             form_spec_map=form_spec_map,
             built_stages=built_stages_up_to_index,
             progress_logger=JobBasedProgressLogger(job_interface),
+            site_configs=site_configs,
             debug=debug,
         )
 

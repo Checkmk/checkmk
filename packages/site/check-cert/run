@@ -17,7 +17,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -c, --clean                 remove artifacts first"
     echo "  -b, --build                 build executable"
     echo "  -u, --unit-tests            run unit tests"
     echo "  -F, --check-format          check for correct formatting"

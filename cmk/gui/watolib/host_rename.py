@@ -12,6 +12,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
@@ -28,13 +30,15 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+)
 
-from ..config import active_config
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
-from .automations import AnnotatedHostName, do_remote_automation, RemoteAutomationConfig
+from .automations import AnnotatedHostName, do_remote_automation
 from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import (
@@ -75,6 +79,7 @@ def perform_rename_hosts(
     renamings: Iterable[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
     *,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     pprint_value: bool,
     use_git: bool,
     debug: bool,
@@ -136,7 +141,9 @@ def perform_rename_hosts(
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
     update_interface(_("This might take some time and involves a core restart..."))
     renamings_by_site = group_renamings_by_site(successful_renamings)
-    action_counts = _rename_hosts_in_check_mk(renamings_by_site, use_git=use_git, debug=debug)
+    action_counts = _rename_hosts_in_check_mk(
+        renamings_by_site, site_configs=site_configs, use_git=use_git, debug=debug
+    )
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
@@ -152,7 +159,7 @@ def perform_rename_hosts(
 
     # 5. Update UUID links
     update_interface(_("Renaming host(s): Update UUID links..."))
-    actions += _rename_host_in_uuid_link_manager(renamings_by_site)
+    actions += _rename_host_in_uuid_link_manager(renamings_by_site, site_configs, debug=debug)
 
     for action in actions:
         action_counts.setdefault(action, 0)
@@ -281,6 +288,7 @@ def _rename_host_in_rulesets(
 def _rename_hosts_in_check_mk(
     renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
     *,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     use_git: bool,
     debug: bool,
 ) -> dict[str, int]:
@@ -303,7 +311,7 @@ def _rename_hosts_in_check_mk(
         )
 
         new_counts = rename_hosts(
-            site_id,
+            make_automation_config(site_configs[site_id]),
             name_pairs,
             debug=debug,
         ).action_counts
@@ -436,16 +444,20 @@ def group_renamings_by_site(
 
 def _rename_host_in_uuid_link_manager(
     renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
+    site_configs: Mapping[SiteId, SiteConfiguration],
+    *,
+    debug: bool,
 ) -> list[str]:
     n_relinked = 0
     for site_id, renamings in renamings_by_site.items():
-        if site_is_local(active_config.sites[site_id], site_id):
+        automation_config = make_automation_config(site_configs[site_id])
+        if isinstance(automation_config, LocalAutomationConfig):
             n_relinked += len(get_uuid_link_manager().rename(renamings))
         else:
             n_relinked += int(
                 str(
                     do_remote_automation(
-                        RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+                        automation_config,
                         "rename-hosts-uuid-link",
                         [
                             (
@@ -453,7 +465,7 @@ def _rename_host_in_uuid_link_manager(
                                 json.dumps(renamings),
                             )
                         ],
-                        debug=active_config.debug,
+                        debug=debug,
                     )
                 )
             )

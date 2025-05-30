@@ -32,6 +32,11 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -132,12 +137,13 @@ class ModeObjectParameters(WatoMode):
 
         # Object type specific detail information
         service_result: AnalyseServiceResult | None = None
+        automation_config = make_automation_config(active_config.sites[self._host.site_id()])
         if for_host:
-            self._show_host_info(debug=active_config.debug)
+            self._show_host_info(automation_config=automation_config, debug=active_config.debug)
         else:
             assert self._service is not None
             service_result = analyse_service(
-                self._host.site_id(),
+                automation_config,
                 self._hostname,
                 self._service,
                 debug=active_config.debug,
@@ -189,9 +195,11 @@ class ModeObjectParameters(WatoMode):
 
         forms.end()
 
-    def _show_host_info(self, *, debug: bool) -> None:
+    def _show_host_info(
+        self, *, automation_config: LocalAutomationConfig | RemoteAutomationConfig, debug: bool
+    ) -> None:
         host_info = analyse_host(
-            self._host.site_id(),
+            automation_config,
             self._hostname,
             debug=debug,
         )

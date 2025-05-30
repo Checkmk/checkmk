@@ -48,6 +48,10 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_effectiveness,
     analyze_host_rule_matches,
@@ -1575,17 +1579,37 @@ class EnabledDisabledServicesEditor:
         self._host = host
 
     def save_host_service_enable_disable_rules(
-        self, to_enable: set[str], to_disable: set[str], *, pprint_value: bool, debug: bool
+        self,
+        to_enable: set[str],
+        to_disable: set[str],
+        *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         self._save_service_enable_disable_rules(
-            to_enable, value=False, pprint_value=pprint_value, debug=debug
+            to_enable,
+            value=False,
+            automation_config=automation_config,
+            pprint_value=pprint_value,
+            debug=debug,
         )
         self._save_service_enable_disable_rules(
-            to_disable, value=True, pprint_value=pprint_value, debug=debug
+            to_disable,
+            value=True,
+            automation_config=automation_config,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
     def _save_service_enable_disable_rules(
-        self, services: set[str], *, value: bool, pprint_value: bool, debug: bool
+        self,
+        services: set[str],
+        *,
+        value: bool,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         """
         Load all disabled services rules from the folder, then check whether or not there is a
@@ -1622,7 +1646,7 @@ class EnabledDisabledServicesEditor:
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
         services_labels = get_services_labels(
-            self._host.site_id(), self._host.name(), services, debug=debug
+            automation_config, self._host.name(), services, debug=debug
         )
         for service in list(services):
             service_labels = services_labels.labels[service]

@@ -53,6 +53,7 @@ from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automati
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     do_remote_automation,
+    LocalAutomationConfig,
     RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import (
@@ -279,6 +280,7 @@ class Discovery:
         discovery_result: DiscoveryResult,
         target_host_name: HostName,
         *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
     ) -> None:
@@ -291,6 +293,7 @@ class Discovery:
             self._save_host_service_enable_disable_rules(
                 transition.remove_disabled_rule,
                 transition.add_disabled_rule,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )
@@ -385,11 +388,16 @@ class Discovery:
         remove_disabled_rule: set[str],
         add_disabled_rule: set[str],
         *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
     ) -> None:
         EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
-            remove_disabled_rule, add_disabled_rule, pprint_value=pprint_value, debug=debug
+            remove_disabled_rule,
+            add_disabled_rule,
+            automation_config=automation_config,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
@@ -597,6 +605,7 @@ def perform_fix_all(
     *,
     host: Host,
     raise_errors: bool,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> DiscoveryResult:
@@ -615,6 +624,7 @@ def perform_fix_all(
         ).do_discovery(
             discovery_result,
             host.name(),
+            automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
         )
@@ -657,6 +667,7 @@ def perform_service_discovery(
     host: Host,
     selected_services: Container[tuple[str, Item]],
     raise_errors: bool,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> DiscoveryResult:
@@ -674,6 +685,7 @@ def perform_service_discovery(
         ).do_discovery(
             discovery_result,
             host.name(),
+            automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
         )

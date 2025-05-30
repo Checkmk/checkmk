@@ -29,6 +29,7 @@ from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.services import (
     Discovery,
@@ -335,6 +336,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             debug=False,
         ),
         host=sample_host,
+        automation_config=LocalAutomationConfig(),
         raise_errors=True,
         pprint_value=False,
         debug=False,
@@ -594,6 +596,7 @@ def test_perform_discovery_single_update(
         update_target="unchanged",
         host=sample_host,
         raise_errors=True,
+        automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
     )
@@ -808,6 +811,7 @@ def test_perform_discovery_action_update_services(
         update_target=None,
         host=sample_host,
         raise_errors=True,
+        automation_config=LocalAutomationConfig(),
         pprint_value=False,
         debug=False,
     )

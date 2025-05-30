@@ -70,7 +70,9 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     cmk_version_of_remote_automation_source,
+    LocalAutomationConfig,
     make_automation_config,
+    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
@@ -342,6 +344,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             selected_services=self._resolve_selected_services(
                 api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
+            automation_config=make_automation_config(active_config.sites[host.site_id()]),
             raise_errors=not api_request.discovery_options.ignore_errors,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
@@ -418,6 +421,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         update_target: str | None,
         selected_services: Container[tuple[str, Item]],
         *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         raise_errors: bool,
         pprint_value: bool,
         debug: bool,
@@ -448,6 +452,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     discovery_result=discovery_result,
                     host=host,
                     raise_errors=raise_errors,
+                    automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
                 )
@@ -476,6 +481,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     selected_services=selected_services,
                     raise_errors=raise_errors,
+                    automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
                 )
@@ -488,6 +494,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     selected_services=selected_services,
                     raise_errors=raise_errors,
+                    automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
                 )

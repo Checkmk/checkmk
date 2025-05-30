@@ -38,6 +38,8 @@ from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
+    LocalAutomationConfig,
+    make_automation_config,
     MKAutomationException,
     RemoteAutomationConfig,
 )
@@ -277,6 +279,7 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
         host,
         check_type,
         service_item,
+        automation_config=make_automation_config(active_config.sites[host.site_id()]),
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
     )
@@ -289,6 +292,7 @@ def _update_single_service_phase(
     check_type: str,
     service_item: str | None,
     *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> None:
@@ -307,6 +311,7 @@ def _update_single_service_phase(
             debug=debug,
         ),
         host.name(),
+        automation_config=automation_config,
         pprint_value=pprint_value,
         debug=debug,
     )
@@ -414,6 +419,7 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     return _execute_service_discovery(
         discovery_action,
         host,
+        automation_config=make_automation_config(active_config.sites[host.site_id()]),
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
     )
@@ -423,6 +429,7 @@ def _execute_service_discovery(
     api_discovery_action: APIDiscoveryAction,
     host: Host,
     *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> Response:
@@ -452,6 +459,7 @@ def _execute_service_discovery(
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )
@@ -464,6 +472,7 @@ def _execute_service_discovery(
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )
@@ -472,6 +481,7 @@ def _execute_service_discovery(
                 discovery_result=discovery_result,
                 host=host,
                 raise_errors=False,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )
@@ -498,6 +508,7 @@ def _execute_service_discovery(
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,
+                automation_config=automation_config,
                 pprint_value=pprint_value,
                 debug=debug,
             )

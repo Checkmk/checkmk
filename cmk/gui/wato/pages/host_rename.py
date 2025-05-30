@@ -10,9 +10,12 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition_supports_nagvis
 
 from cmk.utils import paths
@@ -178,6 +181,7 @@ class ModeBulkRenameHost(WatoMode):
                         callable=rename_hosts_job_entry_point,
                         args=RenameHostsJobArgs(
                             renamings=_renamings_to_job_args(renamings),
+                            site_configs=active_config.sites,
                             pprint_value=active_config.wato_pprint_config,
                             use_git=active_config.wato_use_git,
                             debug=active_config.debug,
@@ -443,6 +447,7 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     pprint_value: bool
     use_git: bool
     debug: bool
+    site_configs: Mapping[SiteId, SiteConfiguration]
 
 
 def rename_hosts_job_entry_point(
@@ -455,6 +460,7 @@ def rename_hosts_job_entry_point(
         actions, auth_problems = _rename_hosts(
             renamings,
             job_interface,
+            site_configs=args.site_configs,
             pprint_value=args.pprint_value,
             use_git=args.use_git,
             debug=args.debug,
@@ -580,6 +586,7 @@ class ModeRenameHost(WatoMode):
                     callable=rename_hosts_job_entry_point,
                     args=RenameHostsJobArgs(
                         renamings=_renamings_to_job_args(renamings),
+                        site_configs=active_config.sites,
                         pprint_value=active_config.wato_pprint_config,
                         use_git=active_config.wato_use_git,
                         debug=active_config.debug,
@@ -659,6 +666,7 @@ def _rename_hosts(
     renamings: Sequence[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
     *,
+    site_configs: Mapping[SiteId, SiteConfiguration],
     pprint_value: bool,
     use_git: bool,
     debug: bool,
@@ -666,6 +674,7 @@ def _rename_hosts(
     action_counts, auth_problems = perform_rename_hosts(
         renamings,
         job_interface,
+        site_configs=site_configs,
         pprint_value=pprint_value,
         use_git=use_git,
         debug=debug,

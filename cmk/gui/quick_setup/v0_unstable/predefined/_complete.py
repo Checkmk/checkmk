@@ -449,6 +449,7 @@ def _run_service_discovery(
         discovery_result=check_table,
         host=host,
         raise_errors=False,
+        automation_config=LocalAutomationConfig(),
         pprint_value=pprint_value,
         debug=debug,
     )

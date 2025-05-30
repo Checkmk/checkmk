@@ -15,6 +15,8 @@ from enum import auto, Enum
 from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -113,6 +115,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.automations import (
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
     analyze_host_rule_effectiveness,
@@ -1183,7 +1190,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset, debug=active_config.debug)
+        self._rule_listing(ruleset, site_configs=active_config.sites, debug=active_config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -1214,7 +1221,9 @@ class ModeEditRuleset(WatoMode):
 
         html.close_div()
 
-    def _rule_listing(self, ruleset: Ruleset, *, debug: bool) -> None:
+    def _rule_listing(
+        self, ruleset: Ruleset, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
+    ) -> None:
         rules: list[tuple[Folder, int, Rule]] = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
@@ -1237,6 +1246,7 @@ class ModeEditRuleset(WatoMode):
         rule_match_results = (
             self._analyze_rule_matching(
                 self._host.site_id(),
+                make_automation_config(site_configs[self._host.site_id()]),
                 self._hostname,
                 self._item,
                 self._service,
@@ -1382,6 +1392,7 @@ class ModeEditRuleset(WatoMode):
     def _analyze_rule_matching(
         self,
         site_id: SiteId,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         host_name: HostName,
         item: Item,
         service_name: ServiceName | None,
@@ -1401,7 +1412,7 @@ class ModeEditRuleset(WatoMode):
         ) as span:
             service_labels = (
                 analyse_service(
-                    site_id,
+                    automation_config,
                     host_name,
                     service_name,
                     debug=debug,

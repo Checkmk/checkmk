@@ -292,7 +292,7 @@ def update_host_labels(
 
 
 def rename_hosts(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     name_pairs: Sequence[tuple[HostName, HostName]],
     *,
     debug: bool,
@@ -300,7 +300,7 @@ def rename_hosts(
     return _deserialize(
         _automation_serialized(
             "rename-hosts",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             indata=name_pairs,
             non_blocking_http=True,
             debug=debug,
@@ -311,7 +311,7 @@ def rename_hosts(
 
 
 def get_services_labels(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     service_names: Iterable[ServiceName],
     *,
@@ -320,7 +320,7 @@ def get_services_labels(
     return _deserialize(
         _automation_serialized(
             "get-services-labels",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name, *service_names],
             debug=debug,
         ),
@@ -345,7 +345,7 @@ def get_service_name(
 
 
 def analyse_service(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     service_name: ServiceName,
     *,
@@ -354,7 +354,7 @@ def analyse_service(
     return _deserialize(
         _automation_serialized(
             "analyse-service",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name, service_name],
             debug=debug,
         ),
@@ -364,7 +364,7 @@ def analyse_service(
 
 
 def analyse_host(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     *,
     debug: bool,
@@ -372,7 +372,7 @@ def analyse_host(
     return _deserialize(
         _automation_serialized(
             "analyse-host",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name],
             debug=debug,
         ),

@@ -1,0 +1,92 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/system
+  response:
+    body:
+      string: '{"detail":"OK"}'
+    headers:
+      content-length:
+      - '15'
+      content-type:
+      - application/json
+      date:
+      - Fri, 30 May 2025 09:00:50 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/sources
+  response:
+    body:
+      string: '{"sources":{"127.0.0.1":42,"172.16.0.1":32,"foo.bar.com":12}}'
+    headers:
+      content-length:
+      - '61'
+      content-type:
+      - application/json
+      date:
+      - Fri, 30 May 2025 09:00:50 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Basic YWRtaW46cGFzc3dvcmQ=
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://127.0.0.1:9000/api/sources?range=300
+  response:
+    body:
+      string: '{"sources":{"127.0.0.1":22,"172.16.0.1":32}}'
+    headers:
+      content-length:
+      - '44'
+      content-type:
+      - application/json
+      date:
+      - Fri, 30 May 2025 09:00:50 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+version: 1

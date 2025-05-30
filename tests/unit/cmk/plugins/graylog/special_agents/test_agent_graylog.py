@@ -12,6 +12,7 @@ import vcr  # type: ignore[import-untyped]
 
 from cmk.plugins.graylog.special_agent.agent_graylog import main
 
+DIR_PATH = Path(os.path.dirname(__file__))
 GRAYLOG_DEFAULT_ARGS = [
     "-uadmin",
     "-spassword",
@@ -20,7 +21,6 @@ GRAYLOG_DEFAULT_ARGS = [
     "http",
     "127.0.0.1",
 ]
-
 GRAYLOG_EXAMPLE_OUTPUT = """<<<graylog_alerts:sep(0)>>>
 {"alerts": {"num_of_alerts": 0, "has_since_argument": false, "alerts_since": null, "num_of_alerts_in_range": 0}}
 <<<graylog_cluster_stats:sep(0)>>>
@@ -42,15 +42,31 @@ GRAYLOG_EXAMPLE_OUTPUT = """<<<graylog_alerts:sep(0)>>>
 <<<graylog_events:sep(0)>>>
 {"events": {"num_of_events": 0, "has_since_argument": false, "events_since": null, "num_of_events_in_range": 0}}
 """
-
 GRAYLOG_EXAMPLE_SECTION_NON_DEFAULT_SECTIONS = """<<<graylog_cluster_health:sep(0)>>>
 {"status": "green", "shards": {"active": 12, "initializing": 0, "relocating": 0, "unassigned": 0}}
 <<<graylog_cluster_inputstates:sep(0)>>>
 {"3b4fa139-8491-44af-90da-cf32061b50b9": [{"id": "6827432a44a4084bad03a9d8", "state": "RUNNING", "started_at": "2025-05-26T09:23:38.678Z", "detailed_message": null, "message_input": {"title": "test", "global": false, "name": "Raw/Plaintext UDP", "content_pack": null, "created_at": "2025-05-16T13:52:42.276Z", "type": "org.graylog2.inputs.raw.udp.RawUDPInput", "creator_user_id": "admin", "attributes": {"recv_buffer_size": 262144, "port": 5555, "number_worker_threads": 12, "override_source": "foobar", "charset_name": "UTF-8", "bind_address": "0.0.0.0"}, "static_fields": {}, "node": "3b4fa139-8491-44af-90da-cf32061b50b9", "id": "6827432a44a4084bad03a9d8"}}, {"id": "68273b3848e232496b4733a9", "state": "RUNNING", "started_at": "2025-05-26T09:23:38.675Z", "detailed_message": null, "message_input": {"title": "test", "global": false, "name": "Raw/Plaintext TCP", "content_pack": null, "created_at": "2025-05-16T13:18:48.252Z", "type": "org.graylog2.inputs.raw.tcp.RawTCPInput", "creator_user_id": "admin", "attributes": {"recv_buffer_size": 1048576, "tcp_keepalive": false, "use_null_delimiter": false, "number_worker_threads": 12, "tls_client_auth_cert_file": "", "bind_address": "0.0.0.0", "tls_cert_file": "", "port": 5555, "tls_key_file": "", "tls_enable": false, "tls_key_password": "", "max_message_size": 2097152, "tls_client_auth": "disabled", "override_source": null, "charset_name": "UTF-8"}, "static_fields": {}, "node": "3b4fa139-8491-44af-90da-cf32061b50b9", "id": "68273b3848e232496b4733a9"}}]}
 """
-
+GRAYLOG_EXAMPLE_SOURCES_OUTPUT = """<<<graylog_sources:sep(0)>>>
+{"sources": {"127.0.0.1": {"messages": 42, "has_since_argument": false, "source_since": null}, "172.16.0.1": {"messages": 32, "has_since_argument": false, "source_since": null}, "foo.bar.com": {"messages": 12, "has_since_argument": false, "source_since": null}}}
+"""
+GRAYLOG_EXAMPLE_SOURCES_OUTPUT_SINCE = """<<<graylog_sources:sep(0)>>>
+{"sources": {"127.0.0.1": {"messages": 42, "has_since_argument": true, "source_since": 300, "messages_since": 22}, "172.16.0.1": {"messages": 32, "has_since_argument": true, "source_since": 300, "messages_since": 32}, "foo.bar.com": {"messages": 12, "has_since_argument": true, "source_since": 300}}}
+"""
+GRAYLOG_EXAMPLE_SOURCES_OUTPUT_SINCE_PIGGYBACK = """<<<<127.0.0.1>>>>
+<<<graylog_sources:sep(0)>>>
+{"sources": {"127.0.0.1": {"messages": 42, "has_since_argument": true, "source_since": 300, "messages_since": 22}}}
+<<<<>>>>
+<<<<172.16.0.1>>>>
+<<<graylog_sources:sep(0)>>>
+{"sources": {"172.16.0.1": {"messages": 32, "has_since_argument": true, "source_since": 300, "messages_since": 32}}}
+<<<<>>>>
+<<<<foo.bar.com>>>>
+<<<graylog_sources:sep(0)>>>
+{"sources": {"foo.bar.com": {"messages": 12, "has_since_argument": true, "source_since": 300}}}
+<<<<>>>>
+"""
 GRAYLOG_EXAMPLE_STDERR = """"""
-DIR_PATH = Path(os.path.dirname(__file__))
 
 
 def test_agent_graylog_main(capsys: pytest.CaptureFixture[str]) -> None:
@@ -72,6 +88,44 @@ def test_agent_graylog_non_default_params(capsys: pytest.CaptureFixture[str]) ->
         out, err = capsys.readouterr()
         assert out == GRAYLOG_EXAMPLE_SECTION_NON_DEFAULT_SECTIONS
         assert err == GRAYLOG_EXAMPLE_STDERR
+
+
+@pytest.mark.parametrize(
+    "args, expected_output",
+    [
+        pytest.param(
+            GRAYLOG_DEFAULT_ARGS + ["--sections", "sources"],
+            GRAYLOG_EXAMPLE_SOURCES_OUTPUT,
+            id="default",
+        ),
+        pytest.param(
+            GRAYLOG_DEFAULT_ARGS + ["--sections", "sources", "--source_since", "300"],
+            GRAYLOG_EXAMPLE_SOURCES_OUTPUT_SINCE,
+            id="With since argument",
+        ),
+        pytest.param(
+            GRAYLOG_DEFAULT_ARGS
+            + [
+                "--sections",
+                "sources",
+                "--source_since",
+                "300",
+                "--display_source_details",
+                "source",
+            ],
+            GRAYLOG_EXAMPLE_SOURCES_OUTPUT_SINCE_PIGGYBACK,
+            id="Piggyback with since argument",
+        ),
+    ],
+)
+def test_agent_graylog_section_sources(
+    args: list[str], expected_output: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with vcr.use_cassette(DIR_PATH / "graylog_vcrtrace_sources.json", record_mode="new_episodes"):
+        assert main(args) == 0
+        out, err = capsys.readouterr()
+    assert out == expected_output
+    assert err == ""
 
 
 def test_agent_graylog_main_500(capsys: pytest.CaptureFixture[str]) -> None:

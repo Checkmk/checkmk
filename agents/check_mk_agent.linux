@@ -941,7 +941,7 @@ section_chrony() {
         # The "| cat" has been added for some kind of regression in RedHat 7.5. The
         # SELinux rules shipped with that release were denying the chronyc call
         # without cat.
-        _run_cached_internal "chrony" 30 120 200 20 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
+        _run_cached_internal "chrony" 30 120 200 20 "echo '<<<chrony>>>'; chronyc -n tracking | cat || true"
     fi
 }
 

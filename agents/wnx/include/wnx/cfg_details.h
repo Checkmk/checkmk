@@ -426,6 +426,8 @@ public:
 
     static uint64_t uniqId() noexcept { return uniq_id_; }
 
+    void initEnvironment();
+
 private:
     void fillExePaths(const std::filesystem::path &root);
     void fillConfigDirs();
@@ -435,7 +437,6 @@ private:
                        const std::vector<YamlData> &yaml_data);
     // LOOOONG operation
     // when failed old config retained
-    void initEnvironment();
     std::vector<std::filesystem::path>
         exe_command_paths_;  // root/utils, root/plugins etc
     std::vector<std::filesystem::path> config_dirs_;  // root and data
@@ -466,12 +467,6 @@ private:
     bool ok_ = false;
 
     static std::atomic<uint64_t> uniq_id_;
-
-#if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class CmaCfg;
-    FRIEND_TEST(CmaCfg, LogFileLocation);
-    FRIEND_TEST(CmaCfg, InitEnvironment);
-#endif
 };
 
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);

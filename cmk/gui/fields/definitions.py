@@ -36,7 +36,6 @@ from cmk.utils.regex import regex, REGEX_ID
 from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
 
 from cmk.gui import sites
-from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
@@ -55,7 +54,7 @@ from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
 
-from cmk.fields import base, Boolean, DateTime, String, validators
+from cmk.fields import base, Boolean, DateTime, validators
 
 _logger = logging.getLogger(__name__)
 _CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"
@@ -1116,11 +1115,6 @@ def bake_agent_field() -> _BakeAgentField:
         deemed acceptable as the intention is to move away from the marshmallow implementation
     """
     return _BakeAgentField()
-
-
-def agent_connection_field() -> String | None:
-    """CME and CCE editions only implementation of cmk_agent_connection field"""
-    return CONNECTION_MODE_FIELD
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:

@@ -47,7 +47,6 @@ from cmk.gui.fields.custom_fields import (
     UnixPath,
 )
 from cmk.gui.fields.definitions import (
-    agent_connection_field,
     bake_agent_field,
     column_field,
     customer_field,
@@ -72,7 +71,6 @@ from cmk.gui.fields.definitions import (
 
 __all__ = [
     "AuxTagIDField",
-    "agent_connection_field",
     "bake_agent_field",
     "CertPublicKey",
     "CertPrivateKey",

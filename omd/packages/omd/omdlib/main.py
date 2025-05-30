@@ -3086,11 +3086,12 @@ def main_init_action(
         if is_disabled(site_paths.apache_conf):
             continue
 
-        site.set_config(load_config(site, global_opts.verbose))
+        config = load_config(site, global_opts.verbose)
+        site.set_config(config)
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
-            if not global_opts.force and not site.is_autostart():
+            if not global_opts.force and config.get("AUTOSTART", "on") != "on":
                 if bare:
                     continue
 

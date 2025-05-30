@@ -40,21 +40,3 @@ def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
 
     site = SiteContext("dingelang")
     assert not site.is_empty()
-
-
-def test_site_context_is_autostart() -> None:
-    site = SiteContext("dingeling")
-
-    with pytest.raises(Exception) as e:
-        site.is_autostart()
-    assert "not loaded yet" in str(e)
-
-    site._config = {}
-    site._config_loaded = True
-    assert site.is_autostart()
-
-    site._config = {"AUTOSTART": "on"}
-    assert site.is_autostart()
-
-    site._config = {"AUTOSTART": "off"}
-    assert not site.is_autostart()

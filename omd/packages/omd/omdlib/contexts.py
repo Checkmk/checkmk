@@ -78,10 +78,6 @@ class SiteContext:
                 return False
         return True
 
-    def is_autostart(self) -> bool:
-        """Determines whether a specific site is set to autostart."""
-        return self.conf.get("AUTOSTART", "on") == "on"
-
     def is_stopped(self, verbose: bool) -> bool:
         """Check if site is completely stopped"""
         return check_status(self._paths.home, verbose, display=False) == 1

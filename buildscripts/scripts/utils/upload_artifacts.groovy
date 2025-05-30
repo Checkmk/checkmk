@@ -177,7 +177,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                         scripts/run-uvenv \
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
-                            dump_bom_artifact_mapping \
+                            dump_meta_artifacts_mapping \
                             --version ${TARGET_VERSION} \
                         """,
                         returnStdout: true)

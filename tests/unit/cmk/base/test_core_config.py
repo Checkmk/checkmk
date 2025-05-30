@@ -15,7 +15,6 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-import cmk.utils.config_path
 import cmk.utils.paths
 from cmk.utils import ip_lookup, password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG

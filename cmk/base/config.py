@@ -45,7 +45,6 @@ from cmk.ccc.site import omd_site, SiteId
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
-import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.translations

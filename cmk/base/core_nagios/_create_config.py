@@ -20,7 +20,6 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
-import cmk.utils.config_path
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig

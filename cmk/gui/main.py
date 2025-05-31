@@ -11,11 +11,9 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.sidebar import SidebarRenderer
-from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 
@@ -44,7 +42,5 @@ def _get_start_url() -> str:
 
 def get_page_heading() -> str:
     if "%s" in active_config.page_heading:
-        return active_config.page_heading % (
-            get_site_config(active_config, omd_site()).get("alias", _("GUI"))
-        )
+        return active_config.page_heading % (active_config.sites[omd_site()]["alias"])
     return active_config.page_heading

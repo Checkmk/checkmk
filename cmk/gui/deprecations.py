@@ -33,7 +33,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
-from cmk.gui.site_config import get_site_config, is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
@@ -466,10 +466,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
                 active_config,
                 request,
                 SiteConfigurations(
-                    {
-                        site_id: get_site_config(active_config, site_id)
-                        for site_id in site_versions_by_site_id
-                    }
+                    {site_id: active_config.sites[site_id] for site_id in site_versions_by_site_id}
                 ),
                 categories=["deprecations"],
                 debug=active_config.debug,

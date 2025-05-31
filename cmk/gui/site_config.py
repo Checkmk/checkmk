@@ -11,7 +11,7 @@ from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.paths
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 
 
 def sitenames() -> list[SiteId]:
@@ -24,17 +24,15 @@ def sitenames() -> list[SiteId]:
 def enabled_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {
-            name: get_site_config(active_config, name)  #
+            name: active_config.sites[name]
             for name in sitenames()
-            if not get_site_config(active_config, name).get("disabled", False)
+            if not active_config.sites[name].get("disabled", False)
         }
     )
 
 
 def configured_sites() -> SiteConfigurations:
-    return SiteConfigurations(
-        {site_id: get_site_config(active_config, site_id) for site_id in sitenames()}
-    )
+    return SiteConfigurations({site_id: active_config.sites[site_id] for site_id in sitenames()})
 
 
 def has_wato_slave_sites() -> bool:
@@ -62,7 +60,7 @@ def get_login_slave_sites() -> list[SiteId]:
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
         if site_spec.get("user_login", True) and not site_is_local(
-            get_site_config(active_config, site_id), site_id
+            active_config.sites[site_id], site_id
         ):
             login_sites.append(site_id)
     return login_sites
@@ -80,17 +78,6 @@ def wato_slave_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {site_id: s for site_id, s in active_config.sites.items() if is_replication_enabled(s)}
     )
-
-
-def get_site_config(config: Config, site_id: SiteId) -> SiteConfiguration:
-    s: SiteConfiguration = config.sites[site_id]
-    # Now make sure that all important keys are available.
-    # Add missing entries by supplying default values.
-    s.setdefault("alias", site_id)
-    s.setdefault("socket", ("local", None))
-    s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    s["id"] = site_id
-    return s
 
 
 def site_is_local(site_config: SiteConfiguration, site_id: SiteId) -> bool:
@@ -116,7 +103,7 @@ def is_single_local_site() -> bool:
 
     # Also use Multisite mode if the one and only site is not local
     sitename = list(active_config.sites.keys())[0]
-    return site_is_local(get_site_config(active_config, sitename), sitename)
+    return site_is_local(active_config.sites[sitename], sitename)
 
 
 def wato_site_ids() -> list[SiteId]:

@@ -15,7 +15,6 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
-from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import get_labels
@@ -363,10 +362,8 @@ def _sort_site_alias(
     config: Config,
     request: Request,
 ) -> int:
-    return (
-        get_site_config(config, r1["site"])["alias"] > get_site_config(config, r2["site"])["alias"]
-    ) - (
-        get_site_config(config, r1["site"])["alias"] < get_site_config(config, r2["site"])["alias"]
+    return (config.sites[r1["site"]]["alias"] > config.sites[r2["site"]]["alias"]) - (
+        config.sites[r1["site"]]["alias"] < config.sites[r2["site"]]["alias"]
     )
 
 

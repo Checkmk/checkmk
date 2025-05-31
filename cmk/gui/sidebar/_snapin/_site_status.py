@@ -8,6 +8,7 @@ import json
 from cmk.ccc.site import SiteId
 
 from cmk.gui import site_config, sites, user_sites
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -17,7 +18,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 
-from ...config import active_config
 from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
@@ -48,7 +48,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in user_sites.sorted_sites():
-            site = site_config.get_site_config(active_config, sitename)
+            site = active_config.sites[sitename]
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 

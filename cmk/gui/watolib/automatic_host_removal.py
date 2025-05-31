@@ -25,7 +25,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
+from cmk.gui.site_config import is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
@@ -111,7 +111,7 @@ def _hosts_to_be_removed(*, debug: bool) -> list[tuple[SiteId, list[Host]]]:
 
 
 def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]:
-    if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+    if site_is_local(site_config := active_config.sites[site_id], site_id):
         try:
             # evaluate the generator here to potentially catch the exception below
             hostnames = list(_hosts_to_be_removed_local(debug=debug))

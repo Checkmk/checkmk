@@ -11,7 +11,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 
@@ -46,7 +45,7 @@ def _search_text_matches(
     for pattern in [
         host.name(),
         str(host.effective_attributes()),
-        str(get_site_config(active_config, host.site_id())["alias"]),
+        str(active_config.sites[host.site_id()]["alias"]),
     ]:
         if match_regex.search(pattern):
             return True

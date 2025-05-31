@@ -28,7 +28,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import UserContext
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import is_wato_slave_site, site_is_local
 
 from ..config import active_config
 from . import bakery, builtin_attributes
@@ -83,7 +83,7 @@ def execute_network_scan_job() -> None:
 
         try:
             if site_is_local(
-                site_config := get_site_config(active_config, folder.site_id()), folder.site_id()
+                site_config := active_config.sites[folder.site_id()], folder.site_id()
             ):
                 found = _do_network_scan(folder)
             else:

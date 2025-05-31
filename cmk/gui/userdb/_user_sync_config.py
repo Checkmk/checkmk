@@ -10,7 +10,7 @@ from livestatus import SiteConfiguration
 from cmk.ccc.site import omd_site, SiteId
 
 from cmk.gui.config import active_config
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import is_wato_slave_site, site_is_local
 
 UserSyncConfig = Literal["all", "master"] | tuple[Literal["list"], list[str]] | None
 
@@ -19,7 +19,7 @@ def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the Setup master site
     default_cfg = user_sync_default_config(
-        site_config := get_site_config(active_config, omd_site()), omd_site()
+        site_config := active_config.sites[omd_site()], omd_site()
     )
     return site_config.get("user_sync", default_cfg)
 

@@ -42,7 +42,6 @@ from cmk.gui.painter_options import (
     PainterOptionRegistry,
     PainterOptions,
 )
-from cmk.gui.site_config import get_site_config
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
@@ -505,7 +504,7 @@ class PainterSitealias(Painter):
         return ["site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, get_site_config(self.config, row["site"])["alias"])
+        return (None, self.config.sites[row["site"]]["alias"])
 
 
 # .
@@ -1732,7 +1731,7 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
 
     def replace_tags(text: str) -> str:
         sitename = row["site"]
-        url_prefix = get_site_config(config, sitename)["url_prefix"]
+        url_prefix = config.sites[sitename]["url_prefix"]
         return (
             text.replace("$URL_PREFIX$", url_prefix)
             .replace("$SITE$", sitename)

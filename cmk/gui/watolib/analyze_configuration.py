@@ -32,7 +32,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
+from cmk.gui.site_config import is_wato_slave_site, site_is_local
 from cmk.gui.utils import escaping
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -269,7 +269,7 @@ def _perform_tests_for_site(
     # thread (One per site)
     logger.debug("[%s] Starting" % site_id)
     try:
-        if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+        if site_is_local(site_config := active_config.sites[site_id], site_id):
             automation = AutomationCheckAnalyzeConfig()
             ac_test_results = automation.execute(_TCheckAnalyzeConfig(categories=categories))
         else:

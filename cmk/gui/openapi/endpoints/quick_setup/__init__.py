@@ -67,7 +67,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupBackgroundStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
-from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import fields
@@ -292,12 +292,10 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
             )
             assert site_id is not None
 
-        if site_id and not site_is_local(
-            get_site_config(active_config, SiteId(site_id)), SiteId(site_id)
-        ):
+        if site_id and not site_is_local(active_config.sites[SiteId(site_id)], SiteId(site_id)):
             background_job_id = start_quick_setup_stage_action_job_on_remote(
                 site_id=site_id,
-                site_config=get_site_config(active_config, SiteId(site_id)),
+                site_config=active_config.sites[SiteId(site_id)],
                 quick_setup_id=quick_setup_id,
                 action_id=stage_action_id,
                 stage_index=stage_index,
@@ -321,9 +319,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         )
         response = Response(status=303)
         url = urlparse(background_job_status_link["href"]).path
-        if site_id and not site_is_local(
-            get_site_config(active_config, SiteId(site_id)), SiteId(site_id)
-        ):
+        if site_id and not site_is_local(active_config.sites[SiteId(site_id)], SiteId(site_id)):
             url = f"{url}?{background_job.FieldSiteId.field_name}={site_id}"
         response.location = url
         return response
@@ -368,12 +364,12 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     action_background_job_id = params["job_id"]
     site_id = params.get(FieldSiteId.field_name)
     if site_id and not site_is_local(
-        get_site_config(active_config, SiteId(site_id)), SiteId(site_id)
+        site_config := active_config.sites[SiteId(site_id)], SiteId(site_id)
     ):
         action_result = StageActionResult.model_validate_json(
             str(
                 do_remote_automation(
-                    get_site_config(active_config, SiteId(site_id)),
+                    site_config,
                     "fetch-quick-setup-stage-action-result",
                     [
                         ("job_id", action_background_job_id),

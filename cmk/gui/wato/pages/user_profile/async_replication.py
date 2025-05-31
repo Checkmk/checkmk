@@ -20,7 +20,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.site_config import get_site_config, sitenames
+from cmk.gui.site_config import sitenames
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -55,7 +55,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if status == "dead":
             raise MKGeneralException(_("The site is marked as dead. Not trying to replicate."))
 
-        site = get_site_config(active_config, site_id)
+        site = active_config.sites[site_id]
         assert user.id is not None
         result = self._synchronize_profile(site_id, site, user.id, debug=active_config.debug)
 

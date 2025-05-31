@@ -23,7 +23,7 @@ from cmk.gui.openapi.endpoints.background_job.response_schemas import Background
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import fields as gui_fields
@@ -74,7 +74,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     else:
         site_id = omd_site()
 
-    if not site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+    if not site_is_local(site_config := active_config.sites[site_id], site_id):
         snapshot = BackgroundStatusSnapshot.from_dict(
             json.loads(
                 str(

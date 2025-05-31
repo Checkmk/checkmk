@@ -32,7 +32,7 @@ from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
@@ -196,7 +196,7 @@ class PageFetchAgentOutput(AgentOutputPage):
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""
         if site_is_local(
-            site_config := get_site_config(active_config, self._request.host.site_id()),
+            site_config := active_config.sites[self._request.host.site_id()],
             self._request.host.site_id(),
         ):
             start_fetch_agent_job(self._request)
@@ -213,7 +213,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
     def _get_job_status(self) -> JobStatusSpec:
         if site_is_local(
-            site_config := get_site_config(active_config, self._request.host.site_id()),
+            site_config := active_config.sites[self._request.host.site_id()],
             self._request.host.site_id(),
         ):
             return get_fetch_agent_job_status(self._request)
@@ -414,7 +414,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
 
     def _get_agent_output_file(self) -> bytes:
         if site_is_local(
-            site_config := get_site_config(active_config, self._request.host.site_id()),
+            site_config := active_config.sites[self._request.host.site_id()],
             self._request.host.site_id(),
         ):
             return get_fetch_agent_output_file(self._request)

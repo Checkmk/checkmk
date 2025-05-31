@@ -74,7 +74,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.site_config import (
-    get_site_config,
     has_wato_slave_sites,
     site_is_local,
     wato_slave_sites,
@@ -1685,7 +1684,7 @@ class ModeTestNotifications(ModeNotifications):
                 self._add_missing_service_context(context)
 
             site_id = SiteId(context["SITEOFHOST"])
-            if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+            if site_is_local(site_config := active_config.sites[site_id], site_id):
                 return (
                     context,
                     notification_test(
@@ -2426,7 +2425,7 @@ def _get_notification_sync_sites() -> list[SiteId]:
     return sorted(
         site_id
         for site_id in wato_slave_sites()
-        if not site_is_local(get_site_config(active_config, SiteId(site_id)), SiteId(site_id))
+        if not site_is_local(active_config.sites[SiteId(site_id)], SiteId(site_id))
     )
 
 

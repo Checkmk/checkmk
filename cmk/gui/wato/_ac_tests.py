@@ -39,7 +39,6 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
-    get_site_config,
     has_wato_slave_sites,
     is_wato_slave_site,
     sitenames,
@@ -129,8 +128,7 @@ class ACTestPersistentConnections(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         yield from (
-            self._check_site(site_id, get_site_config(active_config, site_id))
-            for site_id in sitenames()
+            self._check_site(site_id, active_config.sites[site_id]) for site_id in sitenames()
         )
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:

@@ -48,7 +48,7 @@ from cmk.gui.background_job import (
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import AnnotatedHostName, do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
@@ -1080,7 +1080,7 @@ def get_check_table(
             use_git=active_config.wato_use_git,
         )
 
-    if site_is_local(site_config := get_site_config(active_config, host.site_id()), host.site_id()):
+    if site_is_local(site_config := active_config.sites[host.site_id()], host.site_id()):
         return execute_discovery_job(
             host.name(),
             action,

@@ -68,7 +68,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.site_config import site_is_local
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
@@ -789,7 +789,7 @@ def _merge_results(
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            if site_is_local(get_site_config(active_config, site), site):
+            if site_is_local(active_config.sites[site], site):
                 tarfile_localpath = result.tarfile_path
             else:
                 tarfile_localpath = _get_tarfile_from_remotesite(
@@ -871,8 +871,7 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
 def _get_diagnostics_dump_file(
     site: SiteId, tarfile_name: str, timeout: int, *, debug: bool
 ) -> bytes:
-    site_config = get_site_config(active_config, site)
-    if site_is_local(site_config, site):
+    if site_is_local(site_config := active_config.sites[site], site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
     raw_response = do_remote_automation(

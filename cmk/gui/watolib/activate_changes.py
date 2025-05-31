@@ -81,7 +81,6 @@ from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.site_config import (
     configured_sites,
     enabled_sites,
-    get_site_config,
     is_single_local_site,
     is_wato_slave_site,
     site_is_local,
@@ -686,7 +685,7 @@ def _get_config_sync_state(
 
     Calls the automation call "get-config-sync-state" on the remote site,
     which is handled by AutomationGetConfigSyncState."""
-    site = get_site_config(active_config, site_id)
+    site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "get-config-sync-state",
@@ -713,7 +712,7 @@ def _synchronize_files(
 
     sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-    site = get_site_config(active_config, site_id)
+    site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "receive-config-sync",
@@ -796,7 +795,7 @@ def calc_sync_delta(
             sync_delta = get_file_names_to_sync(
                 site_logger,
                 sync_state,
-                bool(get_site_config(active_config, site_id).get("sync_files")),
+                bool(active_config.sites[site_id].get("sync_files")),
                 file_filter_func,
             )
 
@@ -929,7 +928,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
     while True:
         try:
             raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
-                get_site_config(active_config, site_id),
+                active_config.sites[site_id],
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
                 debug=active_config.debug,
@@ -953,7 +952,7 @@ def _call_activate_changes_automation(
 ) -> ConfigWarnings:
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
-    if site_is_local(site_config := get_site_config(active_config, site_id), site_id):
+    if site_is_local(site_config := active_config.sites[site_id], site_id):
         return execute_activate_changes(domain_requests)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
@@ -1186,7 +1185,7 @@ class ActivateChanges:
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
     ) -> bool:
-        if site_is_local(get_site_config(active_config, site_id), site_id):
+        if site_is_local(active_config.sites[site_id], site_id):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)
@@ -3210,9 +3209,7 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         base_dir = cmk.utils.paths.omd_root
         base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
-        default_sync_config = user_sync_default_config(
-            get_site_config(active_config, omd_site()), omd_site()
-        )
+        default_sync_config = user_sync_default_config(active_config.sites[omd_site()], omd_site())
         current_users = {}
         keep_local_users = False
         active_connectors = []

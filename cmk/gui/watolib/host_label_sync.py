@@ -32,7 +32,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
+from cmk.gui.site_config import has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
@@ -122,7 +122,7 @@ def register(cron_job_registry: CronJobRegistry) -> None:
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId, *, debug: bool) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
-    site_spec = get_site_config(active_config, site_id)
+    site_spec = active_config.sites[site_id]
     result = _execute_site_sync(
         site_id,
         site_spec,

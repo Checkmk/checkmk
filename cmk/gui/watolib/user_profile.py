@@ -26,7 +26,6 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
     get_login_slave_sites,
-    get_site_config,
     is_replication_enabled,
     is_wato_slave_site,
 )
@@ -72,9 +71,7 @@ def _synchronize_profiles_to_sites(
     if not profiles_to_synchronize:
         return
 
-    remote_sites = [
-        (site_id, get_site_config(active_config, site_id)) for site_id in get_login_slave_sites()
-    ]
+    remote_sites = [(site_id, active_config.sites[site_id]) for site_id in get_login_slave_sites()]
 
     logger.info(
         "Credentials changed for %s. Trying to sync to %d sites"

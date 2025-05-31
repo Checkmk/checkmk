@@ -67,7 +67,7 @@ LOGIN_PERMISSIONS = permissions.AllPerm(
 
 def _problem_from_user_error(e: MKUserError) -> Response:
     return problem(
-        status=404,
+        status=400,
         title="User Error",
         detail=str(e),
     )

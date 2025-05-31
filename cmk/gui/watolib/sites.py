@@ -34,7 +34,6 @@ import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui import hooks, log
 from cmk.gui.config import (
-    active_config,
     load_config,
 )
 from cmk.gui.exceptions import MKUserError
@@ -44,7 +43,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
-    get_site_config,
     has_wato_slave_sites,
     is_replication_enabled,
     is_wato_slave_site,
@@ -230,7 +228,11 @@ class SiteManagement:
         )
 
     @classmethod
-    def user_sync_valuespec(cls, site_id):
+    def user_sync_valuespec(
+        cls,
+        site_id: SiteId | None,
+        site_configuration: SiteConfiguration,
+    ) -> CascadingDropdown:
         return CascadingDropdown(
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
@@ -247,7 +249,7 @@ class SiteManagement:
                 ),
             ],
             default_value="all"
-            if site_is_local(get_site_config(active_config, site_id), site_id)
+            if site_id is None or site_is_local(site_configuration, site_id)
             else None,
             help=_(
                 "By default the users are synchronized automatically in the interval configured "
@@ -399,10 +401,10 @@ class SiteManagement:
     @classmethod
     def validate_configuration(
         cls,
-        site_id,
-        site_configuration,
-        all_sites,
-    ):
+        site_id: SiteId,
+        site_configuration: SiteConfiguration,
+        all_sites: SiteConfigurations,
+    ) -> None:
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError(
                 "id", _("The site id must consist only of letters, digit and the underscore.")
@@ -413,7 +415,7 @@ class SiteManagement:
                 "alias", _("Please enter an alias name or description for the site %s.") % site_id
             )
 
-        if site_configuration.get("url_prefix") and site_configuration.get("url_prefix")[-1] != "/":
+        if site_configuration["url_prefix"] and site_configuration["url_prefix"][-1] != "/":
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
 
         # Connection
@@ -452,8 +454,8 @@ class SiteManagement:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
 
         if is_replication_enabled(site_configuration):
-            multisiteurl = site_configuration.get("multisiteurl")
-            if not site_configuration.get("multisiteurl"):
+            multisiteurl = site_configuration["multisiteurl"]
+            if not multisiteurl:
                 raise MKUserError(
                     "multisiteurl",
                     _("Please enter the graphical user interface (GUI) URL of the remote site."),
@@ -490,7 +492,7 @@ class SiteManagement:
 
         # User synchronization
         if ldap_connections_are_configurable():
-            user_sync_valuespec = cls.user_sync_valuespec(site_id)
+            user_sync_valuespec = cls.user_sync_valuespec(site_id, site_configuration)
             user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
@@ -761,7 +763,7 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
         current_settings = load_configuration_settings(site_specific=True)
     else:
         sites = site_management_registry["site_management"].load_sites()
-        current_settings = sites.get(site_id, SiteConfiguration({})).get("globals", {})
+        current_settings = sites[site_id].get("globals", {})
 
     if varname in current_settings:
         return current_settings[varname]

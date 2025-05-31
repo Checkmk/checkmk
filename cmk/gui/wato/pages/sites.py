@@ -568,7 +568,9 @@ class ModeEditSite(WatoMode):
         ]
 
         if ldap_connections_are_configurable():
-            elements.append(("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)))
+            elements.append(
+                ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id, self._site))
+            )
 
         elements.extend(
             [

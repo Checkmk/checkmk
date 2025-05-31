@@ -155,7 +155,7 @@ def test_delete_site_connection_problem(
     clients.SiteManagement.delete(
         site_id=site_id,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(400)
 
 
 def test_create_site_connection(clients: ClientRegistry) -> None:

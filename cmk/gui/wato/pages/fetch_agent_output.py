@@ -42,6 +42,8 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     do_remote_automation,
+    LocalAutomationConfig,
+    make_automation_config,
     RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import get_agent_output
@@ -333,15 +335,23 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
     def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
         with job_interface.gui_context():
-            self._fetch_agent_output(job_interface, debug=active_config.debug)
+            self._fetch_agent_output(
+                job_interface,
+                automation_config=make_automation_config(active_config.sites[self._site_id]),
+                debug=active_config.debug,
+            )
 
     def _fetch_agent_output(
-        self, job_interface: BackgroundProcessInterface, *, debug: bool
+        self,
+        job_interface: BackgroundProcessInterface,
+        *,
+        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+        debug: bool,
     ) -> None:
         job_interface.send_progress_update(_("Fetching '%s'...") % self._agent_type)
 
         agent_output_result = get_agent_output(
-            self._site_id,
+            automation_config,
             self._host_name,
             self._agent_type,
             timeout=int(active_config.reschedule_timeout)

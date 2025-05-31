@@ -40,6 +40,7 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float, Int
 from cmk.gui.valuespec import HostAddress as VSHostAddress
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
+from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
@@ -502,7 +503,7 @@ class PageAjaxDiagHost(AjaxPage):
                 args[9] = api_request.get("snmpv3_security_name", "")
 
         result = diag_host(
-            host.site_id(),
+            make_automation_config(active_config.sites[host.site_id()]),
             hostname,
             _test,
             active_config.debug,

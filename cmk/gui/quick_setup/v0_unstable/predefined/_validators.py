@@ -33,6 +33,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
 )
+from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree, Host
@@ -120,7 +121,7 @@ def _validate_test_connection(
         "test_connection", "Use input data to test connection to datasource"
     )
     output = diag_special_agent(
-        SiteId(site_id) if site_id else omd_site(),
+        make_automation_config(active_config.sites[SiteId(site_id) if site_id else omd_site()]),
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name,
             host_name=host_name,

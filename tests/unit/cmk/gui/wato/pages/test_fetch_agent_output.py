@@ -25,6 +25,7 @@ from cmk.gui.wato.pages.fetch_agent_output import (
     get_fetch_agent_output_file,
     start_fetch_agent_job,
 )
+from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 
@@ -66,7 +67,7 @@ def test_fetch_agent_job(host: Host, mocker: MockerFixture) -> None:
 
     # THEN
     get_agent_output_mock.assert_called_once_with(
-        "NO_SITE", "host1", "agent", timeout=10, debug=False
+        LocalAutomationConfig(), "host1", "agent", timeout=10, debug=False
     )
     job_status = get_fetch_agent_job_status(request)
     assert job_status.state == "finished", job_status

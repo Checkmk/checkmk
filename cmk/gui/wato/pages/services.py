@@ -67,7 +67,11 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import AnnotatedHostName, cmk_version_of_remote_automation_source
+from cmk.gui.watolib.automations import (
+    AnnotatedHostName,
+    cmk_version_of_remote_automation_source,
+    make_automation_config,
+)
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
@@ -1845,7 +1849,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         check_csrf_token()
         try:
             active_check_result = active_check(
-                self._site,
+                make_automation_config(active_config.sites[self._site]),
                 self._host_name,
                 self._check_type,
                 self._item,

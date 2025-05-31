@@ -86,7 +86,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    make_automation_config,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
@@ -729,7 +733,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         results = []
         for chunk in chunks:
             chunk_result = create_diagnostics_dump(
-                site,
+                make_automation_config(active_config.sites[site]),
                 chunk,
                 diagnostics_parameters["timeout"],
                 debug=debug,

@@ -574,7 +574,7 @@ def scan_parents(
 
 
 def diag_special_agent(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     diag_special_agent_input: results.DiagSpecialAgentInput,
     *,
     debug: bool,
@@ -582,7 +582,7 @@ def diag_special_agent(
     return _deserialize(
         _automation_serialized(
             "diag-special-agent",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=None,
             stdin_data=diag_special_agent_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
@@ -595,7 +595,7 @@ def diag_special_agent(
 
 
 def diag_host(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     test: str,
     debug: bool,
@@ -604,7 +604,7 @@ def diag_host(
     return _deserialize(
         _automation_serialized(
             "diag-host",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name, test, *args],
             debug=debug,
         ),
@@ -614,7 +614,7 @@ def diag_host(
 
 
 def active_check(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     check_type: str,
     item: str,
@@ -624,7 +624,7 @@ def active_check(
     return _deserialize(
         _automation_serialized(
             "active-check",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name, check_type, item],
             sync=False,
             debug=debug,
@@ -634,11 +634,15 @@ def active_check(
     )
 
 
-def update_dns_cache(site_id: SiteId, *, debug: bool) -> results.UpdateDNSCacheResult:
+def update_dns_cache(
+    *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    debug: bool,
+) -> results.UpdateDNSCacheResult:
     return _deserialize(
         _automation_serialized(
             "update-dns-cache",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             debug=debug,
         ),
         results.UpdateDNSCacheResult,
@@ -647,7 +651,7 @@ def update_dns_cache(site_id: SiteId, *, debug: bool) -> results.UpdateDNSCacheR
 
 
 def get_agent_output(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,
     agent_type: str,
     timeout: int | None,
@@ -657,7 +661,7 @@ def get_agent_output(
     return _deserialize(
         _automation_serialized(
             "get-agent-output",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=[host_name, agent_type],
             timeout=timeout,
             debug=debug,
@@ -729,7 +733,7 @@ def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.Notificat
 
 
 def create_diagnostics_dump(
-    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     serialized_params: DiagnosticsCLParameters,
     timeout: int,
     *,
@@ -738,7 +742,7 @@ def create_diagnostics_dump(
     return _deserialize(
         _automation_serialized(
             "create-diagnostics-dump",
-            automation_config=make_automation_config(active_config.sites[site_id]),
+            automation_config=automation_config,
             args=serialized_params,
             timeout=timeout,
             non_blocking_http=True,

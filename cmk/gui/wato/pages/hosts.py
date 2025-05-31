@@ -45,8 +45,10 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
 from cmk.gui.watolib.config_hostname import ConfigHostname
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
@@ -59,7 +61,6 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 from cmk.shared_typing.mode_host import ModeHost, ModeHostI18n
 
-from ...watolib.configuration_bundle_store import is_locked_by_quick_setup
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
 
@@ -415,7 +416,8 @@ class ModeEditHost(ABCHostMode):
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
             update_dns_cache_result = update_dns_cache(
-                self._host.site_id(), debug=active_config.debug
+                automation_config=make_automation_config(active_config.sites[self._host.site_id()]),
+                debug=active_config.debug,
             )
             infotext = (
                 _("Successfully updated IP addresses of %d hosts.")

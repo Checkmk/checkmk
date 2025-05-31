@@ -22,6 +22,7 @@ $argTest = $false
 $argSign = $false
 $argMsi = $false
 $argOhm = $false
+$argOracle = $false
 $argExt = $false
 $argSql = $false
 $argDetach = $false
@@ -61,11 +62,12 @@ function Write-Help() {
     Write-Host ""
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help          display help and exit"
-    Write-Host "  -A, --all               shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
+    Write-Host "  -A, --all               shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
     Write-Host "  --clean-all             clean literally all, use with care"
     Write-Host "  --clean-artifacts       clean artifacts"
     Write-Host "  -C, --ctl               build controller"
     Write-Host "  -Q, --mk-sql            build mk-sql"
+    Write-Host "  -o, --mk-oracle         build mk-oracle"
     Write-Host "  -B, --build             build agent"
     Write-Host "  -M, --msi               build msi"
     Write-Host "  -O, --ohm               build ohm"
@@ -98,10 +100,11 @@ else {
             { $("-B", "--build") -contains $_ } { $argBuild = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
             { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
+            { $("-o", "--mk-oracle") -contains $_ } { $argOracle = $true }
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
-            { $("-S", "--skip-mk-sql-test") -contains $_ } { $argSkipSqlTest = $true }
+            { $("-S", "--skip-sql-test") -contains $_ } { $argSkipSqlTest = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }
@@ -117,6 +120,7 @@ else {
 if ($argAll) {
     $argBuild = $true
     $argOhm = $true
+    $argOracle = $true
     $argCtl = $true
     $argTest = $true
     $argSql = $true
@@ -443,6 +447,7 @@ function Start-BinarySigning {
         "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
         "$results_dir\cmk-agent-ctl.exe",
         "$results_dir\mk-sql.exe",
+        "$results_dir\mk-oracle.exe",
         "$ohm_dir\OpenHardwareMonitorLib.dll",
         "$ohm_dir\OpenHardwareMonitorCLI.exe"
     )
@@ -629,6 +634,7 @@ function Clear-All() {
     Write-Host "Cleaning packages..."
     Build-Package $true "host/cmk-agent-ctl" "Controller" "--clean"
     Build-Package $true "host/mk-sql" "MK-SQL" "--clean"
+    Build-Package $true "host/mk-oracle" "mk-oracle" "--clean"
 
     Clear-Artifacts
 
@@ -669,9 +675,11 @@ try {
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
     if ($argSkipSqlTest -ne $true) {
         Build-Package $argSql "host/mk-sql" "MK-SQL"
+        Build-Package $argOracle "host/mk-oracle" "mk-oracle"
     }
     else {
         Build-Package $argSql "host/mk-sql" "MK-SQL" --build
+        Build-Package $argOracle "host/mk-oracle" "mk-oracle" --build
     }
     Build-Ohm
     Build-Ext

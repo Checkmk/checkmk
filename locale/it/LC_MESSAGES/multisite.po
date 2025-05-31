@@ -44186,6 +44186,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Note: Host events do not match this rule if a service filter matches. "
+"However, if an exclude filter matches, host events are still matched by the "
+"rule."
+msgstr ""
+
+msgid ""
 "Note: If you also set a limit in the report, then the limit set here will "
 "replace that one."
 msgstr ""
@@ -44453,7 +44459,9 @@ msgstr "Le notifiche sono abilitate manualmente per questo %s"
 
 msgid ""
 "Notifications are sent only for event types defined by the 'Notified events "
-"for hosts' ruleset"
+"for hosts' ruleset. Note: Host events do not match this rule if a service "
+"filter matches. However, if an exclude service filter matches, host events "
+"are still matched by the rule."
 msgstr ""
 
 msgid ""

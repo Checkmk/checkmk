@@ -122,22 +122,15 @@ public:
 
     [[nodiscard]] std::filesystem::path getData() const { return data_; }
 
-private:
     /// returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
         std::wstring_view data_folder);
+
+private:
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
     std::filesystem::path private_logs_;  //
-
-#if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class AgentConfig;
-    FRIEND_TEST(AgentConfig, FoldersTest);
-
-    friend class CmaCfg;
-    FRIEND_TEST(CmaCfg, LogFileLocation);
-#endif
 };
 
 std::vector<std::wstring_view> AllDirTable();

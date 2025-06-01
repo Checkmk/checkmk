@@ -492,8 +492,8 @@ def get_stage_structure(
 
 
 def start_quick_setup_stage_action_job_on_remote(
-    site_id: str,
-    site_config: SiteConfiguration,
+    site_id: SiteId,
+    automation_config: RemoteAutomationConfig,
     quick_setup_id: QuickSetupId,
     action_id: ActionId,
     stage_index: StageIndex,
@@ -514,7 +514,7 @@ def start_quick_setup_stage_action_job_on_remote(
     try:
         job_id = str(
             do_remote_automation(
-                RemoteAutomationConfig.from_site_config(site_config),
+                automation_config,
                 "start-quick-setup-stage-action",
                 [
                     ("args", args.model_dump_json()),

@@ -800,7 +800,7 @@ class ReplicationStatusFetcher:
 
     def fetch(
         self,
-        sites: Collection[tuple[SiteId, SiteConfiguration]],
+        sites: Collection[tuple[SiteId, RemoteAutomationConfig]],
         *,
         debug: bool,
     ) -> Mapping[SiteId, ReplicationStatus]:
@@ -811,9 +811,9 @@ class ReplicationStatusFetcher:
         result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
 
         processes = []
-        for site_id, site in sites:
+        for site_id, automation_config in sites:
             process = Process(
-                target=self._fetch_for_site, args=(site_id, site, result_queue, debug)
+                target=self._fetch_for_site, args=(site_id, automation_config, result_queue, debug)
             )
             process.start()
             processes.append((site_id, process))
@@ -840,7 +840,7 @@ class ReplicationStatusFetcher:
     def _fetch_for_site(
         self,
         site_id: SiteId,
-        site: SiteConfiguration,
+        automation_config: RemoteAutomationConfig,
         result_queue: JoinableQueue[ReplicationStatus],
         debug: bool,
     ) -> None:
@@ -865,9 +865,7 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            raw_result = do_remote_automation(
-                RemoteAutomationConfig.from_site_config(site), "ping", [], timeout=5, debug=debug
-            )
+            raw_result = do_remote_automation(automation_config, "ping", [], timeout=5, debug=debug)
             assert isinstance(raw_result, dict)
 
             result = ReplicationStatus(

@@ -104,6 +104,7 @@ from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
     MKAutomationException,
+    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
@@ -1366,7 +1367,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
         sites = site_management_registry["site_management"].load_sites()
         replication_sites = [
-            (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
+            (site_id, RemoteAutomationConfig.from_site_config(site_config))
+            for (site_id, site_config) in sites.items()
+            if is_replication_enabled(site_config)
         ]
         remote_status = ReplicationStatusFetcher().fetch(
             replication_sites, debug=active_config.debug

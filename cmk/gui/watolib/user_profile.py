@@ -159,7 +159,10 @@ def _sychronize_profile_worker(
 
     try:
         result = push_user_profiles_to_site_transitional_wrapper(
-            site, profiles_to_synchronize, None, debug=debug
+            RemoteAutomationConfig.from_site_config(site),
+            profiles_to_synchronize,
+            None,
+            debug=debug,
         )
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
@@ -191,17 +194,17 @@ def handle_ldap_sync_finished(
 
 
 def push_user_profiles_to_site_transitional_wrapper(
-    site: SiteConfiguration,
+    automation_config: RemoteAutomationConfig,
     user_profiles: Mapping[UserId, UserSpec],
     visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
     *,
     debug: bool,
 ) -> Literal[True] | str:
-    return _push_user_profiles_to_site(site, user_profiles, visuals, debug=debug)
+    return _push_user_profiles_to_site(automation_config, user_profiles, visuals, debug=debug)
 
 
 def _push_user_profiles_to_site(
-    site: SiteConfiguration,
+    automation_config: RemoteAutomationConfig,
     user_profiles: Mapping[UserId, UserSpec],
     visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None,
     debug: bool,
@@ -214,7 +217,7 @@ def _push_user_profiles_to_site(
         }
 
     do_remote_automation(
-        RemoteAutomationConfig.from_site_config(site),
+        automation_config,
         "push-profiles",
         [("profiles", repr(_serialize(user_profiles))), ("visuals", repr(visuals))],
         timeout=60,

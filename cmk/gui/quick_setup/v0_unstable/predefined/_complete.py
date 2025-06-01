@@ -6,6 +6,8 @@
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
+from livestatus import SiteConfiguration
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
@@ -67,7 +69,7 @@ from cmk.gui.watolib.services import (
     get_check_table,
     perform_fix_all,
 )
-from cmk.gui.watolib.sites import ReplicationStatusFetcher, site_management_registry
+from cmk.gui.watolib.sites import ReplicationStatusFetcher
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -336,8 +338,9 @@ def _create_and_save_special_agent_bundle(
         debug=active_config.debug,
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
-    is_local = site_is_local(active_config.sites[site_id], site_id)
-    if not _service_discovery_possible(site_id, is_local=is_local, debug=active_config.debug):
+    if not _service_discovery_possible(
+        site_id, site_config=active_config.sites[site_id], debug=active_config.debug
+    ):
         progress_logger.log_new_progress_step(
             "service_discovery",
             "Skipping service discovery as target site is unreachable",
@@ -392,16 +395,18 @@ def _create_and_save_special_agent_bundle(
     )
 
 
-def _service_discovery_possible(site_id: SiteId, *, is_local: bool, debug: bool) -> bool:
-    if is_local:
+def _service_discovery_possible(
+    site_id: SiteId, *, site_config: SiteConfiguration, debug: bool
+) -> bool:
+    if site_is_local(active_config.sites[site_id], site_id):
         return True
 
-    sites = site_management_registry["site_management"].load_sites()
-    site = sites.get(site_id)
-    if site is None or not is_replication_enabled(site):
+    if not is_replication_enabled(site_config):
         return False
 
-    remote_status = ReplicationStatusFetcher().fetch([(site_id, site)], debug=debug)
+    remote_status = ReplicationStatusFetcher().fetch(
+        [(site_id, RemoteAutomationConfig.from_site_config(site_config))], debug=debug
+    )
     if not remote_status[site_id].success:
         return False
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import ast
 import os
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
@@ -124,15 +124,15 @@ def register(cron_job_registry: CronJobRegistry) -> None:
     )
 
 
-def execute_host_label_sync(host_name: HostName, site_id: SiteId, *, debug: bool) -> None:
+def execute_host_label_sync(
+    host_name: HostName, automation_config: RemoteAutomationConfig, *, debug: bool
+) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
-    site_spec = active_config.sites[site_id]
     result = _execute_site_sync(
-        site_id,
-        site_spec,
+        automation_config,
         SiteRequest(
             newest_host_labels=0.0,
-            enforce_host=EnforcedHostRequest(site_id, host_name),
+            enforce_host=EnforcedHostRequest(automation_config.site_id, host_name),
             debug=debug,
         ),
     )
@@ -145,7 +145,7 @@ def execute_host_label_sync_job() -> None:
     if not has_wato_slave_sites():
         return
 
-    DiscoveredHostLabelSyncJob().do_sync(debug=active_config.debug)
+    DiscoveredHostLabelSyncJob().do_sync(remote_sites=wato_slave_sites(), debug=active_config.debug)
 
     now = time.time()
     if (
@@ -168,12 +168,14 @@ class DiscoveredHostLabelSyncJob:
     future.
     """
 
-    def do_sync(self, *, debug: bool) -> None:
+    def do_sync(self, *, remote_sites: Mapping[SiteId, SiteConfiguration], debug: bool) -> None:
         logger.info("Synchronization started...")
-        self._execute_sync(debug=debug)
+        self._execute_sync(remote_sites, debug=debug)
         logger.info("The synchronization finished.")
 
-    def _execute_sync(self, *, debug: bool) -> None:
+    def _execute_sync(
+        self, remote_sites: Mapping[SiteId, SiteConfiguration], *, debug: bool
+    ) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
         with ThreadPool(20) as pool:
@@ -181,11 +183,10 @@ class DiscoveredHostLabelSyncJob:
                 copy_request_context(self._execute_site_sync_bg),
                 [
                     (
-                        site_id,
-                        site_spec,
+                        RemoteAutomationConfig.from_site_config(site_spec),
                         SiteRequest(newest_host_labels.get(site_id, 0.0), None, debug=debug),
                     )
-                    for site_id, site_spec in wato_slave_sites().items()
+                    for site_id, site_spec in remote_sites.items()
                 ],
             )
 
@@ -194,8 +195,7 @@ class DiscoveredHostLabelSyncJob:
     def _execute_site_sync_bg(
         self,
         args: tuple[
-            SiteId,
-            SiteConfiguration,
+            RemoteAutomationConfig,
             SiteRequest,
         ],
     ) -> SiteResult:
@@ -233,15 +233,15 @@ class DiscoveredHostLabelSyncJob:
 
 
 def _execute_site_sync(
-    site_id: SiteId, site_spec: SiteConfiguration, site_request: SiteRequest
+    automation_config: RemoteAutomationConfig, site_request: SiteRequest
 ) -> SiteResult:
     """Executes the sync with a site. Is executed in a dedicated subprocess (One per site)"""
     try:
-        logger.debug(_("[%s] Starting sync for site"), site_id)
+        logger.debug(_("[%s] Starting sync for site"), automation_config.site_id)
 
         # timeout=100: Use a value smaller than the default apache request timeout
         raw_result = do_remote_automation(
-            RemoteAutomationConfig.from_site_config(site_spec),
+            automation_config,
             "discovered-host-label-sync",
             [
                 ("request", repr(site_request.serialize())),
@@ -252,9 +252,9 @@ def _execute_site_sync(
         assert isinstance(raw_result, dict)
         result = DiscoveredHostLabelSyncResponse(**raw_result)
 
-        logger.debug(_("[%s] Finished sync for site"), site_id)
+        logger.debug(_("[%s] Finished sync for site"), automation_config.site_id)
         return SiteResult(
-            site_id=site_id,
+            site_id=automation_config.site_id,
             success=True,
             error="",
             updated_host_labels=result.updated_host_labels,
@@ -262,16 +262,18 @@ def _execute_site_sync(
 
     except MKAutomationException as e:
         return SiteResult(
-            site_id=site_id,
+            site_id=automation_config.site_id,
             success=False,
             error=str(e),
             updated_host_labels=[],
         )
 
     except Exception as e:
-        logger.error("Failed to get discovered host labels from site %s: %s", site_id, e)
+        logger.error(
+            "Failed to get discovered host labels from site %s: %s", automation_config.site_id, e
+        )
         return SiteResult(
-            site_id=site_id,
+            site_id=automation_config.site_id,
             success=False,
             error=str(e),
             updated_host_labels=[],

@@ -82,7 +82,6 @@ from cmk.gui.quick_setup.html import (
     quick_setup_render_link,
     quick_setup_source_cell,
 )
-from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -1422,7 +1421,7 @@ class ModeEditRuleset(WatoMode):
                 else {}
             )
             span.set_attribute("cmk.service_labels", repr(service_labels))
-            self._get_host_labels_from_remote_site(debug=debug)
+            self._get_host_labels_from_remote_site(automation_config, debug=debug)
 
             if rulespec.is_for_services:
                 rule_matches = {
@@ -1518,29 +1517,22 @@ class ModeEditRuleset(WatoMode):
             "checkmark",
         )
 
-    def _get_host_labels_from_remote_site(self, *, debug: bool) -> None:
+    def _get_host_labels_from_remote_site(
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig, *, debug: bool
+    ) -> None:
         """To be able to execute the match simulation we need the discovered host labels to be
         present in the central site. Fetch and store them."""
         if not self._hostname:
             return
 
-        remote_sites = wato_slave_sites()
-        if not remote_sites:
-            return
-
-        host = Host.host(self._hostname)
-        if host is None:
-            return
-        site_id = host.site_id()
-
-        if site_id not in remote_sites:
+        if isinstance(automation_config, LocalAutomationConfig):
             return
 
         # Labels should only get synced once per request
-        cache_id = f"{site_id}:{self._hostname}"
+        cache_id = f"{automation_config.site_id}:{self._hostname}"
         if cache_id in g.get("host_label_sync", {}):
             return
-        execute_host_label_sync(self._hostname, site_id, debug=debug)
+        execute_host_label_sync(self._hostname, automation_config, debug=debug)
         g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:

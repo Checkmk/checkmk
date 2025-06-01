@@ -1,5 +1,5 @@
 {
-  "checksum": "03238f353686e87aa25f5c7f4bc9bffbb29979ed8d118f48f6f88465a62e15be",
+  "checksum": "8bec802a7188b8f1d3f298a550007d30a97c8ca39b7f82105d40eb50499b50ae",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -3330,7 +3330,7 @@
               "target": "nix"
             },
             {
-              "id": "openssl 0.10.72",
+              "id": "openssl 0.10.69",
               "target": "openssl"
             },
             {
@@ -3374,7 +3374,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -6995,7 +6995,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -7690,7 +7690,7 @@
               "target": "smallvec"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -7775,7 +7775,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -7852,7 +7852,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -7951,7 +7951,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -9694,7 +9694,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.48.5",
+                "id": "windows-targets 0.52.6",
                 "target": "windows_targets"
               }
             ]
@@ -10449,106 +10449,6 @@
       ],
       "license_file": "LICENSE"
     },
-    "mk-oracle 0.1.0": {
-      "name": "mk-oracle",
-      "version": "0.1.0",
-      "package_url": null,
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "mk_oracle",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "mk_oracle",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "anyhow 1.0.95",
-              "target": "anyhow"
-            },
-            {
-              "id": "clap 4.5.27",
-              "target": "clap"
-            },
-            {
-              "id": "derive_more 1.0.0",
-              "target": "derive_more"
-            },
-            {
-              "id": "flexi_logger 0.29.8",
-              "target": "flexi_logger"
-            },
-            {
-              "id": "futures 0.3.31",
-              "target": "futures"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "log 0.4.25",
-              "target": "log"
-            },
-            {
-              "id": "openssl 0.10.72",
-              "target": "openssl"
-            },
-            {
-              "id": "tokio 1.45.0",
-              "target": "tokio"
-            },
-            {
-              "id": "tokio-util 0.7.13",
-              "target": "tokio_util"
-            },
-            {
-              "id": "yaml-rust2 0.9.0",
-              "target": "yaml_rust2"
-            }
-          ],
-          "selects": {
-            "cfg(windows)": [
-              {
-                "id": "winreg 0.52.0",
-                "target": "winreg"
-              }
-            ]
-          }
-        },
-        "deps_dev": {
-          "common": [
-            {
-              "id": "assert_cmd 2.0.16",
-              "target": "assert_cmd"
-            },
-            {
-              "id": "tempfile 3.16.0",
-              "target": "tempfile"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.1.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": null
-    },
     "mk-sql 0.1.0": {
       "name": "mk-sql",
       "version": "0.1.0",
@@ -10604,7 +10504,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.72",
+              "id": "openssl 0.10.69",
               "target": "openssl"
             },
             {
@@ -10612,7 +10512,7 @@
               "target": "tiberius"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -10712,7 +10612,7 @@
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.72",
+                "id": "openssl 0.10.69",
                 "target": "openssl"
               },
               {
@@ -10720,7 +10620,7 @@
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.108",
+                "id": "openssl-sys 0.9.104",
                 "target": "openssl_sys"
               }
             ],
@@ -10770,7 +10670,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.108",
+                "id": "openssl-sys 0.9.104",
                 "target": "openssl_sys"
               }
             ]
@@ -12720,14 +12620,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.72": {
+    "openssl 0.10.69": {
       "name": "openssl",
-      "version": "0.10.72",
+      "version": "0.10.69",
       "package_url": "https://github.com/sfackler/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.72/download",
-          "sha256": "fedfea7d58a1f73118430a55da6a286e7b044961736ce96a16a17068ea25e5da"
+          "url": "https://static.crates.io/crates/openssl/0.10.69/download",
+          "sha256": "f5e534d133a060a3c19daec1eb3e98ec6f4685978834f2dbadfe2ec215bab64e"
         }
       },
       "targets": [
@@ -12791,11 +12691,11 @@
               "target": "once_cell"
             },
             {
-              "id": "openssl 0.10.72",
+              "id": "openssl 0.10.69",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.108",
+              "id": "openssl-sys 0.9.104",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -12812,7 +12712,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.72"
+        "version": "0.10.69"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -12827,7 +12727,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.108",
+              "id": "openssl-sys 0.9.104",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -12991,14 +12891,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.108": {
+    "openssl-sys 0.9.104": {
       "name": "openssl-sys",
-      "version": "0.9.108",
+      "version": "0.9.104",
       "package_url": "https://github.com/sfackler/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.108/download",
-          "sha256": "e145e1651e858e820e4860f7b9c5e169bc1d8ce1c86043be79fa7b7634821847"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.104/download",
+          "sha256": "45abf306cbf99debc8195b66b7346498d7b10c210de50418b5ccd7ceba08c741"
         }
       },
       "targets": [
@@ -13046,14 +12946,14 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.108",
+              "id": "openssl-sys 0.9.104",
               "target": "build_script_main"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.108"
+        "version": "0.9.104"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -14357,7 +14257,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -15546,7 +15446,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.45.0",
+                "id": "tokio 1.43.0",
                 "target": "tokio"
               },
               {
@@ -18524,7 +18424,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -18886,14 +18786,14 @@
       ],
       "license_file": "LICENSE-APACHE.md"
     },
-    "tokio 1.45.0": {
+    "tokio 1.43.0": {
       "name": "tokio",
-      "version": "1.45.0",
+      "version": "1.43.0",
       "package_url": "https://github.com/tokio-rs/tokio",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio/1.45.0/download",
-          "sha256": "2513ca694ef9ede0fb23fe71a4ee4107cb102b9dc1930f6d0fd77aae068ae165"
+          "url": "https://static.crates.io/crates/tokio/1.43.0/download",
+          "sha256": "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
         }
       },
       "targets": [
@@ -18990,7 +18890,7 @@
           ],
           "selects": {}
         },
-        "version": "1.45.0"
+        "version": "1.43.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -19089,7 +18989,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             }
           ],
@@ -19148,7 +19048,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             }
           ],
@@ -19226,7 +19126,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             }
           ],
@@ -19496,7 +19396,7 @@
               "target": "sync_wrapper"
             },
             {
-              "id": "tokio 1.45.0",
+              "id": "tokio 1.43.0",
               "target": "tokio"
             },
             {
@@ -25081,7 +24981,6 @@
   "binary_crates": [],
   "workspace_members": {
     "cmk-agent-ctl 1.0.0": "packages/host/cmk-agent-ctl",
-    "mk-oracle 0.1.0": "packages/host/mk-oracle",
     "mk-sql 0.1.0": "packages/host/mk-sql"
   },
   "conditions": {
@@ -25208,7 +25107,7 @@
     "mail_slot 0.1.3",
     "nix 0.29.0",
     "odbc-api 10.1.1",
-    "openssl 0.10.72",
+    "openssl 0.10.69",
     "os_info 3.9.2",
     "rand 0.8.5",
     "reqwest 0.12.12",
@@ -25220,7 +25119,7 @@
     "serde_with 3.12.0",
     "socket2 0.5.8",
     "tiberius 0.12.3",
-    "tokio 1.45.0",
+    "tokio 1.43.0",
     "tokio-rustls 0.26.1",
     "tokio-util 0.7.13",
     "toml 0.8.19",

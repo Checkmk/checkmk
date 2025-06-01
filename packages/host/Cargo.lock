@@ -1746,26 +1746,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mk-oracle"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "derive_more",
- "flexi_logger",
- "futures",
- "lazy_static",
- "log",
- "openssl",
- "tempfile",
- "tokio",
- "tokio-util",
- "winreg",
- "yaml-rust2",
-]
-
-[[package]]
 name = "mk-sql"
 version = "0.1.0"
 dependencies = [

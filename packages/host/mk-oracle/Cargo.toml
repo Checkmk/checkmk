@@ -1,0 +1,47 @@
+[package]
+name = "mk-oracle"
+version = "0.1.0"
+# next line is correct but fails pinning with bazel
+# workspace = ".."
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
+
+[dependencies]
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
+# used for New Types derives, may be removed
+derive_more = { workspace = true, features = [
+  "from",
+  "display",
+  "into",
+  "default",
+] }
+flexi_logger.workspace = true
+futures.workspace = true
+lazy_static.workspace = true
+log.workspace = true
+# need to compile OpenSSL. See:
+# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
+# https://github.com/rust-cross/rust-musl-cross/issues/44
+openssl = { workspace = true, features = ["vendored"] }
+tokio = { workspace = true, features = [
+  "full",
+  "rt",
+  "rt-multi-thread",
+  "macros",
+] }
+# tokio-macros = "2.1.0"
+# tokio-rustls = "0.24.1"
+tokio-util = { workspace = true, features = ["compat"] }
+yaml-rust2.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+winreg.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+tempfile.workspace = true

@@ -2322,7 +2322,10 @@ def create_broker_certificates(
         try:
             _set_sync_state(site_activation_state, _("Syncing broker certificates"))
             broker_cert_sync.create_broker_certificates(
-                site_id, settings, central_ca_bundle, customer_ca_bundle, debug=debug
+                RemoteAutomationConfig.from_site_config(settings),
+                central_ca_bundle,
+                customer_ca_bundle,
+                debug=debug,
             )
             return site_activation_state
         except Exception as e:

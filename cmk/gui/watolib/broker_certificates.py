@@ -75,8 +75,7 @@ class BrokerCertificateSync(abc.ABC):
     @abc.abstractmethod
     def create_broker_certificates(
         self,
-        site_id: SiteId,
-        settings: SiteConfiguration,
+        automation_config: RemoteAutomationConfig,
         central_ca_bundle: PersistedCertificateWithPrivateKey,
         customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
         *,
@@ -110,15 +109,14 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
 
     def create_broker_certificates(
         self,
-        site_id: SiteId,
-        settings: SiteConfiguration,
+        automation_config: RemoteAutomationConfig,
         central_ca_bundle: PersistedCertificateWithPrivateKey,
         customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
         *,
         debug: bool,
     ) -> None:
-        logger.info("Remote broker certificates creation for site %s", site_id)
-        csr = CertificateSigningRequest(ask_remote_csr(settings, debug=debug))
+        logger.info("Remote broker certificates creation for site %s", automation_config.site_id)
+        csr = CertificateSigningRequest(ask_remote_csr(automation_config, debug=debug))
         if csr.subject.common_name is None:
             raise ValueError("CSR must provide a common name")
 
@@ -133,14 +131,14 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
             signing_ca=central_ca_bundle.certificate.dump_pem().bytes,
         )
 
-        logger.info("Sending signed broker certificates for site %s", site_id)
-        _sync_broker_certs(settings, remote_broker_certs, debug=debug)
+        logger.info("Sending signed broker certificates for site %s", automation_config.site_id)
+        _sync_broker_certs(automation_config, remote_broker_certs, debug=debug)
 
         # the presence of the following cert is used to determine if the broker certificates need
         # to be created/synced, so only save it if the sync was successful
-        LocalBrokerCertificate(messaging.multisite_cert_file(paths.omd_root, site_id)).write(
-            remote_broker_certs.cert
-        )
+        LocalBrokerCertificate(
+            messaging.multisite_cert_file(paths.omd_root, automation_config.site_id)
+        ).write(remote_broker_certs.cert)
 
     def update_trusted_cas(self) -> None:
         # Only relevant for editions with different customers
@@ -148,13 +146,13 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
 
 
 def _sync_broker_certs(
-    settings: SiteConfiguration,
+    automation_config: RemoteAutomationConfig,
     remote_broker_certs: messaging.BrokerCertificates,
     *,
     debug: bool,
 ) -> None:
     do_remote_automation(
-        RemoteAutomationConfig.from_site_config(settings),
+        automation_config,
         "store-broker-certs",
         [("certificates", remote_broker_certs.model_dump_json()), ("site_id", omd_site())],
         timeout=120,
@@ -162,9 +160,11 @@ def _sync_broker_certs(
     )
 
 
-def ask_remote_csr(settings: SiteConfiguration, *, debug: bool) -> x509CertificateSigningRequest:
+def ask_remote_csr(
+    automation_config: RemoteAutomationConfig, *, debug: bool
+) -> x509CertificateSigningRequest:
     raw_response = do_remote_automation(
-        RemoteAutomationConfig.from_site_config(settings),
+        automation_config,
         "create-broker-certs",
         [],
         timeout=60,
@@ -201,7 +201,7 @@ def create_remote_broker_certs(
 
 
 def sync_remote_broker_certs(
-    site: SiteConfiguration,
+    automation_config: RemoteAutomationConfig,
     broker_certificates: messaging.BrokerCertificates,
     *,
     debug: bool,
@@ -211,7 +211,7 @@ def sync_remote_broker_certs(
     """
 
     do_remote_automation(
-        RemoteAutomationConfig.from_site_config(site),
+        automation_config,
         "store-broker-certs",
         [("certificates", broker_certificates.model_dump_json()), ("site_id", omd_site())],
         timeout=120,
@@ -239,7 +239,9 @@ def trigger_remote_certs_creation(
 
     central_ca = broker_sync.load_central_ca()
     customer_ca = broker_sync.load_or_create_customer_ca(settings.get("customer", "provider"))
-    broker_sync.create_broker_certificates(site_id, settings, central_ca, customer_ca, debug=debug)
+    broker_sync.create_broker_certificates(
+        RemoteAutomationConfig.from_site_config(settings), central_ca, customer_ca, debug=debug
+    )
     broker_sync.update_trusted_cas()
 
 

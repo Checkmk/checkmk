@@ -427,6 +427,7 @@ def _run_service_discovery(
         get_check_table(
             host,
             DiscoveryAction.REFRESH,
+            automation_config=automation_config,
             raise_errors=False,
             debug=debug,
         )
@@ -447,6 +448,7 @@ def _run_service_discovery(
     check_table = get_check_table(
         host,
         DiscoveryAction.FIX_ALL,
+        automation_config=automation_config,
         raise_errors=False,
         debug=debug,
     )

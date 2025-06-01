@@ -432,6 +432,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 action,
                 host,
                 previous_discovery_result,
+                automation_config=automation_config,
                 raise_errors=raise_errors,
                 debug=debug,
             )
@@ -441,10 +442,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             DiscoveryAction.TABULA_RASA,
             DiscoveryAction.STOP,
         ):
-            return get_check_table(host, action, raise_errors=raise_errors, debug=debug)
+            return get_check_table(
+                host,
+                action,
+                automation_config=automation_config,
+                raise_errors=raise_errors,
+                debug=debug,
+            )
 
         discovery_result = initial_discovery_result(
-            action, host, previous_discovery_result, raise_errors=raise_errors, debug=debug
+            action,
+            host,
+            previous_discovery_result,
+            automation_config=automation_config,
+            raise_errors=raise_errors,
+            debug=debug,
         )
 
         match action:

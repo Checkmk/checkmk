@@ -48,7 +48,6 @@ from cmk.gui.background_job import (
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
@@ -630,6 +629,7 @@ def perform_fix_all(
         discovery_result = get_check_table(
             host,
             DiscoveryAction.FIX_ALL,
+            automation_config=automation_config,
             raise_errors=raise_errors,
             debug=debug,
         )
@@ -654,6 +654,7 @@ def perform_host_label_discovery(
         discovery_result = get_check_table(
             host,
             action,
+            automation_config=automation_config,
             raise_errors=raise_errors,
             debug=debug,
         )
@@ -691,7 +692,13 @@ def perform_service_discovery(
             pprint_value=pprint_value,
             debug=debug,
         )
-        discovery_result = get_check_table(host, action, raise_errors=raise_errors, debug=debug)
+        discovery_result = get_check_table(
+            host,
+            action,
+            automation_config=automation_config,
+            raise_errors=raise_errors,
+            debug=debug,
+        )
     return discovery_result
 
 
@@ -763,11 +770,19 @@ def initial_discovery_result(
     action: DiscoveryAction,
     host: Host,
     previous_discovery_result: DiscoveryResult | None,
+    *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     raise_errors: bool,
     debug: bool,
 ) -> DiscoveryResult:
     return (
-        get_check_table(host, action, raise_errors=raise_errors, debug=debug)
+        get_check_table(
+            host,
+            action,
+            automation_config=automation_config,
+            raise_errors=raise_errors,
+            debug=debug,
+        )
         if previous_discovery_result is None or previous_discovery_result.is_active()
         else previous_discovery_result
     )
@@ -1059,6 +1074,7 @@ def get_check_table(
     host: Host,
     action: DiscoveryAction,
     *,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     raise_errors: bool,
     debug: bool,
 ) -> DiscoveryResult:
@@ -1070,7 +1086,7 @@ def get_check_table(
 
     Starting from central site:
 
-    _get_check_table()
+    get_check_table()
           |
           v
     automation service-discovery-job-discover
@@ -1082,7 +1098,7 @@ def get_check_table(
     AutomationServiceDiscoveryJob().execute()
           |
           v
-    _get_check_table()
+    get_check_table()
     """
     if action == DiscoveryAction.TABULA_RASA:
         _changes.add_service_change(
@@ -1096,7 +1112,7 @@ def get_check_table(
             use_git=active_config.wato_use_git,
         )
 
-    if site_is_local(site_config := active_config.sites[host.site_id()], host.site_id()):
+    if isinstance(automation_config, LocalAutomationConfig):
         return execute_discovery_job(
             host.name(),
             action,
@@ -1109,7 +1125,7 @@ def get_check_table(
     return DiscoveryResult.deserialize(
         str(
             do_remote_automation(
-                RemoteAutomationConfig.from_site_config(site_config),
+                automation_config,
                 "service-discovery-job",
                 [
                     ("host_name", host.name()),

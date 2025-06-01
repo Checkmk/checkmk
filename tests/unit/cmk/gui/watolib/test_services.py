@@ -161,6 +161,7 @@ def test_perform_discovery_none_action(
         action=DiscoveryAction.NONE,
         host=sample_host,
         previous_discovery_result=None,
+        automation_config=LocalAutomationConfig(),
         raise_errors=True,
         debug=False,
     )
@@ -178,6 +179,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     discovery_result = get_check_table(
         sample_host,
         DiscoveryAction.TABULA_RASA,
+        automation_config=LocalAutomationConfig(),
         raise_errors=True,
         debug=False,
     )
@@ -332,6 +334,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             action=DiscoveryAction.FIX_ALL,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
         ),
@@ -588,6 +591,7 @@ def test_perform_discovery_single_update(
             action=DiscoveryAction.SINGLE_UPDATE,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
         ),
@@ -803,6 +807,7 @@ def test_perform_discovery_action_update_services(
             action=DiscoveryAction.UPDATE_SERVICES,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
         ),
@@ -922,6 +927,7 @@ def test_perform_discovery_action_update_host_labels(
             action=DiscoveryAction.UPDATE_HOST_LABELS,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
             raise_errors=True,
             debug=False,
         ),

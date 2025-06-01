@@ -177,6 +177,7 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
         discovery_result = get_check_table(
             host,
             DiscoveryAction.NONE,
+            automation_config=make_automation_config(active_config.sites[host.site_id()]),
             raise_errors=False,
             debug=active_config.debug,
         )
@@ -307,6 +308,7 @@ def _update_single_service_phase(
         get_check_table(
             host,
             action,
+            automation_config=make_automation_config(active_config.sites[host.site_id()]),
             raise_errors=False,
             debug=debug,
         ),
@@ -448,7 +450,13 @@ def _execute_service_discovery(
             title="Permission denied",
             detail="You do not have the necessary permissions to execute this action",
         )
-    discovery_result = get_check_table(host, discovery_action, raise_errors=False, debug=debug)
+    discovery_result = get_check_table(
+        host,
+        discovery_action,
+        automation_config=automation_config,
+        raise_errors=False,
+        debug=debug,
+    )
     match api_discovery_action:
         case APIDiscoveryAction.new:
             discovery_result = perform_service_discovery(

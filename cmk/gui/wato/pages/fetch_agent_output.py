@@ -39,7 +39,11 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import AnnotatedHostName, do_remote_automation
+from cmk.gui.watolib.automations import (
+    AnnotatedHostName,
+    do_remote_automation,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 from cmk.gui.watolib.mode import mode_url
@@ -203,7 +207,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             return
 
         do_remote_automation(
-            site_config,
+            RemoteAutomationConfig.from_site_config(site_config),
             "fetch-agent-output-start",
             [
                 ("request", repr(self._request.serialize())),
@@ -220,7 +224,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         return JobStatusSpec.model_validate(
             do_remote_automation(
-                site_config,
+                RemoteAutomationConfig.from_site_config(site_config),
                 "fetch-agent-output-get-status",
                 [
                     ("request", repr(self._request.serialize())),
@@ -420,7 +424,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
             return get_fetch_agent_output_file(self._request)
 
         raw_response = do_remote_automation(
-            site_config,
+            RemoteAutomationConfig.from_site_config(site_config),
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),

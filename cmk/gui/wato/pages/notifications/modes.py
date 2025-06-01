@@ -137,7 +137,7 @@ from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
     notification_get_bulks,
@@ -1697,7 +1697,7 @@ class ModeTestNotifications(ModeNotifications):
             remote_result = cast(
                 NotifyAnalysisInfo,
                 do_remote_automation(
-                    site_config,
+                    RemoteAutomationConfig.from_site_config(site_config),
                     "notification-test",
                     [
                         ("context", json.dumps(context)),

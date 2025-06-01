@@ -99,6 +99,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.broker_certificates import (
     broker_certificate_sync_registry,
     BrokerCertificateSync,
@@ -687,7 +688,7 @@ def _get_config_sync_state(
     which is handled by AutomationGetConfigSyncState."""
     site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
-        site,
+        RemoteAutomationConfig.from_site_config(site),
         "get-config-sync-state",
         [("replication_paths", repr([r.serialize() for r in replication_paths]))],
         debug=active_config.debug,
@@ -714,7 +715,7 @@ def _synchronize_files(
 
     site = active_config.sites[site_id]
     response = cmk.gui.watolib.automations.do_remote_automation(
-        site,
+        RemoteAutomationConfig.from_site_config(site),
         "receive-config-sync",
         [
             ("site_id", site_id),
@@ -928,7 +929,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
     while True:
         try:
             raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
-                active_config.sites[site_id],
+                RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
                 debug=active_config.debug,
@@ -958,7 +959,7 @@ def _call_activate_changes_automation(
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
-            site_config,
+            RemoteAutomationConfig.from_site_config(site_config),
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
             debug=active_config.debug,

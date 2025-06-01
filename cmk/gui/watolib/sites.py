@@ -67,7 +67,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import OMDStatus
-from cmk.gui.watolib.automations import do_remote_automation, parse_license_state
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    parse_license_state,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
@@ -861,7 +865,9 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            raw_result = do_remote_automation(site, "ping", [], timeout=5, debug=debug)
+            raw_result = do_remote_automation(
+                RemoteAutomationConfig.from_site_config(site), "ping", [], timeout=5, debug=debug
+            )
             assert isinstance(raw_result, dict)
 
             result = ReplicationStatus(

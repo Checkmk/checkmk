@@ -6,8 +6,6 @@
 from collections.abc import Callable, Mapping, Sequence
 from uuid import uuid4
 
-from livestatus import SiteConfiguration
-
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 
@@ -41,6 +39,9 @@ from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
+    LocalAutomationConfig,
+    make_automation_config,
+    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
@@ -348,8 +349,7 @@ def _create_and_save_special_agent_bundle(
             _run_service_discovery(
                 host_name,
                 site_id,
-                site_config=active_config.sites[site_id],
-                is_local=is_local,
+                automation_config=make_automation_config(active_config.sites[site_id]),
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,
             )
@@ -412,13 +412,12 @@ def _run_service_discovery(
     host_name: str,
     site_id: SiteId,
     *,
-    site_config: SiteConfiguration,
-    is_local: bool,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     pprint_value: bool,
     debug: bool,
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
-    if not is_local:
+    if isinstance(automation_config, RemoteAutomationConfig):
         # this also implicitly syncs the pending changes to the remote site to run the discovery
         get_check_table(
             host,
@@ -428,7 +427,7 @@ def _run_service_discovery(
         )
 
         snapshot = fetch_service_discovery_background_job_status(
-            site_config, host_name, debug=debug
+            automation_config, host_name, debug=debug
         )
         if not snapshot.exists:
             raise Exception(
@@ -437,7 +436,7 @@ def _run_service_discovery(
             )
         while snapshot.is_active:
             snapshot = fetch_service_discovery_background_job_status(
-                site_config, host_name, debug=debug
+                automation_config, host_name, debug=debug
             )
 
     check_table = get_check_table(

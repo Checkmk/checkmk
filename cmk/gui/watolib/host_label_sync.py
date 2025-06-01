@@ -35,7 +35,11 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    MKAutomationException,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.paths import wato_var_dir
 
@@ -237,7 +241,7 @@ def _execute_site_sync(
 
         # timeout=100: Use a value smaller than the default apache request timeout
         raw_result = do_remote_automation(
-            site_spec,
+            RemoteAutomationConfig.from_site_config(site_spec),
             "discovered-host-label-sync",
             [
                 ("request", repr(site_request.serialize())),

@@ -77,7 +77,11 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    MKAutomationException,
+    RemoteAutomationConfig,
+)
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -496,7 +500,7 @@ def start_quick_setup_stage_action_job_on_remote(
     try:
         job_id = str(
             do_remote_automation(
-                site_config,
+                RemoteAutomationConfig.from_site_config(site_config),
                 "start-quick-setup-stage-action",
                 [
                     ("args", args.model_dump_json()),

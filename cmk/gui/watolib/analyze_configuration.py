@@ -36,7 +36,7 @@ from cmk.gui.site_config import is_wato_slave_site, site_is_local
 from cmk.gui.utils import escaping
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 from cmk.gui.watolib.sites import get_effective_global_setting
 
 
@@ -274,7 +274,7 @@ def _perform_tests_for_site(
             ac_test_results = automation.execute(_TCheckAnalyzeConfig(categories=categories))
         else:
             raw_ac_test_results = do_remote_automation(
-                site_config,
+                RemoteAutomationConfig.from_site_config(site_config),
                 "check-analyze-config",
                 [("categories", json.dumps(categories))],
                 timeout=request_.request_timeout - 10,

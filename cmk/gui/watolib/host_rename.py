@@ -34,7 +34,7 @@ from cmk.gui.utils.urls import makeuri
 from ..config import active_config
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
-from .automations import AnnotatedHostName, do_remote_automation
+from .automations import AnnotatedHostName, do_remote_automation, RemoteAutomationConfig
 from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import (
@@ -445,7 +445,7 @@ def _rename_host_in_uuid_link_manager(
             n_relinked += int(
                 str(
                     do_remote_automation(
-                        active_config.sites[site_id],
+                        RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
                         "rename-hosts-uuid-link",
                         [
                             (

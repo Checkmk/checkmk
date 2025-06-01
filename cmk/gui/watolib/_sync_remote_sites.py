@@ -21,7 +21,7 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
@@ -235,7 +235,7 @@ class SyncRemoteSitesJob:
         return SyncRemoteSitesResult.from_json(
             str(
                 do_remote_automation(
-                    active_config.sites[site_id],
+                    RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
                     "sync-remote-site",
                     [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
                     debug=debug,
@@ -274,7 +274,7 @@ class SyncRemoteSitesJob:
         for site_id, site_changes in last_site_changes.items():
             if site_changes:
                 do_remote_automation(
-                    active_config.sites[site_id],
+                    RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
                     "clear-site-changes",
                     [("last_change_id", str(site_changes[-1]["id"]))],
                     debug=debug,

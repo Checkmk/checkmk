@@ -33,7 +33,7 @@ from cmk.gui.site_config import is_wato_slave_site, site_is_local
 from ..config import active_config
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
-from .automations import do_remote_automation
+from .automations import do_remote_automation, RemoteAutomationConfig
 from .host_attributes import (
     ExcludeIPRange,
     HostAttributeRegistry,
@@ -88,7 +88,7 @@ def execute_network_scan_job() -> None:
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(
-                    site_config,
+                    RemoteAutomationConfig.from_site_config(site_config),
                     "network-scan",
                     [("folder", folder.path())],
                     debug=active_config.debug,

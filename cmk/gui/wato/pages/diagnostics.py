@@ -86,7 +86,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
@@ -875,7 +875,7 @@ def _get_diagnostics_dump_file(
         return _get_local_diagnostics_dump_file(tarfile_name)
 
     raw_response = do_remote_automation(
-        site_config,
+        RemoteAutomationConfig.from_site_config(site_config),
         "diagnostics-dump-get-file",
         [
             ("tarfile_name", tarfile_name),

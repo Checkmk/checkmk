@@ -68,7 +68,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 from cmk.gui.site_config import site_is_local
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 
 from cmk import fields
 
@@ -369,7 +369,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
         action_result = StageActionResult.model_validate_json(
             str(
                 do_remote_automation(
-                    site_config,
+                    RemoteAutomationConfig.from_site_config(site_config),
                     "fetch-quick-setup-stage-action-result",
                     [
                         ("job_id", action_background_job_id),

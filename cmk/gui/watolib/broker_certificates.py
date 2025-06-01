@@ -30,7 +30,7 @@ from cmk.utils.certs import (
 
 from cmk.gui.http import request as _request
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 
 from cmk import messaging
 from cmk.crypto.certificate import (
@@ -154,7 +154,7 @@ def _sync_broker_certs(
     debug: bool,
 ) -> None:
     do_remote_automation(
-        settings,
+        RemoteAutomationConfig.from_site_config(settings),
         "store-broker-certs",
         [("certificates", remote_broker_certs.model_dump_json()), ("site_id", omd_site())],
         timeout=120,
@@ -164,7 +164,11 @@ def _sync_broker_certs(
 
 def ask_remote_csr(settings: SiteConfiguration, *, debug: bool) -> x509CertificateSigningRequest:
     raw_response = do_remote_automation(
-        settings, "create-broker-certs", [], timeout=60, debug=debug
+        RemoteAutomationConfig.from_site_config(settings),
+        "create-broker-certs",
+        [],
+        timeout=60,
+        debug=debug,
     )
 
     match raw_response:
@@ -207,7 +211,7 @@ def sync_remote_broker_certs(
     """
 
     do_remote_automation(
-        site,
+        RemoteAutomationConfig.from_site_config(site),
         "store-broker-certs",
         [("certificates", broker_certificates.model_dump_json()), ("site_id", omd_site())],
         timeout=120,

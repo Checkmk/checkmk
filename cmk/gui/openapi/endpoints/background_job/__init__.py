@@ -24,7 +24,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.site_config import site_is_local
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 
 from cmk import fields as gui_fields
 
@@ -79,7 +79,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
             json.loads(
                 str(
                     do_remote_automation(
-                        site=site_config,
+                        RemoteAutomationConfig.from_site_config(site_config),
                         command="fetch-background-job-snapshot",
                         vars_=[("job_id", job_id)],
                         debug=active_config.debug,

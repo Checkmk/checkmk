@@ -17,7 +17,7 @@ from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 
 
 def remove_tls_registration(
@@ -32,7 +32,7 @@ def remove_tls_registration(
             continue
 
         do_remote_automation(
-            site_config,
+            RemoteAutomationConfig.from_site_config(site_config),
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
             debug=debug,

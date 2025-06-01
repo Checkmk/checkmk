@@ -28,7 +28,11 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    MKAutomationException,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
@@ -126,7 +130,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]
         try:
             hostnames_serialized = str(
                 do_remote_automation(
-                    site_config,
+                    RemoteAutomationConfig.from_site_config(site_config),
                     "hosts-for-auto-removal",
                     [],
                     debug=debug,

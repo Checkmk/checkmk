@@ -39,6 +39,7 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
     MKAutomationException,
+    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -736,12 +737,14 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
-    if site_is_local(active_config.sites[host.site_id()], host.site_id()):
+    if site_is_local(active_config.sites[(site_id := host.site_id())], site_id):
         job = ServiceDiscoveryBackgroundJob(host.name())
         return job.get_status_snapshot()
 
     return fetch_service_discovery_background_job_status(
-        active_config.sites[host.site_id()], host.name(), debug=active_config.debug
+        RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+        host.name(),
+        debug=active_config.debug,
     )
 
 

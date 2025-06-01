@@ -32,7 +32,10 @@ from cmk.gui.site_config import (
 from cmk.gui.type_defs import UserSpec, VisualTypeName
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    RemoteAutomationConfig,
+)
 from cmk.gui.watolib.changes import add_change
 
 # In case the sync is done on the master of a distributed setup the auth serial
@@ -211,7 +214,7 @@ def _push_user_profiles_to_site(
         }
 
     do_remote_automation(
-        site,
+        RemoteAutomationConfig.from_site_config(site),
         "push-profiles",
         [("profiles", repr(_serialize(user_profiles))), ("visuals", repr(visuals))],
         timeout=60,

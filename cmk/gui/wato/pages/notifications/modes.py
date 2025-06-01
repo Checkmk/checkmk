@@ -15,7 +15,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
 
-from livestatus import LivestatusResponse
+from livestatus import LivestatusResponse, SiteConfiguration
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -134,7 +134,11 @@ from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    LocalAutomationConfig,
+    make_automation_config,
+)
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
     notification_get_bulks,
@@ -1691,7 +1695,9 @@ class ModeTestNotifications(ModeNotifications):
 
         analyse = None
         if not user_errors:
-            context, analyse = self._result_from_request(debug=active_config.debug)
+            context, analyse = self._result_from_request(
+                site_configs=active_config.sites, debug=active_config.debug
+            )
             self._show_notification_test_overview(context, analyse)
             self._show_notification_test_details(context, analyse)
             if request.var("test_notification") and analyse:
@@ -1699,7 +1705,7 @@ class ModeTestNotifications(ModeNotifications):
         self._show_rules(analyse)
 
     def _result_from_request(
-        self, *, debug: bool
+        self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
     ) -> tuple[NotificationContext | None, NotifyAnalysisInfo | None]:
         if request.var("test_notification"):
             try:
@@ -1713,8 +1719,8 @@ class ModeTestNotifications(ModeNotifications):
             if context["WHAT"] == "SERVICE":
                 self._add_missing_service_context(context)
 
-            site_id = SiteId(context["SITEOFHOST"])
-            if site_is_local(site_config := active_config.sites[site_id], site_id):
+            automation_config = make_automation_config(site_configs[SiteId(context["SITEOFHOST"])])
+            if isinstance(automation_config, LocalAutomationConfig):
                 return (
                     context,
                     notification_test(
@@ -1727,7 +1733,7 @@ class ModeTestNotifications(ModeNotifications):
             remote_result = cast(
                 NotifyAnalysisInfo,
                 do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(site_config),
+                    automation_config,
                     "notification-test",
                     [
                         ("context", json.dumps(context)),

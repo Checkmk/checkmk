@@ -463,7 +463,6 @@ def execute_deprecation_tests_and_notify_users() -> None:
         not_ok_ac_test_results := _filter_non_ok_ac_test_results(
             perform_tests(
                 logger,
-                active_config,
                 request,
                 SiteConfigurations(
                     {site_id: active_config.sites[site_id] for site_id in site_versions_by_site_id}

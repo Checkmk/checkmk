@@ -12,8 +12,6 @@ from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, cast, Literal, NamedTuple
 
-from livestatus import SiteConfiguration
-
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -26,9 +24,9 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import save_user_file
 from cmk.gui.site_config import (
     get_login_slave_sites,
-    is_replication_enabled,
     is_wato_slave_site,
 )
+from cmk.gui.sites import SiteStatus
 from cmk.gui.type_defs import UserSpec, VisualTypeName
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -84,14 +82,18 @@ def _synchronize_profiles_to_sites(
     states = sites.states()
 
     pool = ThreadPool()
-    jobs = []
-    for site_id, site in remote_sites:
-        jobs.append(
-            pool.apply_async(
-                copy_request_context(_sychronize_profile_worker),
-                (states, site_id, site, profiles_to_synchronize, debug),
-            )
+    jobs = [
+        pool.apply_async(
+            copy_request_context(_sychronize_profile_worker),
+            (
+                states.get(site_id, {}),
+                RemoteAutomationConfig.from_site_config(site_config),
+                profiles_to_synchronize,
+                debug,
+            ),
         )
+        for site_id, site_config in remote_sites
+    ]
 
     results = []
     start_time = time.time()
@@ -139,40 +141,34 @@ def _synchronize_profiles_to_sites(
 
 
 def _sychronize_profile_worker(
-    states: sites.SiteStates,
-    site_id: SiteId,
-    site: SiteConfiguration,
+    site_status: SiteStatus,
+    automation_config: RemoteAutomationConfig,
     profiles_to_synchronize: dict[UserId, UserSpec],
     debug: bool,
 ) -> SynchronizationResult:
-    if not is_replication_enabled(site):
-        return SynchronizationResult(site_id, disabled=True)
-
-    if site.get("disabled"):
-        return SynchronizationResult(site_id, disabled=True)
-
-    status = states.get(site_id, {}).get("state", "unknown")
-    if status == "dead":
+    if site_status.get("state", "unknown") == "dead":
         return SynchronizationResult(
-            site_id, error_text=_("Site %s is dead") % site_id, failed=True
+            automation_config.site_id,
+            error_text=_("Site %s is dead") % automation_config.site_id,
+            failed=True,
         )
 
     try:
         result = push_user_profiles_to_site_transitional_wrapper(
-            RemoteAutomationConfig.from_site_config(site),
+            automation_config,
             profiles_to_synchronize,
             None,
             debug=debug,
         )
         if result is not True:
-            return SynchronizationResult(site_id, error_text=result, failed=True)
-        return SynchronizationResult(site_id, succeeded=True)
+            return SynchronizationResult(automation_config.site_id, error_text=result, failed=True)
+        return SynchronizationResult(automation_config.site_id, succeeded=True)
     except RequestTimeout:
         # This function is currently only used by the background job
         # which does not have any request timeout set, just in case...
         raise
     except Exception as e:
-        return SynchronizationResult(site_id, error_text="%s" % e, failed=True)
+        return SynchronizationResult(automation_config.site_id, error_text="%s" % e, failed=True)
 
 
 # TODO: Why is the logger handed over here? The sync job could simply gather it's own

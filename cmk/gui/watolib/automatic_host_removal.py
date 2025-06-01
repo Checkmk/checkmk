@@ -6,7 +6,7 @@
 import itertools
 import json
 import time
-from collections.abc import Collection, Iterator, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from logging import FileHandler, Formatter
 from typing import Literal, TypedDict
 
@@ -25,11 +25,13 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import is_wato_slave_site, site_is_local, wato_site_ids
+from cmk.gui.site_config import is_wato_slave_site, wato_site_ids
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
+    LocalAutomationConfig,
+    make_automation_config,
     MKAutomationException,
     RemoteAutomationConfig,
 )
@@ -62,7 +64,15 @@ def execute_host_removal_job() -> None:
         if not (
             hosts_to_be_removed := {
                 site_id: hosts
-                for site_id, hosts in _hosts_to_be_removed(debug=active_config.debug)
+                for site_id, hosts in _hosts_to_be_removed(
+                    automation_configs={
+                        site_id: make_automation_config(
+                            active_config.sites[site_id],
+                        )
+                        for site_id in wato_site_ids()
+                    },
+                    debug=active_config.debug,
+                )
                 if hosts
             }
         ):
@@ -106,16 +116,25 @@ def _init_logging() -> None:
     _LOGGER.propagate = False
 
 
-def _hosts_to_be_removed(*, debug: bool) -> list[tuple[SiteId, list[Host]]]:
+def _hosts_to_be_removed(
+    *,
+    automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
+    debug: bool,
+) -> list[tuple[SiteId, list[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
     return [
-        (site_id, _hosts_to_be_removed_for_site(site_id, debug=debug))
+        (site_id, _hosts_to_be_removed_for_site(site_id, automation_configs[site_id], debug=debug))
         for site_id in wato_site_ids()
     ]
 
 
-def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]:
-    if site_is_local(site_config := active_config.sites[site_id], site_id):
+def _hosts_to_be_removed_for_site(
+    site_id: SiteId,
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    *,
+    debug: bool,
+) -> list[Host]:
+    if isinstance(automation_config, LocalAutomationConfig):
         try:
             # evaluate the generator here to potentially catch the exception below
             hostnames = list(_hosts_to_be_removed_local(debug=debug))
@@ -130,7 +149,7 @@ def _hosts_to_be_removed_for_site(site_id: SiteId, *, debug: bool) -> list[Host]
         try:
             hostnames_serialized = str(
                 do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(site_config),
+                    automation_config,
                     "hosts-for-auto-removal",
                     [],
                     debug=debug,

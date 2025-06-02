@@ -83,7 +83,12 @@ def check_suseconnect(_no_item, params, section: Section):
             state = 2
         yield state, infotext
 
-    if "subscription_type" in specs and "registration_code" in specs and "starts_at" in specs and "expires_at" in specs:
+    if (
+        "subscription_type" in specs
+        and "registration_code" in specs
+        and "starts_at" in specs
+        and "expires_at" in specs
+    ):
         yield (
             0,
             (

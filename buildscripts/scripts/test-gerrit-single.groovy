@@ -20,8 +20,6 @@ def main() {
         "CIPARAM_CLEANUP_WORKSPACE",
     ]);
 
-    test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-
     def env_var_list = [];
     def sec_var_list = [];
     def credentials = [];

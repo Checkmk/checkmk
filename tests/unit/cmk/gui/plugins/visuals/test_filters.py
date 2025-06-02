@@ -150,7 +150,7 @@ filter_tests = [
     FilterTest(
         ident="check_command",
         request_vars=[("check_command", "blabla")],
-        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?\n",
+        expected_filters="Filter: service_check_command = blabla\n",
     ),
     # Testing base class FilterText
     FilterTest(

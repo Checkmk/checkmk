@@ -41,6 +41,7 @@ from cmk.utils.version import (
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.groups import GroupType
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -125,13 +126,13 @@ def disconnect() -> None:
 
 
 # TODO: This should live somewhere else, it's just a random helper...
-def all_groups(what: str) -> list[tuple[str, str]]:
+def all_groups(group_type: GroupType) -> list[tuple[str, str]]:
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place.
     """
-    query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
+    query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % group_type
     groups = cast(list[tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted(

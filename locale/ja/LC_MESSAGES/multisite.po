@@ -36946,10 +36946,6 @@ msgstr "ローカルルート"
 msgid "Local server status"
 msgstr "ローカルサーバーのステータス"
 
-#, python-format
-msgid "Local site %s"
-msgstr "ローカルサイト%s"
-
 msgid "Local: Send events to local Event Console in same OMD site"
 msgstr ""
 "ローカル:同じOMDサイトのローカルイベントコンソールにイベントを送信します"
@@ -85427,6 +85423,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, python-format
+#~ msgid "Local site %s"
+#~ msgstr "ローカルサイト%s"
 
 #, fuzzy
 #~ msgid "Show HW/SW Inventory history of this host"

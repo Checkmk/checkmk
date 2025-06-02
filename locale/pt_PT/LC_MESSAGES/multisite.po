@@ -38642,10 +38642,6 @@ msgstr "Rota local"
 msgid "Local server status"
 msgstr "Estado do servidor local"
 
-#, python-format
-msgid "Local site %s"
-msgstr "Site local %s"
-
 msgid "Local: Send events to local Event Console in same OMD site"
 msgstr ""
 "Local: Enviar eventos para a Consola de Eventos local no mesmo site OMD"
@@ -89586,6 +89582,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, python-format
+#~ msgid "Local site %s"
+#~ msgstr "Site local %s"
 
 #, fuzzy
 #~ msgid "Show HW/SW Inventory history of this host"

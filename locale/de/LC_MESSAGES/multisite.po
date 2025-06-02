@@ -37206,10 +37206,6 @@ msgstr "Lokale Route"
 msgid "Local server status"
 msgstr "lokaler Serverzustand"
 
-#, python-format
-msgid "Local site %s"
-msgstr "Lokale Instanz %s"
-
 msgid "Local: Send events to local Event Console in same OMD site"
 msgstr "Lokal: Ereignisse an lokale Event Console derselben OMD-Instanz senden"
 
@@ -86460,6 +86456,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "Local site %s"
+#~ msgstr "Lokale Instanz %s"
 
 #~ msgid ""
 #~ "Notifications are sent only for event types defined by the 'Notified "

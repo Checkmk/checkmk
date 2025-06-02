@@ -38948,10 +38948,6 @@ msgstr "Itinéraire local"
 msgid "Local server status"
 msgstr "Statut du serveur local"
 
-#, python-format
-msgid "Local site %s"
-msgstr "Site local %s"
-
 msgid "Local: Send events to local Event Console in same OMD site"
 msgstr ""
 "Local : Envoyez les événements à la console d'événements locale du même site "
@@ -90503,6 +90499,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, python-format
+#~ msgid "Local site %s"
+#~ msgstr "Site local %s"
 
 #, fuzzy
 #~ msgid "Show HW/SW Inventory history of this host"

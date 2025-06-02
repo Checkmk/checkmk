@@ -17,13 +17,10 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment     setup environment"
-    echo "  -c, --clean                 remove artifacts first"
     echo "  -b, --build                 build executable"
     echo "  -u, --unit-tests            run unit tests"
     echo "  -F, --check-format          check for correct formatting"
     echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
-    echo "  -I F,..., --features=F,...  list of features to activate"
     echo "  -a, --all                   shortcut for -b -u -F -l all"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
@@ -33,17 +30,14 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_SETUP_ENVIRONMENT=no
-    RUN_CLEAN=no
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_CLIPPY=no
-    FEATURES=""
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecbuFl:I:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -52,14 +46,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
-                shift
-                ;;
-            '-c' | '--clean')
-                RUN_CLEAN=yes
-                shift
-                ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
@@ -83,10 +69,6 @@ parse_options() {
                         *) failure "unknown linter: ${LINTER}" ;;
                     esac
                 done
-                shift 2
-                ;;
-            '-I' | '--features')
-                FEATURES="$2"
                 shift 2
                 ;;
             '-a' | '--all')
@@ -121,38 +103,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
-}
-
-# TODO: This needs some serious massaging, some stuff probably don't even belong
-# here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
-run_setup_environment() {
-    REPO_DIR="$(git rev-parse --show-toplevel)"
-
-    # When executed via "make deb", e.g. during local builds, these are set and
-    # confuse cargo.
-    unset MAKEFLAGS DESTDIR
-
-    if [ -e "/opt/rust/rustup" ]; then
-        # Make sure we don't use "$HOME/.cargo" accidentally (expands to
-        # /.cargo, if HOME is not set). On a jenkins node, .cargo should be
-        # created under /home/jenkins/shared_cargo_folder in order to reuse it
-        # between workspaces, see run-in-docker.sh.
-        : "${CARGO_HOME:="${REPO_DIR}/shared_cargo_folder/.cargo"}"
-        export CARGO_HOME
-    fi
-
-    export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
-    RUSTFLAGS="
-$RUSTFLAGS \
---remap-path-prefix=${REPO_DIR}=/builddir \
---remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
-    export RUSTFLAGS
-}
-
-# TODO: Port all cargo call sites to bazel
-run_cargo_cmd_with_explicit_package() {
-    cargo "${1}" --package "${PWD##*/}" "${@:2}"
+    readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_format() {
@@ -176,15 +127,13 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all
     test ${RUN_UNIT_TESTS} = yes && bazel test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_DOCUMENTATION} = yes && bazel build :doc
     true
 }
 

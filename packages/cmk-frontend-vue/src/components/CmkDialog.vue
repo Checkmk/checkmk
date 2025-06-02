@@ -66,7 +66,6 @@ onMounted(() => {
 <style scoped>
 div.cmk-dialog {
   display: flex;
-  margin-bottom: 24px;
 
   div.cmk-dialog__content {
     background-color: var(--help-text-bg-color);

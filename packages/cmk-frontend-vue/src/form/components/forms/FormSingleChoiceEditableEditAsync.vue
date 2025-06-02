@@ -102,16 +102,17 @@ const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
-  <div class="edit-object__wrapper">
+  <div class="fsce-edit-async__wrapper">
     <ErrorBoundary>
       <CmkDialog
+        class="fsce-edit-async__dialog"
         :message="props.i18n.permanent_choice_warning"
         :dismissal_button="{
           title: props.i18n.permanent_choice_warning_dismissal,
           key: DISMISSAL_KEY
         }"
       />
-      <div class="edit-object__buttons">
+      <div class="fsce-edit-async__buttons">
         <CmkButtonSubmit @click="save">
           {{
             objectId === undefined ? props.i18n.create_button : props.i18n.save_button
@@ -139,12 +140,17 @@ const { ErrorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
-.edit-object__wrapper {
+.fsce-edit-async__wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-.edit-object__buttons {
+
+.fsce-edit-async__dialog {
+  margin: 8px 0 24px;
+}
+
+.fsce-edit-async__buttons {
   margin-bottom: 1em;
 }
 </style>

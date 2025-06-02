@@ -49,6 +49,7 @@ function toggleContent() {
   <NotificationFallbackWarning
     v-if="fallback_warning"
     :properties="fallback_warning"
+    class="notification-overview__fallback-warning"
   ></NotificationFallbackWarning>
   <h3 class="notification-overview__header" @click.prevent="toggleContent()">
     <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
@@ -67,6 +68,10 @@ function toggleContent() {
 </template>
 
 <style scoped>
+.notification-overview__fallback-warning {
+  margin: 8px 0 24px;
+}
+
 .notification-overview__container {
   display: flex;
   margin-bottom: 24px;

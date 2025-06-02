@@ -562,7 +562,7 @@ pub mod registry {
 
         /// must be in sync with test files
         /// allowed not be in sync with actual repo branch(may be in future)
-        const REPO_NAME: &str = "2.5.0";
+        const REPO_NAME: &str = "2.4.0";
 
         fn obtain_test_instances_registry_branch(test_set_name: &str) -> String {
             format!(
@@ -572,7 +572,6 @@ pub mod registry {
         }
 
         #[test]
-        #[ignore]
         fn test_get_instances() {
             let custom_branch = obtain_test_instances_registry_branch("test-std");
             let infos = get_instances(Some(custom_branch.to_owned()))
@@ -586,7 +585,6 @@ pub mod registry {
         }
 
         #[test]
-        #[ignore]
         fn test_get_host_tcp_info() {
             let custom_branch = obtain_test_instances_registry_branch("test-not-all");
             let infos = get_instances(Some(custom_branch.to_owned()))

@@ -237,7 +237,7 @@ try {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
         # TODO(timi): move it to CI
-        .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.4.0
+        .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.4.0 # synchronise with platform.rs
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {

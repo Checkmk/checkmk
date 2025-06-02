@@ -20,7 +20,7 @@ with
 ```
 where
 
-* Repo-Name is a name of the repo, for example, *2.5.0*
+* Repo-Name is a name of the repo, for example, *2.4.0*
 * Package-Name is a name of the package, for example, *mk-sql* or *cmk-agent-ctl*
 * Group-Name is a name of the test group, for example *instances* or *tcp-logic*
 * Test-Name is a name of the some test(or tests), for example, *test-tcp-base*

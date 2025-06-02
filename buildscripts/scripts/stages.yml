@@ -207,7 +207,7 @@ STAGES:
           make --quiet test-mypy-cmk &> ${RESULTS}/mypy_cmk.txt
           make_rc=$?
           set -e
-          cp ../bazel-bin/cmk/lib_cmk_repo_no_meraki.mypy_stdout ${RESULTS}/lib_cmk_repo_no_meraki.txt
+          cp ../bazel-bin/cmk/lib_cmk_repo_no_meraki.mypy_stdout ${RESULTS}/lib_cmk_repo_no_meraki.txt || :
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
@@ -283,7 +283,7 @@ STAGES:
           make test-unit
           make_rc=$?
           set -e
-          ../buildscripts/scripts/bazel_test_post_archive_xunit.sh
+          ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"

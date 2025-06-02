@@ -421,7 +421,7 @@ filter_registry.register(
         query_filter=query_filters.MultipleQuery(
             ident="hostgroups", column="host_groups", op=">=", negateable=True
         ),
-        options=sites.all_groups,
+        options=sites.all_groups,  # type: ignore[arg-type]
     )
 )
 
@@ -434,7 +434,7 @@ filter_registry.register(
         query_filter=query_filters.MultipleQuery(
             ident="servicegroups", column="service_groups", op=">=", negateable=True
         ),
-        options=sites.all_groups,
+        options=sites.all_groups,  # type: ignore[arg-type]
     )
 )
 

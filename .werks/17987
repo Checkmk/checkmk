@@ -1,0 +1,27 @@
+Title: Fix Livestatus injection in autocomplete endpoint
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1748868059
+Edition: cre
+Level: 1
+Version: 2.2.0p44
+
+Before this fix, the autocomplete endpoint did not properly validate its parameters, allowing a malicious, authenticated user to inject <code>livestatus</code> commands via the input.
+
+This vulnerability was identified in a commissioned penetration test conducted by PS Positive Security GmbH.
+
+<strong>Who's Affected</strong>:
+
+This issue affects the REST API in all editions of Checkmk.
+
+<strong>Affected Versions</strong>:
+
+LI: 2.4.0
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS score of 5.3 (Medium) with the following CVSS vector: <code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N</code>, and assigned <code>CVE-2025-32918</code>.

@@ -7,6 +7,7 @@ import re
 from collections.abc import Callable, Collection, Iterable, Mapping
 from html import unescape
 from itertools import chain
+from typing import get_args
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -17,6 +18,7 @@ from cmk.utils.version import is_managed_edition
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics.utils import (
@@ -129,6 +131,12 @@ def hostgroup_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     group_type = params["group_type"]
+    if group_type not in (valid_group_types := get_args(GroupType)):
+        raise MKUserError(
+            "params",
+            _("you need to set %s parameter to either %s.")
+            % ("group_type", str(valid_group_types)),
+        )
     choices: Choices = sorted(
         (v for v in sites.all_groups(group_type) if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),

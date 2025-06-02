@@ -30,7 +30,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
@@ -75,18 +74,18 @@ class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
 
     @staticmethod
-    def host_check_file_path(config_path: VersionedConfigPath, hostname: HostName) -> Path:
-        return Path(config_path) / "host_checks" / hostname
+    def host_check_file_path(config_path: Path, hostname: HostName) -> Path:
+        return config_path / "host_checks" / hostname
 
     @staticmethod
-    def host_check_source_file_path(config_path: VersionedConfigPath, hostname: HostName) -> Path:
+    def host_check_source_file_path(config_path: Path, hostname: HostName) -> Path:
         # TODO: Use append_suffix(".py") once we are on Python 3.10
         path = HostCheckStore.host_check_file_path(config_path, hostname)
         return path.with_suffix(path.suffix + ".py")
 
     def write(
         self,
-        config_path: VersionedConfigPath,
+        config_path: Path,
         hostname: HostName,
         host_check: str,
         *,
@@ -117,7 +116,7 @@ class HostCheckStore:
 
 
 def precompile_hostchecks(
-    config_path: VersionedConfigPath,
+    config_path: Path,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
@@ -167,7 +166,7 @@ def precompile_hostchecks(
 def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
-    config_path: VersionedConfigPath,
+    config_path: Path,
     hostname: HostName,
     plugins: AgentBasedPlugins,
     *,

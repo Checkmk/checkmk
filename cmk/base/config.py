@@ -52,7 +52,6 @@ from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.config_path import ConfigPath
 from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
@@ -656,7 +655,7 @@ def load(
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load_packed_config(
-    config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]
+    config_path: Path, discovery_rulesets: Iterable[RuleSetName]
 ) -> LoadingResult:
     """Load the configuration for the CMK helpers of CMC
 
@@ -911,7 +910,7 @@ def get_derived_config_variable_names() -> set[str]:
 
 
 def save_packed_config(
-    config_path: ConfigPath,
+    config_path: Path,
     config_cache: ConfigCache,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
 ) -> None:
@@ -1047,12 +1046,12 @@ class PackedConfigStore:
         self.path: Final = path
 
     @classmethod
-    def from_serial(cls, config_path: ConfigPath) -> PackedConfigStore:
+    def from_serial(cls, config_path: Path) -> PackedConfigStore:
         return cls(cls.make_packed_config_store_path(config_path))
 
     @classmethod
-    def make_packed_config_store_path(cls, config_path: ConfigPath) -> Path:
-        return Path(config_path) / "precompiled_check_config.mk"
+    def make_packed_config_store_path(cls, config_path: Path) -> Path:
+        return config_path / "precompiled_check_config.mk"
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

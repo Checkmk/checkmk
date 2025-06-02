@@ -16,7 +16,7 @@ from typing import Any, Final
 
 from cmk.ccc import store
 
-import cmk.utils.paths
+from cmk.utils.paths import core_helper_config_dir
 
 __all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
 
@@ -26,7 +26,7 @@ class ConfigPath(abc.ABC):
 
     # Note - Security: This must remain hard-coded to a path not writable by others.
     #                  See BNS:c3c5e9.
-    ROOT: Final = cmk.utils.paths.core_helper_config_dir
+    ROOT: Final = core_helper_config_dir
 
     @property
     @abc.abstractmethod
@@ -106,26 +106,14 @@ class VersionedConfigPath(ConfigPath, Iterator):
             if path.is_symlink() or not path.is_dir():
                 continue
 
-            if path.resolve() == Path(LATEST_CONFIG).resolve():
+            if path.resolve() == LATEST_CONFIG.resolve():
                 continue
 
             shutil.rmtree(path)
 
     def _link_latest(self) -> None:
-        Path(LATEST_CONFIG).unlink(missing_ok=True)
-        Path(LATEST_CONFIG).symlink_to(Path(self).name)
+        LATEST_CONFIG.unlink(missing_ok=True)
+        LATEST_CONFIG.symlink_to(Path(self).name)
 
 
-class _LatestConfigPath(ConfigPath):
-    __slots__ = ()
-
-    @property
-    def _path_elem(self) -> str:
-        return "latest"
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}()"
-
-
-# Singleton
-LATEST_CONFIG: Final = _LatestConfigPath()
+LATEST_CONFIG: Final = core_helper_config_dir / "latest"

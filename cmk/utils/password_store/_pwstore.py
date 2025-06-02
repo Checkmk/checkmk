@@ -46,7 +46,7 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def core_password_store_path(config_path: Path = Path(LATEST_CONFIG)) -> Path:
+def core_password_store_path(config_path: Path = LATEST_CONFIG) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.

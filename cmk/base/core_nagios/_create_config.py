@@ -82,7 +82,7 @@ class NagiosCore(core_config.MonitoringCore):
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
-            config_path,
+            Path(config_path),
             service_name_config,
             plugins.check_plugins,
             licensing_handler,
@@ -95,7 +95,7 @@ class NagiosCore(core_config.MonitoringCore):
             plugin_index.create_plugin_index(plugins),
         )
         self._precompile_hostchecks(
-            config_path,
+            Path(config_path),
             service_name_config,
             plugins,
             discovery_rules,
@@ -106,7 +106,7 @@ class NagiosCore(core_config.MonitoringCore):
 
     def _create_core_config(
         self,
-        config_path: VersionedConfigPath,
+        config_path: Path,
         service_name_config: PassiveServiceNameConfig,
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
@@ -148,7 +148,7 @@ class NagiosCore(core_config.MonitoringCore):
 
     def _precompile_hostchecks(
         self,
-        config_path: VersionedConfigPath,
+        config_path: Path,
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -215,7 +215,7 @@ def _validate_licensing(
 
 def create_config(
     outfile: IO[str],
-    config_path: VersionedConfigPath,
+    config_path: Path,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],

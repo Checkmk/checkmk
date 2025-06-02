@@ -11,7 +11,7 @@ from typing import Literal, TypedDict
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import load_object_from_file
 
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.servicename import ServiceName
 
 RRD_CONFIG_FOLDER = "rrd_config"
@@ -20,12 +20,12 @@ CMC_LOG_RRDCREATION = "cmc_log_rrdcreation"
 
 
 @lru_cache
-def rrd_config_dir(config_path: ConfigPath) -> Path:
-    return Path(config_path) / RRD_CONFIG_FOLDER
+def rrd_config_dir(config_path: Path) -> Path:
+    return config_path / RRD_CONFIG_FOLDER
 
 
 @lru_cache
-def rrd_config_hosts_dir(config_path: ConfigPath) -> Path:
+def rrd_config_hosts_dir(config_path: Path) -> Path:
     return rrd_config_dir(config_path) / RRD_CONFIG_HOSTS_FOLDER
 
 

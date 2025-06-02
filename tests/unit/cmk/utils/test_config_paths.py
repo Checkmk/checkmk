@@ -4,18 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
+from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
 
 import pytest
 
-import cmk.utils.paths
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:
     @pytest.fixture
-    def config_path(self):
+    def config_path(self) -> Iterator[VersionedConfigPath]:
         ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
         # Call next because this is where `latest` etc. are created and updated.
         yield next(VersionedConfigPath(0))
@@ -46,7 +46,7 @@ class TestVersionedConfigPath:
         assert config_path == type(config_path)(config_path.serial)
         assert config_path == Path(config_path)
         assert config_path != LATEST_CONFIG
-        assert config_path != Path(LATEST_CONFIG)
+        assert config_path != LATEST_CONFIG
         assert config_path != next(config_path)
 
     def test_hash(self, config_path: VersionedConfigPath) -> None:
@@ -63,72 +63,49 @@ class TestVersionedConfigPath:
     @pytest.mark.parametrize("is_cmc", (True, False))
     def test_create_success(self, config_path: VersionedConfigPath, is_cmc: bool) -> None:
         assert not Path(config_path).exists()
-        assert not Path(LATEST_CONFIG).exists()
+        assert not LATEST_CONFIG.exists()
 
         with config_path.create(is_cmc=is_cmc):
             assert Path(config_path).exists()
-            assert not Path(LATEST_CONFIG).exists()
+            assert not LATEST_CONFIG.exists()
 
         assert Path(config_path).exists()
-        assert Path(LATEST_CONFIG).exists()
-        assert Path(LATEST_CONFIG).resolve() == Path(config_path).resolve()
+        assert LATEST_CONFIG.exists()
+        assert LATEST_CONFIG.resolve() == Path(config_path).resolve()
 
         next_config_path = next(config_path)
         with next_config_path.create(is_cmc=is_cmc):
             assert Path(next_config_path).exists()
-            assert Path(LATEST_CONFIG).exists()
-            assert Path(LATEST_CONFIG).resolve() == Path(config_path).resolve()
+            assert LATEST_CONFIG.exists()
+            assert LATEST_CONFIG.resolve() == Path(config_path).resolve()
 
         assert Path(next_config_path).exists()
-        assert Path(LATEST_CONFIG).exists()
-        assert Path(LATEST_CONFIG).resolve() == Path(next_config_path)
+        assert LATEST_CONFIG.exists()
+        assert LATEST_CONFIG.resolve() == Path(next_config_path)
 
     @pytest.mark.parametrize("is_cmc", (True, False))
     def test_create_no_latest_link_update_on_failure(
         self, config_path: VersionedConfigPath, is_cmc: bool
     ) -> None:
         assert not Path(config_path).exists()
-        assert not Path(LATEST_CONFIG).exists()
+        assert not LATEST_CONFIG.exists()
 
         with config_path.create(is_cmc=is_cmc):
             assert Path(config_path).exists()
-            assert not Path(LATEST_CONFIG).exists()
+            assert not LATEST_CONFIG.exists()
 
         assert Path(config_path).exists()
-        assert Path(LATEST_CONFIG).exists()
-        assert Path(LATEST_CONFIG).resolve() == Path(config_path).resolve()
+        assert LATEST_CONFIG.exists()
+        assert LATEST_CONFIG.resolve() == Path(config_path).resolve()
 
         next_config_path = next(config_path)
         with suppress(RuntimeError), next_config_path.create(is_cmc=is_cmc):
             assert Path(next_config_path).exists()
-            assert Path(LATEST_CONFIG).exists()
-            assert Path(LATEST_CONFIG).resolve() == Path(config_path).resolve()
+            assert LATEST_CONFIG.exists()
+            assert LATEST_CONFIG.resolve() == Path(config_path).resolve()
             raise RuntimeError("boom")
 
         assert Path(next_config_path).exists()
-        assert Path(LATEST_CONFIG).exists()
-        assert Path(LATEST_CONFIG).resolve() != Path(next_config_path).resolve()
-        assert Path(LATEST_CONFIG).resolve() == Path(config_path).resolve()
-
-
-class TestLatestConfigPath:
-    @pytest.fixture
-    def config_path(self):
-        yield LATEST_CONFIG
-        (cmk.utils.paths.core_helper_config_dir / "serial.mk").unlink(missing_ok=True)
-
-    def test_str(self, config_path: ConfigPath) -> None:
-        assert str(config_path) == "latest"
-
-    def test_repr(self, config_path: ConfigPath) -> None:
-        assert isinstance(repr(config_path), str)
-
-    def test_eq(self, config_path: ConfigPath) -> None:
-        assert config_path == type(config_path)()
-        assert config_path == Path(config_path)
-        assert config_path != VersionedConfigPath(0)
-
-    def test_hash(self, config_path: ConfigPath) -> None:
-        assert isinstance(hash(config_path), int)
-        assert hash(config_path) == hash(LATEST_CONFIG)
-        assert hash(config_path) != hash(VersionedConfigPath(0))
+        assert LATEST_CONFIG.exists()
+        assert LATEST_CONFIG.resolve() != Path(next_config_path).resolve()
+        assert LATEST_CONFIG.resolve() == Path(config_path).resolve()

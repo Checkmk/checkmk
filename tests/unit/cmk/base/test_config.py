@@ -2993,15 +2993,15 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
 
 
 @pytest.fixture(name="config_path")
-def fixture_config_path() -> VersionedConfigPath:
-    return VersionedConfigPath(13)
+def fixture_config_path() -> Path:
+    return Path(VersionedConfigPath(13))
 
 
-def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: VersionedConfigPath) -> None:
+def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None:
     ts = Scenario()
     ts.add_host(HostName("bla1"))
     config_cache = ts.apply(monkeypatch)
-    precompiled_check_config = Path(config_path) / "precompiled_check_config.mk"
+    precompiled_check_config = config_path / "precompiled_check_config.mk"
 
     assert not precompiled_check_config.exists()
 
@@ -3010,7 +3010,7 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: VersionedConf
     assert precompiled_check_config.exists()
 
 
-def test_load_packed_config(config_path: VersionedConfigPath) -> None:
+def test_load_packed_config(config_path: Path) -> None:
     config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
 
     assert "abcd" not in config.__dict__
@@ -3022,15 +3022,15 @@ def test_load_packed_config(config_path: VersionedConfigPath) -> None:
 
 class TestPackedConfigStore:
     @pytest.fixture()
-    def store(self, config_path: VersionedConfigPath) -> config.PackedConfigStore:
+    def store(self, config_path: Path) -> config.PackedConfigStore:
         return config.PackedConfigStore.from_serial(config_path)
 
     def test_read_not_existing_file(self, store: config.PackedConfigStore) -> None:
         with pytest.raises(FileNotFoundError):
             store.read()
 
-    def test_write(self, store: config.PackedConfigStore, config_path: VersionedConfigPath) -> None:
-        precompiled_check_config = Path(config_path) / "precompiled_check_config.mk"
+    def test_write(self, store: config.PackedConfigStore, config_path: Path) -> None:
+        precompiled_check_config = config_path / "precompiled_check_config.mk"
         assert not precompiled_check_config.exists()
 
         store.write({"abc": 1})

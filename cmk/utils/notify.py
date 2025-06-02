@@ -16,7 +16,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_object_from_file, save_object_to_file
 
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
@@ -87,7 +86,7 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
 
 
 def write_notify_host_file(
-    config_path: VersionedConfigPath,
+    config_path: Path,
     config_per_host: Mapping[HostName, NotificationHostConfig],
 ) -> None:
     notify_config_path: Path = _get_host_file_path(config_path)
@@ -117,11 +116,8 @@ def read_notify_host_file(
     )
 
 
-def _get_host_file_path(
-    config_path: VersionedConfigPath | None = None,
-    host_name: HostName | None = None,
-) -> Path:
-    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
+def _get_host_file_path(config_path: Path | None = None, host_name: HostName | None = None) -> Path:
+    root_path = config_path if config_path else core_helper_config_dir / "latest"
     if host_name:
         return root_path / "notify" / "host_config" / host_name
     return root_path / "notify" / "host_config"

@@ -364,28 +364,28 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
 
 @pytest.fixture(name="config_path")
-def fixture_config_path() -> VersionedConfigPath:
-    return VersionedConfigPath(42)
+def fixture_config_path() -> Path:
+    return Path(VersionedConfigPath(42))
 
 
 class TestHostCheckStore:
-    def test_host_check_file_path(self, config_path: VersionedConfigPath) -> None:
+    def test_host_check_file_path(self, config_path: Path) -> None:
         assert HostCheckStore.host_check_file_path(config_path, HostName("abc")) == Path(
-            Path(config_path),
+            config_path,
             "host_checks",
             "abc",
         )
 
-    def test_host_check_source_file_path(self, config_path: VersionedConfigPath) -> None:
+    def test_host_check_source_file_path(self, config_path: Path) -> None:
         assert (
             HostCheckStore.host_check_source_file_path(
                 config_path,
                 HostName("abc"),
             )
-            == Path(config_path) / "host_checks" / "abc.py"
+            == config_path / "host_checks" / "abc.py"
         )
 
-    def test_write(self, config_path: VersionedConfigPath) -> None:
+    def test_write(self, config_path: Path) -> None:
         hostname = HostName("aaa")
         store = HostCheckStore()
 
@@ -435,9 +435,7 @@ def _make_plugins_for_test() -> AgentBasedPlugins:
     )
 
 
-def test_dump_precompiled_hostcheck(
-    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
-) -> None:
+def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path) -> None:
     hostname = HostName("localhost")
     ts = Scenario()
     ts.add_host(hostname)

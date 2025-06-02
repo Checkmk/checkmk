@@ -1390,7 +1390,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
 
     create_config(
         sys.stdout,
-        next(VersionedConfigPath.current()),
+        Path(next(VersionedConfigPath.current())),
         config_cache,
         config_cache.make_passive_service_name_config(),
         plugins.check_plugins,

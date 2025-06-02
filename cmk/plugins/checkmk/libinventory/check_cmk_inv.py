@@ -120,7 +120,7 @@ def main(
     return inventory_as_check(
         parameters,
         args.hostname,
-        load_plugins_from_index(Path(LATEST_CONFIG)) if args.use_indexed_plugins else load_checks(),
+        load_plugins_from_index(LATEST_CONFIG) if args.use_indexed_plugins else load_checks(),
     )
 
 

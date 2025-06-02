@@ -264,7 +264,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             sort_index=110,
             info="host",
             autocompleter=AutocompleterConfig(ident="check_cmd"),
-            query_filter=query_filters.CheckCommandQuery(
+            query_filter=query_filters.TextQuery(
                 ident="host_check_command",
                 op="=",
             ),
@@ -291,7 +291,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             sort_index=210,
             info="service",
             autocompleter=AutocompleterConfig(ident="check_cmd"),
-            query_filter=query_filters.CheckCommandQuery(
+            query_filter=query_filters.TextQuery(
                 ident="check_command",
                 op="=",
                 column="service_check_command",

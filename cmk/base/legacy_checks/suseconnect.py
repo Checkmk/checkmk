@@ -69,49 +69,52 @@ def check_suseconnect(
     if (specs := get_data(section)) is None:
         return
 
-    state, infotext = 0, "Status: %(registration_status)s" % specs
-    if params["status"] != "Ignore" and params["status"] != specs["registration_status"]:
-        state = 2
-    yield state, infotext
-
-    state, infotext = 0, "Subscription: %(subscription_status)s" % specs
-    if (
-        params["subscription_status"] != "Ignore"
-        and params["subscription_status"] != specs["subscription_status"]
-    ):
-        state = 2
-    yield state, infotext
-
-    yield (
-        0,
-        (
-            "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
-            "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
-        )
-        % specs,
-    )
-
-    expiration_date = time.strptime(specs["expires_at"], "%Y-%m-%d %H:%M:%S %Z")
-    expiration_time = time.mktime(expiration_date) - time.time()
-
-    if expiration_time > 0:
-        warn, crit = params["days_left"]
-        days2seconds = 24 * 60 * 60
-
-        if expiration_time <= crit * days2seconds:
+    if "registration_status" in specs:
+        state, infotext = 0, "Status: %s" % specs["registration_status"]
+        if params["status"] != "Ignore" and params["status"] != specs["registration_status"]:
             state = 2
-        elif expiration_time <= warn * days2seconds:
-            state = 1
-        else:
-            state = 0
-
-        infotext = "Expires in: %s" % render.timespan(expiration_time)
-        if state:
-            infotext += " (warn/crit at %d/%d days)" % (warn, crit)
-
         yield state, infotext
-    else:
-        yield 2, "Expired since: %s" % render.timespan(-1.0 * expiration_time)
+
+    if "subscription_status" in specs:
+        state, infotext = 0, "Subscription: %s" % specs["subscription_status"]
+        if (
+            params["subscription_status"] != "Ignore"
+            and params["subscription_status"] != specs["subscription_status"]
+        ):
+            state = 2
+        yield state, infotext
+
+    if "subscription_type" in specs and "registration_code" in specs and "starts_at" in specs and "expires_at" in specs:
+        yield (
+            0,
+            (
+                "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
+                "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
+            )
+            % specs,
+        )
+
+        expiration_date = time.strptime(specs["expires_at"], "%Y-%m-%d %H:%M:%S %Z")
+        expiration_time = time.mktime(expiration_date) - time.time()
+
+        if expiration_time > 0:
+            warn, crit = params["days_left"]
+            days2seconds = 24 * 60 * 60
+
+            if expiration_time <= crit * days2seconds:
+                state = 2
+            elif expiration_time <= warn * days2seconds:
+                state = 1
+            else:
+                state = 0
+
+            infotext = "Expires in: %s" % render.timespan(expiration_time)
+            if state:
+                infotext += " (warn/crit at %d/%d days)" % (warn, crit)
+
+            yield state, infotext
+        else:
+            yield 2, "Expired since: %s" % render.timespan(-1.0 * expiration_time)
 
 
 check_info["suseconnect"] = LegacyCheckDefinition(

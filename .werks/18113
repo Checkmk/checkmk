@@ -1,0 +1,16 @@
+Title: Fixed output corruption in the Windows agent mk_inventory plugin
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1748873446
+Edition: cee
+Level: 1
+Version: 2.2.0p44
+
+This werk resolves a problem with incomplete output from the Windows agent
+<code>mk_inventory</code> plugin.
+Previously, the <code>mk_inventory</code> plugin used the null character (<code>ASCII 0</code>)
+as a field separator, which could cause the plugin execution to stop and only
+partial data to be delivered.
+As a fix, the separator was changed to the Unit Separator (<code>ASCII 31</code>),
+which prevents this issue.

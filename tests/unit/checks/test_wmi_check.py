@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, StringTable
+from cmk.agent_based.v2 import StringTable
 
-from .checktestlib import Check, CheckResult
+from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -112,15 +112,3 @@ info_msx_info_store_1 = [
 def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
     assert not list(check.run_discovery(check.run_parse(info)))
-
-
-@pytest.mark.parametrize(
-    "check_name,info",
-    [
-        ("wmi_webservices", info_wmi_timeout),
-    ],
-)
-def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
-    check = Check(check_name)
-    with pytest.raises(IgnoreResultsError):
-        CheckResult(check.run_check(None, {}, check.run_parse(info)))

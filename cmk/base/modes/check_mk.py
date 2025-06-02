@@ -1475,7 +1475,12 @@ def _make_configured_bake_on_restart(
     except ImportError:
         return lambda: None
 
-    return make_configured_bake_on_restart_callback(loading_result, hosts)
+    return make_configured_bake_on_restart_callback(
+        loading_result,
+        hosts,
+        agents_dir=cmk.utils.paths.agents_dir,
+        local_agents_dir=cmk.utils.paths.local_agents_dir,
+    )
 
 
 def mode_update() -> None:

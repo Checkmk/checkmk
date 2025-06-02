@@ -596,6 +596,25 @@ def diag_special_agent(
     )
 
 
+def ping_host(
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    ping_host_input: results.PingHostInput,
+) -> results.PingHostResult:
+    return _deserialize(
+        _automation_serialized(
+            "ping-host",
+            automation_config=automation_config,
+            args=None,
+            stdin_data=ping_host_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+            debug=active_config.debug,
+        ),
+        results.PingHostResult,
+        debug=active_config.debug,
+    )
+
+
 def diag_host(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,

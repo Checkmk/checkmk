@@ -12,11 +12,14 @@ from typing import Final, overload
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 
 import cmk.utils.tags
 
+from cmk.automations.results import PingHostCmd, PingHostInput
+
 import cmk.gui.watolib.sites as watolib_sites
-from cmk.gui import forms
+from cmk.gui import forms, user_sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -33,6 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -40,13 +44,18 @@ from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
-from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
+from cmk.gui.valuespec import DropdownChoice, FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
-from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
+from cmk.gui.watolib.builtin_attributes import (
+    HostAttributeIPv4Address,
+    HostAttributeIPv6Address,
+    HostAttributeSite,
+)
+from cmk.gui.watolib.check_mk_automations import delete_hosts, ping_host, update_dns_cache
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import collect_attributes
@@ -59,16 +68,17 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-from cmk.shared_typing.mode_host import ModeHost, ModeHostI18n
+from cmk.shared_typing.mode_host import ModeHost, ModeHostFormKeys, ModeHostI18n
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     mode_registry.register(ModeEditHost)
     mode_registry.register(ModeCreateHost)
     mode_registry.register(ModeCreateCluster)
+    page_registry.register_page("ajax_ping_host")(PageAjaxPingHost)
 
 
 class ABCHostMode(WatoMode, abc.ABC):
@@ -265,26 +275,43 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         self._page_form_quick_setup_warning()
 
+        host_name_attribute_key: Final[str] = "host"
+        form_name: Final[str] = "edit_host"
         html.vue_app(
             app_name="mode_host",
             data=asdict(
                 ModeHost(
                     i18n=ModeHostI18n(
+                        loading=_("Loading"),
                         error_host_not_dns_resolvable=_(
-                            "Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address or set 'No IP' in the 'Network address' section."
+                            "Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address "
+                            "or set 'No IP' in the 'Network address' section."
                         ),
                         success_host_dns_resolvable=_("Name is DNS-resolvable"),
+                        error_ip_not_pingable=_(
+                            "Failed to ping the IP address. This could be due to an invalid IP, "
+                            "network issues, or firewall restrictions."
+                        ),
+                        success_ip_pingable=_("Successfully pinged IP address"),
+                    ),
+                    form_keys=ModeHostFormKeys(
+                        form=form_name,
+                        host_name=host_name_attribute_key,
+                        ipv4_address=HostAttributeIPv4Address().name(),
+                        ipv6_address=HostAttributeIPv6Address().name(),
+                        site=HostAttributeSite().name(),
+                        ip_address_family="tag_address_family",
                     ),
                 )
             ),
         )
 
-        with html.form_context("edit_host", method="POST"):
+        with html.form_context(form_name, method="POST"):
             html.prevent_password_auto_completion()
 
             basic_attributes: list[tuple[str, ValueSpec, object]] = [
                 # attribute name, valuepec, default value
-                ("host", self._vs_host_name(), self._host.name()),
+                (host_name_attribute_key, self._vs_host_name(), self._host.name()),
             ]
 
             if self._is_cluster():
@@ -306,7 +333,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             )
 
             if self._mode != "edit":
-                html.set_focus("host")
+                html.set_focus(host_name_attribute_key)
 
             forms.end()
             html.hidden_fields()
@@ -844,3 +871,28 @@ class ModeCreateCluster(CreateHostMode):
     def _verify_host_type(cls, host):
         if not host.is_cluster():
             raise MKGeneralException(_("Can not clone a regular host as cluster host"))
+
+
+class PageAjaxPingHost(AjaxPage):
+    def page(self) -> PageResult:
+        site_mapping = {
+            DropdownChoice.option_id(site_id): site_id
+            for site_id, _ in user_sites.get_activation_site_choices()
+        }
+        site_id = site_mapping[
+            request.get_str_input_mandatory("site_id", deflt=DropdownChoice.option_id(omd_site()))
+        ]
+        ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
+        cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
+
+        result = ping_host(
+            automation_config=make_automation_config(active_config.sites[site_id]),
+            ping_host_input=PingHostInput(
+                ip_or_dns_name=ip_or_dns_name,
+                base_cmd=cmd,
+            ),
+        )
+        return {
+            "status_code": result.return_code,
+            "output": result.response,
+        }

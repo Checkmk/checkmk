@@ -16,10 +16,24 @@ from dataclasses import dataclass
 
 @dataclass(kw_only=True)
 class ModeHostI18n:
+    loading: str
     error_host_not_dns_resolvable: str
     success_host_dns_resolvable: str
+    error_ip_not_pingable: str
+    success_ip_pingable: str
+
+
+@dataclass(kw_only=True)
+class ModeHostFormKeys:
+    form: str
+    host_name: str
+    ipv4_address: str
+    ipv6_address: str
+    site: str
+    ip_address_family: str
 
 
 @dataclass(kw_only=True)
 class ModeHost:
+    form_keys: ModeHostFormKeys
     i18n: ModeHostI18n

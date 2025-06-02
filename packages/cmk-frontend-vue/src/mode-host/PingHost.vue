@@ -1,0 +1,223 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import { onMounted, ref, type Ref } from 'vue'
+import axios from 'axios'
+import StatusBox, { type DNSStatus } from '@/mode-host/StatusBox.vue'
+import { type ModeHostI18N } from 'cmk-shared-typing/typescript/mode_host'
+
+const props = defineProps<{
+  i18n: ModeHostI18N
+  formElement: HTMLFormElement
+  ipAddressFamilySelectElement: HTMLSelectElement
+  ipAddressFamilyInputElement: HTMLInputElement
+  hostnameInputElement: HTMLInputElement
+  ipv4InputElement: HTMLInputElement
+  ipv4InputButtonElement: HTMLInputElement
+  ipv6InputElement: HTMLInputElement
+  ipv6InputButtonElement: HTMLInputElement
+  siteSelectElement: HTMLSelectElement
+}>()
+
+interface PingHostResponseError {
+  result_code: 1
+  result: string
+}
+
+interface PingHostResponseSuccess {
+  result_code: 0
+  result: {
+    status_code: number
+    message: string
+  }
+}
+
+type PingHostResponse = PingHostResponseError | PingHostResponseSuccess
+
+enum PingCmd {
+  Ping = 'ping',
+  Ping4 = 'ping4',
+  Ping6 = 'ping6'
+}
+
+interface Result {
+  status: DNSStatus
+  element: HTMLInputElement
+}
+
+const statusElements: Ref<Record<string, Result>> = ref({})
+const isNoIP = ref(false)
+const ipAddressFamilyInputActive = ref(false)
+const ipv4InputActive = ref(false)
+const ipv6InputActive = ref(false)
+const controller = ref(new AbortController())
+const ajaxRequestInProgress = ref(false)
+
+onMounted(() => {
+  props.formElement.addEventListener('change', (e) => {
+    switch (e.target) {
+      case props.formElement:
+        if (props.ipAddressFamilySelectElement.value === 'no-ip') {
+          isNoIP.value = true
+          statusElements.value = {}
+        }
+        break
+      case props.ipAddressFamilyInputElement:
+        ipAddressFamilyInputActive.value = !ipAddressFamilyInputActive.value
+        isNoIP.value =
+          ipAddressFamilyInputActive.value && props.ipAddressFamilySelectElement.value === 'no-ip'
+        break
+      case props.ipv4InputButtonElement:
+        ipv4InputActive.value = !ipv4InputActive.value
+        break
+      case props.ipv6InputButtonElement:
+        ipv6InputActive.value = !ipv6InputActive.value
+        break
+    }
+  })
+  props.hostnameInputElement.addEventListener('input', () => {
+    if (isNoIP.value) {
+      statusElements.value = {}
+      return
+    }
+    if (ipv4InputActive.value || ipv6InputActive.value) {
+      return
+    }
+    callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
+  })
+  props.ipv4InputElement.addEventListener('input', () => {
+    if (isNoIP.value) {
+      statusElements.value = {}
+      return
+    }
+    callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping4, true)
+  })
+  props.ipv6InputElement.addEventListener('input', () => {
+    if (isNoIP.value) {
+      statusElements.value = {}
+      return
+    }
+    callPingHostOnElement(props.ipv6InputElement, PingCmd.Ping6, true)
+  })
+})
+
+function callPingHostOnElement(
+  element: HTMLInputElement,
+  cmd: PingCmd,
+  isIpAddress: boolean
+): void {
+  const elementName = element.name
+  if (!elementName) {
+    return
+  }
+  if (!element.value) {
+    delete statusElements.value[elementName]
+    return
+  }
+  if (props.hostnameInputElement.value) {
+    delete statusElements.value[props.hostnameInputElement.name]
+  }
+  statusElements.value[elementName] = {
+    status: {
+      tooltip: props.i18n.loading,
+      status: 'loading'
+    },
+    element: element
+  }
+  callAJAX(element.value, cmd, isIpAddress)
+    .then((result) => {
+      if (result && statusElements.value[elementName]) {
+        statusElements.value[elementName].status = result
+      }
+    })
+    .catch(() => {})
+}
+
+async function callAJAX(
+  input: string | undefined,
+  cmd: PingCmd = PingCmd.Ping,
+  isIpAddress: boolean = false
+): Promise<DNSStatus | null> {
+  if (ajaxRequestInProgress.value) {
+    controller.value.abort('New request triggered, aborting previous one')
+  }
+  while (controller.value.signal.aborted) {
+    // Wait for the previous request to finish
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  const siteId = props.siteSelectElement.value
+    ? encodeURIComponent(props.siteSelectElement.value)
+    : undefined
+
+  const currentInput = input ? encodeURIComponent(input) : undefined
+
+  if (!currentInput) {
+    return null
+  }
+
+  ajaxRequestInProgress.value = true
+  return await axios
+    .post('ajax_ping_host.py', null, {
+      signal: controller.value.signal,
+      params: {
+        site_id: siteId,
+        ip_or_dns_name: currentInput,
+        cmd: cmd
+      }
+    })
+    .then((response) => {
+      if (response.data) {
+        return handlePingHostResult(response.data, isIpAddress)
+      }
+      return null
+    })
+    .catch(() => {
+      controller.value = new AbortController()
+      return null
+    })
+    .finally(() => {
+      ajaxRequestInProgress.value = false
+    })
+}
+
+function handlePingHostResult(response: PingHostResponse, isIpAddress: boolean): DNSStatus {
+  switch (response.result_code) {
+    case 0:
+      switch (response.result.status_code) {
+        case 0:
+          return {
+            tooltip: isIpAddress
+              ? props.i18n.success_ip_pingable
+              : props.i18n.success_host_dns_resolvable,
+            status: 'ok'
+          }
+        default:
+          return {
+            tooltip: isIpAddress
+              ? props.i18n.error_ip_not_pingable
+              : props.i18n.error_host_not_dns_resolvable,
+            status: 'warn'
+          }
+      }
+    case 1:
+      return {
+        tooltip: response.result,
+        status: 'crit'
+      }
+  }
+}
+</script>
+
+<template>
+  <Teleport
+    v-for="[elementName, { status, element }] in Object.entries(statusElements)"
+    :key="elementName"
+    :to="element.parentNode"
+  >
+    <StatusBox :status="status" />
+  </Teleport>
+</template>

@@ -3,19 +3,45 @@
     "type": "object",
     "title": "mode_host",
     "properties": {
+        "form_keys": { "$ref": "#/$defs/mode_host_form_keys" },
         "i18n": { "$ref": "#/$defs/mode_host_i18n" }
     },
-    "required": ["i18n"],
+    "required": ["form_keys", "i18n"],
     "$defs": {
         "mode_host_i18n": {
             "type": "object",
             "properties": {
+                "loading": { "type": "string" },
                 "error_host_not_dns_resolvable": { "type": "string" },
-                "success_host_dns_resolvable": { "type": "string" }
+                "success_host_dns_resolvable": { "type": "string" },
+                "error_ip_not_pingable": { "type": "string" },
+                "success_ip_pingable": { "type": "string" }
             },
             "required": [
+                "loading",
                 "error_host_not_dns_resolvable",
-                "success_host_dns_resolvable"
+                "success_host_dns_resolvable",
+                "error_ip_not_pingable",
+                "success_ip_pingable"
+            ]
+        },
+        "mode_host_form_keys": {
+            "type": "object",
+            "properties": {
+                "form": { "type": "string" },
+                "host_name": { "type": "string" },
+                "ipv4_address": { "type": "string" },
+                "ipv6_address": { "type": "string" },
+                "site": { "type": "string" },
+                "ip_address_family": { "type": "string" }
+            },
+            "required": [
+                "form",
+                "host_name",
+                "ipv4_address",
+                "ipv6_address",
+                "site",
+                "ip_address_family"
             ]
         }
     }

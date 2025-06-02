@@ -32,6 +32,7 @@ def test_registered_pages() -> None:
         "ajax_fetch_ca",
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",
+        "ajax_ping_host",
         "ajax_popup_action_menu",
         "ajax_popup_host_action_menu",
         "ajax_popup_service_action_menu",

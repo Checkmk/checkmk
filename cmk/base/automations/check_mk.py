@@ -98,6 +98,9 @@ from cmk.automations.results import (
     NotificationGetBulksResult,
     NotificationReplayResult,
     NotificationTestResult,
+    PingHostCmd,
+    PingHostInput,
+    PingHostResult,
     ReloadResult,
     RenameHostsResult,
     RestartResult,
@@ -2631,6 +2634,34 @@ class AutomationDiagSpecialAgent(Automation):
 
 
 automations.register(AutomationDiagSpecialAgent())
+
+
+class AutomationPingHost(Automation):
+    cmd = "ping-host"
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadingResult | None,
+    ) -> PingHostResult:
+        ping_host_input = PingHostInput.deserialize(sys.stdin.read())
+        return PingHostResult(
+            *self._execute_ping(ping_host_input.ip_or_dns_name, ping_host_input.base_cmd)
+        )
+
+    def _execute_ping(self, ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]:
+        completed_process = subprocess.run(
+            [base_cmd.value, "-A", "-i", "0.2", "-c", "2", "-W", "5", ip_or_dns_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+        return completed_process.returncode, completed_process.stdout
+
+
+automations.register(AutomationPingHost())
 
 
 class AutomationDiagHost(Automation):

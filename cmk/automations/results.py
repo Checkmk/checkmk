@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, field
+from enum import StrEnum
 from typing import Any, Literal, Self, TypedDict, TypeVar
 
 from cmk.ccc import version as cmk_version
@@ -721,6 +722,48 @@ class DiagHostResult(ABCAutomationResult):
 
 
 result_type_registry.register(DiagHostResult)
+
+
+@dataclass
+class PingHostResult(ABCAutomationResult):
+    return_code: int
+    response: str
+
+    @staticmethod
+    def automation_call() -> str:
+        return "ping-host"
+
+
+result_type_registry.register(PingHostResult)
+
+
+class PingHostCmd(StrEnum):
+    PING = "ping"
+    PING6 = "ping6"
+    PING4 = "ping4"
+
+
+@dataclass
+class PingHostInput:
+    ip_or_dns_name: str
+    base_cmd: PingHostCmd = PingHostCmd.PING
+
+    @classmethod
+    def deserialize(cls, serialized_input: str) -> PingHostInput:
+        raw = json.loads(serialized_input)
+        deserialized = {
+            "ip_or_dns_name": raw["ip_or_dns_name"],
+            "base_cmd": PingHostCmd(raw.get("base_cmd", PingHostCmd.PING)),
+        }
+        return cls(**deserialized)
+
+    def serialize(self, _for_cmk_version: cmk_version.Version) -> str:
+        return json.dumps(
+            {
+                "ip_or_dns_name": self.ip_or_dns_name,
+                "base_cmd": self.base_cmd.value,
+            }
+        )
 
 
 @dataclass

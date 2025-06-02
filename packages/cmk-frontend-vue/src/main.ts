@@ -94,6 +94,7 @@ function setupVue() {
         }
         case 'mode_host': {
           app = createApp(ModeHostApp, {
+            formKeys: appData.form_keys,
             i18n: appData.i18n
           })
           break

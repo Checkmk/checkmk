@@ -1,6 +1,8 @@
 ROBOTMK_FILES = [
     "artifact/rcc/linux64/rcc",
     "artifact/rcc/windows64/rcc.exe",
+    "artifact/micromamba/micromamba",
+    "artifact/micromamba/micromamba.exe",
     "artifact/rmk_linux64/robotmk_agent_plugin",
     "artifact/rmk_linux64/robotmk_scheduler",
     "artifact/rmk_windows64/robotmk_agent_plugin.exe",

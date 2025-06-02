@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 pkg_files(
     name = "agents_linux",
     srcs = [
+        "@robotmk//:artifact/micromamba/micromamba",
         "@robotmk//:artifact/rcc/linux64/rcc",
         "@robotmk//:artifact/rmk_linux64/robotmk_scheduler",
     ],
@@ -16,6 +17,7 @@ pkg_files(
 pkg_files(
     name = "agents_windows",
     srcs = [
+        "@robotmk//:artifact/micromamba/micromamba.exe",
         "@robotmk//:artifact/rcc/windows64/rcc.exe",
         "@robotmk//:artifact/rmk_windows64/robotmk_scheduler.exe",
     ],

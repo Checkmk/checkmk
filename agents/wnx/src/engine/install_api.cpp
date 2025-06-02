@@ -86,8 +86,7 @@ std::optional<fs::path> FindProductMsi(std::wstring_view product_name) {
 
 bool UseScriptToInstall() noexcept { return g_use_script_to_install; }
 
-InstallMode G_InstallMode = InstallMode::normal;
-InstallMode GetInstallMode() { return G_InstallMode; }
+InstallMode GetInstallMode() { return InstallMode::normal; }
 
 fs::path MakeTempFileNameInTempPath(std::wstring_view file_name) {
     // Find Temporary Folder
@@ -574,6 +573,23 @@ void ClearPostInstallFlag() {
     wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
                              registry::kMsiPostInstallRequired,
                              registry::kMsiPostInstallDefault);
+}
+
+/// - checks that clean install flag is set by MSI
+///
+/// Must be called by any executable to check that installation is finalized
+bool IsCleanInstallationRequired() {
+    return std::wstring(registry::kMsiCleanInstallationlRequest) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiCleanInstallationEntry, L"");
+}
+
+/// - remove clean install flag
+///
+/// Normally called only by service after installation Python module
+void RemoveCleanInstallationFlag() {
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiCleanInstallationEntry, L"");
 }
 
 /// - checks that migration flag is set by MSI

@@ -88,6 +88,10 @@ constexpr std::wstring_view kMsiMigrationRequired = L"Migration_Required";
 constexpr std::wstring_view kMsiMigrationDefault;
 constexpr std::wstring_view kMsiMigrationRequest = L"1";
 
+constexpr std::wstring_view kMsiCleanInstallationEntry = L"Clean_Installation";
+constexpr std::wstring_view kMsiCleanInstallationlRequest =
+    L"yes";  // Sync with InstallFolder.wxs!
+
 inline std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
@@ -127,6 +131,9 @@ bool NeedInstall(const std::filesystem::path &incoming_file,
 
 bool IsPostInstallRequired();
 void ClearPostInstallFlag();
+
+bool IsCleanInstallationRequired();
+void RemoveCleanInstallationFlag();
 
 /// Returns string with error message if the MSI installation failed.
 std::optional<std::wstring> GetLastMsiFailReason();

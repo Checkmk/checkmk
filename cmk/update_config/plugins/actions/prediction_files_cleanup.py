@@ -30,6 +30,10 @@ class RemoveUnreadablePredictions(UpdateAction):
     @staticmethod
     def cleanup_unreadable_files(path: Path) -> None:
         for info_file in path.rglob(f"*{PredictionStore.INFO_FILE_SUFFIX}"):
+            # It may happen that e.g. hostnames have a ".info" suffix, too. This leads to
+            # directories match the pattern. We have to skip those.
+            if info_file.is_dir():
+                continue
             data_file = info_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
             try:
                 _ = PredictionInfo.model_validate_json(info_file.read_text())

@@ -1,0 +1,12 @@
+Title: Fix filterquery for host/serice check command (exact match) filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1748880045
+Edition: cre
+Level: 1
+Version: 2.2.0p43
+
+For the new host/service check command (exact match), the wrong filter query was used, which led to no results.
+
+This has now been fixed.

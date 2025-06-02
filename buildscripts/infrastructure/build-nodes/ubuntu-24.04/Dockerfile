@@ -11,6 +11,9 @@ ENV \
     LANG=C.UTF-8 \
     PATH="/opt/bin:${PATH}"
 
+# fix for CMK-23806, url taken from https://launchpad.net/ubuntu/+archivemirrors
+RUN sed -i "s|http://.*.ubuntu.com/ubuntu|http://ftp.uni-stuttgart.de/ubuntu/|g" /etc/apt/sources.list
+
 RUN apt-get update \
     && apt-get install -y \
     dialog \

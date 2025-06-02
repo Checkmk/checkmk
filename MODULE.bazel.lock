@@ -13955,7 +13955,7 @@
           "@@aspect_rules_py~//Cargo.lock": "a7b4f36f8f57a4b49abc5c5d368101966e975d195c4efecef86da65f56a94958",
           "@@aspect_rules_py~//py/tools/py/Cargo.toml": "0a02fc06c3f8cc48bb5bb31f6476341e4759107aa7584c68fbadb22da33d2984",
           "@@aspect_rules_py~//Cargo.toml": "e2dca3c293e2bfe1a61913a917d750b96d9e8e73b0ebd17b309cacf7588b4deb",
-          "@@//MODULE.bazel": "63cf70560c890f56ce30cc2cd20fda68f28e0f7303c4e2beb5860c01255315ee",
+          "@@//MODULE.bazel": "764f68cdda2f5c91ebe6174723f5520a31c026c03bbc3f535751da81f7973fbf",
           "@@rules_rust~~rust_host_tools~rust_host_tools//rust_host_tools": "ENOENT"
         },
         "recordedDirentsInputs": {},

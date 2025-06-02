@@ -37,18 +37,16 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table as parse_wmi_
 #   '----------------------------------------------------------------------'
 
 
+# TODO(sk): remove this class at all - it breaks OOP rules and adds additional layer of complexity/fragility
 class WMITableLegacy(WMITable):
     """
-    Needed since WMITable.get raises IgnoreResultsError
+    Do not raise on timeout by default
     """
 
     def get(
-        self,
-        row: str | int,
-        column: str | int,
-        silently_skip_timed_out: bool = False,
+        self, row: str | int, column: str | int, *, raise_on_timeout: bool = False
     ) -> str | None:
-        if not silently_skip_timed_out and self.timed_out:
+        if raise_on_timeout and self.timed_out:
             raise IgnoreResultsError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
@@ -81,7 +79,7 @@ def wmi_filter_global_only(
 ) -> bool:
     for table in tables.values():
         try:
-            value = table.get(row, "Name", silently_skip_timed_out=True)
+            value = table.get(row, "Name")
         except KeyError:
             return False
         if value != "_Global_":

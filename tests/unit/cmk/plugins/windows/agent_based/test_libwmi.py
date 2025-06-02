@@ -4000,3 +4000,18 @@ def test_scale_counter(measure: float, factor: float, base: float) -> None:
         abs(scale_counter(measure, factor, base) - scale_counter_reference(measure, factor, base))
         < 1e-15
     )
+
+
+# https://crash.checkmk.com/gui/crashreportview/show/9d3f1366-4e38-11ef-b6b2-7d71c04640e1
+# SIMPLIFIED
+# every table consists form the header and a list of rows + key column(usually name)
+CRASH_TABLE = [
+    ["metric A", "name", "rpcaveragelatency", "wmistatus"],
+    ["0", "snacky", "99", "Timeout"],
+    ["2409704", "_total", "6", "Timeout"],
+]
+
+
+def test_me():
+    wmi_table = WMITable("", CRASH_TABLE[0], "name", 0, None, CRASH_TABLE[1:])
+    assert wmi_table.get("_total", "rpcaveragelatency") == "6"

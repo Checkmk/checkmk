@@ -21,7 +21,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
-from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler
@@ -577,7 +577,7 @@ def create_nagios_servicedefs(
         service_name_config.final_service_name_config,
         ip_address_of,
         stored_passwords,
-        password_store.core_password_store_path(LATEST_CONFIG),
+        password_store.core_password_store_path(),
     ):
         active_service_labels = _get_service_labels(
             config_cache.label_manager, hostname, service_data.description

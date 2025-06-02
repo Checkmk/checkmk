@@ -100,7 +100,7 @@ def test_do_create_config_nagios_collects_passwords(
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
 
-    core_store = password_store.core_password_store_path(LATEST_CONFIG)
+    core_store = password_store.core_password_store_path()
     assert not password_store.load(core_store)
 
     core_config.do_create_config(

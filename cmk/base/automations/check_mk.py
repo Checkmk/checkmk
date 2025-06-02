@@ -41,7 +41,6 @@ from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
-from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
@@ -864,7 +863,7 @@ def _execute_autodiscovery(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
-        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
+        password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
     host_label_plugins = HostLabelPluginMapper(
@@ -3300,9 +3299,7 @@ class AutomationGetAgentOutput(Automation):
             )
 
             if ty == "agent":
-                core_password_store_file = cmk.utils.password_store.core_password_store_path(
-                    LATEST_CONFIG
-                )
+                core_password_store_file = cmk.utils.password_store.core_password_store_path()
                 for source in sources.make_sources(
                     plugins,
                     hostname,

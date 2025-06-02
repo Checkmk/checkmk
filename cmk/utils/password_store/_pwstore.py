@@ -13,7 +13,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.local_secrets import PasswordStoreSecret
 
@@ -46,12 +46,12 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def core_password_store_path(config_path: ConfigPath) -> Path:
+def core_password_store_path(config_path: Path = Path(LATEST_CONFIG)) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.
     """
-    return Path(config_path) / "stored_passwords"
+    return config_path / "stored_passwords"
 
 
 def pending_password_store_path() -> Path:
@@ -150,7 +150,7 @@ def lookup(pw_file: Path, pw_id: str) -> str:
 
 
 def lookup_for_bakery(pw_id: str) -> str:
-    return lookup(core_password_store_path(LATEST_CONFIG), pw_id)
+    return lookup(core_password_store_path(), pw_id)
 
 
 class PasswordStore:

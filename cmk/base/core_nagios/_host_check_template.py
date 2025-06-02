@@ -110,7 +110,7 @@ def main() -> int:
             ),
             {},
             [CONFIG.hostname],
-            password_store_file=core_password_store_path(LATEST_CONFIG),
+            password_store_file=core_password_store_path(),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

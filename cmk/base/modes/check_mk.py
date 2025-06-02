@@ -30,7 +30,6 @@ import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, tty
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -1906,7 +1905,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             inventory=1.5 * check_interval,
         ),
         snmp_backend_override=snmp_backend_override,
-        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
+        password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -2891,7 +2890,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
-        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
+        password_store_file=cmk.utils.password_store.core_password_store_path(),
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:

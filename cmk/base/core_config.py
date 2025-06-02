@@ -10,6 +10,7 @@ import socket
 import sys
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.debug
@@ -447,7 +448,7 @@ def _create_core_config(
         )
 
     cmk.utils.password_store.save(
-        passwords, cmk.utils.password_store.core_password_store_path(config_path)
+        passwords, cmk.utils.password_store.core_password_store_path(Path(config_path))
     )
 
 

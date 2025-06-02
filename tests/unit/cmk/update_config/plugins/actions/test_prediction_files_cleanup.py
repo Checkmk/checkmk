@@ -23,21 +23,33 @@ PREDICTION_INFO = PredictionInfo(
 
 
 @pytest.mark.parametrize(
-    ["info_file_content", "file_expected"],
+    ["partial_path", "info_file_content", "file_expected"],
     [
         pytest.param(
+            "",
             PREDICTION_INFO,
             True,
             id="Valid files are kept",
         ),
-        pytest.param("boo", False, id="Corrupt files are removed"),
+        pytest.param(
+            "local.info",
+            PREDICTION_INFO,
+            True,
+            id="Valid files are kept (with '.info' in hostname)",
+        ),
+        pytest.param("", "boo", False, id="Corrupt files are removed"),
+        pytest.param(
+            "local.info", "boo", False, id="Corrupt files are removed (with '.info' in hostname)"
+        ),
     ],
 )
 def test_cleanup_unreadable_files(
-    tmp_path: Path, info_file_content: str, file_expected: bool
+    tmp_path: Path, partial_path: str, info_file_content: str, file_expected: bool
 ) -> None:
-    info_file = tmp_path / "my_test_prediction.info"
-    data_file = tmp_path / "my_test_prediction"
+    base_path = tmp_path / partial_path
+    base_path.mkdir(parents=True, exist_ok=True)
+    info_file = base_path / "my_test_prediction.info"
+    data_file = base_path / "my_test_prediction"
 
     info_file.write_text(info_file_content)
     data_file.write_text(

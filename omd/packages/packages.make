@@ -184,7 +184,6 @@ include \
     packages/apache-omd/apache-omd.make \
     packages/cpp-libs/cpp-libs.make \
     packages/check_mk/check_mk.make \
-    packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/pnp4nagios/pnp4nagios.make \

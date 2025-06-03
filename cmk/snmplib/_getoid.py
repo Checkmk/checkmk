@@ -6,11 +6,11 @@
 from collections.abc import Callable
 from contextlib import suppress
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 
-import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
 

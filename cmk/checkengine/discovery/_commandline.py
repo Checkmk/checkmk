@@ -8,12 +8,12 @@ import itertools
 from collections import Counter
 from collections.abc import Callable, Container, Mapping, Sequence
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 
-import cmk.utils.cleanup
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -92,7 +92,7 @@ def commandline_discovery(
             raise
         section.section_error("%s" % e)
     finally:
-        cmk.utils.cleanup.cleanup_globals()
+        cmk.ccc.cleanup.cleanup_globals()
 
 
 def _commandline_discovery_on_host(

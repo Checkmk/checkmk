@@ -16,6 +16,13 @@ py_library(
 )
 
 py_library(
+    name = "cleanup",
+    srcs = ["cmk/ccc/cleanup.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "crash-reporting",
     srcs = ["cmk/ccc/crash_reporting.py"],
     imports = ["."],
@@ -145,6 +152,7 @@ py_library(
 )
 
 _ALL = [
+    "cleanup",
     "crash-reporting",
     "daemon",
     "debug",

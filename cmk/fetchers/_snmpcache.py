@@ -6,10 +6,9 @@
 
 from pathlib import Path
 
+import cmk.ccc.cleanup
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostAddress, HostName
-
-import cmk.utils.cleanup
 
 from cmk.snmplib import OID, SNMPDecodedString
 
@@ -63,7 +62,7 @@ def cleanup_host_caches() -> None:
     _clear_other_hosts_oid_cache(None)
 
 
-cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
+cmk.ccc.cleanup.register_cleanup(cleanup_host_caches)
 
 
 def _clear_other_hosts_oid_cache(hostname: HostName | None) -> None:

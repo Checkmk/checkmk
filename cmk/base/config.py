@@ -36,6 +36,7 @@ from typing import (
     TypeVar,
 )
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
@@ -45,7 +46,6 @@ from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils
 import cmk.utils.check_utils
-import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.translations

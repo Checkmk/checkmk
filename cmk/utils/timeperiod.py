@@ -11,12 +11,12 @@ from dateutil.tz import tzlocal
 
 import livestatus
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_from_mk_file
 
-import cmk.utils.cleanup
 from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday, weekday_ids
 from cmk.utils.paths import check_mk_config_dir
@@ -159,7 +159,7 @@ def cleanup_timeperiod_caches() -> None:
     cache_manager.obtain_cache("timeperiods_cache").clear()
 
 
-cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)
+cmk.ccc.cleanup.register_cleanup(cleanup_timeperiod_caches)
 
 
 def _is_time_in_timeperiod(

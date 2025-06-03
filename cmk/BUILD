@@ -132,6 +132,7 @@ CSE_PY = glob([
 CMK_PACKAGES = [
     "//packages/cmk-agent-based",
     "//packages/cmk-agent-receiver",
+    "//packages/cmk-ccc:cleanup",
     "//packages/cmk-ccc:crash-reporting",
     "//packages/cmk-ccc:daemon",
     "//packages/cmk-ccc:debug",

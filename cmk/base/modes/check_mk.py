@@ -18,13 +18,13 @@ from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
-import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log
@@ -1050,7 +1050,7 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
         console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
         if cmk.ccc.debug.enabled():
             raise
-    cmk.utils.cleanup.cleanup_globals()
+    cmk.ccc.cleanup.cleanup_globals()
 
 
 def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: Path, *, backend: SNMPBackend) -> None:
@@ -2713,7 +2713,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 raise
             section.section_error("%s" % e)
         finally:
-            cmk.utils.cleanup.cleanup_globals()
+            cmk.ccc.cleanup.cleanup_globals()
 
 
 modes.register(

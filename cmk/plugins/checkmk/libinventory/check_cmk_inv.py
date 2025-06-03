@@ -10,11 +10,11 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
+import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 
-import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import LATEST_CONFIG

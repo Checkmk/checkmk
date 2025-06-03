@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import NamedTuple, TypeVar
 
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.view_utils import CellContent, CellSpec
 
@@ -50,7 +51,7 @@ class StrWithStaleness(NamedTuple):
 
 
 def render_str_with_staleness(
-    painter_data: StrWithStaleness, painter_configuration: PainterConfiguration
+    painter_data: StrWithStaleness, painter_configuration: PainterConfiguration, user: LoggedInUser
 ) -> CellSpec:
     if painter_data.is_stale:
         return "stale", painter_data.value

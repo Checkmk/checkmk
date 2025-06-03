@@ -10,7 +10,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 
@@ -22,7 +21,6 @@ from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
         return instance(
-            user=user,
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
@@ -54,23 +52,23 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
             "columns": property(lambda s: s._spec["columns"]),
-            "render": lambda self, row, cell: paint_function(row),
+            "render": lambda self, row, cell, user: paint_function(row),
             "export_for_python": (
-                lambda self, row, cell: (
+                lambda self, row, cell, user: (
                     spec["export_for_python"](row, cell)
                     if "export_for_python" in spec
                     else paint_function(row)[1]
                 )
             ),
             "export_for_csv": (
-                lambda self, row, cell: (
+                lambda self, row, cell, user: (
                     spec["export_for_csv"](row, cell)
                     if "export_for_csv" in spec
                     else paint_function(row)[1]
                 )
             ),
             "export_for_json": (
-                lambda self, row, cell: (
+                lambda self, row, cell, user: (
                     spec["export_for_json"](row, cell)
                     if "export_for_json" in spec
                     else paint_function(row)[1]

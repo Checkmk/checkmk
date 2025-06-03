@@ -424,7 +424,7 @@ class PainterAggrIcons(Painter):
     def printable(self) -> bool:
         return False
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         single_url = "view.py?" + urlencode_vars(
             [("view_name", "aggr_single"), ("aggr_name", row["aggr_name"])]
         )
@@ -493,7 +493,7 @@ class PainterAggrInDowntime(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
 
 
@@ -509,7 +509,7 @@ class PainterAggrAcknowledged(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
@@ -538,7 +538,7 @@ class PainterAggrState(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(
             row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"]
         )
@@ -559,7 +559,7 @@ class PainterAggrStateNum(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_effective_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", str(row["aggr_effective_state"]["state"]))
 
 
@@ -578,7 +578,7 @@ class PainterAggrRealState(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_state"])
 
 
@@ -597,7 +597,7 @@ class PainterAggrAssumedState(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_assumed_state"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
@@ -616,7 +616,7 @@ class PainterAggrGroup(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_group"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", HTML.with_escaping(row["aggr_group"])
 
 
@@ -635,7 +635,7 @@ class PainterAggrName(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_name"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", escape_attribute(row["aggr_name"])
 
 
@@ -654,7 +654,7 @@ class PainterAggrOutput(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_output"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("", row["aggr_output"])
 
 
@@ -686,7 +686,7 @@ class PainterAggrHosts(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
@@ -705,7 +705,7 @@ class PainterAggrHostsServices(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_hosts"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_aggr_hosts(row, "host", request=self.request)
 
 
@@ -836,17 +836,17 @@ class PainterAggrTreestate(Painter):
     def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_aggregated_tree_state(row, painter_options=self._painter_options)
 
-    def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -868,7 +868,7 @@ class PainterAggrTreestateFrozenDiff(Painter):
     def painter_options(self) -> list[str]:
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
@@ -877,14 +877,14 @@ class PainterAggrTreestateFrozenDiff(Painter):
             row, painter_options=self._painter_options, show_frozen_difference=True
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
 
 @request_memoize()
@@ -986,21 +986,21 @@ class PainterAggrTreestateBoxed(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["aggr_treestate", "aggr_hosts"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_aggregated_tree_state(
             row,
             painter_options=self._painter_options,
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=self.request)
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
+        return render_tree_json(row, user=user, request=self.request)
 
 
 def render_tree_json(

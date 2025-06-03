@@ -109,7 +109,6 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
     )
 
     painter: Painter = painter_registry["tag_painter"](
-        user=user,
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),

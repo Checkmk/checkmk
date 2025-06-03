@@ -26,7 +26,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme
@@ -79,14 +79,12 @@ class Painter(abc.ABC):
     def __init__(
         self,
         *,
-        user: LoggedInUser,
         config: Config,
         request: Request,
         painter_options: PainterOptions,
         theme: Theme,
         url_renderer: RenderLink,
     ):
-        self.user = user
         self.config = config
         self.request = request
         self._painter_options = painter_options
@@ -102,14 +100,20 @@ class Painter(abc.ABC):
         # Needed because of old calling conventions. Doesn't have any effect.
         empty_cell = EmptyCell(None, None, None)
 
-        def format_html(row: Row, _painter_configuration: PainterConfiguration) -> CellSpec:
-            return self.render(row, empty_cell)
+        def format_html(
+            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
+        ) -> CellSpec:
+            return self.render(row, empty_cell, user)
 
-        def format_json(row: Row, _painter_configuration: PainterConfiguration) -> object:
-            return self.export_for_json(row, empty_cell)
+        def format_json(
+            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
+        ) -> object:
+            return self.export_for_json(row, empty_cell, user)
 
-        def format_csv(row: Row, _painter_configuration: PainterConfiguration) -> str:
-            result = self.export_for_csv(row, empty_cell)
+        def format_csv(
+            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
+        ) -> str:
+            result = self.export_for_csv(row, empty_cell, user)
             if isinstance(result, HTML):
                 # ??? Typing doesn't fit.
                 return str(result)
@@ -258,11 +262,11 @@ class Painter(abc.ABC):
 
     # TODO For PDF we implement an additional method.
 
-    def _compute_data(self, row: Row, cell: Cell) -> object:
-        return self.render(row, cell)[1]
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+        return self.render(row, cell, user)[1]
 
     @abc.abstractmethod
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         """Renders the painter for the given row
         The paint function gets one argument: A data row, which is a python
         dictionary representing one data object (host, service, ...). Its
@@ -278,31 +282,31 @@ class Painter(abc.ABC):
         change in future."""
         raise NotImplementedError()
 
-    def export_for_python(self, row: Row, cell: Cell) -> object:
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         """Render the content of the painter for Pyton export based on the given row.
 
         If the data of a painter can not be exported as Python, then this method
         raises a 'PythonExportError'.
         """
-        return self._compute_data(row, cell)
+        return self._compute_data(row, cell, user)
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         """Render the content of the painter for CSV export based on the given row.
 
         If the data of a painter can not be exported as CSV (like trees), then this method
         raises a 'CSVExportError'.
         """
-        if isinstance(data := self._compute_data(row, cell), str | HTML):
+        if isinstance(data := self._compute_data(row, cell, user), str | HTML):
             return data
         raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
 
-    def export_for_json(self, row: Row, cell: Cell) -> object:
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         """Render the content of the painter for JSON export based on the given row.
 
         If the data of a painter can not be exported as JSON, then this method
         raises a 'JSONExportError'.
         """
-        return self._compute_data(row, cell)
+        return self._compute_data(row, cell, user)
 
 
 # .
@@ -392,7 +396,6 @@ class Cell:
         try:
             return PainterAdapter(
                 experimental_painter_registry[self.painter_name()],
-                user=user,
                 config=active_config,
                 request=request,
                 painter_options=painter_options_inst,
@@ -402,7 +405,6 @@ class Cell:
         except KeyError:
             assert self._registered_painters is not None
             return self._registered_painters[self.painter_name()](
-                user=user,
                 config=active_config,
                 request=request,
                 painter_options=painter_options_inst,
@@ -473,7 +475,6 @@ class Cell:
         assert self._tooltip_painter_name is not None
         assert self._registered_painters is not None
         return self._registered_painters[self._tooltip_painter_name](
-            user=user,
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
@@ -511,11 +512,12 @@ class Cell:
         self,
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        user: LoggedInUser,
     ) -> tuple[str, str | HTML]:
         row = join_row(row, self)
 
         try:
-            tdclass, content = self.render_content(row)
+            tdclass, content = self.render_content(row, user=user)
             assert isinstance(content, str | HTML)
         except Exception:
             logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
@@ -537,7 +539,7 @@ class Cell:
             tooltip_cell = Cell(
                 ColumnSpec(self.tooltip_painter_name()), None, self._registered_painters
             )
-            _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
+            _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row, user=user)
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
             if tooltip_text:
@@ -550,7 +552,9 @@ class Cell:
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
-    def render_for_pdf(self, row: Row, time_range: tuple[int, int]) -> PDFCellSpec:
+    def render_for_pdf(
+        self, row: Row, time_range: tuple[int, int], user: LoggedInUser
+    ) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             themes = theme.icon_themes()
@@ -565,7 +569,7 @@ class Cell:
 
         try:
             row = join_row(row, self)
-            css_classes, rendered_txt = self.render_content(row)
+            css_classes, rendered_txt = self.render_content(row, user=user)
             if css_classes is None:
                 css_classes = ""
             if rendered_txt is None:
@@ -601,7 +605,7 @@ class Cell:
                 f'Failed to paint "{self.painter_name()}": {traceback.format_exc()}'
             )
 
-    def render_for_python_export(self, row: Row) -> object:
+    def render_for_python_export(self, row: Row, user: LoggedInUser) -> object:
         if request.var("output_format") not in ["python", "python_export"]:
             return "NOT_PYTHON_EXPORTABLE"
 
@@ -609,7 +613,7 @@ class Cell:
             return ""
 
         try:
-            content = self.painter().export_for_python(row, self)
+            content = self.painter().export_for_python(row, self, user)
         except PythonExportError:
             return "NOT_PYTHON_EXPORTABLE"
 
@@ -621,7 +625,7 @@ class Cell:
 
         return content
 
-    def render_for_csv_export(self, row: Row) -> str | HTML:
+    def render_for_csv_export(self, row: Row, user: LoggedInUser) -> str | HTML:
         if request.var("output_format") not in ["csv", "csv_export"]:
             return "NOT_CSV_EXPORTABLE"
 
@@ -629,13 +633,13 @@ class Cell:
             return ""
 
         try:
-            content = self.painter().export_for_csv(row, self)
+            content = self.painter().export_for_csv(row, self, user)
         except CSVExportError:
             return "NOT_CSV_EXPORTABLE"
 
         return self._render_html_content(content)
 
-    def render_for_json_export(self, row: Row) -> object:
+    def render_for_json_export(self, row: Row, user: LoggedInUser) -> object:
         if request.var("output_format") not in ["json", "json_export"]:
             return "NOT_JSON_EXPORTABLE"
 
@@ -643,7 +647,7 @@ class Cell:
             return ""
 
         try:
-            content = self.painter().export_for_json(row, self)
+            content = self.painter().export_for_json(row, self, user)
         except JSONExportError:
             return "NOT_JSON_EXPORTABLE"
 
@@ -666,20 +670,21 @@ class Cell:
 
         return txt
 
-    def render_content(self, row: Row) -> CellSpec:
+    def render_content(self, row: Row, user: LoggedInUser) -> CellSpec:
         if not row:
             return "", ""  # nothing to paint
 
         painter = self.painter()
-        return painter.render(row, self)
+        return painter.render(row, self, user)
 
     def paint(
         self,
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        user: LoggedInUser,
         colspan: int | None = None,
     ) -> bool:
-        tdclass, content = self.render(row, link_renderer)
+        tdclass, content = self.render(row, link_renderer, user)
         assert isinstance(content, str | HTML)
         html.td(content, class_=tdclass, colspan=colspan)
         return content != ""
@@ -718,6 +723,7 @@ class EmptyCell(Cell):
         self,
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        user: LoggedInUser,
     ) -> tuple[str, str]:
         return "", ""
 
@@ -725,6 +731,7 @@ class EmptyCell(Cell):
         self,
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        user: LoggedInUser,
         colspan: int | None = None,
     ) -> bool:
         return False
@@ -745,7 +752,6 @@ class PainterAdapter(Painter):
         self,
         painter: V1Painter,
         *,
-        user: LoggedInUser,
         config: Config,
         request: Request,
         painter_options: PainterOptions,
@@ -753,7 +759,6 @@ class PainterAdapter(Painter):
         url_renderer: RenderLink,
     ):
         super().__init__(
-            user=user,
             config=config,
             request=request,
             painter_options=painter_options,
@@ -790,11 +795,12 @@ class PainterAdapter(Painter):
     def title_classes(self) -> list[str]:
         return self._painter.title_classes or []
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         config = PainterConfiguration(
             parameters=cell.painter_parameters(), columns=self._painter.columns
         )
         return self._painter.formatters.html(
             list(self._painter.computer([row], config))[0],
             config,
+            user,
         )

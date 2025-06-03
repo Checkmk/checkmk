@@ -332,7 +332,6 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
     registered_painters = all_painters(active_config)
     painters: list[Painter] = [
         painter_class(
-            user=user,
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
@@ -377,7 +376,6 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
 
     registered_painters = all_painters(active_config)
     painter = registered_painters["abc"](
-        user=user,
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),
@@ -393,7 +391,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=dummy_cell) == ("abc", "xyz")
+    assert painter.render(row={}, cell=dummy_cell, user=user) == ("abc", "xyz")
     assert painter.group_by(row={}, cell=dummy_cell) == "xyz"
 
 

@@ -12,6 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
@@ -958,7 +959,7 @@ def render_mobile_table(
             else:
                 colspan = None
 
-            cell.paint(row, link_renderer, colspan=colspan)
+            cell.paint(row, link_renderer, user=user, colspan=colspan)
         html.close_tr()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -1015,7 +1016,7 @@ def render_mobile_list(
     # Paint data rows
     for row in rows:
         html.open_li()
-        rendered_cells = [cell.render(row, link_renderer) for cell in cells]
+        rendered_cells = [cell.render(row, link_renderer, user) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
             assert isinstance(rendered_content, str | HTML)
@@ -1095,7 +1096,7 @@ def render_mobile_dataset(
     for row in rows:
         html.open_table(class_="dataset")
         for cell in cells:
-            _tdclass, content = cell.render(row, link_renderer)
+            _tdclass, content = cell.render(row, link_renderer, user)
             if not content:
                 continue  # Omit empty cells
 
@@ -1104,7 +1105,7 @@ def render_mobile_dataset(
             html.close_tr()
 
             html.open_tr(class_="data")
-            cell.paint(row, link_renderer)
+            cell.paint(row, link_renderer, user=user)
             html.close_tr()
 
         html.close_table()

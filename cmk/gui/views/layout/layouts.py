@@ -113,7 +113,7 @@ class LayoutSingleDataset(Layout):
                     html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
-                    cell.paint(row, link_renderer)
+                    cell.paint(row, link_renderer, user=user)
 
                 if len(thispart) < num_columns:
                     html.td(
@@ -260,7 +260,7 @@ class GroupedBoxesLayout(Layout):
 
             link_renderer = partial(render_link_to_view, request=request)
             for cell in cells:
-                cell.paint(row, link_renderer)
+                cell.paint(row, link_renderer, user=user)
 
             html.close_tr()
 
@@ -281,7 +281,7 @@ class GroupedBoxesLayout(Layout):
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
-            painted = cell.paint(first_row, link_renderer)
+            painted = cell.paint(first_row, link_renderer, user=user)
         html.close_tr()
         html.close_table()
 
@@ -534,7 +534,7 @@ class LayoutTiled(Layout):
                     for cell in group_cells:
                         if painted:
                             html.td(",&nbsp;")
-                        painted = cell.paint(row, link_renderer)
+                        painted = cell.paint(row, link_renderer, user=user)
 
                     html.close_tr()
                     html.close_table()
@@ -577,7 +577,7 @@ class LayoutTiled(Layout):
             if len(render_cells) < 5:
                 render_cells += [EmptyCell(None, None, None)] * (5 - len(render_cells))
 
-            rendered = [cell.render(row, link_renderer) for cell in render_cells]
+            rendered = [cell.render(row, link_renderer, user) for cell in render_cells]
 
             html.open_tr()
             html.open_td(class_=["tl", rendered[1][0]])
@@ -697,7 +697,7 @@ class LayoutTable(Layout):
                     # paint group header, but only if it is non-empty
                     header_is_empty = True
                     for cell in group_cells:
-                        _tdclass, content = cell.render(row, link_renderer)
+                        _tdclass, content = cell.render(row, link_renderer, user)
                         if content:
                             header_is_empty = False
                             break
@@ -716,7 +716,7 @@ class LayoutTable(Layout):
                         for cell in group_cells:
                             if painted:
                                 html.td(",&nbsp;")
-                            painted = cell.paint(row, link_renderer)
+                            painted = cell.paint(row, link_renderer, user=user)
 
                         html.close_tr()
                         html.close_table()
@@ -791,7 +791,7 @@ class LayoutTable(Layout):
                 render_checkbox_td(view, row, num_cells)
 
             for cell in cells:
-                cell.paint(row, link_renderer)
+                cell.paint(row, link_renderer, user=user)
 
             column += 1
 
@@ -874,7 +874,7 @@ class LayoutMatrix(Layout):
                 table.row()
                 table.cell("", cell.title(use_short=False))
                 for _group, group_row in groups:
-                    _tdclass, content = cell.render(group_row, link_renderer)
+                    _tdclass, content = cell.render(group_row, link_renderer, user)
                     table.cell("", content)
 
             for rid in unique_row_ids:
@@ -890,7 +890,7 @@ class LayoutMatrix(Layout):
 
                 table.row()
                 _tdclass, content = cells[0].render(
-                    list(matrix_cells[rid].values())[0], link_renderer
+                    list(matrix_cells[rid].values())[0], link_renderer, user=user
                 )
                 table.cell("", content)
 
@@ -899,7 +899,7 @@ class LayoutMatrix(Layout):
                     cell_row = matrix_cells[rid].get(group_id)
                     if cell_row is not None:
                         for cell_nr, cell in enumerate(cells[1:]):
-                            _tdclass, content = cell.render(cell_row, link_renderer)
+                            _tdclass, content = cell.render(cell_row, link_renderer, user)
                             if cell_nr:
                                 html.write_text_permissive(",")
                             html.write_text_permissive(content)
@@ -932,7 +932,7 @@ class LayoutMatrix(Layout):
                 html.write_text_permissive(cell.title(use_short=False))
                 html.close_td()
                 for _group, group_row in groups:
-                    tdclass, content = cell.render(group_row, link_renderer)
+                    tdclass, content = cell.render(group_row, link_renderer, user=user)
                     if cell_nr > 0:
                         gv = group_value(group_row, [cell])
                         majority_value = header_majorities.get(cell_nr - 1, None)
@@ -958,7 +958,7 @@ class LayoutMatrix(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 tdclass, content = cells[0].render(
-                    list(matrix_cells[rid].values())[0], link_renderer
+                    list(matrix_cells[rid].values())[0], link_renderer, user=user
                 )
                 html.open_td(class_=["left", tdclass])
                 html.write_text_permissive(content)
@@ -976,7 +976,7 @@ class LayoutMatrix(Layout):
                             html.open_table()
 
                         for cell_nr, cell in enumerate(cells[1:]):
-                            tdclass, content = cell.render(cell_row, link_renderer)
+                            tdclass, content = cell.render(cell_row, link_renderer, user)
 
                             gv = group_value(cell_row, [cell])
                             majority_value = row_majorities[rid].get(cell_nr, None)

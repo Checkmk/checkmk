@@ -11,7 +11,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import EmptyCell, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
@@ -65,7 +64,6 @@ def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
     painter = painter_registry[painter_name](
-        user=user,
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),

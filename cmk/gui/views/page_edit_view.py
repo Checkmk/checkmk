@@ -24,7 +24,6 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painter.v0 import all_painters, Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
@@ -1032,7 +1031,6 @@ def _allowed_for_datasource(
             plugin = instance
         elif issubclass(instance, Painter):
             plugin = instance(
-                user=user,
                 config=active_config,
                 request=request,
                 painter_options=PainterOptions.get_instance(),

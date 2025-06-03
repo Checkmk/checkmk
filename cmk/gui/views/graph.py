@@ -329,26 +329,26 @@ class PainterServiceGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
             graphs_from_api,
-            user=self.user,
+            user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
             show_time_range_previews=True,
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> object:
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError()
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> object:
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError()
 
 
@@ -376,13 +376,13 @@ class PainterHostGraphs(Painter):
     def parameters(self):
         return cmk_time_graph_params()
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
             graphs_from_api,
-            user=self.user,
+            user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
@@ -392,13 +392,13 @@ class PainterHostGraphs(Painter):
             require_historic_metrics="service_description" not in row,
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> object:
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError()
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> object:
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError()
 
 
@@ -449,25 +449,25 @@ class PainterSvcPnpgraph(Painter):
     def parameters(self) -> Transform:
         return cmk_time_graph_params()
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
             graphs_from_api,
-            user=self.user,
+            user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> object:
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError()
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> object:
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError()
 
 
@@ -498,25 +498,25 @@ class PainterHostPnpgraph(Painter):
     def parameters(self) -> Transform:
         return cmk_time_graph_params()
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
             graphs_from_api,
-            user=self.user,
+            user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
         )
 
-    def export_for_python(self, row: Row, cell: Cell) -> object:
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise PythonExportError()
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> object:
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
         raise JSONExportError()
 
 

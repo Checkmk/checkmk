@@ -27,6 +27,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
 from cmk.gui.theme.current_theme import theme
@@ -110,7 +111,7 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def _compute_data(self, row: Row, cell: Cell) -> ImmutableTree:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableTree:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
@@ -118,8 +119,8 @@ class PainterInventoryTree(Painter):
 
         return row.get("host_inventory", ImmutableTree())
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if not (tree := self._compute_data(row, cell)):
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        if not (tree := self._compute_data(row, cell, user)):
             return "", ""
 
         tree_renderer = TreeRenderer(
@@ -137,14 +138,14 @@ class PainterInventoryTree(Painter):
 
         return "invtree", code
 
-    def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
-        return serialize_tree(self._compute_data(row, cell))
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawTree:
+        return serialize_tree(self._compute_data(row, cell, user))
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
-        return serialize_tree(self._compute_data(row, cell))
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawTree:
+        return serialize_tree(self._compute_data(row, cell, user))
 
 
 class PainterInvhistTime(Painter):
@@ -166,7 +167,7 @@ class PainterInvhistTime(Painter):
     def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_age(
             row["invhist_time"],
             True,
@@ -192,7 +193,7 @@ class PainterInvhistDelta(Painter):
     def painter_options(self):
         return ["show_internal_tree_paths"]
 
-    def _compute_data(self, row: Row, cell: Cell) -> ImmutableDeltaTree:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableDeltaTree:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
@@ -200,8 +201,8 @@ class PainterInvhistDelta(Painter):
 
         return row.get("invhist_delta", ImmutableDeltaTree())
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        if not (tree := self._compute_data(row, cell)):
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        if not (tree := self._compute_data(row, cell, user)):
             return "", ""
 
         tree_renderer = TreeRenderer(
@@ -219,14 +220,14 @@ class PainterInvhistDelta(Painter):
 
         return "invtree", code
 
-    def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return serialize_delta_tree(self._compute_data(row, cell))
+    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawDeltaTree:
+        return serialize_delta_tree(self._compute_data(row, cell, user))
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return serialize_delta_tree(self._compute_data(row, cell))
+    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> SDRawDeltaTree:
+        return serialize_delta_tree(self._compute_data(row, cell, user))
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -251,7 +252,7 @@ class PainterInvhistRemoved(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_removed"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "removed")
 
 
@@ -270,7 +271,7 @@ class PainterInvhistNew(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_new"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "new")
 
 
@@ -289,7 +290,7 @@ class PainterInvhistChanged(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_changed"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_invhist_count(row, "changed")
 
 

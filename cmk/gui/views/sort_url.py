@@ -8,7 +8,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
@@ -133,7 +132,6 @@ def _get_sorter_name_of_painter(
         else painter_name_or_spec
     )
     painter = registered_painters[painter_name](
-        user=user,
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),

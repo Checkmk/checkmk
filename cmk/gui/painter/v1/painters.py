@@ -5,6 +5,7 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Rows
 from cmk.gui.view_utils import CellSpec
 
@@ -24,7 +25,7 @@ experimental_painter_registry.register(
         ident="alias",
         computer=get_single_str_column,
         formatters=Formatters[str](
-            html=lambda painter_data, painter_configuration: ("", painter_data)
+            html=lambda painter_data, painter_configuration, user: ("", painter_data),
         ),
         title=_l("Host alias"),
         short_title=_l("Alias"),
@@ -35,8 +36,10 @@ experimental_painter_registry.register(
 
 def _get_number_of_services_formatter(
     css_id: str,
-) -> Callable[[int, PainterConfiguration], CellSpec]:
-    def number_of_services(painter_data: int, config: PainterConfiguration) -> CellSpec:
+) -> Callable[[int, PainterConfiguration, LoggedInUser], CellSpec]:
+    def number_of_services(
+        painter_data: int, config: PainterConfiguration, user: LoggedInUser
+    ) -> CellSpec:
         if painter_data > 0:
             return f"count svcstate state{css_id}", str(painter_data)
         return "count svcstate", "0"

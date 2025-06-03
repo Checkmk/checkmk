@@ -11,6 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
@@ -37,7 +38,7 @@ class PainterHostFilename(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return ("tt", row["host_filename"])
 
 
@@ -100,7 +101,7 @@ class PainterWatoFolderAbs(Painter):
     def sorter(self):
         return "wato_folder_abs"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "abs", request=self.request)
 
 
@@ -123,7 +124,7 @@ class PainterWatoFolderRel(Painter):
     def sorter(self):
         return "wato_folder_rel"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "rel", request=self.request)
 
 
@@ -146,7 +147,7 @@ class PainterWatoFolderPlain(Painter):
     def sorter(self):
         return "wato_folder_plain"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_wato_folder(row, "plain", request=self.request)
 
 

@@ -18,7 +18,7 @@ from cmk.utils.tags import TagID
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import ColumnName, Row
@@ -71,13 +71,13 @@ class PainterServiceIcons(Painter):
     def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_icons("service", row, _get_row_icons("service", row))
 
-    def _compute_data(self, row: Row, cell: Cell) -> list[IconSpec]:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
         return [i.icon_name for i in _get_row_icons("service", row) if isinstance(i, IconEntry)]
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
 
@@ -103,13 +103,13 @@ class PainterHostIcons(Painter):
     def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return _paint_icons("host", row, _get_row_icons("host", row))
 
-    def _compute_data(self, row: Row, cell: Cell) -> list[IconSpec]:
+    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
         return [i.icon_name for i in _get_row_icons("host", row) if isinstance(i, IconEntry)]
 
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
 

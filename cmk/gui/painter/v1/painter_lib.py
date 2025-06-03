@@ -10,6 +10,7 @@ import cmk.ccc.plugin_registry
 
 import cmk.utils
 
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
 from cmk.gui.utils.speaklater import LazyString
@@ -28,10 +29,10 @@ class PainterConfiguration:
 
 
 def strip_css_from_cell_spec(
-    html_formatter: Callable[[T, PainterConfiguration], CellSpec],
+    html_formatter: Callable[[T, PainterConfiguration, LoggedInUser], CellSpec], user: LoggedInUser
 ) -> Callable[[T, PainterConfiguration], str]:
     def css_remover(painter_data: T, painter_configuration: PainterConfiguration) -> str:
-        return str(html_formatter(painter_data, painter_configuration)[1])
+        return str(html_formatter(painter_data, painter_configuration, user)[1])
 
     return css_remover
 
@@ -39,13 +40,14 @@ def strip_css_from_cell_spec(
 class Formatters(Generic[T]):
     def __init__(
         self,
-        html: Callable[[T, PainterConfiguration], CellSpec],
-        csv: Callable[[T, PainterConfiguration], str] | None = None,
-        json: Callable[[T, PainterConfiguration], object] | None = None,
+        html: Callable[[T, PainterConfiguration, LoggedInUser], CellSpec],
+        csv: Callable[[T, PainterConfiguration, LoggedInUser], str] | None = None,
+        json: Callable[[T, PainterConfiguration, LoggedInUser], object] | None = None,
+        user: LoggedInUser = user,
     ) -> None:
         self.html = html
-        self.csv = csv or strip_css_from_cell_spec(html)
-        self.json = json or strip_css_from_cell_spec(html)
+        self.csv = csv or strip_css_from_cell_spec(html, user)
+        self.json = json or strip_css_from_cell_spec(html, user)
 
 
 @dataclass(frozen=True, kw_only=True)

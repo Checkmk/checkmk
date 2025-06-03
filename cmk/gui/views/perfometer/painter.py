@@ -11,6 +11,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter.v1.helpers import is_stale
@@ -48,7 +49,7 @@ class PainterPerfometer(Painter):
     def printable(self):
         return "perfometer"
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         classes = ["perfometer"]
         if is_stale(row, config=self.config):
             classes.append("stale")

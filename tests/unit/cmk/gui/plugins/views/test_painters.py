@@ -24,6 +24,7 @@ from cmk.utils.structured_data import deserialize_tree
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.http import request
+from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
@@ -942,7 +943,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request))
+        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request), user)
         assert isinstance(content, str | HTML)
 
         if isinstance(content, str) and "<" in content:

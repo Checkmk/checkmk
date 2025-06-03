@@ -56,7 +56,7 @@ def host_tag_config_based_painters(
                 "title": lambda self, cell: self._spec["title"],
                 "short_title": lambda self, cell: self._spec["short"],
                 "columns": property(lambda self: self._spec["columns"]),
-                "render": lambda self, row, cell: _paint_host_tag(
+                "render": lambda self, row, cell, user: _paint_host_tag(
                     row, self._tag_group_id, tag_group=tag_group
                 ),
                 # Use title of the tag value for grouping, not the complete

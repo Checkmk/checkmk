@@ -109,7 +109,7 @@ def main() {
                             relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
                             build_params << [
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
-                                DISTRO: "ubuntu-22.04",
+                                DISTRO: "ubuntu-24.04",
                                 EDITION: "enterprise",
                             ];
                             break;

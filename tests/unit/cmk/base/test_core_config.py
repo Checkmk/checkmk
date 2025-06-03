@@ -19,7 +19,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 from cmk.utils import ip_lookup, password_store
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -35,11 +35,11 @@ from cmk.base.core_factory import create_core
 
 @pytest.fixture(name="config_path")
 def fixture_config_path():
-    ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
+    VersionedConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
     try:
-        yield ConfigPath.ROOT
+        yield VersionedConfigPath.ROOT
     finally:
-        shutil.rmtree(ConfigPath.ROOT)
+        shutil.rmtree(VersionedConfigPath.ROOT)
 
 
 @pytest.fixture(name="core_scenario")

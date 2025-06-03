@@ -6,57 +6,45 @@
 
 from __future__ import annotations
 
-import abc
 import os
 import shutil
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from cmk.ccc import store
 
 from cmk.utils.paths import core_helper_config_dir
 
-__all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
+__all__ = ["VersionedConfigPath", "LATEST_CONFIG"]
 
 
-class ConfigPath(abc.ABC):
-    __slots__ = ()
-
+class VersionedConfigPath(Iterator):
     # Note - Security: This must remain hard-coded to a path not writable by others.
     #                  See BNS:c3c5e9.
     ROOT: Final = core_helper_config_dir
 
-    @property
-    @abc.abstractmethod
-    def _path_elem(self) -> str:
-        raise NotImplementedError()
-
-    def __str__(self) -> str:
-        return self._path_elem
-
-    def __eq__(self, other: Any) -> bool:
-        return Path(self) == Path(other) if isinstance(other, os.PathLike) else False
-
-    def __hash__(self) -> int:
-        return hash(type(self)) ^ hash(self._path_elem)
-
-    def __fspath__(self) -> str:
-        return str(self.ROOT / self._path_elem)
-
-
-class VersionedConfigPath(ConfigPath, Iterator):
-    __slots__ = ("serial",)
-
-    _SERIAL_MK: Final = ConfigPath.ROOT / "serial.mk"
+    _SERIAL_MK: Final = ROOT / "serial.mk"
 
     def __init__(self, serial: int) -> None:
         super().__init__()
         self.serial: Final = serial
 
+    def __str__(self) -> str:
+        return self._path_elem
+
+    def __fspath__(self) -> str:
+        return str(self.ROOT / self._path_elem)
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.serial})"
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, os.PathLike) and Path(self) == Path(other)
+
+    def __hash__(self) -> int:
+        return hash(type(self)) ^ hash(self._path_elem)
 
     @property
     def _path_elem(self) -> str:

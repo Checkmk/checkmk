@@ -10,16 +10,16 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:
     @pytest.fixture
     def config_path(self) -> Iterator[VersionedConfigPath]:
-        ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
+        VersionedConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
         # Call next because this is where `latest` etc. are created and updated.
         yield next(VersionedConfigPath(0))
-        shutil.rmtree(ConfigPath.ROOT)
+        shutil.rmtree(VersionedConfigPath.ROOT)
 
     def test_iter(self, config_path: VersionedConfigPath) -> None:
         for it, elem in enumerate(config_path, config_path.serial + 1):
@@ -57,7 +57,7 @@ class TestVersionedConfigPath:
 
     def test_fspath(self, config_path: VersionedConfigPath) -> None:
         assert config_path.serial == 1
-        assert Path(config_path) / "filename" == config_path.ROOT / "1/filename"
+        assert Path(config_path) / "filename" == VersionedConfigPath.ROOT / "1/filename"
         assert Path("dir") / Path(config_path).name == Path("dir/1")
 
     @pytest.mark.parametrize("is_cmc", (True, False))

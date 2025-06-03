@@ -19,12 +19,13 @@ from typing import Final, Literal
 import livestatus
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
-from cmk.utils import password_store, tty
+from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot

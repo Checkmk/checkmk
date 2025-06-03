@@ -28,13 +28,12 @@ import requests
 import livestatus
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc import site, store
+from cmk.ccc import site, store, tty
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
-from cmk.utils import tty
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,

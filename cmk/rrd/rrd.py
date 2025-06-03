@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import assert_never, cast, Literal, NewType, Self, TypedDict
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
@@ -37,7 +38,7 @@ from cmk.ccc.crash_reporting import (
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import get_general_version_infos
 
-from cmk.utils import paths, pnp_cleanup, tty
+from cmk.utils import paths, pnp_cleanup
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 

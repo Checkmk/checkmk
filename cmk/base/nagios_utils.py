@@ -7,8 +7,9 @@ import subprocess
 import sys
 from contextlib import suppress
 
+from cmk.ccc import tty
+
 import cmk.utils.paths
-from cmk.utils import tty
 from cmk.utils.log import console
 
 

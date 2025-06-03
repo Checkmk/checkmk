@@ -6,10 +6,10 @@
 from logging import Logger
 from pathlib import Path
 
+from cmk.ccc import tty
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
 
-from cmk.utils import tty
 from cmk.utils.log import console
 
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction

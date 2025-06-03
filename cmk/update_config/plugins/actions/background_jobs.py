@@ -9,7 +9,7 @@ import os
 from logging import Logger
 from typing import Literal, override
 
-from cmk.utils import tty
+from cmk.ccc import tty
 
 from cmk.gui.background_job import BackgroundJobDefines
 

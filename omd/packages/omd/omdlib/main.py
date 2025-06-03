@@ -127,6 +127,7 @@ from omdlib.version import (
 )
 from omdlib.version_info import VersionInfo
 
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import (
     Edition,
@@ -136,7 +137,6 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 
-from cmk.utils import tty
 from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.resulttype import Error, OK, Result

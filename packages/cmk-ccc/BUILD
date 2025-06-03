@@ -136,6 +136,14 @@ py_library(
     ],
 )
 
+py_library(
+    name = "tty",
+    srcs = ["cmk/ccc/tty.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
 _ALL = [
     "crash-reporting",
     "daemon",
@@ -147,6 +155,7 @@ _ALL = [
     "profile",
     "site",
     "store",
+    "tty",
     "user",
     "version",
 ]
@@ -208,6 +217,21 @@ py_test(
     deps = [
         "__test__",
         "site",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "tty-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_tty.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "tty",
         requirement("pytest"),
     ],
 )

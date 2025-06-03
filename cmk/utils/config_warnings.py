@@ -7,7 +7,8 @@ import sys
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils import tty
+from cmk.ccc import tty
+
 from cmk.utils.log import console
 
 ConfigurationWarnings = list[str]

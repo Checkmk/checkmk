@@ -5,7 +5,7 @@
 from logging import Logger
 from typing import override
 
-from cmk.utils import tty
+from cmk.ccc import tty
 
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.rulesets import AllRulesets

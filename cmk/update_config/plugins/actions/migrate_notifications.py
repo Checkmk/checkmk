@@ -6,7 +6,8 @@
 from logging import Logger
 from typing import Any, cast, override
 
-from cmk.utils import tty
+from cmk.ccc import tty
+
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterGeneralInfos,

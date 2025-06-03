@@ -13,12 +13,12 @@ from contextlib import contextmanager, suppress
 from typing import Literal
 
 import cmk.ccc.debug
-from cmk.ccc import store
+from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
 
 import cmk.utils.paths
-from cmk.utils import ip_lookup, tty
+from cmk.utils import ip_lookup
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName

@@ -38,6 +38,7 @@ from typing import (
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import omd_site, SiteId
@@ -48,7 +49,7 @@ import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.translations
-from cmk.utils import config_warnings, ip_lookup, password_store, tty
+from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of

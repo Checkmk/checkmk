@@ -8,10 +8,10 @@ import sys
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 
-from cmk.utils import tty
 from cmk.utils.log import console
 
 from cmk.checkengine.fetcher import HostKey, SourceType

@@ -14,9 +14,8 @@ from tty import setraw
 
 from omdlib.type_defs import ConfigChoiceHasError
 
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
-
-from cmk.utils import tty
 
 DialogResult = tuple[bool, str]
 

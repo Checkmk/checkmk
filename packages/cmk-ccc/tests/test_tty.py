@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils import tty
+from cmk.ccc import tty
 
 
 def test_print_table(capsys: pytest.CaptureFixture[str]) -> None:

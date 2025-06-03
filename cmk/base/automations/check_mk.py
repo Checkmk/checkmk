@@ -30,14 +30,14 @@ from typing import Any
 import livestatus
 
 import cmk.ccc.debug
-from cmk.ccc import version
+from cmk.ccc import tty, version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.version import edition_supports_nagvis
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
+from cmk.utils import config_warnings, ip_lookup, log, man_pages
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager

@@ -18,9 +18,8 @@ if TYPE_CHECKING:
 
 from omdlib.site_paths import SitePaths
 
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
-
-from cmk.utils import tty
 
 # .
 #   .--Users/Groups--------------------------------------------------------.

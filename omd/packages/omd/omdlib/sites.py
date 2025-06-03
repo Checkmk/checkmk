@@ -11,7 +11,7 @@ from pathlib import Path
 from omdlib.site_paths import SitePaths
 from omdlib.version import default_version, version_from_site_dir
 
-from cmk.utils import tty
+from cmk.ccc import tty
 
 
 def main_sites(

@@ -9,7 +9,9 @@ from pathlib import Path
 
 from pydantic import TypeAdapter, ValidationError
 
-from cmk.utils import paths, tty
+from cmk.ccc import tty
+
+from cmk.utils import paths
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.timeperiod import (

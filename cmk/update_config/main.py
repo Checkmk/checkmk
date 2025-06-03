@@ -20,10 +20,10 @@ from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
 
-from cmk.ccc import debug
+from cmk.ccc import debug, tty
 from cmk.ccc.version import Edition, edition
 
-from cmk.utils import log, paths, tty
+from cmk.utils import log, paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions

@@ -5,10 +5,10 @@
 
 from logging import Logger
 
+from cmk.ccc import tty
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
 
-from cmk.utils import tty
 from cmk.utils.log import console
 
 from cmk.gui.site_config import is_wato_slave_site

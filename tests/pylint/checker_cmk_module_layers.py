@@ -741,7 +741,7 @@ _COMPONENTS = (
     (Component("cmk.update_config"), _allow_for_cmk_update_config),
     (
         Component("cmk.validate_config"),
-        _allow("cmk.base", "cmk.gui", "cmk.checkengine", "cmk.utils"),
+        _allow("cmk.base", "cmk.gui", "cmk.checkengine", "cmk.utils", "cmk.ccc"),
     ),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.utils"), _is_default_allowed_import),

@@ -13,10 +13,10 @@ from dataclasses import dataclass, field
 from typing import Any, assert_never, TypeVar
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils import tty
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (

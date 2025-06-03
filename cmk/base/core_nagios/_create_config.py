@@ -16,11 +16,11 @@ from socket import AddressFamily
 from typing import Any, assert_never, IO, Literal
 
 import cmk.ccc.debug
-from cmk.ccc import store
+from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
-from cmk.utils import config_warnings, ip_lookup, password_store, tty
+from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels

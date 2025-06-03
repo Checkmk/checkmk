@@ -16,9 +16,10 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
+from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
 
-from cmk.utils import paths, tty
+from cmk.utils import paths
 from cmk.utils.log import logger as cmk_logger
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse

@@ -6,7 +6,7 @@
 
 import sys
 
-from cmk.utils import tty
+from cmk.ccc import tty
 
 
 def ok() -> None:

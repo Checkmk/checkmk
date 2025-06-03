@@ -23,10 +23,9 @@ from pathlib import Path
 from typing import Final
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-
-from cmk.utils import tty
 
 
 @dataclass

@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.tty import format_warning
 
-from cmk.utils import tty
 from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
-from cmk.utils.tty import format_warning
 
 from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
 

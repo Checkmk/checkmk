@@ -25,11 +25,12 @@ import livestatus
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+from cmk.ccc import tty
 from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.caching
 import cmk.utils.paths
-from cmk.utils import redis, tty
+from cmk.utils import redis
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,

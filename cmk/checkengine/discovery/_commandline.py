@@ -9,11 +9,11 @@ from collections import Counter
 from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.ccc.debug
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.cleanup
-from cmk.utils import tty
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap, SectionName

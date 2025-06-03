@@ -142,6 +142,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:profile",
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",
+    "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",
     "//packages/cmk-crypto",

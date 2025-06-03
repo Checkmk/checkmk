@@ -14,11 +14,11 @@ from dataclasses import dataclass
 from random import Random
 from typing import Final, final, IO, Literal
 
+from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.paths
-from cmk.utils import tty
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout

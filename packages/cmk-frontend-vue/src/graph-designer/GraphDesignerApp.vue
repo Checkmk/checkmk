@@ -23,8 +23,13 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { ref, type Ref } from 'vue'
-import { convertToUnit, convertToExplicitVerticalRange } from '@/graph-designer/converters'
+import { computed, ref, type Ref } from 'vue'
+import {
+  convertFromExplicitVerticalRange,
+  convertFromUnit,
+  convertToExplicitVerticalRange,
+  convertToUnit
+} from '@/graph-designer/converters'
 import {
   type GraphLine,
   type GraphLines,
@@ -709,6 +714,17 @@ function dragElement(event: DragEvent) {
   const movedEntry = graphLines.value.splice(dragReturn.draggedIndex, 1)[0]!
   graphLines.value.splice(dragReturn.targetIndex, 0, movedEntry)
 }
+
+const graphDesignerContentAsJson = computed(() => {
+  return JSON.stringify({
+    graph_lines: graphLines.value,
+    graph_options: {
+      unit: convertFromUnit(dataUnit.value),
+      explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
+      omit_zero_metrics: dataOmitZeroMetrics.value
+    }
+  })
+})
 </script>
 
 <template>
@@ -859,7 +875,7 @@ function dragElement(event: DragEvent) {
             />
           </template>
           <template #metric_action>
-            <button @click="addMetric">
+            <button @click.prevent="addMetric">
               <img
                 :title="props.i18n.graph_lines.add"
                 src="themes/facelift/images/icon_new.svg"
@@ -885,7 +901,7 @@ function dragElement(event: DragEvent) {
             />
           </template>
           <template #metric_action>
-            <button @click="addScalar">
+            <button @click.prevent="addScalar">
               <img
                 :title="props.i18n.graph_lines.add"
                 src="themes/facelift/images/icon_new.svg"
@@ -904,7 +920,7 @@ function dragElement(event: DragEvent) {
           :spec="specConstant"
           :backend-validation="backendValidationConstant"
         />
-        <button @click="addConstant">
+        <button @click.prevent="addConstant">
           <img
             :title="props.i18n.graph_lines.add"
             src="themes/facelift/images/icon_new.svg"
@@ -969,4 +985,7 @@ function dragElement(event: DragEvent) {
       </div>
     </template>
   </TopicsRenderer>
+
+  <!-- This input field contains the computed json value which is sent when the form is submitted -->
+  <input v-model="graphDesignerContentAsJson" name="graph_designer_content" type="hidden" />
 </template>

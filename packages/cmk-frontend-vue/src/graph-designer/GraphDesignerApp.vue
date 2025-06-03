@@ -868,7 +868,6 @@ function dragElement(event: DragEvent) {
                 :title="props.i18n.graph_lines.add"
                 src="themes/facelift/images/icon_new.svg"
                 class="icon iconbutton"
-                @click="addMetric"
               />
               {{ props.i18n.graph_lines.add }}
             </button>
@@ -895,7 +894,6 @@ function dragElement(event: DragEvent) {
                 :title="props.i18n.graph_lines.add"
                 src="themes/facelift/images/icon_new.svg"
                 class="icon iconbutton"
-                @click="addMetric"
               />
               {{ props.i18n.graph_lines.add }}
             </button>
@@ -915,7 +913,6 @@ function dragElement(event: DragEvent) {
             :title="props.i18n.graph_lines.add"
             src="themes/facelift/images/icon_new.svg"
             class="icon iconbutton"
-            @click="addMetric"
           />
           {{ props.i18n.graph_lines.add }}
         </button>

@@ -1,0 +1,3 @@
+#/bin/sh
+WORKSPACE_DIR=`realpath "$0" | xargs dirname | xargs dirname`
+python3 $WORKSPACE_DIR/cmk/gui/openapi/spec/spec_generator/generate_api_spec.py "$@"

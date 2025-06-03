@@ -284,11 +284,11 @@ def _convert_validate_and_save_site_data(
     return serve_json(data=_serialize_site(site_obj), status=200)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_site)
-    endpoint_registry.register(show_sites)
-    endpoint_registry.register(post_site)
-    endpoint_registry.register(put_site)
-    endpoint_registry.register(delete_site)
-    endpoint_registry.register(site_login)
-    endpoint_registry.register(site_logout)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_site, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_sites, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(post_site, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(put_site, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_site, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(site_login, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(site_logout, ignore_duplicates=ignore_duplicates)

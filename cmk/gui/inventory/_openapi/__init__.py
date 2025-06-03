@@ -52,6 +52,10 @@ ENDPOINT_INVENTORY_TREES = VersionedEndpoint(
 def register(
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicates: bool,
 ) -> None:
-    endpoint_family_registry.register(INVENTORY_FAMILY)
-    versioned_endpoint_registry.register(ENDPOINT_INVENTORY_TREES)
+    endpoint_family_registry.register(INVENTORY_FAMILY, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(
+        ENDPOINT_INVENTORY_TREES, ignore_duplicates=ignore_duplicates
+    )

@@ -71,5 +71,5 @@ def show(params: Mapping[str, Any]) -> Response:
     return serve_json(result)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show, ignore_duplicates=ignore_duplicates)

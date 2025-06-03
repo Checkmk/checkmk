@@ -366,7 +366,7 @@ def delete_acknowledgement(params: Mapping[str, Any]) -> Response:
     return http.Response(status=204)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(set_acknowledgement_on_hosts)
-    endpoint_registry.register(set_acknowledgement_on_services)
-    endpoint_registry.register(delete_acknowledgement)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(set_acknowledgement_on_hosts, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(set_acknowledgement_on_services, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_acknowledgement, ignore_duplicates=ignore_duplicates)

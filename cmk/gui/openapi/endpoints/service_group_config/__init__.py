@@ -272,12 +272,12 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     return serve_json(serialize_group_list("service_group_config", updated_service_groups))
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create)
-    endpoint_registry.register(bulk_create)
-    endpoint_registry.register(list_groups)
-    endpoint_registry.register(show_group)
-    endpoint_registry.register(delete)
-    endpoint_registry.register(bulk_delete)
-    endpoint_registry.register(update)
-    endpoint_registry.register(bulk_update)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(create, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_create, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_groups, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_group, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_update, ignore_duplicates=ignore_duplicates)

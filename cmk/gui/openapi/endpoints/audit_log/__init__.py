@@ -124,6 +124,6 @@ def _get_start_end_day_timestamp(value: datetime.date) -> tuple[int, int]:
     return math.floor(start_of_day.timestamp()), math.floor(start_of_next_day.timestamp())
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(get_all)
-    endpoint_registry.register(archive_logs)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(get_all, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(archive_logs, ignore_duplicates=ignore_duplicates)

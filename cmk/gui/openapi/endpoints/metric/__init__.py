@@ -71,5 +71,5 @@ def get_graph(params):
     return serve_json(response)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(get_graph)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(get_graph, ignore_duplicates=ignore_duplicates)

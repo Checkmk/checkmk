@@ -9,7 +9,9 @@ from .list_hosts import ENDPOINT_LIST_HOSTS
 from .show_host import ENDPOINT_SHOW_HOST
 
 
-def register(versioned_endpoint_registry: VersionedEndpointRegistry) -> None:
-    versioned_endpoint_registry.register(ENDPOINT_CREATE_HOST)
-    versioned_endpoint_registry.register(ENDPOINT_LIST_HOSTS)
-    versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST)
+def register(
+    versioned_endpoint_registry: VersionedEndpointRegistry, *, ignore_duplicates: bool
+) -> None:
+    versioned_endpoint_registry.register(ENDPOINT_CREATE_HOST, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(ENDPOINT_LIST_HOSTS, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST, ignore_duplicates=ignore_duplicates)

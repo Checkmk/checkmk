@@ -269,12 +269,12 @@ def get(params: Mapping[str, Any]) -> Response:
     return serve_group(group, serialize_group("host_group_config"))
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create)
-    endpoint_registry.register(bulk_create)
-    endpoint_registry.register(list_groups)
-    endpoint_registry.register(delete)
-    endpoint_registry.register(bulk_delete)
-    endpoint_registry.register(update)
-    endpoint_registry.register(bulk_update)
-    endpoint_registry.register(get)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(create, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_create, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_groups, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_update, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(get, ignore_duplicates=ignore_duplicates)

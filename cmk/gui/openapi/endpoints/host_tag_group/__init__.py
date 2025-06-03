@@ -317,9 +317,9 @@ def serialize_host_tag_group(details: TagGroupSpec) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create_host_tag_group)
-    endpoint_registry.register(show_host_tag_group)
-    endpoint_registry.register(list_host_tag_groups)
-    endpoint_registry.register(update_host_tag_group)
-    endpoint_registry.register(delete_host_tag_group)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(create_host_tag_group, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_host_tag_group, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_host_tag_groups, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_host_tag_group, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_host_tag_group, ignore_duplicates=ignore_duplicates)

@@ -83,4 +83,4 @@ def register(
     _rulespec.register(rulespec_group_registry, rulespec_registry)
     icon_and_action_registry.register(InventoryIcon)
     icon_and_action_registry.register(InventoryHistoryIcon)
-    openapi_register(endpoint_family_registry, versioned_endpoint_registry)
+    openapi_register(endpoint_family_registry, versioned_endpoint_registry, ignore_duplicates=False)

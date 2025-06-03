@@ -23,7 +23,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 def endpoint_family() -> Generator[str]:
     """Fixture to register an endpoint family before each test."""
     family = EndpointFamilyFactory.build(name="test_family", doc_group="Setup")
-    endpoint_family_registry.register(family)
+    endpoint_family_registry.register(family, ignore_duplicates=False)
     yield family.name
     endpoint_family_registry.unregister(family.name)
 
@@ -67,7 +67,7 @@ def test_register_versioned_endpoint(endpoint_family: str) -> None:
     )
 
     test_registry = VersionedEndpointRegistry()
-    test_registry.register(endpoint)
+    test_registry.register(endpoint, ignore_duplicates=False)
 
     endpoint_key = (endpoint_family, endpoint.metadata.link_relation)
     assert len(test_registry._versions) == 2
@@ -79,7 +79,7 @@ def test_invalid_double_registration(endpoint_family: str) -> None:
     endpoint = VersionedEndpointFactory.build(doc=EndpointDocFactory.build(family=endpoint_family))
 
     test_registry = VersionedEndpointRegistry()
-    test_registry.register(endpoint)
+    test_registry.register(endpoint, ignore_duplicates=False)
 
     with pytest.raises(RuntimeError, match="Endpoint with key"):
-        test_registry.register(endpoint)
+        test_registry.register(endpoint, ignore_duplicates=False)

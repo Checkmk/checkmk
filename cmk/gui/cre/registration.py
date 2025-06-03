@@ -302,7 +302,7 @@ def register(edition: Edition) -> None:
         main_module_registry,
         permission_registry,
     )
-    _openapi_registration()
+    _openapi_registration(ignore_duplicates=False)
     builtin_dashboard_extender_registry.register(
         BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
     )
@@ -311,6 +311,6 @@ def register(edition: Edition) -> None:
     )
 
 
-def _openapi_registration() -> None:
-    autocomplete.register(endpoint_registry)
-    metric_endpoint.register(endpoint_registry)
+def _openapi_registration(*, ignore_duplicates: bool) -> None:
+    autocomplete.register(endpoint_registry, ignore_duplicates=ignore_duplicates)
+    metric_endpoint.register(endpoint_registry, ignore_duplicates=ignore_duplicates)

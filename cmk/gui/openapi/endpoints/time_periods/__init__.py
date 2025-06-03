@@ -453,9 +453,13 @@ def _is_alias_in_use(alias: str | None, name: str) -> bool:
     return False
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create_timeperiod)
-    endpoint_registry.register(update_timeperiod)
-    endpoint_registry.register(delete)
-    endpoint_registry.register(show_time_period)
-    endpoint_registry.register(list_time_periods)
+def register(
+    endpoint_registry: EndpointRegistry,
+    *,
+    ignore_duplicates: bool,
+) -> None:
+    endpoint_registry.register(create_timeperiod, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_timeperiod, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_time_period, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_time_periods, ignore_duplicates=ignore_duplicates)

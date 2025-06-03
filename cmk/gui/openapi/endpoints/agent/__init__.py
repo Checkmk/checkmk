@@ -73,5 +73,5 @@ def download_agent(params: Mapping[str, Any]) -> Response:
     return response
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(download_agent)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(download_agent, ignore_duplicates=ignore_duplicates)

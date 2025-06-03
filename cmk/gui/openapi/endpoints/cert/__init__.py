@@ -178,7 +178,9 @@ def agent_controller_certificates_settings(param: object) -> Response:
     return serve_json(config.active_config.agent_controller_certificates)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(root_cert)
-    endpoint_registry.register(make_certificate)
-    endpoint_registry.register(agent_controller_certificates_settings)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(root_cert, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(make_certificate, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        agent_controller_certificates_settings, ignore_duplicates=ignore_duplicates
+    )

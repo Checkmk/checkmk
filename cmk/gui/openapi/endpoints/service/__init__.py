@@ -299,9 +299,9 @@ def _list_services(params: Mapping[str, Any]) -> Response:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_service)
-    endpoint_registry.register(_list_host_services_deprecated)
-    endpoint_registry.register(_list_host_services)
-    endpoint_registry.register(_list_all_services_deprecated)
-    endpoint_registry.register(_list_all_services)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_service, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_list_host_services_deprecated, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_list_host_services, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_list_all_services_deprecated, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_list_all_services, ignore_duplicates=ignore_duplicates)

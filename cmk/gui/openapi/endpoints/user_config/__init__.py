@@ -836,10 +836,10 @@ def _internal_temperature_format_to_api_format(internal_temperature: str | None)
     return "default" if not internal_temperature else internal_temperature
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_user)
-    endpoint_registry.register(list_users)
-    endpoint_registry.register(create_user)
-    endpoint_registry.register(delete_user)
-    endpoint_registry.register(edit_user)
-    endpoint_registry.register(dismiss_user_warning)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_user, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_users, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_user, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_user, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_user, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(dismiss_user_warning, ignore_duplicates=ignore_duplicates)

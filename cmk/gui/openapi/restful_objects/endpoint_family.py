@@ -41,8 +41,8 @@ class EndpointFamilyRegistry:
     def __init__(self):
         self._families: dict[str, EndpointFamily] = {}
 
-    def register(self, family: EndpointFamily) -> None:
-        if family.name in self._families:
+    def register(self, family: EndpointFamily, *, ignore_duplicates: bool) -> None:
+        if family.name in self._families and not ignore_duplicates:
             raise ValueError(f"Endpoint family {family.name} already registered")
         self._families[family.name] = family
 

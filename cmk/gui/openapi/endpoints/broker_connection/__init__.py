@@ -262,9 +262,9 @@ def delete_broker_connection(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_broker_connections)
-    endpoint_registry.register(show_broker_connection)
-    endpoint_registry.register(create_broker_connection)
-    endpoint_registry.register(edit_broker_connection)
-    endpoint_registry.register(delete_broker_connection)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_broker_connections, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_broker_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_broker_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_broker_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_broker_connection, ignore_duplicates=ignore_duplicates)

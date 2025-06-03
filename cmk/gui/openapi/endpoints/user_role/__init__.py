@@ -258,9 +258,9 @@ def edit_userrole(params: Mapping[str, Any]) -> Response:
     return serve_json(data=serialize_user_role(userrole_to_edit))
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_user_role)
-    endpoint_registry.register(list_user_roles)
-    endpoint_registry.register(create_userrole)
-    endpoint_registry.register(delete_userrole)
-    endpoint_registry.register(edit_userrole)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_user_role, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_user_roles, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_userrole, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_userrole, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_userrole, ignore_duplicates=ignore_duplicates)

@@ -390,11 +390,13 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_event)
-    endpoint_registry.register(show_events)
-    endpoint_registry.register(update_and_acknowledge_event)
-    endpoint_registry.register(change_event_state)
-    endpoint_registry.register(update_and_acknowledge_multiple_events)
-    endpoint_registry.register(change_multiple_event_states)
-    endpoint_registry.register(archive_events_with_filter)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_event, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_events, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_and_acknowledge_event, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(change_event_state, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        update_and_acknowledge_multiple_events, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(change_multiple_event_states, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(archive_events_with_filter, ignore_duplicates=ignore_duplicates)

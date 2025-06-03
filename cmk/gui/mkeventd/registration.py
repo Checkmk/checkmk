@@ -107,4 +107,4 @@ def register(
         find_usages_of_contact_group_in_mkeventd_notify_contactgroup
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
-    openapi_register(endpoint_registry)
+    openapi_register(endpoint_registry, ignore_duplicates=False)

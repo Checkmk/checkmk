@@ -376,9 +376,9 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_comment)
-    endpoint_registry.register(show_comments)
-    endpoint_registry.register(create_host_comment)
-    endpoint_registry.register(create_service_comment)
-    endpoint_registry.register(delete_comments)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_comment, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_comments, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_host_comment, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_service_comment, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_comments, ignore_duplicates=ignore_duplicates)

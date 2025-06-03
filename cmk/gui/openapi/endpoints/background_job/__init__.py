@@ -116,5 +116,5 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_background_job_snapshot)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_background_job_snapshot, ignore_duplicates=ignore_duplicates)

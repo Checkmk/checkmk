@@ -270,11 +270,14 @@ def serialize_password(ident: str, details: Password) -> DomainObject:
 
 
 def register(
-    endpoint_family_registry: EndpointFamilyRegistry, endpoint_registry: EndpointRegistry
+    endpoint_family_registry: EndpointFamilyRegistry,
+    endpoint_registry: EndpointRegistry,
+    *,
+    ignore_duplicates: bool,
 ) -> None:
-    endpoint_family_registry.register(PASSWORD_FAMILY)
-    endpoint_registry.register(create_password)
-    endpoint_registry.register(update_password)
-    endpoint_registry.register(delete_password)
-    endpoint_registry.register(show_password)
-    endpoint_registry.register(list_passwords)
+    endpoint_family_registry.register(PASSWORD_FAMILY, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_password, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_password, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_password, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_password, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_passwords, ignore_duplicates=ignore_duplicates)

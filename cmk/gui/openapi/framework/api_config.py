@@ -40,6 +40,9 @@ class APIVersion(enum.Enum):
             return NotImplemented
         return self.numeric_value <= other.numeric_value
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class APIConfig:
     """Configuration for the versioned API system"""

@@ -1025,17 +1025,19 @@ def _host_etag_values(host: Host) -> dict[str, Any]:
     }
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create_host)
-    endpoint_registry.register(create_cluster_host)
-    endpoint_registry.register(bulk_create_hosts)
-    endpoint_registry.register(list_hosts)
-    endpoint_registry.register(update_nodes)
-    endpoint_registry.register(update_host)
-    endpoint_registry.register(bulk_update_hosts)
-    endpoint_registry.register(rename_host)
-    endpoint_registry.register(renaming_job_wait_for_completion)
-    endpoint_registry.register(move)
-    endpoint_registry.register(delete)
-    endpoint_registry.register(bulk_delete)
-    endpoint_registry.register(show_host)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(create_host, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_cluster_host, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_create_hosts, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_hosts, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_nodes, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_host, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_update_hosts, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(rename_host, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        renaming_job_wait_for_completion, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(move, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_host, ignore_duplicates=ignore_duplicates)

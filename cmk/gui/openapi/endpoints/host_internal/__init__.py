@@ -259,7 +259,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(register_host)
-    endpoint_registry.register(link_with_uuid)
-    endpoint_registry.register(show_host)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(register_host, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(link_with_uuid, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_host, ignore_duplicates=ignore_duplicates)

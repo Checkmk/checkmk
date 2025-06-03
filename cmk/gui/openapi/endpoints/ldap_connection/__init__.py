@@ -227,9 +227,9 @@ def _serialize_ldap_connection(connection: LDAPConnectionInterface) -> DomainObj
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_ldap_connection)
-    endpoint_registry.register(show_ldap_connections)
-    endpoint_registry.register(delete_ldap_connection)
-    endpoint_registry.register(create_ldap_connection)
-    endpoint_registry.register(edit_ldap_connection)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_ldap_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_ldap_connections, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_ldap_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_ldap_connection, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_ldap_connection, ignore_duplicates=ignore_duplicates)

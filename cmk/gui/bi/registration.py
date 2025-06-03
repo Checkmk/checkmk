@@ -119,4 +119,4 @@ def register(
     rename_host_hook_registry.register(
         RenameHostHook(RenamePhase.SETUP, "BI aggregations", rename_host_in_bi)
     )
-    _openapi.register(endpoint_registry)
+    _openapi.register(endpoint_registry, ignore_duplicates=False)

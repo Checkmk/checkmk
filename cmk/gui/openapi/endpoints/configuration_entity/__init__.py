@@ -170,9 +170,13 @@ def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Res
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(_create_configuration_entity)
-    endpoint_registry.register(_update_configuration_entity)
-    endpoint_registry.register(_get_configuration_entity_form_spec_schema)
-    notification_parameter_endpoints.register(endpoint_registry)
-    folder_endpoints.register(endpoint_registry)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(_create_configuration_entity, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(_update_configuration_entity, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        _get_configuration_entity_form_spec_schema, ignore_duplicates=ignore_duplicates
+    )
+    notification_parameter_endpoints.register(
+        endpoint_registry, ignore_duplicates=ignore_duplicates
+    )
+    folder_endpoints.register(endpoint_registry, ignore_duplicates=ignore_duplicates)

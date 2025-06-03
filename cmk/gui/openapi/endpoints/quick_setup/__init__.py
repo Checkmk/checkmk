@@ -584,11 +584,15 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
     return response
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(get_guided_stages_or_overview_stages)
-    endpoint_registry.register(quick_setup_get_stage_structure)
-    endpoint_registry.register(quicksetup_run_stage_action)
-    endpoint_registry.register(fetch_quick_setup_stage_action_result)
-    endpoint_registry.register(quick_setup_run_action)
-    endpoint_registry.register(edit_quick_setup_action)
-    endpoint_registry.register(fetch_quick_setup_action_result)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(
+        get_guided_stages_or_overview_stages, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(quick_setup_get_stage_structure, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(quicksetup_run_stage_action, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        fetch_quick_setup_stage_action_result, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(quick_setup_run_action, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_quick_setup_action, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(fetch_quick_setup_action_result, ignore_duplicates=ignore_duplicates)

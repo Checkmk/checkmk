@@ -97,7 +97,7 @@ def install_endpoint(fresh_app_instance):
         hooks.call("permission-checked", param["body"]["permission"])
         return Response(status=204)
 
-    endpoint_registry.register(test)
+    endpoint_registry.register(test, ignore_duplicates=False)
 
     yield test
 
@@ -125,7 +125,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
         response.status_code = 200
         return response
 
-    endpoint_registry.register(multiaccept_test)
+    endpoint_registry.register(multiaccept_test, ignore_duplicates=False)
 
     yield multiaccept_test
 
@@ -145,7 +145,7 @@ def install_reserved_endpoint(fresh_app_instance):
     def reserved_test(param: Mapping[str, Any]) -> Response:
         return Response(status=204)
 
-    endpoint_registry.register(reserved_test)
+    endpoint_registry.register(reserved_test, ignore_duplicates=False)
 
     yield reserved_test
 
@@ -204,7 +204,7 @@ def install_endpoint_raise(fresh_app_instance):
         """Smth"""
         raise ProblemException(418, "short", "long")
 
-    endpoint_registry.register(test)
+    endpoint_registry.register(test, ignore_duplicates=False)
     yield test
 
     endpoint_registry.unregister(test)
@@ -226,7 +226,7 @@ def accept_parameter_endpoint(fresh_app_instance):
         """Smth"""
         return Response(status=204)
 
-    endpoint_registry.register(test)
+    endpoint_registry.register(test, ignore_duplicates=False)
     yield test
 
     endpoint_registry.unregister(test)

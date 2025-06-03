@@ -108,5 +108,7 @@ def _serve_background_job(job: BackgroundJob, domain_type: DomainType) -> Respon
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(start_parent_scan_background_job)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(
+        start_parent_scan_background_job, ignore_duplicates=ignore_duplicates
+    )

@@ -199,9 +199,9 @@ def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_aux_tag)
-    endpoint_registry.register(show_aux_tags)
-    endpoint_registry.register(create_aux_tag)
-    endpoint_registry.register(put_aux_tag)
-    endpoint_registry.register(delete_aux_tag)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_aux_tag, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_aux_tags, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_aux_tag, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(put_aux_tag, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_aux_tag, ignore_duplicates=ignore_duplicates)

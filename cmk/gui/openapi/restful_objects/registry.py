@@ -48,7 +48,7 @@ class EndpointRegistry:
         ...
 
         >>> reg = EndpointRegistry()
-        >>> reg.register(WrappedEndpoint)
+        >>> reg.register(WrappedEndpoint, ignore_duplicates=False)
         >>> endpoint = reg.lookup(__name__, ".../update", {'hostname': 'example.com'})
         >>> assert endpoint['href'] == '/foo/d41d8cd98f/example.com', endpoint
         >>> assert endpoint['method'] == 'get'
@@ -64,6 +64,7 @@ class EndpointRegistry:
     def __init__(self) -> None:
         self._endpoints: dict[EndpointKey, dict[ParameterKey, EndpointEntry]] = {}
         self._endpoint_list: list[Endpoint] = []
+        self.ignore_duplicates: bool = False
 
     def __iter__(self) -> Iterator[Endpoint]:
         return iter(self._endpoint_list)
@@ -114,7 +115,7 @@ class EndpointRegistry:
         entry["href"] = fill_out_path_template(entry["href"], examples)
         return entry
 
-    def register(self, wrapped_endpoint: WrappedEndpoint) -> None:
+    def register(self, wrapped_endpoint: WrappedEndpoint, *, ignore_duplicates: bool) -> None:
         endpoint = wrapped_endpoint.endpoint
         self._endpoint_list.append(endpoint)
         func = endpoint.func
@@ -124,6 +125,9 @@ class EndpointRegistry:
         parameter_key = tuple(sorted(path_parameters(endpoint.path)))
         endpoint_entry = self._endpoints.setdefault(endpoint_key, {})
         if parameter_key in endpoint_entry:
+            if ignore_duplicates:
+                return
+
             raise RuntimeError(
                 f"The endpoint {endpoint_key!r} has already been set to {endpoint_entry[parameter_key]!r}"
             )

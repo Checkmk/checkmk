@@ -760,10 +760,12 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_service_discovery_result)
-    endpoint_registry.register(update_service_phase)
-    endpoint_registry.register(show_service_discovery_run)
-    endpoint_registry.register(service_discovery_run_wait_for_completion)
-    endpoint_registry.register(execute_service_discovery)
-    endpoint_registry.register(execute_bulk_discovery)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_service_discovery_result, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update_service_phase, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_service_discovery_run, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        service_discovery_run_wait_for_completion, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(execute_service_discovery, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(execute_bulk_discovery, ignore_duplicates=ignore_duplicates)

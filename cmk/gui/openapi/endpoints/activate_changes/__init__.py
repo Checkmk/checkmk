@@ -292,9 +292,11 @@ def list_pending_changes(params: Mapping[str, Any]) -> Response:
     return constructors.response_with_etag_created_from_dict(response, pending_changes)
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(activate_changes)
-    endpoint_registry.register(activate_changes_wait_for_completion)
-    endpoint_registry.register(show_activation)
-    endpoint_registry.register(list_activations)
-    endpoint_registry.register(list_pending_changes)
+def register(endpoint_registry: EndpointRegistry, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(activate_changes, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(
+        activate_changes_wait_for_completion, ignore_duplicates=ignore_duplicates
+    )
+    endpoint_registry.register(show_activation, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_activations, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_pending_changes, ignore_duplicates=ignore_duplicates)

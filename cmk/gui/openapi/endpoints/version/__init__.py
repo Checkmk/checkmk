@@ -52,5 +52,5 @@ def search(param):
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(search)
+def register(endpoint_registry: EndpointRegistry, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(search, ignore_duplicates=ignore_duplicates)

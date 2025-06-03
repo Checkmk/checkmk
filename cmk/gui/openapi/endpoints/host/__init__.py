@@ -230,7 +230,7 @@ def fixup_inventory_column(
             yield row
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(list_hosts_deprecated)
-    endpoint_registry.register(list_hosts)
-    endpoint_registry.register(show_host)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(list_hosts_deprecated, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_hosts, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_host, ignore_duplicates=ignore_duplicates)

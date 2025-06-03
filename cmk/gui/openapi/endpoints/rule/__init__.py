@@ -566,10 +566,10 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(move_rule_to)
-    endpoint_registry.register(create_rule)
-    endpoint_registry.register(list_rules)
-    endpoint_registry.register(show_rule)
-    endpoint_registry.register(delete_rule)
-    endpoint_registry.register(edit_rule)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(move_rule_to, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(create_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_rules, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(edit_rule, ignore_duplicates=ignore_duplicates)

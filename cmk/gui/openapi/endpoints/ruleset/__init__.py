@@ -147,6 +147,6 @@ def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(list_rulesets)
-    endpoint_registry.register(show_ruleset)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(list_rulesets, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_ruleset, ignore_duplicates=ignore_duplicates)

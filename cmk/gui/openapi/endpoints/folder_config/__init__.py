@@ -525,12 +525,12 @@ def hash_of_folder(folder: Folder) -> constructors.ETagHash:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create)
-    endpoint_registry.register(hosts_of_folder)
-    endpoint_registry.register(update)
-    endpoint_registry.register(bulk_update)
-    endpoint_registry.register(delete)
-    endpoint_registry.register(move)
-    endpoint_registry.register(list_folders)
-    endpoint_registry.register(show_folder)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(create, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(hosts_of_folder, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(update, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(bulk_update, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(move, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(list_folders, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_folder, ignore_duplicates=ignore_duplicates)

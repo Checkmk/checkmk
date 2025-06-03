@@ -239,9 +239,9 @@ def _serialize_notification_rule(rule: NotificationRule) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(show_rule)
-    endpoint_registry.register(show_rules)
-    endpoint_registry.register(post_rule)
-    endpoint_registry.register(put_rule)
-    endpoint_registry.register(delete_rule)
+def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:
+    endpoint_registry.register(show_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(show_rules, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(post_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(put_rule, ignore_duplicates=ignore_duplicates)
+    endpoint_registry.register(delete_rule, ignore_duplicates=ignore_duplicates)

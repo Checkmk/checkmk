@@ -330,6 +330,28 @@ def test_diagnostics_element_dpkg():
     )
 
 
+@pytest.mark.usefixtures("monkeypatch")
+def test_diagnostics_element_filesize_content_ignores_temporary_file(tmp_path: PurePath) -> None:
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
+
+    test_dir = cmk.utils.paths.local_checks_dir
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_dir.joinpath("testfile").write_text("test\n")
+
+    test_dir.joinpath(".session_info.mk.newodhsmg3r").write_text("test\n")
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    with patch("pathlib.Path.group", return_value="dummygroup"):
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+    with open(filepath, newline="") as csvfile:
+        files = [
+            Path(row["path"]).name for row in csv.DictReader(csvfile, delimiter=";", quotechar="'")
+        ]
+
+    assert files == ["testfile"]
+
+
 def test_diagnostics_element_dpkg_content(monkeypatch, tmp_path):
     test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
     test_bin_dir.mkdir(parents=True, exist_ok=True)

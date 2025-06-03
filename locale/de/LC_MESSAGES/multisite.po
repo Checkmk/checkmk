@@ -25554,9 +25554,6 @@ msgstr "Mehrere Proxies mit dem Titel'%s' gefunden"
 msgid "Found no CA"
 msgstr "Keine CA gefunden"
 
-msgid "Found no graph matching this definition."
-msgstr "Kein Graph zu dieser Definition gefunden."
-
 msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
@@ -86456,6 +86453,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Found no graph matching this definition."
+#~ msgstr "Kein Graph zu dieser Definition gefunden."
 
 #, python-format
 #~ msgid "Local site %s"

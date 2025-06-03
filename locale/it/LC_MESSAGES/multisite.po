@@ -26188,9 +26188,6 @@ msgstr "Trovati più proxy che usano il titolo '%s'"
 msgid "Found no CA"
 msgstr "Non è stato trovato alcun CA"
 
-msgid "Found no graph matching this definition."
-msgstr "Non ho trovato nessun grafico corrispondente a questa definizione."
-
 msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
@@ -88927,6 +88924,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "Found no graph matching this definition."
+#~ msgstr "Non ho trovato nessun grafico corrispondente a questa definizione."
 
 #, python-format
 #~ msgid "Local site %s"

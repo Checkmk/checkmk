@@ -25192,9 +25192,6 @@ msgstr "タイトル '%s'を使用する複数のプロキシが見つかりま�
 msgid "Found no CA"
 msgstr "CAが見つかりません"
 
-msgid "Found no graph matching this definition."
-msgstr "この定義に一致するグラフが見つかりませんでした。"
-
 msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
@@ -85423,6 +85420,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Found no graph matching this definition."
+#~ msgstr "この定義に一致するグラフが見つかりませんでした。"
 
 #, python-format
 #~ msgid "Local site %s"

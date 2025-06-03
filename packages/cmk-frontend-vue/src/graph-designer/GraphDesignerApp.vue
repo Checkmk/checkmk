@@ -23,7 +23,7 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { computed, ref, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { convertToUnit, convertToExplicitVerticalRange } from '@/graph-designer/converters'
 import {
   type GraphLine,
@@ -76,9 +76,7 @@ const dataTransformation = ref(95)
 const specTransformation = makeFloat('', props.i18n.graph_operations.percentile)
 const backendValidationTransformation: ValidationMessages = []
 
-const dataUnit = computed(() => {
-  return convertToUnit(props.graph_options.unit)
-})
+const dataUnit = ref(convertToUnit(props.graph_options.unit))
 const specUnit = makeCascadingSingleChoice('', [
   {
     name: 'first_entry_with_unit',
@@ -195,9 +193,9 @@ const specUnit = makeCascadingSingleChoice('', [
 ])
 const backendValidationUnit: ValidationMessages = []
 
-const dataExplicitVerticalRange = computed(() => {
-  return convertToExplicitVerticalRange(props.graph_options.explicit_vertical_range)
-})
+const dataExplicitVerticalRange = ref(
+  convertToExplicitVerticalRange(props.graph_options.explicit_vertical_range)
+)
 const specExplicitVerticalRange = makeCascadingSingleChoice('', [
   {
     name: 'auto',
@@ -237,9 +235,7 @@ const specExplicitVerticalRange = makeCascadingSingleChoice('', [
 ])
 const backendValidationExplicitVerticalRange: ValidationMessages = []
 
-const dataOmitZeroMetrics = computed(() => {
-  return props.graph_options.omit_zero_metrics
-})
+const dataOmitZeroMetrics = ref(props.graph_options.omit_zero_metrics)
 const specOmitZeroMetrics = makeBooleanChoice()
 const backendValidationOmitZeroMetrics: ValidationMessages = []
 

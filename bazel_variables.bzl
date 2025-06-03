@@ -1,5 +1,5 @@
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
-RUFF_VERSION = "0.9.6"
+RUFF_VERSION = "0.11.11"
 
 # TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
 edition_python_deps = {

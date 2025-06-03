@@ -494,7 +494,7 @@ class Certificate:
             )
 
         try:
-            self._cert.verify_directly_issued_by(signer._cert)  # noqa: SLF001
+            self._cert.verify_directly_issued_by(signer._cert)
         except pyca_exceptions.InvalidSignature as e:
             raise InvalidSignatureError(str(e)) from e
 

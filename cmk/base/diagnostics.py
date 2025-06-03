@@ -9,6 +9,7 @@ import abc
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tarfile
@@ -434,10 +435,13 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         csv_data = []
         csv_data.append("size;path;owner;group;mode;changed")
+        tmp_file_regex = re.compile(r"^\..*\.new.*")
         for dirpath, _dirnames, filenames in os.walk(cmk.utils.paths.omd_root):
             for file in filenames:
                 f = Path(dirpath).joinpath(file)
                 if f.is_symlink():
+                    continue
+                if re.match(tmp_file_regex, f.name):
                     continue
                 csv_data.append(
                     ";".join(

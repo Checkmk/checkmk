@@ -7,7 +7,7 @@ new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
-bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
+bazel_dep(name = "aspect_rules_lint", version = "1.4.4")
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "gazelle", version = "0.42.0")

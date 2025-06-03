@@ -109,7 +109,10 @@ class SiteFilter(Filter):
 
 def default_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
-    return active_config.sites[SiteId(current_value)]["alias"] if current_value else None
+    try:
+        return active_config.sites[SiteId(current_value)]["alias"] if current_value else None
+    except KeyError:
+        return None
 
 
 class MultipleSitesFilter(SiteFilter):

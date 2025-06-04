@@ -667,7 +667,7 @@ def _compute_final_check_parameters(
             ),
         )
 
-    config = PostprocessingConfig(
+    config = PostprocessingServiceConfig(
         only_from=lambda: config_cache.only_from(host_name),
         prediction=make_prediction,
         service_level=lambda: config_cache.effective_service_level(
@@ -994,7 +994,7 @@ def _needs_postprocessing(params: object) -> bool:
 
 
 @dataclass
-class PostprocessingConfig:
+class PostprocessingServiceConfig:
     only_from: Callable[[], None | str | list[str]]
     prediction: Callable[[], InjectedParameters]
     service_level: Callable[[], int]
@@ -1004,7 +1004,7 @@ class PostprocessingConfig:
 
 def postprocess_configuration(
     params: object,
-    postprocessing_config: PostprocessingConfig,
+    config: PostprocessingServiceConfig,
 ) -> object:
     """Postprocess configuration parameters.
 
@@ -1022,25 +1022,25 @@ def postprocess_configuration(
     """
     match params:
         case tuple(("cmk_postprocessed", "host_name", _)):
-            return postprocessing_config.host_name
+            return config.host_name
         case tuple(("cmk_postprocessed", "only_from", _)):
-            return postprocessing_config.only_from()
+            return config.only_from()
         case tuple(("cmk_postprocessed", "predictive_levels", value)):
-            return _postprocess_predictive_levels(value, postprocessing_config.prediction())
+            return _postprocess_predictive_levels(value, config.prediction())
         case tuple(("cmk_postprocessed", "service_level", _)):
-            return postprocessing_config.service_level()
+            return config.service_level()
         case tuple(("cmk_postprocessed", "service_name", _)):
-            return postprocessing_config.service_name
+            return config.service_name
         case tuple():
-            return tuple(postprocess_configuration(v, postprocessing_config) for v in params)
+            return tuple(postprocess_configuration(v, config) for v in params)
         case list():
-            return list(postprocess_configuration(v, postprocessing_config) for v in params)
+            return list(postprocess_configuration(v, config) for v in params)
         case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
-                    postprocessing_config.prediction().model_dump()
+                    config.prediction().model_dump()
                     if k == "__injected__"
-                    else postprocess_configuration(v, postprocessing_config)
+                    else postprocess_configuration(v, config)
                 )
                 for k, v in params.items()
             }

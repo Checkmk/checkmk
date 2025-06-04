@@ -195,7 +195,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
 
 
 def test_only_from_injection() -> None:
-    p_config = checkers.PostprocessingConfig(
+    p_config = checkers.PostprocessingServiceConfig(
         only_from=lambda: ["1.2.3.4"],
         prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
         service_level=lambda: 42,
@@ -215,7 +215,7 @@ def test_only_from_injection() -> None:
 
 
 def test_prediction_injection_legacy() -> None:
-    p_config = checkers.PostprocessingConfig(
+    p_config = checkers.PostprocessingServiceConfig(
         only_from=lambda: ["1.2.3.4"],
         prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
         service_level=lambda: 42,
@@ -257,7 +257,7 @@ def test_prediction_injection() -> None:
     metric = "my_reference_metric"
     prediction = (42.0, (50.0, 60.0))
 
-    p_config = checkers.PostprocessingConfig(
+    p_config = checkers.PostprocessingServiceConfig(
         only_from=lambda: [],
         prediction=lambda: InjectedParameters(
             meta_file_path_template="",

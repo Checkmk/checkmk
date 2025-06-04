@@ -248,6 +248,8 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
 
 
 def has_inventory(on: bool, row: Row) -> bool:
+    if "host_inventory" not in row:
+        return False
     return bool(row["host_inventory"]) is on
 
 

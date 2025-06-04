@@ -41,6 +41,7 @@ import {
 import { type SpecLineType, type Topic } from '@/graph-designer/type_defs'
 import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'
+import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
 
 const props = defineProps<{
   graph_lines: GraphLines
@@ -479,17 +480,20 @@ function isOperation(graphLine: GraphLine) {
   }
 }
 
-function addMetric() {
+async function addMetric() {
   if (
     dataMetric.value.hostName !== '' &&
     dataMetric.value.serviceName !== '' &&
     dataMetric.value.metricName !== ''
   ) {
-    // TODO set color, title, ...
+    const color: string = await fetchMetricColor(
+      dataMetric.value.metricName,
+      dataConsolidationType.value
+    )
     graphLines.value.push({
       id: id++,
       type: 'metric',
-      color: '#ff0000',
+      color: color,
       title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
       visible: true,
       line_type: 'line',
@@ -507,17 +511,17 @@ function addMetric() {
   }
 }
 
-function addScalar() {
+async function addScalar() {
   if (
     dataScalar.value.hostName !== '' &&
     dataScalar.value.serviceName !== '' &&
     dataScalar.value.metricName !== ''
   ) {
-    // TODO set color, title, ...
+    const color: string = await fetchMetricColor(dataMetric.value.metricName, dataScalarType.value)
     graphLines.value.push({
       id: id++,
       type: 'scalar',
-      color: '#ff0000',
+      color: color,
       title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
       visible: true,
       line_type: 'line',

@@ -454,6 +454,13 @@ function deleteGraphLine(graphLine: GraphLine) {
   graphLines.value = graphLines.value.filter((l) => l !== graphLine)
 }
 
+function updateGraphLineTitle(graphLine: GraphLine) {
+  switch (graphLine.type) {
+    case 'constant':
+      graphLine.title = `${props.i18n.topics.constant} ${graphLine.value}`
+  }
+}
+
 function isOperation(graphLine: GraphLine) {
   switch (graphLine.type) {
     case 'sum':
@@ -833,7 +840,13 @@ const graphDesignerContentAsJson = computed(() => {
             </FixedMetricRowRenderer>
           </div>
           <div v-else-if="graphLine.type === 'constant'">
-            {{ graphLine.title }}
+            {{ props.i18n.topics.constant }}
+            <FormEdit
+              v-model:data="graphLine.value"
+              :spec="specConstant"
+              :backend-validation="backendValidationConstant"
+              @update:data="updateGraphLineTitle(graphLine)"
+            />
           </div>
           <div v-else-if="graphLine.type === 'transformation'">
             {{ formulaOf(graphLine) }}

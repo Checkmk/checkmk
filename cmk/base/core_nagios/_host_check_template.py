@@ -13,7 +13,7 @@ import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.log
-from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.password_store import core_password_store_path
 
 from cmk.checkengine.plugin_backend import (
@@ -94,7 +94,9 @@ def main() -> int:
 
         discovery_rulesets = extract_known_discovery_rulesets(plugins)
 
-        loading_result = config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
+        loading_result = config.load_packed_config(
+            VersionedConfigPath.LATEST_CONFIG, discovery_rulesets
+        )
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
 
         config.ipaddresses = CONFIG.ipaddresses

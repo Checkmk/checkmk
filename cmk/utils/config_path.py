@@ -15,16 +15,17 @@ from typing import Final
 
 from cmk.ccc import store
 
-from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.paths import omd_root
 
-__all__ = ["VersionedConfigPath", "LATEST_CONFIG"]
+__all__ = ["VersionedConfigPath"]
 
 
 class VersionedConfigPath(Iterator):
     # Note - Security: This must remain hard-coded to a path not writable by others.
     #                  See BNS:c3c5e9.
-    ROOT: Final = core_helper_config_dir
+    ROOT: Final = omd_root / "var/check_mk/core/helper_config"
 
+    LATEST_CONFIG: Final = ROOT / "latest"
     _SERIAL_MK: Final = ROOT / "serial.mk"
 
     def __init__(self, serial: int) -> None:
@@ -48,23 +49,19 @@ class VersionedConfigPath(Iterator):
 
     @classmethod
     def current(cls) -> VersionedConfigPath:
-        serial: int = store.load_object_from_file(
-            VersionedConfigPath._SERIAL_MK,
-            default=0,
-            lock=True,
-        )
+        serial: int = store.load_object_from_file(cls._SERIAL_MK, default=0, lock=True)
         return cls(serial)
 
     def __iter__(self) -> Iterator[VersionedConfigPath]:
         serial = self.serial
         while True:
             serial += 1
-            store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
+            store.save_object_to_file(self._SERIAL_MK, serial)
             yield VersionedConfigPath(serial)
 
     def __next__(self) -> VersionedConfigPath:
         serial = self.serial + 1
-        store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
+        store.save_object_to_file(self._SERIAL_MK, serial)
         return VersionedConfigPath(serial)
 
     def previous_config_path(self) -> VersionedConfigPath:
@@ -72,32 +69,18 @@ class VersionedConfigPath(Iterator):
 
     @contextmanager
     def create(self, *, is_cmc: bool) -> Iterator[None]:
-        if not is_cmc:
-            # CMC manages the configs on its own.
-            self._cleanup()
+        if not is_cmc:  # CMC manages the configs on its own.
+            for path in self.ROOT.iterdir() if self.ROOT.exists() else []:
+                if (
+                    not path.is_symlink()  # keep "lates" symlink
+                    and path.is_dir()  # keep "serial.mk"
+                    and path.resolve() != self.LATEST_CONFIG.resolve()  # keep latest config
+                ):
+                    shutil.rmtree(path)
         Path(self).mkdir(parents=True, exist_ok=True)
         yield
         # TODO(ml) We should probably remove the files that were created
         #          previously and not update `serial.mk` on error.
         # TODO: Should this be in a "finally" or not? Unclear...
-        self._link_latest()
-
-    def _cleanup(self) -> None:
-        if not self.ROOT.exists():
-            return
-
-        for path in self.ROOT.iterdir():
-            if path.is_symlink() or not path.is_dir():
-                continue
-
-            if path.resolve() == LATEST_CONFIG.resolve():
-                continue
-
-            shutil.rmtree(path)
-
-    def _link_latest(self) -> None:
-        LATEST_CONFIG.unlink(missing_ok=True)
-        LATEST_CONFIG.symlink_to(Path(self).name)
-
-
-LATEST_CONFIG: Final = core_helper_config_dir / "latest"
+        self.LATEST_CONFIG.unlink(missing_ok=True)
+        self.LATEST_CONFIG.symlink_to(Path(self).name)

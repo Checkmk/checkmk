@@ -14,7 +14,7 @@ Note that Bandit is picky about the exact format.
 | `BNS:537c43` | `B104` | Comparison against "0.0.0.0", if true then the address is set to "127.0.0.1". |
 | `BNS:7a2427` | `B108` | False positive, the temp file/directory is located inside a safe directory. |
 | `BNS:9a7128` | `B301` | `ObjectStore` has a pickle serializer which it uses to store and load files from disk. To mitigate the risks, it makes sure that only non-world-writable files are loaded. |
-| `BNS:c3c5e9` | `B301` | `PackedConfigStore` loads a config from file via `pickle.load`. The path is hard-coded to `cmk.utils.paths.core_helper_config_dir` in `ConfigPath`, which is only writable by the site user. |
+| `BNS:c3c5e9` | `B301` | `PackedConfigStore` loads a config from file via `pickle.load`. The path is hard-coded to `cmk.utils.config_path.VersionedConfigPath.ROOT`, which is only writable by the site user. |
 | `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
 | `BNS:02774b` | `B303` | SHA1 is still used by the agent bakery and mkbackup for compatibility reasons. Switching is planned. |
 | `BNS:6b61d9` | `B310` | The URL is explicitly validated. |

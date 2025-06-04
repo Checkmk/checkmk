@@ -17,7 +17,7 @@ from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
 
@@ -120,7 +120,9 @@ def main(
     return inventory_as_check(
         parameters,
         args.hostname,
-        load_plugins_from_index(LATEST_CONFIG) if args.use_indexed_plugins else load_checks(),
+        load_plugins_from_index(VersionedConfigPath.LATEST_CONFIG)
+        if args.use_indexed_plugins
+        else load_checks(),
     )
 
 

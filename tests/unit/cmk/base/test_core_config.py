@@ -17,7 +17,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 from cmk.utils import ip_lookup, password_store
-from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -86,7 +86,7 @@ def test_do_create_config_nagios(
     )
 
     assert cmk.utils.paths.nagios_objects_file.exists()
-    assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
+    assert config.PackedConfigStore.from_serial(VersionedConfigPath.LATEST_CONFIG).path.exists()
 
 
 @pytest.mark.skip(reason="CMK-22671")

@@ -13,7 +13,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
-from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.local_secrets import PasswordStoreSecret
 
@@ -46,7 +46,7 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def core_password_store_path(config_path: Path = LATEST_CONFIG) -> Path:
+def core_password_store_path(config_path: Path = VersionedConfigPath.LATEST_CONFIG) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.

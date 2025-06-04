@@ -134,7 +134,7 @@ def test_02_pip_path(site: Site) -> None:
 def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     p = site.execute(pip_cmd.command + ["-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 24.0")
+    assert version.startswith("pip 25.0")
 
 
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:

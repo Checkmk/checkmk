@@ -448,11 +448,11 @@ http_archive(
 http_archive(
     name = "python",
     build_file = "//omd/packages/Python:BUILD.Python.bazel",
-    sha256 = "56bfef1fdfc1221ce6720e43a661e3eb41785dd914ce99698d8c7896af4bdaa1",
-    strip_prefix = "Python-3.12.3",
+    sha256 = "c30bb24b7f1e9a19b11b55a546434f74e739bb4c271a3e3a80ff4380d49f7adb",
+    strip_prefix = "Python-3.12.11",
     urls = [
-        "https://www.python.org/ftp/python/3.12.3/Python-3.12.3.tar.xz",
-        UPSTREAM_MIRROR_URL + "Python-3.12.3.tar.xz",
+        "https://www.python.org/ftp/python/3.12.11/Python-3.12.11.tar.xz",
+        # UPSTREAM_MIRROR_URL + "Python-3.12.11.tar.xz",
     ],
 )
 
@@ -547,11 +547,16 @@ multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitoo
 use_repo(multitool, "multitool")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    is_default = True,
-    # We can specify the exact version.
-    python_version = "3.12.3",
+python.single_version_platform_override(
+    platform = "x86_64-unknown-linux-gnu",
+    python_version = "3.12.11",
+    sha256 = "9cd19efa875ae61d358b5dfeebc72035dd6fd11870943869394d2d7534675e28",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20250604/cpython-3.12.11+20250604-x86_64-unknown-linux-gnu-install_only.tar.gz",
+    ],
 )
+python.defaults(python_version = "3.12.11")
+python.toolchain(python_version = "3.12.11")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
@@ -561,7 +566,7 @@ pip.parse(
         "CC": "gcc-13",
     },
     hub_name = "cmk_requirements",
-    python_version = "3.12.3",
+    python_version = "3.12.11",
     requirements_by_platform = {
         "@//:requirements.txt": "linux_*",
     },

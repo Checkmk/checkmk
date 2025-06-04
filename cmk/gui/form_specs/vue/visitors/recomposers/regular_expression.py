@@ -2,10 +2,18 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
+import warnings
+from collections.abc import Callable
+
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.rulesets.v1 import Help
+from cmk.rulesets.v1 import Help, Message
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope, RegularExpression, String
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+
+
+class RegexFutureWarning(FutureWarning): ...
 
 
 def recompose(form_spec: FormSpec[str]) -> String:
@@ -52,10 +60,28 @@ def recompose(form_spec: FormSpec[str]) -> String:
         )
     )
 
+    def _validate_regex(value: str) -> str:
+        try:
+            with warnings.catch_warnings(action="error", category=FutureWarning):
+                re.compile(value)
+
+        except FutureWarning as e:
+            warnings.warn(f"{e} in {value}", RegexFutureWarning)
+            re.compile(value)
+
+        except re.error:
+            raise ValidationError(Message("Invalid regular expression: %s") % value)
+
+        return value
+
+    combined_validate: list[Callable[[str], object]] = [_validate_regex]
+    if form_spec.custom_validate:
+        combined_validate.extend(form_spec.custom_validate)
+
     return String(
         title=form_spec.title,
         help_text=combined_help,
-        custom_validate=form_spec.custom_validate,
+        custom_validate=combined_validate,
         label=form_spec.label,
         migrate=form_spec.migrate,
         prefill=form_spec.prefill,

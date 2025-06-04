@@ -798,6 +798,13 @@ const graphDesignerContentAsJson = computed(() => {
         <td>
           <div v-if="graphLine.type === 'metric'">
             <FixedMetricRowRenderer>
+              <template #metric_cells>
+                <FormMetricCells
+                  v-model:host-name="graphLine.host_name"
+                  v-model:service-name="graphLine.service_name"
+                  v-model:metric-name="graphLine.metric_name"
+                />
+              </template>
               <template #metric_type>
                 <FormEdit
                   v-model:data="graphLine.consolidation_type"
@@ -805,28 +812,23 @@ const graphDesignerContentAsJson = computed(() => {
                   :backend-validation="backendValidationConsolidationType"
                 />
               </template>
-              <template #metric_of>
-                {{ props.i18n.graph_lines.of }}
-              </template>
-              <template #metric_title>
-                {{ graphLine.title }}
-              </template>
             </FixedMetricRowRenderer>
           </div>
           <div v-else-if="graphLine.type === 'scalar'">
             <FixedMetricRowRenderer>
+              <template #metric_cells>
+                <FormMetricCells
+                  v-model:host-name="graphLine.host_name"
+                  v-model:service-name="graphLine.service_name"
+                  v-model:metric-name="graphLine.metric_name"
+                />
+              </template>
               <template #metric_type>
                 <FormEdit
                   v-model:data="graphLine.scalar_type"
                   :spec="specScalarType"
                   :backend-validation="backendValidationScalarType"
                 />
-              </template>
-              <template #metric_of>
-                {{ props.i18n.graph_lines.of }}
-              </template>
-              <template #metric_title>
-                {{ graphLine.title }}
               </template>
             </FixedMetricRowRenderer>
           </div>
@@ -865,7 +867,11 @@ const graphDesignerContentAsJson = computed(() => {
       <div>
         <MetricRowRenderer>
           <template #metric_cells>
-            <FormMetricCells v-model:data="dataMetric" />
+            <FormMetricCells
+              v-model:host-name="dataMetric.hostName"
+              v-model:service-name="dataMetric.serviceName"
+              v-model:metric-name="dataMetric.metricName"
+            />
           </template>
           <template #metric_type>
             <FormEdit
@@ -891,7 +897,11 @@ const graphDesignerContentAsJson = computed(() => {
       <div>
         <MetricRowRenderer>
           <template #metric_cells>
-            <FormMetricCells v-model:data="dataScalar" />
+            <FormMetricCells
+              v-model:host-name="dataScalar.hostName"
+              v-model:service-name="dataScalar.serviceName"
+              v-model:metric-name="dataScalar.metricName"
+            />
           </template>
           <template #metric_type>
             <FormEdit

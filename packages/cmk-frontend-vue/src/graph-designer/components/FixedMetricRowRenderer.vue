@@ -8,9 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
   <table>
     <tbody>
       <tr>
+        <td><slot name="metric_cells"></slot></td>
         <td><slot name="metric_type"></slot></td>
-        <td><slot name="metric_of"></slot></td>
-        <td><slot name="metric_title"></slot></td>
       </tr>
     </tbody>
   </table>

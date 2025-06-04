@@ -16,9 +16,9 @@ export interface Metric {
   metricName: string
 }
 
-const data = defineModel<Metric>('data', {
-  default: { hostName: '', serviceName: '', metricName: '' }
-})
+const hostName = defineModel<string>('hostName', { default: '' })
+const serviceName = defineModel<string>('serviceName', { default: '' })
+const metricName = defineModel<string>('metricName', { default: '' })
 
 const specHostName = makeString('', 'Host name', {
   fetch_method: 'ajax_vs_autocomplete',
@@ -36,7 +36,7 @@ const specServiceName = computed(() => {
       ident: 'monitored_service_description',
       params: {
         strict: true,
-        context: { host: { host: data.value.hostName } }
+        context: { host: { host: hostName.value } }
       }
     }
   })
@@ -51,8 +51,8 @@ const specMetricName = computed(() => {
       params: {
         strict: true,
         context: {
-          host: { host: data.value.hostName },
-          service: { service: data.value.serviceName }
+          host: { host: hostName.value },
+          service: { service: serviceName.value }
         }
       }
     }
@@ -63,17 +63,17 @@ const backendValidationMetricName: ValidationMessages = []
 // Clear form fields if one changes
 
 watch(
-  () => data.value.hostName,
+  () => hostName.value,
   () => {
-    data.value.serviceName = ''
-    data.value.metricName = ''
+    serviceName.value = ''
+    metricName.value = ''
   }
 )
 
 watch(
-  () => data.value.serviceName,
+  () => serviceName.value,
   () => {
-    data.value.metricName = ''
+    metricName.value = ''
   }
 )
 </script>
@@ -81,23 +81,23 @@ watch(
 <template>
   <td>
     <FormEdit
-      v-model:data="data.hostName"
+      v-model:data="hostName"
       :spec="specHostName"
       :backend-validation="backendValidationHostName"
     />
   </td>
   <td>
     <FormEdit
-      :key="data.hostName"
-      v-model:data="data.serviceName"
+      :key="hostName"
+      v-model:data="serviceName"
       :spec="specServiceName"
       :backend-validation="backendValidationServiceName"
     />
   </td>
   <td>
     <FormEdit
-      :key="data.serviceName"
-      v-model:data="data.metricName"
+      :key="serviceName"
+      v-model:data="metricName"
       :spec="specMetricName"
       :backend-validation="backendValidationMetricName"
     />

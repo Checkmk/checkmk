@@ -1,0 +1,13 @@
+diff --git a/py/private/pytest.py.tmpl b/py/private/pytest.py.tmpl
+index aaf5282..4394218 100644
+--- a/py/private/pytest.py.tmpl
++++ b/py/private/pytest.py.tmpl
+@@ -12,6 +12,8 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++# type: ignore
++
+ import sys
+ import os
+ from pathlib import Path

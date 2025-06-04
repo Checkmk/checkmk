@@ -6,9 +6,9 @@ new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.
 
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
-bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.17.1")
 bazel_dep(name = "aspect_rules_lint", version = "1.4.4")
-bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "gazelle", version = "0.42.0")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
@@ -23,11 +23,11 @@ bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf"
 bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_foreign_cc", version = "0.14.0")
 bazel_dep(name = "rules_go", version = "0.50.1")
-bazel_dep(name = "rules_multitool", version = "0.4.0")
+bazel_dep(name = "rules_multitool", version = "1.3.0")
 bazel_dep(name = "rules_mypy", version = "0.29.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-bazel_dep(name = "rules_python", version = "1.1.0")
+bazel_dep(name = "rules_python", version = "1.4.1")
 bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(
     # LLVM for clang-tidy, clang-format, and IWYU.
@@ -35,7 +35,7 @@ bazel_dep(
     version = "1.4.0",
 )
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
-bazel_dep(name = "rules_uv", version = "0.44.0")
+bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(
     # Transitive dep required because a dependency in the protobuf-python chain
     # expects `@rules_proto//proto/private/rules:proto_toolchain_rule.bzl`.
@@ -56,13 +56,6 @@ bazel_dep(
     # https://github.com/hedronvision/bazel-compile-commands-extractor
     name = "hedron_compile_commands",
     dev_dependency = True,
-)
-
-# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
-git_override(
-    module_name = "aspect_rules_py",
-    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
-    remote = "https://github.com/TimotheusBachinger/rules_py",
 )
 
 git_override(
@@ -88,6 +81,16 @@ git_override(
     # No tags, no releases.  Let's go with today's head.
     commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+)
+
+single_version_override(
+    module_name = "aspect_rules_py",
+    patch_strip = 1,
+    patches = [
+        # https://github.com/aspect-build/rules_py/pull/577
+        "//bazel/patches:rules_py-no_mypy_for_py_pytest_main.patch",
+    ],
+    version = "1.5.2",
 )
 
 single_version_override(
@@ -121,7 +124,6 @@ single_version_override(
     module_name = "rules_python",
     patch_strip = 1,
     patches = [
-        "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
     ],
 )

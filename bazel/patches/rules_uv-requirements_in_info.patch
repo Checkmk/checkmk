@@ -1,5 +1,5 @@
 diff --git a/uv/pip.bzl b/uv/pip.bzl
-index 91197af..db0b9f7 100644
+index 62295ef..c910382 100644
 --- a/uv/pip.bzl
 +++ b/uv/pip.bzl
 @@ -3,6 +3,9 @@
@@ -13,7 +13,7 @@ index 91197af..db0b9f7 100644
  def pip_compile(
          name,
 diff --git a/uv/private/pip.bzl b/uv/private/pip.bzl
-index 2239ec7..1dac7d1 100644
+index a5517f4..9e53274 100644
 --- a/uv/private/pip.bzl
 +++ b/uv/private/pip.bzl
 @@ -3,6 +3,12 @@
@@ -29,17 +29,17 @@ index 2239ec7..1dac7d1 100644
  _PY_TOOLCHAIN = "@bazel_tools//tools/python:toolchain_type"
  
  _DEFAULT_ARGS = [
-@@ -70,8 +76,12 @@ def _uv_pip_compile(
- 
+@@ -78,8 +84,12 @@ def _uv_pip_compile(
  def _runfiles(ctx):
      py3_runtime = _python_runtime(ctx)
-+    runfiles = [ctx.file.requirements_in, ctx.file.requirements_txt] + ctx.files.data
+     overrides_file = [ctx.file.requirements_overrides] if ctx.attr.requirements_overrides else []
++    files = [ctx.file.requirements_in, ctx.file.requirements_txt] + overrides_file + ctx.files.data
 +    if RequirementsInInfo in ctx.attr.requirements_in:
 +        for src in ctx.attr.requirements_in[RequirementsInInfo].srcs:
-+            runfiles.extend(src.files.to_list())
++            files.extend(src.files.to_list())
      runfiles = ctx.runfiles(
--        files = [ctx.file.requirements_in, ctx.file.requirements_txt] + ctx.files.data,
-+        files = runfiles,
+-        files = [ctx.file.requirements_in, ctx.file.requirements_txt] + overrides_file + ctx.files.data,
++        files = files,
          transitive_files = py3_runtime.files,
      )
      runfiles = runfiles.merge(ctx.attr._uv[0].default_runfiles)

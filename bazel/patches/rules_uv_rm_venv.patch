@@ -1,21 +1,12 @@
 diff --git a/uv/private/create_venv.sh b/uv/private/create_venv.sh
-index b88b2d4..b42a109 100644
-uv has a problem when:
-* the venv directory exists
-* it contains files
-* it does not contain a pyvenv.cfg
-uv's "allow_existing" does also not sound right to use:
-/// WARNING: This option can lead to unexpected behavior if the existing virtual environment
-/// and the newly-created virtual environment are linked to different Python interpreters.
-
-So we ensure the existing directory is completley blown away before running uv on it.
+index 9d2990b..3fcf296 100644
 --- a/uv/private/create_venv.sh
 +++ b/uv/private/create_venv.sh
-@@ -30,6 +30,7 @@ then
-   exit -1
+@@ -34,6 +34,7 @@ if [[ "$target" != /* ]]; then
+   target="$BUILD_WORKSPACE_DIRECTORY/$target"
  fi
-
-+rm -rf "$BUILD_WORKSPACE_DIRECTORY/$target"
- "$UV" venv "$BUILD_WORKSPACE_DIRECTORY/$target" --python "$PYTHON"
- source "$BUILD_WORKSPACE_DIRECTORY/$target/bin/activate"
+ 
++rm -rf "$target"
+ "$UV" venv "$target" --python "$PYTHON"
+ source "$target/bin/activate"
  "$UV" pip install -r "$REQUIREMENTS_TXT" {{args}}

@@ -1,22 +1,16 @@
----
- uv/private/create_venv.sh | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
 diff --git a/uv/private/create_venv.sh b/uv/private/create_venv.sh
-index b42a109..7c21edf 100644
+index 3fcf296..33501fa 100644
 --- a/uv/private/create_venv.sh
 +++ b/uv/private/create_venv.sh
-@@ -31,9 +31,9 @@ then
+@@ -35,9 +35,9 @@ if [[ "$target" != /* ]]; then
  fi
-
- rm -rf "$BUILD_WORKSPACE_DIRECTORY/$target"
--"$UV" venv "$BUILD_WORKSPACE_DIRECTORY/$target" --python "$PYTHON"
-+"$UV" venv --quiet "$BUILD_WORKSPACE_DIRECTORY/$target" --python "$PYTHON"
- source "$BUILD_WORKSPACE_DIRECTORY/$target/bin/activate"
+ 
+ rm -rf "$target"
+-"$UV" venv "$target" --python "$PYTHON"
++"$UV" venv --quiet "$target" --python "$PYTHON"
+ source "$target/bin/activate"
 -"$UV" pip install -r "$REQUIREMENTS_TXT" {{args}}
 +"$UV" pip install --quiet -r "$REQUIREMENTS_TXT" {{args}}
-
+ 
  site_packages_extra_files=({{site_packages_extra_files}})
  if [ ! -z ${site_packages_extra_files+x} ]; then
---
-2.43.0

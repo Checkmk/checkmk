@@ -38,7 +38,10 @@ test('Render GraphDesignerApp', () => {
           clone_this_entry: 'clone_this_entry',
           move_this_entry: 'move_this_entry',
           delete_this_entry: 'delete_this_entry',
-          add: 'add'
+          add: 'add',
+          placeholder_host_name: 'host name',
+          placeholder_service_name: 'service name',
+          placeholder_metric_name: 'metric name'
         },
         graph_operations: {
           sum: 'sum',

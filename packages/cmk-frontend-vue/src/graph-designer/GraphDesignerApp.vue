@@ -307,14 +307,14 @@ function formulaOf(graphLine: GraphLine): string {
 }
 
 const dataMetric = ref<Metric>({
-  hostName: '',
-  serviceName: '',
-  metricName: ''
+  hostName: null,
+  serviceName: null,
+  metricName: null
 })
 const dataScalar = ref<Metric>({
-  hostName: '',
-  serviceName: '',
-  metricName: ''
+  hostName: null,
+  serviceName: null,
+  metricName: null
 })
 
 let id = 0
@@ -494,8 +494,11 @@ function isOperation(graphLine: GraphLine) {
 async function addMetric() {
   if (
     dataMetric.value.hostName !== '' &&
+    dataMetric.value.hostName !== null &&
     dataMetric.value.serviceName !== '' &&
-    dataMetric.value.metricName !== ''
+    dataMetric.value.serviceName !== null &&
+    dataMetric.value.metricName !== '' &&
+    dataMetric.value.metricName !== null
   ) {
     const color: string = await fetchMetricColor(
       dataMetric.value.metricName,
@@ -516,9 +519,9 @@ async function addMetric() {
       consolidation_type: dataConsolidationType.value
     })
     dataMetric.value = {
-      hostName: '',
-      serviceName: '',
-      metricName: ''
+      hostName: null,
+      serviceName: null,
+      metricName: null
     }
   }
 }
@@ -526,8 +529,11 @@ async function addMetric() {
 async function addScalar() {
   if (
     dataScalar.value.hostName !== '' &&
+    dataScalar.value.hostName !== null &&
     dataScalar.value.serviceName !== '' &&
-    dataScalar.value.metricName !== ''
+    dataScalar.value.serviceName !== null &&
+    dataScalar.value.metricName !== '' &&
+    dataScalar.value.metricName !== null
   ) {
     const color: string = await fetchMetricColor(dataScalar.value.metricName, dataScalarType.value)
     graphLines.value.push({
@@ -545,9 +551,9 @@ async function addScalar() {
       scalar_type: dataScalarType.value
     })
     dataScalar.value = {
-      hostName: '',
-      serviceName: '',
-      metricName: ''
+      hostName: null,
+      serviceName: null,
+      metricName: null
     }
   }
 }
@@ -841,6 +847,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  :placeholder_host_name="props.i18n.graph_lines.placeholder_host_name"
+                  :placeholder_service_name="props.i18n.graph_lines.placeholder_service_name"
+                  :placeholder_metric_name="props.i18n.graph_lines.placeholder_metric_name"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -862,6 +871,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  :placeholder_host_name="props.i18n.graph_lines.placeholder_host_name"
+                  :placeholder_service_name="props.i18n.graph_lines.placeholder_service_name"
+                  :placeholder_metric_name="props.i18n.graph_lines.placeholder_metric_name"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -927,6 +939,9 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataMetric.hostName"
               v-model:service-name="dataMetric.serviceName"
               v-model:metric-name="dataMetric.metricName"
+              :placeholder_host_name="props.i18n.graph_lines.placeholder_host_name"
+              :placeholder_service_name="props.i18n.graph_lines.placeholder_service_name"
+              :placeholder_metric_name="props.i18n.graph_lines.placeholder_metric_name"
             />
           </template>
           <template #metric_type>
@@ -957,6 +972,9 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataScalar.hostName"
               v-model:service-name="dataScalar.serviceName"
               v-model:metric-name="dataScalar.metricName"
+              :placeholder_host_name="props.i18n.graph_lines.placeholder_host_name"
+              :placeholder_service_name="props.i18n.graph_lines.placeholder_service_name"
+              :placeholder_metric_name="props.i18n.graph_lines.placeholder_metric_name"
             />
           </template>
           <template #metric_type>

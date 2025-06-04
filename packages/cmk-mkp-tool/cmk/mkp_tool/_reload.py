@@ -10,8 +10,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def reload_services_affected_by_mkp_changes() -> None:
-    _reload_service("apache")
+    # order matters :-(
     _reload_service("automation-helper")
+    _reload_service("ui-job-scheduler")
+    _reload_service("redis")
+    _reload_service("apache")
 
 
 def _reload_service(service_name: str) -> None:

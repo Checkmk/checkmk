@@ -15,12 +15,10 @@ import os
 import re
 import subprocess
 import time
-import uuid
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from io import BytesIO
-from pathlib import Path
 from typing import Annotated, Final, NamedTuple
 
 import requests
@@ -30,7 +28,6 @@ from pydantic import BaseModel, field_validator, PlainValidator
 from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId
@@ -41,23 +38,18 @@ from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 
-from cmk.automations.results import result_type_registry, SerializedResult
+from cmk.automations.results import SerializedResult
 
 from cmk.gui import hooks
 from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundProcessInterface,
     BackgroundStatusSnapshot,
-    InitialStatusArgs,
     JobStatusSpec,
     JobStatusStates,
-    JobTarget,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
@@ -68,7 +60,7 @@ from cmk.gui.utils.compatibility import (
     make_incompatible_info,
 )
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.utils import mk_repr
 
 from cmk import trace
@@ -144,6 +136,7 @@ def check_mk_local_automation_serialized(
     timeout: int | None = None,
     force_cli_interface: bool = False,
     debug: bool,
+    collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
 ) -> tuple[Sequence[str], SerializedResult]:
     with tracer.span(
         f"local_automation[{command}]",
@@ -156,7 +149,7 @@ def check_mk_local_automation_serialized(
             stdin_data = repr(indata)
 
         if command in ["restart", "reload"]:
-            call_hook_pre_activate_changes()
+            call_hook_pre_activate_changes(collect_all_hosts)
 
         executor: AutomationExecutor = (
             automation_subprocess.SubprocessExecutor()
@@ -201,7 +194,7 @@ def check_mk_local_automation_serialized(
 
         # On successful "restart" command execute the activate changes hook
         if command in ["restart", "reload"]:
-            call_hook_activate_changes()
+            call_hook_activate_changes(collect_all_hosts)
 
         return result.command_description, SerializedResult(result.output)
 
@@ -282,37 +275,39 @@ def check_mk_remote_automation_serialized(
         )
 
 
-# This hook is executed when one applies the pending configuration changes
-# from wato but BEFORE the nagios restart is executed.
-#
-# It can be used to create custom input files for nagios/Checkmk.
-#
-# The registered hooks are called with a dictionary as parameter which
-# holds all available with the hostnames as keys and the attributes of
-# the hosts as values.
-def call_hook_pre_activate_changes() -> None:
+def call_hook_pre_activate_changes(
+    collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
+) -> None:
+    """Execute the pre-activate-changes hooks
+
+    This hook is executed when one applies the pending configuration changes
+    from wato but BEFORE the nagios restart is executed.
+
+    It can be used to create custom input files for nagios/Checkmk.
+
+    The registered hooks are called with a dictionary as parameter which
+    holds all available with the hostnames as keys and the attributes of
+    the hosts as values."""
     if hooks.registered("pre-activate-changes"):
-        # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
-
-        hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
+        hooks.call("pre-activate-changes", collect_all_hosts)
 
 
-# This hook is executed when one applies the pending configuration changes
-# from wato.
-#
-# But it is only excecuted when there is at least one function
-# registered for this host.
-#
-# The registered hooks are called with a dictionary as parameter which
-# holds all available with the hostnames as keys and the attributes of
-# the hosts as values.
-def call_hook_activate_changes() -> None:
+def call_hook_activate_changes(
+    collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
+) -> None:
+    """Execute the post activate-changes hooks
+
+    This hook is executed when one applies the pending configuration changes
+    from wato.
+
+    But it is only excecuted when there is at least one function
+    registered for this host.
+
+    The registered hooks are called with a dictionary as parameter which
+    holds all available with the hostnames as keys and the attributes of
+    the hosts as values."""
     if hooks.registered("activate-changes"):
-        # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
-
-        hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
+        hooks.call("activate-changes", collect_all_hosts)
 
 
 def _do_remote_automation_serialized(
@@ -703,143 +698,6 @@ def _start_remote_automation_job(
 
     auto_logger.info("Started background job: %s", job_id)
     return job_id
-
-
-class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
-    """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
-
-    def command_name(self) -> str:
-        return "checkmk-remote-automation-start"
-
-    def get_request(self) -> CheckmkAutomationRequest:
-        return CheckmkAutomationRequest(
-            *ast.literal_eval(request.get_ascii_input_mandatory("request"))
-        )
-
-    def execute(self, api_request: CheckmkAutomationRequest) -> str:
-        automation_id = str(uuid.uuid4())
-        job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
-        job = CheckmkAutomationBackgroundJob(job_id)
-        if (
-            result := job.start(
-                JobTarget(
-                    callable=checkmk_automation_job_entry_point,
-                    args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
-                ),
-                InitialStatusArgs(
-                    title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
-                    user=str(user.id) if user.id else None,
-                ),
-            )
-        ).is_error():
-            raise result.error
-
-        return job.get_job_id()
-
-
-class CheckmkAutomationJobArgs(BaseModel, frozen=True):
-    job_id: str
-    api_request: CheckmkAutomationRequest
-
-
-def checkmk_automation_job_entry_point(
-    job_interface: BackgroundProcessInterface, args: CheckmkAutomationJobArgs
-) -> None:
-    job = CheckmkAutomationBackgroundJob(args.job_id)
-    job.execute_automation(job_interface, args.api_request)
-
-
-class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
-    """Called by do_remote_automation_in_background_job to get the background job state from on a
-    remote site"""
-
-    def command_name(self) -> str:
-        return "checkmk-remote-automation-get-status"
-
-    def get_request(self) -> str:
-        return ast.literal_eval(request.get_ascii_input_mandatory("request"))
-
-    @staticmethod
-    def _load_result(path: Path) -> str:
-        return store.load_text_from_file(path)
-
-    def execute(self, api_request: str) -> RemoteAutomationGetStatusResponseRaw:
-        job_id = api_request
-        job = CheckmkAutomationBackgroundJob(job_id)
-        response = CheckmkAutomationGetStatusResponse(
-            job_status=job.get_status_snapshot().status,
-            result=self._load_result(Path(job.get_work_dir()) / "result.mk"),
-        )
-        return dict(response[0]), response[1]
-
-
-class CheckmkAutomationBackgroundJob(BackgroundJob):
-    """The background job is always executed on the site where the host is located on"""
-
-    job_prefix = "automation-"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Checkmk automation")
-
-    @staticmethod
-    def _store_result(
-        *,
-        path: Path,
-        serialized_result: SerializedResult,
-        automation_cmd: str,
-        cmdline_cmd: Iterable[str],
-        debug: bool,
-    ) -> None:
-        try:
-            store.save_text_to_file(
-                path,
-                result_type_registry[automation_cmd]
-                .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source(request)),
-            )
-        except SyntaxError as e:
-            msg = get_local_automation_failure_message(
-                command=automation_cmd,
-                cmdline=cmdline_cmd,
-                out=serialized_result,
-                exc=e,
-                debug=debug,
-            )
-            raise MKAutomationException(msg)
-
-    def execute_automation(
-        self,
-        job_interface: BackgroundProcessInterface,
-        api_request: CheckmkAutomationRequest,
-    ) -> None:
-        with job_interface.gui_context():
-            self._execute_automation(job_interface, api_request)
-
-    def _execute_automation(
-        self,
-        job_interface: BackgroundProcessInterface,
-        api_request: CheckmkAutomationRequest,
-    ) -> None:
-        self._logger.info("Starting automation: %s", api_request.command)
-        self._logger.debug(api_request)
-        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
-            command=api_request.command,
-            args=api_request.args,
-            indata=api_request.indata,
-            stdin_data=api_request.stdin_data,
-            timeout=api_request.timeout,
-            debug=api_request.debug,
-        )
-        # This file will be read by the get-status request
-        self._store_result(
-            path=Path(job_interface.get_work_dir()) / "result.mk",
-            serialized_result=serialized_result,
-            automation_cmd=api_request.command,
-            cmdline_cmd=cmdline_cmd,
-            debug=api_request.debug,
-        )
-        job_interface.send_result_message(_("Finished."))
 
 
 def _edition_from_short(edition_short: str) -> cmk_version.Edition:

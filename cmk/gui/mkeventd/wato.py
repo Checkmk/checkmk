@@ -161,8 +161,8 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
-    CollectedHostAttributes,
     make_action_link,
 )
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic

@@ -36,6 +36,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     RemoteAutomationConfig,
 )
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
 
 
 class AutomationResponse(NamedTuple):
@@ -70,6 +71,7 @@ def _automation_serialized(
             timeout=timeout,
             force_cli_interface=force_cli_interface,
             debug=debug,
+            collect_all_hosts=collect_all_hosts,
         )
         return AutomationResponse(
             command=command,

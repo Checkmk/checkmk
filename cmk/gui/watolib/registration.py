@@ -20,6 +20,7 @@ from . import (
     activate_changes,
     autodiscovery,
     automatic_host_removal,
+    automation_background_job,
     automation_commands,
     builtin_attributes,
     config_domains,
@@ -37,11 +38,6 @@ from .activate_changes import (
 from .agent_registration import AutomationRemoveTLSRegistration
 from .analyze_configuration import AutomationCheckAnalyzeConfig
 from .automation_commands import AutomationCommandRegistry
-from .automations import (
-    AutomationCheckmkAutomationGetStatus,
-    AutomationCheckmkAutomationStart,
-    CheckmkAutomationBackgroundJob,
-)
 from .broker_certificates import (
     AutomationCreateBrokerCertificates,
     AutomationStoreBrokerCertificates,
@@ -144,8 +140,6 @@ def register(
     automation_command_registry.register(AutomationRemoveTLSRegistration)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
-    automation_command_registry.register(AutomationCheckmkAutomationStart)
-    automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorLocalSiteConnection)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
@@ -159,6 +153,7 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
+    automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("request-start", launch_requests_processing_background)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
@@ -196,7 +191,6 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
-    job_registry.register(CheckmkAutomationBackgroundJob)
     job_registry.register(ServiceDiscoveryBackgroundJob)
 
 

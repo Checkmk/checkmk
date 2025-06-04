@@ -20,7 +20,9 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.http import request
-from cmk.gui.watolib import automations
+from cmk.gui.watolib import automation_background_job
+from cmk.gui.watolib.automation_background_job import CheckmkAutomationBackgroundJob
+from cmk.gui.watolib.automations import CheckmkAutomationRequest
 
 RESULT: object = None
 
@@ -57,7 +59,7 @@ class TestCheckmkAutomationBackgroundJob:
         registry = ResultTypeRegistry()
         registry.register(ResultTest)
         monkeypatch.setattr(
-            automations,
+            automation_background_job,
             "result_type_registry",
             registry,
         )
@@ -74,7 +76,7 @@ class TestCheckmkAutomationBackgroundJob:
     @pytest.fixture(name="check_mk_local_automation_serialized")
     def check_mk_local_automation_serialized_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            automations,
+            automation_background_job,
             "check_mk_local_automation_serialized",
             self._check_mk_local_automation_serialized,
         )
@@ -89,14 +91,14 @@ class TestCheckmkAutomationBackgroundJob:
     ) -> None:
         with monkeypatch.context() as m:
             m.setattr(request, "headers", {"x-checkmk-version": "2.2.0i1"})
-            api_request = automations.CheckmkAutomationRequest(
+            api_request = CheckmkAutomationRequest(
                 command="test",
                 args=None,
                 indata=None,
                 stdin_data=None,
                 timeout=None,
             )
-            job = automations.CheckmkAutomationBackgroundJob("job_id")
+            job = CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
             job._execute_automation(
                 BackgroundProcessInterface(
@@ -108,6 +110,7 @@ class TestCheckmkAutomationBackgroundJob:
                     open(os.devnull, "w"),
                 ),
                 api_request,
+                lambda: {},
             )
             assert RESULT == "(2, None)"
 
@@ -123,14 +126,14 @@ class TestCheckmkAutomationBackgroundJob:
         with monkeypatch.context() as m:
             if set_version:
                 m.setattr(request, "headers", {"x-checkmk-version": "2.1.0p10"})
-            api_request = automations.CheckmkAutomationRequest(
+            api_request = CheckmkAutomationRequest(
                 command="test",
                 args=None,
                 indata=None,
                 stdin_data=None,
                 timeout=None,
             )
-            job = automations.CheckmkAutomationBackgroundJob("job_id")
+            job = CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
             job._execute_automation(
                 BackgroundProcessInterface(
@@ -142,5 +145,6 @@ class TestCheckmkAutomationBackgroundJob:
                     open(os.devnull, "w"),
                 ),
                 api_request,
+                lambda: {},
             )
             assert RESULT == "i was very different previously"

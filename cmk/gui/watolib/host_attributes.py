@@ -167,6 +167,12 @@ class HostAttributes(BuiltInHostAttributes, BuiltInHostTagGroups, total=False):
     tag_criticality: str
 
 
+class CollectedHostAttributes(HostAttributes):
+    path: str
+    # Seems to be added during runtime in some cases. Clean this up
+    edit_url: NotRequired[str]
+
+
 def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
     """Create a copy of the given attributes and mask credential data"""
 

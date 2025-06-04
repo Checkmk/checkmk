@@ -44,6 +44,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     verify_request_compatibility,
 )
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
 
 from cmk import trace
 from cmk.crypto.password import Password
@@ -221,6 +222,7 @@ class PageAutomation(AjaxPage):
             stdin_data=stdin_data,
             timeout=timeout,
             debug=debug,
+            collect_all_hosts=collect_all_hosts,
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(

@@ -26,6 +26,8 @@ import requests
 
 from cmk.ccc import store
 
+from cmk.special_agents.v0_unstable.storage import Storage
+
 LOG = logging.getLogger(__name__)
 
 
@@ -359,18 +361,13 @@ def to_bytes(string: str) -> int:
 
 @contextmanager
 def JsonCachedData(
-    cache_file: Path,
+    storage: Storage,
+    storage_key: str,
     cutoff_condition: Callable[[str, Any], bool],
 ) -> Generator[Callable[[str, Any], Any], None, None]:
     """Store JSON-serializable data on filesystem and provide it if available"""
-    cache_file.parents[0].mkdir(parents=True, exist_ok=True)
-    try:
-        with cache_file.open() as crfile:
-            cache = json.load(crfile)
-        LOG.debug("Cache: loaded %d elements", len(cache))
-    except (FileNotFoundError, json.JSONDecodeError):
-        LOG.warning("Cache: could not find file - start a new one")
-        cache = {}
+    cache = json.loads(storage.read(key=storage_key, default="{}"))
+    LOG.debug("Cache: loaded %d elements", len(cache))
 
     dirty = False
     # note: this must not be a generator - otherwise we modify a dict while iterating it
@@ -391,9 +388,8 @@ def JsonCachedData(
         yield setdefault
     finally:
         if dirty:
-            LOG.debug("Cache: write file: %r", str(cache_file.absolute()))
-            with cache_file.open(mode="w") as cwfile:
-                json.dump(cache, cwfile, indent=2)
+            LOG.debug("Cache: write file: %r", storage_key)
+            storage.write(storage_key, json.dumps(cache, indent=2))
 
 
 if __name__ == "__main__":

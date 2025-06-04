@@ -43,6 +43,7 @@ from cmk.special_agents.v0_unstable.agent_common import (
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.v0_unstable.misc import JsonCachedData, to_bytes
+from cmk.special_agents.v0_unstable.storage import Storage
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
@@ -394,8 +395,10 @@ def fetch_backup_data(
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
+    storage = Storage(program_ident="agent_proxmox_ve", host=args.hostname)
     with JsonCachedData(
-        LogCacheFilePath / args.hostname / "upid.log.cache.json",
+        storage=storage,
+        storage_key="upid.log.cache.json",
         cutoff_condition=lambda k, v: bool(v[0] < cutoff_date),
     ) as cached:
 

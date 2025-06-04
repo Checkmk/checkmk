@@ -36,7 +36,7 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
     Faking the AWS agent bypasses such validations, which are 'out-of-scope' of UI tests.
     """
     fake_agent_aws = Path(__file__).parent / "fake_agent_aws.py"
-    aws_agent = test_site.root / "lib" / "check_mk" / "special_agents" / "agent_aws.py"
+    aws_agent = test_site.path("lib/python3/cmk/plugins/aws/special_agents/agent_aws.py")
     backup_agent = str(aws_agent).replace(".py", ".py.bck")
     run(["cp", str(aws_agent), backup_agent], sudo=True)
     run(["cp", str(fake_agent_aws), str(aws_agent)], sudo=True)

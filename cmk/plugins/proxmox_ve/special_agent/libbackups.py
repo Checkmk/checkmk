@@ -15,7 +15,6 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any
 
 from cmk.utils.paths import tmp_dir
@@ -27,6 +26,7 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import to_bytes
+from cmk.special_agents.v0_unstable.storage import Storage
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")
 
@@ -352,8 +352,10 @@ def fetch_backup_data(
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
+    storage = Storage(program_ident="agent_proxmox_ve", host=args.hostname)
     with JsonCachedData(
-        LogCacheFilePath / args.hostname / "upid.log.cache.json",
+        storage=storage,
+        storage_key="upid.log.cache.json",
         cutoff_condition=lambda k, v: bool(v[0] < cutoff_date),
     ) as cached:
 
@@ -386,18 +388,14 @@ def fetch_backup_data(
 
 @contextmanager
 def JsonCachedData(
-    cache_file: Path,
+    storage: Storage,
+    storage_key: str,
     cutoff_condition: Callable[[str, Any], bool],
 ) -> Generator[Callable[[str, Any], Any], None, None]:
     """Store JSON-serializable data on filesystem and provide it if available"""
-    cache_file.parents[0].mkdir(parents=True, exist_ok=True)
-    try:
-        with cache_file.open() as crfile:
-            cache = json.load(crfile)
-        LOGGER.debug("Cache: loaded %d elements", len(cache))
-    except (FileNotFoundError, json.JSONDecodeError):
-        LOGGER.warning("Cache: could not find file - start a new one")
-        cache = {}
+
+    cache = json.loads(storage.read(key=storage_key, default="{}"))
+    LOGGER.debug("Cache: loaded %d elements", len(cache))
 
     dirty = False
     # note: this must not be a generator - otherwise we modify a dict while iterating it
@@ -418,6 +416,5 @@ def JsonCachedData(
         yield setdefault
     finally:
         if dirty:
-            LOGGER.debug("Cache: write file: %r", str(cache_file.absolute()))
-            with cache_file.open(mode="w") as cwfile:
-                json.dump(cache, cwfile, indent=2)
+            LOGGER.debug("Cache: write file: %r", storage_key)
+            storage.write(storage_key, json.dumps(cache, indent=2))

@@ -143,6 +143,7 @@ def test_registered_pages() -> None:
         "user_webauthn_login_begin",
         "view",
         "wato",
+        "wato_ajax_diag_cmk_agent",
         "wato_ajax_diag_host",
         "wato_ajax_execute_check",
         "wato_ajax_fetch_site_status",

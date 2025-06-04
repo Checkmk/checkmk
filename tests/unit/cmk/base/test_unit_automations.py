@@ -39,6 +39,7 @@ def test_registered_automations() -> None:
         "create-diagnostics-dump",
         "delete-hosts",
         "delete-hosts-known-remote",
+        "diag-cmk-agent",
         "diag-host",
         "diag-special-agent",
         "autodiscovery",

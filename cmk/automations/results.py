@@ -712,6 +712,51 @@ result_type_registry.register(DiagSpecialAgentResult)
 
 
 @dataclass
+class DiagCmkAgentInput:
+    host_name: HostName
+    ip_address: HostAddress
+    address_family: Literal["no-ip", "ip-v4-only", "ip-v6-only", "ip-v4v6"]
+    agent_port: int
+    timeout: int
+
+    @classmethod
+    def deserialize(cls, serialized_input: str) -> DiagCmkAgentInput:
+        raw = json.loads(serialized_input)
+        deserialized = {
+            "host_name": HostName(raw["host_name"]),
+            "ip_address": HostAddress(raw["ip_address"]),
+            "address_family": raw["address_family"],
+            "agent_port": raw["agent_port"],
+            "timeout": raw["timeout"],
+        }
+        return cls(**deserialized)
+
+    def serialize(self, _for_cmk_version: cmk_version.Version) -> str:
+        return json.dumps(
+            {
+                "host_name": self.host_name,
+                "ip_address": self.ip_address,
+                "address_family": self.address_family,
+                "agent_port": self.agent_port,
+                "timeout": self.timeout,
+            }
+        )
+
+
+@dataclass
+class DiagCmkAgentResult(ABCAutomationResult):
+    return_code: int
+    response: str
+
+    @staticmethod
+    def automation_call() -> str:
+        return "diag-cmk-agent"
+
+
+result_type_registry.register(DiagCmkAgentResult)
+
+
+@dataclass
 class DiagHostResult(ABCAutomationResult):
     return_code: int
     response: str

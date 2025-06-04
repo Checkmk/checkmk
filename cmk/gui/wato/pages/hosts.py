@@ -17,7 +17,7 @@ from cmk.ccc.site import omd_site
 
 import cmk.utils.tags
 
-from cmk.automations.results import PingHostCmd, PingHostInput
+from cmk.automations.results import DiagCmkAgentInput, PingHostCmd, PingHostInput
 
 import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui import forms, user_sites
@@ -56,7 +56,12 @@ from cmk.gui.watolib.builtin_attributes import (
     HostAttributeIPv6Address,
     HostAttributeSite,
 )
-from cmk.gui.watolib.check_mk_automations import delete_hosts, ping_host, update_dns_cache
+from cmk.gui.watolib.check_mk_automations import (
+    delete_hosts,
+    diag_cmk_agent,
+    ping_host,
+    update_dns_cache,
+)
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import collect_attributes
@@ -80,6 +85,7 @@ def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     mode_registry.register(ModeCreateHost)
     mode_registry.register(ModeCreateCluster)
     page_registry.register_page("ajax_ping_host")(PageAjaxPingHost)
+    page_registry.register_page("wato_ajax_diag_cmk_agent")(PageAjaxDiagCmkAgent)
 
 
 class ABCHostMode(WatoMode, abc.ABC):
@@ -902,6 +908,26 @@ class PageAjaxPingHost(AjaxPage):
                 base_cmd=cmd,
             ),
         )
+        return {
+            "status_code": result.return_code,
+            "output": result.response,
+        }
+
+
+class PageAjaxDiagCmkAgent(AjaxPage):
+    def page(self) -> PageResult:
+        api_request = self.webapi_request()
+        result = diag_cmk_agent(
+            automation_config=make_automation_config(active_config.sites[api_request["site_id"]]),
+            diag_cmk_agent_input=DiagCmkAgentInput(
+                host_name=api_request["host_name"],
+                ip_address=api_request["ipaddress"],
+                address_family=api_request["address_family"],
+                agent_port=api_request["agent_port"],
+                timeout=api_request["timeout"],
+            ),
+        )
+
         return {
             "status_code": result.return_code,
             "output": result.response,

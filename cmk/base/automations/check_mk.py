@@ -25,7 +25,8 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
-from typing import Any
+from socket import AddressFamily
+from typing import Any, Literal
 
 import livestatus
 
@@ -83,6 +84,8 @@ from cmk.automations.results import (
     CreateDiagnosticsDumpResult,
     DeleteHostsKnownRemoteResult,
     DeleteHostsResult,
+    DiagCmkAgentInput,
+    DiagCmkAgentResult,
     DiagHostResult,
     DiagSpecialAgentHostConfig,
     DiagSpecialAgentInput,
@@ -128,9 +131,17 @@ from cmk.snmplib import (
     walk_for_export,
 )
 
-from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, SNMPScanConfig, TCPFetcher, TLSConfig
+from cmk.fetchers import (
+    get_raw_data,
+    Mode,
+    ProgramFetcher,
+    SNMPScanConfig,
+    TCPEncryptionHandling,
+    TCPFetcher,
+    TLSConfig,
+)
 from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
@@ -2662,6 +2673,102 @@ class AutomationPingHost(Automation):
 
 
 automations.register(AutomationPingHost())
+
+
+class AutomationDiagCmkAgent(Automation):
+    cmd = "diag-cmk-agent"
+
+    def execute(
+        self,
+        args: list[str],
+        _plugins: AgentBasedPlugins | None,
+        _loading_result: config.LoadingResult | None,
+    ) -> DiagCmkAgentResult:
+        diag_cmk_agent_input = DiagCmkAgentInput.deserialize(sys.stdin.read())
+        host_name = diag_cmk_agent_input.host_name
+        ipaddress = diag_cmk_agent_input.ip_address
+        family = diag_cmk_agent_input.address_family
+
+        def address_family_config(
+            address_family: Literal["no-ip", "ip-v4-only", "ip-v6-only", "ip-v4v6"],
+        ) -> AddressFamily:
+            if address_family == "ip-v4-only":
+                return AddressFamily.AF_INET
+            if address_family == "ip-v6-only":
+                return AddressFamily.AF_INET6
+            # TODO What to use for DualStack?
+            if address_family == "ip-v4v6":
+                return AddressFamily.AF_INET6
+            return AddressFamily.AF_INET
+
+        if not ipaddress:
+            if family == "no-ip":
+                return DiagCmkAgentResult(
+                    1,
+                    "Host is configured as No-IP host: %s" % host_name,
+                )
+            try:
+                resolved_address = ip_lookup.cached_dns_lookup(
+                    hostname=host_name,
+                    family=address_family_config(family),
+                    force_file_cache_renewal=False,
+                )
+            except Exception:
+                return DiagCmkAgentResult(
+                    1,
+                    "Cannot resolve host name %s into IP address" % host_name,
+                )
+
+            if resolved_address is None:
+                return DiagCmkAgentResult(
+                    1,
+                    "Cannot resolve host name %s into IP address" % host_name,
+                )
+
+            ipaddress = resolved_address
+
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
+
+        state, output = 0, ""
+        raw_data = get_raw_data(
+            file_cache=NoCache(
+                path_template="/dev/null",
+                max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),
+                simulation=False,
+                use_only_cache=False,
+                file_cache_mode=0,
+            ),
+            fetcher=TCPFetcher(
+                family=AddressFamily.AF_INET,
+                address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
+                timeout=float(diag_cmk_agent_input.timeout),
+                host_name=host_name,
+                encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+                pre_shared_secret=None,
+                tls_config=tls_config,
+            ),
+            mode=Mode.CHECKING,
+        )
+
+        if raw_data.is_ok():
+            output += ensure_str_with_fallback(
+                raw_data.ok,
+                encoding="utf-8",
+                fallback="latin-1",
+            )
+        else:
+            state = 1
+            output += str(raw_data.error)
+
+        # TODO do we need the output?
+        return DiagCmkAgentResult(state, output)
+
+
+automations.register(AutomationDiagCmkAgent())
 
 
 class AutomationDiagHost(Automation):

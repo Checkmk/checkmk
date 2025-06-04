@@ -634,6 +634,25 @@ def diag_host(
     )
 
 
+def diag_cmk_agent(
+    automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    diag_cmk_agent_input: results.DiagCmkAgentInput,
+) -> results.DiagCmkAgentResult:
+    return _deserialize(
+        _automation_serialized(
+            "diag-cmk-agent",
+            automation_config=automation_config,
+            args=None,
+            stdin_data=diag_cmk_agent_input.serialize(
+                cmk_version.Version.from_str(cmk_version.__version__)
+            ),
+            debug=active_config.debug,
+        ),
+        results.DiagCmkAgentResult,
+        debug=active_config.debug,
+    )
+
+
 def active_check(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_name: HostName,

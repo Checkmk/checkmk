@@ -75,38 +75,63 @@ const tooltipText = computed(() => {
   return props.msg_start
 })
 
+type AutomationResponse = {
+  output: string
+  status_code: number
+}
+
 type AjaxResponse = {
   result_code: number
-  result?: string
+  result?: AutomationResponse
 }
 
 type AjaxOptions = {
   method: 'POST' | 'GET'
 }
 
+// Add observer
+const getCurrentAddressFamily = () => {
+  const dropdownChoices = document.querySelector('#attr_entry_tag_address_family') as HTMLElement
+  if (dropdownChoices && dropdownChoices.offsetParent !== null) {
+    const selected = dropdownChoices.querySelector('select')
+    if (selected) {
+      return selected.value
+    }
+  }
+
+  const defaultChoice = document.querySelector('#attr_default_tag_address_family') as HTMLElement
+  if (defaultChoice && defaultChoice.offsetParent !== null) {
+    const defaultValue = defaultChoice.querySelector('b')
+    if (defaultValue) {
+      return defaultValue.textContent?.trim()
+    }
+  }
+
+  return 'ip-v4-only'
+}
+
 async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
   try {
-    // Host diagnostics have still to be adjusted to work with none existing hosts
+    const siteIdDefaultValue = document.getElementById('attr_default_site')
+    const siteIdDropdownValue = document.getElementById('attr_entry_site')
+    const siteId = ref('')
+    if (siteIdDefaultValue && siteIdDropdownValue) {
+      const siteIdDefaultValueVisibility = siteIdDefaultValue.getAttribute('style')
+      if (!siteIdDefaultValueVisibility) {
+        siteId.value = siteIdDefaultValue.textContent ?? ''
+      } else {
+        siteId.value = siteIdDropdownValue.textContent ?? ''
+      }
+    }
+
     const postDataRaw = new URLSearchParams({
-      _test: 'agent',
+      host_name: hostname.value ?? '',
+      ipaddress: ipV4.value ?? ipV6.value ?? '',
+      address_family: getCurrentAddressFamily() ?? 'ip-v4-only',
       agent_port: '6556',
-      tcp_connect_timeout: '5',
-      snmp_timeout: '1',
-      snmp_retries: '5',
-      _csrf_token: ''
+      timeout: '5',
+      site_id: siteId.value.split(' - ')[0] ?? ''
     })
-
-    if (hostname.value) {
-      postDataRaw.append('host', hostname.value)
-    }
-
-    if (ipV4.value) {
-      postDataRaw.append('ipaddress', ipV4.value)
-    }
-
-    if (ipV6.value) {
-      postDataRaw.append('ipaddress', ipV6.value)
-    }
 
     const postData = postDataRaw.toString()
 
@@ -128,11 +153,11 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
 
     const data: AjaxResponse = await res.json()
 
-    if (data.result_code === 0) {
+    if (data.result_code === 0 && data.result && data.result.status_code === 0) {
       isSuccess.value = true
     } else {
       isError.value = true
-      errorDetails.value = data.result ?? ''
+      errorDetails.value = data.result?.output ?? ''
     }
   } catch (err) {
     console.error('Error:', err)
@@ -147,7 +172,7 @@ function startAjax(): void {
   isSuccess.value = false
   isError.value = false
 
-  void callAjax('wato_ajax_diag_host.py', {
+  void callAjax('wato_ajax_diag_cmk_agent.py', {
     method: 'POST'
   })
 }
@@ -182,14 +207,23 @@ function startAjax(): void {
     <CmkIcon name="start" size="xlarge" :title="tooltipText" />
   </CmkButton>
 
-  <CmkButton v-if="isError" type="button" title="Download agent" @click="slideInOpen = true">
+  <CmkButton
+    v-if="errorDetails.includes('[Errno 111]')"
+    type="button"
+    title="Download agent"
+    @click="slideInOpen = true"
+  >
     Download Checkmk agent
   </CmkButton>
+  <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
+    {{ errorDetails }}
+  </span>
   <SlideIn
     :open="slideInOpen"
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
+    <div>Error: {{ errorDetails }}</div>
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-html="externalContent"></div>
   </SlideIn>
@@ -211,5 +245,10 @@ button {
   margin-left: var(--spacing);
   height: auto;
   padding: 0;
+}
+
+span.error_msg {
+  margin-left: var(--spacing);
+  color: red;
 }
 </style>

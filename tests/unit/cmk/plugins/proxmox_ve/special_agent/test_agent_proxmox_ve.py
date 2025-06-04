@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
+from cmk.plugins.proxmox_ve.special_agent.libbackups import (
     BackupInfo,
     BackupTask,
     collect_vm_backup_info,

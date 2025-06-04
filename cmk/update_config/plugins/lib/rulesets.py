@@ -13,7 +13,8 @@ from cmk.ccc import debug
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, TagCondition
+from cmk.utils.tags import TagGroupID
 
 from cmk.base import config
 
@@ -80,6 +81,11 @@ def load_and_transform(logger: Logger) -> AllRulesets:
         REPLACED_RULESETS,
     )
     transform_wato_rulesets_params(
+        logger,
+        all_rulesets,
+        raise_errors=debug.enabled(),
+    )
+    transform_remove_null_host_tag_conditions_from_rulesets(
         logger,
         all_rulesets,
         raise_errors=debug.enabled(),
@@ -227,6 +233,66 @@ def transform_wato_rulesets_params(
                     folder.path(),
                     folder_index,
                     rule.value,
+                    e,
+                )
+    return migrated_rulesets
+
+
+def _filter_out_null_host_tags(
+    host_tags: Mapping[TagGroupID, TagCondition],
+) -> dict[TagGroupID, TagCondition]:
+    filtered_host_tags: dict[TagGroupID, TagCondition] = {}
+
+    for tag_group, tag_id in host_tags.items():
+        match tag_id:
+            case {"$ne": cond} | {"$or": cond} | {"$nor": cond} | cond if cond is None:
+                continue
+            case _:
+                filtered_host_tags[tag_group] = tag_id
+
+    return filtered_host_tags
+
+
+def transform_remove_null_host_tag_conditions_from_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    raise_errors: bool = False,
+) -> Collection[RulesetName]:
+    migrated_rulesets = set()
+    for ruleset in all_rulesets.get_rulesets().values():
+        for folder, folder_index, old_rule in ruleset.get_rules():
+            host_tags = old_rule.get_rule_conditions().host_tags
+            filtered_host_tags = _filter_out_null_host_tags(host_tags)
+            null_tag_groups = host_tags.keys() - filtered_host_tags.keys()
+
+            if not null_tag_groups:
+                continue
+
+            try:
+                logger.warning(
+                    "WARNING: Removing null host tag condition: rule=%s(id=%s), tag_groups=%s",
+                    ruleset.name,
+                    old_rule.id,
+                    null_tag_groups,
+                )
+
+                new_conditions = {"host_tags": {**filtered_host_tags}}
+                new_rule_conditions = RuleConditions.from_config(folder.name(), new_conditions)
+                new_rule = old_rule.clone(preserve_id=True)
+                new_rule.update_conditions(new_rule_conditions)
+
+                ruleset.edit_rule(old_rule, new_rule)
+                migrated_rulesets.add(ruleset.name)
+            except Exception as e:
+                if raise_errors:
+                    raise
+                logger.error(
+                    "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
+                    "Rule: %d, Value: %s: %s",
+                    ruleset.name,
+                    folder.path(),
+                    folder_index,
+                    old_rule.value,
                     e,
                 )
     return migrated_rulesets

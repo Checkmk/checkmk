@@ -273,6 +273,13 @@ function getUpdates {
     }
 }
 
+function EscapeRegistryPath {
+    param (
+        [string]$Path
+    )
+    return $Path -replace '([]`*\?\[""])', '`$1'
+}
+
 function getSoftwareFromRegistry {
     $regVars = @("DisplayName", "Publisher", "InstallLocation", "PSChildName", "DisplayVersion", "EstimatedSize", "InstallDate", "Language")
 
@@ -286,17 +293,18 @@ function getSoftwareFromRegistry {
                 $booleanContent = $false
 
                 foreach ($var in $regVars) {
+                    $escapedRegistryPath = EscapeRegistryPath $subkey.PSPath
                     if ($var -eq "PSChildName") {
                         $value = $subkey.PSChildName
                     }
                     elseif ($var -eq "Language") {
-                        $value = (Get-ItemProperty -Path $subkey.PSPath -Name $var -ErrorAction SilentlyContinue).$var
+                        $value = (Get-ItemProperty -Path $escapedRegistryPath -Name $var -ErrorAction SilentlyContinue).$var
                         if ($null -ne $value) {
                             $value = $value.ToString()
                         }
                     }
                     else {
-                        $value = (Get-ItemProperty -Path $subkey.PSPath -Name $var -ErrorAction SilentlyContinue).$var
+                        $value = (Get-ItemProperty -Path $escapedRegistryPath -Name $var -ErrorAction SilentlyContinue).$var
                     }
 
                     if ($null -ne $value -and $value -is [string]) {

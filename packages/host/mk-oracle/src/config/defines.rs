@@ -17,6 +17,8 @@ pub mod keys {
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";
+    pub const INSTANCE: &str = "instance";
+    pub const SERVICE: &str = "service";
     pub const FAIL_OVER_PARTNER: &str = "failoverpartner";
     pub const TLS: &str = "tls";
     pub const PORT: &str = "port";
@@ -51,22 +53,14 @@ pub mod keys {
 }
 
 pub mod values {
-    /// AuthType::System
-    pub const SQL_SERVER: &str = "sql_server";
-    /// AuthType::Windows
-    #[cfg(windows)]
-    pub const WINDOWS: &str = "windows";
-    /// AuthType::Integrated
-    #[cfg(windows)]
-    pub const INTEGRATED: &str = "integrated";
-    /// AuthType::Token
-    pub const TOKEN: &str = "token";
+    /// AuthType::Standard
+    pub const STANDARD: &str = "standard";
+    /// AuthType::Os
+    pub const OS: &str = "os";
+    /// AuthType::Kerberos
+    pub const KERBEROS: &str = "kerberos";
     /// Mode::Port
     pub const PORT: &str = "port";
-    /// Mode::Socket
-    pub const SOCKET: &str = "socket";
-    /// AuthType::Special
-    pub const SPECIAL: &str = "special";
 }
 
 pub mod defaults {
@@ -74,13 +68,12 @@ pub mod defaults {
     pub const MAX_CONNECTIONS: u32 = 6;
     pub const MAX_QUERIES: u32 = 64;
 
-    #[cfg(windows)]
-    pub const AUTH_TYPE: &str = values::INTEGRATED;
-    #[cfg(unix)]
-    pub const AUTH_TYPE: &str = values::SQL_SERVER;
+    pub const AUTH_TYPE: &str = values::OS;
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
-    pub const CONNECTION_PORT: u16 = 1433;
+
+    pub const INSTANCE_NAME: &str = "XE";
+    pub const CONNECTION_PORT: u16 = 1521;
     pub const CONNECTION_TIMEOUT: u64 = 5;
     pub const SECTIONS_CACHE_AGE: u32 = 600;
     pub const SECTIONS_ALWAYS: &[&str] = &[

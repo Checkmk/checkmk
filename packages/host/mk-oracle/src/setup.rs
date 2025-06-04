@@ -4,7 +4,7 @@
 
 use crate::args::Args;
 use crate::config::system::{Logging, SystemConfig};
-use crate::config::CheckConfig;
+use crate::config::OracleConfig;
 use crate::constants;
 use anyhow::Result;
 use clap::Parser;
@@ -118,7 +118,7 @@ pub enum SendTo {
     Stdout,
 }
 
-pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
+pub fn init(args: ArgsOs) -> Result<(OracleConfig, Env)> {
     let args = Args::parse_from(args);
     let config_file = get_config_file(&args);
 
@@ -173,10 +173,10 @@ fn create_info_text(level: &log::Level, environment: &Env) -> String {
     )
 }
 
-fn get_check_config(file: &Path) -> Result<CheckConfig> {
+fn get_check_config(file: &Path) -> Result<OracleConfig> {
     log::info!("Using config file: {}", file.display());
 
-    CheckConfig::load_file(file)
+    OracleConfig::load_file(file)
 }
 
 fn get_system_config(file: &Path) -> Result<SystemConfig> {

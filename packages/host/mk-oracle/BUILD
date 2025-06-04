@@ -25,6 +25,7 @@ rust_library(
         "src/emit.rs",
         "src/lib.rs",
         "src/ora_sql.rs",
+        "src/ora_sql/backend.rs",
         "src/ora_sql/custom.rs",
         "src/ora_sql/defaults.rs",
         "src/ora_sql/instance.rs",

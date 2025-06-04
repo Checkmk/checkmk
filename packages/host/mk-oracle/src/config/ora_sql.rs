@@ -9,13 +9,12 @@ use crate::platform;
 use crate::platform::registry::get_instances;
 use crate::platform::InstanceInfo;
 use crate::types::{
-    CertPath, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
+    HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, PointName, Port, ServiceName,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
 use std::time::Duration;
 use yaml_rust2::YamlLoader;
 
@@ -115,16 +114,13 @@ impl Config {
         }
         let default_config = Config {
             auth: Authentication {
-                auth_type: AuthType::Undefined,
+                auth_type: AuthType::Os,
                 ..Default::default()
             },
             ..Default::default()
         };
         let config = Config::parse_main_from_yaml(root, &default_config)?;
         match config {
-            Some(c) if !c.auth.defined() => {
-                anyhow::bail!("Bad/absent user name");
-            }
             Some(mut c) => {
                 c.configs = root
                     .get_yaml_vector(keys::CONFIGS)
@@ -260,7 +256,7 @@ fn get_additional_registry_instances(
     auth: &Authentication,
     conn: &Connection,
 ) -> Vec<CustomInstance> {
-    if !is_local_endpoint(auth, conn) {
+    if !is_local_endpoint(conn) {
         log::info!("skipping registry instances: the host is not enough localhost");
         return vec![];
     }
@@ -292,10 +288,10 @@ fn get_additional_registry_instances(
         .collect::<Vec<CustomInstance>>()
 }
 
-pub fn is_local_endpoint(auth: &Authentication, conn: &Connection) -> bool {
-    auth.auth_type() == &AuthType::Integrated
-        || conn.hostname() == HostName::from("localhost".to_owned())
+pub fn is_local_endpoint(conn: &Connection) -> bool {
+    conn.hostname() == HostName::from("localhost".to_owned())
         || conn.hostname() == HostName::from("127.0.0.1".to_owned())
+        || conn.hostname() == HostName::from("::1".to_owned())
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -303,7 +299,6 @@ pub struct Authentication {
     username: String,
     password: Option<String>,
     auth_type: AuthType,
-    access_token: Option<String>,
 }
 
 impl Default for Authentication {
@@ -312,7 +307,6 @@ impl Default for Authentication {
             username: "".to_owned(),
             password: None,
             auth_type: AuthType::default(),
-            access_token: None,
         }
     }
 }
@@ -323,17 +317,24 @@ impl Authentication {
             anyhow::bail!("authentication is missing");
         }
 
-        Ok(Self {
-            username: auth.get_string(keys::USERNAME).unwrap_or_default(),
-            password: auth.get_string(keys::PASSWORD),
-            auth_type: AuthType::try_from(
-                auth.get_string(keys::TYPE)
-                    .as_deref()
-                    .unwrap_or(defaults::AUTH_TYPE),
-            )?,
-            access_token: auth.get_string(keys::ACCESS_TOKEN),
+        let auth_type = AuthType::try_from(
+            auth.get_string(keys::TYPE)
+                .as_deref()
+                .unwrap_or(defaults::AUTH_TYPE),
+        )?;
+        if auth_type == AuthType::Os {
+            Ok(Self {
+                username: String::new(),
+                password: None,
+                auth_type,
+            })
+        } else {
+            Ok(Self {
+                username: auth.get_string(keys::USERNAME).unwrap_or_default(),
+                password: auth.get_string(keys::PASSWORD),
+                auth_type,
+            })
         }
-        .ensure())
     }
     pub fn username(&self) -> &str {
         &self.username
@@ -344,41 +345,18 @@ impl Authentication {
     pub fn auth_type(&self) -> &AuthType {
         &self.auth_type
     }
-    pub fn access_token(&self) -> Option<&String> {
-        self.access_token.as_ref()
-    }
-
-    pub fn defined(&self) -> bool {
-        self.auth_type() == &AuthType::Integrated || !self.username().is_empty()
-    }
-
-    fn ensure(mut self) -> Self {
-        if self.auth_type() == &AuthType::Integrated {
-            self.username = String::new();
-            self.password = None;
-            self.access_token = None;
-        }
-        self
-    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum AuthType {
-    SqlServer,
-    Windows,
-    Integrated,
-    Token,
-    Undefined,
+    Standard,
+    Os,
+    Kerberos,
 }
 
 impl Default for AuthType {
-    #[cfg(unix)]
     fn default() -> Self {
-        Self::SqlServer
-    }
-    #[cfg(windows)]
-    fn default() -> Self {
-        Self::Integrated
+        Self::Standard
     }
 }
 
@@ -387,12 +365,9 @@ impl TryFrom<&str> for AuthType {
 
     fn try_from(val: &str) -> Result<Self> {
         match str::to_ascii_lowercase(val).as_ref() {
-            values::SQL_SERVER => Ok(AuthType::SqlServer),
-            #[cfg(windows)]
-            values::WINDOWS => Ok(AuthType::Windows),
-            #[cfg(windows)]
-            values::INTEGRATED => Ok(AuthType::Integrated),
-            values::TOKEN => Ok(AuthType::Token),
+            values::STANDARD => Ok(AuthType::Standard),
+            values::OS => Ok(AuthType::Os),
+            values::KERBEROS => Ok(AuthType::Kerberos),
             _ => Err(anyhow!("unsupported auth type `{val}`")),
         }
     }
@@ -400,20 +375,14 @@ impl TryFrom<&str> for AuthType {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Backend {
-    Auto,
-    Tcp,
-    #[cfg(windows)]
-    Odbc,
+    Std,
+    SqlPlus,
+    Jdbc,
 }
 
 impl Default for Backend {
-    #[cfg(unix)]
     fn default() -> Self {
-        Self::Tcp
-    }
-    #[cfg(windows)]
-    fn default() -> Self {
-        Self::Auto
+        Self::Std
     }
 }
 
@@ -423,12 +392,9 @@ impl Backend {
         T: AsRef<str>,
     {
         match value.as_ref() {
-            "auto" => Some(Self::Auto),
-            "tcp" => Some(Self::Tcp),
-            #[cfg(unix)]
-            "odbc" => Some(Self::Auto), // at the moment unix ignores odbc
-            #[cfg(windows)]
-            "odbc" => Some(Self::Odbc),
+            "std" => Some(Self::Std),
+            "jdbc" => Some(Self::Jdbc),
+            "sql_plus" => Some(Self::SqlPlus),
             _ => None,
         }
     }
@@ -437,84 +403,58 @@ impl Backend {
 #[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
     hostname: HostName,
-    fail_over_partner: Option<String>,
+    point: PointName,
     port: Port,
-    socket: Option<PathBuf>,
-    trust_server_certificate: bool,
-    tls: Option<ConnectionTls>,
     timeout: u64,
     backend: Backend,
 }
 
 impl Connection {
-    pub fn from_yaml(yaml: &Yaml, auth: Option<&Authentication>) -> Result<Option<Self>> {
+    pub fn from_yaml(yaml: &Yaml, _auth: Option<&Authentication>) -> Result<Option<Self>> {
         let conn = yaml.get(keys::CONNECTION);
         if conn.is_badvalue() {
             return Ok(None);
         }
-        Ok(Some(
-            Self {
-                hostname: conn
-                    .get_string(keys::HOSTNAME)
-                    .map(|s| {
-                        if s.is_empty() {
-                            defaults::CONNECTION_HOST_NAME.to_string()
-                        } else {
-                            s
-                        }
-                    })
-                    .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
-                    .to_lowercase()
-                    .into(),
-                fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
-                port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
-                    log::debug!("no port specified, using default");
-                    defaults::CONNECTION_PORT
-                })),
-                socket: conn.get_pathbuf(keys::SOCKET),
-                trust_server_certificate: conn.get_bool(
-                    keys::TRUST_SERVER_CERTIFICATE,
-                    defaults::TRUST_SERVER_CERTIFICATE,
-                ),
-                tls: ConnectionTls::from_yaml(conn)?,
-                timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
-                    log::debug!("no timeout specified, using default");
-                    defaults::CONNECTION_TIMEOUT
-                }),
-                backend: {
-                    let value: String = conn
-                        .get_string(keys::BACKEND)
-                        .unwrap_or_default()
-                        .to_lowercase();
-                    Backend::from_string(value.as_str()).unwrap_or_else(|| {
-                        log::error!("Unknown backend '{}'", &value);
-                        Backend::default()
-                    })
-                },
-            }
-            .ensure(auth),
-        ))
+        Ok(Some(Self {
+            hostname: conn
+                .get_string(keys::HOSTNAME)
+                .map(|s| {
+                    if s.is_empty() {
+                        defaults::CONNECTION_HOST_NAME.to_string()
+                    } else {
+                        s
+                    }
+                })
+                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
+                .to_lowercase()
+                .into(),
+            point: calc_point_name(conn),
+            port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
+                log::debug!("no port specified, using default");
+                defaults::CONNECTION_PORT
+            })),
+            timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
+                log::debug!("no timeout specified, using default");
+                defaults::CONNECTION_TIMEOUT
+            }),
+            backend: {
+                let value: String = conn
+                    .get_string(keys::BACKEND)
+                    .unwrap_or_default()
+                    .to_lowercase();
+                Backend::from_string(value.as_str()).unwrap_or_else(|| {
+                    log::error!("Unknown backend '{}'", &value);
+                    Backend::default()
+                })
+            },
+        }))
     }
+
     pub fn hostname(&self) -> HostName {
         self.hostname.clone()
     }
-    pub fn fail_over_partner(&self) -> Option<&String> {
-        self.fail_over_partner.as_ref()
-    }
     pub fn port(&self) -> Port {
         self.port.clone()
-    }
-    pub fn sql_browser_port(&self) -> Option<u16> {
-        None
-    }
-    pub fn socket(&self) -> Option<&PathBuf> {
-        self.socket.as_ref()
-    }
-    pub fn trust_server_certificate(&self) -> bool {
-        self.trust_server_certificate
-    }
-    pub fn tls(&self) -> Option<&ConnectionTls> {
-        self.tls.as_ref()
     }
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
@@ -522,66 +462,34 @@ impl Connection {
     pub fn backend(&self) -> &Backend {
         &self.backend
     }
-
-    fn ensure(mut self, auth: Option<&Authentication>) -> Self {
-        match auth {
-            Some(auth) if auth.auth_type() == &AuthType::Integrated => {
-                self.fail_over_partner = None;
-                self.socket = None;
-            }
-            _ => {}
-        }
-        self
+    pub fn point(&self) -> &PointName {
+        &self.point
     }
+}
+
+fn calc_point_name(yaml: &Yaml) -> PointName {
+    if let Some(s) = yaml.get_string(keys::INSTANCE) {
+        return PointName::Instance(InstanceName::from(s));
+    }
+    if let Some(s) = yaml.get_string(keys::SERVICE) {
+        return PointName::Service(ServiceName::from(s));
+    }
+    log::warn!(
+        "No point name specified, using default instance name {}",
+        defaults::INSTANCE_NAME
+    );
+    PointName::Instance(InstanceName::from(defaults::INSTANCE_NAME))
 }
 
 impl Default for Connection {
     fn default() -> Self {
         Self {
             hostname: defaults::CONNECTION_HOST_NAME.to_string().into(),
-            fail_over_partner: None,
+            point: PointName::Instance(defaults::INSTANCE_NAME.into()),
             port: Port(defaults::CONNECTION_PORT),
-            socket: None,
-            trust_server_certificate: defaults::TRUST_SERVER_CERTIFICATE,
-            tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
             backend: Backend::default(),
         }
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub struct ConnectionTls {
-    ca: PathBuf,
-    client_certificate: CertPath,
-}
-
-impl ConnectionTls {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let tls = yaml.get(keys::TLS);
-        if tls.is_badvalue() {
-            return Ok(None);
-        }
-        let ca = tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?;
-        let client_certificate = tls
-            .get_string(keys::CLIENT_CERTIFICATE)
-            .map(|s| s.into())
-            .context("bad/Missing CLIENT_CERTIFICATE")?;
-        log::info!(
-            "Using ca '{}' client certificate: '{}'",
-            ca.display(),
-            client_certificate,
-        );
-        Ok(Some(Self {
-            ca,
-            client_certificate,
-        }))
-    }
-    pub fn ca(&self) -> &Path {
-        &self.ca
-    }
-    pub fn client_certificate(&self) -> &CertPath {
-        &self.client_certificate
     }
 }
 
@@ -684,8 +592,6 @@ impl Discovery {
 #[derive(PartialEq, Debug, Clone)]
 pub enum Mode {
     Port,
-    Socket,
-    Special,
 }
 
 impl Mode {
@@ -700,8 +606,6 @@ impl TryFrom<&str> for Mode {
     fn try_from(str: &str) -> Result<Self> {
         match str::to_ascii_lowercase(str).as_ref() {
             values::PORT => Ok(Mode::Port),
-            values::SOCKET => Ok(Mode::Socket),
-            values::SPECIAL => Ok(Mode::Special),
             _ => Err(anyhow!("unsupported mode")),
         }
     }
@@ -715,14 +619,9 @@ pub struct CustomInstance {
     conn: Connection,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
-    tcp: bool,
 }
 
 impl CustomInstance {
-    pub fn is_tcp(&self) -> bool {
-        self.tcp
-    }
-
     pub fn from_yaml(
         yaml: &Yaml,
         main_auth: &Authentication,
@@ -735,14 +634,12 @@ impl CustomInstance {
                 .to_uppercase(),
         );
         let (auth, conn) = CustomInstance::ensure_auth_and_conn(yaml, main_auth, main_conn, &name)?;
-        let tcp = is_use_tcp(&name, &auth, &conn);
         Ok(Self {
             name,
             auth,
             conn,
             alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
-            tcp,
         })
     }
 
@@ -765,7 +662,6 @@ impl CustomInstance {
             conn,
             alias: None,
             piggyback: None,
-            tcp: port.is_some(),
         }
     }
 
@@ -781,8 +677,8 @@ impl CustomInstance {
         let auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
         let conn = Connection::from_yaml(yaml, Some(&auth))?.unwrap_or(main_conn.clone());
 
-        let instance_host = calc_real_host(&auth, &conn);
-        let main_host = calc_real_host(main_auth, main_conn);
+        let instance_host = calc_real_host(&conn);
+        let main_host = calc_real_host(main_conn);
         if instance_host != main_host {
             log::warn!(
                 "Host {instance_host} defined in {sid} doesn't match to main host {main_host}"
@@ -835,28 +731,15 @@ impl CustomInstance {
         self.piggyback.as_ref()
     }
     pub fn calc_real_host(&self) -> HostName {
-        calc_real_host(&self.auth, &self.conn)
+        calc_real_host(&self.conn)
     }
 }
 
-pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
-    if is_local_endpoint(auth, conn) {
+pub fn calc_real_host(conn: &Connection) -> HostName {
+    if is_local_endpoint(conn) {
         "localhost".to_string().into()
     } else {
         conn.hostname().clone()
-    }
-}
-
-pub fn is_use_tcp(name: &InstanceName, auth: &Authentication, conn: &Connection) -> bool {
-    if conn.backend() != &Backend::Auto && conn.backend() != &Backend::Tcp {
-        return false;
-    }
-    if is_local_endpoint(auth, conn) {
-        get_registry_instance_info(name)
-            .map(|i| i.is_tcp())
-            .unwrap_or(true)
-    } else {
-        true
     }
 }
 
@@ -908,17 +791,11 @@ oracle:
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
-      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user) 
-      access_token: "baz" # optional
+      type: "standard" # optional, default: "os", values: standard, kerberos
     connection: # optional
       hostname: "localhost" # optional(default: "localhost")
-      failoverpartner: "localhost2" # optional
-      port: 1433 # optional(default: 1433)
-      socket: 'C:\path\to\file' # optional
-      trust_server_certificate: no
-      tls: # optional
-        ca: 'C:\path\to\file' # mandatory
-        client_certificate: 'C:\path\to\file' # mandatory
+      point: "XE" # optional(default: "")
+      port: 1521 # optional(default: 1521)
       timeout: 5 # optional(default: 5)
     sections: # optional
     - instance:  # special section
@@ -947,7 +824,7 @@ oracle:
       detect: true # optional(default:yes)
       include: ["foo", "bar", "INST2"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
-    mode: "socket" # optional(default:"port") - "socket", "port" or "special"
+    mode: "port" # optional(default:"port")
     instances: # optional
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
@@ -961,12 +838,11 @@ oracle:
         authentication:
           username: "u"
           password: "p"
-          type: "sql_server"
-          access_token: "b"
+          type: "standard"
         connection:
           hostname: "local"
           port: 500
-          backend: tcp
+          backend: std
   configs:
     - main:
         options:
@@ -974,7 +850,7 @@ oracle:
         authentication: # mandatory
           username: "f" # mandatory
           password: "b"
-          type: "sql_server"
+          type: "standard"
         connection: # optional
           hostname: "localhost" # optional(default: "localhost")
           timeout: 5 # optional(default: 5)
@@ -999,35 +875,27 @@ oracle:
 authentication:
   username: "foo"
   password: "bar"
-  type: "sql_server"
-  access_token: "baz"
+  type: "standard"
 "#;
         #[cfg(windows)]
-        pub const AUTHENTICATION_INTEGRATED: &str = r#"
+        pub const AUTHENTICATION_OS: &str = r#"
 authentication:
   username: "foo"
   password: "bar"
-  type: "integrated"
-  access_token: "baz"
+  type: "os"
 "#;
         pub const AUTHENTICATION_MINI: &str = r#"
 authentication:
   username: "foo"
   _password: "bar"
   _type: "system"
-  _access_token: "baz"
 "#;
 
         pub const CONNECTION_FULL: &str = r#"
 connection:
   hostname: "alice"
-  failoverpartner: "bob"
+  point: "XE"
   port: 9999
-  socket: 'C:\path\to\file_socket'
-  trust_server_certificate: no
-  tls:
-    ca: 'C:\path\to\file_ca'
-    client_certificate: 'C:\path\to\file_client'
   timeout: 341
 "#;
         pub const DISCOVERY_FULL: &str = r#"
@@ -1120,8 +988,7 @@ piggyback:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some(&"bar".to_owned()));
-        assert_eq!(a.auth_type(), &AuthType::SqlServer);
-        assert_eq!(a.access_token(), Some(&"baz".to_owned()));
+        assert_eq!(a.auth_type(), &AuthType::Standard);
     }
 
     #[test]
@@ -1143,26 +1010,18 @@ authentication:
     #[test]
     fn test_authentication_from_yaml_mini() {
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
-        #[cfg(windows)]
         assert_eq!(a.username(), "");
-        #[cfg(unix)]
-        assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
-        #[cfg(windows)]
-        assert_eq!(a.auth_type(), &AuthType::Integrated);
-        #[cfg(unix)]
-        assert_eq!(a.auth_type(), &AuthType::SqlServer);
-        assert_eq!(a.access_token(), None);
+        assert_eq!(a.auth_type(), &AuthType::Os);
     }
 
     #[cfg(windows)]
     #[test]
     fn test_authentication_from_yaml_integrated() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_INTEGRATED)).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_OS)).unwrap();
         assert_eq!(a.username(), "");
         assert_eq!(a.password(), None);
-        assert_eq!(a.auth_type(), &AuthType::Integrated);
-        assert_eq!(a.access_token(), None);
+        assert_eq!(a.auth_type(), &AuthType::Os);
     }
 
     #[test]
@@ -1171,29 +1030,16 @@ authentication:
             .unwrap()
             .unwrap();
         assert_eq!(c.hostname(), "alice".to_string().into());
-        assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), Port(9999));
-        assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
-        assert!(!c.trust_server_certificate());
         assert_eq!(c.timeout(), Duration::from_secs(341));
-        let tls = c.tls().unwrap();
-        assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
-        assert_eq!(
-            tls.client_certificate(),
-            &r"C:\path\to\file_client".to_owned().into()
-        );
         assert_eq!(c.backend(), &Backend::default());
     }
 
     #[test]
     fn test_connection_backend() {
         let test: Vec<(&str, Backend)> = vec![
-            ("auto", Backend::Auto),
-            ("tcp", Backend::Tcp),
-            #[cfg(Unix)]
-            ("odbc", Backend::default()),
-            #[cfg(windows)]
-            ("odbc", Backend::Odbc),
+            ("standard", Backend::Std),
+            ("sql_plus", Backend::SqlPlus),
             ("unknown", Backend::default()),
             ("", Backend::default()),
         ];
@@ -1219,21 +1065,13 @@ authentication:
     #[cfg(windows)]
     #[test]
     fn test_connection_from_yaml_auth_integrated() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_INTEGRATED)).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_OS)).unwrap();
         let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), Some(&a))
             .unwrap()
             .unwrap();
         assert_eq!(c.hostname(), "alice".to_string().into());
-        assert_eq!(c.fail_over_partner(), None);
         assert_eq!(c.port(), Port(9999));
-        assert_eq!(c.socket(), None);
         assert_eq!(c.timeout(), Duration::from_secs(341));
-        let tls = c.tls().unwrap();
-        assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
-        assert_eq!(
-            tls.client_certificate(),
-            &r"C:\path\to\file_client".to_owned().into()
-        );
     }
 
     #[test]
@@ -1327,18 +1165,12 @@ discovery:
     fn test_mode_try_from() {
         assert!(Mode::try_from("a").is_err());
         assert_eq!(Mode::try_from("poRt").unwrap(), Mode::Port);
-        assert_eq!(Mode::try_from("soCKET").unwrap(), Mode::Socket);
-        assert_eq!(Mode::try_from("SPecial").unwrap(), Mode::Special);
     }
 
     #[test]
     fn test_mode_from_yaml() {
         assert!(Mode::from_yaml(&create_yaml("mode: Zu")).is_err());
         assert!(Mode::from_yaml(&create_yaml("no_mode: port")).is_err());
-        assert_eq!(
-            Mode::from_yaml(&create_yaml("mode: Special")).unwrap(),
-            Mode::Special
-        );
     }
 
     fn as_names(sections: Vec<&Section>) -> Vec<&str> {
@@ -1401,8 +1233,8 @@ discovery:
     #[test]
     fn test_custom_instance() {
         let a = Authentication {
-            username: "ux".to_string(),
-            auth_type: AuthType::SqlServer,
+            username: "customised".to_string(),
+            auth_type: AuthType::Standard,
             ..Default::default()
         };
         let instance = CustomInstance::from_yaml(
@@ -1413,7 +1245,7 @@ discovery:
         )
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
-        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.auth().username(), "customised");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
         assert_eq!(instance.calc_real_host(), "h1".to_string().into());
         assert_eq!(instance.alias(), &Some("a1".to_string().into()));
@@ -1423,12 +1255,12 @@ discovery:
 
     #[cfg(windows)]
     #[test]
-    fn test_custom_instance_integrated() {
+    fn test_custom_instance_os() {
         pub const INSTANCE_INTEGRATED: &str = r#"
 sid: "INST1"
 authentication:
   username: "u1"
-  type: "integrated"
+  type: "os"
 connection:
   hostname: "h1"
 "#;
@@ -1442,22 +1274,20 @@ connection:
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
-        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
 
-    #[cfg(windows)]
     #[test]
-    fn test_custom_instance_integrated_default() {
-        pub const INSTANCE_INTEGRATED: &str = r#"
+    fn test_custom_instance_os_default() {
+        pub const INSTANCE_OS: &str = r#"
 sid: "INST1"
 authentication:
   username: "u1"
-  type: "integrated"
+  type: "os"
 connection:
   port: 5555
 "#;
         let instance = CustomInstance::from_yaml(
-            &create_yaml(INSTANCE_INTEGRATED),
+            &create_yaml(INSTANCE_OS),
             &Authentication::default(),
             &Connection::default(),
             &Sections::default(),
@@ -1465,7 +1295,7 @@ connection:
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
-        assert_eq!(instance.auth().auth_type(), &AuthType::Integrated);
+        assert_eq!(instance.auth().auth_type(), &AuthType::Os);
         assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
         assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
@@ -1477,7 +1307,7 @@ sid: "INST1"
 authentication:
   username: "u1"
   password: "pwd"
-  type: "sql_server"
+  type: "standard"
 connection:
   port: 5555
 "#;
@@ -1491,7 +1321,7 @@ connection:
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.auth().password().unwrap(), "pwd");
-        assert_eq!(instance.auth().auth_type(), &AuthType::SqlServer);
+        assert_eq!(instance.auth().auth_type(), &AuthType::Standard);
         assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
         assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
@@ -1517,7 +1347,7 @@ connection:
     fn test_get_additional_registry_instances_non_localhost() {
         let auth = Authentication {
             username: "ux".to_string(),
-            auth_type: AuthType::SqlServer,
+            auth_type: AuthType::Standard,
             ..Default::default()
         };
         let conn = Connection {
@@ -1580,31 +1410,6 @@ oracle:
     }
 
     #[test]
-    fn test_calc_effective_host() {
-        let conn_to_bar = Connection {
-            hostname: "bAr".to_string().into(),
-            ..Default::default()
-        };
-        let auth_integrated = Authentication {
-            auth_type: AuthType::Integrated,
-            ..Default::default()
-        };
-        let auth_sql_server = Authentication {
-            auth_type: AuthType::SqlServer,
-            ..Default::default()
-        };
-
-        assert_eq!(
-            calc_real_host(&auth_integrated, &conn_to_bar),
-            "localhost".to_string().into()
-        );
-        assert_eq!(
-            calc_real_host(&auth_sql_server, &conn_to_bar),
-            "bAr".to_string().into()
-        );
-    }
-
-    #[test]
     fn test_sections_enabled() {
         const CONFIG: &str = r#"
 ---
@@ -1646,63 +1451,7 @@ oracle:
     }
 
     #[test]
-    fn test_is_use_tcp_local() {
-        let a = Authentication::default();
-        let c = Connection::default();
-        assert!(is_use_tcp(&"foo".to_string().into(), &a, &c));
-        assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
-        assert!(is_use_tcp(&"SQLEXPRESS_NAME".to_string().into(), &a, &c));
-    }
-    #[test]
-    fn test_is_use_tcp_remote() {
-        let a = Authentication {
-            auth_type: AuthType::Undefined,
-            ..Default::default()
-        };
-        let c = Connection::default();
-        assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
-    }
-
-    fn _make_non_local_host_name() -> HostName {
-        "localhost.com".to_string().into()
-    }
-
-    fn _make_non_local_connection(backend: Backend) -> Connection {
-        Connection {
-            hostname: _make_non_local_host_name(),
-            backend,
-            ..Default::default()
-        }
-    }
-    #[test]
-    fn test_is_use_tcp() {
-        let srv_name: InstanceName = "SERVER".to_string().into();
-        let auth_sql = Authentication {
-            auth_type: AuthType::SqlServer,
-            ..Default::default()
-        };
-        let conn_non_local_tcp = _make_non_local_connection(Backend::Tcp);
-        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_tcp));
-
-        let conn_non_local_auto = _make_non_local_connection(Backend::Auto);
-        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_auto));
-
-        #[cfg(windows)]
-        {
-            let conn_non_local_odbc = _make_non_local_connection(Backend::Odbc);
-            assert!(!is_use_tcp(&srv_name, &auth_sql, &conn_non_local_odbc));
-        }
-    }
-    #[test]
     fn test_is_local_endpoint() {
-        let auth_integrated = Authentication {
-            auth_type: AuthType::Integrated,
-            ..Default::default()
-        };
-        let auth_sql = Authentication {
-            auth_type: AuthType::SqlServer,
-            ..Default::default()
-        };
         let conn_non_local = Connection {
             hostname: HostName::from("localhost.com".to_string()),
             ..Default::default()
@@ -1715,10 +1464,13 @@ oracle:
             hostname: HostName::from("127.0.0.1".to_string()),
             ..Default::default()
         };
-        assert!(is_local_endpoint(&auth_integrated, &conn_local));
-        assert!(is_local_endpoint(&auth_integrated, &conn_non_local));
-        assert!(is_local_endpoint(&auth_sql, &conn_local));
-        assert!(is_local_endpoint(&auth_sql, &conn_127));
-        assert!(!is_local_endpoint(&auth_sql, &conn_non_local));
+        let conn_1 = Connection {
+            hostname: HostName::from("::1".to_string()),
+            ..Default::default()
+        };
+        assert!(is_local_endpoint(&conn_127));
+        assert!(is_local_endpoint(&conn_local));
+        assert!(is_local_endpoint(&conn_1));
+        assert!(!is_local_endpoint(&conn_non_local));
     }
 }

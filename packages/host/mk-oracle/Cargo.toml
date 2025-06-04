@@ -28,6 +28,7 @@ log.workspace = true
 # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
 # https://github.com/rust-cross/rust-musl-cross/issues/44
 openssl = { workspace = true, features = ["vendored"] }
+oracle = "0.6.3"
 tokio = { workspace = true, features = [
   "full",
   "rt",

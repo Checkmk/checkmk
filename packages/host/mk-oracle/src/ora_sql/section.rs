@@ -6,7 +6,6 @@ use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
-use crate::types::Edition;
 use crate::{constants, types::InstanceName, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -113,30 +112,20 @@ impl Section {
 
     /// try to find the section's query in the sql directory for instance with the given version
     /// or in the known queries if custom sql query is not provided
-    pub fn select_query(
-        &self,
-        sql_dir: Option<PathBuf>,
-        instance_version: u32,
-        edition: &Edition,
-    ) -> Option<String> {
+    pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         match self.name.as_ref() {
-            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties, edition)
+            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
                 .map(str::to_string)
                 .ok(),
-            _ => self.find_query(sql_dir, instance_version, edition),
+            _ => self.find_query(sql_dir, instance_version),
         }
     }
 
-    fn find_query(
-        &self,
-        sql_dir: Option<PathBuf>,
-        instance_version: u32,
-        edition: &Edition,
-    ) -> Option<String> {
+    fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         self.find_provided_query(sql_dir, instance_version)
             .or_else(|| {
                 get_sql_id(&self.name)
-                    .and_then(|x| Self::find_known_query(x, edition))
+                    .and_then(Self::find_known_query)
                     .map(|s| s.to_owned())
             })
     }
@@ -163,8 +152,8 @@ impl Section {
         }
         None
     }
-    fn find_known_query(id: sqls::Id, edition: &Edition) -> Option<&'static str> {
-        sqls::find_known_query(id, edition)
+    fn find_known_query(id: sqls::Id) -> Option<&'static str> {
+        sqls::find_known_query(id)
             .map_err(|e| {
                 log::error!("{e}");
                 e
@@ -241,7 +230,6 @@ pub fn get_sql_id<T: AsRef<str>>(section_name: T) -> Option<sqls::Id> {
 mod tests {
     use super::*;
     use crate::config::section;
-    use crate::types::Edition;
 
     #[test]
     fn test_section_header() {
@@ -275,24 +263,6 @@ mod tests {
             Some(100),
         );
         assert_eq!(section.to_work_header(), "<<<oracle_jobs:sep(09)>>>\n");
-    }
-
-    #[test]
-    fn test_section_select_query_azure() {
-        let customized_for_azure = [
-            sqls::Id::Counters,
-            sqls::Id::CounterEntries,
-            sqls::Id::ClusterNodes,
-            sqls::Id::Mirroring,
-            sqls::Id::AvailabilityGroups,
-            sqls::Id::Clusters,
-        ];
-        for id in customized_for_azure {
-            assert_ne!(
-                find_known_query(id, &Edition::Azure).unwrap(),
-                find_known_query(id, &Edition::Normal).unwrap()
-            );
-        }
     }
 
     /// We test only few parameters

@@ -1,5 +1,5 @@
 {
-  "checksum": "03238f353686e87aa25f5c7f4bc9bffbb29979ed8d118f48f6f88465a62e15be",
+  "checksum": "f8c70820439aba02bab325aeb08825bafbc94ac10f89a650864b509552377261",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4012,6 +4012,69 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "darling 0.13.4": {
+      "name": "darling",
+      "version": "0.13.4",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling/0.13.4/download",
+          "sha256": "a01d95850c592940db9b8194bc39f4bc0e89dee5c4265e4b1807c34a9aba453c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.13.4",
+              "target": "darling_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "darling_macro 0.13.4",
+              "target": "darling_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.13.4"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "darling 0.20.10": {
       "name": "darling",
       "version": "0.20.10",
@@ -4068,6 +4131,80 @@
           "selects": {}
         },
         "version": "0.20.10"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "darling_core 0.13.4": {
+      "name": "darling_core",
+      "version": "0.13.4",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling_core/0.13.4/download",
+          "sha256": "859d65a907b6852c9361e3185c862aae7fafd2887876799fa55f5f99dc40d610"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling_core",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "strsim",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "fnv 1.0.7",
+              "target": "fnv"
+            },
+            {
+              "id": "ident_case 1.0.1",
+              "target": "ident_case"
+            },
+            {
+              "id": "proc-macro2 1.0.93",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.38",
+              "target": "quote"
+            },
+            {
+              "id": "strsim 0.10.0",
+              "target": "strsim"
+            },
+            {
+              "id": "syn 1.0.109",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.13.4"
       },
       "license": "MIT",
       "license_ids": [
@@ -4142,6 +4279,61 @@
         },
         "edition": "2021",
         "version": "0.20.10"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "darling_macro 0.13.4": {
+      "name": "darling_macro",
+      "version": "0.13.4",
+      "package_url": "https://github.com/TedDriggs/darling",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/darling_macro/0.13.4/download",
+          "sha256": "9c972679f83bdf9c42bd905396b6c3588a843a17f0f16dfcfa3e2c5d57441835"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "darling_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "darling_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.13.4",
+              "target": "darling_core"
+            },
+            {
+              "id": "quote 1.0.38",
+              "target": "quote"
+            },
+            {
+              "id": "syn 1.0.109",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.13.4"
       },
       "license": "MIT",
       "license_ids": [
@@ -9694,7 +9886,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.48.5",
+                "id": "windows-targets 0.52.6",
                 "target": "windows_targets"
               }
             ]
@@ -10506,6 +10698,10 @@
             {
               "id": "openssl 0.10.72",
               "target": "openssl"
+            },
+            {
+              "id": "oracle 0.6.3",
+              "target": "oracle"
             },
             {
               "id": "tokio 1.45.0",
@@ -12581,6 +12777,86 @@
       ],
       "license_file": "LICENSE"
     },
+    "odpic-sys 0.1.1": {
+      "name": "odpic-sys",
+      "version": "0.1.1",
+      "package_url": "https://github.com/kubo/odpic-sys",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/odpic-sys/0.1.1/download",
+          "sha256": "920b5474a5128a9f0232df5a0ffc50aaa5b077b29b8b06ab0131985ac82793ed"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "odpic_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "odpic_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "odpic-sys 0.1.1",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.1"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cc 1.2.10",
+              "target": "cc"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "UPL-1.0/Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "UPL-1.0"
+      ],
+      "license_file": null
+    },
     "oid-registry 0.7.1": {
       "name": "oid-registry",
       "version": "0.7.1",
@@ -13108,6 +13384,138 @@
       ],
       "license_file": "LICENSE-MIT"
     },
+    "oracle 0.6.3": {
+      "name": "oracle",
+      "version": "0.6.3",
+      "package_url": "https://github.com/kubo/rust-oracle",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/oracle/0.6.3/download",
+          "sha256": "3db40fe6e4df881b683691ade5ef1f7b1afd52aefa115581f7b92855524d7ec0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "oracle",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "oracle",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "odpic-sys 0.1.1",
+              "target": "odpic_sys"
+            },
+            {
+              "id": "once_cell 1.20.2",
+              "target": "once_cell"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "oracle_procmacro 0.1.2",
+              "target": "oracle_procmacro"
+            },
+            {
+              "id": "paste 1.0.15",
+              "target": "paste"
+            }
+          ],
+          "selects": {
+            "cfg(windows)": [
+              {
+                "id": "rustversion 1.0.19",
+                "target": "rustversion"
+              }
+            ]
+          }
+        },
+        "version": "0.6.3"
+      },
+      "license": "UPL-1.0/Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "UPL-1.0"
+      ],
+      "license_file": null
+    },
+    "oracle_procmacro 0.1.2": {
+      "name": "oracle_procmacro",
+      "version": "0.1.2",
+      "package_url": "https://github.com/kubo/rust-oracle",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/oracle_procmacro/0.1.2/download",
+          "sha256": "ad247f3421d57de56a0d0408d3249d4b1048a522be2013656d92f022c3d8af27"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "oracle_procmacro",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "oracle_procmacro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "darling 0.13.4",
+              "target": "darling"
+            },
+            {
+              "id": "proc-macro2 1.0.93",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.38",
+              "target": "quote"
+            },
+            {
+              "id": "syn 1.0.109",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.1.2"
+      },
+      "license": "UPL-1.0/Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "UPL-1.0"
+      ],
+      "license_file": null
+    },
     "orbclient 0.3.48": {
       "name": "orbclient",
       "version": "0.3.48",
@@ -13426,6 +13834,77 @@
         },
         "edition": "2021",
         "version": "0.9.10"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "paste 1.0.15": {
+      "name": "paste",
+      "version": "1.0.15",
+      "package_url": "https://github.com/dtolnay/paste",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/paste/1.0.15/download",
+          "sha256": "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "paste",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "paste",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "paste 1.0.15",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.0.15"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -17631,6 +18110,44 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "strsim 0.10.0": {
+      "name": "strsim",
+      "version": "0.10.0",
+      "package_url": "https://github.com/dguo/strsim-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/strsim/0.10.0/download",
+          "sha256": "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "strsim",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "strsim",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.10.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
     "strsim 0.11.1": {
       "name": "strsim",
       "version": "0.11.1",
@@ -17706,6 +18223,104 @@
         "BSD-3-Clause"
       ],
       "license_file": "LICENSE"
+    },
+    "syn 1.0.109": {
+      "name": "syn",
+      "version": "1.0.109",
+      "package_url": "https://github.com/dtolnay/syn",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/syn/1.0.109/download",
+          "sha256": "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "syn",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "syn",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "clone-impls",
+            "default",
+            "derive",
+            "extra-traits",
+            "full",
+            "parsing",
+            "printing",
+            "proc-macro",
+            "quote",
+            "visit-mut"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.93",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.38",
+              "target": "quote"
+            },
+            {
+              "id": "syn 1.0.109",
+              "target": "build_script_build"
+            },
+            {
+              "id": "unicode-ident 1.0.16",
+              "target": "unicode_ident"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.0.109"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
     },
     "syn 2.0.96": {
       "name": "syn",
@@ -25209,6 +25824,7 @@
     "nix 0.29.0",
     "odbc-api 10.1.1",
     "openssl 0.10.72",
+    "oracle 0.6.3",
     "os_info 3.9.2",
     "rand 0.8.5",
     "reqwest 0.12.12",

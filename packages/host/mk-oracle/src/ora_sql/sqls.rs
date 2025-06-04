@@ -6,8 +6,6 @@ use anyhow::Result;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 
-use crate::types::Edition;
-
 pub const UTC_DATE_FIELD: &str = "utc_date";
 
 #[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
@@ -407,62 +405,40 @@ pub fn _get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string()
 }
 
-#[derive(Debug, Clone, Copy)]
-struct QueryMap<'a> {
-    normal: &'a str,
-    azure: Option<&'a str>,
-}
-
-impl<'a> QueryMap<'a> {
-    pub fn new(normal: &'a str, azure: Option<&'a str>) -> Self {
-        QueryMap { normal, azure }
-    }
-    fn get_query(&self, edition: &Edition) -> &'a str {
-        if edition == &Edition::Azure {
-            self.azure.unwrap_or(self.normal)
-        } else {
-            self.normal
-        }
-    }
-}
-
 lazy_static::lazy_static! {
     static ref BLOCKING_SESSIONS: String = format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string();
     static ref COUNTERS_NORMAL: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES_NORMAL  ).to_string();
-    static ref COUNTERS_AZURE: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES_AZURE  ).to_string();
     static ref CLUSTERS_NORMAL: String = format!("{};{};", query::CLUSTER_NODES_NORMAL, query::CLUSTER_ACTIVE_NODES  ).to_string();
-    static ref CLUSTERS_AZURE: String = format!("{};{};", query::CLUSTER_NODES_AZURE, query::CLUSTER_ACTIVE_NODES  ).to_string();
-    static ref QUERY_MAP: HashMap<Id, QueryMap<'static>> = HashMap::from([
-        (Id::ComputerName, QueryMap::new(query::COMPUTER_NAME, None)),
-        (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
-        (Id::Jobs, QueryMap::new(query::JOBS, None)),
-        (Id::AvailabilityGroups, QueryMap::new(query::AVAILABILITY_GROUP_NORMAL, Some(query::AVAILABILITY_GROUP_AZURE))),
-        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
-        (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),
-        (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
-        (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES_NORMAL, Some(query::CLUSTER_NODES_AZURE))),
-        (Id::IsClustered, QueryMap::new(query::IS_CLUSTERED, None)),
-        (Id::DatabaseNames, QueryMap::new(query::DATABASE_NAMES, None)),
-        (Id::Databases, QueryMap::new(query::DATABASES, None)),
-        (Id::Datafiles, QueryMap::new(query::DATAFILES, None)),
-        (Id::Backup, QueryMap::new(query::BACKUP, None)),
-        (Id::TableSpaces, QueryMap::new(query::SPACE_USED, None)),
-        (Id::CounterEntries, QueryMap::new(query::COUNTERS_ENTRIES_NORMAL, Some(query::COUNTERS_ENTRIES_AZURE))),
-        (Id::Connections, QueryMap::new(query::CONNECTIONS, None)),
-        (Id::TransactionLogs, QueryMap::new(query::TRANSACTION_LOGS, None)),
-        (Id::BadQuery, QueryMap::new(query::BAD_QUERY, None)),
-        (Id::WaitingTasks, QueryMap::new(query::WAITING_TASKS, None)), // used only in tests no None))w
-        (Id::BlockedSessions, QueryMap::new(BLOCKING_SESSIONS.as_str(), None)),
-        (Id::Counters, QueryMap::new(COUNTERS_NORMAL.as_str(), Some(COUNTERS_AZURE.as_str()))),
-        (Id::Clusters, QueryMap::new(CLUSTERS_NORMAL.as_str(), Some(CLUSTERS_AZURE.as_str()))),
+    static ref QUERY_MAP: HashMap<Id, &'static str > = HashMap::from([
+        (Id::ComputerName, query::COMPUTER_NAME),
+        (Id::Mirroring, query::MIRRORING_NORMAL),
+        (Id::Jobs, query::JOBS),
+        (Id::AvailabilityGroups, query::AVAILABILITY_GROUP_NORMAL),
+        (Id::InstanceProperties, query::INSTANCE_PROPERTIES),
+        (Id::UtcEntry, query::UTC_ENTRY),
+        (Id::ClusterActiveNodes, query::CLUSTER_ACTIVE_NODES),
+        (Id::ClusterNodes, query::CLUSTER_NODES_NORMAL),
+        (Id::IsClustered, query::IS_CLUSTERED),
+        (Id::DatabaseNames, query::DATABASE_NAMES),
+        (Id::Databases, query::DATABASES),
+        (Id::Datafiles, query::DATAFILES),
+        (Id::Backup, query::BACKUP),
+        (Id::TableSpaces, query::SPACE_USED),
+        (Id::CounterEntries, query::COUNTERS_ENTRIES_NORMAL),
+        (Id::Connections, query::CONNECTIONS),
+        (Id::TransactionLogs, query::TRANSACTION_LOGS),
+        (Id::BadQuery, query::BAD_QUERY),
+        (Id::WaitingTasks, query::WAITING_TASKS), // used only in tests no None))w
+        (Id::BlockedSessions, BLOCKING_SESSIONS.as_str()),
+        (Id::Counters, COUNTERS_NORMAL.as_str()),
+        (Id::Clusters, CLUSTERS_NORMAL.as_str()),
     ]);
 }
 
-pub fn find_known_query<T: Borrow<Id>>(query_id: T, edition: &Edition) -> Result<&'static str> {
+pub fn find_known_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
     QUERY_MAP
         .get(query_id.borrow())
         .copied()
-        .map(|x| x.get_query(edition))
         .ok_or(anyhow::anyhow!(
             "Query for {:?} not found",
             query_id.borrow()

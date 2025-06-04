@@ -14,7 +14,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, Protocol
 
 import livestatus
 
@@ -123,6 +123,26 @@ __all__ = [
 ]
 
 type _Labels = Mapping[str, str]
+
+
+class CheckerConfig(Protocol):  # protocol for now.
+    def only_from(self, host_name: HostName) -> None | str | list[str]: ...
+
+    def effective_service_level(
+        self, host_name: HostName, service_name: ServiceName, labels: _Labels
+    ) -> int: ...
+
+    def get_clustered_service_configuration(
+        self, host_name: HostName, service_name: ServiceName, labels: _Labels
+    ) -> tuple[cluster_mode.ClusterMode, Mapping[str, object]]: ...
+
+    def nodes(self, host_name: HostName) -> Sequence[HostName]: ...
+
+    def effective_host(
+        self, host_name: HostName, service_name: ServiceName, labels: _Labels
+    ) -> HostName: ...
+
+    def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum: ...
 
 
 def _fetch_all(
@@ -546,7 +566,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
     # See comment to SectionPluginMapper.
     def __init__(
         self,
-        config_cache: ConfigCache,
+        config: CheckerConfig,
         check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
         value_store_manager: ValueStoreManager,
         logger: logging.Logger,
@@ -554,7 +574,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         clusters: Container[HostName],
         rtc_package: AgentRawData | None,
     ):
-        self.config_cache: Final = config_cache
+        self.config: Final = config
         self.value_store_manager: Final = value_store_manager
         self._logger: Final = logger
         self.clusters: Final = clusters
@@ -574,7 +594,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         ) -> AggregatedResult:
             check_function = _get_check_function(
                 plugin,
-                lambda: self.config_cache.get_clustered_service_configuration(
+                lambda: self.config.get_clustered_service_configuration(
                     host_name, service.description, service.labels
                 ),
                 host_name,
@@ -585,16 +605,16 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
-                cluster_nodes=self.config_cache.nodes(host_name),
+                cluster_nodes=self.config.nodes(host_name),
                 providers=providers,
                 service=service,
                 plugin=plugin,
                 check_function=check_function,
                 rtc_package=self.rtc_package,
-                get_effective_host=self.config_cache.effective_host,
-                snmp_backend=self.config_cache.get_snmp_backend(host_name),
+                get_effective_host=self.config.effective_host,
+                snmp_backend=self.config.get_snmp_backend(host_name),
                 parameters=_compute_final_check_parameters(
-                    host_name, service, self.config_cache, self._logger
+                    host_name, service, self.config, self._logger
                 ),
             )
 
@@ -640,7 +660,7 @@ def _make_rrd_data_getter(
 def _compute_final_check_parameters(
     host_name: HostName,
     service: ConfiguredService,
-    config_cache: ConfigCache,
+    checker_config: CheckerConfig,
     logger: logging.Logger,
 ) -> Parameters:
     params = service.parameters.evaluate(timeperiod_active)
@@ -668,9 +688,9 @@ def _compute_final_check_parameters(
         )
 
     config = PostprocessingServiceConfig(
-        only_from=lambda: config_cache.only_from(host_name),
+        only_from=lambda: checker_config.only_from(host_name),
         prediction=make_prediction,
-        service_level=lambda: config_cache.effective_service_level(
+        service_level=lambda: checker_config.effective_service_level(
             host_name, service.description, service.labels
         ),
         host_name=str(host_name),

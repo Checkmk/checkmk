@@ -87,19 +87,8 @@ case "$1" in
         exit_failure 'failed'
         ;;
 
-    restart)
+    restart | reload)
         $0 stop && $0 start
-        ;;
-
-    reload)
-        echo -n 'Reloading ui-job-scheduler...'
-        if [ -z "$THE_PID" ]; then
-            echo 'not running.'
-            exit 1
-        else
-            echo "killing $THE_PID with SIGUSR1..."
-            kill -USR1 "$THE_PID"
-        fi
         ;;
 
     status)

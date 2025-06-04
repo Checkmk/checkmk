@@ -458,6 +458,9 @@ function updateGraphLineTitle(graphLine: GraphLine) {
   switch (graphLine.type) {
     case 'constant':
       graphLine.title = `${props.i18n.topics.constant} ${graphLine.value}`
+      break
+    case 'transformation':
+      graphLine.title = `${props.i18n.graph_operations.percentile} ${graphLine.percentile} ${props.i18n.graph_lines.of} ${graphLine.operand.title}`
   }
 }
 
@@ -694,7 +697,7 @@ function applyTransformation() {
       id: id++,
       type: 'transformation',
       color: '#ff0000',
-      title: `${props.i18n.graph_operations.percentile} ${props.i18n.graph_lines.of} ${selectedGraphLine.title}`,
+      title: `${props.i18n.graph_operations.percentile} ${dataTransformation.value} ${props.i18n.graph_lines.of} ${selectedGraphLine.title}`,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -849,7 +852,13 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </div>
           <div v-else-if="graphLine.type === 'transformation'">
-            {{ formulaOf(graphLine) }}
+            <FormEdit
+              v-model:data="graphLine.percentile"
+              :spec="specTransformation"
+              :backend-validation="backendValidationTransformation"
+              @update:data="updateGraphLineTitle(graphLine)"
+            />
+            {{ props.i18n.graph_lines.of }}
             <br />
             <div
               :style="{

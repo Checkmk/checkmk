@@ -898,11 +898,12 @@ def mode_update_dns_cache() -> None:
     config_cache = config.load(discovery_rulesets=()).config_cache
     hosts_config = config_cache.hosts_config
     ip_lookup.update_dns_cache(
-        ip_lookup_configs=(
-            config_cache.ip_lookup_config(hn)
+        hosts=(
+            hn
             for hn in set(hosts_config.hosts).union(hosts_config.clusters)
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
+        ip_lookup_config=config_cache.ip_lookup_config(),
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,

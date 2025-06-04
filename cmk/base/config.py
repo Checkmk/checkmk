@@ -1748,15 +1748,15 @@ class ConfigCache:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
-    def ip_lookup_config(self, host_name: HostName) -> ip_lookup.IPLookupConfig:
+    def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
-            hostname=host_name,
-            ip_stack_config=ConfigCache.ip_stack_config(host_name),
-            is_snmp_host=self.computed_datasources(host_name).is_snmp,
-            is_use_walk_host=self.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK,
-            default_address_family=self.default_address_family(host_name),
-            management_address=self.management_address(host_name),
-            is_dyndns_host=self.is_dyndns_host(host_name),
+            ip_stack_config=ConfigCache.ip_stack_config,
+            is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
+            is_use_walk_host=lambda host_name: self.get_snmp_backend(host_name)
+            is SNMPBackendEnum.STORED_WALK,
+            default_address_family=self.default_address_family,
+            management_address=self.management_address,
+            is_dyndns_host=self.is_dyndns_host,
         )
 
     def make_snmp_config(

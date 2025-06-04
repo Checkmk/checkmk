@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import enum
 import socket
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
-from typing import Any, assert_never, Literal, NamedTuple
+from dataclasses import dataclass
+from typing import Any, assert_never, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -38,14 +39,14 @@ class IPStackConfig(enum.IntFlag):
     DUAL_STACK = IPv4 | IPv6
 
 
-class IPLookupConfig(NamedTuple):
-    hostname: HostName
-    ip_stack_config: IPStackConfig
-    is_snmp_host: bool
-    is_use_walk_host: bool
-    default_address_family: socket.AddressFamily
-    management_address: HostAddress | None
-    is_dyndns_host: bool
+@dataclass(frozen=True, kw_only=True)
+class IPLookupConfig:
+    ip_stack_config: Callable[[HostName], IPStackConfig]
+    is_snmp_host: Callable[[HostName], bool]
+    is_use_walk_host: Callable[[HostName], bool]
+    default_address_family: Callable[[HostName], socket.AddressFamily]
+    management_address: Callable[[HostName], HostAddress | None]
+    is_dyndns_host: Callable[[HostName], bool]
 
 
 def fallback_ip_for(
@@ -352,7 +353,8 @@ def _get_ip_lookup_cache() -> IPLookupCache:
 
 def update_dns_cache(
     *,
-    ip_lookup_configs: Iterable[IPLookupConfig],
+    hosts: Iterable[HostName],
+    ip_lookup_config: IPLookupConfig,
     configured_ipv4_addresses: Mapping[HostName | HostAddress, HostAddress],
     configured_ipv6_addresses: Mapping[HostName | HostAddress, HostAddress],
     # Do these two even make sense? If either is set, this function
@@ -370,7 +372,7 @@ def update_dns_cache(
 
         console.verbose("Updating DNS cache...")
         # `_annotate_family()` handles DUAL_STACK and NO_IP
-        for host_name, host_config, family in _annotate_family(ip_lookup_configs):
+        for host_name, family in _annotate_family(hosts, ip_lookup_config):
             console.verbose_no_lf(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
@@ -383,10 +385,11 @@ def update_dns_cache(
                     ).get(host_name),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=(
-                        host_config.is_use_walk_host and host_config.is_snmp_host
+                        ip_lookup_config.is_use_walk_host(host_name)
+                        and ip_lookup_config.is_snmp_host(host_name)
                     ),
                     override_dns=override_dns,
-                    is_dyndns_host=host_config.is_dyndns_host,
+                    is_dyndns_host=ip_lookup_config.is_dyndns_host(host_name),
                     force_file_cache_renewal=True,  # it's cleared anyway
                 )
                 console.verbose(f"{ip}")
@@ -412,19 +415,20 @@ def update_dns_cache(
 
 
 def _annotate_family(
-    ip_lookup_configs: Iterable[IPLookupConfig],
+    hosts: Iterable[HostName],
+    ip_lookup_config: IPLookupConfig,
 ) -> Iterable[
     tuple[
         HostName,
-        IPLookupConfig,
         Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ]
 ]:
-    for host_config in ip_lookup_configs:
-        if IPStackConfig.IPv4 in host_config.ip_stack_config:
-            yield host_config.hostname, host_config, socket.AddressFamily.AF_INET
-        if IPStackConfig.IPv6 in host_config.ip_stack_config:
-            yield host_config.hostname, host_config, socket.AddressFamily.AF_INET6
+    for host_name in hosts:
+        ip_stack_config = ip_lookup_config.ip_stack_config(host_name)
+        if IPStackConfig.IPv4 in ip_stack_config:
+            yield host_name, socket.AddressFamily.AF_INET
+        if IPStackConfig.IPv6 in ip_stack_config:
+            yield host_name, socket.AddressFamily.AF_INET6
 
 
 class CollectFailedHosts:

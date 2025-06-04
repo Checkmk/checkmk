@@ -3397,12 +3397,13 @@ class AutomationUpdateDNSCache(Automation):
         hosts_config = loading_result.config_cache.hosts_config
         return UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
-                ip_lookup_configs=(
-                    loading_result.config_cache.ip_lookup_config(hn)
+                hosts=(
+                    hn
                     for hn in frozenset(itertools.chain(hosts_config.hosts, hosts_config.clusters))
                     if loading_result.config_cache.is_active(hn)
                     and loading_result.config_cache.is_online(hn)
                 ),
+                ip_lookup_config=loading_result.config_cache.ip_lookup_config(),
                 configured_ipv4_addresses=config.ipaddresses,
                 configured_ipv6_addresses=config.ipv6addresses,
                 simulation_mode=config.simulation_mode,

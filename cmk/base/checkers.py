@@ -574,7 +574,9 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         ) -> AggregatedResult:
             check_function = _get_check_function(
                 plugin,
-                self.config_cache,
+                lambda: self.config_cache.get_clustered_service_configuration(
+                    host_name, service.description, service.labels
+                ),
                 host_name,
                 service,
                 self.value_store_manager,
@@ -679,7 +681,9 @@ def _compute_final_check_parameters(
 
 def _get_check_function(
     plugin: CheckPluginAPI,
-    config_cache: ConfigCache,
+    get_clustered_service_configuration: Callable[
+        [], tuple[cluster_mode.ClusterMode, Mapping[str, object]]
+    ],
     host_name: HostName,
     service: ConfiguredService,
     value_store_manager: ValueStoreManager,
@@ -689,9 +693,7 @@ def _get_check_function(
     assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(
-                host_name, service.description, service.labels
-            ),
+            *get_clustered_service_configuration(),
             plugin=plugin,
             service_id=service.id(),
             value_store_manager=value_store_manager,

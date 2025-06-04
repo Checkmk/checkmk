@@ -36,6 +36,12 @@ pkg_mklink(
     target = "check_icmp",
 )
 
+pkg_mklink(
+    name = "check_ldaps_symlink",
+    link_name = "lib/nagios/plugins/check_ldaps",
+    target = "check_ldap",
+)
+
 exclude_from_filegroup(
     name = "share",
     src = "@monitoring-plugins//:gen_dir",
@@ -60,6 +66,7 @@ pkg_tar(
     name = "monitoring-plugins",
     srcs = [
         ":check_icmp_symlink",
+        ":check_ldaps_symlink",
         ":libexec",
         ":share_doc",
     ],

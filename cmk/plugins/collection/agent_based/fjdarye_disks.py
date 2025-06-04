@@ -151,14 +151,17 @@ check_plugin_fjdarye_disks = CheckPlugin(
 def _fjdarye_disks_states_summary(section: SectionFjdaryeDisk) -> Mapping[str, int]:
     """
     >>> _fjdarye_disks_states_summary({})
-    Counter()
+    {}
 
     >>> _fjdarye_disks_states_summary({"0": FjdaryeDisk(disk_index="0", state=State.OK, state_description="available", state_disk="1")})
-    Counter({'available': 1})
+    {'available': 1}
 
     """
-
-    return Counter([disk.state_description for disk in section.values() if disk.state_disk != "3"])
+    # Note: This needs to be an actual dictionary, so that it can be (de-)serialized to and from the
+    # autochecks file. Otherwise, discovery preview will show an error!
+    return dict(
+        Counter([disk.state_description for disk in section.values() if disk.state_disk != "3"])
+    )
 
 
 def discover_fjdarye_disks_summary(

@@ -3041,6 +3041,10 @@ msgstr "Absolut"
 msgid "Absolute %s space"
 msgstr "Spațiu absolut %s"
 
+#, fuzzy
+msgid "Absolute archive path"
+msgstr "Spațiu liber exact"
+
 msgid "Absolute commitable memory"
 msgstr "Memorie comutabilă absolută"
 
@@ -5157,6 +5161,10 @@ msgstr "Înregistrare agent de panificație"
 msgid "Agent Bakery packages"
 msgstr "Pachete pentru agenți de panificație"
 
+#, fuzzy
+msgid "Agent Download"
+msgstr "Ultima descărcare"
+
 msgid "Agent Error"
 msgstr "Eroare agent"
 
@@ -6402,6 +6410,10 @@ msgid ""
 msgstr ""
 "Aproape toate filtrele disponibile, utilizate pentru căutarea de servicii "
 "și, eventual, pentru efectuarea de acțiuni"
+
+#, fuzzy
+msgid "Already installed the agent?"
+msgstr "Instalați întotdeauna Python cu agentul"
 
 msgid "Also bulk outside of time period"
 msgstr "De asemenea, vrac în afara perioadei de timp"
@@ -7810,13 +7822,14 @@ msgstr "Extinderea automată va fi ignorată"
 msgid "Autoextensible"
 msgstr "Autoextensibil"
 
-msgid "Automated environment setup (via RCC)"
+#, fuzzy
+msgid "Automated environment setup"
 msgstr "Configurarea automată a mediului (prin RCC)"
 
 #, fuzzy
 msgid ""
-"Automated environment setup (via RCC, ⚠ <b>not available</b> because Robotmk "
-"Core MKP has been installed)"
+"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
+"has been installed)"
 msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Automatic"
@@ -9323,6 +9336,10 @@ msgstr "URL de bază (Site OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL de bază pentru motorul API docker"
+
+#, fuzzy
+msgid "Base directory"
+msgstr "Director de date"
 
 #, fuzzy
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
@@ -14366,6 +14383,22 @@ msgstr "Execuții concurente"
 
 msgid "Concurrent executions in percent"
 msgstr "Execuții simultane în procente"
+
+#, fuzzy
+msgid "Conda"
+msgstr "Luni"
+
+#, fuzzy
+msgid "Conda configuration"
+msgstr "Configurația RRA"
+
+msgid ""
+"Conda environments can be packed into .tar.gz archives using <tt>conda-pack</"
+"tt>."
+msgstr ""
+
+msgid "Conda manifest (yaml file)"
+msgstr ""
 
 msgid "Condition"
 msgstr "Stare"
@@ -21422,6 +21455,10 @@ msgid "Download %s package of agent for %s"
 msgstr "Descărcați pachetul %s de agent pentru %s."
 
 #, fuzzy
+msgid "Download & install agent"
+msgstr "Agent descărcat"
+
+#, fuzzy
 msgid "Download (internet connection)"
 msgstr "Conexiuni client"
 
@@ -23504,6 +23541,10 @@ msgstr "Timeout de construire a mediului"
 
 msgid "Environment dependency handling"
 msgstr ""
+
+#, fuzzy
+msgid "Environment source"
+msgstr "Variabile de mediu"
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episodul 1: Instalarea Checkmk și monitorizarea primei gazde"
@@ -26865,9 +26906,6 @@ msgstr "Resurse IG"
 
 msgid "GPU utilization"
 msgstr "Utilizare GPU"
-
-msgid "GUI"
-msgstr "GUI"
 
 msgid "GUI design"
 msgstr "Proiectare GUI"
@@ -49030,6 +49068,10 @@ msgstr "Fișiere împachetate"
 msgid "Packages"
 msgstr "Pachete"
 
+#, fuzzy
+msgid "Packed Conda environment"
+msgstr "Utilizarea din mediul înconjurător"
+
 msgid "Packet loss"
 msgstr "Pierderea de pachete"
 
@@ -52581,6 +52623,10 @@ msgid "RAM used (averaged)"
 msgstr "RAM utilizată (medie)"
 
 #, fuzzy
+msgid "RCC (deprecated)"
+msgstr "Depreciat"
+
+#, fuzzy
 msgid "RCC Remote server address"
 msgstr "Adresa serverului URL personalizat"
 
@@ -52915,6 +52961,10 @@ msgstr "Citește"
 
 msgid "Read / Write queue length"
 msgstr "Lungimea cozii de citire / scriere"
+
+#, fuzzy
+msgid "Read Checkmk user guide"
+msgstr "Ghidul oficial al utilizatorului Checkmk"
 
 msgid "Read IO operations per second"
 msgstr "Operațiuni IO de citire pe secundă"
@@ -53703,6 +53753,14 @@ msgstr "Niveluri relative"
 
 msgid "Relative levels of active sessions."
 msgstr "Nivelurile relative ale sesiunilor active."
+
+#, fuzzy
+msgid "Relative manifest path"
+msgstr "Ora relativă de alertă"
+
+#, fuzzy
+msgid "Relative path to Robotmk environment manifest"
+msgstr "Cale către robot.yaml"
 
 #, fuzzy
 msgid "Relative path to robot.yaml"
@@ -64789,6 +64847,11 @@ msgstr ""
 "URL-ul serverului Checkmk trebuie să fie FQDN (consultați ajutorul în linie "
 "pentru detalii)."
 
+msgid ""
+"The Conda environment file specifies all dependencies that will be installed "
+"in the environment."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr "Clientul a fost șters."
 
@@ -65151,6 +65214,16 @@ msgid ""
 "base directory, which was previously owned by a user, then that user could "
 "potentially execute arbitrary code via the scheduler. To avoid this issue, "
 "one should specify a non-existing directory or empty directory here."
+msgstr ""
+
+msgid ""
+"The Robotmk scheduler will configure micromamba to create Conda environments "
+"in this directory. Before executing any tests, the scheduler will take "
+"ownership of the base directory. However, it will not clear an existing "
+"directory of its contents. If you specify a base directory that was "
+"previously owned by a user, then that user could potentially execute "
+"arbitrary code via the scheduler. To avoid this issue, one should specify a "
+"non-existing directory or empty directory here."
 msgstr ""
 
 msgid ""
@@ -70160,6 +70233,11 @@ msgstr ""
 msgid "This URL ist not allowed to be used as bookmark"
 msgstr "Acest URL nu poate fi folosit ca marcaj."
 
+msgid ""
+"This YAML file can be used to specify post-build commands such as "
+"<tt>rfbrowser init</tt>."
+msgstr ""
+
 msgid "This account has no permission for automation."
 msgstr "Acest cont nu are permisiunea de automatizare."
 
@@ -71472,6 +71550,22 @@ msgstr ""
 "asigurați-vă că spoolerul de notificare este configurat corect pentru "
 "conexiunile de intrare și/sau de ieșire."
 
+#, fuzzy
+msgid ""
+"This option configures the Robotmk scheduler to create a Conda environment "
+"and execute the test suite in the context of this environment. The "
+"environment is created using micromamba. This eliminates the need to install "
+"and configure Python and all of its library packages on the target hosts. "
+"Conda environments are created right after the schedulder gets started by "
+"the Checkmk agent and before it enters the scheduling phase."
+msgstr ""
+"Cu ajutorul <a href=https://github.com/robocorp/rcc>rcc binary</a>, "
+"programatorul robotmk poate genera mediile Python necesare pentru executarea "
+"suitelor Robot Framework. Acest lucru elimină necesitatea de a instala și "
+"configura Python și toate pachetele de bibliotecă ale acestuia pe gazdele "
+"țintă. Mediile RCC sunt construite numai atunci când este pornit "
+"planificatorul."
+
 msgid ""
 "This option controls whether error messages from unreachable sites are shown "
 "in the output of views. Those error messages shall alert you that not all "
@@ -72302,6 +72396,13 @@ msgstr "Această problemă a fost recunoscută"
 
 msgid "This problem has been acknowledged."
 msgstr "Această problemă a fost recunoscută."
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
+"declanșați o rescanare."
 
 msgid "This process may take several minutes, please wait..."
 msgstr ""
@@ -73924,6 +74025,13 @@ msgid "This setting determines how ports will be enabled in Windows Firewall."
 msgstr ""
 "Această setare determină modul în care vor fi activate porturile în Windows "
 "Firewall."
+
+msgid ""
+"This setting ensures that a hanging/failing environment creation for a "
+"single plan does not block the scheduling phase of other plans. Building a "
+"Conda environment from a manifest file for the very first time can take some "
+"minutes. Also unpacking a packed Conda environment can take some time. "
+msgstr ""
 
 msgid ""
 "This setting is only useful if you've configured service levels for hosts. "
@@ -89891,6 +89999,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "GUI"
+#~ msgstr "GUI"
 
 #~ msgid "Found no graph matching this definition."
 #~ msgstr "Nu s-a găsit niciun grafic care să corespundă acestei definiții."

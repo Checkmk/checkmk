@@ -2897,6 +2897,10 @@ msgstr "絶対"
 msgid "Absolute %s space"
 msgstr "絶対 %s スペース"
 
+#, fuzzy
+msgid "Absolute archive path"
+msgstr "絶対空きスペース"
+
 msgid "Absolute commitable memory"
 msgstr "絶対コミット可能メモリ"
 
@@ -4884,6 +4888,10 @@ msgstr "エージェントベーカリーログ"
 msgid "Agent Bakery packages"
 msgstr "エージェントベーカリーパッケージ"
 
+#, fuzzy
+msgid "Agent Download"
+msgstr "最終ダウンロード"
+
 msgid "Agent Error"
 msgstr "エージェントエラー"
 
@@ -6058,6 +6066,10 @@ msgid ""
 msgstr ""
 "利用可能なほぼすべてのフィルター、サービスの検索やアクションの実行に使用され"
 "ます"
+
+#, fuzzy
+msgid "Already installed the agent?"
+msgstr "常にエージェントと一緒にPythonをインストールする"
 
 msgid "Also bulk outside of time period"
 msgstr "また 期間外のバルク"
@@ -7411,12 +7423,14 @@ msgstr "自動拡張は無視されます"
 msgid "Autoextensible"
 msgstr "自動拡張可能"
 
-msgid "Automated environment setup (via RCC)"
+#, fuzzy
+msgid "Automated environment setup"
 msgstr "自動環境セットアップ（RCC経由）"
 
+#, fuzzy
 msgid ""
-"Automated environment setup (via RCC, ⚠ <b>not available</b> because Robotmk "
-"Core MKP has been installed)"
+"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
+"has been installed)"
 msgstr ""
 "自動環境設定 (RCC 経由、Robotmk Core MKP がインストールされているため⚠<b>利用"
 "不可</b> )"
@@ -8829,6 +8843,10 @@ msgstr "ベースURL(OMDサイト)"
 
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
+
+#, fuzzy
+msgid "Base directory"
+msgstr "データディレクトリ"
 
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "<tt>プラグイン</tt>および<tt>ローカル</tt>のベースディレクトリ"
@@ -13630,6 +13648,22 @@ msgstr "同時実行"
 
 msgid "Concurrent executions in percent"
 msgstr "同時実行の割合"
+
+#, fuzzy
+msgid "Conda"
+msgstr "月曜"
+
+#, fuzzy
+msgid "Conda configuration"
+msgstr "設定の追加"
+
+msgid ""
+"Conda environments can be packed into .tar.gz archives using <tt>conda-pack</"
+"tt>."
+msgstr ""
+
+msgid "Conda manifest (yaml file)"
+msgstr ""
 
 msgid "Condition"
 msgstr "条件"
@@ -20313,6 +20347,10 @@ msgid "Download %s package of agent for %s"
 msgstr "%sのエージェントの%sパッケージをダウンロードします"
 
 #, fuzzy
+msgid "Download & install agent"
+msgstr "ダウンロードしたエージェント"
+
+#, fuzzy
 msgid "Download (internet connection)"
 msgstr "クライアント接続"
 
@@ -22328,6 +22366,10 @@ msgstr "環境変数"
 
 msgid "Environment dependency handling"
 msgstr ""
+
+#, fuzzy
+msgid "Environment source"
+msgstr "環境変数"
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "エピソード1: Checkmkのインストールと最初のホスト監視"
@@ -25575,9 +25617,6 @@ msgstr "GIリソース"
 
 msgid "GPU utilization"
 msgstr "GPU使用率"
-
-msgid "GUI"
-msgstr "GUI"
 
 msgid "GUI design"
 msgstr "GUIデザイン"
@@ -46851,6 +46890,10 @@ msgstr "パッケージ化されたファイル"
 msgid "Packages"
 msgstr "パッケージ"
 
+#, fuzzy
+msgid "Packed Conda environment"
+msgstr "環境からの使用"
+
 msgid "Packet loss"
 msgstr "パケットロス"
 
@@ -50224,6 +50267,10 @@ msgid "RAM used (averaged)"
 msgstr "RAM使用量（平均）"
 
 #, fuzzy
+msgid "RCC (deprecated)"
+msgstr "非推奨"
+
+#, fuzzy
 msgid "RCC Remote server address"
 msgstr "カスタムURLサーバーアドレス"
 
@@ -50551,6 +50598,10 @@ msgstr "読んだ"
 
 msgid "Read / Write queue length"
 msgstr "読み取り/書き込みキューの長さ"
+
+#, fuzzy
+msgid "Read Checkmk user guide"
+msgstr "Checkmk公式ユーザーガイド"
 
 msgid "Read IO operations per second"
 msgstr "1秒あたりのIO操作の読み取り"
@@ -51307,6 +51358,14 @@ msgstr "相対レベル"
 
 msgid "Relative levels of active sessions."
 msgstr "アクティブなセッションの相対レベル。"
+
+#, fuzzy
+msgid "Relative manifest path"
+msgstr "アラートの相対時間"
+
+#, fuzzy
+msgid "Relative path to Robotmk environment manifest"
+msgstr "robot.yamlへの相対パス"
 
 msgid "Relative path to robot.yaml"
 msgstr "robot.yamlへの相対パス"
@@ -61853,6 +61912,11 @@ msgid ""
 msgstr ""
 "CheckmkサーバーのURLはFQDNでなければならない(詳細はインラインヘルプを参照)。"
 
+msgid ""
+"The Conda environment file specifies all dependencies that will be installed "
+"in the environment."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr "カスタマーが削除されました。"
 
@@ -62193,6 +62257,16 @@ msgid ""
 "base directory, which was previously owned by a user, then that user could "
 "potentially execute arbitrary code via the scheduler. To avoid this issue, "
 "one should specify a non-existing directory or empty directory here."
+msgstr ""
+
+msgid ""
+"The Robotmk scheduler will configure micromamba to create Conda environments "
+"in this directory. Before executing any tests, the scheduler will take "
+"ownership of the base directory. However, it will not clear an existing "
+"directory of its contents. If you specify a base directory that was "
+"previously owned by a user, then that user could potentially execute "
+"arbitrary code via the scheduler. To avoid this issue, one should specify a "
+"non-existing directory or empty directory here."
 msgstr ""
 
 msgid ""
@@ -66941,6 +67015,11 @@ msgstr ""
 msgid "This URL ist not allowed to be used as bookmark"
 msgstr "このURLをブックマークとして使用することはできません"
 
+msgid ""
+"This YAML file can be used to specify post-build commands such as "
+"<tt>rfbrowser init</tt>."
+msgstr ""
+
 msgid "This account has no permission for automation."
 msgstr "このアカウントには自動化の権限がありません。"
 
@@ -68171,6 +68250,22 @@ msgstr ""
 "した場合、通知スプーラが着信および/または送信接続用に正しく設定されていること"
 "を確認してください。"
 
+#, fuzzy
+msgid ""
+"This option configures the Robotmk scheduler to create a Conda environment "
+"and execute the test suite in the context of this environment. The "
+"environment is created using micromamba. This eliminates the need to install "
+"and configure Python and all of its library packages on the target hosts. "
+"Conda environments are created right after the schedulder gets started by "
+"the Checkmk agent and before it enters the scheduling phase."
+msgstr ""
+"<a href=\"https://github.com/robocorp/rcc\" target=\"_blank\">RCC</a>バイナリ"
+"の助けを借りて、robotmk スケジューラは Robot Framework スイートの実行に必要"
+"な Python 環境を生成することができます。これにより、Pythonとそのライブラリ"
+"パッケージのすべてをターゲットホストにインストールして設定する必要がなくなり"
+"ます。RCC 環境は、Checkmk エージェントによってスケジューラが起動された直後、"
+"スケジューリング フェーズに入る前に生成されます。"
+
 msgid ""
 "This option controls whether error messages from unreachable sites are shown "
 "in the output of views. Those error messages shall alert you that not all "
@@ -68924,6 +69019,13 @@ msgstr "この問題は認められています"
 
 msgid "This problem has been acknowledged."
 msgstr "この問題は承認済みです。"
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"上記の問題はキャッシュの欠落が原因かもしれません。再スキャンを行ってくださ"
+"い。"
 
 msgid "This process may take several minutes, please wait..."
 msgstr ""
@@ -70428,6 +70530,13 @@ msgid "This setting determines how ports will be enabled in Windows Firewall."
 msgstr ""
 "この設定は、Windowsファイアウォールでポートをどのように有効にするかを決定しま"
 "す。"
+
+msgid ""
+"This setting ensures that a hanging/failing environment creation for a "
+"single plan does not block the scheduling phase of other plans. Building a "
+"Conda environment from a manifest file for the very first time can take some "
+"minutes. Also unpacking a packed Conda environment can take some time. "
+msgstr ""
 
 msgid ""
 "This setting is only useful if you've configured service levels for hosts. "
@@ -85420,6 +85529,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "GUI"
+#~ msgstr "GUI"
 
 #~ msgid "Found no graph matching this definition."
 #~ msgstr "この定義に一致するグラフが見つかりませんでした。"

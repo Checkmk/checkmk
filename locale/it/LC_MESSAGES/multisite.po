@@ -3005,6 +3005,10 @@ msgstr "Assoluto"
 msgid "Absolute %s space"
 msgstr "Spazio assoluto %s"
 
+#, fuzzy
+msgid "Absolute archive path"
+msgstr "Spazio libero assoluto"
+
 msgid "Absolute commitable memory"
 msgstr "Memoria commutabile assoluta"
 
@@ -5113,6 +5117,10 @@ msgstr "Registrazione agente panificio"
 msgid "Agent Bakery packages"
 msgstr "Pacchetti di pasticceria per agenti"
 
+#, fuzzy
+msgid "Agent Download"
+msgstr "Ultimo download"
+
 msgid "Agent Error"
 msgstr "Errore dell'agente"
 
@@ -6353,6 +6361,10 @@ msgid ""
 msgstr ""
 "Quasi tutti i filtri disponibili, usati per cercare servizi e forse fare "
 "azioni"
+
+#, fuzzy
+msgid "Already installed the agent?"
+msgstr "Installare sempre Python con l'agente"
 
 msgid "Also bulk outside of time period"
 msgstr "Anche la massa al di fuori del periodo di tempo"
@@ -7744,13 +7756,14 @@ msgstr "Autoextend sarà ignorato"
 msgid "Autoextensible"
 msgstr "Autoestensibile"
 
-msgid "Automated environment setup (via RCC)"
-msgstr ""
+#, fuzzy
+msgid "Automated environment setup"
+msgstr "Ambienti basati sul cloud"
 
 #, fuzzy
 msgid ""
-"Automated environment setup (via RCC, ⚠ <b>not available</b> because Robotmk "
-"Core MKP has been installed)"
+"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
+"has been installed)"
 msgstr "Usa SSL per la connessione."
 
 msgid "Automatic"
@@ -9258,6 +9271,10 @@ msgstr "URL di base (sito OMD)"
 #, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL di base per il motore docker API"
+
+#, fuzzy
+msgid "Base directory"
+msgstr "Elenco dati"
 
 #, fuzzy
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
@@ -14223,6 +14240,22 @@ msgstr "Esecuzioni simultanee"
 
 msgid "Concurrent executions in percent"
 msgstr "Esecuzioni simultanee in percentuale"
+
+#, fuzzy
+msgid "Conda"
+msgstr "Lunedì"
+
+#, fuzzy
+msgid "Conda configuration"
+msgstr "Configurazione RRA"
+
+msgid ""
+"Conda environments can be packed into .tar.gz archives using <tt>conda-pack</"
+"tt>."
+msgstr ""
+
+msgid "Conda manifest (yaml file)"
+msgstr ""
 
 msgid "Condition"
 msgstr "Condizioni"
@@ -21214,6 +21247,10 @@ msgid "Download %s package of agent for %s"
 msgstr "Scarica il pacchetto %s dell'agente per %s"
 
 #, fuzzy
+msgid "Download & install agent"
+msgstr "Agente scaricato"
+
+#, fuzzy
 msgid "Download (internet connection)"
 msgstr "Connessioni client"
 
@@ -23239,6 +23276,10 @@ msgstr "Timeout di costruzione dell'ambiente"
 
 msgid "Environment dependency handling"
 msgstr ""
+
+#, fuzzy
+msgid "Environment source"
+msgstr "Variabili d'ambiente"
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episodio 1: Installazione di Checkmk e monitoraggio del primo host"
@@ -26586,9 +26627,6 @@ msgstr "Risorsa GI"
 
 msgid "GPU utilization"
 msgstr "Utilizzo della CPU"
-
-msgid "GUI"
-msgstr "GUI"
 
 msgid "GUI design"
 msgstr "Progettazione GUI"
@@ -48537,6 +48575,10 @@ msgstr "File confezionati"
 msgid "Packages"
 msgstr "Pacchetti"
 
+#, fuzzy
+msgid "Packed Conda environment"
+msgstr "Utilizzo dall'ambiente"
+
 msgid "Packet loss"
 msgstr "Perdita di pacchetti"
 
@@ -52059,6 +52101,10 @@ msgid "RAM used (averaged)"
 msgstr "RAM utilizzata (media)"
 
 #, fuzzy
+msgid "RCC (deprecated)"
+msgstr "Deprecato"
+
+#, fuzzy
 msgid "RCC Remote server address"
 msgstr "Indirizzo del server URL personalizzato"
 
@@ -52390,6 +52436,10 @@ msgstr "Leggi"
 
 msgid "Read / Write queue length"
 msgstr "Lunghezza della coda di lettura/scrittura"
+
+#, fuzzy
+msgid "Read Checkmk user guide"
+msgstr "La guida utente ufficiale di Checkmk"
 
 msgid "Read IO operations per second"
 msgstr "Operazioni di lettura IO al secondo"
@@ -53169,6 +53219,14 @@ msgstr "Livelli relativi"
 
 msgid "Relative levels of active sessions."
 msgstr "Livelli relativi di sessioni attive."
+
+#, fuzzy
+msgid "Relative manifest path"
+msgstr "Tempo relativo di allarme"
+
+#, fuzzy
+msgid "Relative path to Robotmk environment manifest"
+msgstr "Percorso di robot.yaml"
 
 #, fuzzy
 msgid "Relative path to robot.yaml"
@@ -64097,6 +64155,11 @@ msgstr ""
 "L'URL del server Checkmk deve essere l'FQDN (per i dettagli, vedere la guida "
 "in linea)."
 
+msgid ""
+"The Conda environment file specifies all dependencies that will be installed "
+"in the environment."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr "Il cliente è stato cancellato."
 
@@ -64454,6 +64517,16 @@ msgid ""
 "base directory, which was previously owned by a user, then that user could "
 "potentially execute arbitrary code via the scheduler. To avoid this issue, "
 "one should specify a non-existing directory or empty directory here."
+msgstr ""
+
+msgid ""
+"The Robotmk scheduler will configure micromamba to create Conda environments "
+"in this directory. Before executing any tests, the scheduler will take "
+"ownership of the base directory. However, it will not clear an existing "
+"directory of its contents. If you specify a base directory that was "
+"previously owned by a user, then that user could potentially execute "
+"arbitrary code via the scheduler. To avoid this issue, one should specify a "
+"non-existing directory or empty directory here."
 msgstr ""
 
 msgid ""
@@ -69394,6 +69467,11 @@ msgstr ""
 msgid "This URL ist not allowed to be used as bookmark"
 msgstr "Questo URL non può essere usato come segnalibro"
 
+msgid ""
+"This YAML file can be used to specify post-build commands such as "
+"<tt>rfbrowser init</tt>."
+msgstr ""
+
 msgid "This account has no permission for automation."
 msgstr "Questo account non ha il permesso per l'automazione."
 
@@ -70676,6 +70754,15 @@ msgstr ""
 "entrata e/o in uscita."
 
 msgid ""
+"This option configures the Robotmk scheduler to create a Conda environment "
+"and execute the test suite in the context of this environment. The "
+"environment is created using micromamba. This eliminates the need to install "
+"and configure Python and all of its library packages on the target hosts. "
+"Conda environments are created right after the schedulder gets started by "
+"the Checkmk agent and before it enters the scheduling phase."
+msgstr ""
+
+msgid ""
 "This option controls whether error messages from unreachable sites are shown "
 "in the output of views. Those error messages shall alert you that not all "
 "data from all sites has been shown. Other people - however - find those "
@@ -71497,6 +71584,13 @@ msgstr "Questo problema è stato riconosciuto"
 
 msgid "This problem has been acknowledged."
 msgstr "Questo problema è stato riconosciuto."
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"I problemi sopra descritti potrebbero essere causati da cache mancanti. "
+"Eseguire una nuova scansione."
 
 msgid "This process may take several minutes, please wait..."
 msgstr ""
@@ -73090,6 +73184,13 @@ msgid "This setting determines how ports will be enabled in Windows Firewall."
 msgstr ""
 "Questa impostazione determina come le porte saranno abilitate in Windows "
 "Firewall."
+
+msgid ""
+"This setting ensures that a hanging/failing environment creation for a "
+"single plan does not block the scheduling phase of other plans. Building a "
+"Conda environment from a manifest file for the very first time can take some "
+"minutes. Also unpacking a packed Conda environment can take some time. "
+msgstr ""
 
 msgid ""
 "This setting is only useful if you've configured service levels for hosts. "
@@ -88924,6 +89025,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "GUI"
+#~ msgstr "GUI"
 
 #~ msgid "Found no graph matching this definition."
 #~ msgstr "Non ho trovato nessun grafico corrispondente a questa definizione."

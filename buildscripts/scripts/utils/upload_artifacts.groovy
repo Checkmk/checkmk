@@ -5,10 +5,10 @@
 // library for uploading packages
 package lib
 
-def hashfile_extension = ".hash";
-def downloads_path = "/var/downloads/checkmk/";
-def smb_base_path = "/smb-share-customer/checkmk/"
-def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+hashfile_extension = ".hash";
+downloads_path = "/var/downloads/checkmk/";
+smb_base_path = "/smb-share-customer/checkmk/"
+versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {

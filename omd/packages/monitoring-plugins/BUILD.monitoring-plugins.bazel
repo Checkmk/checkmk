@@ -87,6 +87,11 @@ POSTFIX_SCRIPT = """
     rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
     "$INSTALLDIR/libexec/check_disk_smb"
 
+    # check_ldaps is just a symlink but would be resolved by bazel -> pkg_mklink is not able to re-create the symlink
+    # so just delete the file before hand...
+    # TODO: clean up this mess
+    rm -f "$INSTALLDIR/libexec/check_ldaps"
+
     # check_ircd requires the perl module IO::Socket::IP since https://github.com/monitoring-plugins/monitoring-plugins/commit/93cd51bc6221ffc846c69135f2746120683b44c5
     # We don't want to deploy yet another perl module nor cannot guarantee that the required perl version is available under all distros.
     rm -f "$INSTALLDIR/libexec/check_ircd"

@@ -15,6 +15,7 @@ from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.help
 from cmk.gui import (
+    activate_menu,
     agent_registration,
     autocompleters,
     crash_handler,
@@ -169,6 +170,7 @@ def register(
         help_developer_entries,
         help_about_checkmk_entries,
     )
+    activate_menu.register(main_menu_registry)
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()

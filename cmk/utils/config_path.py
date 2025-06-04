@@ -32,23 +32,19 @@ class VersionedConfigPath(Iterator):
         self.serial: Final = serial
 
     def __str__(self) -> str:
-        return self._path_elem
+        return str(self.ROOT / str(self.serial))
 
     def __fspath__(self) -> str:
-        return str(self.ROOT / self._path_elem)
+        return str(self)
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.serial})"
+        return f"{self.__class__.__name__}({self.serial})"
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, os.PathLike) and Path(self) == Path(other)
+        return Path(self) == Path(other) if isinstance(other, os.PathLike) else NotImplemented
 
     def __hash__(self) -> int:
-        return hash(type(self)) ^ hash(self._path_elem)
-
-    @property
-    def _path_elem(self) -> str:
-        return str(self.serial)
+        return hash(Path(self))
 
     @classmethod
     def current(cls) -> VersionedConfigPath:

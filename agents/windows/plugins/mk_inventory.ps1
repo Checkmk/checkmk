@@ -5,70 +5,81 @@
 $CMK_VERSION = "2.5.0b1"
 $HKLM = "HKLM:\"
 
-# These three lines are default in case not set in the agent bakery
-$delay = 14400
-$exePaths = @()
-$regPaths = @("Software\Microsoft\Windows\CurrentVersion\Uninstall",
-            "Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall")
+function GetEnvVar {
+    param([string]$name)
+    return [System.Environment]::GetEnvironmentVariable($name)
+}
 
-$stateDir = [System.Environment]::GetEnvironmentVariable("MK_STATEDIR")
-$confDir = [System.Environment]::GetEnvironmentVariable("MK_CONFDIR")
-$remoteHost = [System.Environment]::GetEnvironmentVariable("REMOTE_HOST")
+function Initialize {
+    # These three lines are default in case not set in the agent bakery
+    $script:delay = 14400
+    $script:exePaths = @()
+    $script:regPaths = @("Software\Microsoft\Windows\CurrentVersion\Uninstall",
+        "Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall")
 
-# Set values from the bakery configuration file
-if($confDir){
-    $confJson = Join-Path $confDir "mk_inventory_cfg.json"
+    $script:stateDir = GetEnvVar("MK_STATEDIR")
+    $script:confDir = GetEnvVar("MK_CONFDIR")
+    $script:remoteHost = GetEnvVar("REMOTE_HOST")
 
-    if(Test-Path $confJson){
-        $jsonContent = Get-Content -Path $confJson -Raw
-        $config = ConvertFrom-Json -InputObject $jsonContent
-        if($config){
-            $delay = $config.delay
-            $exePaths = $config.exePaths
-            $regPaths = $config.regPaths
+    # Set values from the bakery configuration file
+    if ($script:confDir) {
+        $confJson = Join-Path $script:confDir "mk_inventory_cfg.json"
+
+        if (Test-Path $confJson) {
+            $jsonContent = Get-Content -Path $confJson -Raw
+            $config = ConvertFrom-Json -InputObject $jsonContent
+            if ($config) {
+                $script:delay = $config.delay
+                $script:exePaths = $config.exePaths
+                $script:regPaths = $config.regPaths
+            }
+        }
+    }
+
+    # Default values if environment variables are missing
+    if (-not $script:remoteHost) {
+        $script:remoteHost = "local"
+    }
+    # Fallback if an (old) agent does not provide the MK_STATEDIR
+    if ($script:confDir -and -not $script:stateDir) {
+        $script:stateDir = $script:confDir
+    }
+}
+
+function CreateTimestamp {
+    # Create timestamp only in case env variables are properly resolved
+    # Run script without a timestamp otherwise
+    if ($script:stateDir) {
+        # Define timestamp file
+        $timestamp = "$script:stateDir\mk_inventory.$($script:remoteHost -replace ':', '_')"
+
+        # Check if timestamp file exists and its last modified time
+        if (Test-Path $timestamp) {
+            $fileDate = (Get-Item $timestamp).LastWriteTime
+            # Exit if timestamp is too young
+            if ($fileDate.AddSeconds($script:delay) -ge (Get-Date)) {
+                return "Exiting the script because timestamp is too young."
+            }
+        }
+
+        # Create new timestamp file (requires admin rights)
+        try {
+            New-Item -Path $timestamp -ItemType File -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Output "Failed to create timestamp: $_"
         }
     }
 }
 
-# Default values if environment variables are missing
-if (-not $remoteHost) {
-    $remoteHost = "local"
-}
-# Fallback if an (old) agent does not provide the MK_STATEDIR
-if ($confDir -and -not $stateDir) {
-    $stateDir = $confDir
+function GetTimeUntil {
+    # Get the current Unix timestamp
+    $epoch = [int](([datetime]::UtcNow - [datetime]'1970-01-01').TotalSeconds)
+    # Add delay and 5 minutes (300 seconds)
+    return $epoch + $script:delay + 300
 }
 
-# Create timestamp only in case env variables are properly resolved
-# Run script without a timestamp otherwise
-if ($stateDir) {
-    # Define timestamp file
-    $timestamp = "$stateDir\mk_inventory.$($remoteHost -replace ':', '_')"
-
-    # Check if timestamp file exists and its last modified time
-    if (Test-Path $timestamp) {
-        $fileDate = (Get-Item $timestamp).LastWriteTime
-        # Exit if timestamp is too young
-        if ($fileDate.AddSeconds($delay) -ge (Get-Date)) {
-            exit
-        }
-    }
-
-    # Create new timestamp file (requires admin rights)
-    try {
-        New-Item -Path $timestamp -ItemType File -Force | Out-Null
-    }
-    catch {
-        Write-Output "Failed to create timestamp: $_"
-    }
-}
-
-# The unix timestamp
-$epoch = [int](([datetime]::UtcNow - [datetime] '1970-01-01').TotalSeconds)
-# Convert add delay seconds plus 5 minutes
-$timeUntil = $epoch + $delay + 300
-
-function startSection {
+function StartSection {
     param (
         [string]$name,
         [string]$sep,
@@ -77,7 +88,7 @@ function startSection {
     Write-Output "<<<${name}:sep(${sep}):persist(${timeUntil})>>>"
 }
 
-function getWMIObject {
+function GetWmiObject {
     param (
         [string]$strClass,
         [string[]]$arrVars
@@ -108,7 +119,7 @@ function getWMIObject {
     }
 }
 
-function getWMIObject2 {
+function GetWmiObject2 {
     param (
         [string]$ClassName,
         [string[]]$arrVars
@@ -128,7 +139,7 @@ function getWMIObject2 {
             # Append Update Build Revision (UBR) to the version property
             if ($label -eq "version") {
                 $ubr = (Get-ItemProperty -Path "${HKLM}SOFTWARE\Microsoft\Windows NT\CurrentVersion").UBR
-                if($ubr){
+                if ($ubr) {
                     $value = "$value.$ubr"
                 }
             }
@@ -139,7 +150,7 @@ function getWMIObject2 {
     }
 }
 
-function getNetworkAdapter {
+function GetNetworkAdapter {
     param (
         [string[]]$arrVars
     )
@@ -178,7 +189,7 @@ function getNetworkAdapter {
     }
 }
 
-function getRouteTable {
+function GetRouteTable {
     $adapters = Get-CimInstance -ClassName "Win32_NetworkAdapter" -Namespace "root\cimv2"
     $routes = Get-CimInstance -ClassName "Win32_IP4RouteTable" -Namespace "root\cimv2"
 
@@ -206,14 +217,18 @@ function getRouteTable {
     }
 }
 
-function getSoftwareFromInstaller {
+function GetSoftwareFromInstaller {
     param (
-        [string[]]$fields
+        [string[]]$fields,
+        $installer = $null # For dependency injection in tests
     )
     $WI_SID_EVERYONE = "s-1-1-0"
     $WI_ALL_CONTEXTS = 7
     # Create Windows Installer COM object
-    $installer = New-Object -ComObject WindowsInstaller.Installer
+    if (-not $installer) {
+        $installer = New-Object -ComObject WindowsInstaller.Installer
+    }
+    
     # Try getting products using ProductsEx
     try {
         $products = $installer.ProductsEx("", $WI_SID_EVERYONE, $WI_ALL_CONTEXTS)
@@ -225,8 +240,7 @@ function getSoftwareFromInstaller {
             $products = $installer.Products()
         }
         catch {
-            # Exit here, because we are unable to query the installed software
-            # Write-Output "Cannot list installed software"
+            Write-Output "Cannot list installed software: $_"
             return
         }
     }
@@ -260,7 +274,7 @@ function getSoftwareFromInstaller {
     }
 }
 
-function getUpdates {
+function GetUpdates {
     Write-Output "Node,Description,HotFixID,InstalledOn"
     $computerName = (Get-CimInstance Win32_ComputerSystem).Name
     Get-HotFix | ForEach-Object {
@@ -280,7 +294,7 @@ function EscapeRegistryPath {
     return $Path -replace '([]`*\?\[""])', '`$1'
 }
 
-function getSoftwareFromRegistry {
+function GetSoftwareFromRegistry {
     $regVars = @("DisplayName", "Publisher", "InstallLocation", "PSChildName", "DisplayVersion", "EstimatedSize", "InstallDate", "Language")
 
     foreach ($path in $regPaths) {
@@ -326,7 +340,7 @@ function getSoftwareFromRegistry {
     }
 }
 
-function recurseFolderForExecs {
+function RecurseFolderForExecs {
     param (
         [string]$folderPath
     )
@@ -345,74 +359,82 @@ function recurseFolderForExecs {
 
     # Recursively process subfolders
     Get-ChildItem -Path $folderPath -Directory | ForEach-Object {
-        recurseFolderForExecs $_.FullName
+        RecurseFolderForExecs $_.FullName
     }
 }
 
-function getSoftwareFromFilesystem {
+function GetSoftwareFromFilesystem {
     foreach ($path in $exePaths) {
         if (Test-Path -Path $path -PathType Container) {
-            recurseFolderForExecs $path
+            RecurseFolderForExecs $path
         }
     }
 }
 
+Initialize
+$result = CreateTimestamp
+Write-Output $result
+if ($result -eq "Exiting the script because timestamp is too young.") {
+    return
+}
+$timeUntil = GetTimeUntil
+
 # Processor
-startSection "win_cpuinfo" 58 $timeUntil
-getWMIObject "Win32_Processor" @("Name", "Manufacturer", "Caption", "DeviceID", "MaxClockSpeed", "AddressWidth", "L2CacheSize", "L3CacheSize", "Architecture", "NumberOfCores", "NumberOfLogicalProcessors", "CurrentVoltage", "Status")
+StartSection "win_cpuinfo" 58 $timeUntil
+GetWmiObject "Win32_Processor" @("Name", "Manufacturer", "Caption", "DeviceID", "MaxClockSpeed", "AddressWidth", "L2CacheSize", "L3CacheSize", "Architecture", "NumberOfCores", "NumberOfLogicalProcessors", "CurrentVoltage", "Status")
 
 # OS Version
-startSection "win_os" 124 $timeUntil
-getWMIObject2 "Win32_OperatingSystem" @("csname", "caption", "version", "OSArchitecture", "servicepackmajorversion", "ServicePackMinorVersion", "InstallDate")
+StartSection "win_os" 124 $timeUntil
+GetWmiObject2 "Win32_OperatingSystem" @("csname", "caption", "version", "OSArchitecture", "servicepackmajorversion", "ServicePackMinorVersion", "InstallDate")
 
 # Memory
-# startSection "win_memory" 58 $timeUntil
-# getWMIObject "Win32_PhysicalMemory" @("BankLabel","DeviceLocator","Capacity","Manufacturer","PartNumber","SerialNumber","Speed")
+# StartSection "win_memory" 58 $timeUntil
+# GetWmiObject "Win32_PhysicalMemory" @("BankLabel","DeviceLocator","Capacity","Manufacturer","PartNumber","SerialNumber","Speed")
 
 # BIOS
-startSection "win_bios" 58 $timeUntil
-getWMIObject "Win32_bios" @("Manufacturer", "Name", "SerialNumber", "InstallDate", "BIOSVersion", "ListOfLanguages", "PrimaryBIOS", "ReleaseDate", "SMBIOSBIOSVersion", "SMBIOSMajorVersion", "SMBIOSMinorVersion")
+StartSection "win_bios" 58 $timeUntil
+GetWmiObject "Win32_bios" @("Manufacturer", "Name", "SerialNumber", "InstallDate", "BIOSVersion", "ListOfLanguages", "PrimaryBIOS", "ReleaseDate", "SMBIOSBIOSVersion", "SMBIOSMajorVersion", "SMBIOSMinorVersion")
 
 # System
-startSection "win_system" 58 $timeUntil
-getWMIObject "Win32_SystemEnclosure" @("Manufacturer", "Name", "Model", "HotSwappable", "InstallDate", "PartNumber", "SerialNumber")
+StartSection "win_system" 58 $timeUntil
+GetWmiObject "Win32_SystemEnclosure" @("Manufacturer", "Name", "Model", "HotSwappable", "InstallDate", "PartNumber", "SerialNumber")
 
 # ComputerSystem
-startSection "win_computersystem" 58 $timeUntil
-getWMIObject "Win32_ComputerSystem" @("Manufacturer", "Name", "Model", "InstallDate")
+StartSection "win_computersystem" 58 $timeUntil
+GetWmiObject "Win32_ComputerSystem" @("Manufacturer", "Name", "Model", "InstallDate")
 
 # ComputerSystemProduct
-startSection "win_computersystemproduct" 58 $timeUntil
-getWMIObject "Win32_ComputerSystemProduct" @("UUID")
+StartSection "win_computersystemproduct" 58 $timeUntil
+GetWmiObject "Win32_ComputerSystemProduct" @("UUID")
 
 # Hard-Disk
-startSection "win_disks" 58 $timeUntil
-getWMIObject "Win32_diskDrive" @("Manufacturer", "InterfaceType", "Model", "Name", "SerialNumber", "Size", "MediaType", "Signature")
+StartSection "win_disks" 58 $timeUntil
+GetWmiObject "Win32_diskDrive" @("Manufacturer", "InterfaceType", "Model", "Name", "SerialNumber", "Size", "MediaType", "Signature")
 
 # Graphics Adapter
-startSection "win_video" 58 $timeUntil
-getWMIObject "Win32_VideoController" @("Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported", "AdapterRAM")
+StartSection "win_video" 58 $timeUntil
+GetWmiObject "Win32_VideoController" @("Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported", "AdapterRAM")
 
 # Network Adapter
-startSection "win_networkadapter" 58 $timeUntil
-getNetworkAdapter @("Name", "ServiceName", "MACAddress", "AdapterType", "DeviceID", "NetworkAddresses", "Speed")
+StartSection "win_networkadapter" 58 $timeUntil
+GetNetworkAdapter @("Name", "ServiceName", "MACAddress", "AdapterType", "DeviceID", "NetworkAddresses", "Speed")
 
 # Route Table
-startSection "win_ip_r" 124 $timeUntil
-getRouteTable
+StartSection "win_ip_r" 124 $timeUntil
+GetRouteTable
 
 # Installed Software
-startSection "win_wmi_software" 31 $timeUntil
-getSoftwareFromInstaller @("ProductName", "Publisher", "VersionString", "InstallDate", "Language")
+StartSection "win_wmi_software" 31 $timeUntil
+GetSoftwareFromInstaller @("ProductName", "Publisher", "VersionString", "InstallDate", "Language")
 
 # Windows Updates
-startSection "win_wmi_updates" 44 $timeUntil
-getUpdates
+StartSection "win_wmi_updates" 44 $timeUntil
+GetUpdates
 
 # Search Registry
-startSection "win_reg_uninstall" 31 $timeUntil
-getSoftwareFromRegistry
+StartSection "win_reg_uninstall" 31 $timeUntil
+GetSoftwareFromRegistry
 
 # Search exes
-startSection "win_exefiles" 124 $timeUntil
-getSoftwareFromFilesystem
+StartSection "win_exefiles" 124 $timeUntil
+GetSoftwareFromFilesystem

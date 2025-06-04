@@ -36,11 +36,11 @@ def test_werks_available(werks_page: Werks) -> None:
 
 
 def test_navigate_to_werks(werks_page: Werks) -> None:
-    # validate presence of dropdown buttons
+    logger.info("Validate presence of dropdown buttons")
     for button_name in werks_page.dropdown_buttons:
         expect(werks_page.main_area.dropdown_button(button_name)).to_be_visible()
 
-    # validate 'Filter' button works
+    logger.info("Validate 'Filter' button works")
     werks_page.get_link("Filter").click()
     expect(
         werks_page.main_area.locator().get_by_role(role="heading", name="Filter")
@@ -48,12 +48,12 @@ def test_navigate_to_werks(werks_page: Werks) -> None:
     expect(werks_page.apply_filter).to_have_count(1)
     expect(werks_page.reset_filter).to_have_count(1)
 
-    # validate 'Acnowledge all' button is disabled
+    logger.info("Validate 'Acnowledge all' button is disabled")
     # NOTE: expect(...).to_be_enabled() does not work for web-element.
     with pytest.raises(PWTimeoutError):
         werks_page.get_link("Acknowledge all").click()
 
-    # validate presence of Werks
+    logger.info("Validate presence of Werks")
     max_number_of_werks_displayed = 100 * werks_page.tables_of_listed_versions().count()
     number_of_werks_displayed = werks_page.get_link("#", exact=False).count()
     assert number_of_werks_displayed > 0, "Checkmk site does not display any werks!"

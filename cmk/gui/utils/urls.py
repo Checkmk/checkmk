@@ -453,6 +453,7 @@ class DocReference(Enum):
     PIGGYBACK = "piggyback"
     PROMETHEUS = "monitoring_prometheus"
     REGEXES = "regexes"
+    REPLACE_AGENT_SIGNATURE_KEYS = "agent_deployment#replacing_signature_keys"
     REST_API = "rest_api"
     REPORTS = "reporting"
     SLA_CONFIGURATION = "sla"

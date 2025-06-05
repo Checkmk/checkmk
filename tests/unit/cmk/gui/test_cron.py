@@ -34,6 +34,7 @@ def test_registered_jobs() -> None:
             "execute_licensing_online_verification_background_job",
             "execute_host_label_sync_job",
             "replace_builtin_signature_cert",
+            "execute_signing_key_validation_job",
         ]
 
     found_jobs = sorted(set(f.__name__ for f in cron.multisite_cronjobs))

@@ -23,7 +23,7 @@ from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 dump_path_site = Path("var/check_mk/dumps")
-sleep_time = 5  # seconds
+dcd_interval = 5  # seconds
 
 
 class CheckModes(IntEnum):
@@ -534,7 +534,7 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         dcd_id=dcd_id,
         title="DCD Connector for piggyback hosts",
         host_attributes=host_attributes,
-        interval=sleep_time,
+        interval=dcd_interval,
         validity_period=60,
         max_cache_age=60,
         delete_hosts=True,
@@ -587,7 +587,7 @@ def execute_dcd_cycle(site: Site, expected_pb_hosts: int = 0) -> None:
         return False
 
     max_count = 30
-    interval = 5
+    interval = dcd_interval
 
     try:
         wait_until(

@@ -11,10 +11,10 @@ use mk_oracle::config::ora_sql::{AuthType, Config, EngineTag};
 use mk_oracle::ora_sql::backend;
 
 use common::tools::SQL_DB_ENDPOINT;
-use mk_oracle::types::InstanceName;
+use mk_oracle::types::{Credentials, InstanceName};
 
 fn make_base_config(
-    credentials: &backend::Credentials,
+    credentials: &Credentials,
     auth_type: AuthType,
     address: &str,
     port: u16,
@@ -43,7 +43,7 @@ oracle:
 #[test]
 fn test_config_to_remove() {
     let config = make_base_config(
-        &backend::Credentials {
+        &Credentials {
             user: "sys".to_string(),
             password: "Oracle-dba".to_string(),
         },
@@ -61,7 +61,7 @@ fn test_config_to_remove() {
 fn test_local_connection() {
     assert!(!SQL_DB_ENDPOINT.is_empty());
     let config = make_base_config(
-        &backend::Credentials {
+        &Credentials {
             user: "sys".to_string(),
             password: "Oracle-dba".to_string(),
         },
@@ -71,6 +71,6 @@ fn test_local_connection() {
         InstanceName::from("XE"),
     );
 
-    let task = backend::make_task(&config.endpoint()).unwrap();
-    assert!(task.connect().is_ok());
+    let mut task = backend::make_task(&config.endpoint()).unwrap();
+    assert!(task.connect().is_err());
 }

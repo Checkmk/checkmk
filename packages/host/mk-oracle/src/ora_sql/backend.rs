@@ -3,64 +3,94 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, ora_sql::AuthType, ora_sql::Endpoint, ora_sql::EngineTag};
-use crate::types::{HostName, PointName, Port};
+use crate::ora_sql::types::Target;
+use crate::types::{Credentials, PointName};
+use anyhow::Context;
 use anyhow::Result;
 
-use crate::config::ora_sql::Authentication;
-// use oracle::{Connection, Error};
+use oracle::Connection;
 
 #[derive(Debug)]
-pub struct StdEngine {}
+pub struct StdEngine {
+    connection: Option<Connection>,
+}
+
+trait OraDbEngine {
+    fn connect(&mut self, target: &Target) -> Result<()>;
+    //    where
+    //      Self: Sized;
+}
+
+impl OraDbEngine for StdEngine {
+    fn connect(&mut self, _target: &Target) -> Result<()> {
+        if self.connection.is_some() {
+            return Ok(());
+        }
+        // Here we would normally establish a connection to the database.
+        // For now, we just simulate a successful connection.
+        self.connection = Some(Connection::connect(
+            "user",
+            "password",
+            "localhost:1521/XE",
+        )?);
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 pub struct SqlPlusEngine {}
 
-#[derive(Debug)]
-pub struct JdbcEngine {}
-
-#[derive(Debug)]
-pub enum Engine {
-    Std(StdEngine),
-    SqlPlus(SqlPlusEngine),
-    Jdbc(JdbcEngine),
+impl OraDbEngine for SqlPlusEngine {
+    fn connect(&mut self, _target: &Target) -> Result<()> {
+        anyhow::bail!("Sql*Plus engine is not implemented yet")
+    }
 }
 
 #[derive(Debug)]
-pub struct Target {
-    pub host: HostName,
-    pub point: PointName,
-    pub port: Port,
-    pub auth: Authentication,
+pub struct JdbcEngine {}
+impl OraDbEngine for JdbcEngine {
+    fn connect(&mut self, _target: &Target) -> Result<()> {
+        anyhow::bail!("Jdbc engine is not implemented yet")
+    }
+}
+
+#[derive(Debug)]
+enum EngineType {
+    Std,
+    SqlPlus,
+    Jdbc,
+}
+
+impl EngineType {
+    fn create_engine(&self) -> Box<dyn OraDbEngine> {
+        match self {
+            EngineType::Std => Box::new(StdEngine { connection: None }),
+            EngineType::SqlPlus => Box::new(SqlPlusEngine {}),
+            EngineType::Jdbc => Box::new(JdbcEngine {}),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
 pub struct TaskBuilder {
     target: Option<Target>,
-    engine: Option<Engine>,
+    engine_type: Option<EngineType>,
     database: Option<String>,
 }
 
-#[derive(Debug)]
 pub struct Task {
     target: Target,
-    engine: Engine,
+    engine: Box<dyn OraDbEngine>,
     _database: Option<String>,
 }
 
 impl Task {
-    pub fn connect(&self) -> Result<()> {
-        match &self.engine {
-            Engine::Std(_) => Ok(()),
-            Engine::SqlPlus(_) => anyhow::bail!("Sql*Plus engine is not implemented yet"),
-            Engine::Jdbc(_) => anyhow::bail!("JDBC engine is not implemented yet"),
-        }
+    pub fn connect(&mut self) -> Result<()> {
+        self.engine.connect(&self.target)?;
+        Ok(())
     }
     pub fn target(&self) -> &Target {
         &self.target
-    }
-
-    pub fn engine(&self) -> &Engine {
-        &self.engine
     }
 
     pub fn database(&self) -> Option<&String> {
@@ -88,11 +118,11 @@ impl TaskBuilder {
         self
     }
 
-    pub fn engine(mut self, engine_tag: &EngineTag) -> Self {
-        self.engine = Some(match engine_tag {
-            EngineTag::Std | EngineTag::Auto => Engine::Std(StdEngine {}),
-            EngineTag::SqlPlus => Engine::SqlPlus(SqlPlusEngine {}),
-            EngineTag::Jdbc => Engine::Jdbc(JdbcEngine {}),
+    pub fn engine_type(mut self, engine_tag: &EngineTag) -> Self {
+        self.engine_type = Some(match engine_tag {
+            EngineTag::Std | EngineTag::Auto => EngineType::Std,
+            EngineTag::SqlPlus => EngineType::SqlPlus,
+            EngineTag::Jdbc => EngineType::Jdbc,
         });
         self
     }
@@ -100,8 +130,9 @@ impl TaskBuilder {
     pub fn build(self) -> Result<Task> {
         Ok(Task {
             engine: self
-                .engine
-                .ok_or_else(|| anyhow::anyhow!("Engine not defined"))?,
+                .engine_type
+                .map(|e| e.create_engine())
+                .context("Engine is not defined")?,
             target: self
                 .target
                 .ok_or_else(|| anyhow::anyhow!("Target is absent"))?,
@@ -110,16 +141,10 @@ impl TaskBuilder {
     }
 }
 
-#[derive(Debug)]
-pub struct Credentials {
-    pub user: String,
-    pub password: String,
-}
-
 pub fn make_task(endpoint: &Endpoint) -> Result<Task> {
     TaskBuilder::new()
         .target(endpoint)
-        .engine(endpoint.conn().engine_tag())
+        .engine_type(endpoint.conn().engine_tag())
         .build()
 }
 

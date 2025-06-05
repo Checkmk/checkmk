@@ -89,3 +89,9 @@ pub struct InstanceAlias(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct HostName(String);
+
+#[derive(Debug)]
+pub struct Credentials {
+    pub user: String,
+    pub password: String,
+}

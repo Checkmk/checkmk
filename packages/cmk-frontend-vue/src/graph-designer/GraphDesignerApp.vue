@@ -375,7 +375,8 @@ function generateOperation(graphLine: Operation): Operation {
     id: id++,
     type: graphLine.type,
     color: graphLine.color,
-    title: graphLine.title,
+    auto_title: graphLine.auto_title,
+    custom_title: graphLine.custom_title,
     visible: graphLine.visible,
     line_type: graphLine.line_type,
     mirrored: graphLine.mirrored,
@@ -390,7 +391,8 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         id: id++,
         type: graphLine.type,
         color: graphLine.color,
-        title: graphLine.title,
+        auto_title: graphLine.auto_title,
+        custom_title: graphLine.custom_title,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -404,7 +406,8 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         id: id++,
         type: graphLine.type,
         color: graphLine.color,
-        title: graphLine.title,
+        auto_title: graphLine.auto_title,
+        custom_title: graphLine.custom_title,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -418,7 +421,8 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         id: id++,
         type: graphLine.type,
         color: graphLine.color,
-        title: graphLine.title,
+        auto_title: graphLine.auto_title,
+        custom_title: graphLine.custom_title,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -437,7 +441,8 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         id: id++,
         type: graphLine.type,
         color: graphLine.color,
-        title: graphLine.title,
+        auto_title: graphLine.auto_title,
+        custom_title: graphLine.custom_title,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -455,13 +460,13 @@ function deleteGraphLine(graphLine: GraphLine) {
   graphLines.value = graphLines.value.filter((l) => l !== graphLine)
 }
 
-function updateGraphLineTitle(graphLine: GraphLine) {
+function updateGraphLineAutoTitle(graphLine: GraphLine) {
   switch (graphLine.type) {
     case 'constant':
-      graphLine.title = `${props.i18n.topics.constant} ${graphLine.value}`
+      graphLine.auto_title = `${props.i18n.topics.constant} ${graphLine.value}`
       break
     case 'transformation':
-      graphLine.title = `${props.i18n.graph_operations.percentile} ${graphLine.percentile} ${props.i18n.graph_lines.of} ${graphLine.operand.title}`
+      graphLine.auto_title = `${props.i18n.graph_operations.percentile} ${graphLine.percentile} ${props.i18n.graph_lines.of} ${graphLine.operand.auto_title}`
   }
 }
 
@@ -494,7 +499,8 @@ async function addMetric() {
       id: id++,
       type: 'metric',
       color: color,
-      title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
+      auto_title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -522,7 +528,8 @@ async function addScalar() {
       id: id++,
       type: 'scalar',
       color: color,
-      title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
+      auto_title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -544,7 +551,8 @@ function addConstant() {
     id: id++,
     type: 'constant',
     color: '#ff0000',
-    title: `${props.i18n.topics.constant} ${dataConstant.value}`,
+    auto_title: `${props.i18n.topics.constant} ${dataConstant.value}`,
+    custom_title: '',
     visible: true,
     line_type: 'line',
     mirrored: false,
@@ -582,7 +590,8 @@ function applySum() {
       id: id++,
       type: 'sum',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.sum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.sum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -599,7 +608,8 @@ function applyProduct() {
       id: id++,
       type: 'product',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.product} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.product} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -616,7 +626,8 @@ function applyDifference() {
       id: id++,
       type: 'difference',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.difference} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.difference} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -633,7 +644,8 @@ function applyFraction() {
       id: id++,
       type: 'fraction',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.fraction} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.fraction} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -650,7 +662,8 @@ function applyAverage() {
       id: id++,
       type: 'average',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.average} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.average} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -667,7 +680,8 @@ function applyMinimum() {
       id: id++,
       type: 'minimum',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.minimum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.minimum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -684,7 +698,8 @@ function applyMaximum() {
       id: id++,
       type: 'maximum',
       color: firstOperand.color,
-      title: `${props.i18n.graph_operations.maximum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      auto_title: `${props.i18n.graph_operations.maximum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -701,7 +716,8 @@ function applyTransformation() {
       id: id++,
       type: 'transformation',
       color: '#ff0000',
-      title: `${props.i18n.graph_operations.percentile} ${dataTransformation.value} ${props.i18n.graph_lines.of} ${selectedGraphLine.title}`,
+      auto_title: `${props.i18n.graph_operations.percentile} ${dataTransformation.value} ${props.i18n.graph_lines.of} ${selectedGraphLine.auto_title}`,
+      custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -749,7 +765,8 @@ const graphDesignerContentAsJson = computed(() => {
         <th class="header_buttons"></th>
         <th class="header_buttons">{{ props.i18n.graph_lines.actions }}</th>
         <th class="header_narrow">{{ props.i18n.graph_lines.color }}</th>
-        <th class="header_nobr narrow">{{ props.i18n.graph_lines.title }}</th>
+        <th class="header_nobr narrow">{{ props.i18n.graph_lines.auto_title }}</th>
+        <th class="header_nobr narrow">{{ props.i18n.graph_lines.custom_title }}</th>
         <th class="header_buttons">{{ props.i18n.graph_lines.visible }}</th>
         <th class="header_narrow">{{ props.i18n.graph_lines.line_style }}</th>
         <th class="header_buttons">{{ props.i18n.graph_lines.mirrored }}</th>
@@ -803,7 +820,8 @@ const graphDesignerContentAsJson = computed(() => {
           />
         </td>
         <td class="narrow"><CmkColorPicker v-model:data="graphLine.color" /></td>
-        <td class="nobr narrow"><FormTitle v-model:data="graphLine.title" /></td>
+        <td class="nobr narrow">{{ graphLine.auto_title }}</td>
+        <td class="nobr narrow"><FormTitle v-model:data="graphLine.custom_title" /></td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
         <td class="narrow">
           <FormLineType v-model:data="graphLine.line_type" :spec="specLineType" />
@@ -852,7 +870,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:data="graphLine.value"
               :spec="specConstant"
               :backend-validation="backendValidationConstant"
-              @update:data="updateGraphLineTitle(graphLine)"
+              @update:data="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
           <div v-else-if="graphLine.type === 'transformation'">
@@ -860,7 +878,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:data="graphLine.percentile"
               :spec="specTransformation"
               :backend-validation="backendValidationTransformation"
-              @update:data="updateGraphLineTitle(graphLine)"
+              @update:data="updateGraphLineAutoTitle(graphLine)"
             />
             {{ props.i18n.graph_lines.of }}
             <br />
@@ -871,7 +889,7 @@ const graphDesignerContentAsJson = computed(() => {
               }"
               class="color"
             ></div>
-            {{ graphLine.operand.title }}
+            {{ graphLine.operand.auto_title }}
           </div>
           <div v-else-if="isOperation(graphLine)">
             {{ formulaOf(graphLine) }}
@@ -880,7 +898,7 @@ const graphDesignerContentAsJson = computed(() => {
                 :style="{ 'background-color': operand.color, 'border-color': operand.color }"
                 class="color"
               ></div>
-              {{ operand.title }}
+              {{ operand.auto_title }}
             </div>
           </div>
         </td>

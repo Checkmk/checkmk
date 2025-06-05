@@ -12,7 +12,8 @@
 export type GraphLine = Metric | Scalar | Constant | Operation | Transformation;
 export type GraphLineId = number;
 export type GraphLineColor = string;
-export type GraphLineTitle = string;
+export type GraphLineAutoTitle = string;
+export type GraphLineCustomTitle = string;
 export type GraphLineVisible = boolean;
 export type GraphLineLineType = "line" | "area" | "stack";
 export type GraphLineMirrored = boolean;
@@ -31,7 +32,8 @@ export interface Metric {
   id: GraphLineId;
   type: "metric";
   color: GraphLineColor;
-  title: GraphLineTitle;
+  auto_title: GraphLineAutoTitle;
+  custom_title: GraphLineCustomTitle;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -44,7 +46,8 @@ export interface Scalar {
   id: GraphLineId;
   type: "scalar";
   color: GraphLineColor;
-  title: GraphLineTitle;
+  auto_title: GraphLineAutoTitle;
+  custom_title: GraphLineCustomTitle;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -57,7 +60,8 @@ export interface Constant {
   id: GraphLineId;
   type: "constant";
   color: GraphLineColor;
-  title: GraphLineTitle;
+  auto_title: GraphLineAutoTitle;
+  custom_title: GraphLineCustomTitle;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -67,7 +71,8 @@ export interface Operation {
   id: GraphLineId;
   type: "sum" | "product" | "difference" | "fraction" | "average" | "minimum" | "maximum";
   color: GraphLineColor;
-  title: GraphLineTitle;
+  auto_title: GraphLineAutoTitle;
+  custom_title: GraphLineCustomTitle;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -77,7 +82,8 @@ export interface Transformation {
   id: GraphLineId;
   type: "transformation";
   color: GraphLineColor;
-  title: GraphLineTitle;
+  auto_title: GraphLineAutoTitle;
+  custom_title: GraphLineCustomTitle;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -120,7 +126,8 @@ export interface I18NGraphLines {
   maximum: string;
   actions: string;
   color: string;
-  title: string;
+  auto_title: string;
+  custom_title: string;
   visible: string;
   line_style: string;
   line: string;

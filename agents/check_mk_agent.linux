@@ -1691,7 +1691,7 @@ _run_cached_internal() {
     if ${DISABLE_CACHING:-false}; then
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
-        $@
+        eval $@
         return
     fi
 

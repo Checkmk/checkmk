@@ -10,6 +10,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
+from dateutil.relativedelta import relativedelta
+
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -604,11 +606,13 @@ def generate_key(
 ) -> Key:
     # Note: Verification of the signatures makes assumptions about the key (RSA) and the padding
     # scheme (PKCS1v15). Make sure this is adjusted before changing it here.
+    # Both agent signatures and backup encryption currently assume RSA keys.
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
         organization=f"Checkmk Site {site_id}",
         organizational_unit=user_id,
         key_size=key_size,
+        expiry=relativedelta(years=10),
     )
     return Key(
         certificate=key_pair.certificate.dump_pem().str,

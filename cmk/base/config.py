@@ -525,10 +525,19 @@ _TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], Non
 
 
 class ConfiguredIPLookup(Generic[_TErrHandler]):
-    def __init__(self, config_cache: ConfigCache, *, error_handler: _TErrHandler) -> None:
-        # TODO: pass ip_lookup_config + clusters instead of config_cache
-        self._config_cache = config_cache
+    def __init__(
+        self,
+        lookup: Callable[
+            [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+            HostAddress | None,
+        ],
+        *,
+        allow_empty: Container[HostName],
+        error_handler: _TErrHandler,
+    ) -> None:
+        self._lookup: Final = lookup
         self.error_handler: Final[_TErrHandler] = error_handler
+        self._allow_empty: Final = allow_empty
 
     def __call__(
         self,
@@ -536,11 +545,9 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> HostAddress | None:
         try:
-            return lookup_ip_address(
-                self._config_cache.ip_lookup_config(), host_name, family=family
-            )
+            return self._lookup(host_name, family)
         except Exception as e:
-            if host_name in self._config_cache.hosts_config.clusters:
+            if host_name in self._allow_empty:
                 return HostAddress("")
             self.error_handler(host_name, e)
 
@@ -1413,6 +1420,21 @@ def lookup_mgmt_board_ip_address(
         )
     except MKIPAddressLookupError:
         return None
+
+
+def make_lookup_ip_address(
+    ip_config: ip_lookup.IPLookupConfig,
+) -> Callable[
+    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None],
+    HostAddress,
+]:
+    def _wrapped_lookup(
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
+    ) -> HostAddress:
+        return lookup_ip_address(ip_config, host_name, family=family)
+
+    return _wrapped_lookup
 
 
 def lookup_ip_address(
@@ -4201,7 +4223,11 @@ class FetcherFactory:
         cmdline = self._make_program_commandline(
             host_name,
             ip_address,
-            ConfiguredIPLookup(self._config_cache, error_handler=handle_ip_lookup_failure),
+            ConfiguredIPLookup(
+                make_lookup_ip_address(self._config_cache.ip_lookup_config()),
+                allow_empty=self._config_cache.hosts_config.clusters,
+                error_handler=handle_ip_lookup_failure,
+            ),
             program,
         )
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())

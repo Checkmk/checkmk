@@ -96,7 +96,9 @@ def _make_sources(
             ipaddress,
             password_store_file=Path("/pw/store"),
             passwords={},
-            ip_address_of=ConfiguredIPLookup(config_cache, error_handler=handle_ip_lookup_failure),
+            ip_address_of=ConfiguredIPLookup(
+                lambda *a: ipaddress, allow_empty=(), error_handler=handle_ip_lookup_failure
+            ),
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

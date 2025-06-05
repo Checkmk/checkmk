@@ -69,7 +69,7 @@ def test_do_create_config_nagios(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
+        lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
     )
     core_config.do_create_config(
         create_core("nagios"),
@@ -95,7 +95,7 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_address_of = config.ConfiguredIPLookup(
-        core_scenario, error_handler=ip_lookup.CollectFailedHosts()
+        lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
     )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
@@ -136,7 +136,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     expected_attrs = {
         "_ADDRESSES_4": "",
         "_ADDRESSES_6": "",
-        "_ADDRESS_4": "0.0.0.0",
+        "_ADDRESS_4": "1.2.3.4",
         "_ADDRESS_6": "",
         "_ADDRESS_FAMILY": "4",
         "_FILENAME": "/wato/hosts.mk",
@@ -153,7 +153,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
         "__LABEL_cmk/site": "unit",
         "__LABELSOURCE_cmk/site": "discovered",
         "__LABELSOURCE_ding": "explicit",
-        "address": "0.0.0.0",
+        "address": "1.2.3.4",
         "alias": "test-host",
     }
 
@@ -165,7 +165,11 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     assert (
         config_cache.get_host_attributes(
             HostName("test-host"),
-            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
+            config.ConfiguredIPLookup(
+                lambda *a: HostAddress("1.2.3.4"),
+                allow_empty=(),
+                error_handler=config.handle_ip_lookup_failure,
+            ),
         )
         == expected_attrs
     )
@@ -305,7 +309,9 @@ def test_template_translation(
             hostname,
             ipaddress,
             template,
-            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
+            config.ConfiguredIPLookup(
+                lambda *a: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
+            ),
         )
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
     )

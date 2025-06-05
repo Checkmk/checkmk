@@ -1507,7 +1507,7 @@ def test_commandline_discovery(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            lambda *a: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
         ),
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,

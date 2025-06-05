@@ -689,7 +689,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 passwords=cmk.utils.password_store.load(pending_passwords_file),
                 password_store_file=pending_passwords_file,
                 ip_address_of=ConfiguredIPLookup(
-                    config_cache, error_handler=handle_ip_lookup_failure
+                    config.make_lookup_ip_address(ip_lookup_config),
+                    allow_empty=hosts_config.clusters,
+                    error_handler=handle_ip_lookup_failure,
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
@@ -1376,8 +1378,8 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
 
+    hosts_config = config_cache.hosts_config
     if hostnames is None:
-        hosts_config = config_cache.hosts_config
         hostnames = sorted(
             {
                 hn
@@ -1400,7 +1402,9 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             cmk.utils.password_store.pending_password_store_path()
         ),
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         service_depends_on=config.ServiceDependsOn(
             tag_list=config_cache.tag_list,
@@ -1461,7 +1465,9 @@ def mode_update() -> None:
 
     hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        config.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
+        allow_empty=hosts_config.clusters,
+        error_handler=ip_lookup.CollectFailedHosts(),
     )
 
     bake_on_restart = _make_configured_bake_on_restart(loading_result, hosts_config.hosts)
@@ -1532,7 +1538,9 @@ def mode_restart(args: Sequence[HostName]) -> None:
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        config.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
+        allow_empty=hosts_config.clusters,
+        error_handler=ip_lookup.CollectFailedHosts(),
     )
 
     cmk.base.core.do_restart(
@@ -1594,7 +1602,9 @@ def mode_reload(args: Sequence[HostName]) -> None:
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        config.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
+        allow_empty=hosts_config.clusters,
+        error_handler=ip_lookup.CollectFailedHosts(),
     )
 
     cmk.base.core.do_reload(
@@ -1914,7 +1924,9 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=config_cache.hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
@@ -2233,7 +2245,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -2422,7 +2436,9 @@ def run_checking(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -2651,7 +2667,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
@@ -2904,7 +2922,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=config_cache.hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,

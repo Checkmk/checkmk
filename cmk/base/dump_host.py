@@ -48,6 +48,7 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
+    make_lookup_ip_address,
 )
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
@@ -276,7 +277,9 @@ def dump_host(
                 password_store_file=used_password_store,
                 passwords=passwords,
                 ip_address_of=ConfiguredIPLookup(
-                    config_cache, error_handler=handle_ip_lookup_failure
+                    make_lookup_ip_address(ip_lookup_config),
+                    allow_empty=config_cache.hosts_config.clusters,
+                    error_handler=handle_ip_lookup_failure,
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),

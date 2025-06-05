@@ -145,7 +145,9 @@ def inventory_as_check(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
+            config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
         ),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,

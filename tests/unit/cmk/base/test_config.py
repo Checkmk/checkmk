@@ -385,7 +385,11 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(localhost) is IPStackConfig.IPv4
 
-    ip_address_of = ConfiguredIPLookup(config_cache, error_handler=handle_ip_lookup_failure)
+    ip_address_of = ConfiguredIPLookup(
+        config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=handle_ip_lookup_failure,
+    )
 
     assert (
         ip_address_of(

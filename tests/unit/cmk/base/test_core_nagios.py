@@ -324,7 +324,9 @@ def test_create_nagios_host_spec(
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
     )
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
@@ -352,7 +354,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        lambda h, f: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
     )
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
@@ -987,7 +989,9 @@ def test_create_nagios_config_commands(
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=config.handle_ip_lookup_failure
+        lambda h, f: HostAddress("127.0.0.1"),
+        allow_empty=(),
+        error_handler=config.handle_ip_lookup_failure,
     )
 
     hostname = HostName("my_host")

@@ -122,7 +122,13 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_preserving_link,
+    folder_tree,
+    FolderSiteStats,
+    make_action_link,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import (
     validate_piggyback_hub_config,
@@ -873,6 +879,10 @@ class ModeDistributedMonitoring(WatoMode):
         if delete_id and transactions.check_transaction():
             return self._action_delete(SiteId(delete_id))
 
+        delete_folders_id = request.get_ascii_input("_delete_folders")
+        if delete_folders_id and transactions.check_transaction():
+            return self._action_delete_folders(SiteId(delete_folders_id))
+
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
             return self._action_delete_broker_connection(ConnectionId(delete_connection_id))
@@ -915,7 +925,9 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in folder_tree().root_folder().all_site_ids():
+        folder_site_stats = FolderSiteStats.build(folder_tree().root_folder())
+
+        if delete_id in folder_site_stats.hosts.keys():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,
@@ -931,11 +943,41 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(
                 None,
                 _(
-                    "You cannot delete this connection. It has folders/hosts "
+                    "You cannot delete this connection. It still has hosts related to the site "
                     'assigned to it. You can use the <a href="%s">host '
                     "search</a> to get a list of the hosts."
                 )
                 % search_url,
+            )
+
+        folders_related_to_site = folder_site_stats.folders.get(delete_id, set())
+        empty_folders = {folder for folder in folders_related_to_site if folder.is_empty()}
+        non_empty_folders = folders_related_to_site - empty_folders
+
+        if non_empty_folders:
+            raise MKUserError(
+                None,
+                _(
+                    "You cannot delete this connection. It still has non-empty "
+                    "folders/hosts assigned to it: %s"
+                    "You need to first navigate to each folder and move/remove the nested "
+                    "folders/hosts."
+                )
+                % self._build_urls_for_folders(non_empty_folders),
+            )
+
+        if empty_folders:
+            delete_folders_url = makeactionuri_contextless(
+                request, transactions, [("_delete_folders", delete_id), ("mode", "sites")]
+            )
+            raise MKUserError(
+                None,
+                _(
+                    "You cannot delete this connection. It still has empty folders assigned "
+                    "to it: %s"
+                    'If you want us to remove these automatically, click <a href="%s">delete</a>.'
+                )
+                % (self._build_urls_for_folders(empty_folders), delete_folders_url),
             )
 
         self._site_mgmt.delete_site(
@@ -943,6 +985,20 @@ class ModeDistributedMonitoring(WatoMode):
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
         )
+        return redirect(mode_url("sites"))
+
+    def _action_delete_folders(self, delete_id: SiteId) -> ActionResult:
+        folder_site_stats = FolderSiteStats.build(folder_tree().root_folder())
+        folders_related_to_site = folder_site_stats.folders.get(delete_id, set())
+        empty_folders = {folder for folder in folders_related_to_site if folder.is_empty()}
+
+        if not empty_folders:
+            raise MKUserError(None, _("No empty folders for %s available to delete.") % delete_id)
+
+        for empty_folder in empty_folders:
+            if (parent := empty_folder.parent()) is not None:
+                parent.delete_subfolder(empty_folder.name())
+
         return redirect(mode_url("sites"))
 
     def _action_delete_broker_connection(self, delete_connection_id: ConnectionId) -> ActionResult:
@@ -1118,6 +1174,14 @@ class ModeDistributedMonitoring(WatoMode):
                     self._show_basic_settings_connection(table, conn_id, connection)
 
         html.javascript("cmk.sites.fetch_site_status();")
+
+    def _build_url_for_folder(self, folder: Folder) -> str:
+        url = makeuri_contextless(request, [("folder", folder.path()), ("mode", "folder")])
+        return f"<a href='{url}'>{folder.path()}</a>"
+
+    def _build_urls_for_folders(self, folders: Iterable[Folder]) -> str:
+        items = "".join(f"<li>{self._build_url_for_folder(folder)}</li>" for folder in folders)
+        return f"<ul>{items}</ul>"
 
     def _show_buttons_connection(self, table: Table, connection_id: str) -> None:
         table.cell(_("Actions"), css=["buttons"])

@@ -15,12 +15,13 @@ import shutil
 import subprocess
 import time
 import uuid
+from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Self, TypedDict
 
 from redis.client import Pipeline
 
@@ -3951,6 +3952,29 @@ def find_usages_of_contact_group_in_hosts_and_folders(
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
+
+
+@dataclass(frozen=True)
+class FolderSiteStats:
+    hosts: dict[SiteId, set[Host]]
+    folders: dict[SiteId, set[Folder]]
+
+    @classmethod
+    def build(cls, root: Folder) -> Self:
+        hosts: dict[SiteId, set[Host]] = defaultdict(set)
+        folders: dict[SiteId, set[Folder]] = defaultdict(set)
+        cls._walk_folder_tree(root, hosts, folders)
+        return cls(hosts, folders)
+
+    @staticmethod
+    def _walk_folder_tree(
+        folder: Folder, hosts: dict[SiteId, set[Host]], folders: dict[SiteId, set[Folder]]
+    ) -> None:
+        folders[folder.site_id()].add(folder)
+        for host in folder.hosts().values():
+            hosts[host.site_id()].add(host)
+        for subfolder in folder.subfolders():
+            FolderSiteStats._walk_folder_tree(subfolder, hosts, folders)
 
 
 @dataclass(frozen=True)

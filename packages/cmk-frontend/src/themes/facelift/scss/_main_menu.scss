@@ -553,6 +553,15 @@
         background-color: $color-state-2-background;
         border-radius: 8px;
       }
+      span#changes_label {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        padding: 2px 5px 1px;
+        color: $font-color-black;
+        background-color: $color-state-1-background;
+        border-radius: 8px;
+      }
     }
   }
 

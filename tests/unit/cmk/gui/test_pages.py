@@ -64,6 +64,7 @@ def test_registered_pages() -> None:
         "ajax_load_bi_aggregation_layout",
         "ajax_delete_bi_aggregation_layout",
         "ajax_fetch_topology",
+        "ajax_sidebar_get_pending_changes",
         "automation_login",
         "bi_map",
         "bi_render_tree",

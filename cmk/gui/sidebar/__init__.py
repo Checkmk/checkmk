@@ -71,6 +71,7 @@ from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,
+    PageAjaxSidebarActivateMenu,
     PageAjaxSidebarGetMessages,
     PageAjaxSidebarGetUnackIncompWerks,
 )
@@ -99,6 +100,9 @@ def register(
     page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages))
     page_registry.register(
         PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks)
+    )
+    page_registry.register(
+        PageEndpoint("ajax_sidebar_get_pending_changes", PageAjaxSidebarActivateMenu)
     )
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(

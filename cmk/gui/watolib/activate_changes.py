@@ -18,6 +18,7 @@ import subprocess
 import tarfile
 import time
 import traceback
+from collections import Counter
 from collections.abc import (
     Callable,
     Collection,
@@ -30,6 +31,7 @@ from collections.abc import (
 from contextlib import contextmanager, suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from html import unescape
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
@@ -1063,6 +1065,36 @@ def activate_site_changes(
             return None
 
 
+class ActivationSitesSummary(TypedDict):
+    site_id: str
+    site_name: str
+    version: str
+    changes: int
+    online_status: Literal[
+        "online",
+        "disabled",
+        "down",
+        "unreach",
+        "dead",
+        "waiting",
+        "missing",
+        "unknown",
+    ]
+
+
+class PendingChangesSummary(TypedDict):
+    change_id: str
+    change_text: str
+    user: str
+    time: float
+    which_sites: str
+
+
+class ActivationChangesSummary(TypedDict):
+    sites: list[ActivationSitesSummary]
+    pending_changes: list[PendingChangesSummary]
+
+
 class ActivateChanges:
     def __init__(self) -> None:
         # Changes grouped by site
@@ -1269,6 +1301,53 @@ class ActivateChanges:
 
     def get_changes_to_activate(self, site_id: SiteId) -> Sequence[ChangeSpec]:
         return self._changes_by_site_until[site_id]
+
+    def get_all_data_required_for_activation_popout(self) -> ActivationChangesSummary:
+        self.load()
+
+        # Count changes per affected site
+        site_change_counter: Counter = Counter()
+        for _change_id, change in self._all_changes:
+            for site in change["affected_sites"]:
+                site_change_counter[site] += 1
+
+        def _get_site_version(site_id: SiteId) -> str:
+            site_status = sites_states().get(site_id, SiteStatus({}))
+            site_version = (
+                site_status.get("livestatus_version", "") if not site_status.get("disabled") else ""
+            )
+            if site_version and "-" in site_version:
+                site_version = site_version.split("-", 1)[0]
+            return site_version
+
+        return {
+            "sites": [
+                {
+                    "site_id": site["id"],
+                    "site_name": site["alias"],
+                    "version": _get_site_version(site_id),
+                    "changes": 0
+                    if site["id"] not in site_change_counter
+                    else site_change_counter[site["id"]],
+                    "online_status": "disabled"
+                    if site.get("disabled")
+                    else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
+                }
+                for site_id, site in activation_sites().items()
+            ],
+            "pending_changes": [
+                {
+                    "change_id": change["id"],
+                    "change_text": unescape(change["text"]),
+                    "user": change["user_id"],
+                    "time": change["time"],
+                    "which_sites": "All sites"
+                    if affects_all_sites(change)
+                    else ", ".join(sorted(change["affected_sites"])),
+                }
+                for _, change in self._all_changes
+            ],
+        }
 
 
 def has_been_activated(change: ChangeSpec) -> bool:

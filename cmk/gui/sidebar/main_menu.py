@@ -26,6 +26,7 @@ from cmk.gui.type_defs import Icon, MainMenu, MainMenuItem, MainMenuTopic, MainM
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
+from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
 
@@ -147,6 +148,11 @@ def ajax_message_read():
         if active_config.debug:
             raise
         html.write_text_permissive("ERROR")
+
+
+class PageAjaxSidebarActivateMenu(AjaxPage):
+    def page(self) -> PageResult:
+        return ActivateChanges().get_all_data_required_for_activation_popout()
 
 
 class PopUpMessage(TypedDict):

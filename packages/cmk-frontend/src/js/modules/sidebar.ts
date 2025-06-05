@@ -625,6 +625,8 @@ export function reset_sidebar_scheduler() {
     execute_sidebar_scheduler();
 }
 
+let pending_changes_counter = 0;
+
 export function execute_sidebar_scheduler() {
     g_seconds_to_update =
         g_seconds_to_update !== null
@@ -638,6 +640,11 @@ export function execute_sidebar_scheduler() {
             execute_sidebar_scheduler();
         }, 250);
         return;
+    }
+
+    pending_changes_counter = (pending_changes_counter + 1) % 3;
+    if (pending_changes_counter === 0) {
+        update_pending_changes();
     }
 
     const to_be_updated: string[] = [];
@@ -1173,6 +1180,10 @@ export function init_messages_and_werks(
 ) {
     g_sidebar_notify_interval = interval;
     create_initial_ids("user", "messages", "user_message.py");
+    create_initial_ids("changes", "changes", "wato.py?mode=changelog");
+
+    update_pending_changes();
+
     // Are there pending messages? Render the initial state of
     // trigger button
     update_messages();
@@ -1258,6 +1269,53 @@ export function update_message_trigger(msg_text: string, msg_count: number) {
 
 function mark_message_read(msg_id: string) {
     call_ajax("sidebar_message_read.py?id=" + msg_id);
+}
+
+interface Sites {
+    site_id: string;
+    site_name: string;
+    online_status: string;
+    changes: number;
+    version: string;
+}
+
+interface PendingChanges {
+    change_id: string;
+    change_text: string;
+    user: string;
+    time: string;
+    which_sites: string;
+}
+interface AjaxSidebarGetPendingChanges {
+    sites: Array<Sites>;
+    pending_changes: Array<PendingChanges>;
+}
+
+function handle_pending_changes(_data: any, response_text: string) {
+    const response: CMKAjaxReponse<AjaxSidebarGetPendingChanges> =
+        JSON.parse(response_text);
+    if (response.result_code != 0) {
+        return;
+    }
+    const l = document.getElementById("changes_label");
+    if (l) {
+        if (response.result.pending_changes.length === 0) {
+            l.style.display = "none";
+            return;
+        }
+        l.innerText =
+            response.result.pending_changes.length > 10
+                ? "10+"
+                : response.result.pending_changes.length.toString();
+        l.style.display = "inline";
+    }
+}
+
+function update_pending_changes() {
+    // retrieve new messages
+    call_ajax("ajax_sidebar_get_pending_changes.py", {
+        response_handler: handle_pending_changes,
+    });
 }
 
 interface AjaxSidebarGetUnackIncompWerks {

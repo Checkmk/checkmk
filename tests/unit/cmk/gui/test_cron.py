@@ -33,6 +33,7 @@ def test_registered_jobs() -> None:
             "cmk.gui.cee.plugins.wato.licensing.background_jobs.execute_licensing_online_verification_background_job",
             "cmk.gui.watolib.host_label_sync.execute_host_label_sync_job",
             "cmk.gui.cee.userdb.saml2.config.replace_builtin_signature_cert",
+            "cmk.gui.cee.plugins.wato.agent_bakery._cronjobs.execute_signing_key_validation_job",
         ]
 
     found_jobs = sorted([f"{f.__module__}.{f.__name__}" for f in cron.multisite_cronjobs])

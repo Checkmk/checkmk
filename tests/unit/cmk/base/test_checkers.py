@@ -15,6 +15,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.ccc.hostaddress import HostName
 
+from cmk.utils import ip_lookup
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
@@ -22,7 +23,7 @@ from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import CheckPluginName, ConfiguredService
 
-from cmk.base import checkers, config
+from cmk.base import checkers
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -94,7 +95,7 @@ def test_consume_result_invalid() -> None:
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        config,
+        ip_lookup,
         "lookup_ip_address",
         lambda *args, **kw: "dummy.test.ip.0",
     )
@@ -116,7 +117,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     ts.add_cluster(cluster_test, nodes=[HostName("node1.test"), HostName("node2.test")])
 
     monkeypatch.setattr(
-        config,
+        ip_lookup,
         "lookup_ip_address",
         lambda *args, **kw: "dummy.test.ip.0",
     )
@@ -163,7 +164,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     )
 
     monkeypatch.setattr(
-        config,
+        ip_lookup,
         "lookup_ip_address",
         lambda hostname, *args, **kw: "dummy.test.ip.%s" % hostname[4],
     )
@@ -178,7 +179,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         HostKey(node2, SourceType.HOST),
     ]
     monkeypatch.setattr(
-        config,
+        ip_lookup,
         "lookup_ip_address",
         lambda *args, **kw: "dummy.test.ip.0",
     )

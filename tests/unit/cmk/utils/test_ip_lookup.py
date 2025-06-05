@@ -6,7 +6,7 @@
 import socket
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TypeAlias
+from typing import Final, TypeAlias
 
 import pytest
 from pytest import MonkeyPatch
@@ -44,6 +44,130 @@ def patch_persisted_cache(monkeypatch: MonkeyPatch, cache: _PersistedCache) -> N
 def patch_actual_lookup(monkeypatch: MonkeyPatch, mapping: _PersistedCache) -> None:
     monkeypatch.setattr(
         socket, "getaddrinfo", lambda hn, _a, fm: [[0, 0, 0, 0, [mapping[(hn, fm)]]]]
+    )
+
+
+def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
+    _FALLBACK_ADDRESS_IPV4: Final = "0.0.0.0"
+    _FALLBACK_ADDRESS_IPV6: Final = "::"
+    localhost = HostName("localhost")
+    no_ip = HostName("no_ip")
+    dual_stack = HostName("dual_stack")
+    cluster = HostName("cluster")
+    bad_host = HostName("bad_host")
+    undiscoverable = HostName("undiscoverable")
+
+    ts = Scenario()
+    ts.add_host(localhost)
+    ts.add_host(HostName(undiscoverable))
+    ts.add_host(HostName(no_ip), {TagGroupID("address_family"): TagID("no-ip")})
+    ts.add_host(HostName(dual_stack), {TagGroupID("address_family"): TagID("ip-v4v6")})
+    ts.add_cluster(HostName(cluster))
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda host, port, family=None, *args, **kwargs: {
+            (localhost, socket.AF_INET): [(family, None, None, None, ("127.0.0.1", 0))],
+            (localhost, socket.AF_INET6): [(family, None, None, None, ("::1", 0))],
+        }[(host, family)],
+    )
+
+    assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(localhost) is ip_lookup.IPStackConfig.IPv4
+
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=lambda *a: None,
+    )
+
+    assert (
+        ip_address_of(
+            localhost,
+            socket.AddressFamily.AF_INET,
+        )
+        == "127.0.0.1"
+    )
+    assert (
+        ip_address_of(
+            localhost,
+            socket.AddressFamily.AF_INET6,
+        )
+        == "::1"
+    )
+
+    assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(no_ip) is ip_lookup.IPStackConfig.NO_IP
+
+    assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(dual_stack) is ip_lookup.IPStackConfig.DUAL_STACK
+    assert (
+        ip_address_of(
+            dual_stack,
+            socket.AddressFamily.AF_INET,
+        )
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(
+            dual_stack,
+            socket.AddressFamily.AF_INET6,
+        )
+        == _FALLBACK_ADDRESS_IPV6
+    )
+
+    assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(cluster) is ip_lookup.IPStackConfig.IPv4  # That's strange
+    assert (
+        ip_address_of(
+            cluster,
+            socket.AddressFamily.AF_INET,
+        )
+        == ""
+    )
+    assert (
+        ip_address_of(
+            cluster,
+            socket.AddressFamily.AF_INET6,
+        )
+        == ""
+    )
+
+    assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(bad_host) is ip_lookup.IPStackConfig.IPv4  # That's strange
+    assert (
+        ip_address_of(
+            bad_host,
+            socket.AddressFamily.AF_INET,
+        )
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(
+            bad_host,
+            socket.AddressFamily.AF_INET6,
+        )
+        == _FALLBACK_ADDRESS_IPV6
+    )
+
+    assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
+    assert (
+        config_cache.ip_stack_config(undiscoverable) is ip_lookup.IPStackConfig.IPv4
+    )  # That's strange
+    assert (
+        ip_address_of(
+            undiscoverable,
+            socket.AddressFamily.AF_INET,
+        )
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(
+            undiscoverable,
+            socket.AddressFamily.AF_INET6,
+        )
+        == _FALLBACK_ADDRESS_IPV6
     )
 
 
@@ -436,7 +560,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
 
     config_cache = ts.apply(monkeypatch)
     assert (
-        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
         == result_address
     )
 
@@ -470,7 +594,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
     )
 
     assert (
-        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
         == result_address
     )
 
@@ -496,7 +620,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(
 
     config_cache = ts.apply(monkeypatch)
     assert (
-        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
         == result_address
     )
 
@@ -518,7 +642,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
-    assert config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
+    assert ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
 
 
 def test_lookup_mgmt_board_ip_address_unresolvable_2(
@@ -531,7 +655,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
     ts = Scenario()
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+    monkeypatch.setattr(ip_lookup, "_lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,
         "host_attributes",
@@ -540,4 +664,4 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
         },
     )
 
-    assert config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
+    assert ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None

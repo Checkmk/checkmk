@@ -71,7 +71,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
-        ip_address_of: config.IPLookup,
+        ip_address_of: ip_lookup.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -111,7 +111,7 @@ class NagiosCore(core_config.MonitoringCore):
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
-        ip_address_of: config.IPLookup,
+        ip_address_of: ip_lookup.IPLookup,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
@@ -222,7 +222,7 @@ def create_config(
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
-    ip_address_of: config.IPLookup,
+    ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> None:
     cfg = NagiosConfig(outfile, hostnames)
@@ -280,7 +280,7 @@ def _create_nagios_config_host(
     hostname: HostName,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
-    ip_address_of: config.IPLookup,
+    ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> NotificationHostConfig:
     cfg.write_str("\n# ----------------------------------------------------\n")
@@ -315,7 +315,7 @@ def create_nagios_host_spec(
     config_cache: ConfigCache,
     hostname: HostName,
     attrs: ObjectAttributes,
-    ip_address_of: config.IPLookup,
+    ip_address_of: ip_lookup.IPLookup,
 ) -> ObjectSpec:
     ip = attrs["address"]
 
@@ -535,7 +535,7 @@ def create_nagios_servicedefs(
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
-    ip_address_of: config.IPLookup,
+    ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")

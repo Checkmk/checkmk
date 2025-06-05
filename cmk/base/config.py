@@ -11,7 +11,6 @@ import contextlib
 import copy
 import dataclasses
 import enum
-import ipaddress
 import itertools
 import logging
 import numbers
@@ -27,19 +26,17 @@ from typing import (
     AnyStr,
     assert_never,
     Final,
-    Generic,
     Literal,
     NamedTuple,
     overload,
     TypeGuard,
-    TypeVar,
 )
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import omd_site, SiteId
 
@@ -58,7 +55,7 @@ from cmk.utils.host_storage import (
     get_host_storage_loaders,
 )
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import ConfiguredIPLookup, IPLookup, IPStackConfig, make_lookup_ip_address
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -514,44 +511,6 @@ RecurringDowntime = Mapping[str, int | str]  # TODO(sk): TypedDict here
 class _NestedExitSpec(ExitSpec, total=False):
     overall: ExitSpec
     individual: dict[str, ExitSpec]
-
-
-IPLookup = Callable[
-    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-    HostAddress | None,
-]
-
-_TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], None])
-
-
-class ConfiguredIPLookup(Generic[_TErrHandler]):
-    def __init__(
-        self,
-        lookup: Callable[
-            [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-            HostAddress | None,
-        ],
-        *,
-        allow_empty: Container[HostName],
-        error_handler: _TErrHandler,
-    ) -> None:
-        self._lookup: Final = lookup
-        self.error_handler: Final[_TErrHandler] = error_handler
-        self._allow_empty: Final = allow_empty
-
-    def __call__(
-        self,
-        host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    ) -> HostAddress | None:
-        try:
-            return self._lookup(host_name, family)
-        except Exception as e:
-            if host_name in self._allow_empty:
-                return HostAddress("")
-            self.error_handler(host_name, e)
-
-        return ip_lookup.fallback_ip_for(family)
 
 
 def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
@@ -1390,76 +1349,6 @@ def compute_enforced_service_parameters(
 
     return TimespecificParameters(
         [configured_parameters, TimespecificParameterSet.from_parameters(defaults)]
-    )
-
-
-def lookup_mgmt_board_ip_address(
-    ip_config: ip_lookup.IPLookupConfig, host_name: HostName
-) -> HostAddress | None:
-    mgmt_address: Final = ip_config.management_address(host_name)
-    try:
-        mgmt_ipa = (
-            None if mgmt_address is None else HostAddress(str(ipaddress.ip_address(mgmt_address)))
-        )
-    except (ValueError, TypeError):
-        mgmt_ipa = None
-
-    try:
-        return ip_lookup.lookup_ip_address(
-            # host name is ignored, if mgmt_ipa is trueish.
-            host_name=mgmt_address or host_name,
-            family=ip_config.default_address_family(host_name),
-            configured_ip_address=mgmt_ipa,
-            simulation_mode=ip_config.simulation_mode,
-            is_snmp_usewalk_host=(
-                ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_management(host_name)
-            ),
-            override_dns=ip_config.fake_dns,
-            is_dyndns_host=ip_config.is_dyndns_host(host_name),
-            force_file_cache_renewal=not ip_config.use_dns_cache,
-        )
-    except MKIPAddressLookupError:
-        return None
-
-
-def make_lookup_ip_address(
-    ip_config: ip_lookup.IPLookupConfig,
-) -> Callable[
-    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None],
-    HostAddress,
-]:
-    def _wrapped_lookup(
-        host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
-    ) -> HostAddress:
-        return lookup_ip_address(ip_config, host_name, family=family)
-
-    return _wrapped_lookup
-
-
-def lookup_ip_address(
-    ip_config: ip_lookup.IPLookupConfig,
-    host_name: HostName | HostAddress,
-    *,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
-) -> HostAddress:
-    if family is None:
-        family = ip_config.default_address_family(host_name)
-    return ip_lookup.lookup_ip_address(
-        host_name=host_name,
-        family=family,
-        configured_ip_address=(
-            ip_config.ipv4_addresses
-            if family is socket.AddressFamily.AF_INET
-            else ip_config.ipv6_addresses
-        ).get(host_name),
-        simulation_mode=ip_config.simulation_mode,
-        is_snmp_usewalk_host=(
-            ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
-        ),
-        override_dns=ip_config.fake_dns,
-        is_dyndns_host=ip_config.is_dyndns_host(host_name),
-        force_file_cache_renewal=not ip_config.use_dns_cache,
     )
 
 

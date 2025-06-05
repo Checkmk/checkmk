@@ -68,9 +68,6 @@ def test_do_create_config_nagios(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
-    ip_address_of = config.ConfiguredIPLookup(
-        lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
-    )
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
@@ -78,7 +75,9 @@ def test_do_create_config_nagios(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
-        ip_address_of=ip_address_of,
+        ip_address_of=ip_lookup.ConfiguredIPLookup(
+            lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
+        ),
         hosts_to_update=None,
         service_depends_on=lambda *a: (),
         duplicates=(),
@@ -94,7 +93,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
-    ip_address_of = config.ConfiguredIPLookup(
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
         lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
     )
 
@@ -164,12 +163,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
 
     assert (
         config_cache.get_host_attributes(
-            HostName("test-host"),
-            config.ConfiguredIPLookup(
-                lambda *a: HostAddress("1.2.3.4"),
-                allow_empty=(),
-                error_handler=config.handle_ip_lookup_failure,
-            ),
+            HostName("test-host"), ip_address_of=lambda *a: HostAddress("1.2.3.4")
         )
         == expected_attrs
     )
@@ -305,14 +299,7 @@ def test_template_translation(
     config_cache = ts.apply(monkeypatch)
 
     assert (
-        config_cache.translate_commandline(
-            hostname,
-            ipaddress,
-            template,
-            config.ConfiguredIPLookup(
-                lambda *a: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
-            ),
-        )
+        config_cache.translate_commandline(hostname, ipaddress, template, lambda *a: None)
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
     )
 

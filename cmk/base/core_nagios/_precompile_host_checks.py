@@ -29,7 +29,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import IPStackConfig, lookup_ip_address
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -43,12 +43,7 @@ from cmk.checkengine.plugins import (
     SectionPlugin,
 )
 
-from cmk.base.config import (
-    ConfigCache,
-    FilterMode,
-    lookup_ip_address,
-    save_packed_config,
-)
+from cmk.base.config import ConfigCache, FilterMode, save_packed_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 
 from cmk.discover_plugins import PluginLocation

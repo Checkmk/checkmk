@@ -149,9 +149,7 @@ def _iter_macros(documented_macros: Sequence[str], resources: Iterable[str]) -> 
 
 def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None) -> None:
     host_name = HostName("test-host")
-    ip_address_of = base_config.ConfiguredIPLookup(
-        lambda *a: None, allow_empty=(), error_handler=base_config.handle_ip_lookup_failure
-    )
+    ip_address_of = lambda *a: None
     host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
     host_macros = base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
@@ -202,9 +200,7 @@ def test_special_agent_macros(
     config_cache: ConfigCache,
 ) -> None:
     host_name = HostName("test-host")
-    ip_address_of = base_config.ConfiguredIPLookup(
-        lambda *a: None, allow_empty=(), error_handler=base_config.handle_ip_lookup_failure
-    )
+    ip_address_of = lambda *a: None
 
     host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     macros = {

@@ -31,7 +31,6 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 
-from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.nagios_utils import do_check_nagiosconfig
@@ -66,7 +65,7 @@ class MonitoringCore(abc.ABC):
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-        ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
+        ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
@@ -94,7 +93,7 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
-        ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
+        ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
@@ -272,7 +271,7 @@ def do_create_config(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
+    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
@@ -368,7 +367,7 @@ def _create_core_config(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
+    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,

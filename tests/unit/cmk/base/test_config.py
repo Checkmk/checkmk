@@ -10,7 +10,7 @@ import shutil
 import socket
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Final, Literal, NoReturn
+from typing import Any, Literal, NoReturn
 
 import pytest
 from pytest import MonkeyPatch
@@ -57,8 +57,6 @@ from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
-    ConfiguredIPLookup,
-    handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
@@ -354,128 +352,6 @@ def test_is_ipv4v6_host(
 
 def _assert_not_called(*args: object) -> NoReturn:
     raise AssertionError(f"Unexpected call with {args}")
-
-
-def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
-    _FALLBACK_ADDRESS_IPV4: Final = "0.0.0.0"
-    _FALLBACK_ADDRESS_IPV6: Final = "::"
-    localhost = HostName("localhost")
-    no_ip = HostName("no_ip")
-    dual_stack = HostName("dual_stack")
-    cluster = HostName("cluster")
-    bad_host = HostName("bad_host")
-    undiscoverable = HostName("undiscoverable")
-
-    ts = Scenario()
-    ts.add_host(localhost)
-    ts.add_host(HostName(undiscoverable))
-    ts.add_host(HostName(no_ip), {TagGroupID("address_family"): TagID("no-ip")})
-    ts.add_host(HostName(dual_stack), {TagGroupID("address_family"): TagID("ip-v4v6")})
-    ts.add_cluster(HostName(cluster))
-    config_cache = ts.apply(monkeypatch)
-    monkeypatch.setattr(
-        socket,
-        "getaddrinfo",
-        lambda host, port, family=None, *args, **kwargs: {
-            (localhost, socket.AF_INET): [(family, None, None, None, ("127.0.0.1", 0))],
-            (localhost, socket.AF_INET6): [(family, None, None, None, ("::1", 0))],
-        }[(host, family)],
-    )
-
-    assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(localhost) is IPStackConfig.IPv4
-
-    ip_address_of = ConfiguredIPLookup(
-        config.make_lookup_ip_address(config_cache.ip_lookup_config()),
-        allow_empty=config_cache.hosts_config.clusters,
-        error_handler=handle_ip_lookup_failure,
-    )
-
-    assert (
-        ip_address_of(
-            localhost,
-            socket.AddressFamily.AF_INET,
-        )
-        == "127.0.0.1"
-    )
-    assert (
-        ip_address_of(
-            localhost,
-            socket.AddressFamily.AF_INET6,
-        )
-        == "::1"
-    )
-
-    assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(no_ip) is IPStackConfig.NO_IP
-
-    assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(dual_stack) is IPStackConfig.DUAL_STACK
-    assert (
-        ip_address_of(
-            dual_stack,
-            socket.AddressFamily.AF_INET,
-        )
-        == _FALLBACK_ADDRESS_IPV4
-    )
-    assert (
-        ip_address_of(
-            dual_stack,
-            socket.AddressFamily.AF_INET6,
-        )
-        == _FALLBACK_ADDRESS_IPV6
-    )
-
-    assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(cluster) is IPStackConfig.IPv4  # That's strange
-    assert (
-        ip_address_of(
-            cluster,
-            socket.AddressFamily.AF_INET,
-        )
-        == ""
-    )
-    assert (
-        ip_address_of(
-            cluster,
-            socket.AddressFamily.AF_INET6,
-        )
-        == ""
-    )
-
-    assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(bad_host) is IPStackConfig.IPv4  # That's strange
-    assert (
-        ip_address_of(
-            bad_host,
-            socket.AddressFamily.AF_INET,
-        )
-        == _FALLBACK_ADDRESS_IPV4
-    )
-    assert (
-        ip_address_of(
-            bad_host,
-            socket.AddressFamily.AF_INET6,
-        )
-        == _FALLBACK_ADDRESS_IPV6
-    )
-
-    assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(undiscoverable) is IPStackConfig.IPv4  # That's strange
-    assert (
-        ip_address_of(
-            undiscoverable,
-            socket.AddressFamily.AF_INET,
-        )
-        == _FALLBACK_ADDRESS_IPV4
-    )
-    assert (
-        ip_address_of(
-            undiscoverable,
-            socket.AddressFamily.AF_INET6,
-        )
-        == _FALLBACK_ADDRESS_IPV6
-    )
 
 
 @pytest.mark.parametrize(

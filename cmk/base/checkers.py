@@ -29,7 +29,12 @@ from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import (
+    IPLookup,
+    IPStackConfig,
+    lookup_ip_address,
+    lookup_mgmt_board_ip_address,
+)
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
@@ -84,12 +89,7 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 
-from cmk.base.config import (
-    ConfigCache,
-    IPLookup,
-    lookup_ip_address,
-    lookup_mgmt_board_ip_address,
-)
+from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import (
     FetcherFactory,

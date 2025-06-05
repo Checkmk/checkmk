@@ -1506,9 +1506,7 @@ def test_commandline_discovery(
         agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=config.ConfiguredIPLookup(
-            lambda *a: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
-        ),
+        ip_address_of=lambda *a: None,
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

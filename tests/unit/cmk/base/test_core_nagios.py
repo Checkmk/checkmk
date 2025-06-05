@@ -25,7 +25,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils import paths
+from cmk.utils import ip_lookup, paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.servicename import ServiceName
@@ -323,8 +323,8 @@ def test_create_nagios_host_spec(
     cfg = NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
-    ip_address_of = config.ConfiguredIPLookup(
-        config.make_lookup_ip_address(config_cache.ip_lookup_config()),
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -353,14 +353,13 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     )
 
     config_cache = ts.apply(monkeypatch)
-    ip_address_of = config.ConfiguredIPLookup(
-        lambda h, f: None, allow_empty=(), error_handler=config.handle_ip_lookup_failure
-    )
 
-    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of=lambda *a: None)
 
     cfg = NagiosConfig(io.StringIO(), [hostname])
-    host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
+    host_spec = create_nagios_host_spec(
+        cfg, config_cache, hostname, host_attrs, ip_address_of=lambda *a: None
+    )
     assert host_spec["_SERVICE_PERIOD"] == "24X7"
     assert "service_period" not in host_spec
 
@@ -988,12 +987,6 @@ def test_create_nagios_config_commands(
     config_cache = config._create_config_cache(EMPTYCONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    ip_address_of = config.ConfiguredIPLookup(
-        lambda h, f: HostAddress("127.0.0.1"),
-        allow_empty=(),
-        error_handler=config.handle_ip_lookup_failure,
-    )
-
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = NagiosConfig(outfile, [hostname])
@@ -1007,7 +1000,7 @@ def test_create_nagios_config_commands(
         host_attrs,
         {},
         license_counter,
-        ip_address_of,
+        ip_address_of=lambda *a: HostAddress("127.0.0.1"),
         service_depends_on=lambda *a: (),
     )
     create_nagios_config_commands(cfg)

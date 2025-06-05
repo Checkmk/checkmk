@@ -18,7 +18,13 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.utils import ip_lookup
-from cmk.utils.ip_lookup import IPLookupConfig, IPStackConfig
+from cmk.utils.ip_lookup import (
+    IPLookupConfig,
+    IPStackConfig,
+    lookup_ip_address,
+    lookup_mgmt_board_ip_address,
+    make_lookup_ip_address,
+)
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -42,14 +48,7 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import sources
-from cmk.base.config import (
-    ConfigCache,
-    ConfiguredIPLookup,
-    handle_ip_lookup_failure,
-    lookup_ip_address,
-    lookup_mgmt_board_ip_address,
-    make_lookup_ip_address,
-)
+from cmk.base.config import ConfigCache, handle_ip_lookup_failure
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
 
@@ -276,7 +275,7 @@ def dump_host(
                 ipaddress,
                 password_store_file=used_password_store,
                 passwords=passwords,
-                ip_address_of=ConfiguredIPLookup(
+                ip_address_of=ip_lookup.ConfiguredIPLookup(
                     make_lookup_ip_address(ip_lookup_config),
                     allow_empty=config_cache.hosts_config.clusters,
                     error_handler=handle_ip_lookup_failure,

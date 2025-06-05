@@ -718,6 +718,7 @@ filter_registry.register(
         query_filter=query_filters.TextQuery(
             ident="host_check_command_exact",
             op="=",
+            column="host_check_command",
         ),
     )
 )

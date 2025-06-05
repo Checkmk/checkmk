@@ -616,6 +616,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     loading_result = load_config(plugins)
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_lookup_config = config_cache.ip_lookup_config()
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
@@ -627,7 +628,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         ipaddress = (
             None
             if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-            else config.lookup_ip_address(config_cache, hostname)
+            else config.lookup_ip_address(ip_lookup_config, hostname)
         )
         check_interval = config_cache.check_mk_check_interval(hostname)
         stored_walk_path = cmk.utils.paths.snmpwalks_dir
@@ -680,7 +681,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
             tag_list=config_cache.tag_list(hostname),
-            management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,
@@ -904,10 +905,6 @@ def mode_update_dns_cache() -> None:
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         ip_lookup_config=config_cache.ip_lookup_config(),
-        configured_ipv6_addresses=config.ipaddresses,
-        configured_ipv4_addresses=config.ipv6addresses,
-        simulation_mode=config.simulation_mode,
-        override_dns=(HostAddress(config.fake_dns) if config.fake_dns is not None else None),
     )
 
 
@@ -1098,12 +1095,13 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.load(discovery_rulesets=()).config_cache
+    ip_lookup_config = config_cache.ip_lookup_config()
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
-        ipaddress = config.lookup_ip_address(config_cache, hostname)
+        ipaddress = config.lookup_ip_address(ip_lookup_config, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -1178,6 +1176,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     config_cache = config.load(discovery_rulesets=()).config_cache
+    ip_lookup_config = config_cache.ip_lookup_config()
     oid, *hostnames = args
 
     if not hostnames:
@@ -1194,7 +1193,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
-        ipaddress = config.lookup_ip_address(config_cache, hostname)
+        ipaddress = config.lookup_ip_address(ip_lookup_config, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 

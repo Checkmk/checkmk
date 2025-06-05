@@ -526,6 +526,7 @@ _TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], Non
 
 class ConfiguredIPLookup(Generic[_TErrHandler]):
     def __init__(self, config_cache: ConfigCache, *, error_handler: _TErrHandler) -> None:
+        # TODO: pass ip_lookup_config + clusters instead of config_cache
         self._config_cache = config_cache
         self.error_handler: Final[_TErrHandler] = error_handler
 
@@ -535,7 +536,9 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> HostAddress | None:
         try:
-            return lookup_ip_address(self._config_cache, host_name, family=family)
+            return lookup_ip_address(
+                self._config_cache.ip_lookup_config(), host_name, family=family
+            )
         except Exception as e:
             if host_name in self._config_cache.hosts_config.clusters:
                 return HostAddress("")
@@ -596,6 +599,7 @@ class LoadedConfigFragment:
     (compare cmk/base/default_config/base ...)
     """
 
+    # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!
     folder_attributes: Mapping[str, FolderAttributesForBase]
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
@@ -620,6 +624,11 @@ class LoadedConfigFragment:
     bake_agents_on_restart: bool
     agent_bakery_logging: int | None
     is_wato_slave_site: bool
+    simulation_mode: bool
+    use_dns_cache: bool
+    ipaddresses: Mapping[HostName, HostAddress]
+    ipv6addresses: Mapping[HostName, HostAddress]
+    fake_dns: str | None
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -728,6 +737,11 @@ def _perform_post_config_loading_actions(
         apply_bake_revision=apply_bake_revision,
         bake_agents_on_restart=bake_agents_on_restart,
         is_wato_slave_site=is_wato_slave_site,
+        simulation_mode=simulation_mode,
+        use_dns_cache=use_dns_cache,
+        ipaddresses=ipaddresses,
+        ipv6addresses=ipv6addresses,
+        fake_dns=fake_dns,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1373,9 +1387,9 @@ def compute_enforced_service_parameters(
 
 
 def lookup_mgmt_board_ip_address(
-    config_cache: ConfigCache, host_name: HostName
+    ip_config: ip_lookup.IPLookupConfig, host_name: HostName
 ) -> HostAddress | None:
-    mgmt_address: Final = config_cache.management_address(host_name)
+    mgmt_address: Final = ip_config.management_address(host_name)
     try:
         mgmt_ipa = (
             None if mgmt_address is None else HostAddress(str(ipaddress.ip_address(mgmt_address)))
@@ -1387,43 +1401,43 @@ def lookup_mgmt_board_ip_address(
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
             host_name=mgmt_address or host_name,
-            family=config_cache.default_address_family(host_name),
+            family=ip_config.default_address_family(host_name),
             configured_ip_address=mgmt_ipa,
-            simulation_mode=simulation_mode,
+            simulation_mode=ip_config.simulation_mode,
             is_snmp_usewalk_host=(
-                config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
-                and (config_cache.management_protocol(host_name) == "snmp")
+                ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_management(host_name)
             ),
-            override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
-            is_dyndns_host=config_cache.is_dyndns_host(host_name),
-            force_file_cache_renewal=not use_dns_cache,
+            override_dns=ip_config.fake_dns,
+            is_dyndns_host=ip_config.is_dyndns_host(host_name),
+            force_file_cache_renewal=not ip_config.use_dns_cache,
         )
     except MKIPAddressLookupError:
         return None
 
 
 def lookup_ip_address(
-    config_cache: ConfigCache,
+    ip_config: ip_lookup.IPLookupConfig,
     host_name: HostName | HostAddress,
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress:
     if family is None:
-        family = config_cache.default_address_family(host_name)
+        family = ip_config.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
         configured_ip_address=(
-            ipaddresses if family is socket.AddressFamily.AF_INET else ipv6addresses
+            ip_config.ipv4_addresses
+            if family is socket.AddressFamily.AF_INET
+            else ip_config.ipv6_addresses
         ).get(host_name),
-        simulation_mode=simulation_mode,
+        simulation_mode=ip_config.simulation_mode,
         is_snmp_usewalk_host=(
-            config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
-            and config_cache.computed_datasources(host_name).is_snmp
+            ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
         ),
-        override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
-        is_dyndns_host=config_cache.is_dyndns_host(host_name),
-        force_file_cache_renewal=not use_dns_cache,
+        override_dns=ip_config.fake_dns,
+        is_dyndns_host=ip_config.is_dyndns_host(host_name),
+        force_file_cache_renewal=not ip_config.use_dns_cache,
     )
 
 
@@ -1752,11 +1766,19 @@ class ConfigCache:
         return ip_lookup.IPLookupConfig(
             ip_stack_config=ConfigCache.ip_stack_config,
             is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
+            is_snmp_management=lambda host_name: self.management_protocol(host_name) == "snmp",
             is_use_walk_host=lambda host_name: self.get_snmp_backend(host_name)
             is SNMPBackendEnum.STORED_WALK,
             default_address_family=self.default_address_family,
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
+            simulation_mode=self._loaded_config.simulation_mode,
+            fake_dns=None
+            if self._loaded_config.fake_dns is None
+            else HostAddress(self._loaded_config.fake_dns),
+            use_dns_cache=self._loaded_config.use_dns_cache,
+            ipv4_addresses=self._loaded_config.ipaddresses,
+            ipv6_addresses=self._loaded_config.ipv6addresses,
         )
 
     def make_snmp_config(

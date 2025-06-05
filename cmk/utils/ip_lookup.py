@@ -43,10 +43,18 @@ class IPStackConfig(enum.IntFlag):
 class IPLookupConfig:
     ip_stack_config: Callable[[HostName], IPStackConfig]
     is_snmp_host: Callable[[HostName], bool]
+    is_snmp_management: Callable[[HostName], bool]
     is_use_walk_host: Callable[[HostName], bool]
-    default_address_family: Callable[[HostName], socket.AddressFamily]
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ]
     management_address: Callable[[HostName], HostAddress | None]
     is_dyndns_host: Callable[[HostName], bool]
+    ipv4_addresses: Mapping[HostName, HostAddress]
+    ipv6_addresses: Mapping[HostName, HostAddress]
+    simulation_mode: bool
+    fake_dns: HostAddress | None
+    use_dns_cache: bool
 
 
 def fallback_ip_for(
@@ -355,12 +363,6 @@ def update_dns_cache(
     *,
     hosts: Iterable[HostName],
     ip_lookup_config: IPLookupConfig,
-    configured_ipv4_addresses: Mapping[HostName | HostAddress, HostAddress],
-    configured_ipv6_addresses: Mapping[HostName | HostAddress, HostAddress],
-    # Do these two even make sense? If either is set, this function
-    # will just clear the cache.
-    simulation_mode: bool,
-    override_dns: HostAddress | None,
 ) -> tuple[int, Sequence[HostName]]:
     failed = []
 
@@ -379,16 +381,16 @@ def update_dns_cache(
                     host_name=host_name,
                     family=family,
                     configured_ip_address=(
-                        configured_ipv4_addresses
+                        ip_lookup_config.ipv4_addresses
                         if family is socket.AF_INET
-                        else configured_ipv6_addresses
+                        else ip_lookup_config.ipv6_addresses
                     ).get(host_name),
-                    simulation_mode=simulation_mode,
+                    simulation_mode=ip_lookup_config.simulation_mode,
                     is_snmp_usewalk_host=(
                         ip_lookup_config.is_use_walk_host(host_name)
                         and ip_lookup_config.is_snmp_host(host_name)
                     ),
-                    override_dns=override_dns,
+                    override_dns=ip_lookup_config.fake_dns,
                     is_dyndns_host=ip_lookup_config.is_dyndns_host(host_name),
                     force_file_cache_renewal=True,  # it's cleared anyway
                 )

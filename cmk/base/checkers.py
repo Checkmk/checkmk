@@ -360,6 +360,7 @@ class CMKFetcher:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.ip_lookup_config: Final = config_cache.ip_lookup_config()
         self.factory: Final = factory
         self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
@@ -396,7 +397,7 @@ class CMKFetcher:
                     or (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else lookup_ip_address(self.config_cache, host_name)
+                        else lookup_ip_address(self.ip_lookup_config, host_name)
                     ),
                 )
             ]
@@ -408,7 +409,7 @@ class CMKFetcher:
                     (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else lookup_ip_address(self.config_cache, node)
+                        else lookup_ip_address(self.ip_lookup_config, node)
                     ),
                 )
                 for node in self.config_cache.nodes(host_name)
@@ -463,7 +464,7 @@ class CMKFetcher:
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),
                     tag_list=self.config_cache.tag_list(current_host_name),
                     management_ip=lookup_mgmt_board_ip_address(
-                        self.config_cache,
+                        self.ip_lookup_config,
                         current_host_name,
                     ),
                     management_protocol=self.config_cache.management_protocol(current_host_name),

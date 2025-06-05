@@ -526,7 +526,7 @@ class AutomationDiscoveryPreview(Automation):
             # because...  I don't know... global variables I guess.  In any case,
             # doing it the other way around breaks one integration test.
             # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
-            else config.lookup_ip_address(config_cache, host_name)
+            else config.lookup_ip_address(config_cache.ip_lookup_config(), host_name)
         )
         return _get_discovery_preview(
             host_name,
@@ -2502,6 +2502,8 @@ class AutomationScanParents(Automation):
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
 
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
+        ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+
         monitoring_host = (
             HostName(config.monitoring_host) if config.monitoring_host is not None else None
         )
@@ -2524,9 +2526,7 @@ class AutomationScanParents(Automation):
                 hostnames,
                 silent=True,
                 settings=settings,
-                lookup_ip_address=functools.partial(
-                    config.lookup_ip_address, loading_result.config_cache
-                ),
+                lookup_ip_address=functools.partial(config.lookup_ip_address, ip_lookup_config),
             )
             return ScanParentsResult(gateway_results)
         except Exception as e:
@@ -2790,6 +2790,7 @@ class AutomationDiagHost(Automation):
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
         )
+        ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -2824,7 +2825,7 @@ class AutomationDiagHost(Automation):
             if ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
                 raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
-                resolved_address = config.lookup_ip_address(loading_result.config_cache, host_name)
+                resolved_address = config.lookup_ip_address(ip_lookup_config, host_name)
             except Exception:
                 raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
 
@@ -2940,6 +2941,7 @@ class AutomationDiagHost(Automation):
         ip_address_of: config.IPLookup,
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
+        ip_lookup_config = config_cache.ip_lookup_config()
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -2987,7 +2989,7 @@ class AutomationDiagHost(Automation):
             computed_datasources=config_cache.computed_datasources(host_name),
             datasource_programs=config_cache.datasource_programs(host_name),
             tag_list=config_cache.tag_list(host_name),
-            management_ip=lookup_mgmt_board_ip_address(config_cache, host_name),
+            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, host_name),
             management_protocol=config_cache.management_protocol(host_name),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 host_name,
@@ -3395,6 +3397,8 @@ class AutomationUpdateDNSCache(Automation):
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
 
         hosts_config = loading_result.config_cache.hosts_config
+        ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+
         return UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
                 hosts=(
@@ -3403,11 +3407,7 @@ class AutomationUpdateDNSCache(Automation):
                     if loading_result.config_cache.is_active(hn)
                     and loading_result.config_cache.is_online(hn)
                 ),
-                ip_lookup_config=loading_result.config_cache.ip_lookup_config(),
-                configured_ipv4_addresses=config.ipaddresses,
-                configured_ipv6_addresses=config.ipv6addresses,
-                simulation_mode=config.simulation_mode,
-                override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
+                ip_lookup_config=ip_lookup_config,
             )
         )
 
@@ -3434,6 +3434,8 @@ class AutomationGetAgentOutput(Automation):
         )
         config_cache = loading_result.config_cache
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ip_lookup_config = config_cache.ip_lookup_config()
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -3443,11 +3445,10 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ip_stack_config = ConfigCache.ip_stack_config(hostname)
             ipaddress = (
                 None
                 if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-                else config.lookup_ip_address(config_cache, hostname)
+                else config.lookup_ip_address(ip_lookup_config, hostname)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
             walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -3495,7 +3496,7 @@ class AutomationGetAgentOutput(Automation):
                     computed_datasources=config_cache.computed_datasources(hostname),
                     datasource_programs=config_cache.datasource_programs(hostname),
                     tag_list=config_cache.tag_list(hostname),
-                    management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+                    management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
                     management_protocol=config_cache.management_protocol(hostname),
                     special_agent_command_lines=config_cache.special_agent_command_lines(
                         hostname,

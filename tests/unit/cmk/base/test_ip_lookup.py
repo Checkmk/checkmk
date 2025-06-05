@@ -383,11 +383,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
             for hn in hosts_config.hosts
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
-        ip_lookup_config=ts.config_cache.ip_lookup_config(),
-        configured_ipv4_addresses={},
-        configured_ipv6_addresses={},
-        simulation_mode=False,
-        override_dns=None,
+        ip_lookup_config=config_cache.ip_lookup_config(),
     )
     assert ip_lookup_cache() == {
         ("blub", socket.AF_INET): HostAddress("127.0.0.13"),
@@ -439,7 +435,10 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
-    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
+    assert (
+        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        == result_address
+    )
 
 
 @pytest.mark.parametrize(
@@ -470,7 +469,10 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
         }[(host, family)],
     )
 
-    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
+    assert (
+        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        == result_address
+    )
 
 
 @pytest.mark.parametrize(
@@ -493,7 +495,10 @@ def test_lookup_mgmt_board_ip_address_dual_host(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
+    assert (
+        config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        == result_address
+    )
 
 
 @pytest.mark.parametrize(
@@ -513,7 +518,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
-    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None
+    assert config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
 
 
 def test_lookup_mgmt_board_ip_address_unresolvable_2(
@@ -535,4 +540,4 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
         },
     )
 
-    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None
+    assert config.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None

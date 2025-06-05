@@ -29,4 +29,9 @@ EMPTYCONFIG = LoadedConfigFragment(
     apply_bake_revision=False,
     bake_agents_on_restart=False,
     is_wato_slave_site=False,
+    simulation_mode=False,
+    use_dns_cache=True,
+    ipaddresses={},
+    ipv6addresses={},
+    fake_dns=None,
 )

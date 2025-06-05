@@ -178,6 +178,7 @@ def dump_precompiled_hostcheck(
 
     # IP addresses
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
+    ip_lookup_config = config_cache.ip_lookup_config()
     needed_ipaddresses: dict[HostName, HostAddress] = {}
     needed_ipv6addresses: dict[HostName, HostAddress] = {}
     if hostname in config_cache.hosts_config.clusters:
@@ -186,18 +187,18 @@ def dump_precompiled_hostcheck(
             node_ip_stack_config = ConfigCache.ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
                 needed_ipaddresses[node] = lookup_ip_address(
-                    config_cache, node, family=socket.AddressFamily.AF_INET
+                    ip_lookup_config, node, family=socket.AddressFamily.AF_INET
                 )
 
             if IPStackConfig.IPv6 in node_ip_stack_config:
                 needed_ipv6addresses[node] = lookup_ip_address(
-                    config_cache, node, family=socket.AddressFamily.AF_INET6
+                    ip_lookup_config, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
             if IPStackConfig.IPv4 in ip_stack_config:
                 needed_ipaddresses[hostname] = lookup_ip_address(
-                    config_cache, hostname, family=socket.AddressFamily.AF_INET
+                    ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET
                 )
         except Exception:
             pass
@@ -205,19 +206,19 @@ def dump_precompiled_hostcheck(
         try:
             if IPStackConfig.IPv6 in ip_stack_config:
                 needed_ipv6addresses[hostname] = lookup_ip_address(
-                    config_cache, hostname, family=socket.AddressFamily.AF_INET6
+                    ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
         if IPStackConfig.IPv4 in ip_stack_config:
             needed_ipaddresses[hostname] = lookup_ip_address(
-                config_cache, hostname, family=socket.AddressFamily.AF_INET
+                ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET
             )
 
         if IPStackConfig.IPv6 in ip_stack_config:
             needed_ipv6addresses[hostname] = lookup_ip_address(
-                config_cache, hostname, family=socket.AddressFamily.AF_INET6
+                ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET6
             )
 
     # assign the values here, just to let the type checker do its job

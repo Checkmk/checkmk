@@ -18,7 +18,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.utils import ip_lookup
-from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.ip_lookup import IPLookupConfig, IPStackConfig
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -137,6 +137,8 @@ def dump_host(
     print_("\n")
     label_manager = config_cache.label_manager
     hosts_config = config_cache.hosts_config
+    ip_lookup_config = config_cache.ip_lookup_config()
+
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
         color = tty.bgmagenta
@@ -152,7 +154,7 @@ def dump_host(
         None
         if ip_stack_config is IPStackConfig.NO_IP
         else _ip_address_for_dump_host(
-            config_cache,
+            ip_lookup_config,
             hosts_config,
             hostname,
             family=primary_family,
@@ -166,7 +168,7 @@ def dump_host(
         try:
             secondary = str(
                 _ip_address_for_dump_host(
-                    config_cache,
+                    ip_lookup_config,
                     hosts_config,
                     hostname,
                     family=_complementary_family(primary_family),
@@ -266,7 +268,7 @@ def dump_host(
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
             tag_list=config_cache.tag_list(hostname),
-            management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,
@@ -346,14 +348,14 @@ def _evaluate_params(params: TimespecificParameters) -> str:
 
 
 def _ip_address_for_dump_host(
-    config_cache: ConfigCache,
+    ip_lookup_config: IPLookupConfig,
     hosts_config: Hosts,
     host_name: HostName,
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress | None:
     try:
-        return lookup_ip_address(config_cache, host_name, family=family)
+        return lookup_ip_address(ip_lookup_config, host_name, family=family)
     except Exception:
         return (
             HostAddress("")

@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import replace
+
 import pytest
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from tests.unit.cmk.base.emptyconfig import EMPTYCONFIG
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.resulttype as result
 
@@ -33,8 +35,10 @@ class TestModeDumpAgent:
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
-    def patch_config_load(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        loaded_config = EMPTYCONFIG
+    def patch_config_load(
+        self, monkeypatch: pytest.MonkeyPatch, hostname: HostName, ipaddress: HostAddress
+    ) -> None:
+        loaded_config = replace(EMPTYCONFIG, ipaddresses={hostname: ipaddress})
         monkeypatch.setattr(
             config,
             config.load.__name__,

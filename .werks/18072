@@ -1,0 +1,11 @@
+Title: Agent signature keys: Add expire date and time
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1749117579
+Edition: cee
+Level: 1
+Version: 2.2.0p44
+
+The new column "Expires" now shows the date and time an agent signing key will
+expire.

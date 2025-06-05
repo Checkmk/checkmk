@@ -5,7 +5,9 @@
 import logging
 import os
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -17,6 +19,7 @@ from tests.testlib.version import CMKEdition, CMKPackageInfo, get_min_version
 from tests.plugins_integration import checks
 
 logger = logging.getLogger(__name__)
+cleanup: Final[bool] = os.getenv("CLEANUP", "1") == "1"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -145,17 +148,33 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
             site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
             logger.info('Rule "%s" created!', ruleset_name)
 
-            logger.info("Setting dynamic configuration global settings...")
-            # set global settings for dynamic configuration: high timeout values to make DCD being
-            # only triggered manually within the test execution
-            site.write_file(
-                "etc/check_mk/dcd.d/wato/global.mk",
-                "dcd_activate_changes_timeout = 3600\n"
-                "dcd_bulk_discovery_timeout = 3600\n"
-                "dcd_site_update_interval = 3600\n",
-            )
+            with _modify_dcd_global_settings(site):
+                yield site
 
-            yield site
+
+@contextmanager
+def _modify_dcd_global_settings(site: Site) -> Iterator[None]:
+    """Set global settings for dynamic configuration
+
+    High timeout values to make DCD being only triggered manually within the test execution.
+    """
+    wato_dir = site.path("etc/check_mk/dcd.d/wato")
+    logger.info("Setting dynamic configuration global settings...")
+    try:
+        site.run(["cp", str(wato_dir / "global.mk"), str(wato_dir / "global.mk.bak")])
+        site.write_file(
+            "etc/check_mk/dcd.d/wato/global.mk",
+            "dcd_activate_changes_timeout = 3600\n"
+            "dcd_bulk_discovery_timeout = 3600\n"
+            "dcd_site_update_interval = 3600\n",
+        )
+        yield
+    finally:
+        if cleanup:
+            # restore original global settings
+            site.run(["cp", str(wato_dir / "global.mk.bak"), str(wato_dir / "global.mk")])
+            logger.info("Restored original global settings in '%s'", wato_dir / "global.mk")
+            site.run(["rm", "-f", str(wato_dir / "global.mk.bak")])
 
 
 @pytest.fixture(name="site_factory_update", scope="session")

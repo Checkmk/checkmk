@@ -277,13 +277,13 @@ def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.C
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """Skip tests of unwanted types"""
-    if item.config.getoption("--dry-run"):
-        pytest.xfail("*** DRY-RUN ***")
     current_edition = edition_from_env()
     skip_editions: list[TypeCMKEdition] = []
     for mark in item.iter_markers(name="skip_if_edition"):
         skip_editions += [
-            edition if isinstance(edition, TypeCMKEdition) else TypeCMKEdition(edition)
+            edition
+            if isinstance(edition, TypeCMKEdition)
+            else TypeCMKEdition().edition_from_text(str(edition))
             for edition in mark.args
         ]
     if skip_editions and current_edition in skip_editions:
@@ -298,3 +298,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         pytest.skip(
             f'Test skipped because edition "{current_edition.edition_data.long}" is skipped implicitly!'
         )
+
+    if item.config.getoption("--dry-run"):
+        pytest.xfail("*** DRY-RUN ***")

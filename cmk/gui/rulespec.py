@@ -11,18 +11,16 @@ from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.utils.rule_specs.registering import register_plugin
-from cmk.gui.watolib.notification_parameter import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
+from cmk.gui.watolib.rulespecs import RulespecRegistry
 
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 
-def register() -> None:
-    # This is only a placeholder to call to ensure that the module is loaded and recognized as a
-    # main module
-    pass
-
-
-def load_plugins() -> None:
+def register(
+    rulespec_registry: RulespecRegistry,
+    notification_parameter_registry: NotificationParameterRegistry,
+) -> None:
     errors, loaded_rule_specs = load_api_v1_rule_specs(debug_enabled())
     if errors:
         logger.error("Error loading rulespecs: %s", errors)
@@ -35,12 +33,16 @@ def load_plugins() -> None:
                 error,
             )
 
-    register_plugins(loaded_rule_specs)
+    register_plugins(rulespec_registry, notification_parameter_registry, loaded_rule_specs)
 
 
-def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
+def register_plugins(
+    rulespec_registry: RulespecRegistry,
+    notification_parameter_registry: NotificationParameterRegistry,
+    loaded_rule_specs: Sequence[LoadedRuleSpec],
+) -> None:
     for loaded_rule_spec in loaded_rule_specs:
         if isinstance(loaded_rule_spec.rule_spec, NotificationParameters):
             notification_parameter_registry.register(loaded_rule_spec.rule_spec)
 
-        register_plugin(loaded_rule_spec)
+        register_plugin(rulespec_registry, loaded_rule_spec)

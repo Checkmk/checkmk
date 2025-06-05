@@ -21,9 +21,15 @@ from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-laye
     RuleSpec,
 )
 from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.notification_parameter import (  # pylint: disable=cmk-module-layer-violation
+    notification_parameter_registry,
+)
 from cmk.gui.watolib.rulesets import (  # pylint: disable=cmk-module-layer-violation
     AllRulesets,
     RulesetCollection,
+)
+from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
+    rulespec_registry,
 )
 
 from cmk.discover_plugins import (
@@ -134,7 +140,7 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
     )
 
     _, loaded = load_discovered_rule_specs(discovered)
-    register_plugins(loaded)
+    register_plugins(rulespec_registry, notification_parameter_registry, loaded)
 
     def _add_name_prefix(plugin: RuleSpec) -> str:
         match plugin:

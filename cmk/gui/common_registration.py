@@ -99,6 +99,7 @@ from cmk.gui.watolib.host_rename import RenameHostHookRegistry
 from cmk.gui.watolib.hosts_and_folders import FolderValidatorsRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry
@@ -303,4 +304,4 @@ def register(
     user_config.register(config_file_registry)
     configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)
-    rulespec.register()
+    rulespec.register(rulespec_registry, notification_parameter_registry)

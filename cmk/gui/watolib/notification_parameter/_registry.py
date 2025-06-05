@@ -76,7 +76,8 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
                 parameter_form=plugin.form_spec,
             )
             register_plugin(
-                LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))
+                _rulespecs.rulespec_registry,
+                LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root)),
             )
 
     def parameter_called(self) -> Dictionary:

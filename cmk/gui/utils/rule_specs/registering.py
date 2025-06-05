@@ -13,10 +13,10 @@ from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
-from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.rulespecs import RulespecRegistry
 
 
-def register_plugin(loaded_rule_spec: LoadedRuleSpec) -> None:
+def register_plugin(rulespec_registry: RulespecRegistry, loaded_rule_spec: LoadedRuleSpec) -> None:
     try:
         legacy_rulespec = convert_to_legacy_rulespec(
             loaded_rule_spec.rule_spec, loaded_rule_spec.edition_only, _

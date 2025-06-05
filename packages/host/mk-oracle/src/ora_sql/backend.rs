@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self, ora_sql::AuthType, ora_sql::Endpoint};
+use crate::config::{self, ora_sql::AuthType, ora_sql::Endpoint, ora_sql::EngineTag};
 use crate::types::{HostName, PointName, Port};
 use anyhow::Result;
 
@@ -10,19 +10,19 @@ use crate::config::ora_sql::Authentication;
 // use oracle::{Connection, Error};
 
 #[derive(Debug)]
-pub struct StdBackend {}
+pub struct StdEngine {}
 
 #[derive(Debug)]
-pub struct SqlPlusBackend {}
+pub struct SqlPlusEngine {}
 
 #[derive(Debug)]
-pub struct JdbcBackend {}
+pub struct JdbcEngine {}
 
 #[derive(Debug)]
-pub enum Backend {
-    Std(StdBackend),
-    SqlPlus(SqlPlusBackend),
-    Jdbc(JdbcBackend),
+pub enum Engine {
+    Std(StdEngine),
+    SqlPlus(SqlPlusEngine),
+    Jdbc(JdbcEngine),
 }
 
 #[derive(Debug)]
@@ -36,31 +36,31 @@ pub struct Target {
 #[derive(Debug, Default)]
 pub struct TaskBuilder {
     target: Option<Target>,
-    backend: Option<Backend>,
+    engine: Option<Engine>,
     database: Option<String>,
 }
 
 #[derive(Debug)]
 pub struct Task {
     target: Target,
-    backend: Backend,
+    engine: Engine,
     _database: Option<String>,
 }
 
 impl Task {
     pub fn connect(&self) -> Result<()> {
-        match &self.backend {
-            Backend::Std(_) => Ok(()),
-            Backend::SqlPlus(_) => anyhow::bail!("JDBC backend is not implemented yet"),
-            Backend::Jdbc(_) => anyhow::bail!("JDBC backend is not implemented yet"),
+        match &self.engine {
+            Engine::Std(_) => Ok(()),
+            Engine::SqlPlus(_) => anyhow::bail!("Sql*Plus engine is not implemented yet"),
+            Engine::Jdbc(_) => anyhow::bail!("JDBC engine is not implemented yet"),
         }
     }
     pub fn target(&self) -> &Target {
         &self.target
     }
 
-    pub fn backend(&self) -> &Backend {
-        &self.backend
+    pub fn engine(&self) -> &Engine {
+        &self.engine
     }
 
     pub fn database(&self) -> Option<&String> {
@@ -88,16 +88,20 @@ impl TaskBuilder {
         self
     }
 
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.backend = Some(backend);
+    pub fn engine(mut self, engine_tag: &EngineTag) -> Self {
+        self.engine = Some(match engine_tag {
+            EngineTag::Std | EngineTag::Auto => Engine::Std(StdEngine {}),
+            EngineTag::SqlPlus => Engine::SqlPlus(SqlPlusEngine {}),
+            EngineTag::Jdbc => Engine::Jdbc(JdbcEngine {}),
+        });
         self
     }
 
     pub fn build(self) -> Result<Task> {
         Ok(Task {
-            backend: self
-                .backend
-                .ok_or_else(|| anyhow::anyhow!("Backend not defined"))?,
+            engine: self
+                .engine
+                .ok_or_else(|| anyhow::anyhow!("Engine not defined"))?,
             target: self
                 .target
                 .ok_or_else(|| anyhow::anyhow!("Target is absent"))?,
@@ -115,7 +119,7 @@ pub struct Credentials {
 pub fn make_task(endpoint: &Endpoint) -> Result<Task> {
     TaskBuilder::new()
         .target(endpoint)
-        .backend(Backend::SqlPlus(SqlPlusBackend {}))
+        .engine(endpoint.conn().engine_tag())
         .build()
 }
 
@@ -160,7 +164,7 @@ oracle:
        instance: XE
        timeout: 1
 "#;
-        Config::from_string(&BASE.replace("type_tag", auth_type))
+        Config::from_string(BASE.replace("type_tag", auth_type))
             .unwrap()
             .unwrap()
     }

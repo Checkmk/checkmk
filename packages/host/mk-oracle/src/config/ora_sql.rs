@@ -14,6 +14,7 @@ use crate::types::{
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::time::Duration;
 use yaml_rust2::YamlLoader;
@@ -100,8 +101,8 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_string(source: &str) -> Result<Option<Self>> {
-        YamlLoader::load_from_str(source)?
+    pub fn from_string<T: AsRef<str>>(source: T) -> Result<Option<Self>> {
+        YamlLoader::load_from_str(source.as_ref())?
             .first()
             .and_then(|e| Config::from_yaml(e).transpose())
             .transpose()
@@ -373,25 +374,37 @@ impl TryFrom<&str> for AuthType {
     }
 }
 
+impl fmt::Display for AuthType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AuthType::Standard => write!(f, "{}", values::STANDARD),
+            AuthType::Os => write!(f, "{}", values::OS),
+            AuthType::Kerberos => write!(f, "{}", values::KERBEROS),
+        }
+    }
+}
+
 #[derive(PartialEq, Debug, Clone)]
-pub enum Backend {
+pub enum EngineTag {
+    Auto,
     Std,
     SqlPlus,
     Jdbc,
 }
 
-impl Default for Backend {
+impl Default for EngineTag {
     fn default() -> Self {
         Self::Std
     }
 }
 
-impl Backend {
+impl EngineTag {
     fn from_string<T>(value: T) -> Option<Self>
     where
         T: AsRef<str>,
     {
         match value.as_ref() {
+            "auto" => Some(Self::Auto),
             "std" => Some(Self::Std),
             "jdbc" => Some(Self::Jdbc),
             "sql_plus" => Some(Self::SqlPlus),
@@ -406,7 +419,7 @@ pub struct Connection {
     point: PointName,
     port: Port,
     timeout: u64,
-    backend: Backend,
+    engine_tag: EngineTag,
 }
 
 impl Connection {
@@ -437,14 +450,14 @@ impl Connection {
                 log::debug!("no timeout specified, using default");
                 defaults::CONNECTION_TIMEOUT
             }),
-            backend: {
+            engine_tag: {
                 let value: String = conn
-                    .get_string(keys::BACKEND)
+                    .get_string(keys::ENGINE_TAG)
                     .unwrap_or_default()
                     .to_lowercase();
-                Backend::from_string(value.as_str()).unwrap_or_else(|| {
-                    log::error!("Unknown backend '{}'", &value);
-                    Backend::default()
+                EngineTag::from_string(value.as_str()).unwrap_or_else(|| {
+                    log::error!("Unknown engine '{}'", &value);
+                    EngineTag::default()
                 })
             },
         }))
@@ -459,8 +472,8 @@ impl Connection {
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
     }
-    pub fn backend(&self) -> &Backend {
-        &self.backend
+    pub fn engine_tag(&self) -> &EngineTag {
+        &self.engine_tag
     }
     pub fn point(&self) -> &PointName {
         &self.point
@@ -488,7 +501,7 @@ impl Default for Connection {
             point: PointName::Instance(defaults::INSTANCE_NAME.into()),
             port: Port(defaults::CONNECTION_PORT),
             timeout: defaults::CONNECTION_TIMEOUT,
-            backend: Backend::default(),
+            engine_tag: EngineTag::default(),
         }
     }
 }
@@ -779,7 +792,7 @@ mod tests {
     use self::data::TEST_CONFIG;
 
     use super::*;
-    use crate::config::{ora_sql::Backend, section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::config::{ora_sql::EngineTag, section::SectionKind, yaml::test_tools::create_yaml};
     mod data {
         /// copied from tests/files/test-config.yaml
         pub const TEST_CONFIG: &str = r#"
@@ -829,7 +842,7 @@ oracle:
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
         connection: # optional,  same as above
-          backend: odbc
+          engine: jdbc
         alias: "someApplicationName" # optional
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
@@ -842,7 +855,7 @@ oracle:
         connection:
           hostname: "local"
           port: 500
-          backend: std
+          engine: std
   configs:
     - main:
         options:
@@ -1032,30 +1045,32 @@ authentication:
         assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.timeout(), Duration::from_secs(341));
-        assert_eq!(c.backend(), &Backend::default());
+        assert_eq!(c.engine_tag(), &EngineTag::default());
     }
 
     #[test]
-    fn test_connection_backend() {
-        let test: Vec<(&str, Backend)> = vec![
-            ("standard", Backend::Std),
-            ("sql_plus", Backend::SqlPlus),
-            ("unknown", Backend::default()),
-            ("", Backend::default()),
+    fn test_connection_engine() {
+        let test: Vec<(&str, EngineTag)> = vec![
+            ("auto", EngineTag::Auto),
+            ("standard", EngineTag::Std),
+            ("jdbc", EngineTag::Jdbc),
+            ("sql_plus", EngineTag::SqlPlus),
+            ("unknown", EngineTag::default()),
+            ("", EngineTag::default()),
         ];
         for (value, expected) in test {
-            let config_text = create_full_connection_with_backend(value);
+            let config_text = create_full_connection_with_engine(value);
             let c = Connection::from_yaml(&create_yaml(&config_text), None)
                 .unwrap()
                 .unwrap();
-            assert_eq!(c.backend(), &expected);
+            assert_eq!(c.engine_tag(), &expected, "for value `{value}`");
         }
     }
 
-    fn create_full_connection_with_backend(value: &str) -> String {
+    fn create_full_connection_with_engine(value: &str) -> String {
         format!(
             r#"{}
-  backend: {}
+  engine_tag: {}
 "#,
             data::CONNECTION_FULL,
             value
@@ -1386,21 +1401,21 @@ oracle:
           hostname: ab
 "
         );
-        Config::from_string(&source).unwrap().unwrap()
+        Config::from_string(source).unwrap().unwrap()
     }
 
     #[test]
     fn test_calc_hash() {
         let c1 = Config::from_string(TEST_CONFIG).unwrap().unwrap();
-        let c2 = Config::from_string(&(TEST_CONFIG.to_string() + "\n# xxx"))
+        let c2 = Config::from_string(TEST_CONFIG.to_string() + "\n# xxx")
             .unwrap()
             .unwrap();
         let c3 = Config::from_string(
-            &(TEST_CONFIG.to_string()
+            TEST_CONFIG.to_string()
                 + r#"
     - main:
         authentication: # mandatory
-          username: "f" # mandatory"#),
+          username: "f" # mandatory"#,
         )
         .unwrap()
         .unwrap();

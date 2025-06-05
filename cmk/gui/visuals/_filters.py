@@ -267,6 +267,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             query_filter=query_filters.TextQuery(
                 ident="host_check_command_exact",
                 op="=",
+                column="host_check_command",
             ),
         )
     )

@@ -318,6 +318,12 @@ metric_pgstate_active_undersized_remapped_backfilling = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
+metric_pgstate_active_undersized_degraded_remapped_backfill_wait_backfill_toofull = metrics.Metric(
+    name="pgstate_active_undersized_degraded_remapped_backfill_wait_backfill_toofull",
+    title=Title("PGs Active + Undersized + Degraded + Remapped + Backfill + Wait + Toofull"),
+    unit=UNIT_COUNTER,
+    color=metrics.Color.RED,
+)
 metric_pgstate_down = metrics.Metric(
     name="pgstate_down",
     title=Title("PGs Down"),

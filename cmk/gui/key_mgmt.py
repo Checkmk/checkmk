@@ -121,6 +121,10 @@ class PageKeyManagement:
     def title(self) -> str:
         raise NotImplementedError()
 
+    @classmethod
+    def name(cls) -> str:
+        raise NotImplementedError()
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._may_edit_config():
             return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -241,6 +245,10 @@ class PageKeyManagement:
                 html.icon_button(download_url, _("Download this key"), "download")
                 table.cell(_("Description"), key.alias)
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
+                # We need the expire date and time only for agent signing keys.
+                # see CMK-23867
+                if self.name() == "signature_keys":
+                    table.cell(_("Expires"), str(key.to_certificate().not_valid_after))
                 table.cell(_("By"), key.owner)
                 table.cell(_("Digest (MD5)"), key.fingerprint(HashAlgorithm.MD5))
                 table.cell(_("Key ID"), key_id)

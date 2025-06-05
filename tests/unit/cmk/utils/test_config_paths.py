@@ -16,25 +16,18 @@ from cmk.utils.config_path import VersionedConfigPath
 class TestVersionedConfigPath:
     @pytest.fixture
     def config_path(self) -> Iterator[VersionedConfigPath]:
-        VersionedConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
-        # Call next because this is where `latest` etc. are created and updated.
-        yield next(VersionedConfigPath(0))
+        shutil.rmtree(VersionedConfigPath.ROOT, ignore_errors=True)
+        yield VersionedConfigPath.next()
         shutil.rmtree(VersionedConfigPath.ROOT)
 
-    def test_iter(self, config_path: VersionedConfigPath) -> None:
-        for it, elem in enumerate(config_path, config_path.serial + 1):
-            if it == 10:
-                break
-            assert elem == type(config_path)(it)
-
     def test_next(self, config_path: VersionedConfigPath) -> None:
-        assert config_path == VersionedConfigPath.current() == VersionedConfigPath(1)
+        assert config_path == VersionedConfigPath(1)
 
-        config_path = next(config_path)
-        assert config_path == VersionedConfigPath.current() == VersionedConfigPath(2)
+        config_path = VersionedConfigPath.next()
+        assert config_path == VersionedConfigPath(2)
 
-        config_path = next(config_path)
-        assert config_path == VersionedConfigPath.current() == VersionedConfigPath(3)
+        config_path = VersionedConfigPath.next()
+        assert config_path == VersionedConfigPath(3)
 
     def test_str(self, config_path: VersionedConfigPath) -> None:
         assert isinstance(str(config_path), str)
@@ -47,13 +40,15 @@ class TestVersionedConfigPath:
         assert config_path == Path(config_path)
         assert config_path != VersionedConfigPath.LATEST_CONFIG
         assert config_path != VersionedConfigPath.LATEST_CONFIG
-        assert config_path != next(config_path)
+        next_config_path = VersionedConfigPath.next()
+        assert config_path != next_config_path
 
     def test_hash(self, config_path: VersionedConfigPath) -> None:
         assert isinstance(hash(config_path), int)
         assert hash(config_path) == hash(type(config_path)(config_path.serial))
         assert hash(config_path) != hash(VersionedConfigPath.LATEST_CONFIG)
-        assert hash(config_path) != hash(next(config_path))
+        next_config_path = VersionedConfigPath.next()
+        assert hash(config_path) != hash(next_config_path)
 
     def test_fspath(self, config_path: VersionedConfigPath) -> None:
         assert config_path.serial == 1
@@ -73,7 +68,7 @@ class TestVersionedConfigPath:
         assert VersionedConfigPath.LATEST_CONFIG.exists()
         assert VersionedConfigPath.LATEST_CONFIG.resolve() == Path(config_path).resolve()
 
-        next_config_path = next(config_path)
+        next_config_path = VersionedConfigPath.next()
         with next_config_path.create(is_cmc=is_cmc):
             assert Path(next_config_path).exists()
             assert VersionedConfigPath.LATEST_CONFIG.exists()
@@ -98,7 +93,7 @@ class TestVersionedConfigPath:
         assert VersionedConfigPath.LATEST_CONFIG.exists()
         assert VersionedConfigPath.LATEST_CONFIG.resolve() == Path(config_path).resolve()
 
-        next_config_path = next(config_path)
+        next_config_path = VersionedConfigPath.next()
         with suppress(RuntimeError), next_config_path.create(is_cmc=is_cmc):
             assert Path(next_config_path).exists()
             assert VersionedConfigPath.LATEST_CONFIG.exists()

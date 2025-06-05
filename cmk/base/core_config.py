@@ -382,7 +382,7 @@ def _create_core_config(
     passwords = config_cache.collect_passwords()
     cmk.utils.password_store.save(passwords, cmk.utils.password_store.pending_password_store_path())
 
-    config_path = next(VersionedConfigPath.current())
+    config_path = VersionedConfigPath.next()
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
         core.create_config(
             config_path,

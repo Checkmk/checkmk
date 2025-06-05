@@ -11,7 +11,7 @@ import shutil
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Final
+from typing import Final, Self
 
 from cmk.ccc import store
 
@@ -20,7 +20,7 @@ from cmk.utils.paths import omd_root
 __all__ = ["VersionedConfigPath"]
 
 
-class VersionedConfigPath(Iterator):
+class VersionedConfigPath:
     # Note - Security: This must remain hard-coded to a path not writable by others.
     #                  See BNS:c3c5e9.
     ROOT: Final = omd_root / "var/check_mk/core/helper_config"
@@ -48,21 +48,11 @@ class VersionedConfigPath(Iterator):
         return hash(Path(self))
 
     @classmethod
-    def current(cls) -> VersionedConfigPath:
-        serial: int = store.load_object_from_file(cls._SERIAL_MK, default=0, lock=True)
-        return cls(serial)
-
-    def __iter__(self) -> Iterator[VersionedConfigPath]:
-        serial = self.serial
-        while True:
-            serial += 1
-            store.save_object_to_file(self._SERIAL_MK, serial)
-            yield VersionedConfigPath(serial)
-
-    def __next__(self) -> VersionedConfigPath:
-        serial = self.serial + 1
-        store.save_object_to_file(self._SERIAL_MK, serial)
-        return VersionedConfigPath(serial)
+    def next(cls) -> Self:
+        old_serial: int = store.load_object_from_file(cls._SERIAL_MK, default=0, lock=True)
+        new_serial = old_serial + 1
+        store.save_object_to_file(cls._SERIAL_MK, new_serial)
+        return cls(new_serial)
 
     def previous_config_path(self) -> VersionedConfigPath:
         return VersionedConfigPath(self.serial - 1)

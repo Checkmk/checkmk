@@ -1807,6 +1807,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def title(self) -> str:
         return _("Keys for backups")
 
+    @classmethod
+    def name(cls) -> str:
+        return "backup_signature_keys"
+
     def page(self) -> None:
         show_key_download_warning(self.key_store.load())
         super().page()

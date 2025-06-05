@@ -462,6 +462,12 @@ function deleteGraphLine(graphLine: GraphLine) {
 
 function updateGraphLineAutoTitle(graphLine: GraphLine) {
   switch (graphLine.type) {
+    case 'metric':
+    case 'scalar': {
+      const autoTitleParts = [graphLine.host_name, graphLine.service_name, graphLine.metric_name]
+      graphLine.auto_title = `${autoTitleParts.filter((p) => p !== '').join(' > ')}`
+      break
+    }
     case 'constant':
       graphLine.auto_title = `${props.i18n.topics.constant} ${graphLine.value}`
       break
@@ -835,6 +841,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  @update:host-name="updateGraphLineAutoTitle(graphLine)"
+                  @update:service-name="updateGraphLineAutoTitle(graphLine)"
+                  @update:metric-name="updateGraphLineAutoTitle(graphLine)"
                 />
               </template>
               <template #metric_type>
@@ -853,6 +862,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
+                  @update:host-name="updateGraphLineAutoTitle(graphLine)"
+                  @update:service-name="updateGraphLineAutoTitle(graphLine)"
+                  @update:metric-name="updateGraphLineAutoTitle(graphLine)"
                 />
               </template>
               <template #metric_type>

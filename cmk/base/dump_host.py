@@ -12,18 +12,12 @@ from typing import Literal
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
-from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.hostaddress import HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-from cmk.utils import ip_lookup
-from cmk.utils.ip_lookup import (
-    IPLookupConfig,
-    IPStackConfig,
-    lookup_ip_address,
-    make_lookup_ip_address,
-)
+from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -47,7 +41,7 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import sources
-from cmk.base.config import ConfigCache, handle_ip_lookup_failure
+from cmk.base.config import ConfigCache
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import SNMPFetcherConfig, Source
 
@@ -131,14 +125,13 @@ def dump_host(
     plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
-    ip_address_of: ip_lookup.IPLookup,
-    ip_address_of_mgmt: ip_lookup.IPLookup,
+    ip_address_of: IPLookup,
+    ip_address_of_mgmt: IPLookup,
     simulation_mode: bool,
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
     hosts_config = config_cache.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config()
 
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -152,11 +145,7 @@ def dump_host(
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
     primary_family = config_cache.default_address_family(hostname)
     ipaddress = (
-        None
-        if ip_stack_config is IPStackConfig.NO_IP
-        else _ip_address_for_dump_host(
-            ip_lookup_config, hosts_config, hostname, family=primary_family
-        )
+        None if ip_stack_config is IPStackConfig.NO_IP else ip_address_of(hostname, primary_family)
     )
 
     addresses: str | None = ""
@@ -164,14 +153,7 @@ def dump_host(
         addresses = ipaddress
     else:
         try:
-            secondary = str(
-                _ip_address_for_dump_host(
-                    ip_lookup_config,
-                    hosts_config,
-                    hostname,
-                    family=_complementary_family(primary_family),
-                )
-            )
+            secondary = str(ip_address_of(hostname, _complementary_family(primary_family)))
         except Exception:
             secondary = "X.X.X.X"
 
@@ -274,11 +256,7 @@ def dump_host(
                 ipaddress,
                 password_store_file=used_password_store,
                 passwords=passwords,
-                ip_address_of=ip_lookup.ConfiguredIPLookup(
-                    make_lookup_ip_address(ip_lookup_config),
-                    allow_empty=config_cache.hosts_config.clusters,
-                    error_handler=handle_ip_lookup_failure,
-                ),
+                ip_address_of=ip_address_of,
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
@@ -346,20 +324,3 @@ def _evaluate_params(params: TimespecificParameters) -> str:
         if params.is_constant()
         else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active)!r}"
     )
-
-
-def _ip_address_for_dump_host(
-    ip_lookup_config: IPLookupConfig,
-    hosts_config: Hosts,
-    host_name: HostName,
-    *,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-) -> HostAddress | None:
-    try:
-        return lookup_ip_address(ip_lookup_config, host_name, family=family)
-    except Exception:
-        return (
-            HostAddress("")
-            if host_name in hosts_config.clusters
-            else ip_lookup.fallback_ip_for(family)
-        )

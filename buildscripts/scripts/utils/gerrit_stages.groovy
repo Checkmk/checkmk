@@ -4,6 +4,8 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+gerrit_stages_status_color_mapping = ['success': 'green', 'skipped': 'grey', 'failure': 'red']
+
 // Creates a stage with provided properties. The created stage will be marked as
 // successful or failed if its command returns with non-zero and can thus be used
 // to implement tests.
@@ -179,7 +181,7 @@ def desc_add_status_row(STAGE, DURATION, status, PATTERN) {
     currentBuild.description += """<tr>
     <td>${STAGE}</td>
     <td>${DURATION}</td>
-    <td style=\"color: ${['success': 'green', 'skipped': 'grey', 'failure': 'red'][status]};\">${status}</td>
+    <td style=\"color: ${gerrit_stages_status_color_mapping[status]};\">${status}</td>
     <td>${PATTERN}</td>
     </tr>""";
     desc_add_table_bottom();
@@ -207,7 +209,7 @@ def desc_add_status_row_gerrit(Map args) {
     def additional_desc = """<tr>
     <td>${triggered_build}</td>
     <td>${args.duration}</td>
-    <td style=\"color: ${['success': 'green', 'skipped': 'grey', 'failure': 'red'][args.status]};\">${args.status}</td>
+    <td style=\"color: ${gerrit_stages_status_color_mapping[args.status]};\">${args.status}</td>
     <td>${parser_warnings}</td>
     <td>${pattern_url}</td>
     </tr>""";

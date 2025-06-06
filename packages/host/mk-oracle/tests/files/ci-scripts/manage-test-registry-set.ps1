@@ -1,6 +1,6 @@
 $command = $args[0]
 $name = $args[1]
-$package = "mk-sql"
+$package = "mk-oracle"
 
 function Install-Me {
     param (

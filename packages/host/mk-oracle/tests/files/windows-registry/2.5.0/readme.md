@@ -7,7 +7,7 @@ Import all reg files to the registry.
 export registry branch from, for example:
 
 ```
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.INSTANCE1
+HKEY_LOCAL_MACHINE\SOFTWARE\ORACLE
 ```
 
 replace
@@ -21,9 +21,9 @@ with
 where
 
 * Repo-Name is a name of the repo, for example, *2.5.0*
-* Package-Name is a name of the package, for example, *mk-sql* or *cmk-agent-ctl*
-* Group-Name is a name of the test group, for example *instances* or *tcp-logic*
-* Test-Name is a name of the some test(or tests), for example, *test-tcp-base*
+* Package-Name is a name of the package, for example, *mk-oracle* or *cmk-agent-ctl*
+* Group-Name is a name of the test group, for example *instances*
+* Test-Name is a name of the some test(or tests), for example, *test-registry*
 
 # How to use it
 

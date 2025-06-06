@@ -259,11 +259,12 @@ div#top_heading {
         background-color: $page-menu-bg-color;
         opacity: 1;
         scrollbar-width: none; /* Firefox */
-        img {
+        img,
+        svg {
           width: 14px;
           height: 14px;
           margin-right: 5px;
-          padding-bottom: 2px;
+          padding: 0 0 2px 0;
           &.emblem {
             right: 0;
             bottom: -2px;

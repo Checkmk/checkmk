@@ -33,7 +33,7 @@ export async function fetchMetricColor<OutputType>(
   metricName: string,
   metricType: 'average' | 'min' | 'max' | 'warn' | 'crit'
 ): Promise<OutputType> {
-  const response = await cmkFetch('ajax_metric_color.py', {
+  const response = await cmkFetch('ajax_fetch_metric_color.py', {
     method: 'POST',
     headers: {
       'Content-type': 'application/x-www-form-urlencoded'

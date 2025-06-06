@@ -373,14 +373,14 @@ def test_check_cmk_agent_update(
     "trusted_certs,results",
     (
         (None, []),  # no cert details, pre 2.2 updater
-        ({}, [Result(state=State.CRIT, notice="Updater has no trusted certificates")]),
+        ({}, [Result(state=State.OK, notice="Agent updater has no trusted agent signature keys")]),
         (
             {
                 0: {"corrupt": True},
             },
             [
-                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
-                Result(state=State.CRIT, notice="Updater has no trusted certificates"),
+                Result(state=State.OK, notice="Agent signature key #0 is corrupt"),
+                Result(state=State.OK, notice="Agent updater has no trusted agent signature keys"),
             ],
         ),
         (
@@ -395,11 +395,11 @@ def test_check_cmk_agent_update(
             [
                 Result(
                     state=State.OK,
-                    notice="Time until updater certificate #0 (CN='foo') will expire: 42 years 9 days",  # timespan apparently does not care for leap years
+                    notice="Time until agent signature key #0 ('foo') will expire: 42 years 9 days",  # timespan apparently does not care for leap years
                 ),
                 Result(
                     state=State.OK,
-                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                    notice="Time until all agent signature keys are expired: 42 years 9 days",
                 ),
             ],
         ),
@@ -414,14 +414,14 @@ def test_check_cmk_agent_update(
                 },
             },
             [
-                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(state=State.OK, notice="Agent signature key #0 is corrupt"),
                 Result(
                     state=State.OK,
-                    notice="Time until updater certificate #1 (CN='foo') will expire: 42 years 9 days",
+                    notice="Time until agent signature key #1 ('foo') will expire: 42 years 9 days",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                    notice="Time until all agent signature keys are expired: 42 years 9 days",
                 ),
             ],
         ),
@@ -449,19 +449,19 @@ def test_check_cmk_agent_update(
             [
                 Result(
                     state=State.OK,
-                    notice="Time until updater certificate #0 (CN='foo') will expire: 42 years 9 days",
-                ),
-                Result(
-                    state=State.WARN,
-                    notice="Updater certificate #1 (CN='bar') is expired",
-                ),
-                Result(
-                    state=State.WARN,
-                    notice="Time until updater certificate #2 (CN='foobar') will expire: 6 days 21 hours (warn/crit below 90 days 0 hours/never)",
+                    notice="Time until agent signature key #0 ('foo') will expire: 42 years 9 days",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                    notice="Agent signature key #1 ('bar') is expired",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until agent signature key #2 ('foobar') will expire: 6 days 21 hours",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all agent signature keys are expired: 42 years 9 days",
                 ),
             ],
         ),
@@ -487,18 +487,18 @@ def test_check_cmk_agent_update(
                 },
             },
             [
-                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(state=State.OK, notice="Agent signature key #0 is corrupt"),
                 Result(
                     state=State.OK,
-                    notice="Time until updater certificate #1 (CN='signed') will expire: 22 years 213 days",
+                    notice="Time until agent signature key #1 ('signed') will expire: 22 years 213 days",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Time until updater certificate #2 (CN='Lorem ipsum') will expire: 22 years 213 days",
+                    notice="Time until agent signature key #2 ('Lorem ipsum') will expire: 22 years 213 days",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Time until all updater certificates are expired: 22 years 213 days",
+                    notice="Time until all agent signature keys are expired: 22 years 213 days",
                 ),
             ],
         ),

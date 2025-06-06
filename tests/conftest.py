@@ -294,7 +294,7 @@ def _editions_from_markers(item: pytest.Item, marker_name: EditionMarker) -> lis
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
-    """Skip tests of unwanted types"""
+    """Skip tests for specific editions or environments"""
     current_edition = edition_from_env()
 
     skip_editions = _editions_from_markers(item, EditionMarker.skip_if)

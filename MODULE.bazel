@@ -35,16 +35,23 @@ single_version_override(
 )
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
-PYTHON_VERSION = "3.12.3"
+PYTHON_VERSION = "3.12.11"
 
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.single_version_platform_override(
+    platform = "x86_64-unknown-linux-gnu",
+    python_version = "3.12.11",
+    sha256 = "9cd19efa875ae61d358b5dfeebc72035dd6fd11870943869394d2d7534675e28",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20250604/cpython-3.12.11+20250604-x86_64-unknown-linux-gnu-install_only.tar.gz",
+    ],
+)
 python.toolchain(
     is_default = True,
-    # We can specify the exact version.
-    python_version = PYTHON_VERSION,
+    python_version = "3.12.11",
 )
 
 bazel_dep(name = "rules_mypy", version = "0.17.0")

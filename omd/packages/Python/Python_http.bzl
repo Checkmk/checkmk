@@ -1,5 +1,4 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 load("//:package_versions.bzl", "PYTHON_VERSION")
 
 def python_workspace():
@@ -10,8 +9,8 @@ def python_workspace():
         build_file = "@omd_packages//omd/packages/Python:BUILD.Python.bazel",
         urls = [
             "https://www.python.org/ftp/python/" + version_str + "/" + filename,
-            UPSTREAM_MIRROR_URL + filename,
+            # UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = "7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112",
+        sha256 = "c30bb24b7f1e9a19b11b55a546434f74e739bb4c271a3e3a80ff4380d49f7adb",
         strip_prefix = "Python-" + version_str,
     )

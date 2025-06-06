@@ -12,17 +12,22 @@ load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescri
 
 npm_link_all_packages(name = "node_modules")
 
+SOURCES_COMMON = [
+    "configuration_entity.json",
+    "mode_host.json",
+    "notifications.json",
+    "setup.json",
+    "user_frontend_config.json",
+    "vue_formspec_components.json",
+]
+
+SOURCES_PYDANTIC = [
+    "graph_designer.json",
+]
+
 json2typescript(
     name = "generated_ts_files",
-    srcs = [
-        "configuration_entity.json",
-        "graph_designer.json",
-        "mode_host.json",
-        "notifications.json",
-        "setup.json",
-        "user_frontend_config.json",
-        "vue_formspec_components.json",
-    ],
+    srcs = SOURCES_COMMON + SOURCES_PYDANTIC,
     chdir = package_name(),
     data = glob([
         "source/**/*.json",
@@ -87,8 +92,8 @@ py_library(
 )
 
 json2python(
-    name = "generated_py_files_graph_designer",
-    srcs = ["graph_designer.json"],
+    name = "generated_py_files_pydantic",
+    srcs = SOURCES_PYDANTIC,
     data = ["header_py.txt"],
     extra_args = [
         "--use-field-description",
@@ -111,14 +116,7 @@ json2python(
 
 json2python(
     name = "generated_py_files_common",
-    srcs = [
-        "configuration_entity.json",
-        "mode_host.json",
-        "notifications.json",
-        "setup.json",
-        "user_frontend_config.json",
-        "vue_formspec_components.json",
-    ],
+    srcs = SOURCES_COMMON,
     data = ["header_py.txt"],
     extra_args = [
         "--use-field-description",
@@ -148,7 +146,7 @@ py_library(
     srcs = [
         ":cmk/shared_typing/__init__.py",
         ":generated_py_files_common",
-        ":generated_py_files_graph_designer",
+        ":generated_py_files_pydantic",
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],

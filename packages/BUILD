@@ -6,7 +6,6 @@ filegroup(
         "//packages/cmk-ccc:requirements.in",
         "//packages/cmk-crypto:requirements.in",
         "//packages/cmk-events:requirements.in",
-        "//packages/cmk-graphing:requirements.in",
         "//packages/cmk-livestatus-client:requirements.in",
         "//packages/cmk-messaging:requirements.in",
         "//packages/cmk-mkp-tool:requirements.in",

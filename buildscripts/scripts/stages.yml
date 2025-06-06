@@ -144,9 +144,6 @@ VARIABLES:
     - NAME: CHANGED_CMK_CRYPTO_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-crypto/' || true"
 
-    - NAME: CHANGED_CMK_GRAPHING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-graphing/' || true"
-
     - NAME: CHANGED_CMK_MESSAGING_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-messaging/' || true"
 
@@ -572,14 +569,6 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-events files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
-
-    - NAME: "Package cmk-graphing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_GRAPHING_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-graphing"
-      COMMAND: "./run --all &> ${RESULTS}/cmk-graphing.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-graphing files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
     - NAME: "Package cmk-livestatus-client"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS

@@ -40,6 +40,7 @@ configure_make(
         "LDFLAGS='-static-libstdc++ -static-libgcc'",
         "--with-openssl=$$EXT_BUILD_DEPS/openssl",
         "--with-openssl-rpath=auto",
+        "--with-ssl-default-suites=openssl",
         "CFLAGS='-Dredacted=\"redacted\"'",
         "--enable-optimizations",
         "--enable-shared",

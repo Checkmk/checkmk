@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal, override, TypedDict
 
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema
@@ -58,14 +58,17 @@ class BIAggregationFunctionBestSerialized(AggregationFunctionConfig):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
+    @override
     @classmethod
     def kind(cls) -> AggregationKind:
         return "best"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIAggregationFunctionBestSchema]:
         return BIAggregationFunctionBestSchema
 
+    @override
     def serialize(self) -> BIAggregationFunctionBestSerialized:
         return BIAggregationFunctionBestSerialized(
             type=self.kind(),
@@ -73,12 +76,14 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
             restrict_state=self.restrict_state,
         )
 
+    @override
     def __init__(self, aggr_function_config: BIAggregationFunctionBestSerialized) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
+    @override
     def aggregate(self, states: list[int]) -> int:
         index = min(len(states) - 1, self.count - 1)
         return map_states(states, index, self.restricted_bi_level)
@@ -119,14 +124,17 @@ class BIAggregationFunctionWorstSerialized(AggregationFunctionConfig):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
+    @override
     @classmethod
     def kind(cls) -> AggregationKind:
         return "worst"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIAggregationFunctionWorstSchema]:
         return BIAggregationFunctionWorstSchema
 
+    @override
     def serialize(self) -> BIAggregationFunctionWorstSerialized:
         return BIAggregationFunctionWorstSerialized(
             type=self.kind(),
@@ -134,12 +142,14 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
             restrict_state=self.restrict_state,
         )
 
+    @override
     def __init__(self, aggr_function_config: BIAggregationFunctionWorstSerialized) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
+    @override
     def aggregate(self, states: list[int]) -> int:
         index = max(0, len(states) - self.count)
         return map_states(states, index, self.restricted_bi_level)
@@ -179,14 +189,17 @@ class BIAggregationFunctionCountOKSerialized(AggregationFunctionConfig):
 
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
+    @override
     @classmethod
     def kind(cls) -> AggregationKind:
         return "count_ok"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIAggregationFunctionCountOKSchema]:
         return BIAggregationFunctionCountOKSchema
 
+    @override
     def serialize(self) -> BIAggregationFunctionCountOKSerialized:
         return BIAggregationFunctionCountOKSerialized(
             type=self.kind(),
@@ -194,11 +207,13 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
             levels_warn=self.levels_warn,
         )
 
+    @override
     def __init__(self, aggr_function_config: BIAggregationFunctionCountOKSerialized) -> None:
         super().__init__(aggr_function_config)
         self.levels_ok = aggr_function_config["levels_ok"]
         self.levels_warn = aggr_function_config["levels_warn"]
 
+    @override
     def aggregate(self, states: list[int]) -> int:
         ok_nodes = states.count(0)
 
@@ -262,6 +277,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "count_ok": BIAggregationFunctionCountOKSchema,
     # }
 
+    @override
     def get_obj_type(
         self, obj: ABCBIAggregationFunction | AggregationFunctionConfig
     ) -> AggregationKind:

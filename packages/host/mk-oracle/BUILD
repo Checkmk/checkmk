@@ -31,6 +31,7 @@ rust_library(
         "src/ora_sql/instance.rs",
         "src/ora_sql/section.rs",
         "src/ora_sql/sqls.rs",
+        "src/ora_sql/types.rs",
         "src/platform.rs",
         "src/setup.rs",
         "src/types.rs",

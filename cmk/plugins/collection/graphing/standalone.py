@@ -1363,14 +1363,6 @@ metric_mem_lnx_hardware_corrupted = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_PINK,
 )
-# Consumed Host memory usage is defined as the amount of host memory that is allocated to the
-# virtual machine
-metric_mem_esx_host = metrics.Metric(
-    name="mem_esx_host",
-    title=Title("Consumed host memory"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.GREEN,
-)
 # # Active Guest Memory is defined as the amount of guest memory that is currently being used by the
 # guest operating system and its applications
 metric_mem_esx_guest = metrics.Metric(

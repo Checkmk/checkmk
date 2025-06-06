@@ -2,11 +2,26 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+from cmk.ccc import version
+
+from cmk.utils import paths
+
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+
+skip_if_saas = pytest.mark.skipif(
+    version.edition(paths.omd_root) is version.Edition.CSE,
+    reason="Users endpoints are deactivate in SaaS",
+)
+
+
+skip_if_not_saas = pytest.mark.skipif(
+    version.edition(paths.omd_root) is not version.Edition.CSE,
+    reason="This test is only for SaaS",
+)
 
 
 # LDAP API Schema Example
@@ -186,6 +201,7 @@ def create_ldap_connections(clients: ClientRegistry) -> None:
         )
 
 
+@skip_if_saas
 def test_get_ldap_connection_min_config(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     resp = clients.LdapConnection.get(ldap_connection_id="LDAP_1")
@@ -251,6 +267,7 @@ def test_get_ldap_connection_min_config(clients: ClientRegistry) -> None:
     }
 
 
+@skip_if_saas
 def test_get_ldap_connection_doesnt_exist(clients: ClientRegistry) -> None:
     clients.LdapConnection.get(
         ldap_connection_id="LDAP_1",
@@ -258,6 +275,7 @@ def test_get_ldap_connection_doesnt_exist(clients: ClientRegistry) -> None:
     ).assert_status_code(404)
 
 
+@skip_if_saas
 def test_get_ldap_connections(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     cnx4 = ldap_api_schema(ldap_id="LDAP_4")
@@ -266,6 +284,7 @@ def test_get_ldap_connections(clients: ClientRegistry) -> None:
     assert resp.json["value"][3]["extensions"] == cnx4
 
 
+@skip_if_saas
 def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.create(
@@ -274,6 +293,7 @@ def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+@skip_if_saas
 def test_create_ldap_connection_existing_non_sync_connection(clients: ClientRegistry) -> None:
     clients.LdapConnection.create(
         ldap_data=ldap_api_schema(ldap_id="LDAP_1"),
@@ -281,6 +301,7 @@ def test_create_ldap_connection_existing_non_sync_connection(clients: ClientRegi
     ).assert_status_code(400)
 
 
+@skip_if_saas
 def test_delete_ldap_connection(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     resp = clients.LdapConnection.get_all()
@@ -290,6 +311,7 @@ def test_delete_ldap_connection(clients: ClientRegistry) -> None:
     assert len(resp.json["value"]) == 2
 
 
+@skip_if_saas
 def test_delete_ldap_connection_valid_etag(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.delete(
@@ -298,6 +320,7 @@ def test_delete_ldap_connection_valid_etag(clients: ClientRegistry) -> None:
     )
 
 
+@skip_if_saas
 def test_delete_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.delete(
@@ -307,6 +330,7 @@ def test_delete_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
     ).assert_status_code(412)
 
 
+@skip_if_saas
 def test_edit_ldap_connection(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     edited_ldap_3 = ldap_api_schema(ldap_id="LDAP_3")
@@ -315,6 +339,7 @@ def test_edit_ldap_connection(clients: ClientRegistry) -> None:
     assert resp.json["value"][2]["extensions"] == edited_ldap_3
 
 
+@skip_if_saas
 def test_edit_ldap_connection_that_doesnt_exist(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.edit(
@@ -324,6 +349,7 @@ def test_edit_ldap_connection_that_doesnt_exist(clients: ClientRegistry) -> None
     ).assert_status_code(404)
 
 
+@skip_if_saas
 def test_edit_ldap_connection_valid_etag(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     resp1 = clients.LdapConnection.edit(
@@ -335,6 +361,7 @@ def test_edit_ldap_connection_valid_etag(clients: ClientRegistry) -> None:
     assert resp1.headers["ETag"] == resp2.headers["ETag"]
 
 
+@skip_if_saas
 def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.edit(
@@ -345,6 +372,7 @@ def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
     ).assert_status_code(412)
 
 
+@skip_if_saas
 def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
     clients.LdapConnection.create(
         ldap_data={
@@ -373,6 +401,7 @@ def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+@skip_if_saas
 def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
     LDAPUserConnector.connection_suffixes = {}
     clients.LdapConnection.create(
@@ -391,3 +420,31 @@ def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
     assert LDAPUserConnector.get_connection_suffixes() == {"suffix_1": "LDAP_1"}
     clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
     assert not LDAPUserConnector.get_connection_suffixes()
+
+
+@skip_if_not_saas
+def test_ldap_connection_endpoints_return_404_in_cse_edition(clients: ClientRegistry) -> None:
+    """
+    Ensure all LdapConnection REST API endpoints return 404 in CSE edition.
+    """
+
+    resp = clients.LdapConnection.create(
+        ldap_data={"general_properties": {"id": "LDAP_1"}}, expect_ok=False
+    )
+    resp.assert_status_code(404)
+
+    resp = clients.LdapConnection.get(ldap_connection_id="LDAP_1", expect_ok=False)
+    resp.assert_status_code(404)
+
+    resp = clients.LdapConnection.get_all(expect_ok=False)
+    resp.assert_status_code(404)
+
+    resp = clients.LdapConnection.edit(
+        ldap_connection_id="LDAP_1",
+        ldap_data={"general_properties": {"id": "LDAP_1"}},
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+
+    resp = clients.LdapConnection.delete(ldap_connection_id="LDAP_1", expect_ok=False)
+    resp.assert_status_code(404)

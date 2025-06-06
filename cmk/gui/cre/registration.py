@@ -37,7 +37,7 @@ from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
-from cmk.gui.openapi.endpoints import autocomplete
+from cmk.gui.openapi.endpoints import autocomplete, ldap_connection
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0 import painter_registry
@@ -295,3 +295,4 @@ def register(edition: Edition) -> None:
 def _openapi_registration() -> None:
     autocomplete.register(endpoint_registry)
     metric_endpoint.register(endpoint_registry)
+    ldap_connection.register(endpoint_registry)

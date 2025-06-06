@@ -197,7 +197,7 @@ def register(main_menu_registry_: MainMenuRegistry) -> None:
             name="customize",
             title=_l("Customize"),
             icon="main_customize",
-            sort_index=10,
+            sort_index=11,
             topics=_customize_menu_topics,
             hide=hide_customize_menu,
         )

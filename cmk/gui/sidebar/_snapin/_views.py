@@ -47,7 +47,7 @@ def register(
             name="monitoring",
             title=_l("Monitor"),
             icon="main_monitoring",
-            sort_index=5,
+            sort_index=9,
             topics=view_menu_topics,
             search=MonitoringSearch("monitoring_search"),
         )

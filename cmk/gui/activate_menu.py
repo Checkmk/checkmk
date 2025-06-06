@@ -28,7 +28,7 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             name="changes",
             title=_l("Changes"),
             icon="main_changes",
-            sort_index=17,
+            sort_index=7,
             topics=lambda: [
                 MainMenuTopic(
                     name="changes",

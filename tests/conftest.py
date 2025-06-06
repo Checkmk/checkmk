@@ -299,11 +299,11 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
     skip_editions = _editions_from_markers(item, EditionMarker.skip_if)
     if skip_editions and current_edition in skip_editions:
-        pytest.skip(f'Test skipped because edition "{current_edition.long}" is skipped explicitly!')
+        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped explicitly!')
 
     unskip_editions = _editions_from_markers(item, EditionMarker.skip_if_not)
     if unskip_editions and current_edition not in unskip_editions:
-        pytest.skip(f'Test skipped because edition "{current_edition.long}" is skipped implicitly!')
+        pytest.skip(f'{item.nodeid}: Edition "{current_edition.long}" is skipped implicitly!')
 
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")

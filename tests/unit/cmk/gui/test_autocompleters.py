@@ -22,7 +22,6 @@ def test_builtin_autocompleters_registered() -> None:
         "monitored_hostname",
         "monitored_metrics",
         "monitored_service_description",
-        "otel_host_name_computation",
         "service_levels",
         "sites",
         "syslog_facilities",

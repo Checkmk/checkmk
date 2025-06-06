@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
 from marshmallow import validate
@@ -35,12 +34,10 @@ _bi_criticality_level = {
 _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()}
 
 
-def mapped_states(f: Callable[[Any, list[int]], int]) -> Callable[[Any, list[int]], int]:
-    def wrapped_f(self: ABCBIAggregationFunction, states: list[int]) -> int:
-        new_states = sorted(_bi_criticality_level[state] for state in states)
-        return _reversed_bi_criticality_level.get(f(self, new_states), BIStates.UNKNOWN)
-
-    return wrapped_f
+def map_states(states: list[int], index: int, restricted_bi_level: int) -> int:
+    new_states = sorted(_bi_criticality_level[state] for state in states)
+    level = min(restricted_bi_level, new_states[index])
+    return _reversed_bi_criticality_level.get(level, BIStates.UNKNOWN)
 
 
 #   .--Best----------------------------------------------------------------.
@@ -76,9 +73,9 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
-    @mapped_states
     def aggregate(self, states: list[int]) -> int:
-        return min(self.restricted_bi_level, states[min(len(states) - 1, self.count - 1)])
+        index = min(len(states) - 1, self.count - 1)
+        return map_states(states, index, self.restricted_bi_level)
 
 
 class BIAggregationFunctionBestSchema(Schema):
@@ -132,9 +129,9 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
         self.restrict_state = aggr_function_config["restrict_state"]
         self.restricted_bi_level = _bi_criticality_level[self.restrict_state]
 
-    @mapped_states
     def aggregate(self, states: list[int]) -> int:
-        return min(self.restricted_bi_level, states[max(0, len(states) - self.count)])
+        index = max(0, len(states) - self.count)
+        return map_states(states, index, self.restricted_bi_level)
 
 
 class BIAggregationFunctionWorstSchema(Schema):

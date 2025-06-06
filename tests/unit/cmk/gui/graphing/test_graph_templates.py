@@ -865,6 +865,47 @@ def test_evaluate_title_missing_scalar() -> None:
             ],
             id="Thresholds present",
         ),
+        pytest.param(
+            "throuput=1;2;3;;",
+            {
+                "throuput": RegisteredMetric(
+                    name="throuput",
+                    title_localizer=lambda _localizer: "Throughput",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="T"),
+                        precision=AutoPrecision(digits=3),
+                    ),
+                    color="",
+                ),
+            },
+            [
+                MetricExpression(
+                    WarningOf(Metric("throuput")),
+                    line_type="-line",
+                    title="Warning throuput",
+                ),
+                MetricExpression(
+                    CriticalOf(Metric("throuput")),
+                    line_type="-line",
+                    title="Critical throuput",
+                ),
+            ],
+            [
+                HorizontalRule(
+                    value=-2.0,
+                    rendered_value="2 T",
+                    color="#ffd000",
+                    title="Warning throuput",
+                ),
+                HorizontalRule(
+                    value=-3.0,
+                    rendered_value="3 T",
+                    color="#ff3232",
+                    title="Critical throuput",
+                ),
+            ],
+            id="Mirrored thresholds",
+        ),
     ],
 )
 def test_horizontal_rules_from_thresholds(

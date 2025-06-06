@@ -561,7 +561,7 @@ def _evaluate_scalars(
             return []
         results.append(
             HorizontalRule(
-                value=result.ok.value,
+                value=result.ok.value * (-1 if result.ok.line_type.startswith("-") else 1),
                 rendered_value=user_specific_unit(
                     result.ok.unit_spec,
                     user,

@@ -758,9 +758,7 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Execute pip freeze and convert to JSON
 
-        lines = subprocess.check_output(
-            ["pip3", "freeze", "--all", "--no-python-version-warning"], text=True
-        ).split("\n")
+        lines = subprocess.check_output(["pip3", "freeze", "--all"], text=True).split("\n")
         return {l.split("==")[0]: l.split("==")[1] for l in lines if "==" in l}
 
 

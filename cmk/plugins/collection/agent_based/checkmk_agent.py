@@ -303,11 +303,21 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
 def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:
     """check the certificate part of the agent updater section
 
-    * Warn if a certificate is corrupt
-    * Warn if a certificate is not valid anymore
-    * Warn if a certificate is about to become invalid
-    * Crit if there is no trusted certificate
-    * Warn/Crit if there will be no valid cert in 90/30 days.
+    Write to details if:
+    * A certificate is corrupt
+    * A certificate is not valid anymore
+    * There is no trusted certificate
+
+    Yield metrics about:
+    * When each certificate is about to become invalid
+    * When the last certificate is about to become invalid
+
+    We don't issue WARN/CRIT here because the certificates are centrally managed in the bakery, so
+    the warning about an expiring certificate should also be issued centrally.
+    Otherwise, we would receive identical warnings from each affected host.
+
+    We call the certificate "agent signature key" in the service output, since it's merely an
+    implementation detail that we wrap the (public) key in a certificate.
     """
 
     if parsed.trusted_certs is None:
@@ -317,7 +327,7 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
     longest_valid = -1.0  # How long is the longest running certificate valid?
     for number, cert_info in parsed.trusted_certs.items():
         if cert_info.corrupt:
-            yield Result(state=State.WARN, notice=f"Updater certificate #{number} is corrupt")
+            yield Result(state=State.OK, notice=f"Agent signature key #{number} is corrupt")
             continue
 
         assert cert_info.not_after is not None  # It is only None if cert is corrupt
@@ -328,28 +338,26 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 
         if duration_valid.total_seconds() < 0:
             yield Result(
-                state=State.WARN,
-                notice=f"Updater certificate #{number} (CN={cert_info.common_name!r}) is expired",
+                state=State.OK,
+                notice=f"Agent signature key #{number} ({cert_info.common_name!r}) is expired",
             )
         else:
             amount_trusted += 1
             longest_valid = max(longest_valid, duration_valid.total_seconds())
             yield from check_levels_v1(
                 duration_valid.total_seconds(),
-                levels_lower=(90 * 3600 * 24, None),  # type: ignore[arg-type]
                 render_func=render.timespan,
-                label=f"Time until updater certificate #{number} (CN={cert_info.common_name!r}) will expire",
+                label=f"Time until agent signature key #{number} ({cert_info.common_name!r}) will expire",
                 notice_only=True,
             )
 
     if amount_trusted == 0:
-        yield Result(state=State.CRIT, notice="Updater has no trusted certificates")
+        yield Result(state=State.OK, notice="Agent updater has no trusted agent signature keys")
     else:
         yield from check_levels_v1(
             longest_valid,
-            levels_lower=(90 * 3600 * 24, 30 * 3600 * 24),
             render_func=render.timespan,
-            label="Time until all updater certificates are expired",
+            label="Time until all agent signature keys are expired",
             notice_only=True,
         )
 

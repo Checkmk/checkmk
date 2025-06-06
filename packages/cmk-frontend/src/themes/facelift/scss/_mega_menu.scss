@@ -296,7 +296,7 @@
               margin: 3px 0 0; /* No spacing if icons per entry are used */
             }
 
-            a.show_all_topics,
+            a.collapse_topic,
             div.spacer {
               img {
                 display: none;
@@ -416,7 +416,7 @@
                 margin-left: 0;
               }
 
-              a.show_all_topics img {
+              a.collapse_topic img {
                 display: block;
               }
             }

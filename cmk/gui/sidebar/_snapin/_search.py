@@ -1064,7 +1064,13 @@ match_plugin_registry.register(ServiceMatchPlugin())
 class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self) -> None:
         super().__init__(["services"], "services", "st")
-        self._state_mapping = {"ok": "0", "warn": "1", "crit": "2", "unkn": "3", "pend": "p"}
+        self._state_mapping = {
+            "ok": "0",
+            "warn": "1",
+            "crit": "2",
+            "unkn": "3",
+            "pend": "p",
+        }
         self._supported_views = frozenset({"allservices", "searchsvc"})
 
     def _get_service_state_from_filter(self, value: str) -> str:
@@ -1596,9 +1602,9 @@ class MenuSearchResultsRenderer(abc.ABC):
         html.div(class_="spacer", content="")
 
         html.open_a(
-            class_="show_all_topics",
+            class_="collapse_topic",
             href=None,
-            onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
+            onclick=f"cmk.search.on_click_collapse_topic({json.dumps(topic)})",
         )
         html.icon(icon="collapse_arrow", title=_("Show all topics"))
         html.close_a()

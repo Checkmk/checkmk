@@ -256,16 +256,20 @@ class MegaMenuRenderer:
         topic_id: str,
         topic: TopicMenuTopic | TopicMenuTopicSegment,
     ) -> None:
-        # TODO: Fix expansion/collaps mechanism of multilevel TopicMenuTopicSegment instances to
-        #       work with that of the "Show all" entry
-        #       https://jira.lan.tribe29.com/browse/CMK-23671
         html.open_h2()
         html.open_a(
-            class_="show_all_topics",
+            class_="collapse_topic",
             href=None,
-            onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id,
+            onclick="cmk.popup_menu.mega_menu_collapse_topic('%s')" % topic_id,
         )
-        html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
+        html.icon(
+            icon="collapse_arrow",
+            title=(
+                _("Show all %s topics") % menu_id
+                if isinstance(topic, TopicMenuTopic)
+                else _("Close topic segment %s") % topic.title
+            ),
+        )
         html.close_a()
         if not user.get_attribute("icons_per_item") and topic.icon:
             html.icon(topic.icon)

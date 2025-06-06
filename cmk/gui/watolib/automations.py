@@ -30,7 +30,7 @@ from livestatus import SiteConfiguration
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import get_omd_config, omd_site, SiteId
+from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 
@@ -113,8 +113,7 @@ def make_automation_config(
 ) -> LocalAutomationConfig | RemoteAutomationConfig:
     return (
         LocalAutomationConfig()
-        # TODO: check with lm why this change is needed
-        if site_is_local(site_config, site_config.get("id", omd_site()))
+        if site_is_local(site_config, site_config["id"])
         else RemoteAutomationConfig.from_site_config(site_config)
     )
 

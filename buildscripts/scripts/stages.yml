@@ -132,9 +132,6 @@ VARIABLES:
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
 
-    - NAME: CHANGED_CMK_AGENT_BASED_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
-
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/\\|^packages/host/Cargo' || true"
 
@@ -167,6 +164,9 @@ VARIABLES:
 
     - NAME: CHANGED_CMK_OTEL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel-collector/' || true"
+
+    - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
 
     - NAME: CHANGED_RULESETS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
@@ -525,13 +525,13 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
-    - NAME: "Package cmk-agent-based"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_BASED_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-agent-based"
+    - NAME: "Package cmk-plugin-apis"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGIN_APIS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "packages/cmk-plugin-apis"
       BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: "./run --all &> ${RESULTS}/cmk-agent-based.txt"
-      TEXT_ON_SKIP: "No cmk-agent-based files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-based.txt"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-plugin-apis.txt"
+      TEXT_ON_SKIP: "No cmk-plugin-apis files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-plugin-apis.txt"
 
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES

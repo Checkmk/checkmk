@@ -131,7 +131,6 @@ CSE_PY = glob([
 
 CMK_PACKAGES = [
     "//packages/cmk-shared-typing:cmk_shared_typing_py",
-    "//packages/cmk-agent-based",
     "//packages/cmk-agent-receiver",
     "//packages/cmk-ccc:cleanup",
     "//packages/cmk-ccc:crash-reporting",
@@ -154,6 +153,7 @@ CMK_PACKAGES = [
     "//packages/cmk-livestatus-client:py_livestatus",
     "//packages/cmk-messaging",
     "//packages/cmk-mkp-tool",
+    "//packages/cmk-plugin-apis",
     "//packages/cmk-rulesets",
     "//packages/cmk-server-side-calls",
     "//packages/cmk-trace",

@@ -1,5 +1,5 @@
 [project]
-name = "cmk-agent-based"
+name = "cmk-plugin-apis"
 version = "1.0.0"
 dynamic = ["dependencies"]
 

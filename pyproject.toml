@@ -82,7 +82,7 @@ ignore = [
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
 "agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
-"packages/cmk-agent-based/cmk/agent_based/v1/type_defs.py" = [
+"packages/cmk-plugin-apis/cmk/agent_based/v1/type_defs.py" = [
   "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
   "UP035", # Import from `FOO` instead: `BAR`
 ]

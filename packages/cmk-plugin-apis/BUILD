@@ -10,7 +10,7 @@ exports_files([
 ])
 
 py_library(
-    name = "cmk-agent-based",
+    name = "cmk-plugin-apis",
     srcs = [
         "cmk/agent_based/legacy/__init__.py",
         "cmk/agent_based/legacy/_loading.py",
@@ -46,7 +46,7 @@ py_library(
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = ["cmk-agent-based"],
+    srcs = ["cmk-plugin-apis"],
     tags = ["no-mypy"],
 )
 
@@ -64,18 +64,18 @@ py_test(
     main = "__test__.py",
     deps = [
         ":__test__",
-        ":cmk-agent-based",
+        ":cmk-plugin-apis",
         requirement("pytest"),
     ],
 )
 
 py_wheel(
     name = "wheel",
-    distribution = "cmk-agent-based",
-    strip_path_prefixes = ["packages/cmk-agent-based"],
+    distribution = "cmk-plugin-apis",
+    strip_path_prefixes = ["packages/cmk-plugin-apis"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [":cmk-agent-based"],
+    deps = [":cmk-plugin-apis"],
 )
 
 package_wheel(

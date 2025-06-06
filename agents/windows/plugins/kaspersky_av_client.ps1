@@ -21,45 +21,73 @@ Regardless of the system's date/time settings
 #>
 
 $CMK_VERSION = "2.5.0b1"
-$strStatisticsLoc = "HKLM:\SOFTWARE\Wow6432Node\KasperskyLab\Components\34\1103\1.0.0.0\Statistics\AVState"
+$g_AVStateRegKey = "HKLM:\SOFTWARE\Wow6432Node\KasperskyLab\Components\34\1103\1.0.0.0\Statistics\AVState"
 
 function StrDateTimeToCheckmkFormat {
     param (
         [string]$strDateTime
     )
+    try {
+        $dateTime = [datetime]::ParseExact($strDateTime, "dd-MM-yyyy HH-mm-ss", $null)
+        $localDateTimeString = $dateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
+    }
+    catch {
+        Write-Output "Error parsing date: $($_.Exception.Message)"
+        return
+    }
 
-    $dateTime = [datetime]::ParseExact($strDateTime, "dd-MM-yyyy HH-mm-ss", $null)
-    $localDateTimeString = $dateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
     Write-Output $localDateTimeString
 }
 
-$strProtection_LastConnected = Get-ItemPropertyValue $strStatisticsLoc -Name Protection_LastConnected
+function GetKasperskyRegistryDateValue {
+    param (
+        [string]$RegistryPath,
+        [string]$Name
+    )
+    $value = Get-ItemPropertyValue $RegistryPath -Name $Name
+    if ($null -eq $value -or $value -eq "") { return $null }
+    return $value
+}
 
-# If the strProtection_LastConnected key can be read Kaspersky AV is assumed to be installed
-if ($null -ne $strProtection_LastConnected) {
-    Write-Output "<<<kaspersky_av_client>>>"
+function GetKasperskyFullscanStatus {
+    $lastFscan = GetKasperskyRegistryDateValue $g_AVStateRegKey "Protection_LastFscan"
+    if (-not $lastFscan) {
+        return "Fullscan Missing"
+    }
+    return "Fullscan $(StrDateTimeToCheckmkFormat $lastFscan)"
+}
 
-    # Protection_BasesDate key is set with old signatures from installer
-    $strProtection_BasesDate = Get-ItemPropertyValue $strStatisticsLoc -Name Protection_BasesDate
-    if (-not $strProtection_BasesDate) {
-        Write-Output "Signatures Missing"
+function GetKasperskySignatureStatus {
+    $basesDate = GetKasperskyRegistryDateValue $g_AVStateRegKey "Protection_BasesDate"
+    if (-not $basesDate) {
+        return "Signatures Missing"
+    }
+    return "Signatures $(StrDateTimeToCheckmkFormat $basesDate)"
+}
+
+function GetKasperskyAvClientStatus {
+    $lastConnected = GetKasperskyRegistryDateValue $g_AVStateRegKey "Protection_LastConnected"
+    if ($null -ne $lastConnected) {
+        Write-Output "<<<kaspersky_av_client>>>"
+        try {
+            Write-Output (GetKasperskySignatureStatus)
+        }
+        catch {
+            Write-Output "GetKasperskySignatureStatus Error: $($_.Exception.Message)"
+        }
+        try {
+            Write-Output (GetKasperskyFullscanStatus)
+        }
+        catch {
+            Write-Output "GetKasperskyFullscanStatus Error: $($_.Exception.Message)"
+        }
     }
     else {
-        Write-Output "Signatures $(StrDateTimeToCheckmkFormat $strProtection_BasesDate)"
+        # Write-Output "<<<kaspersky_av_client>>>"
+        # Write-Output "Signatures Missing"
+        # Write-Output "Fullscan Missing"
+        # Write-Output "Missing Kaspersky Client"
     }
+}
 
-    # Protection_LastFscan key deployed empty on installation
-    $strProtection_LastFscan = Get-ItemPropertyValue $strStatisticsLoc -Name Protection_LastFscan
-    if (-not $strProtection_LastFscan) {
-        Write-Output "Fullscan Missing"
-    }
-    else {
-        Write-Output "Fullscan $(StrDateTimeToCheckmkFormat $strProtection_LastFscan)"
-    }
-}
-else {
-    # Write-Output "<<<kaspersky_av_client>>>"
-    # Write-Output "Signatures Missing"
-    # Write-Output "Fullscan Missing"
-    # Write-Output "Missing Kaspersky Client"
-}
+GetKasperskyAvClientStatus

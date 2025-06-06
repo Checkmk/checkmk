@@ -894,11 +894,11 @@ fi
 
 _run_cached_internal() {
     # Run a command asynchronous by use of a cache file.
-    # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
+    # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
     # Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
     # This means that extra escaping is required.
     # For example:
-    # To run a cat command every two minutes, considering the created data valid for one three minutes,
+    # To run a cat command every two minutes, considering the created data valid for three minutes,
     # send the created data for four minutes and allowing the command to run for 12 minutes, you'll have to call
     #
     #   _run_cached_interal "my_file_content" 120 180 240 720 "cat \"My File\""

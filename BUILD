@@ -208,6 +208,27 @@ pip_compile(
 )
 
 compile_requirements_in(
+    name = "raw-requirements-in",
+    constraints = [
+        ":bazel-requirements-constraints.txt",
+        ":requirements.txt",
+        "//:constraints.txt",
+    ],
+    requirements = [
+        "//cmk:requirements.in",
+        "//packages:python_requirements",
+        "//:dev-requirements.in",
+    ],
+)
+
+pip_compile(
+    name = "raw_requirements",
+    requirements_in = ":raw-requirements-in",
+    requirements_txt = ":raw-requirements.txt",
+    tags = ["manual"],
+)
+
+compile_requirements_in(
     name = "runtime-requirements-in",
     constraints = [
         ":bazel-requirements-constraints.txt",
@@ -228,13 +249,13 @@ pip_compile(
     requirements_in = ":runtime-requirements-in",
     requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],
-    visibility = ["//visibility:public"],
 )
 
 multirun(
     name = "lock_python_requirements",
     commands = [
         ":requirements",
+        ":raw_requirements",
         ":runtime_requirements",
     ],
     # Running in a single threaded mode allows consecutive `uv` invocations to benefit
@@ -242,12 +263,12 @@ multirun(
     jobs = 1,
 )
 
-test_suite(
-    name = "requirements_test_suite",
-    tests = [
-        ":requirements_test",
-        ":runtime_requirements_test",
-    ],
+alias(
+    name = "python_requirements_test",
+    actual = select({
+        "@//:gpl_repo": "raw_requirements_test",
+        "@//:gpl+enterprise_repo": "requirements_test",
+    }),
 )
 
 write_file(
@@ -286,7 +307,10 @@ write_file(
 create_venv(
     name = "create_venv",
     destination_folder = ".venv",
-    requirements_txt = "@//:requirements.txt",
+    requirements_txt = select({
+        "@//:gpl_repo": ":raw-requirements.txt",
+        "@//:gpl+enterprise_repo": ":requirements.txt",
+    }),
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",

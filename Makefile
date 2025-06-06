@@ -229,12 +229,13 @@ sw-documentation:
 relock_venv:
 	echo > requirements.txt
 	touch runtime-requirements.txt
+	touch raw-requirements.txt
 	bazel run //:lock_python_requirements > /dev/null
 
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv:
 	@set -e; \
-	if ! bazel test //:requirements_test > /dev/null; then \
+	if ! bazel run //:python_requirements_test > /dev/null; then \
 		if [ "${CI}" == "true" ]; then \
 			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
 			echo "It seems you forgot to commit the new lock file. Regenerate with: make relock_venv"; \

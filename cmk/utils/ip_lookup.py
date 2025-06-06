@@ -73,6 +73,50 @@ class IPLookupConfig:
     use_dns_cache: bool
 
 
+def make_lookup_mgmt_board_ip_address(
+    ip_config: IPLookupConfig,
+) -> Callable[
+    [
+        HostName,
+        Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ],
+    HostAddress | None,
+]:
+    def lookup_mgmt_board_ip_address(
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ) -> HostAddress | None:
+        mgmt_address: Final = ip_config.management_address(host_name)
+        try:
+            mgmt_ipa = (
+                None
+                if mgmt_address is None
+                else HostAddress(str(ipaddress.ip_address(mgmt_address)))
+            )
+        except (ValueError, TypeError):
+            mgmt_ipa = None
+
+        try:
+            return _lookup_ip_address(
+                # host name is ignored, if mgmt_ipa is trueish.
+                host_name=mgmt_address or host_name,
+                family=family,
+                configured_ip_address=mgmt_ipa,
+                simulation_mode=ip_config.simulation_mode,
+                is_snmp_usewalk_host=(
+                    ip_config.is_use_walk_host(host_name)
+                    and ip_config.is_snmp_management(host_name)
+                ),
+                override_dns=ip_config.fake_dns,
+                is_dyndns_host=ip_config.is_dyndns_host(host_name),
+                force_file_cache_renewal=not ip_config.use_dns_cache,
+            )
+        except MKIPAddressLookupError:
+            return None
+
+    return lookup_mgmt_board_ip_address
+
+
 def lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig, host_name: HostName
 ) -> HostAddress | None:

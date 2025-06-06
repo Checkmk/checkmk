@@ -1508,6 +1508,7 @@ def test_commandline_discovery(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=lambda *a: None,
+        ip_address_of_mgmt=lambda *a: None,
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

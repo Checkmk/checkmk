@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Final, Self
 
-from cmk.ccc import store
+from cmk.ccc.store import acquire_lock, DimSerializer, ObjectStore, release_lock
 
 from cmk.utils.paths import omd_root
 
@@ -49,9 +49,16 @@ class VersionedConfigPath:
 
     @classmethod
     def next(cls) -> Self:
-        old_serial: int = store.load_object_from_file(cls._SERIAL_MK, default=0, lock=True)
+        store = ObjectStore(cls._SERIAL_MK, serializer=DimSerializer())
+        try:
+            acquire_lock(store.path)
+            old_serial: int = store.read_obj(default=0)
+        except Exception:
+            release_lock(store.path)
+            raise
         new_serial = old_serial + 1
-        store.save_object_to_file(cls._SERIAL_MK, new_serial)
+        with store.locked():
+            store.write_obj(new_serial)
         return cls(new_serial)
 
     def previous_config_path(self) -> VersionedConfigPath:

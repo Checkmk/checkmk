@@ -70,7 +70,6 @@ create_venv(
                "//packages/cmk-messaging:pkg_tar",
                "//packages/cmk-mkp-tool:pkg_tar",
                "//packages/cmk-plugin-apis:pkg_tar",
-               "//packages/cmk-server-side-calls:pkg_tar",
                "//packages/cmk-trace:pkg_tar",
                "//packages/cmk-werks:pkg_tar",
                "//packages/livestatus:livestatus_pkg",

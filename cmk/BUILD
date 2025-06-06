@@ -153,7 +153,6 @@ CMK_PACKAGES = [
     "//packages/cmk-messaging",
     "//packages/cmk-mkp-tool",
     "//packages/cmk-plugin-apis",
-    "//packages/cmk-server-side-calls",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

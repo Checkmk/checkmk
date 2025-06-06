@@ -165,9 +165,6 @@ VARIABLES:
     - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
 
-    - NAME: CHANGED_CMK_SERVER_SIDE_CALLS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-server-side-calls/' || true"
-
     - NAME: CHANGED_CMK_WERKS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks/' || true"
 
@@ -606,14 +603,6 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-otel-collector files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
-
-    - NAME: "Package cmk-server-side-calls"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
-      DIR: "packages/cmk-server-side-calls"
-      COMMAND: "./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No cmk-server-side-calls files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
 
     - NAME: "Package cmk-werks"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_CMK_CCC_FILES,CHANGED_PYTHON_REQUIREMENTS

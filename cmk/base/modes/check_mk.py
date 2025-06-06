@@ -613,26 +613,29 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
     plugins = load_checks()
     loading_result = load_config(plugins)
+    hosts_config = config.make_hosts_config(loading_result.loaded_config)
+
+    if hostname in hosts_config.clusters:
+        raise MKBailOut("Can not be used with cluster hosts")
+
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config()
+
     ip_lookup_config = config_cache.ip_lookup_config()
+    ip_family = ip_lookup_config.default_address_family(hostname)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
-        hosts_config = config.make_hosts_config(loading_result.loaded_config)
-        if hostname in hosts_config.clusters:
-            raise MKBailOut("Can not be used with cluster hosts")
-
         ip_stack_config = ConfigCache.ip_stack_config(hostname)
         ipaddress = (
             None
             if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-            else ip_lookup.lookup_ip_address(ip_lookup_config, hostname)
+            else ip_address_of(hostname, ip_family)
         )
         check_interval = config_cache.check_mk_check_interval(hostname)
         stored_walk_path = cmk.utils.paths.snmpwalks_dir
@@ -1114,12 +1117,13 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
 
     config_cache = config.load(discovery_rulesets=()).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
-        ipaddress = ip_lookup.lookup_ip_address(ip_lookup_config, hostname)
+        ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -1195,6 +1199,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
 
     config_cache = config.load(discovery_rulesets=()).config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
     if not hostnames:
@@ -1211,7 +1216,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     for hostname in (HostName(hn) for hn in hostnames):
         if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
-        ipaddress = ip_lookup.lookup_ip_address(ip_lookup_config, hostname)
+        ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 

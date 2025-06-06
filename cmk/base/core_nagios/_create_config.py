@@ -72,6 +72,7 @@ class NagiosCore(core_config.MonitoringCore):
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
         ip_address_of: ip_lookup.IPLookup,
+        ip_address_of_mgmt: ip_lookup.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],

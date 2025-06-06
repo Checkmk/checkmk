@@ -9,6 +9,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
+from dateutil.relativedelta import relativedelta
+
 from livestatus import SiteId
 
 import cmk.utils.render
@@ -525,6 +527,7 @@ def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id:
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
         organizational_unit_name=user_id,
+        expiry=relativedelta(years=10),
     )
     return Key(
         certificate=key_pair.certificate.dump_pem().str,

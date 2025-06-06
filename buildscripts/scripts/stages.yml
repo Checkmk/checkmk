@@ -126,6 +126,9 @@ VARIABLES:
     - NAME: CHANGED_MK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo' || true"
 
+    - NAME: CHANGED_MK_ORACLE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-oracle/\\|^packages/host/Cargo' || true"
+
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
 
@@ -683,6 +686,16 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
+
+    - NAME: "Package mk-oracle"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES
+      SEC_VAR_LIST:
+          - "CI_TEST_SQL_DB_ENDPOINT"
+      DIR: "packages/host/mk-oracle"
+      COMMAND: "./run --all &> ${RESULTS}/mk-oracle.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No mk-oracle files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/mk-oracle.txt"
 
     - NAME: "Package neb"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES

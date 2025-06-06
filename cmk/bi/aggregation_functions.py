@@ -22,7 +22,7 @@ from cmk.bi.lib import (
 )
 from cmk.bi.schema import Schema
 
-_bi_criticality_level = {
+_bi_criticality_level: dict[int, int] = {
     BIStates.OK: 0,
     BIStates.PENDING: 2,
     BIStates.WARN: 4,

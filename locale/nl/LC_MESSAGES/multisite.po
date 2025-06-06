@@ -45538,6 +45538,14 @@ msgstr "Aantal huidige verbindingen"
 msgid "Number of current sessions"
 msgstr "Aantal lopende sessies"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Percentage van het huidige aantal threads in de threadpool"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Percentage van huidige threads bezig in threadpool"
+
 msgid "Number of currently running sessions"
 msgstr "Aantal lopende sessies"
 

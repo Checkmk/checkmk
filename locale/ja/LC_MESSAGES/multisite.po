@@ -43585,6 +43585,14 @@ msgstr "現在の接続数"
 msgid "Number of current sessions"
 msgstr "現在のセッション数"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "スレッドプール内の現在のスレッド数のパーセンテージレベル"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "スレッドプールでビジー状態の現在のスレッドの割合"
+
 msgid "Number of currently running sessions"
 msgstr "現在実行中のセッションの数"
 

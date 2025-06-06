@@ -45627,6 +45627,14 @@ msgstr "Numărul de conexiuni curente"
 msgid "Number of current sessions"
 msgstr "Numărul de sesiuni curente"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Niveluri procentuale ale numărului curent de fire în threadpool"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Procentul de fire curente ocupate în threadpool"
+
 msgid "Number of currently running sessions"
 msgstr "Numărul de sesiuni în curs de desfășurare"
 

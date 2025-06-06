@@ -45521,6 +45521,14 @@ msgstr "Número de ligações actuais"
 msgid "Number of current sessions"
 msgstr "Número de sessões em curso"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Níveis percentuais de contagem de roscas atuais no conjunto de roscas"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Percentagem de roscas de corrente ocupadas no conjunto de roscas"
+
 msgid "Number of currently running sessions"
 msgstr "Número de sessões actualmente em curso"
 

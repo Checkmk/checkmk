@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -14,7 +14,7 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.metrics as metrics
+from cmk.gui import metrics
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._expression import (
@@ -166,29 +166,10 @@ def test__replace_expressions_missing_scalars() -> None:
 
 
 @pytest.mark.parametrize(
-    "perf_string, result",
+    "perf_string, thresholds, result",
     [
         pytest.param(
             "one=5;;;; power=5;;;; output=5;;;;",
-            [],
-            id="Unknown thresholds from check",
-        ),
-        pytest.param(
-            "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
-            [
-                HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
-                HorizontalRule(10.0, "10.0 W", "#ff3232", "Critical power"),
-                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
-            ],
-            id="Thresholds present",
-        ),
-    ],
-)
-def test_horizontal_rules_from_thresholds(
-    perf_string: str, result: Sequence[HorizontalRule]
-) -> None:
-    assert (
-        gt._horizontal_rules_from_thresholds(
             [
                 ScalarDefinition(
                     expression=WarningOf(Metric("one")),
@@ -203,6 +184,40 @@ def test_horizontal_rules_from_thresholds(
                     title="Warning output",
                 ),
             ],
+            [],
+            id="Unknown thresholds from check",
+        ),
+        pytest.param(
+            "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
+            [
+                ScalarDefinition(
+                    expression=WarningOf(Metric("one")),
+                    title="Warning",
+                ),
+                ScalarDefinition(
+                    expression=CriticalOf(Metric("power")),
+                    title="Critical power",
+                ),
+                ScalarDefinition(
+                    expression=Product([WarningOf(Metric("output")), Constant(-1)]),
+                    title="Warning output",
+                ),
+            ],
+            [
+                HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
+                HorizontalRule(10.0, "10.0 W", "#ff3232", "Critical power"),
+                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
+            ],
+            id="Thresholds present",
+        ),
+    ],
+)
+def test_horizontal_rules_from_thresholds(
+    perf_string: str, thresholds: Iterable[ScalarDefinition], result: Sequence[HorizontalRule]
+) -> None:
+    assert (
+        gt._horizontal_rules_from_thresholds(
+            thresholds,
             metrics.translate_perf_data(perf_string),
         )
         == result

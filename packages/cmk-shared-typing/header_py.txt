@@ -7,4 +7,3 @@
 # Do not edit manually.
 #
 # fmt: off
-# type: ignore

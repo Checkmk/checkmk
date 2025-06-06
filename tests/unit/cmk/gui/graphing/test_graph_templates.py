@@ -788,11 +788,28 @@ def test_evaluate_title_missing_scalar() -> None:
 
 
 @pytest.mark.parametrize(
-    ("perf_data_string", "registered_metrics", "result"),
+    ("perf_data_string", "registered_metrics", "metric_expressions", "result"),
     [
         pytest.param(
             "one=5;;;; power=5;;;; output=5;;;;",
             {},
+            [
+                MetricExpression(
+                    WarningOf(Metric("one")),
+                    line_type="line",
+                    title="Warning",
+                ),
+                MetricExpression(
+                    CriticalOf(Metric("power")),
+                    line_type="line",
+                    title="Critical power",
+                ),
+                MetricExpression(
+                    Product([WarningOf(Metric("output")), Constant(-1)]),
+                    line_type="line",
+                    title="Warning output",
+                ),
+            ],
             [],
             id="Unknown thresholds from check",
         ),
@@ -809,6 +826,23 @@ def test_evaluate_title_missing_scalar() -> None:
                     color="",
                 ),
             },
+            [
+                MetricExpression(
+                    WarningOf(Metric("one")),
+                    line_type="line",
+                    title="Warning",
+                ),
+                MetricExpression(
+                    CriticalOf(Metric("power")),
+                    line_type="line",
+                    title="Critical power",
+                ),
+                MetricExpression(
+                    Product([WarningOf(Metric("output")), Constant(-1)]),
+                    line_type="line",
+                    title="Warning output",
+                ),
+            ],
             [
                 HorizontalRule(
                     value=7.0,
@@ -836,6 +870,7 @@ def test_evaluate_title_missing_scalar() -> None:
 def test_horizontal_rules_from_thresholds(
     perf_data_string: str,
     registered_metrics: Mapping[str, RegisteredMetric],
+    metric_expressions: Sequence[MetricExpression],
     result: Sequence[HorizontalRule],
 ) -> None:
     perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
@@ -846,23 +881,7 @@ def test_horizontal_rules_from_thresholds(
     )
     assert (
         _evaluate_scalars(
-            [
-                MetricExpression(
-                    WarningOf(Metric("one")),
-                    line_type="line",
-                    title="Warning",
-                ),
-                MetricExpression(
-                    CriticalOf(Metric("power")),
-                    line_type="line",
-                    title="Critical power",
-                ),
-                MetricExpression(
-                    Product([WarningOf(Metric("output")), Constant(-1)]),
-                    line_type="line",
-                    title="Warning output",
-                ),
-            ],
+            metric_expressions,
             translated_metrics,
         )
         == result

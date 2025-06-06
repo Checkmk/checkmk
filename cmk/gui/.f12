@@ -18,6 +18,11 @@ test -d "${ROOT}" || exit 1
     bash .f12
 )
 
+(
+    cd ../../packages/cmk-shared-typing
+    bash .f12
+)
+
 if [ -z "${ONLY_COPY}" ]; then
     sudo --login -u "${SITE}" -- bash -c "omd reload apache ; omd restart ui-job-scheduler"
 fi

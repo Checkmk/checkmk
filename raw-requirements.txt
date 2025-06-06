@@ -2966,9 +2966,9 @@ pydantic==2.10.6 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   checkmk-dev-tools
     #   datamodel-code-generator
@@ -2981,9 +2981,9 @@ pydantic[email]==2.10.6 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   datamodel-code-generator
 pydantic-core==2.27.2 \
@@ -3368,7 +3368,7 @@ pytest==7.4.4 \
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
-    #   -r packages/cmk-agent-based/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   meraki
     #   pytest-asyncio

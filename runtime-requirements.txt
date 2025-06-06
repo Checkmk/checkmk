@@ -2005,6 +2005,7 @@ pydantic==2.10.6 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
@@ -2287,6 +2288,8 @@ pytest==7.4.4 \
     --hash=sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-mknotifyd/requirements.in
+    #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   meraki
@@ -2296,6 +2299,7 @@ pytest-mock==3.14.0 \
     --hash=sha256:2719255a1efeceadbc056d6bf3df3d1c5015530fb40cf347c0f9afac88410bd0
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-mknotifyd/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
@@ -2447,6 +2451,7 @@ pyyaml==6.0.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   jsonschema-path
     #   kubernetes
     #   vcrpy

@@ -180,11 +180,15 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
     def aggregate(self, states: list[int]) -> int:
         ok_nodes = states.count(0)
+
         if self._check_levels(ok_nodes, len(states), self.levels_ok):
-            return BIStates.OK
-        if self._check_levels(ok_nodes, len(states), self.levels_warn):
-            return BIStates.WARN
-        return BIStates.CRIT
+            state = BIStates.OK
+        elif self._check_levels(ok_nodes, len(states), self.levels_warn):
+            state = BIStates.WARN
+        else:
+            state = BIStates.CRIT
+
+        return int(state)
 
     def _check_levels(self, ok_nodes: int, total_nodes: int, levels: dict) -> bool:
         if levels["type"] == "count":

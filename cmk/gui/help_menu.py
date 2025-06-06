@@ -33,14 +33,16 @@ def register(
     developer_entries: Callable[[], TopicMenuTopicEntries],
     about_checkmk_entries: Callable[[], TopicMenuTopicEntries],
 ) -> None:
+    mega_menu_name = "help"
     mega_menu_registry.register(
         MegaMenu(
-            name="help",
+            name=mega_menu_name,
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
             topics=_help_menu_topics(learning_entries, developer_entries, about_checkmk_entries),
             info_line=info_line,
+            onopen=f'cmk.popup_menu.mega_menu_reset_default_expansion("{mega_menu_name}");',
         )
     )
 

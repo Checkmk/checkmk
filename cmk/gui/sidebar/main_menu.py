@@ -91,12 +91,17 @@ class MainMenuRenderer:
             if menu.hide():
                 continue
 
+            onopen = (
+                ";".join([menu.onopen or "", (menu.search.onopen if menu.search else "")])
+                if any([menu.onopen, menu.search])
+                else None
+            )
             items.append(
                 MainMenuItem(
                     name=menu.name,
                     title=str(menu.title),
                     icon=menu.icon,
-                    onopen=menu.search.onopen if menu.search else None,
+                    onopen=onopen,
                 )
             )
         return items

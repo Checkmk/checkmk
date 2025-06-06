@@ -645,6 +645,7 @@ class MegaMenu(NamedTuple):
     search: ABCMegaMenuSearch | None = None
     info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False
+    onopen: str | None = None
 
 
 SearchQuery = str

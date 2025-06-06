@@ -186,7 +186,7 @@ $tactical-overview-td-bg-color: $ux-theme-5;
 $server-time-div-bg-color: rgba($grey-4, 0.2);
 $snapin-heading-border-color: rgba($grey-4, 0.2);
 $simplebar-scrollbar-color: rgb(78, 93, 105);
-$popup-border: 4px solid $success;
+$popup-border: $popup-border-width solid $success;
 $popup-inner-border: 1px solid rgba(51, 51, 51, 0.2);
 $filter-add-button-hover-brightness: brightness(0);
 $floatfilter-legend-border: 1px solid rgba($black, 0.2);

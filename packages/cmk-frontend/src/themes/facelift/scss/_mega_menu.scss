@@ -126,6 +126,8 @@
 
     &.help > div.popup_menu {
       @include small-menu;
+      box-sizing: border-box;
+      min-width: calc($single-column-mega-menu-width + $popup-border-width);
     }
 
     &.user > div.popup_menu {

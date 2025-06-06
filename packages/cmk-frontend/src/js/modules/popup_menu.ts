@@ -642,10 +642,15 @@ export function mega_menu_show_all_items(current_topic_id: string) {
         );
     }
 
+    // Preserve the popup menu's height so there's no vertical jump
+    // This only concerns our small menus "help" and "user"
+    const popup_menu: HTMLElement = main_menu.closest(".main_menu_popup")!;
+    popup_menu.style.minHeight = `${popup_menu.clientHeight}px`;
+
     remove_class(current_topic, "extendable");
     add_class(current_topic, "extended");
     add_class(main_menu, "extended_topic");
-    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
+    resize_mega_menu_popup(popup_menu);
 }
 
 export function mega_menu_collapse_topic(current_topic_id: string) {
@@ -668,9 +673,37 @@ export function mega_menu_collapse_topic(current_topic_id: string) {
         return;
     }
 
+    const popup_menu: HTMLElement = main_menu.closest(".main_menu_popup")!;
+    popup_menu.style.minHeight = "";
+
     remove_class(main_menu, "extended_topic");
     mega_menu_hide_entries(main_menu.id);
-    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
+    resize_mega_menu_popup(popup_menu);
+}
+
+export function mega_menu_reset_default_expansion(main_menu_name: string) {
+    const main_menu: HTMLElement | null = document.getElementById(
+        "main_menu_" + main_menu_name,
+    );
+    if (main_menu === null) {
+        return;
+    }
+
+    const extended_topics = main_menu.querySelectorAll(
+        ".topic.extended, .topic.previously_extended",
+    ) as NodeListOf<HTMLElement>;
+    if (extended_topics.length === 0) {
+        return;
+    }
+
+    for (const topic of extended_topics) {
+        remove_class(topic, "extended");
+        topic.getElementsByTagName("ul")[0].removeAttribute("style");
+    }
+
+    remove_class(main_menu, "extended_topic");
+    mega_menu_hide_entries(main_menu.id);
+    resize_mega_menu_popup(main_menu.closest(".main_menu_popup")!);
 }
 
 export function mega_menu_hide_entries(menu_id: string) {

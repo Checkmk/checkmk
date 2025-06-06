@@ -60,10 +60,6 @@ def is_replication_enabled(site_config: SiteConfiguration) -> bool:
     return bool(site_config.get("replication"))
 
 
-def get_replication_site_id(site_config: SiteConfiguration) -> str:
-    return replication if (replication := site_config.get("replication")) else ""
-
-
 def wato_slave_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {site_id: s for site_id, s in active_config.sites.items() if is_replication_enabled(s)}

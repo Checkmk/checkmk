@@ -58,7 +58,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
-    get_replication_site_id,
     has_wato_slave_sites,
     is_replication_enabled,
     is_wato_slave_site,
@@ -1967,5 +1966,9 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(
         sites.items(),
-        key=lambda sid_s: (get_replication_site_id(sid_s[1]), sid_s[1].get("alias", ""), sid_s[0]),
+        key=lambda sid_s: (
+            is_replication_enabled(sid_s[1]),
+            sid_s[1]["alias"],
+            sid_s[0],
+        ),
     )

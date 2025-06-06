@@ -163,8 +163,8 @@ fn to_bool(value: &str) -> Result<bool> {
 #[cfg(test)]
 pub mod test_tools {
     use yaml_rust2::{Yaml, YamlLoader};
-    pub fn create_yaml(source: &str) -> Yaml {
-        YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
+    pub fn create_yaml<T: AsRef<str>>(source: T) -> Yaml {
+        YamlLoader::load_from_str(source.as_ref()).expect("fix test string!")[0].clone()
     }
 }
 #[cfg(test)]

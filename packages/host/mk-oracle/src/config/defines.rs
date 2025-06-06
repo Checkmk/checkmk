@@ -13,6 +13,7 @@ pub mod keys {
     pub const USERNAME: &str = "username";
     pub const PASSWORD: &str = "password";
     pub const TYPE: &str = "type";
+    pub const ROLE: &str = "role";
     pub const ACCESS_TOKEN: &str = "access_token";
 
     pub const CONNECTION: &str = "connection";
@@ -59,6 +60,15 @@ pub mod values {
     pub const OS: &str = "os";
     /// AuthType::Kerberos
     pub const KERBEROS: &str = "kerberos";
+
+    /// AuthType::Role
+    pub const SYS_DBA: &str = "sysdba";
+    pub const SYS_OPER: &str = "sysoper";
+    pub const SYS_BACKUP: &str = "sysbackup";
+    pub const SYS_DG: &str = "sysdg";
+    pub const SYS_KM: &str = "syskm";
+    pub const SYS_ASM: &str = "sysasm";
+
     /// Mode::Port
     pub const PORT: &str = "port";
 }

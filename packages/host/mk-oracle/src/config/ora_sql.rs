@@ -296,10 +296,40 @@ pub fn is_local_endpoint(conn: &Connection) -> bool {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub enum Role {
+    SysDba,
+    SysOper,
+    SysBackup,
+    SysDG,
+    SysKM,
+    SysASM,
+}
+impl Role {
+    pub fn from_yaml(auth: &Yaml) -> Option<Self> {
+        auth.get_string(keys::ROLE)
+            .and_then(|role| Role::new(role.as_str()))
+    }
+    fn new(value: &str) -> Option<Self> {
+        match str::to_ascii_lowercase(value).as_ref() {
+            values::SYS_DBA => Some(Self::SysDba),
+            values::SYS_OPER => Some(Self::SysOper),
+            values::SYS_BACKUP => Some(Self::SysBackup),
+            values::SYS_DG => Some(Self::SysDG),
+            values::SYS_KM => Some(Self::SysKM),
+            values::SYS_ASM => Some(Self::SysASM),
+            _ => {
+                log::error!("Invalid role {value}");
+                None
+            }
+        }
+    }
+}
+#[derive(PartialEq, Debug, Clone)]
 pub struct Authentication {
     username: String,
     password: Option<String>,
     auth_type: AuthType,
+    role: Option<Role>,
 }
 
 impl Default for Authentication {
@@ -308,6 +338,7 @@ impl Default for Authentication {
             username: "".to_owned(),
             password: None,
             auth_type: AuthType::default(),
+            role: None,
         }
     }
 }
@@ -323,17 +354,20 @@ impl Authentication {
                 .as_deref()
                 .unwrap_or(defaults::AUTH_TYPE),
         )?;
+        let role = Role::from_yaml(auth);
         if auth_type == AuthType::Os {
             Ok(Self {
                 username: String::new(),
                 password: None,
                 auth_type,
+                role,
             })
         } else {
             Ok(Self {
                 username: auth.get_string(keys::USERNAME).unwrap_or_default(),
                 password: auth.get_string(keys::PASSWORD),
                 auth_type,
+                role,
             })
         }
     }
@@ -345,6 +379,10 @@ impl Authentication {
     }
     pub fn auth_type(&self) -> &AuthType {
         &self.auth_type
+    }
+
+    pub fn role(&self) -> Option<&Role> {
+        self.role.as_ref()
     }
 }
 
@@ -889,6 +927,7 @@ authentication:
   username: "foo"
   password: "bar"
   type: "standard"
+  role: sysdba
 "#;
         #[cfg(windows)]
         pub const AUTHENTICATION_OS: &str = r#"
@@ -1002,6 +1041,32 @@ piggyback:
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some(&"bar".to_owned()));
         assert_eq!(a.auth_type(), &AuthType::Standard);
+        assert_eq!(a.role(), Some(&Role::SysDba));
+    }
+    #[test]
+    fn test_authentication_role() {
+        pub const AUTHENTICATION_FIRST: &str = r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "standard"
+  role: "#;
+        let test_set: Vec<(&str, Option<&Role>)> = vec![
+            ("", None),
+            ("aaa", None),
+            ("SYSdba", Some(&Role::SysDba)),
+            ("sysoper", Some(&Role::SysOper)),
+            ("sysbackup", Some(&Role::SysBackup)),
+            ("sysdg", Some(&Role::SysDG)),
+            ("syskm", Some(&Role::SysKM)),
+            ("sysasm", Some(&Role::SysASM)),
+        ];
+        for (role, expected) in test_set {
+            let a =
+                Authentication::from_yaml(&create_yaml(AUTHENTICATION_FIRST.to_string() + role))
+                    .unwrap();
+            assert_eq!(a.role(), expected);
+        }
     }
 
     #[test]

@@ -13,3 +13,9 @@ pub struct Target {
     pub port: Port,
     pub auth: Authentication,
 }
+
+impl Target {
+    pub fn make_connection_string(&self) -> String {
+        format!("{}:{}/{}", self.host, self.port, self.point)
+    }
+}

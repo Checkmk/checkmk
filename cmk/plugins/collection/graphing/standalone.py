@@ -1363,20 +1363,6 @@ metric_mem_lnx_hardware_corrupted = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_PINK,
 )
-# # Active Guest Memory is defined as the amount of guest memory that is currently being used by the
-# guest operating system and its applications
-metric_mem_esx_guest = metrics.Metric(
-    name="mem_esx_guest",
-    title=Title("Active guest memory"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.ORANGE,
-)
-metric_mem_esx_ballooned = metrics.Metric(
-    name="mem_esx_ballooned",
-    title=Title("Ballooned memory"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.YELLOW,
-)
 metric_pagefile_total = metrics.Metric(
     name="pagefile_total",
     title=Title("Pagefile installed"),

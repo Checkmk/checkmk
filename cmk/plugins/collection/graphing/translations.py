@@ -593,17 +593,6 @@ translation_esx_vsphere_hostsystem_mem_usage_esx_vsphere_hostsystem_mem_usage_cl
     translations={"usage": translations.RenameTo("mem_used")},
 )
 
-translation_esx_vsphere_vm_mem_usage = translations.Translation(
-    name="esx_vsphere_vm_mem_usage",
-    check_commands=[translations.PassiveCheck("esx_vsphere_vm_mem_usage")],
-    translations={
-        "ballooned": translations.RenameTo("mem_esx_ballooned"),
-        "guest": translations.RenameTo("mem_esx_guest"),
-        "host": translations.RenameTo("mem_esx_host"),
-        "private": translations.RenameTo("mem_esx_private"),
-        "shared": translations.RenameTo("mem_esx_shared"),
-    },
-)
 
 translation_f5_bigip_conns = translations.Translation(
     name="f5_bigip_conns",

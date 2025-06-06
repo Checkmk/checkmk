@@ -301,6 +301,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                         ipv6_address=HostAttributeIPv6Address().name(),
                         site=HostAttributeSite().name(),
                         ip_address_family="tag_address_family",
+                        cb_change="cb_host_change"
+                        if not self._is_cluster()
+                        else "cb_cluster_change",
                     ),
                 )
             ),

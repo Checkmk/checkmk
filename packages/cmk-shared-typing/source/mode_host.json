@@ -33,7 +33,8 @@
                 "ipv4_address": { "type": "string" },
                 "ipv6_address": { "type": "string" },
                 "site": { "type": "string" },
-                "ip_address_family": { "type": "string" }
+                "ip_address_family": { "type": "string" },
+                "cb_change": { "type": "string" }
             },
             "required": [
                 "form",
@@ -41,7 +42,8 @@
                 "ipv4_address",
                 "ipv6_address",
                 "site",
-                "ip_address_family"
+                "ip_address_family",
+                "cb_change"
             ]
         }
     }

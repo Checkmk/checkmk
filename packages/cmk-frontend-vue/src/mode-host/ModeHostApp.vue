@@ -26,7 +26,7 @@ const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
 
 onMounted(() => {
   formElement.value = getElementBySelector(`form[id="form_${props.formKeys.form}"]`)
-  hostnameInputElement.value = getElementBySelector(
+  hostnameInputElement.value = document.querySelector(
     `input.text[name="${props.formKeys.host_name}"]`
   )
   ipv4InputElement.value = getElementBySelector(`input.text[name="${props.formKeys.ipv4_address}"]`)
@@ -36,13 +36,13 @@ onMounted(() => {
     `select[name="${props.formKeys.ip_address_family}"]`
   )
   ipAddressFamilyInputElement.value = getElementBySelector(
-    `input[id="cb_host_change_${props.formKeys.ip_address_family}"]`
+    `input[id="${props.formKeys.cb_change}_${props.formKeys.ip_address_family}"]`
   )
   ipv4InputButtonElement.value = getElementBySelector(
-    `input[id="cb_host_change_${props.formKeys.ipv4_address}"]`
+    `input[id="${props.formKeys.cb_change}_${props.formKeys.ipv4_address}"]`
   )
   ipv6InputButtonElement.value = getElementBySelector(
-    `input[id="cb_host_change_${props.formKeys.ipv6_address}"]`
+    `input[id="${props.formKeys.cb_change}_${props.formKeys.ipv6_address}"]`
   )
 })
 

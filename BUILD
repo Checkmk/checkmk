@@ -4,6 +4,7 @@ load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
+load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "RUFF_VERSION")
@@ -228,6 +229,17 @@ pip_compile(
     requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
+)
+
+multirun(
+    name = "lock_python_requirements",
+    commands = [
+        ":requirements",
+        ":runtime_requirements",
+    ],
+    # Running in a single threaded mode allows consecutive `uv` invocations to benefit
+    # from the `uv` cache from the first run.
+    jobs = 1,
 )
 
 test_suite(

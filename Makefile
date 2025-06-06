@@ -226,18 +226,10 @@ documentation:
 sw-documentation:
 	scripts/run-uvenv make -C doc/documentation html
 
-# Use this target to update the requirements_*_lock.txt files
-# TODO: Find a _way_ better ways to handle this
-# HINT: If you want to update dependencies and only running `make relock_venv`
-#       does not work, remove `requirements.txt` and try again.
 relock_venv:
-	touch requirements.txt
+	echo > requirements.txt
 	touch runtime-requirements.txt
-	bazel mod deps --lockfile_mode=update > /dev/null
-	bazel run //:requirements.update > /dev/null
-	bazel mod deps --lockfile_mode=update > /dev/null
-	bazel run //:runtime_requirements.update > /dev/null
-	bazel mod deps --lockfile_mode=update > /dev/null
+	bazel run //:lock_python_requirements > /dev/null
 
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv:
@@ -248,9 +240,5 @@ relock_venv:
 			echo "It seems you forgot to commit the new lock file. Regenerate with: make relock_venv"; \
 			exit 1; \
 		fi; \
-		# TODO: We currently need to first have an updated runtime lock file as this is the input for the all_lock file. \
-		# Therefore execution order matters! \
-		bazel run //:runtime_requirements.update; bazel mod deps --lockfile_mode=update; \
-		bazel run //:requirements.update; bazel mod deps --lockfile_mode=update; \
 	fi; \
 	CC="gcc" bazel run //:create_venv

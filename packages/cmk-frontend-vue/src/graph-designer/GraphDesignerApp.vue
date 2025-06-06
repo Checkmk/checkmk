@@ -318,7 +318,7 @@ const dataScalar = ref<Metric>({
 })
 
 let id = 0
-const graphLines: Ref<GraphLines> = ref([])
+const graphLines: Ref<GraphLines> = ref(props.graph_lines)
 const selectedGraphLines: Ref<GraphLines> = ref([])
 
 function isDissolvable(graphLine: GraphLine) {

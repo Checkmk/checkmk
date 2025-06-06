@@ -11,8 +11,9 @@ import pickle
 import pprint
 import shutil
 from collections.abc import Mapping
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -40,8 +41,6 @@ from cmk.ccc.store._locks import (
 )
 from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 
-from cmk import trace
-
 __all__ = [
     "BytesSerializer",
     "DimSerializer",
@@ -63,7 +62,24 @@ __all__ = [
 ]
 
 logger = logging.getLogger("cmk.store")
-tracer = trace.get_tracer()
+
+
+class LazyTracer:
+    def __init__(self):
+        self._lock = Lock()
+        self._tracer = None
+
+    def span(self, name: str, *, attributes: Mapping[str, str]) -> AbstractContextManager:
+        with self._lock:
+            if self._tracer is None:
+                from cmk.trace import get_tracer
+
+                self._tracer = get_tracer()
+        return self._tracer.span(name, attributes=attributes)
+
+
+tracer = LazyTracer()
+
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.

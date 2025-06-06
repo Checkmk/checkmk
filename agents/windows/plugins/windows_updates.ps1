@@ -24,8 +24,8 @@ $CMK_VERSION = "2.5.0b1"
 # Output UTF-16 BOM
 [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
 Write-Output ([char]0xFEFF)
-# Function to read from the registry
-function Read-FromRegistry {
+
+function ReadFromRegistry {
     param (
         [string]$RegistryKey,
         [string]$Default
@@ -41,11 +41,48 @@ function Read-FromRegistry {
     }
 }
 
+function ProcessSearchResult {
+    param (
+        $SearchResult,
+        $RebootRequired,
+        $RebootTime
+    )
+
+    if ($SearchResult.ResultCode -ne 2) {
+        Write-Output "<<<windows_updates>>>"
+        Write-Output "x x x"
+        Write-Output "There was an error getting update information. Maybe Windows Update is not activated."
+        return
+    }
+
+    Write-Verbose "Found $($SearchResult.Updates.Count) pending updates."
+    Write-Verbose "Processing update results..."
+    $ImportantUpdates = @()
+    $OptionalUpdates = @()
+    $NumImp = 0
+    $NumOpt = 0
+    foreach ($Update in $SearchResult.Updates) {
+        if ($Update.AutoSelectOnWebSites) {
+            $ImportantUpdates += $Update.Title
+            $NumImp++
+        } else {
+            $OptionalUpdates += $Update.Title
+            $NumOpt++
+        }
+    }
+
+    Write-Output "<<<windows_updates>>>"
+    Write-Output "$RebootRequired $NumImp $NumOpt"
+    Write-Output ($ImportantUpdates -join "; ")
+    Write-Output ($OptionalUpdates -join "; ")
+    Write-Output $RebootTime
+}
+
 Write-Verbose "Starting windows update check..."
 
 $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update"
 Write-Verbose "Defined registry path for Windows Update: $RegPath"
-$RebootTime = Read-FromRegistry -RegistryKey "$RegPath\NextFeaturedUpdatesNotificationTime" -Default "no_key"
+$RebootTime = ReadFromRegistry -RegistryKey "$RegPath\NextFeaturedUpdatesNotificationTime" -Default "no_key"
 
 Write-Verbose "Checking for pending updates..."
 $RebootRequired = (New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired
@@ -63,33 +100,4 @@ $SearchResult = $UpdateSearcher.Search("IsInstalled = 0 and IsHidden = 0")
 # Aborted = 5
 
 Write-Verbose "Search is finished with result code:  $($SearchResult.ResultCode)"
-
-if ($SearchResult.ResultCode -ne 2) {
-    Write-Output "<<<windows_updates>>>"
-    Write-Output "x x x"
-    Write-Output "There was an error getting update information. Maybe Windows Update is not activated."
-    exit
-}
-
-Write-Verbose "Found $($SearchResult.Updates.Count) pending updates."
-
-Write-Verbose "Processing update results..."
-$ImportantUpdates = @()
-$OptionalUpdates = @()
-$NumImp = 0
-$NumOpt = 0
-foreach ($Update in $SearchResult.Updates) {
-    if ($Update.AutoSelectOnWebSites) {
-        $ImportantUpdates += $Update.Title
-        $NumImp++
-    } else {
-        $OptionalUpdates += $Update.Title
-        $NumOpt++
-    }
-}
-
-Write-Output "<<<windows_updates>>>"
-Write-Output "$RebootRequired $NumImp $NumOpt"
-Write-Output ($ImportantUpdates -join "; ")
-Write-Output ($OptionalUpdates -join "; ")
-Write-Output $RebootTime
+ProcessSearchResult -SearchResult $SearchResult -RebootRequired $RebootRequired -RebootTime $RebootTime

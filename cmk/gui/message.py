@@ -351,36 +351,8 @@ def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too
         time=int(time.time()),
     )
 
-    if isinstance(msg["dest"], str):
-        dest_what = msg["dest"]
-    else:
-        dest_what = msg["dest"][0]
-
-    if dest_what == "all_users":
-        recipients = list(map(UserId, active_config.multisite_users.keys()))
-    elif dest_what == "online":
-        recipients = userdb.get_online_user_ids(datetime.now())
-    elif dest_what == "list":
-        recipients = list(map(UserId, msg["dest"][1]))
-    else:
-        recipients = []
-
+    recipients, num_success, errors = send_message(msg)
     num_recipients = len(recipients)
-
-    num_success: dict[str, int] = {}
-    for method in msg["methods"]:
-        num_success[method] = 0
-
-    # Now loop all messaging methods to send the messages
-    errors: dict[MessageMethod, list[tuple]] = {}
-    for user_id in recipients:
-        for method in msg["methods"]:
-            try:
-                handler = _messaging_methods()[method]["handler"]
-                handler(user_id, msg)
-                num_success[method] = num_success[method] + 1
-            except MKInternalError as e:
-                errors.setdefault(method, []).append((user_id, e))
 
     message = escape_to_html(_("The message has successfully been sent..."))
     message += HTMLWriter.render_br()
@@ -414,6 +386,41 @@ def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too
                 )
             error_message += HTMLWriter.render_table(table_rows) + HTMLWriter.render_br()
         html.show_error(error_message)
+
+
+def send_message(
+    msg: Message,
+) -> tuple[list[UserId], dict[str, int], dict[MessageMethod, list[tuple]]]:
+    if isinstance(msg["dest"], str):
+        dest_what = msg["dest"]
+    else:
+        dest_what = msg["dest"][0]
+
+    if dest_what == "all_users":
+        recipients = list(map(UserId, active_config.multisite_users.keys()))
+    elif dest_what == "online":
+        recipients = userdb.get_online_user_ids(datetime.now())
+    elif dest_what == "list":
+        recipients = list(map(UserId, msg["dest"][1]))
+    else:
+        recipients = []
+
+    num_success: dict[str, int] = {}
+    for method in msg["methods"]:
+        num_success[method] = 0
+
+    # Now loop all messaging methods to send the messages
+    errors: dict[MessageMethod, list[tuple]] = {}
+    for user_id in recipients:
+        for method in msg["methods"]:
+            try:
+                handler = _messaging_methods()[method]["handler"]
+                handler(user_id, msg)
+                num_success[method] = num_success[method] + 1
+            except MKInternalError as e:
+                errors.setdefault(method, []).append((user_id, e))
+
+    return recipients, num_success, errors
 
 
 #   ---Message Plugins-------------------------------------------------------

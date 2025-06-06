@@ -529,7 +529,7 @@ async function addScalar() {
     dataScalar.value.serviceName !== '' &&
     dataScalar.value.metricName !== ''
   ) {
-    const color: string = await fetchMetricColor(dataMetric.value.metricName, dataScalarType.value)
+    const color: string = await fetchMetricColor(dataScalar.value.metricName, dataScalarType.value)
     graphLines.value.push({
       id: id++,
       type: 'scalar',

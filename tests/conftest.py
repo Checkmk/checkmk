@@ -16,6 +16,8 @@ import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
+from cmk.ccc.version import Edition
+
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
 pytest.register_assert_rewrite(
@@ -31,7 +33,10 @@ from tests.testlib.utils import (  # noqa: E402
     run,
     verbose_called_process_error,
 )
-from tests.testlib.version import edition_from_env, TypeCMKEdition  # noqa: E402
+from tests.testlib.version import (  # noqa: E402
+    CMKEdition,
+    edition_from_env,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -275,28 +280,32 @@ def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.C
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
+def _editions_from_markers(item: pytest.Item, marker_name: str) -> list[Edition]:
+    editions: list[Edition] = []
+    for mark in item.iter_markers(name=marker_name):
+        editions += [
+            edition_arg
+            if isinstance(edition_arg, Edition)
+            else CMKEdition.edition_from_text(str(edition_arg)).edition_data
+            for edition_arg in mark.args
+        ]
+    return editions
+
+
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """Skip tests of unwanted types"""
-    current_edition = edition_from_env()
-    skip_editions: list[TypeCMKEdition] = []
-    for mark in item.iter_markers(name="skip_if_edition"):
-        skip_editions += [
-            edition
-            if isinstance(edition, TypeCMKEdition)
-            else TypeCMKEdition().edition_from_text(str(edition))
-            for edition in mark.args
-        ]
+    current_edition = edition_from_env().edition_data
+
+    skip_editions = _editions_from_markers(item, "skip_if_edition")
     if skip_editions and current_edition in skip_editions:
         pytest.skip(
-            f'Test skipped because edition "{current_edition.edition_data.long}" is skipped explicitly!'
+            f'{item.nodeid}: Test skipped because edition "{current_edition.long}" is skipped explicitly!'
         )
 
-    unskip_editions: list[TypeCMKEdition] = []
-    for mark in item.iter_markers(name="skip_if_not_edition"):
-        unskip_editions += mark.args
+    unskip_editions = _editions_from_markers(item, "skip_if_not_edition")
     if unskip_editions and current_edition not in unskip_editions:
         pytest.skip(
-            f'Test skipped because edition "{current_edition.edition_data.long}" is skipped implicitly!'
+            f'{item.nodeid}: Test skipped because edition "{current_edition.long}" is skipped implicitly!'
         )
 
     if item.config.getoption("--dry-run"):

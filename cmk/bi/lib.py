@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypedDict, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -684,8 +684,12 @@ AggregationKind = Literal[
 ]
 
 
+class AggregationFunctionConfig(TypedDict):
+    type: AggregationKind
+
+
 class ABCBIAggregationFunction(ABC):
-    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: AggregationFunctionConfig) -> None:
         super().__init__()
 
     @classmethod
@@ -703,7 +707,7 @@ class ABCBIAggregationFunction(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self) -> dict[str, Any]:
+    def serialize(self) -> AggregationFunctionConfig:
         raise NotImplementedError()
 
 
@@ -711,7 +715,7 @@ class BIAggregationFunctionRegistry(plugin_registry.Registry[type[ABCBIAggregati
     def plugin_name(self, instance: type[ABCBIAggregationFunction]) -> str:
         return instance.kind()
 
-    def instantiate(self, aggr_func_config: dict[str, Any]) -> ABCBIAggregationFunction:
+    def instantiate(self, aggr_func_config: AggregationFunctionConfig) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)
 
 

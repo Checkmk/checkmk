@@ -5,13 +5,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Literal, TypedDict
 
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
+    AggregationFunctionConfig,
     AggregationKind,
     bi_aggregation_function_registry,
     BIStates,
@@ -50,6 +51,11 @@ def map_states(states: list[int], index: int, restricted_bi_level: int) -> int:
 #   +----------------------------------------------------------------------+
 
 
+class BIAggregationFunctionBestSerialized(AggregationFunctionConfig):
+    count: int
+    restrict_state: int
+
+
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
     @classmethod
@@ -60,14 +66,14 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
     def schema(cls) -> type[BIAggregationFunctionBestSchema]:
         return BIAggregationFunctionBestSchema
 
-    def serialize(self):
-        return {
-            "type": self.kind(),
-            "count": self.count,
-            "restrict_state": self.restrict_state,
-        }
+    def serialize(self) -> BIAggregationFunctionBestSerialized:
+        return BIAggregationFunctionBestSerialized(
+            type=self.kind(),
+            count=self.count,
+            restrict_state=self.restrict_state,
+        )
 
-    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: BIAggregationFunctionBestSerialized) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
@@ -106,6 +112,11 @@ class BIAggregationFunctionBestSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BIAggregationFunctionWorstSerialized(AggregationFunctionConfig):
+    count: int
+    restrict_state: int
+
+
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     @classmethod
@@ -116,14 +127,14 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     def schema(cls) -> type[BIAggregationFunctionWorstSchema]:
         return BIAggregationFunctionWorstSchema
 
-    def serialize(self):
-        return {
-            "type": self.kind(),
-            "count": self.count,
-            "restrict_state": self.restrict_state,
-        }
+    def serialize(self) -> BIAggregationFunctionWorstSerialized:
+        return BIAggregationFunctionWorstSerialized(
+            type=self.kind(),
+            count=self.count,
+            restrict_state=self.restrict_state,
+        )
 
-    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: BIAggregationFunctionWorstSerialized) -> None:
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
         self.restrict_state = aggr_function_config["restrict_state"]
@@ -156,6 +167,16 @@ class BIAggregationFunctionWorstSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BILevelsSerialized(TypedDict):
+    type: Literal["count", "percentage"]
+    value: float
+
+
+class BIAggregationFunctionCountOKSerialized(AggregationFunctionConfig):
+    levels_ok: BILevelsSerialized
+    levels_warn: BILevelsSerialized
+
+
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @classmethod
@@ -166,14 +187,14 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     def schema(cls) -> type[BIAggregationFunctionCountOKSchema]:
         return BIAggregationFunctionCountOKSchema
 
-    def serialize(self):
-        return {
-            "type": self.kind(),
-            "levels_ok": self.levels_ok,
-            "levels_warn": self.levels_warn,
-        }
+    def serialize(self) -> BIAggregationFunctionCountOKSerialized:
+        return BIAggregationFunctionCountOKSerialized(
+            type=self.kind(),
+            levels_ok=self.levels_ok,
+            levels_warn=self.levels_warn,
+        )
 
-    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
+    def __init__(self, aggr_function_config: BIAggregationFunctionCountOKSerialized) -> None:
         super().__init__(aggr_function_config)
         self.levels_ok = aggr_function_config["levels_ok"]
         self.levels_warn = aggr_function_config["levels_warn"]
@@ -190,7 +211,7 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
         return int(state)
 
-    def _check_levels(self, ok_nodes: int, total_nodes: int, levels: dict) -> bool:
+    def _check_levels(self, ok_nodes: int, total_nodes: int, levels: BILevelsSerialized) -> bool:
         if levels["type"] == "count":
             return ok_nodes >= levels["value"]
         return (ok_nodes / total_nodes) * 100 >= levels["value"]
@@ -241,5 +262,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "count_ok": BIAggregationFunctionCountOKSchema,
     # }
 
-    def get_obj_type(self, obj: ABCBIAggregationFunction | dict) -> str:
+    def get_obj_type(
+        self, obj: ABCBIAggregationFunction | AggregationFunctionConfig
+    ) -> AggregationKind:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

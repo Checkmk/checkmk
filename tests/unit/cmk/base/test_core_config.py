@@ -76,7 +76,7 @@ def test_do_create_config_nagios(
         AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
+            lambda *a: HostAddress(""), allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
         ),
         ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,
@@ -95,7 +95,7 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
+        lambda *a: HostAddress(""), allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
     )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())

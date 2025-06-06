@@ -29,7 +29,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils.ip_lookup import IPStackConfig, lookup_ip_address
+from cmk.utils.ip_lookup import IPStackConfig, StrictIPLookup
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -115,6 +115,7 @@ def precompile_hostchecks(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+    ip_address_of: StrictIPLookup,
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
@@ -142,6 +143,7 @@ def precompile_hostchecks(
                 config_path,
                 hostname,
                 plugins,
+                ip_address_of=ip_address_of,
                 precompile_mode=precompile_mode,
             )
 
@@ -164,6 +166,7 @@ def dump_precompiled_hostcheck(
     hostname: HostName,
     plugins: AgentBasedPlugins,
     *,
+    ip_address_of: StrictIPLookup,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str:
@@ -173,7 +176,6 @@ def dump_precompiled_hostcheck(
 
     # IP addresses
     ip_stack_config = ConfigCache.ip_stack_config(hostname)
-    ip_lookup_config = config_cache.ip_lookup_config()
     needed_ipaddresses: dict[HostName, HostAddress] = {}
     needed_ipv6addresses: dict[HostName, HostAddress] = {}
     if hostname in config_cache.hosts_config.clusters:
@@ -181,40 +183,30 @@ def dump_precompiled_hostcheck(
         for node in config_cache.nodes(hostname):
             node_ip_stack_config = ConfigCache.ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
-                needed_ipaddresses[node] = lookup_ip_address(
-                    ip_lookup_config, node, family=socket.AddressFamily.AF_INET
-                )
+                needed_ipaddresses[node] = ip_address_of(node, socket.AddressFamily.AF_INET)
 
             if IPStackConfig.IPv6 in node_ip_stack_config:
-                needed_ipv6addresses[node] = lookup_ip_address(
-                    ip_lookup_config, node, family=socket.AddressFamily.AF_INET6
-                )
+                needed_ipv6addresses[node] = ip_address_of(node, socket.AddressFamily.AF_INET6)
 
         try:
             if IPStackConfig.IPv4 in ip_stack_config:
-                needed_ipaddresses[hostname] = lookup_ip_address(
-                    ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET
-                )
+                needed_ipaddresses[hostname] = ip_address_of(hostname, socket.AddressFamily.AF_INET)
         except Exception:
             pass
 
         try:
             if IPStackConfig.IPv6 in ip_stack_config:
-                needed_ipv6addresses[hostname] = lookup_ip_address(
-                    ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET6
+                needed_ipv6addresses[hostname] = ip_address_of(
+                    hostname, socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
         if IPStackConfig.IPv4 in ip_stack_config:
-            needed_ipaddresses[hostname] = lookup_ip_address(
-                ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET
-            )
+            needed_ipaddresses[hostname] = ip_address_of(hostname, socket.AddressFamily.AF_INET)
 
         if IPStackConfig.IPv6 in ip_stack_config:
-            needed_ipv6addresses[hostname] = lookup_ip_address(
-                ip_lookup_config, hostname, family=socket.AddressFamily.AF_INET6
-            )
+            needed_ipv6addresses[hostname] = ip_address_of(hostname, socket.AddressFamily.AF_INET6)
 
     # assign the values here, just to let the type checker do its job
     host_check_config = HostCheckConfig(

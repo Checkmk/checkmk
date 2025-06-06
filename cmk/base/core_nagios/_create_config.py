@@ -71,7 +71,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
-        ip_address_of: ip_lookup.IPLookup,
+        ip_address_of: ip_lookup.StrictIPLookup,
         ip_address_of_mgmt: ip_lookup.IPLookup,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
@@ -100,6 +100,7 @@ class NagiosCore(core_config.MonitoringCore):
             service_name_config,
             plugins,
             discovery_rules,
+            ip_address_of,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -153,6 +154,7 @@ class NagiosCore(core_config.MonitoringCore):
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+        ip_address_of: ip_lookup.StrictIPLookup,
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -165,6 +167,7 @@ class NagiosCore(core_config.MonitoringCore):
             service_name_config,
             plugins,
             discovery_rules,
+            ip_address_of,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):

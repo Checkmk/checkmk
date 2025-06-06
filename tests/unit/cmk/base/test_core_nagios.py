@@ -453,6 +453,7 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
         hostname,
         plugins=_make_plugins_for_test(),
         precompile_mode=PrecompileMode.INSTANT,
+        ip_address_of=lambda *a: HostAddress("1.2.3.4"),
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")

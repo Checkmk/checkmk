@@ -39,9 +39,14 @@ _enforce_localhost = False
 _FALLBACK_V4 = HostAddress("0.0.0.0")
 _FALLBACK_V6 = HostAddress("::")
 
-IPLookup = Callable[
+# TODO: return type actually is non optional in most cases
+type IPLookup = Callable[
     [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
     HostAddress | None,
+]
+type StrictIPLookup = Callable[
+    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+    HostAddress,
 ]
 
 _TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], None])
@@ -192,7 +197,7 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         self,
         lookup: Callable[
             [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-            HostAddress | None,
+            HostAddress,
         ],
         *,
         allow_empty: Container[HostName],
@@ -206,7 +211,7 @@ class ConfiguredIPLookup(Generic[_TErrHandler]):
         self,
         host_name: HostName,
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    ) -> HostAddress | None:
+    ) -> HostAddress:
         try:
             return self._lookup(host_name, family)
         except Exception as e:

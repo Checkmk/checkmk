@@ -16,7 +16,6 @@ import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils import ip_lookup
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.automations import results as automation_results
@@ -284,13 +283,12 @@ def test_automation_active_check_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(
-        ip_lookup, ip_lookup.lookup_ip_address.__name__, lambda *a, **kw: HostAddress("127.0.0.1")
-    )
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    loaded_config = EMPTYCONFIG
+    loaded_config = replace(
+        EMPTYCONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
+    )
     config_cache = config.ConfigCache(loaded_config)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 

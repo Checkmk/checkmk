@@ -504,8 +504,9 @@ class AutomationDiscoveryPreview(Automation):
             plugins.check_plugins, service_name_config
         )
         ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+        ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
+            ip_address_of_bare,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=handle_ip_lookup_failure,
         )
@@ -515,11 +516,11 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(service_configurer, ip_address_of),
+            config_cache.fetcher_factory(service_configurer, ip_address_of_with_fallback),
             plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
-            ip_address_of=ip_address_of,
+            ip_address_of=ip_address_of_with_fallback,
             ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
@@ -530,7 +531,6 @@ class AutomationDiscoveryPreview(Automation):
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
-        # TODO: see if we can consolidate this with `ip_address_of`
         ip_address = (
             None
             if host_name in hosts_config.clusters
@@ -539,7 +539,7 @@ class AutomationDiscoveryPreview(Automation):
             # because...  I don't know... global variables I guess.  In any case,
             # doing it the other way around breaks one integration test.
             # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
-            else ip_lookup.lookup_ip_address(config_cache.ip_lookup_config(), host_name)
+            else ip_address_of_bare(host_name, ip_lookup_config.default_address_family(host_name))
         )
         return _get_discovery_preview(
             host_name,
@@ -550,7 +550,7 @@ class AutomationDiscoveryPreview(Automation):
             service_name_config,
             config_cache,
             plugins,
-            ip_address_of,
+            ip_address_of_with_fallback,
             ip_address,
         )
 
@@ -2877,7 +2877,9 @@ class AutomationDiagHost(Automation):
             ):
                 raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
-                ipaddress = ip_lookup.lookup_ip_address(ip_lookup_config, host_name)
+                ipaddress = ip_lookup.make_lookup_ip_address(ip_lookup_config)(
+                    host_name, ip_lookup_config.default_address_family(host_name)
+                )
             except Exception:
                 raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
 
@@ -3491,8 +3493,9 @@ class AutomationGetAgentOutput(Automation):
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
         ip_stack_config = config_cache.ip_stack_config(hostname)
         ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+        ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
+            ip_address_of_bare,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -3508,7 +3511,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = (
                 None
                 if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-                else ip_lookup.lookup_ip_address(ip_lookup_config, hostname)
+                else ip_address_of_bare(hostname, ip_lookup_config.default_address_family(hostname))
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
             walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -3533,7 +3536,9 @@ class AutomationGetAgentOutput(Automation):
                     hostname,
                     ipaddress,
                     ip_stack_config,
-                    fetcher_factory=config_cache.fetcher_factory(service_configurer, ip_address_of),
+                    fetcher_factory=config_cache.fetcher_factory(
+                        service_configurer, ip_address_of_with_fallback
+                    ),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,
                         selected_sections=NO_SELECTION,
@@ -3563,7 +3568,7 @@ class AutomationGetAgentOutput(Automation):
                         ipaddress,
                         password_store_file=core_password_store_file,
                         passwords=cmk.utils.password_store.load(core_password_store_file),
-                        ip_address_of=ip_address_of,
+                        ip_address_of=ip_address_of_with_fallback,
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

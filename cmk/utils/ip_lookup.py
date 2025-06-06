@@ -161,35 +161,26 @@ def make_lookup_ip_address(
         host_name: HostName,
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
     ) -> HostAddress:
-        return lookup_ip_address(ip_config, host_name, family=family)
+        if family is None:
+            family = ip_config.default_address_family(host_name)
+        return _lookup_ip_address(
+            host_name=host_name,
+            family=family,
+            configured_ip_address=(
+                ip_config.ipv4_addresses
+                if family is socket.AddressFamily.AF_INET
+                else ip_config.ipv6_addresses
+            ).get(host_name),
+            simulation_mode=ip_config.simulation_mode,
+            is_snmp_usewalk_host=(
+                ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
+            ),
+            override_dns=ip_config.fake_dns,
+            is_dyndns_host=ip_config.is_dyndns_host(host_name),
+            force_file_cache_renewal=not ip_config.use_dns_cache,
+        )
 
     return _wrapped_lookup
-
-
-def lookup_ip_address(
-    ip_config: IPLookupConfig,
-    host_name: HostName | HostAddress,
-    *,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
-) -> HostAddress:
-    if family is None:
-        family = ip_config.default_address_family(host_name)
-    return _lookup_ip_address(
-        host_name=host_name,
-        family=family,
-        configured_ip_address=(
-            ip_config.ipv4_addresses
-            if family is socket.AddressFamily.AF_INET
-            else ip_config.ipv6_addresses
-        ).get(host_name),
-        simulation_mode=ip_config.simulation_mode,
-        is_snmp_usewalk_host=(
-            ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_host(host_name)
-        ),
-        override_dns=ip_config.fake_dns,
-        is_dyndns_host=ip_config.is_dyndns_host(host_name),
-        force_file_cache_renewal=not ip_config.use_dns_cache,
-    )
 
 
 class ConfiguredIPLookup(Generic[_TErrHandler]):

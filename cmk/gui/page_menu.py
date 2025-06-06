@@ -593,8 +593,6 @@ class PageMenuRenderer:
         if menu.inpage_search:
             self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
-        if menu.has_pending_changes:
-            self._show_pending_changes_icon(menu.pending_changes_tooltip)
         html.close_tr()
 
         if menu.enable_suggestions:
@@ -719,11 +717,6 @@ class PageMenuRenderer:
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
         html.open_td(class_="inpage_search")
         inpage_search_form(mode=item.target_mode, default_value=item.default_value)
-        html.close_td()
-
-    def _show_pending_changes_icon(self, tooltip: str | None) -> None:
-        html.open_td(class_="icon_container")
-        html.icon_button("wato.py?mode=changelog", tooltip if tooltip else "", "pending_changes")
         html.close_td()
 
     def _javascript(self) -> None:

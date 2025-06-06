@@ -13,7 +13,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
-from cmk.utils.ip_lookup import ConfiguredIPLookup, IPStackConfig
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -30,7 +30,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins
 
-from cmk.base.config import ConfigCache, handle_ip_lookup_failure
+from cmk.base.config import ConfigCache
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 
 
@@ -61,7 +61,8 @@ def _make_sources(
         fetcher_factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: ipaddress,
         ),
         snmp_fetcher_config=SNMPFetcherConfig(
             scan_config=SNMPScanConfig(
@@ -96,9 +97,7 @@ def _make_sources(
             ipaddress,
             password_store_file=Path("/pw/store"),
             passwords={},
-            ip_address_of=ConfiguredIPLookup(
-                lambda *a: ipaddress, allow_empty=(), error_handler=handle_ip_lookup_failure
-            ),
+            ip_address_of=lambda *a: ipaddress,
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

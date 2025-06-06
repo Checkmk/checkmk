@@ -616,6 +616,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
@@ -656,7 +661,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ipaddress,
             ip_stack_config,
             fetcher_factory=config_cache.fetcher_factory(
-                config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+                ip_address_of,
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
@@ -781,6 +787,12 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
     hosts_config = config_cache.hosts_config
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
+
     all_hosts = {
         hn
         for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -800,6 +812,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             service_name_config,
             plugins,
             hostname,
+            ip_address_of=ip_address_of,
             simulation_mode=config.simulation_mode,
         )
 
@@ -1912,21 +1925,23 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
     )
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
     check_interval = config_cache.check_mk_check_interval(hostname)
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            ip_address_of,
         ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
@@ -2204,6 +2219,11 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
 
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
@@ -2238,16 +2258,13 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            ip_address_of,
         ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2415,6 +2432,11 @@ def run_checking(
     if len(args) == 2:
         ipaddress = HostAddress(args[1])
 
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(
         options,
@@ -2430,15 +2452,11 @@ def run_checking(
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(service_configurer),
+        config_cache.fetcher_factory(service_configurer, ip_address_of),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2632,6 +2650,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     config_cache = loading_result.config_cache
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
 
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
@@ -2660,16 +2683,13 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            ip_address_of,
         ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2905,6 +2925,11 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     service_name_config = (
         config_cache.make_passive_service_name_config()
     )  # not obvious to me why/if we *really* need this
+    ip_address_of = ip_lookup.ConfiguredIPLookup(
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
 
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -2915,16 +2940,13 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            ip_address_of,
         ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

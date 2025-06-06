@@ -1191,7 +1191,7 @@ class ActivateChanges:
         return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id: SiteId, site: SiteConfiguration) -> bool:
-        return site_is_local(site, site_id) or "secret" in site
+        return site_is_local(site) or "secret" in site
 
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
@@ -1213,7 +1213,7 @@ class ActivateChanges:
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
     ) -> bool:
-        if site_is_local(active_config.sites[site_id], site_id):
+        if site_is_local(active_config.sites[site_id]):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)

@@ -77,8 +77,8 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     """Update the site specific global settings in the central site configuration"""
     site_mgmt = site_management_registry["site_management"]
     configured_sites = site_mgmt.load_sites()
-    for site_id, site_spec in configured_sites.items():
-        if site_globals_editable(site_id, site_spec):
+    for site_spec in configured_sites.values():
+        if site_globals_editable(site_spec):
             site_spec["globals"] = dict(
                 update_global_config(
                     logger,

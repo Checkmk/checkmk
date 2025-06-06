@@ -252,9 +252,7 @@ class SiteManagement:
                     ),
                 ),
             ],
-            default_value="all"
-            if site_id is None or site_is_local(site_configuration, site_id)
-            else None,
+            default_value="all" if site_id is None or site_is_local(site_configuration) else None,
             help=_(
                 "By default the users are synchronized automatically in the interval configured "
                 "in the connection. For example the LDAP connector synchronizes the users every "
@@ -708,7 +706,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if is_replication_enabled(site):
             distributed = True
-        if site_is_local(site, siteid):
+        if site_is_local(site):
             create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
@@ -732,7 +730,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
+def site_globals_editable(site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
     if is_wato_slave_site():
@@ -742,7 +740,7 @@ def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
     if not has_wato_slave_sites():
         return False
 
-    return is_replication_enabled(site) or site_is_local(site, site_id)
+    return is_replication_enabled(site) or site_is_local(site)
 
 
 def _delete_distributed_wato_file():

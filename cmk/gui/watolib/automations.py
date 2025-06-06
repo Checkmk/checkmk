@@ -113,7 +113,7 @@ def make_automation_config(
 ) -> LocalAutomationConfig | RemoteAutomationConfig:
     return (
         LocalAutomationConfig()
-        if site_is_local(site_config, site_config["id"])
+        if site_is_local(site_config)
         else RemoteAutomationConfig.from_site_config(site_config)
     )
 

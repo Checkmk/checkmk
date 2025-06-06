@@ -1228,7 +1228,7 @@ class ModeDistributedMonitoring(WatoMode):
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
-        if site_globals_editable(site_id, site):
+        if site_globals_editable(site):
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
 
             has_site_globals = bool(site.get("globals"))
@@ -1659,7 +1659,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 return
 
             if not is_replication_enabled(self._site) and not site_is_local(
-                active_config.sites[self._site_id], self._site_id
+                active_config.sites[self._site_id]
             ):
                 html.show_error(
                     _(
@@ -1935,7 +1935,7 @@ def _page_menu_dropdown_site_details(
 def _page_menu_entries_site_details(
     site_id: str, site: SiteConfiguration, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(SiteId(site_id), site):
+    if current_mode != "edit_site_globals" and site_globals_editable(site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name="configuration",

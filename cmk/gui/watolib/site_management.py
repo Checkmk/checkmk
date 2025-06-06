@@ -482,7 +482,7 @@ class ConfigurationConnection:
             direct_login_to_web_gui_allowed=internal_config["user_login"],
             user_sync=UserSync.from_internal(
                 internal_config=internal_config.get(
-                    "user_sync", "all" if site_is_local(internal_config, site_id) else "disabled"
+                    "user_sync", "all" if site_is_local(internal_config) else "disabled"
                 )
             ),
             replicate_event_console=internal_config["replicate_ec"],
@@ -756,7 +756,7 @@ def add_changes_after_editing_site_connection(
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
-    if not replication_enabled and not site_is_local(active_config.sites[site_id], site_id):
+    if not replication_enabled and not site_is_local(active_config.sites[site_id]):
         clear_site_replication_status(site_id)
 
     if site_id != omd_site():

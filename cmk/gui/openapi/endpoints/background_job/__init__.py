@@ -74,7 +74,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     else:
         site_id = omd_site()
 
-    if not site_is_local(site_config := active_config.sites[site_id], site_id):
+    if not site_is_local(site_config := active_config.sites[site_id]):
         snapshot = BackgroundStatusSnapshot.from_dict(
             json.loads(
                 str(

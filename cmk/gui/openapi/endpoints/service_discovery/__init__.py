@@ -757,7 +757,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
-    if site_is_local(active_config.sites[(site_id := host.site_id())], site_id):
+    if site_is_local(active_config.sites[(site_id := host.site_id())]):
         job = ServiceDiscoveryBackgroundJob(host.name())
         return job.get_status_snapshot()
 

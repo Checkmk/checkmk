@@ -398,7 +398,7 @@ def _create_and_save_special_agent_bundle(
 def _service_discovery_possible(
     site_id: SiteId, *, site_config: SiteConfiguration, debug: bool
 ) -> bool:
-    if site_is_local(active_config.sites[site_id], site_id):
+    if site_is_local(active_config.sites[site_id]):
         return True
 
     if not is_replication_enabled(site_config):

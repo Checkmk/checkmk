@@ -186,7 +186,7 @@ class ActivateChangesWriter:
                 "domain_settings": domain_settings or {},
                 "prevent_discard_changes": prevent_discard_changes,
                 "diff_text": diff_text,
-                "has_been_activated": site_is_local(active_config.sites[site_id], site_id)
+                "has_been_activated": site_is_local(active_config.sites[site_id])
                 and need_restart is False
                 and need_apache_reload is False,
             }

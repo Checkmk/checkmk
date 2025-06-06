@@ -82,9 +82,7 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
         try:
-            if site_is_local(
-                site_config := active_config.sites[folder.site_id()], folder.site_id()
-            ):
+            if site_is_local(site_config := active_config.sites[folder.site_id()]):
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(

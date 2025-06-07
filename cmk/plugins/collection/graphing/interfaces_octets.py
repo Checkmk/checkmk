@@ -105,8 +105,34 @@ graph_bandwidth_translated = graphs.Bidirectional(
             )
         ],
         simple_lines=[
-            metrics.WarningOf("if_out_octets"),
-            metrics.CriticalOf("if_out_octets"),
+            metrics.Product(
+                Title("Warning of Output bandwidth"),
+                UNIT_BITS_PER_SECOND,
+                metrics.Color.YELLOW,
+                [
+                    metrics.WarningOf("if_out_octets"),
+                    metrics.Constant(
+                        Title(""),
+                        UNIT_NUMBER,
+                        metrics.Color.GRAY,
+                        8.0,
+                    ),
+                ],
+            ),
+            metrics.Product(
+                Title("Critical of Output bandwidth"),
+                UNIT_BITS_PER_SECOND,
+                metrics.Color.RED,
+                [
+                    metrics.CriticalOf("if_out_octets"),
+                    metrics.Constant(
+                        Title(""),
+                        UNIT_NUMBER,
+                        metrics.Color.GRAY,
+                        8.0,
+                    ),
+                ],
+            ),
         ],
     ),
     upper=graphs.Graph(
@@ -129,8 +155,34 @@ graph_bandwidth_translated = graphs.Bidirectional(
             )
         ],
         simple_lines=[
-            metrics.WarningOf("if_in_octets"),
-            metrics.CriticalOf("if_in_octets"),
+            metrics.Product(
+                Title("Warning of Input bandwidth"),
+                UNIT_BITS_PER_SECOND,
+                metrics.Color.YELLOW,
+                [
+                    metrics.WarningOf("if_in_octets"),
+                    metrics.Constant(
+                        Title(""),
+                        UNIT_NUMBER,
+                        metrics.Color.GRAY,
+                        8.0,
+                    ),
+                ],
+            ),
+            metrics.Product(
+                Title("Critical of Input bandwidth"),
+                UNIT_BITS_PER_SECOND,
+                metrics.Color.RED,
+                [
+                    metrics.CriticalOf("if_in_octets"),
+                    metrics.Constant(
+                        Title(""),
+                        UNIT_NUMBER,
+                        metrics.Color.GRAY,
+                        8.0,
+                    ),
+                ],
+            ),
         ],
     ),
 )

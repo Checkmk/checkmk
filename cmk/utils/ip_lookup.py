@@ -19,7 +19,7 @@ from collections.abc import (
 )
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, assert_never, Final, Generic, Literal, TypeVar
+from typing import Any, assert_never, Final, Generic, Literal, Protocol, TypeVar
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -48,6 +48,16 @@ type StrictIPLookup = Callable[
     [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
     HostAddress,
 ]
+
+
+# TODO: consolidate with the above
+class IPLookupOptional(Protocol):
+    def __call__(
+        self,
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
+    ) -> HostAddress | None: ...
+
 
 _TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], None])
 
@@ -80,17 +90,13 @@ class IPLookupConfig:
 
 def make_lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig,
-) -> Callable[
-    [
-        HostName,
-        Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    ],
-    HostAddress | None,
-]:
+) -> IPLookupOptional:
     def lookup_mgmt_board_ip_address(
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
     ) -> HostAddress | None:
+        if family is None:
+            family = ip_config.default_address_family(host_name)
         mgmt_address: Final = ip_config.management_address(host_name)
         try:
             mgmt_ipa = (
@@ -120,35 +126,6 @@ def make_lookup_mgmt_board_ip_address(
             return None
 
     return lookup_mgmt_board_ip_address
-
-
-def lookup_mgmt_board_ip_address(
-    ip_config: IPLookupConfig, host_name: HostName
-) -> HostAddress | None:
-    mgmt_address: Final = ip_config.management_address(host_name)
-    try:
-        mgmt_ipa = (
-            None if mgmt_address is None else HostAddress(str(ipaddress.ip_address(mgmt_address)))
-        )
-    except (ValueError, TypeError):
-        mgmt_ipa = None
-
-    try:
-        return _lookup_ip_address(
-            # host name is ignored, if mgmt_ipa is trueish.
-            host_name=mgmt_address or host_name,
-            family=ip_config.default_address_family(host_name),
-            configured_ip_address=mgmt_ipa,
-            simulation_mode=ip_config.simulation_mode,
-            is_snmp_usewalk_host=(
-                ip_config.is_use_walk_host(host_name) and ip_config.is_snmp_management(host_name)
-            ),
-            override_dns=ip_config.fake_dns,
-            is_dyndns_host=ip_config.is_dyndns_host(host_name),
-            force_file_cache_renewal=not ip_config.use_dns_cache,
-        )
-    except MKIPAddressLookupError:
-        return None
 
 
 def make_lookup_ip_address(

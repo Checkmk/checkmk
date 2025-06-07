@@ -560,7 +560,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
 
     config_cache = ts.apply(monkeypatch)
     assert (
-        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
         == result_address
     )
 
@@ -594,7 +594,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
     )
 
     assert (
-        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
         == result_address
     )
 
@@ -620,7 +620,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(
 
     config_cache = ts.apply(monkeypatch)
     assert (
-        ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname)
+        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
         == result_address
     )
 
@@ -642,7 +642,10 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
-    assert ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
+    assert (
+        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        is None
+    )
 
 
 def test_lookup_mgmt_board_ip_address_unresolvable_2(
@@ -664,4 +667,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
         },
     )
 
-    assert ip_lookup.lookup_mgmt_board_ip_address(config_cache.ip_lookup_config(), hostname) is None
+    assert (
+        ip_lookup.make_lookup_mgmt_board_ip_address(config_cache.ip_lookup_config())(hostname)
+        is None
+    )

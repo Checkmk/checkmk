@@ -41,7 +41,7 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.ip_lookup import ConfiguredIPLookup, lookup_mgmt_board_ip_address
+from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
@@ -628,6 +628,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
@@ -689,7 +690,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
             tag_list=config_cache.host_tags.tag_list(hostname),
-            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
+            management_ip=ip_address_of_mgmt(hostname, ip_family),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,

@@ -44,7 +44,7 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.ip_lookup import lookup_mgmt_board_ip_address
+from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -3044,7 +3044,9 @@ class AutomationDiagHost(Automation):
             computed_datasources=config_cache.computed_datasources(host_name),
             datasource_programs=config_cache.datasource_programs(host_name),
             tag_list=config_cache.host_tags.tag_list(host_name),
-            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, host_name),
+            management_ip=make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+                host_name, ip_lookup_config.default_address_family(host_name)
+            ),
             management_protocol=config_cache.management_protocol(host_name),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 host_name,
@@ -3493,6 +3495,7 @@ class AutomationGetAgentOutput(Automation):
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
         ip_stack_config = config_cache.ip_stack_config(hostname)
         ip_lookup_config = config_cache.ip_lookup_config()
+        ip_family = ip_lookup_config.default_address_family(hostname)
         ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
             ip_address_of_bare,
@@ -3511,7 +3514,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = (
                 None
                 if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-                else ip_address_of_bare(hostname, ip_lookup_config.default_address_family(hostname))
+                else ip_address_of_bare(hostname, ip_family)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
             walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -3561,7 +3564,9 @@ class AutomationGetAgentOutput(Automation):
                     computed_datasources=config_cache.computed_datasources(hostname),
                     datasource_programs=config_cache.datasource_programs(hostname),
                     tag_list=config_cache.host_tags.tag_list(hostname),
-                    management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
+                    management_ip=make_lookup_mgmt_board_ip_address(ip_lookup_config)(
+                        hostname, ip_family
+                    ),
                     management_protocol=config_cache.management_protocol(hostname),
                     special_agent_command_lines=config_cache.special_agent_command_lines(
                         hostname,

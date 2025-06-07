@@ -45,12 +45,11 @@ def make_config_cache_mock(
 
 def mock_ip_address_of(
     host_name: HostName,
-    family: socket.AddressFamily | ip_lookup.IPStackConfig,
-) -> HostAddress | None:
-    if family == socket.AF_INET:
-        return HostAddress("0.0.0.1")
-
-    return HostAddress("::1")
+    family: socket.AddressFamily | None = None,
+) -> HostAddress:
+    if family == socket.AF_INET6:
+        return HostAddress("::1")
+    return HostAddress("0.0.0.1")
 
 
 def test_get_host_config_macros_stringified() -> None:

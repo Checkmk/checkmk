@@ -31,6 +31,7 @@ from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.ip_lookup import (
     IPLookup,
+    IPLookupOptional,
     IPStackConfig,
 )
 from cmk.utils.log import console
@@ -349,7 +350,7 @@ class CMKFetcher:
         force_snmp_cache_refresh: bool,
         ip_address_of: IPLookup,
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
-        ip_address_of_mgmt: IPLookup,
+        ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,

@@ -60,7 +60,8 @@ def ip_address_of_never_called(
 
 
 def ip_address_of_return_local(
-    _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    host_name: HostName,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress:
     return HostAddress("127.0.0.1")
 
@@ -324,7 +325,7 @@ def test_create_nagios_host_spec(
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        config_cache.ip_lookup_config(),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -354,11 +355,13 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
     config_cache = ts.apply(monkeypatch)
 
-    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of=lambda *a: None)
+    host_attrs = config_cache.get_host_attributes(
+        hostname, ip_address_of=lambda *a: HostAddress("")
+    )
 
     cfg = NagiosConfig(io.StringIO(), [hostname])
     host_spec = create_nagios_host_spec(
-        cfg, config_cache, hostname, host_attrs, ip_address_of=lambda *a: None
+        cfg, config_cache, hostname, host_attrs, ip_address_of=lambda *a: HostAddress("")
     )
     assert host_spec["_SERVICE_PERIOD"] == "24X7"
     assert "service_period" not in host_spec

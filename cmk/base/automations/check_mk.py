@@ -25,7 +25,7 @@ from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
 from socket import AddressFamily
-from typing import Any, Literal
+from typing import Any, Literal, NoReturn
 
 import livestatus
 
@@ -315,7 +315,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup_config,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -434,7 +434,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             plugins.check_plugins, service_name_config
         )
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            config_cache.ip_lookup_config(),
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -465,7 +465,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 service_name_config,
                 config_cache,
                 plugins,
-                ip_address_of_host,
+                _disabled_ip_lookup,
                 run_settings.host_config.ip_address,
             )
         finally:
@@ -506,7 +506,7 @@ class AutomationDiscoveryPreview(Automation):
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
-            ip_address_of_bare,
+            ip_lookup_config,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=handle_ip_lookup_failure,
         )
@@ -884,9 +884,8 @@ def _execute_autodiscovery(
         config_cache, ab_plugins.check_plugins, service_name_config
     )
     ip_lookup_config = config_cache.ip_lookup_config()
-    ip_lookup_func = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup_func,
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         # error handling: we're redirecting stdout to /dev/null anyway,
         # and not using the collected errors.
@@ -903,7 +902,7 @@ def _execute_autodiscovery(
         logger=logging.getLogger("cmk.base.discovery"),
     )
     slightly_different_ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup_func,
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -1305,7 +1304,7 @@ class AutomationRenameHosts(Automation):
                 service_name_config = config_cache.make_passive_service_name_config()
 
                 ip_address_of = ip_lookup.ConfiguredIPLookup(
-                    ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                    ip_lookup_config,
                     allow_empty=hosts_config.clusters,
                     error_handler=ip_lookup.CollectFailedHosts(),
                 )
@@ -1740,7 +1739,7 @@ class AutomationAnalyseServices(Automation):
                     host_name=host_name,
                     servicedesc=servicedesc,
                     ip_address_of=ip_lookup.ConfiguredIPLookup(
-                        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                        ip_lookup_config,
                         allow_empty=loading_result.config_cache.hosts_config.clusters,
                         error_handler=config.handle_ip_lookup_failure,
                     ),
@@ -2273,7 +2272,7 @@ class AutomationRestart(Automation):
         ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup_config,
             allow_empty=hosts_config.clusters,
             error_handler=ip_lookup.CollectFailedHosts(),
         )
@@ -2359,7 +2358,7 @@ def _execute_silently(
     service_name_config: PassiveServiceNameConfig,
     action: CoreAction,
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    ip_address_of_mgmt: ip_lookup.IPLookup,
+    ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     hosts_config: Hosts,
     loaded_config: config.LoadedConfigFragment,
     plugins: AgentBasedPlugins,
@@ -2584,10 +2583,10 @@ class AutomationScanParents(Automation):
 automations.register(AutomationScanParents())
 
 
-def ip_address_of_host(_host_address: HostAddress, _address_family: socket.AddressFamily) -> None:
+def _disabled_ip_lookup(host_name: object, family: object = None) -> NoReturn:
     # TODO: this adds the restriction of only being able to use NO_IP hosts for now. When having an
     #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
-    return None
+    raise MKAutomationError("IP lookup is not available in this context. ")
 
 
 def get_special_agent_commandline(
@@ -2610,7 +2609,7 @@ def get_special_agent_commandline(
             host_config.host_additional_addresses_ipv4,
             host_config.host_additional_addresses_ipv6,
             host_config.macros,
-            ip_address_of_host,
+            _disabled_ip_lookup,
         ),
         host_config.host_attrs,
         http_proxies,
@@ -2910,7 +2909,7 @@ class AutomationDiagHost(Automation):
                         # Also: This class might write to console. The de-serializer of the automation call will
                         # not be able to handle this I think? At best it will ignore it. We should fix this.
                         ip_address_of=ip_lookup.ConfiguredIPLookup(
-                            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                            ip_lookup_config,
                             allow_empty=hosts_config.clusters,
                             error_handler=config.handle_ip_lookup_failure,
                         ),
@@ -2993,7 +2992,7 @@ class AutomationDiagHost(Automation):
         hosts_config = config_cache.hosts_config
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup_config,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -3288,7 +3287,7 @@ class AutomationActiveCheck(Automation):
         # Maybe we add some meaningfull error handling here someday?
         # This reflects the effetive behavior when the error handler was inroduced.
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            config_cache.ip_lookup_config(),
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=lambda *a, **kw: None,
         )
@@ -3498,7 +3497,7 @@ class AutomationGetAgentOutput(Automation):
         ip_family = ip_lookup_config.default_address_family(hostname)
         ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
         ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
-            ip_address_of_bare,
+            ip_lookup_config,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )

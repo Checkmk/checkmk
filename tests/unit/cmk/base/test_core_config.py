@@ -76,7 +76,9 @@ def test_do_create_config_nagios(
         AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            lambda *a: HostAddress(""), allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
+            core_scenario.ip_lookup_config(),
+            allow_empty=(),
+            error_handler=ip_lookup.CollectFailedHosts(),
         ),
         ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,
@@ -95,7 +97,9 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        lambda *a: HostAddress(""), allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
+        core_scenario.ip_lookup_config(),
+        allow_empty=(),
+        error_handler=ip_lookup.CollectFailedHosts(),
     )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
@@ -301,7 +305,9 @@ def test_template_translation(
     config_cache = ts.apply(monkeypatch)
 
     assert (
-        config_cache.translate_commandline(hostname, ipaddress, template, lambda *a: None)
+        config_cache.translate_commandline(
+            hostname, ipaddress, template, lambda *a: HostAddress("")
+        )
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
     )
 

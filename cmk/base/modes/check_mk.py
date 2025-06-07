@@ -624,7 +624,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -698,7 +698,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 passwords=cmk.utils.password_store.load(pending_passwords_file),
                 password_store_file=pending_passwords_file,
                 ip_address_of=ConfiguredIPLookup(
-                    ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                    ip_lookup_config,
                     allow_empty=hosts_config.clusters,
                     error_handler=handle_ip_lookup_failure,
                 ),
@@ -794,7 +794,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     ip_lookup_config = config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -1424,7 +1424,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             cmk.utils.password_store.pending_password_store_path()
         ),
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            config_cache.ip_lookup_config(),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
@@ -1493,7 +1493,7 @@ def mode_update() -> None:
     hosts_config = loading_result.config_cache.hosts_config
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1569,7 +1569,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1637,7 +1637,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1952,7 +1952,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2249,7 +2249,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2465,7 +2465,7 @@ def run_checking(
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2686,7 +2686,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     service_name_config = config_cache.make_passive_service_name_config()
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2964,7 +2964,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )  # not obvious to me why/if we *really* need this
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )

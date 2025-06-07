@@ -29,7 +29,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils.ip_lookup import IPStackConfig, StrictIPLookup
+from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -115,7 +115,7 @@ def precompile_hostchecks(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-    ip_address_of: StrictIPLookup,
+    ip_address_of: IPLookup,
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
@@ -166,7 +166,7 @@ def dump_precompiled_hostcheck(
     hostname: HostName,
     plugins: AgentBasedPlugins,
     *,
-    ip_address_of: StrictIPLookup,
+    ip_address_of: IPLookup,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str:

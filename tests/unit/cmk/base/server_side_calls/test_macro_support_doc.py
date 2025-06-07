@@ -15,7 +15,7 @@ import pytest
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
 
@@ -149,7 +149,7 @@ def _iter_macros(documented_macros: Sequence[str], resources: Iterable[str]) -> 
 
 def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None) -> None:
     host_name = HostName("test-host")
-    ip_address_of = lambda *a: None
+    ip_address_of = lambda *a: HostAddress("")
     host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
     host_macros = base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
@@ -200,7 +200,7 @@ def test_special_agent_macros(
     config_cache: ConfigCache,
 ) -> None:
     host_name = HostName("test-host")
-    ip_address_of = lambda *a: None
+    ip_address_of = lambda *a: HostAddress("")
 
     host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     macros = {

@@ -19,7 +19,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 
@@ -245,7 +245,7 @@ def test_host_folder_matching(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         )._agent_port(hostname)
         == result
     )
@@ -729,7 +729,7 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         )._agent_port(hostname)
         == result
     )
@@ -762,7 +762,7 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         )._tcp_connect_timeout(hostname)
         == result
     )
@@ -796,7 +796,7 @@ def test_encryption_handling(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         )._encryption_handling(hostname)
         is result
     )
@@ -830,7 +830,7 @@ def test_symmetric_agent_encryption(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         )._symmetric_agent_encryption(hostname)
         is result
     )
@@ -3113,9 +3113,9 @@ def test_get_active_service_data_crash(
     list(
         config_cache.active_check_services(
             host_name,
-            config_cache.get_host_attributes(host_name, lambda *a, **kw: None),
+            config_cache.get_host_attributes(host_name, lambda *a, **kw: HostAddress("")),
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
-            lambda *a, **kw: None,
+            lambda *a, **kw: HostAddress(""),
             {},
             Path(),
         )

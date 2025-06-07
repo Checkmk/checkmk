@@ -77,7 +77,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.ip_stack_config(localhost) is ip_lookup.IPStackConfig.IPv4
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        config_cache.ip_lookup_config(),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=lambda *a: None,
     )

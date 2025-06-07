@@ -1502,14 +1502,14 @@ def test_commandline_discovery(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
             ),
-            ip_lookup=lambda *a: None,
+            ip_lookup=lambda *a: HostAddress(""),
         ),
         agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=lambda *a: None,
-        ip_address_of_mandatory=lambda *a: None,
-        ip_address_of_mgmt=lambda *a: None,
+        ip_address_of=lambda *a: HostAddress(""),
+        ip_address_of_mandatory=lambda *a: HostAddress(""),
+        ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

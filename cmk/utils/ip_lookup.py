@@ -39,18 +39,17 @@ _enforce_localhost = False
 _FALLBACK_V4 = HostAddress("0.0.0.0")
 _FALLBACK_V6 = HostAddress("::")
 
-# TODO: return type actually is non optional in most cases
-type IPLookup = Callable[
-    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-    HostAddress | None,
-]
-type StrictIPLookup = Callable[
-    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-    HostAddress,
-]
+
+# keep the protocols here for now,
+# they could be duplcated to achieve better separation.
+class IPLookup(Protocol):
+    def __call__(
+        self,
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
+    ) -> HostAddress: ...
 
 
-# TODO: consolidate with the above
 class IPLookupOptional(Protocol):
     def __call__(
         self,
@@ -97,6 +96,7 @@ def make_lookup_mgmt_board_ip_address(
     ) -> HostAddress | None:
         if family is None:
             family = ip_config.default_address_family(host_name)
+
         mgmt_address: Final = ip_config.management_address(host_name)
         try:
             mgmt_ipa = (
@@ -130,10 +130,7 @@ def make_lookup_mgmt_board_ip_address(
 
 def make_lookup_ip_address(
     ip_config: IPLookupConfig,
-) -> Callable[
-    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None],
-    HostAddress,
-]:
+) -> IPLookup:
     def _wrapped_lookup(
         host_name: HostName,
         family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
@@ -163,23 +160,23 @@ def make_lookup_ip_address(
 class ConfiguredIPLookup(Generic[_TErrHandler]):
     def __init__(
         self,
-        lookup: Callable[
-            [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
-            HostAddress,
-        ],
+        config: IPLookupConfig,
         *,
         allow_empty: Container[HostName],
         error_handler: _TErrHandler,
     ) -> None:
-        self._lookup: Final = lookup
+        self.config: Final = config
+        self._lookup: Final = make_lookup_ip_address(config)
         self.error_handler: Final[_TErrHandler] = error_handler
         self._allow_empty: Final = allow_empty
 
     def __call__(
         self,
         host_name: HostName,
-        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
     ) -> HostAddress:
+        if family is None:
+            family = self.config.default_address_family(host_name)
         try:
             return self._lookup(host_name, family)
         except Exception as e:

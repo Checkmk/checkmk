@@ -17,7 +17,7 @@ from cmk.ccc.hostaddress import HostName
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-from cmk.utils.ip_lookup import IPLookup, IPStackConfig
+from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
@@ -126,7 +126,7 @@ def dump_host(
     hostname: HostName,
     *,
     ip_address_of: IPLookup,
-    ip_address_of_mgmt: IPLookup,
+    ip_address_of_mgmt: IPLookupOptional,
     simulation_mode: bool,
 ) -> None:
     print_("\n")

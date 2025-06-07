@@ -534,8 +534,6 @@ def test_non_trivial_graph_declarations() -> None:
             non_trivial_graphs.append(ident)
 
     assert set(non_trivial_graphs) == {
-        "bandwidth",
-        "bandwidth_translated",
         "cmk_cpu_time_by_phase",
         "cpu_time",
         "cpu_utilization_3",

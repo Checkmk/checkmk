@@ -24165,6 +24165,11 @@ msgstr "Fehler beim Parsen der Metrik-Strings: %s"
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "Fehler beim Einlesen der Zustands-Datei \"%s\": %s"
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -60604,6 +60609,10 @@ msgstr "Erfolgreich erkannte Hosts"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Anmeldung an Remote-Instanz %s war erfolgreich."
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "Die IP-Adressen von %d Hosts wurden erfolgreich aktualisiert."
 
 #, python-format
 msgid "Successfully sent %d commands."

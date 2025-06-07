@@ -24976,6 +24976,11 @@ msgstr "Mislukt bij het ontleden van prestatiegegevens string: %s"
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "Faalde om staatsdossier \"%s\" te ontleden: %s"
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -63131,6 +63136,10 @@ msgstr "Succesvol verwijderd %d hosts"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Succesvol ingelogd op externe site %s."
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "IP adressen van %d hosts succesvol bijgewerkt."
 
 #, python-format
 msgid "Successfully sent %d commands."

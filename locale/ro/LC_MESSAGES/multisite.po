@@ -25046,6 +25046,11 @@ msgstr "Nu a reușit să analizeze șirul de date de performanță: %s"
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "Nu a reușit să analizeze fișierul de stare \"%s\": %s."
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -63316,6 +63321,10 @@ msgstr "Gazde descoperite cu succes"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Conectat cu succes la site-ul la distanță %s."
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "Ați actualizat cu succes adresele IP ale gazdelor %d."
 
 #, python-format
 msgid "Successfully sent %d commands."

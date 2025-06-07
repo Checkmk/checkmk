@@ -25168,6 +25168,11 @@ msgstr ""
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "Échec de l'analyse du fichier d'état \"%s\" : %s"
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -63664,6 +63669,10 @@ msgstr "Suppression réussie de %d hôtes"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Connexion réussie au site distant %s."
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "Mise à jour réussie des adresses IP de %d hôtes."
 
 #, python-format
 msgid "Successfully sent %d commands."

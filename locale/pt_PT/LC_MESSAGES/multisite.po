@@ -24970,6 +24970,11 @@ msgstr "Cadeia de dados de desempenho falhada a analisar: %s"
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "Falha no arquivo de estado parse \"%s\": %s"
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -63125,6 +63130,10 @@ msgstr "Anfitriões descobertos com sucesso"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Conectado com sucesso ao site remoto %s."
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "Endereços IP atualizados com sucesso de hosts %d."
 
 #, python-format
 msgid "Successfully sent %d commands."

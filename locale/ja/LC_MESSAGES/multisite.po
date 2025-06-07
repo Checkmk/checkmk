@@ -23826,6 +23826,11 @@ msgstr "パフォーマンスデータ文字列の解析に失敗しました: %
 msgid "Failed to parse state file \"%s\": %s"
 msgstr "状態ファイル \"%s\" の解析に失敗しました:%s"
 
+msgid ""
+"Failed to ping the IP address. This could be due to an invalid IP, network "
+"issues, or firewall restrictions."
+msgstr ""
+
 #, python-format
 msgid ""
 "Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". The value of "
@@ -60454,6 +60459,10 @@ msgstr "ホストの検出に成功"
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "リモートサイト %s に正常にログインしました。"
+
+#, fuzzy
+msgid "Successfully pinged IP address"
+msgstr "%dホストのIPアドレスが正常に更新されました。"
 
 #, python-format
 msgid "Successfully sent %d commands."

@@ -702,17 +702,20 @@ def _create_graph_recipe_from_template(
             translated_metrics,
         ),
         horizontal_rules=[
-            HorizontalRule(
-                value=evaluated.value,
-                rendered_value=get_render_function(evaluated.unit_spec)(evaluated.value),
-                color=evaluated.color,
-                title=evaluated.title,
-            )
-            for evaluated in graph_template.scalars
+            _evaluated_scalar_to_horizontal_rule(evaluated) for evaluated in graph_template.scalars
         ],
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
         specification=specification,
+    )
+
+
+def _evaluated_scalar_to_horizontal_rule(evaluated: Evaluated) -> HorizontalRule:
+    return HorizontalRule(
+        value=evaluated.value * (-1 if evaluated.line_type.startswith("-") else 1),
+        rendered_value=get_render_function(evaluated.unit_spec)(evaluated.value),
+        color=evaluated.color,
+        title=evaluated.title,
     )
 
 

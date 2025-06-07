@@ -24,6 +24,7 @@ from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
     _evaluate_scalars,
+    _evaluated_scalar_to_horizontal_rule,
     _get_evaluated_graph_templates,
     _get_sorted_graph_plugins,
     _matching_graph_templates,
@@ -2056,3 +2057,55 @@ def test_conflicting_metrics(
     assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )
+
+
+@pytest.mark.parametrize(
+    ("evaluated_scalar, expected_result"),
+    [
+        pytest.param(
+            Evaluated(
+                WarningOf(Metric("some_metric")),
+                1.0,
+                ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                "#0080c0",
+                "line",
+                "Warning of Some metric",
+            ),
+            HorizontalRule(
+                value=1.0,
+                rendered_value="1",
+                color="#0080c0",
+                title="Warning of Some metric",
+            ),
+            id="stanard case",
+        ),
+        pytest.param(
+            Evaluated(
+                WarningOf(Metric("some_metric")),
+                1.0,
+                ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                "#0080c0",
+                "-line",
+                "Warning of Some metric",
+            ),
+            HorizontalRule(
+                value=-1.0,
+                rendered_value="1",
+                color="#0080c0",
+                title="Warning of Some metric",
+            ),
+            id="mirrored",
+        ),
+    ],
+)
+def test_evaluated_scalar_to_horizontal_rule(
+    evaluated_scalar: Evaluated,
+    expected_result: HorizontalRule,
+) -> None:
+    assert _evaluated_scalar_to_horizontal_rule(evaluated_scalar) == expected_result

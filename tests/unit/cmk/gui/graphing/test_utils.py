@@ -1849,18 +1849,22 @@ def test_graph_template_from_graph(
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
                         "Warning of metric-name-l3",
+                        mirrored=True,
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-l4"), "crit"),
                         "Critical of metric-name-l4",
+                        mirrored=True,
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
                         "Minimum of metric-name-l5",
+                        mirrored=True,
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
                         "Maximum of metric-name-l6",
+                        mirrored=True,
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],

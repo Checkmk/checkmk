@@ -190,7 +190,7 @@ def _horizontal_rules_from_thresholds(
             if (result := entry.expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
                     HorizontalRule(
-                        result.value,
+                        result.value * (-1 if entry.mirrored else 1),
                         result.unit_info["render"](result.value),
                         result.color,
                         entry.title,

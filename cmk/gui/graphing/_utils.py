@@ -67,6 +67,7 @@ class MKGraphNotFound(MKGeneralException): ...
 class ScalarDefinition(NamedTuple):
     expression: MetricExpression
     title: str
+    mirrored: bool = False
 
 
 class MetricUnitColor(TypedDict):
@@ -416,7 +417,13 @@ class GraphTemplate:
                     | metrics.MaximumOf()
                 ):
                     parsed = _parse_quantity(line, "-line")
-                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                    scalars.append(
+                        ScalarDefinition(
+                            parsed.expression,
+                            parsed.title,
+                            mirrored=True,
+                        )
+                    )
                 case _:
                     metrics_.append(_parse_quantity(line, "-line"))
         return cls(

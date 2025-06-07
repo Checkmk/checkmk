@@ -210,6 +210,36 @@ def test__replace_expressions_missing_scalars() -> None:
             ],
             id="Thresholds present",
         ),
+        pytest.param(
+            "power=5;9;10;;",
+            [
+                ScalarDefinition(
+                    expression=WarningOf(Metric("power")),
+                    title="Warning output",
+                    mirrored=True,
+                ),
+                ScalarDefinition(
+                    expression=CriticalOf(Metric("power")),
+                    title="Critical power",
+                    mirrored=True,
+                ),
+            ],
+            [
+                HorizontalRule(
+                    value=-9.0,
+                    rendered_value="9.00 W",
+                    color="#ffd000",
+                    title="Warning output",
+                ),
+                HorizontalRule(
+                    value=-10.0,
+                    rendered_value="10.0 W",
+                    color="#ff3232",
+                    title="Critical power",
+                ),
+            ],
+            id="Mirrored thresholds",
+        ),
     ],
 )
 def test_horizontal_rules_from_thresholds(

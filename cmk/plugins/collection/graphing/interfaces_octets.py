@@ -92,13 +92,13 @@ graph_bandwidth_translated = graphs.Bidirectional(
             metrics.Product(
                 Title("Output bandwidth"),
                 UNIT_BITS_PER_SECOND,
-                metrics.Color.GRAY,
+                metrics.Color.BLUE,
                 [
                     "if_out_octets",
                     metrics.Constant(
                         Title(""),
                         UNIT_NUMBER,
-                        metrics.Color.BLUE,
+                        metrics.Color.GRAY,
                         8.0,
                     ),
                 ],
@@ -116,13 +116,13 @@ graph_bandwidth_translated = graphs.Bidirectional(
             metrics.Product(
                 Title("Input bandwidth"),
                 UNIT_BITS_PER_SECOND,
-                metrics.Color.GRAY,
+                metrics.Color.GREEN,
                 [
                     "if_in_octets",
                     metrics.Constant(
                         Title(""),
                         UNIT_NUMBER,
-                        metrics.Color.BLUE,
+                        metrics.Color.GRAY,
                         8.0,
                     ),
                 ],

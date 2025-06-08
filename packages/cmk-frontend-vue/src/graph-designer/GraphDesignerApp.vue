@@ -573,7 +573,7 @@ function operationIsApplicable() {
   return Object.keys(selectedGraphLines.value).length >= 2
 }
 
-function showSelectedIds(operator: string) {
+function showSelectedIds(operator: '-' | '/') {
   return ` (${selectedGraphLines.value.map((l) => `#${l.id}`).join(` ${operator} `)})`
 }
 

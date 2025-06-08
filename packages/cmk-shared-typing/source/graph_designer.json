@@ -178,13 +178,7 @@
                 "operands": {
                     "type": "array",
                     "items": {
-                        "anyOf": [
-                            { "$ref": "#/$defs/graph_line_metric" },
-                            { "$ref": "#/$defs/graph_line_scalar" },
-                            { "$ref": "#/$defs/graph_line_constant" },
-                            { "$ref": "#/$defs/graph_line_operation" },
-                            { "$ref": "#/$defs/graph_line_transformation" }
-                        ]
+                        "$ref": "#/$defs/graph_line"
                     }
                 }
             },

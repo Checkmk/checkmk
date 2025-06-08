@@ -65,6 +65,9 @@ class MonitoringCore(abc.ABC):
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
         ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
         passwords: Mapping[str, str],
@@ -78,6 +81,7 @@ class MonitoringCore(abc.ABC):
             config_cache,
             hosts_config,
             service_name_config,
+            default_address_family,
             ip_address_of,
             ip_address_of_mgmt,
             licensing_handler,
@@ -95,6 +99,9 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
         ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
         licensing_handler: LicensingHandler,
@@ -274,6 +281,9 @@ def do_create_config(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     hosts_to_update: set[HostName] | None,
@@ -308,6 +318,7 @@ def do_create_config(
                 service_name_config,
                 plugins,
                 discovery_rules,
+                default_address_family,
                 ip_address_of,
                 ip_address_of_mgmt,
                 hosts_to_update=hosts_to_update,
@@ -372,6 +383,9 @@ def _create_core_config(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     hosts_to_update: set[HostName] | None,
@@ -396,6 +410,7 @@ def _create_core_config(
             service_name_config,
             plugins,
             discovery_rules,
+            default_address_family,
             ip_address_of,
             ip_address_of_mgmt,
             hosts_to_update=hosts_to_update,

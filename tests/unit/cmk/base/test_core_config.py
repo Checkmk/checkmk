@@ -68,6 +68,7 @@ def test_do_create_config_nagios(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
+    ip_lookup_config = core_scenario.ip_lookup_config()
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
@@ -75,8 +76,9 @@ def test_do_create_config_nagios(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
+        default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            core_scenario.ip_lookup_config(),
+            ip_lookup_config,
             allow_empty=(),
             error_handler=ip_lookup.CollectFailedHosts(),
         ),
@@ -96,8 +98,9 @@ def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
+    ip_lookup_config = core_scenario.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        core_scenario.ip_lookup_config(),
+        ip_lookup_config,
         allow_empty=(),
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -114,6 +117,7 @@ def test_do_create_config_nagios_collects_passwords(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
+        default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_address_of,
         ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,

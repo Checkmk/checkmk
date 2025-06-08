@@ -71,6 +71,9 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        default_address_family: Callable[
+            [HostName], Literal[AddressFamily.AF_INET, AddressFamily.AF_INET6]
+        ],
         ip_address_of: ip_lookup.IPLookup,
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
         licensing_handler: LicensingHandler,

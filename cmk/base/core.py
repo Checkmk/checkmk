@@ -6,6 +6,7 @@
 
 import enum
 import os
+import socket
 import subprocess
 import sys
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -60,6 +61,9 @@ def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     core: MonitoringCore,
@@ -76,6 +80,7 @@ def do_reload(
         config_cache,
         hosts_config,
         service_name_config,
+        default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
         core,
@@ -94,6 +99,9 @@ def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
     core: MonitoringCore,
@@ -116,6 +124,7 @@ def do_restart(
                 service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,
+                default_address_family=default_address_family,
                 ip_address_of=ip_address_of,
                 ip_address_of_mgmt=ip_address_of_mgmt,
                 hosts_to_update=hosts_to_update,

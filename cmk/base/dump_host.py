@@ -5,6 +5,7 @@
 
 import socket
 import time
+from typing import Literal
 
 import cmk.utils.render
 import cmk.utils.tty as tty
@@ -110,9 +111,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         add_txt = ""
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(
-        hostname, family=config_cache.default_address_family(hostname)
-    )
+    primary_family = config_cache.default_address_family(hostname)
+    ipaddress = _ip_address_for_dump_host(hostname, family=primary_family)
 
     addresses: str | None = ""
     if ConfigCache.address_family(hostname) is not AddressFamily.DUAL_STACK:
@@ -121,13 +121,13 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         try:
             secondary = _ip_address_for_dump_host(
                 hostname,
-                family=config_cache.default_address_family(hostname),
+                family=_complementary_family(primary_family),
             )
         except Exception:
             secondary = "X.X.X.X"
 
         addresses = f"{ipaddress}, {secondary}"
-        if config_cache.default_address_family(hostname) is socket.AF_INET6:
+        if primary_family is socket.AF_INET6:
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"
@@ -228,6 +228,16 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
         cmk.utils.render.date_and_time(time.time()),
         params.evaluate(cmk.base.core.timeperiod_active),
     )
+
+
+def _complementary_family(
+    family: socket.AddressFamily,
+) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
+    match family:
+        case socket.AddressFamily.AF_INET:
+            return socket.AddressFamily.AF_INET6
+        case _other:  # socket.AddressFamily.AF_INET6:
+            return socket.AddressFamily.AF_INET
 
 
 def _ip_address_for_dump_host(

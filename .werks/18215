@@ -1,0 +1,11 @@
+Title: Wrong display of dual stack hosts on CLI
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1749385475
+Edition: cre
+Level: 1
+Version: 2.2.0p44
+
+This fixes the display of the IP addresses of dual stack hosts when running <code>cmk -D &lt;HOST&gt;</code>.
+Instead of showing the primary <em>and</em> the secondary IP address, the primary one was shown twice.

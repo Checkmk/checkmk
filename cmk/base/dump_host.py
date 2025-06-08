@@ -5,6 +5,7 @@
 
 import socket
 import time
+from typing import Literal
 
 import cmk.utils.password_store
 import cmk.utils.render
@@ -119,11 +120,12 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         add_txt = ""
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
+    primary_family = config_cache.default_address_family(hostname)
     ipaddress = _ip_address_for_dump_host(
         config_cache,
         hosts_config,
         hostname,
-        family=config_cache.default_address_family(hostname),
+        family=primary_family,
     )
 
     addresses: str | None = ""
@@ -136,14 +138,14 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
                     config_cache,
                     hosts_config,
                     hostname,
-                    family=config_cache.default_address_family(hostname),
+                    family=_complementary_family(primary_family),
                 )
             )
         except Exception:
             secondary = "X.X.X.X"
 
         addresses = f"{ipaddress}, {secondary}"
-        if config_cache.default_address_family(hostname) is socket.AF_INET6:
+        if primary_family is socket.AF_INET6:
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"
@@ -237,6 +239,16 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         )
 
     tty.print_table(headers, colors, table_data, "  ")
+
+
+def _complementary_family(
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
+    match family:
+        case socket.AddressFamily.AF_INET:
+            return socket.AddressFamily.AF_INET6
+        case socket.AddressFamily.AF_INET6:
+            return socket.AddressFamily.AF_INET
 
 
 def _evaluate_params(params: TimespecificParameters) -> str:

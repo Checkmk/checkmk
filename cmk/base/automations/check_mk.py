@@ -24,7 +24,6 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
-from socket import AddressFamily
 from typing import Any, Literal, NoReturn
 
 import livestatus
@@ -2738,15 +2737,15 @@ class AutomationDiagCmkAgent(Automation):
 
         def address_family_config(
             address_family: Literal["no-ip", "ip-v4-only", "ip-v6-only", "ip-v4v6"],
-        ) -> AddressFamily:
+        ) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
             if address_family == "ip-v4-only":
-                return AddressFamily.AF_INET
+                return socket.AddressFamily.AF_INET
             if address_family == "ip-v6-only":
-                return AddressFamily.AF_INET6
+                return socket.AddressFamily.AF_INET6
             # TODO What to use for DualStack?
             if address_family == "ip-v4v6":
-                return AddressFamily.AF_INET6
-            return AddressFamily.AF_INET
+                return socket.AddressFamily.AF_INET6
+            return socket.AddressFamily.AF_INET
 
         if not ipaddress:
             if family == "no-ip":
@@ -2790,7 +2789,7 @@ class AutomationDiagCmkAgent(Automation):
                 file_cache_mode=0,
             ),
             fetcher=TCPFetcher(
-                family=AddressFamily.AF_INET,
+                family=socket.AddressFamily.AF_INET,
                 address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
                 timeout=float(diag_cmk_agent_input.timeout),
                 host_name=host_name,
@@ -2869,6 +2868,8 @@ class AutomationDiagHost(Automation):
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
 
+        ip_family = ip_lookup_config.default_address_family(host_name)
+
         if not ipaddress:
             if (
                 loading_result.config_cache.ip_stack_config(host_name)
@@ -2884,9 +2885,7 @@ class AutomationDiagHost(Automation):
 
         try:
             if test == "ping":
-                return DiagHostResult(
-                    *self._execute_ping(loading_result.config_cache, host_name, ipaddress)
-                )
+                return DiagHostResult(*self._execute_ping(ipaddress, ip_family))
 
             if test == "agent":
                 return DiagHostResult(
@@ -2903,9 +2902,7 @@ class AutomationDiagHost(Automation):
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
                         file_cache_options=file_cache_options,
-                        # Passing `ip_address_of` is the result of a refactoring.
-                        # We do pass an IP address as well, so I'm not quite sure why we need this.
-                        # Feel free to investigate!
+                        # This is needed because we might need more than just the primary IP address
                         # Also: This class might write to console. The de-serializer of the automation call will
                         # not be able to handle this I think? At best it will ignore it. We should fix this.
                         ip_address_of=ip_lookup.ConfiguredIPLookup(
@@ -2917,9 +2914,7 @@ class AutomationDiagHost(Automation):
                 )
 
             if test == "traceroute":
-                return DiagHostResult(
-                    *self._execute_traceroute(loading_result.config_cache, host_name, ipaddress)
-                )
+                return DiagHostResult(*self._execute_traceroute(ipaddress, ip_family))
 
             if test.startswith("snmp"):
                 if config.simulation_mode:
@@ -2961,11 +2956,11 @@ class AutomationDiagHost(Automation):
             )
 
     def _execute_ping(
-        self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
+        self,
+        ipaddress: str,
+        ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> tuple[int, str]:
-        base_cmd = (
-            "ping6" if config_cache.default_address_family(hostname) is socket.AF_INET6 else "ping"
-        )
+        base_cmd = "ping6" if ip_family is socket.AF_INET6 else "ping"
         completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
@@ -2991,11 +2986,6 @@ class AutomationDiagHost(Automation):
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup_config,
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -3114,11 +3104,11 @@ class AutomationDiagHost(Automation):
         return state, output
 
     def _execute_traceroute(
-        self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
+        self,
+        ipaddress: str,
+        ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> tuple[int, str]:
-        family_flag = (
-            "-6" if config_cache.default_address_family(hostname) is socket.AF_INET6 else "-4"
-        )
+        family_flag = "-6" if ip_family is socket.AF_INET6 else "-4"
         try:
             completed_process = subprocess.run(
                 ["traceroute", family_flag, "-n", ipaddress],

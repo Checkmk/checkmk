@@ -137,18 +137,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
         for site in get_site_factory(prefix="PB_").get_test_site(
             auto_cleanup=not checks.config.skip_cleanup
         ):
-            dump_path = site.path("var/check_mk/dumps")
-
-            # create dump folder in the test site
-            logger.info('Creating folder "%s"...', dump_path)
-            _ = site.run(["mkdir", "-p", dump_path.as_posix()])
-
-            ruleset_name = "datasource_programs"
-            logger.info('Creating rule "%s"...', ruleset_name)
-            site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
-            logger.info('Rule "%s" created!', ruleset_name)
-
-            with _modify_dcd_global_settings(site):
+            with _modify_dcd_global_settings(site), _setup_datasource(site):
                 yield site
 
 
@@ -175,6 +164,31 @@ def _modify_dcd_global_settings(site: Site) -> Iterator[None]:
             site.run(["cp", str(wato_dir / "global.mk.bak"), str(wato_dir / "global.mk")])
             logger.info("Restored original global settings in '%s'", wato_dir / "global.mk")
             site.run(["rm", "-f", str(wato_dir / "global.mk.bak")])
+
+
+@contextmanager
+def _setup_datasource(site: Site) -> Iterator[None]:
+    """Setup and teardown the datasource rule and the dump directory for the test site."""
+    dump_path = site.path("var/check_mk/dumps")
+    rule_id = None
+    try:
+        # create dump folder in the test site
+        logger.info('Creating folder "%s"...', dump_path)
+        site.run(["mkdir", "-p", dump_path.as_posix()])
+
+        ruleset_name = "datasource_programs"
+        logger.info('Creating rule "%s"...', ruleset_name)
+        rule_id = site.openapi.rules.create(
+            ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>"
+        )
+        logger.info('Rule "%s" created!', ruleset_name)
+        yield
+    finally:
+        if cleanup:
+            if rule_id:
+                site.openapi.rules.delete(rule_id)
+            site.run(["rm", "-rf", dump_path.as_posix()])
+            site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.fixture(name="site_factory_update", scope="session")

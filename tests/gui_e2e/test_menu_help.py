@@ -70,7 +70,7 @@ class HelpMenuButton:
     ],
 )
 def fixture_help_menu_button(
-    request: pytest.FixtureRequest, page: Page
+    request: pytest.FixtureRequest, cmk_page: Page
 ) -> Iterator[HelpMenuButton]:
     def update_user_agent(route: Route, request: Request) -> None:
         headers = request.headers
@@ -80,7 +80,7 @@ def fixture_help_menu_button(
         route.continue_(headers=headers)
 
     help_menu_button: HelpMenuButton = request.param
-    browser_context = page.context
+    browser_context = cmk_page.context
     if "ideas" in help_menu_button.url_pattern:
         # "ideas.checkmk.com" requires a reliable user_agent to be initialized,
         # not an automated one.

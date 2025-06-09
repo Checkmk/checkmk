@@ -2,11 +2,15 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any
+
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Playwright
 
 from tests.gui_e2e.testlib.playwright.pom.dashboard import DashboardMobile
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+
+_mobile_devices = ("iPhone 6", "Galaxy S8")
 
 _header_selector = "div.ui-header.ui-bar-inherit.ui-header-fixed.slidedown"
 _listview_selector = "ul.ui-listview.ui-listview-inset.ui-corner-all.ui-shadow"
@@ -19,6 +23,20 @@ _hrefs_for_selectors = [
     pytest.param("mobile_view.py?view_name=mobile_events", id="history-events"),
     pytest.param("mobile_view.py?view_name=ec_events_mobile", id="ec-events"),
 ]
+
+
+@pytest.fixture(scope="module", params=_mobile_devices)
+def browser_context_args(
+    browser_context_args: dict[str, Any], playwright: Playwright, request: pytest.FixtureRequest
+) -> dict[str, Any]:
+    """Return arguments to initialize a playwright `BrowserContext` object for mobile devices.
+
+    This overrides the `browser_context_args` fixture from gui_e2e/testlib/playwright/plugin.py.
+    """
+    return {
+        **browser_context_args,
+        **playwright.devices[str(request.param)],
+    }
 
 
 def test_login(dashboard_page_mobile: DashboardMobile) -> None:

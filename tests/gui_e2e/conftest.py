@@ -7,23 +7,18 @@
 
 import logging
 import os
-import re
 from collections import defaultdict
 from collections.abc import Iterator
-from typing import Any
+from typing import TypeVar
 
 import pytest
 from faker import Faker
-from playwright.sync_api import Browser, BrowserContext, expect, Page
-from playwright.sync_api import TimeoutError as PWTimeoutError
+from playwright.sync_api import BrowserContext, Page
+from random_order.config import Config as RandomOrderConfig  # type: ignore[import-untyped]
 
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
-from tests.gui_e2e.testlib.playwright.plugin import (
-    manage_new_browser_context,
-    manage_new_page_from_browser_context,
-)
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
@@ -42,6 +37,9 @@ from tests.testlib.site import (
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
+
+
+TDashobard = TypeVar("TDashobard", Dashboard, DashboardMobile)
 
 # loading pom fixtures
 setup_fixtures = [notification_user]
@@ -94,101 +92,55 @@ def fixture_credentials(test_site: Site) -> CmkCredentials:
     return CmkCredentials(username=ADMIN_USER, password=test_site.admin_password)
 
 
-def _log_in(
-    context: BrowserContext,
-    credentials: CmkCredentials,
-    request: pytest.FixtureRequest,
-    test_site: Site,
-) -> None:
-    if test_site.edition.is_saas_edition():
-        return
-    video_name = f"login_for_{request.node.name.replace('.py', '')}"
-    with manage_new_page_from_browser_context(context, request, video_name) as page:
-        login_page = LoginPage(page, site_url=test_site.internal_url)
-        login_page.login(credentials)
-
-
-@pytest.fixture(name="_logged_in_page", scope="module")
-def _logged_in(
-    test_site: Site,
-    credentials: CmkCredentials,
-    _context: BrowserContext,
-    request: pytest.FixtureRequest,
-) -> None:
-    _log_in(_context, credentials, request, test_site)
-
-
-@pytest.fixture(name="_logged_in_page_mobile", scope="module")
-def _logged_in_mobile(
-    test_site: Site,
-    credentials: CmkCredentials,
-    _context_mobile: BrowserContext,
-    request: pytest.FixtureRequest,
-) -> None:
-    _log_in(_context_mobile, credentials, request, test_site)
-
-
 @pytest.fixture(name="dashboard_page")
 def fixture_dashboard_page(
-    page: Page, _logged_in_page: None, test_site: Site, credentials: CmkCredentials
+    cmk_page: Page, test_site: Site, credentials: CmkCredentials
 ) -> Dashboard:
     """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
-    _obj = _navigate_to_dashboard(page, test_site.internal_url, credentials)
-    if isinstance(_obj, Dashboard):
-        return _obj  # handle type-hinting
-    raise TypeError("Expected Dashboard PoM corresponding to browser GUI!")
+    return _navigate_to_dashboard(cmk_page, test_site.internal_url, credentials, Dashboard)
 
 
 @pytest.fixture(name="dashboard_page_mobile")
 def fixture_dashboard_page_mobile(
-    page_mobile: Page, _logged_in_page_mobile: None, test_site: Site, credentials: CmkCredentials
+    cmk_page: Page, test_site: Site, credentials: CmkCredentials
 ) -> DashboardMobile:
-    """Entrypoint to test mobile GUI. Navigates to 'Mobile Dashboard'"""
-    _obj = _navigate_to_dashboard(page_mobile, test_site.internal_url_mobile, credentials)
-    if isinstance(_obj, DashboardMobile):
-        return _obj  # handle type-hinting
-    raise TypeError("Expected Dashboard PoM corresponding to mobile GUI!")
+    """Entrypoint to test browser GUI in mobile view. Navigates to 'Main Dashboard'."""
+    return _navigate_to_dashboard(
+        cmk_page, test_site.internal_url_mobile, credentials, DashboardMobile
+    )
 
 
 def _navigate_to_dashboard(
-    page: Page, url: str, credentials: CmkCredentials
-) -> Dashboard | DashboardMobile:
+    page: Page,
+    url: str,
+    credentials: CmkCredentials,
+    dashboard_type: type[TDashobard],
+) -> TDashobard:
     """Navigate to dashboard page.
 
     Performs a login to Checkmk site, if necessary.
     """
-    dashboard_type: type[Dashboard | DashboardMobile] = (
-        DashboardMobile if "mobile.py" in url else Dashboard
-    )
     page.goto(url, wait_until="load")
-    try:
-        return dashboard_type(page, navigate_to_page=False)
-    except (PWTimeoutError, AssertionError) as _:
-        # logged out
-        expect(page, f"Expected login page, found: {page.url}!").to_have_url(re.compile("login.py"))
-        LoginPage(page, url, navigate_to_page=False).login(credentials)
-        return dashboard_type(page, navigate_to_page=False)
+
+    if "login.py" in page.url:
+        # Log in to the site if not already logged in.
+        LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
+
+    return dashboard_type(page, navigate_to_page=False)
 
 
 @pytest.fixture(name="new_browser_context_and_page")
+@pytest.mark.browser_context_args
 def fixture_new_browser_context_and_page(
-    _browser: Browser,
-    context_launch_kwargs: dict[str, Any],
-    request: pytest.FixtureRequest,
+    context: BrowserContext,
 ) -> Iterator[tuple[BrowserContext, Page]]:
     """Create a new browser context from the existing browser session and return a new page.
-
-    Usually, a browser context is setup once for every test-module.
-    This context is shared among all the pages created by the tests present within the module.
-    For example, cookies are shared among all the test cases.
 
     In the case a fresh browser context is required, use this fixture.
 
     NOTE: fresh context requires a login to the Checkmk site. Refer to `LoginPage` for details.
     """
-    with manage_new_browser_context(_browser, context_launch_kwargs) as context:
-        with manage_new_page_from_browser_context(context, request) as page:
-            yield context, page
+    yield context, context.new_page()
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -325,3 +277,14 @@ def _email_manager() -> Iterator[EmailManager]:
     """
     with EmailManager() as email_manager:
         yield email_manager
+
+
+def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
+    """This is a workaround for the issue that pytest does not sort the collected items.
+
+    It is caused by a bug that is fixed in pytest 8.0.0:
+    https://github.com/microsoft/playwright-pytest/issues/195
+    TODO CMK-23788: Remove after pytest upgrade
+    """
+    if not RandomOrderConfig(config).is_enabled:
+        items.sort(key=lambda item: item.nodeid)

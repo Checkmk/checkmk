@@ -575,7 +575,7 @@ def execute_dcd_cycle(site: Site, expected_pb_hosts: int = 0) -> None:
             expected_pb_hosts,
         )
         all_batches_stdout = site.check_output(["cmk-dcd", "--batches"]).strip("\n").split("\n")
-        logger.info("Latest DCD batches:\n%s", "\n".join(all_batches_stdout[-10:]))
+        logger.info("DCD batches:\n%s", "\n".join(all_batches_stdout[:]))
 
         # check if the last batch contains the expected number of PB hosts
         if f"{expected_pb_hosts} hosts" in all_batches_stdout[-1]:

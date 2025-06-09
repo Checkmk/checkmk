@@ -191,6 +191,7 @@ def test_filesystem_email_notifications(
             test_site.schedule_check(host_name, checkmk_agent)
 
 
+@pytest.mark.xfail(reason="CMK-23942: Quick setup bug", strict=True)
 def test_email_notifications_host_filters(
     modify_notification_rule: str,
     dashboard_page: Dashboard,

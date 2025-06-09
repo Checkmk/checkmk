@@ -26,7 +26,7 @@ def test_download_diagnostics(dashboard_page: Dashboard, request: pytest.Fixture
     * Diagnostic dump can be downloaded.
     """
     file_prefix: str = request.node.name
-    artifacts_dir = Path(request.config.getoption("--output-cmk"))
+    artifacts_dir = Path(request.config.getoption("--output"))
 
     diagnostics = SupportDiagnostics(dashboard_page.page)
     job_details: BackgroundJobDetails = diagnostics.job_details()

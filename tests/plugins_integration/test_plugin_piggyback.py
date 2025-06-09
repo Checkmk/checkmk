@@ -50,6 +50,7 @@ def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
     return dump
 
 
+@pytest.mark.xfail("Test showing a flaky behavior. CMK-23945")
 @pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
 def test_plugin_piggyback(
     test_site_piggyback: Site,

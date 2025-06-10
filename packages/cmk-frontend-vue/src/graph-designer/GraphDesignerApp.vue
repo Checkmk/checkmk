@@ -569,7 +569,6 @@ function addGraphLineWithSelection(graphLine: GraphLine) {
 }
 
 function applySum() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -587,7 +586,6 @@ function applySum() {
 }
 
 function applyProduct() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -605,7 +603,6 @@ function applyProduct() {
 }
 
 function applyDifference() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -623,7 +620,6 @@ function applyDifference() {
 }
 
 function applyFraction() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -641,7 +637,6 @@ function applyFraction() {
 }
 
 function applyAverage() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -659,7 +654,6 @@ function applyAverage() {
 }
 
 function applyMinimum() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -677,7 +671,6 @@ function applyMinimum() {
 }
 
 function applyMaximum() {
-  // TODO use other attributes from first operand?
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -695,7 +688,6 @@ function applyMaximum() {
 }
 
 function applyTransformation() {
-  // TODO use other attributes from operand?
   const selectedGraphLine = selectedGraphLines.value[0]
   if (selectedGraphLine) {
     addGraphLineWithSelection({

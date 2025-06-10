@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
@@ -19,7 +19,7 @@ class NetappOntapParams(BaseModel):
     username: str
     password: Secret
     no_cert_check: bool
-    skip_elements: list[str] = []
+    fetched_resources: Sequence[str]
 
 
 def generate_netapp_ontap_command(
@@ -32,18 +32,13 @@ def generate_netapp_ontap_command(
     args += ["--username", params.username]
     args += ["--password", params.password.unsafe()]
 
+    args.append("--fetched-resources")
+    args.extend(params.fetched_resources)
+
     if params.no_cert_check:
         args += ["--no-cert-check"]
     else:
         args += ["--cert-server-name", host_config.name]
-
-    if params.skip_elements:
-        args += [
-            "--no-counters",
-            " ".join(
-                [element[4:] for element in params.skip_elements if element.startswith("ctr_")]
-            ),
-        ]
 
     yield SpecialAgentCommand(command_arguments=args)
 

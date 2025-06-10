@@ -124,7 +124,7 @@ section_openbsd_mem() {
 
 section_misc_sections() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0p34"
+    echo "Version: 2.3.0p35"
     echo "AgentOS: openbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

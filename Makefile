@@ -226,6 +226,10 @@ documentation:
 sw-documentation:
 	scripts/run-uvenv make -C doc/documentation html
 
+update_venv:
+	echo > requirements.txt
+	bazel run //:lock_python_requirements > /dev/null
+
 relock_venv:
 	bazel run //:lock_python_requirements > /dev/null
 

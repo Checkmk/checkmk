@@ -30,6 +30,7 @@ SRCS = [
     ":node_modules/@typescript-eslint",
     ":node_modules/@vitejs",
     ":node_modules/@vue",
+    ":node_modules/@types",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
     ":node_modules/cmk-shared-typing",
@@ -38,12 +39,14 @@ SRCS = [
     ":node_modules/msw",
     ":node_modules/prettier",
     ":node_modules/radix-vue",
+    ":node_modules/rollup",
     ":node_modules/sanitize-html",
     ":node_modules/typescript-eslint",
     ":node_modules/vite",
     ":node_modules/vitest",
     ":node_modules/vitest-fail-on-console",
     ":node_modules/vue",
+    ":node_modules/vue-router",
 ] + glob([
     "src/**/*.ts",
     "src/**/*.vue",
@@ -78,7 +81,7 @@ vitest_bin.vitest_test(
 
 vue_tsc_bin.vue_tsc_test(
     name = "type-check",
-    args = ["--noEmit"],
+    args = ["--build --force"],
     chdir = package_name(),
     data = SRCS,
     include_types = True,

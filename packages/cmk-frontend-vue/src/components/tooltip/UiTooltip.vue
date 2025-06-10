@@ -4,24 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { TooltipRoot, useForwardPropsEmits } from 'radix-vue'
+import { TooltipRoot } from 'radix-vue'
 
 type TooltipEmits = {
   'update:open': [value: boolean]
 }
 interface TooltipProps {
-  open?: boolean
+  open: boolean
   disableClosingTrigger?: boolean
 }
 
-const props = defineProps<TooltipProps>()
-const emits = defineEmits<TooltipEmits>()
-
-const forwarded = useForwardPropsEmits(props, emits)
+defineProps<TooltipProps>()
+const emit = defineEmits<TooltipEmits>()
 </script>
 
 <template>
-  <TooltipRoot v-bind="forwarded">
+  <TooltipRoot
+    :open="open"
+    :disable-closing-trigger="disableClosingTrigger ?? false"
+    @update:open="emit('update:open', $event)"
+  >
     <slot />
   </TooltipRoot>
 </template>

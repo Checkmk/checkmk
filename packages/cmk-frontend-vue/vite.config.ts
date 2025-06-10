@@ -38,7 +38,7 @@ export default defineConfig(({ command }) => {
         onwarn: function (message: string | RollupLog) {
           if (typeof message === 'object') {
             if (message.code === 'CIRCULAR_DEPENDENCY') {
-              const external_circular_dependency = message.ids!.filter((id) =>
+              const external_circular_dependency = message.ids!.filter((id: any) =>
                 id.includes('/node_modules/')
               )
               if (external_circular_dependency.length === message.ids!.length) {

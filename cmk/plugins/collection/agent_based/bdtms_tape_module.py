@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     Service,
     SimpleSNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 
@@ -25,8 +26,8 @@ def inventory_bdtms_tape_module(section: StringTable) -> DiscoveryResult:
 
 
 def check_bdtms_tape_module(item: str, section: StringTable) -> CheckResult:
-    def state(status):
-        return 0 if status.lower() == "ok" else 2
+    def state(status: str) -> State:
+        return State.OK if status.lower() == "ok" else State.CRIT
 
     for device in section:
         device_id, module_status, board_status, power_status = device

@@ -57,8 +57,9 @@ def inventory_f5_bigip_pool(parsed):
 
 def f5_bigip_pool_get_down_members(down_info):
     downs = []
+    up_states = ["4", "28"]
     for line in down_info:
-        if line[2] != "4" or line[3] != "4" or line[4] in ("2", "3", "4", "5"):
+        if line[2] not in up_states or line[3] not in up_states or line[4] in ("2", "3", "4", "5"):
             if re.match(r"\/\S*\/\S*", line[5]):
                 host = line[5].split("/")[2]
             else:

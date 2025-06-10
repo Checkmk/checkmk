@@ -15,6 +15,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import forms
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -175,9 +176,11 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = folder_from_request(
-                        request.var("folder"), request.get_ascii_input("host")
-                    ).edit_url()
+                    try:
+                        host_name = request.get_ascii_input("host")
+                    except MKUserError:
+                        host_name = None
+                    url = folder_from_request(request.var("folder"), host_name).edit_url()
 
                 container = parent  # container is of type Folder
                 while container:

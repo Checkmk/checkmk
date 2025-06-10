@@ -447,7 +447,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "f5_bigip_fans",
         "f5_bigip_interfaces",
         "f5_bigip_mem",
-        "f5_bigip_pool",
         "f5_bigip_psu",
         "f5_bigip_snat",
         "f5_bigip_vserver",

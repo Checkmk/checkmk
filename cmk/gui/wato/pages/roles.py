@@ -525,7 +525,11 @@ class ModeRoleMatrix(WatoMode):
                     table.row()
                     table.cell(_("Permission"), perm.title, css=["wide"])
 
-                    html.help(perm.description)
+                    html.help(
+                        HTML.without_escaping("<br />").join(
+                            (perm.description, _("Internal name: %s") % perm.name)
+                        )
+                    )
 
                     for role in sorted(
                         userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name)

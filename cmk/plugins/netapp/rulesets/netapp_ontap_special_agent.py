@@ -13,9 +13,58 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoiceElement,
     Password,
     String,
+    validators,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+DEFAULT_RESOURCES = [
+    "volumes",
+    "volumes_counters",
+    "disk",
+    "luns",
+    "aggr",
+    "vs_status",
+    "ports",
+    "interfaces",  # counters can eventually be collected separately
+    "node",
+    "fan",
+    "temp",
+    "alerts",
+    "vs_traffic",
+    "psu",
+    "environment",
+    "qtree_quota",
+    "snapvault",
+    "fc_interfaces",
+]
+
+
+def _migrate_netapp_config(p: object) -> dict[str, object]:
+    """Migrate old NetApp configuration format to new fetched_resources approach"""
+    if not isinstance(p, dict):
+        raise TypeError(p)
+
+    # Default monitored objects (all components with performance data)
+    default_fetched_resources = DEFAULT_RESOURCES
+
+    migrated = dict(p)
+
+    if "skip_elements" in migrated:
+        skip_elements = migrated.pop("skip_elements")  # Remove old parameter
+
+        fetched_resources = default_fetched_resources.copy()
+
+        if isinstance(skip_elements, list) and "ctr_volumes" in skip_elements:
+            if "volumes_counters" in fetched_resources:
+                fetched_resources.remove("volumes_counters")
+
+        if "fetched_resources" not in migrated:
+            migrated["fetched_resources"] = fetched_resources
+
+    if "fetched_resources" not in migrated:
+        migrated["fetched_resources"] = default_fetched_resources
+
+    return migrated
 
 
 def _formspec_netapp_ontap() -> Dictionary:
@@ -25,6 +74,7 @@ def _formspec_netapp_ontap() -> Dictionary:
             "This rule set selects the NetApp special agent instead of the normal Checkmk Agent "
             "and allows monitoring via the NetApp Ontap REST API."
         ),
+        migrate=_migrate_netapp_config,
         elements={
             "username": DictElement(
                 parameter_form=String(
@@ -33,7 +83,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                         "The username that should be used for accessing the NetApp API."
                     ),
                     custom_validate=[
-                        LengthInRange(min_value=1),
+                        validators.LengthInRange(min_value=1),
                     ],
                 ),
                 required=True,
@@ -42,7 +92,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                 parameter_form=Password(
                     help_text=Help("The password of the user."),
                     title=Title("Password of the user"),
-                    custom_validate=(LengthInRange(min_value=1),),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
                 required=True,
             ),
@@ -53,19 +103,45 @@ def _formspec_netapp_ontap() -> Dictionary:
                 ),
                 required=True,
             ),
-            "skip_elements": DictElement(
+            "fetched_resources": DictElement(
+                required=True,
                 parameter_form=MultipleChoice(
-                    title=Title("Performance improvements"),
-                    help_text=Help(
-                        "Here you can configure whether the performance counters should get queried. "
-                        "This can save quite a lot of CPU load on larger systems."
-                    ),
                     elements=[
+                        MultipleChoiceElement(name="volumes", title=Title("Volumes")),
                         MultipleChoiceElement(
-                            name="ctr_volumes",
-                            title=Title("Do not query volume performance counters"),
+                            name="volumes_counters",
+                            title=Title("Volume Performance Counters (requires Volumes)"),
                         ),
+                        MultipleChoiceElement(name="disk", title=Title("Disks")),
+                        MultipleChoiceElement(name="luns", title=Title("LUNs")),
+                        MultipleChoiceElement(name="aggr", title=Title("Aggregations")),
+                        MultipleChoiceElement(name="qtree_quota", title=Title("Qtree Quotas")),
+                        MultipleChoiceElement(name="snapvault", title=Title("SnapVaults")),
+                        MultipleChoiceElement(name="interfaces", title=Title("Network Interfaces")),
+                        MultipleChoiceElement(name="ports", title=Title("Network Ports")),
+                        MultipleChoiceElement(name="fc_interfaces", title=Title("Interface FCP")),
+                        MultipleChoiceElement(
+                            name="node", title=Title("Nodes")
+                        ),  # NVRAM Battery, Info
+                        MultipleChoiceElement(name="vs_status", title=Title("SVM Status")),
+                        MultipleChoiceElement(name="vs_traffic", title=Title("Traffic SVM")),
+                        MultipleChoiceElement(name="fan", title=Title("Fans")),
+                        MultipleChoiceElement(name="temp", title=Title("Temperature Sensors")),
+                        MultipleChoiceElement(name="psu", title=Title("Power Supplies")),
+                        MultipleChoiceElement(
+                            name="environment", title=Title("Environment Sensors")
+                        ),
+                        MultipleChoiceElement(name="alerts", title=Title("Alerts")),
                     ],
+                    prefill=DefaultValue(DEFAULT_RESOURCES),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    title=Title("Fetch information about..."),
+                    help_text=Help(
+                        "Select the NetApp resources you would like to fetch from the API. "
+                        "Note that some sections depend on others: 'Volume Performance Counters' "
+                        "requires 'Volumes' data. Performance counter sections may "
+                        "consume more resources and take longer to collect on large systems."
+                    ),
                 ),
             ),
         },

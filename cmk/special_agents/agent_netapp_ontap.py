@@ -6,6 +6,7 @@
 import logging
 import sys
 from collections.abc import Collection, Iterable, Sequence
+from enum import Enum
 
 import requests
 from netapp_ontap import resources as NetAppResource
@@ -21,6 +22,32 @@ from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdap
 __version__ = "2.4.0p5"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
+
+
+class FetchedResource(Enum):
+    """Available NetApp resources for API fetching"""
+
+    volumes = "volumes"
+    volumes_counters = "volumes_counters"
+    disk = "disk"
+    luns = "luns"
+    aggr = "aggr"
+    vs_status = "vs_status"
+    ports = "ports"
+    interfaces = "interfaces"
+    node = "node"
+    fan = "fan"
+    temp = "temp"
+    alerts = "alerts"
+    vs_traffic = "vs_traffic"
+    psu = "psu"
+    environment = "environment"
+    qtree_quota = "qtree_quota"
+    snapvault = "snapvault"
+    fc_interfaces = "fc_ports"
+
+    def __str__(self):
+        return self.value
 
 
 def write_section(
@@ -821,31 +848,75 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
 
 
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
-    volumes = list(fetch_volumes(connection))
-    write_section("volumes", volumes, logger)
+    """Write monitoring sections based on selected resources"""
+    fetched_resources = {obj.value for obj in args.fetched_resources}
 
-    if "volumes" not in args.no_counters:
+    # Store interfaces and volumes for counter sections that depend on them
+    volumes = None
+
+    if (
+        FetchedResource.volumes.value in fetched_resources
+        or FetchedResource.volumes_counters.value in fetched_resources
+    ):
+        volumes = list(fetch_volumes(connection))
+        write_section("volumes", volumes, logger)
+
+    # Volume counters (depends on volumes)
+    if FetchedResource.volumes_counters.value in fetched_resources:
+        if volumes is None:
+            volumes = list(fetch_volumes(connection))
         write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
 
-    write_section("disk", fetch_disks(connection), logger)
-    write_section("luns", fetch_luns(connection), logger)
-    write_section("aggr", fetch_aggr(connection, args), logger)
-    write_section("vs_status", fetch_vs_status(connection), logger)
-    write_section("ports", fetch_ports(connection), logger)
-    interfaces = list(fetch_interfaces(connection))
-    write_section("if", interfaces, logger)
-    write_section("if_counters", fetch_interfaces_counters(connection, interfaces), logger)
-    write_section("node", fetch_nodes(connection), logger)
-    write_section("fan", fetch_fans(connection), logger)
-    write_section("temp", fetch_temperatures(connection), logger)
-    write_section("alerts", fetch_alerts(connection, args), logger)
-    write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
-    write_section("psu", fetch_psu(connection), logger)
-    write_section("environment", fetch_environment(connection), logger)
-    write_section("qtree_quota", fetch_qtree_quota(connection), logger)
-    write_section("snapvault", fetch_snapmirror(connection), logger)
-    write_section("fc_ports", fetch_fc_ports(connection), logger)
-    write_section("fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger)
+    if FetchedResource.disk.value in fetched_resources:
+        write_section("disk", fetch_disks(connection), logger)
+
+    if FetchedResource.luns.value in fetched_resources:
+        write_section("luns", fetch_luns(connection), logger)
+
+    if FetchedResource.aggr.value in fetched_resources:
+        write_section("aggr", fetch_aggr(connection, args), logger)
+
+    if FetchedResource.qtree_quota.value in fetched_resources:
+        write_section("qtree_quota", fetch_qtree_quota(connection), logger)
+
+    if FetchedResource.snapvault.value in fetched_resources:
+        write_section("snapvault", fetch_snapmirror(connection), logger)
+
+    if FetchedResource.vs_status.value in fetched_resources:
+        write_section("vs_status", fetch_vs_status(connection), logger)
+
+    if FetchedResource.ports.value in fetched_resources:
+        write_section("ports", fetch_ports(connection), logger)
+
+    if FetchedResource.interfaces.value in fetched_resources:
+        interfaces = list(fetch_interfaces(connection))
+        write_section("if", interfaces, logger)
+        write_section("if_counters", fetch_interfaces_counters(connection, interfaces), logger)
+
+    if FetchedResource.node.value in fetched_resources:
+        write_section("node", fetch_nodes(connection), logger)
+
+    if FetchedResource.fan.value in fetched_resources:
+        write_section("fan", fetch_fans(connection), logger)
+
+    if FetchedResource.temp.value in fetched_resources:
+        write_section("temp", fetch_temperatures(connection), logger)
+
+    if FetchedResource.alerts.value in fetched_resources:
+        write_section("alerts", fetch_alerts(connection, args), logger)
+
+    if FetchedResource.vs_traffic.value in fetched_resources:
+        write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
+
+    if FetchedResource.psu.value in fetched_resources:
+        write_section("psu", fetch_psu(connection), logger)
+
+    if FetchedResource.environment.value in fetched_resources:
+        write_section("environment", fetch_environment(connection), logger)
+
+    if FetchedResource.fc_interfaces.value in fetched_resources:
+        write_section("fc_ports", fetch_fc_ports(connection), logger)
+        write_section("fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -866,12 +937,31 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         ),
     )
     parser.add_argument(
-        "--no-counters",
-        nargs="*",
-        type=str,
-        default=[],
-        choices=["volumes"],
-        help=('Skip counters for the given element. Right now only "volumes" is supported.'),
+        "--fetched-resources",
+        type=FetchedResource,
+        nargs="+",
+        default=[
+            FetchedResource.volumes,
+            FetchedResource.volumes_counters,
+            FetchedResource.disk,
+            FetchedResource.luns,
+            FetchedResource.aggr,
+            FetchedResource.vs_status,
+            FetchedResource.ports,
+            FetchedResource.interfaces,
+            FetchedResource.node,
+            FetchedResource.fan,
+            FetchedResource.temp,
+            FetchedResource.alerts,
+            FetchedResource.vs_traffic,
+            FetchedResource.psu,
+            FetchedResource.environment,
+            FetchedResource.qtree_quota,
+            FetchedResource.snapvault,
+            FetchedResource.fc_interfaces,
+        ],
+        help="The NetApp objects which are supposed to be fetched. Available resources: "
+        + ", ".join([obj.value for obj in FetchedResource]),
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(

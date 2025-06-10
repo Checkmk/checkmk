@@ -72,7 +72,7 @@ function Write-Help() {
     Write-Host "  -M, --msi               build msi"
     Write-Host "  -O, --ohm               build ohm"
     Write-Host "  -E, --extensions        build extensions"
-    Write-Host "  -T, --test              run agent component tests using binary in repo_root/artefacts"
+    Write-Host "  -T, --test              run agent component tests, powershell unit tests"
     Write-Host "  -S, --skip-mk-sql-test  skip sql test to be able to build msi in case sql is not configured"
     Write-Host "  --detach                detach USB before running"
     Write-Host "  --sign                  sign controller using Yubikey based Code Certificate"
@@ -308,7 +308,7 @@ function Start-UnitTests {
         return
     }
     Write-Host "Running unit tests..." -ForegroundColor White
-    & ./run_tests.ps1 --unit
+    & ./run_tests.ps1 --unit # TODO fix it, currently no tests are executed as --unit parameter is obsolete and not used in run_tests.ps1
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -714,5 +714,3 @@ finally {
     Invoke-Detach $argAttached
 }
 exit $result
-
-

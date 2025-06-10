@@ -1,15 +1,14 @@
 # To execute all complicated tests of windows agent
 # params regression, component, ext, simulation, integration, all
 #
-# CI must run regression, component, integration, all
+# CI must run regression, component, integration, powershell unit, all
 # Dev machine must run also ext and simulation
-# later tests may require some additional package installed which ae not suitable for CI VM
+# later tests may require some additional package installed which are not suitable for CI VM
 
-if ((get-host).version.major -lt 7) {
+if ((Get-Host).version.major -lt 7) {
     Write-Host "PowerShell version 7 or higher is required." -ForegroundColor Red
     exit
 }
-
 
 $testComponent = $false
 $testExt = $false
@@ -24,34 +23,6 @@ $repo_root = (get-item $pwd).parent.parent.FullName
 $cur_dir = $pwd
 $env:repo_root = $repo_root
 $results_dir = $repo_root + "\artefacts"
-
-function Write-Help() {
-    $x = Get-Item $PSCommandPath
-    $x.BaseName
-    $name = "powershell -File " + $x.BaseName + ".ps1"
-
-    Write-Host "Usage:"
-    Write-Host ""
-    Write-Host "$name [arguments]"
-    Write-Host ""
-    Write-Host "Available arguments:"
-    Write-Host "  -?, -h, --help       display help and exit"
-    Write-Host "  -A, --all            shortcut to -B -C -S -E -R -I -P"
-    Write-Host "  -B, --build          build"
-    Write-Host "  -C, --component      component testing"
-    Write-Host "  -S, --simulation     simulation testing"
-    Write-Host "  -E, --ext            ext component testing"
-    Write-Host "  -R, --regression     regression testing"
-    Write-Host "  -I, --integration    integration testing"
-    Write-Host "  -P, --plugins        plugins testing"
-    Write-Host "  -U, --unit           unit testing"
-    Write-Host ""
-    Write-Host "Examples:"
-    Write-Host ""
-    Write-Host "$name --component"
-    Write-Host "$name --build --integration"
-}
-
 
 if ($args.Length -eq 0) {
     Write-Host "No arguments provided. Running with default flags." -ForegroundColor Yellow
@@ -93,6 +64,33 @@ if ($testAll) {
     $testAll = $true
 }
 
+function Write-Help() {
+    $x = Get-Item $PSCommandPath
+    $x.BaseName
+    $name = "powershell -File " + $x.BaseName + ".ps1"
+
+    Write-Host "Usage:"
+    Write-Host ""
+    Write-Host "$name [arguments]"
+    Write-Host ""
+    Write-Host "Available arguments:"
+    Write-Host "  -?, -h, --help          display help and exit"
+    Write-Host "  -A, --all               shortcut to -B -C -S -E -R -I -P"
+    Write-Host "  -B, --build             build"
+    Write-Host "  -C, --component         component testing"
+    Write-Host "  -S, --simulation        simulation testing"
+    Write-Host "  -E, --ext               ext component testing"
+    Write-Host "  -R, --regression        regression testing"
+    Write-Host "  -I, --integration       integration testing"
+    Write-Host "  -P, --plugins           plugins testing"
+    Write-Host "  -U, --unit              unit testing" # TODO remove, obsolete
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host ""
+    Write-Host "$name --component"
+    Write-Host "$name --build --integration"
+}
+
 function New-TemporaryDirectory() {
     param(
         [Parameter(
@@ -113,7 +111,6 @@ function New-TemporaryDirectory() {
     }
 }
 
-
 function Test-Administrator {
     [OutputType([bool])]
     param()
@@ -122,7 +119,6 @@ function Test-Administrator {
         return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
     }
 }
-
 
 function Create_UnitTestDir([String]$prefix) {
     $wnx_test_dir = New-TemporaryDirectory -prefix "$prefix"
@@ -191,9 +187,7 @@ function Invoke-UnitTest([bool]$run, [String]$name, [String]$cmdline) {
             Remove-Item $wnx_test_dir -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
-
 }
-
 
 function Create_RegressionTestDir([String]$dir_prefix) {
     $regression_dir = New-TemporaryDirectory -prefix "$dir_prefix"
@@ -257,7 +251,6 @@ function Invoke-RegressionTest() {
             Remove-Item $regression_dir -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
-
 }
 
 function Create_IntegrationTestDir([String]$dir_prefix) {
@@ -291,7 +284,6 @@ function Create_IntegrationTestDir([String]$dir_prefix) {
     &  xcopy "..\windows\plugins\*.*" "$plugins_dir\" "/D" "/Y" > nul
     return $integration_dir, "$root_dir\check_mk_agent.exe", "$data_dir\bin\cmk-agent-ctl.exe"
 }
-
 
 function Invoke-IntegrationTest() {
     if (!$testIntegration) {
@@ -338,9 +330,7 @@ function Invoke-IntegrationTest() {
             Remove-Item $integration_dir -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
-
 }
-
 
 function Invoke-Exe {
     param(
@@ -381,6 +371,38 @@ function Invoke-Exe {
     Write-Host "Running $name..." -Foreground White
 }
 
+function Invoke-PluginsUnitTests {
+    if (!$testPlugins) {
+        Write-Host "Skipping Powershell plugins unit tests..." -Foreground Yellow
+        return
+    }
+
+    $minPesterVersion = [Version]'5.0.0'
+    $pesterModule = Get-Module -ListAvailable -Name Pester | Sort-Object Version -Descending | Select-Object -First 1
+
+    if (-not $pesterModule -or $pesterModule.Version -lt $minPesterVersion) {
+        try {
+            Install-Module -Name Pester -Scope CurrentUser -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Host "Failed to install Pester module: $_"
+            return
+        }
+    }
+
+    Write-Host "Running Powershell plugins unit tests..." -Foreground White
+    $pluginsTestPath = Join-Path $PSScriptRoot "..\windows\unit_tests_ps1"
+    if (-not (Test-Path $pluginsTestPath)) {
+        Write-Host "Powershell plugins test directory not found: $pluginsTestPath" -ForegroundColor Red
+        return
+    }
+    Write-Host "Running Powershell plugins tests in $pluginsTestPath..." -ForegroundColor White
+    Invoke-Pester -Path $pluginsTestPath
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Powershell plugins unit tests failed, error code is $LASTEXITCODE" -ErrorAction Stop
+    }
+    Write-Host "Success Powershell plugins unit tests" -ForegroundColor Green
+}
 
 $result = 1
 try {
@@ -408,7 +430,7 @@ try {
     Invoke-UnitTest -run $testComponent -name "component" -cmdline "*Component"
     Invoke-UnitTest -run $testExt -name "ext" -cmdline "*ComponentExt"
     Invoke-UnitTest -run $testSimulation -name "simulation" -cmdline "*_Simulation"
-
+    Invoke-PluginsUnitTests
     Invoke-RegressionTest
     Invoke-IntegrationTest
     try {

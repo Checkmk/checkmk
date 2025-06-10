@@ -3,14 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fileURLToPath, URL } from 'node:url'
+import path from 'node:path'
 import { type RollupLog } from 'rollup'
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-  const resultBuild = {
+  const resultBuild: UserConfig = {
     clearScreen: false,
     plugins: [
       vue({
@@ -27,8 +27,8 @@ export default defineConfig(({ command }) => {
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend', import.meta.url))
+        '@': path.resolve('./src'),
+        '~cmk-frontend': path.resolve('../cmk-frontend')
       }
     },
     build: {

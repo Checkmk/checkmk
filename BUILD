@@ -263,12 +263,18 @@ multirun(
     jobs = 1,
 )
 
-alias(
-    name = "python_requirements_test",
-    actual = select({
-        "@//:gpl_repo": "raw_requirements_test",
-        "@//:gpl+enterprise_repo": "requirements_test",
-    }),
+test_suite(
+    name = "py_requirements_test_enterprise",
+    tests = [
+        ":raw_requirements_test",
+        ":requirements_test",
+        ":runtime_requirements_test",
+    ],
+)
+
+test_suite(
+    name = "py_requirements_test_gpl",
+    tests = [":raw_requirements_test"],
 )
 
 write_file(

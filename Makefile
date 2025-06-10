@@ -227,19 +227,26 @@ sw-documentation:
 	scripts/run-uvenv make -C doc/documentation html
 
 relock_venv:
-	echo > requirements.txt
-	touch runtime-requirements.txt
-	touch raw-requirements.txt
 	bazel run //:lock_python_requirements > /dev/null
 
-# .venv is PHONY because the dependencies are resolved by bazel
-.venv:
+ifeq ($(EDITION),raw)
+    # Bazel cannot `select()` tests in a `test_suite` and cannot `alias` tests.
+    # See discussion under https://github.com/bazelbuild/bazel/issues/11458
+    PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_gpl
+else
+    PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_enterprise
+endif
+
+check_python_requirements:
 	@set -e; \
-	if ! bazel run //:python_requirements_test > /dev/null; then \
+	if ! bazel test $(PYTHON_REQUIREMENTS_TEST) > /dev/null; then \
 		if [ "${CI}" == "true" ]; then \
 			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
 			echo "It seems you forgot to commit the new lock file. Regenerate with: make relock_venv"; \
 			exit 1; \
 		fi; \
-	fi; \
+	fi;
+
+# .venv is PHONY because the dependencies are resolved by bazel
+.venv: check_python_requirements
 	CC="gcc" bazel run //:create_venv

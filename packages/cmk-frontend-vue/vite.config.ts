@@ -73,13 +73,7 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['tests/setup-tests.ts'],
-        // needed when running in Bazel context - without
-        // we get errors containing
-        //   `TypeError: Cannot read properties of null (reading 'ce')`
-        deps: {
-          inline: ['radix-vue']
-        }
+        setupFiles: ['tests/setup-tests.ts']
       },
       server: {
         strictPort: true,

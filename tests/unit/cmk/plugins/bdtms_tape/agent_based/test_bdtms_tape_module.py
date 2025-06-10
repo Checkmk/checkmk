@@ -6,7 +6,7 @@
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.bdtms_tape.agent_based.bdtms_tape_module import (
     check_bdtms_tape_module,
-    inventory_bdtms_tape_module,
+    discover_bdtms_tape_module,
     parse_bdtms_tape_module,
 )
 
@@ -25,7 +25,7 @@ _SECTION = parse_bdtms_tape_module(
 
 
 def test_discover_bdtms_tape_module() -> None:
-    assert list(inventory_bdtms_tape_module(_SECTION)) == [
+    assert list(discover_bdtms_tape_module(_SECTION)) == [
         Service(item="1"),
         Service(item="2"),
         Service(item="3"),

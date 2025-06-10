@@ -25,6 +25,7 @@ HOST_CONFIG = HostConfig(
                 "username": "user",
                 "password": Secret(0),
                 "no_cert_check": True,
+                "fetched_resources": ["node", "fan"],
             },
             [
                 SpecialAgentCommand(
@@ -35,6 +36,9 @@ HOST_CONFIG = HostConfig(
                         "user",
                         "--password",
                         Secret(0).unsafe(),
+                        "--fetched-resources",
+                        "node",
+                        "fan",
                         "--no-cert-check",
                     ]
                 )
@@ -46,6 +50,7 @@ HOST_CONFIG = HostConfig(
                 "username": "user",
                 "password": Secret(0),
                 "no_cert_check": False,
+                "fetched_resources": ["node"],
             },
             [
                 SpecialAgentCommand(
@@ -56,6 +61,8 @@ HOST_CONFIG = HostConfig(
                         "user",
                         "--password",
                         Secret(0).unsafe(),
+                        "--fetched-resources",
+                        "node",
                         "--cert-server-name",
                         HOST_CONFIG.name,
                     ]
@@ -68,7 +75,7 @@ HOST_CONFIG = HostConfig(
                 "username": "user",
                 "password": Secret(0),
                 "no_cert_check": False,
-                "skip_elements": ["ctr_volume"],
+                "fetched_resources": ["volumes"],
             },
             [
                 SpecialAgentCommand(
@@ -79,10 +86,10 @@ HOST_CONFIG = HostConfig(
                         "user",
                         "--password",
                         Secret(0).unsafe(),
+                        "--fetched-resources",
+                        "volumes",
                         "--cert-server-name",
                         HOST_CONFIG.name,
-                        "--no-counters",
-                        "volume",
                     ]
                 )
             ],

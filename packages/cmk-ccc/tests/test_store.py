@@ -160,7 +160,7 @@ def test_save_data_to_file_pretty(tmp_path: Path) -> None:
         "4asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
-    store.save_object_to_file(path, data, pretty=True)
+    store.save_object_to_file(path, data, pprint_value=True)
     assert Path(path).read_text().count("\n") > 4
     assert store.load_object_from_file(path, default=None) == data
 
@@ -244,7 +244,7 @@ def test_save_mk_file(tmp_path: Path) -> None:
 
 def test_save_to_mk_file(tmp_path: Path) -> None:
     path = tmp_path / "huhu"
-    store.save_to_mk_file(path, "x", {"a": 1})
+    store.save_to_mk_file(path, key="x", value={"a": 1})
 
     actual = store.load_mk_file(path, default={"x": {"a": 2, "y": 1}}, lock=False)
 

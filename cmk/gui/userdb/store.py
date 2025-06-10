@@ -557,16 +557,16 @@ def write_contacts_and_users_file(
     # Checkmk's monitoring contacts
     save_to_mk_file(
         check_mk_config_dir / "contacts.mk",
-        "contacts",
-        contacts,
+        key="contacts",
+        value=contacts,
         pprint_value=active_config.wato_pprint_config,
     )
 
     # GUI specific user configuration
     save_to_mk_file(
         multisite_config_dir / "users.mk",
-        "multisite_users",
-        users,
+        key="multisite_users",
+        value=users,
         pprint_value=active_config.wato_pprint_config,
     )
 

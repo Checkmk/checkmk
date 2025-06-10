@@ -99,9 +99,9 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             self._config_file_path,
-            self._config_variable,
-            cfg,
-            pprint_value,
+            key=self._config_variable,
+            value=cfg,
+            pprint_value=pprint_value,
         )
 
 
@@ -142,9 +142,9 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
         target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             target_path,
-            self._config_variable,
-            cfg,
-            pprint_value,
+            key=self._config_variable,
+            value=cfg,
+            pprint_value=pprint_value,
         )
 
 

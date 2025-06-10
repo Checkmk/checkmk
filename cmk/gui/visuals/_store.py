@@ -358,7 +358,7 @@ def move_visual_to_local(
         save_object_to_file(
             path=local_path / visual_id,
             data=visual,
-            pretty=True,
+            pprint_value=True,
         )
     _CombinedVisualsCache(visual_type).invalidate_cache()
 

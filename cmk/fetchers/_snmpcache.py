@@ -43,7 +43,7 @@ def write_single_oid_cache(
         return
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path = cache_dir / f"{host_name}.{ipaddress}"
-    store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
+    store.save_object_to_file(cache_path, _g_single_oid_cache, pprint_value=False)
 
 
 def _load_single_oid_cache(

@@ -2421,7 +2421,7 @@ def store_notification_backlog(raw_context: EventContext, *, backlog_size: int) 
         default=[],
         lock=True,
     )[: backlog_size - 1]
-    store.save_object_to_file(path, [raw_context] + backlog, pretty=False)
+    store.save_object_to_file(path, [raw_context] + backlog, pprint_value=False)
 
 
 def raw_context_from_backlog(nr: int) -> EventContext:

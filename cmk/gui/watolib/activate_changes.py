@@ -370,7 +370,9 @@ def _load_site_replication_status(site_id: SiteId, lock: bool = False) -> SiteRe
 
 
 def _save_site_replication_status(site_id: SiteId, repl_status: SiteReplicationStatus) -> None:
-    store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
+    store.save_object_to_file(
+        _site_replication_status_path(site_id), repl_status, pprint_value=False
+    )
 
 
 def _update_replication_status(site_id, vars_):

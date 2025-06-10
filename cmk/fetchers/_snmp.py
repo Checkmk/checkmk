@@ -55,7 +55,7 @@ class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
         return store.load_object_from_file(path, default=None)
 
     def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
-        return store.save_object_to_file(path, rowinfo, pretty=False)
+        return store.save_object_to_file(path, rowinfo, pprint_value=False)
 
     @staticmethod
     def _oid2name(fetchoid: str, context_hash: str) -> str:

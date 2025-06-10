@@ -136,9 +136,9 @@ def _sendmail_path() -> str:
 def default_from_address() -> str:
     environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
     if cmk_version.is_cma():
-        return load_text_from_file(Path("/etc/nullmailer/default-from"), environ_default).replace(
-            "\n", ""
-        )
+        return load_text_from_file(
+            Path("/etc/nullmailer/default-from"), default=environ_default
+        ).replace("\n", "")
 
     return environ_default
 

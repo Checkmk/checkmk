@@ -77,6 +77,9 @@ class LazyTracer:
                 self._tracer = get_tracer()
         return self._tracer.span(name, attributes=attributes)
 
+    def simple_span(self, name: str, path: Path) -> AbstractContextManager:
+        return self.span(f"{name}[{path}]", attributes={"cmk.file.path": str(path)})
+
 
 tracer = LazyTracer()
 
@@ -105,10 +108,7 @@ tracer = LazyTracer()
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
 def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Mapping[str, object]:
-    with tracer.span(
-        f"load_mk_file[{path}]",
-        attributes={"cmk.file.path": str(path)},
-    ):
+    with tracer.simple_span("load_mk_file", path):
         if default is None:  # leave this for now, we still have a lot of `Any`s flying around
             raise MKGeneralException(
                 _(
@@ -140,11 +140,8 @@ def load_from_mk_file[T](path: Path, *, key: str, default: T, lock: bool) -> T:
     return load_mk_file(path, default={key: default}, lock=lock)[key]  # type: ignore[return-value]
 
 
-def save_mk_file(path: Path, data: str, add_header: bool = True) -> None:
-    with tracer.span(
-        f"save_mk_file[{path}]",
-        attributes={"cmk.file.path": str(path)},
-    ):
+def save_mk_file(path: Path, data: str, *, add_header: bool = True) -> None:
+    with tracer.simple_span("save_mk_file", path):
         content = ""
         if add_header:
             content += "# Written by Checkmk store\n\n"
@@ -154,18 +151,12 @@ def save_mk_file(path: Path, data: str, add_header: bool = True) -> None:
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path: Path, key: str, value: Any, pprint_value: bool = False) -> None:
-    format_func = repr
-    if pprint_value:
-        format_func = pprint.pformat
-
-    # mypy complains: "[mypy:] Cannot call function of unknown type"
-    if isinstance(value, dict):
-        formatted = f"{key}.update({format_func(value)})"
-    else:
-        formatted = f"{key} += {format_func(value)}"
-
-    save_mk_file(path, formatted)
+def save_to_mk_file(path: Path, *, key: str, value: object, pprint_value: bool = False) -> None:
+    fmt = pprint.pformat if pprint_value else repr
+    save_mk_file(
+        path,
+        f"{key}.update({fmt(value)})" if isinstance(value, dict) else f"{key} += {fmt(value)}",
+    )
 
 
 # .
@@ -184,10 +175,7 @@ def save_to_mk_file(path: Path, key: str, value: Any, pprint_value: bool = False
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> Any:
     with (
-        tracer.span(
-            f"load_object_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
+        tracer.simple_span("load_object_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
         return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
@@ -195,83 +183,51 @@ def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> An
 
 def load_object_from_pickle_file(path: Path, *, default: Any, lock: bool = False) -> Any:
     with (
-        tracer.span(
-            f"load_object_from_pickle_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
+        tracer.simple_span("load_object_from_pickle_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
         return ObjectStore(path, serializer=PickleSerializer()).read_obj(default=default)
 
 
-def load_text_from_file(path: Path, default: str = "", lock: bool = False) -> str:
+def load_text_from_file(path: Path, *, default: str = "", lock: bool = False) -> str:
     with (
-        tracer.span(
-            f"load_text_from_file[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
+        tracer.simple_span("load_text_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
         return ObjectStore(path, serializer=TextSerializer()).read_obj(default=default)
 
 
 def load_bytes_from_file(path: Path, *, default: bytes) -> bytes:
-    with tracer.span(
-        f"load_bytes_from_file[{path}]",
-        attributes={"cmk.file.path": str(path)},
-    ):
+    with tracer.simple_span("load_bytes_from_file", path):
         return ObjectStore(path, serializer=BytesSerializer()).read_obj(default=default)
 
 
-def save_object_to_file(path: Path, data: Any, pretty: bool = False) -> None:
-    _write(path, DimSerializer(pretty=pretty), data)
+def save_object_to_file(path: Path, data: object, *, pprint_value: bool = False) -> None:
+    store = ObjectStore(path, serializer=DimSerializer(pretty=pprint_value))
+    with tracer.simple_span("save_object_to_file", path), store.locked():
+        store.write_obj(data)
 
 
-# A simple wrapper for cases where you want to store a python data with pickle
-# that is then read by load_object_from_pickle_file() again
-def save_object_to_pickle_file(path: Path, data: Any) -> None:
-    serializer = PickleSerializer[Any]()
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(path, serializer=serializer).write_obj(data)
+def save_object_to_pickle_file(path: Path, data: object) -> None:
+    store = ObjectStore(path, serializer=PickleSerializer[object]())
+    with tracer.simple_span("save_object_to_pickle_file", path), store.locked():
+        store.write_obj(data)
 
 
 def save_text_to_file(path: Path, data: str) -> None:
-    _write(path, TextSerializer(), data)
+    store = ObjectStore(path, serializer=TextSerializer())
+    with tracer.simple_span("save_text_to_file", path), store.locked():
+        store.write_obj(data)
 
 
 def save_bytes_to_file(path: Path, data: bytes) -> None:
-    _write(path, BytesSerializer(), data)
-
-
-def _write(path: Path, serializer: Serializer, data: Any) -> None:
-    store = ObjectStore(path, serializer=serializer)
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    with (
-        tracer.span(
-            f"_write[{path}]",
-            attributes={"cmk.file.path": str(path)},
-        ),
-        store.locked(),
-    ):
+    store = ObjectStore(path, serializer=BytesSerializer())
+    with tracer.simple_span("save_bytes_to_file", path), store.locked():
         store.write_obj(data)
 
 
 def _pickled_files_cache_dir(temp_dir: Path) -> Path:
     return temp_dir / "pickled_files_cache"
-
-
-_pickle_serializer = PickleSerializer[Any]()
 
 
 def try_load_file_from_pickle_cache(
@@ -330,7 +286,7 @@ def try_load_file_from_pickle_cache(
     if path.exists():
         # Only create the pickled version if an original file actually exists
         pickle_path.parent.mkdir(exist_ok=True, parents=True)
-        ObjectStore(pickle_path, serializer=_pickle_serializer).write_obj(data)
+        ObjectStore(pickle_path, serializer=PickleSerializer[Any]()).write_obj(data)
     return data
 
 

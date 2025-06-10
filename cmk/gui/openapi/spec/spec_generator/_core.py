@@ -441,7 +441,7 @@ def main(version: APIVersion) -> int:
             store.save_object_to_file(
                 spec_path(target),
                 _generate_spec(version, _make_spec(version), target, omd_site()),
-                pretty=False,
+                pprint_value=False,
             )
     return 0
 

@@ -529,8 +529,8 @@ def fixture_locked_rule_id() -> Iterable[str]:
     id_ = "f893cdfc-00c8-4d93-943b-05c4edc52068"
     save_to_mk_file(
         rules_mk,
-        "host_label_rules",
-        [
+        key="host_label_rules",
+        value=[
             {
                 "id": id_,
                 "value": {"custom": "label"},

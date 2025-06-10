@@ -1014,8 +1014,8 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
             )
             store.save_to_mk_file(
                 tmp_filepath,
-                "sites",
-                {
+                key="sites",
+                value={
                     siteid: livestatus.sanitize_site_configuration(config)
                     for siteid, config in sites.items()
                 },

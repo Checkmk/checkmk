@@ -354,7 +354,9 @@ def save_snapshot_user_connection_config(
 ) -> None:
     save_dir = Path(snapshot_work_dir, "etc/check_mk/multisite.d/wato")
     save_dir.mkdir(mode=0o770, parents=True, exist_ok=True)
-    store.save_to_mk_file(save_dir / "user_connections.mk", "user_connections", connections)
+    store.save_to_mk_file(
+        save_dir / "user_connections.mk", key="user_connections", value=connections
+    )
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
@@ -375,9 +377,9 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             self._config_file_path,
-            self._config_variable,
-            cfg,
-            pprint_value,
+            key=self._config_variable,
+            value=cfg,
+            pprint_value=pprint_value,
         )
 
         for connector_class in user_connector_registry.values():

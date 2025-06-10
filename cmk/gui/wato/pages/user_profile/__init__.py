@@ -9,7 +9,7 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import MainMenuTopic
 
-from . import async_replication, change_password, edit_profile, mega_menu, replicate, two_factor
+from . import async_replication, change_password, edit_profile, main_menu, replicate, two_factor
 
 
 def register(
@@ -17,7 +17,7 @@ def register(
     main_menu_registry: MainMenuRegistry,
     user_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
-    mega_menu.register(page_registry, main_menu_registry, user_menu_topics)
+    main_menu.register(page_registry, main_menu_registry, user_menu_topics)
     two_factor.register(page_registry)
     two_factor.register(page_registry)
     edit_profile.register(page_registry)

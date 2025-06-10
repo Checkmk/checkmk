@@ -163,7 +163,7 @@ from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
-from .pages.user_profile.mega_menu import default_user_menu_topics as default_user_menu_topics
+from .pages.user_profile.main_menu import default_user_menu_topics as default_user_menu_topics
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the Setup plug-in context

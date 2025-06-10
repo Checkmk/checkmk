@@ -7,12 +7,16 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.netscaler.agent_based.netscaler_vserver import _check_netscaler_vservers, VServer
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.netscaler.agent_based.netscaler_vserver import (
+    _check_netscaler_vservers,
+    discover_netscaler_vserver,
+    VServer,
+)
 
 
 @pytest.fixture(name="clustered_vservers")
-def clustered_vservers_fixture():
+def clustered_vservers_fixture() -> Sequence[VServer]:
     return [
         {
             "entity_service_type": "loadbalancing",
@@ -35,7 +39,54 @@ def clustered_vservers_fixture():
             "tx_bytes": 0,
             "node": "node2",
         },
+        {
+            "entity_service_type": "loadbalancing group",
+            "protocol": "ssl",
+            "request_rate": 0,
+            "rx_bytes": 0,
+            "service_state": (1, "busy"),
+            "socket": "0.0.0.0:0",
+            "tx_bytes": 0,
+            "node": "node3",
+        },
     ]
+
+
+def test_discover_netscaler_vservers() -> None:
+    assert list(
+        discover_netscaler_vserver(
+            {
+                "name1": {
+                    "entity_service_type": "loadbalancing",
+                    "health": 75.2,
+                    "protocol": "ssl",
+                    "request_rate": 0,
+                    "rx_bytes": 0,
+                    "service_state": (0, "up"),
+                    "socket": "0.0.0.0:0",
+                    "tx_bytes": 5,
+                },
+                "name2": {
+                    "entity_service_type": "ssl vpn",
+                    "protocol": "ssl",
+                    "request_rate": 1,
+                    "rx_bytes": 2,
+                    "service_state": (1, "busy"),
+                    "socket": "10.101.6.11:443",
+                    "tx_bytes": 0,
+                },
+                "name3": {
+                    "entity_service_type": "loadbalancing group",
+                    "protocol": "ssl",
+                    "request_rate": 0,
+                    "rx_bytes": 0,
+                    "service_state": (1, "busy"),
+                    "socket": "0.0.0.0:0",
+                    "tx_bytes": 0,
+                },
+            },
+        )
+    ) == [Service(item="name1"), Service(item="name2")]
 
 
 def test_check_netscaler_vservers_clustered_best(
@@ -90,4 +141,27 @@ def test_check_netscaler_vservers_clustered_worst(
         state=State.WARN,
         summary="Status: transition to out of service (node1)",
         details="Status: transition to out of service (node1)",
+    )
+
+
+def test_check_netscaler_vservers() -> None:
+    assert not list(
+        _check_netscaler_vservers(
+            {
+                "health_levels": (100.0, 0.1),
+                "cluster_status": "best",
+            },
+            [
+                {
+                    "entity_service_type": "loadbalancing group",
+                    "protocol": "ssl",
+                    "request_rate": 0,
+                    "rx_bytes": 0,
+                    "service_state": (1, "busy"),
+                    "socket": "0.0.0.0:0",
+                    "tx_bytes": 0,
+                    "node": "node3",
+                }
+            ],
+        )
     )

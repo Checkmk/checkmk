@@ -203,13 +203,16 @@ def discover_netscaler_vserver(section: Section) -> DiscoveryResult:
     ... })))
     [Service(item='cag.company.com'), Service(item='citrix.comp.directory')]
     """
-    for srv_name in section:
-        yield Service(item=srv_name)
+    yield from (
+        Service(item=srv_name)
+        for srv_name, server_info in section.items()
+        if server_info.get("entity_service_type") != "loadbalancing group"
+    )
 
 
 def _check_netscaler_vservers(
     params: Mapping[str, Any],
-    vsevers: Sequence[VServer],
+    vservers: Sequence[VServer],
 ) -> CheckResult:
     """
     >>> for result in _check_netscaler_vservers(
@@ -236,14 +239,15 @@ def _check_netscaler_vservers(
     Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
     Metric('if_out_octets', 0.0)
     """
-    if not vsevers:
+    vservers = [vs for vs in vservers if vs.get("entity_service_type") != "loadbalancing group"]
+    if not vservers:
         return
 
     cluster_status = params.get("cluster_status", "best")
     stat_list = []
     req_rate_list, rx_list, tx_list = [0], [0], [0]
 
-    for vserver in vsevers:
+    for vserver in vservers:
         stat_list.append(vserver["service_state"][0])
         req_rate_list.append(vserver["request_rate"])
         rx_list.append(vserver["rx_bytes"])
@@ -259,10 +263,10 @@ def _check_netscaler_vservers(
                 " (%s)" % vserver["node"] if "node" in vserver else "",
             ),
         )
-        for vserver in vsevers
+        for vserver in vservers
     )
 
-    first_vserver = vsevers[0]
+    first_vserver = vservers[0]
     if first_vserver["entity_service_type"] in ["loadbalancing", "loadbalancing group"]:
         yield from check_levels_v1(
             value=first_vserver["health"],

@@ -309,7 +309,7 @@ impl Role {
         auth.get_string(keys::ROLE)
             .and_then(|role| Role::new(role.as_str()))
     }
-    fn new(value: &str) -> Option<Self> {
+    pub fn new(value: &str) -> Option<Self> {
         match str::to_ascii_lowercase(value).as_ref() {
             values::SYS_DBA => Some(Self::SysDba),
             values::SYS_OPER => Some(Self::SysOper),
@@ -317,10 +317,26 @@ impl Role {
             values::SYS_DG => Some(Self::SysDG),
             values::SYS_KM => Some(Self::SysKM),
             values::SYS_ASM => Some(Self::SysASM),
+            "" => {
+                log::info!("No role specified");
+                None
+            }
             _ => {
                 log::error!("Invalid role {value}");
                 None
             }
+        }
+    }
+}
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::SysDba => write!(f, "{}", values::SYS_DBA),
+            Self::SysOper => write!(f, "{}", values::SYS_OPER),
+            Self::SysBackup => write!(f, "{}", values::SYS_BACKUP),
+            Self::SysDG => write!(f, "{}", values::SYS_DG),
+            Self::SysKM => write!(f, "{}", values::SYS_KM),
+            Self::SysASM => write!(f, "{}", values::SYS_ASM),
         }
     }
 }

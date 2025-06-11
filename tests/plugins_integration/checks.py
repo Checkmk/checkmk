@@ -555,10 +555,11 @@ def execute_dcd_cycle(site: Site, expected_pb_hosts: int = 0) -> None:
 
     Trigger a DCD cycle until:
     1) One batch that computes all expected PB hosts is completed;
-    2) The last batch in the queue contains the expected number of PB hosts.
+    2) The following batches also contain the expected number of PB hosts.
 
     This is needed to ensure that the DCD has processed all piggyback hosts and those hosts persist
     in the following batches.
+    This behavior needs to be enforced considering what has been observed in CMK-24031.
 
     Args:
         site: The Site instance where the DCD cycle should be executed
@@ -575,12 +576,15 @@ def execute_dcd_cycle(site: Site, expected_pb_hosts: int = 0) -> None:
         all_batches_stdout = site.check_output(["cmk-dcd", "--batches"]).strip("\n").split("\n")
         logger.info("DCD batches:\n%s", "\n".join(all_batches_stdout[:]))
 
-        # check if the last batch contains the expected number of PB hosts
-        if f"{expected_pb_hosts} hosts" in all_batches_stdout[-1]:
+        for idx, batch_stdout in enumerate(all_batches_stdout):
             # check if there is at least one completed batch containing the expected number of PB
             # hosts
-            for batch_stdout in all_batches_stdout:
-                if all(string in batch_stdout for string in ["Done", f"{expected_pb_hosts} hosts"]):
+            if all(string in batch_stdout for string in ["Done", f"{expected_pb_hosts} hosts"]):
+                # check that all following batches also contain the expected number of PB hosts
+                if all(
+                    f"{expected_pb_hosts} hosts" in next_batch_stdout
+                    for next_batch_stdout in all_batches_stdout[idx + 1 :]
+                ):
                     return True
         return False
 

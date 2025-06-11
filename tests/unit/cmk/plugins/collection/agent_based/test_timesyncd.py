@@ -90,6 +90,12 @@ STRING_TABLE_NO_SYNC_NTP_MESSAGE = [
     ["Timezone=Europe/Berlin"],
 ]
 
+STRING_TABLE_NTP_MESSAGE_NO_TIMEZONE = [
+    [
+        "NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-24, RootDelay=87.096ms, RootDispersion=26.397ms, Reference=C0248F97, OriginateTimestamp=Tue 2019-10-01 11:33:12 CEST, ReceiveTimestamp=Tue 2019-10-01 11:33:12 CEST, TransmitTimestamp=Tue 2019-10-01 11:33:12 CEST, DestinationTimestamp=Tue 2019-10-01 11:33:12 CEST, Ignored=no PacketCount=1, Jitter=0ms }"
+    ],
+]
+
 
 @pytest.mark.parametrize(
     "string_table, string_table_ntpmessage,  result",
@@ -99,6 +105,7 @@ STRING_TABLE_NO_SYNC_NTP_MESSAGE = [
         (STRING_TABLE_NO_SERVER, STRING_TABLE_NO_SYNC_NTP_MESSAGE, [Service()]),
         (STRING_TABLE_SERVER_NO_SYNC, STRING_TABLE_NO_SYNC_NTP_MESSAGE, [Service()]),
         (STRING_TABLE_STANDARD, STRING_TABLE_SERVER_NTP_MESSAGE, [Service()]),
+        (STRING_TABLE_STANDARD, STRING_TABLE_NTP_MESSAGE_NO_TIMEZONE, [Service()]),
         ([], [], []),
     ],
 )
@@ -198,6 +205,24 @@ def test_discover_timesyncd(
                     summary="Time since last NTPMessage: 22 hours 1 minute (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
                 ),
                 Metric("last_sync_receive_time", 79260.36999988556, levels=(3600.0, 7200.0)),
+                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Jitter: 0 seconds"),
+                Metric("jitter", 0.0, levels=(0.2, 0.5)),
+                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+            ],
+        ),
+        (
+            STRING_TABLE_STANDARD,
+            STRING_TABLE_NTP_MESSAGE_NO_TIMEZONE,
+            timesyncd.default_check_parameters,
+            [
+                Result(state=State.OK, summary="Offset: 54 milliseconds"),
+                Metric("time_offset", 0.053991, levels=(0.2, 0.5)),
+                Result(
+                    state=State.OK,
+                    summary="Time since last sync: 22 hours 1 minute",
+                ),
+                Metric("last_sync_time", 79260.0),
                 Result(state=State.OK, summary="Stratum: 2.00"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
                 Metric("jitter", 0.0, levels=(0.2, 0.5)),

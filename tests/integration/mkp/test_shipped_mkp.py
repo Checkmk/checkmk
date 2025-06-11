@@ -14,6 +14,8 @@ from tests.testlib.site import Site
 
 from tests.extension_compatibility.test_extension_compatibility import ImportErrors
 
+from .lib import disable_extension, enable_extension
+
 MKP_TO_TEST: Iterable[str] = ()
 
 
@@ -51,15 +53,7 @@ def test_enabling_shipped_mkp(site: Site, package_name: str) -> None:
 @contextmanager
 def _temporary_enable_extension(site: Site, name: str) -> Iterator[None]:
     try:
-        _enable_extension(site, name)
+        enable_extension(site, name)
         yield
     finally:
-        _disable_extension(site, name)
-
-
-def _enable_extension(site: Site, name: str) -> None:
-    site.check_output(["mkp", "enable", name])
-
-
-def _disable_extension(site: Site, name: str) -> None:
-    site.check_output(["mkp", "disable", name])
+        disable_extension(site, name)

@@ -59,6 +59,10 @@ def test_error_does_not_raise() -> None:
         ("0 name", None),
         ("0 name -", ("0", "name", "-", None)),
         ('0 "name with space" -', ("0", "name with space", "-", None)),
+        (
+            '0 "name with space"  metric=0   info with spaces',
+            ("0", "name with space", "metric=0", "info with spaces"),
+        ),
         ("0 name - info text", ("0", "name", "-", "info text")),
         (
             "0 name - results' text has a quote",
@@ -286,6 +290,19 @@ def test_regex_parser(
                 data={},
             ),
             id="invalid format, empty line",
+        ),
+        pytest.param(
+            ["CannotSeparateThis"],
+            local.LocalSection(
+                errors={
+                    "Line #1": local.LocalError(
+                        output="CannotSeparateThis",
+                        reason="Could not parse line into components (status, service name, performance data, status detail)",
+                    )
+                },
+                data={},
+            ),
+            id="invalid format, cannot separate",
         ),
     ],
 )

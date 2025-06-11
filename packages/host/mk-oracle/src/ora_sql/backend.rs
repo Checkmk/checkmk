@@ -2,13 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self, ora_sql::AuthType, ora_sql::Endpoint, ora_sql::EngineTag};
+use crate::config::{
+    self, ora_sql::AuthType, ora_sql::Endpoint, ora_sql::EngineTag, ora_sql::Role,
+};
 use crate::ora_sql::types::Target;
 use crate::types::{Credentials, PointName};
 use anyhow::Context;
 use anyhow::Result;
 
-use oracle::Connection;
+use oracle::{Connection, Connector, Privilege};
 
 #[derive(Debug)]
 pub struct StdEngine {
@@ -22,18 +24,40 @@ trait OraDbEngine {
 }
 
 impl OraDbEngine for StdEngine {
-    fn connect(&mut self, _target: &Target) -> Result<()> {
+    fn connect(&mut self, target: &Target) -> Result<()> {
         if self.connection.is_some() {
             return Ok(());
         }
         // Here we would normally establish a connection to the database.
         // For now, we just simulate a successful connection.
-        self.connection = Some(Connection::connect(
-            "user",
-            "password",
-            "localhost:1521/XE",
-        )?);
+        if let Some(role) = target.auth.role() {
+            let mut connector = Connector::new(
+                target.auth.username(),
+                target.auth.password().unwrap_or(&String::new()),
+                target.make_connection_string(),
+            );
+            connector.privilege(_to_privilege(role));
+            self.connection = Some(connector.connect()?);
+        } else {
+            self.connection = Some(Connection::connect(
+                target.auth.username(),
+                target.auth.password().unwrap_or(&String::new()),
+                target.make_connection_string(),
+            )?);
+        }
+
         Ok(())
+    }
+}
+
+fn _to_privilege(role: &Role) -> Privilege {
+    match role {
+        Role::SysDba => Privilege::Sysdba,
+        Role::SysOper => Privilege::Sysoper,
+        Role::SysASM => Privilege::Sysasm,
+        Role::SysBackup => Privilege::Sysbackup,
+        Role::SysKM => Privilege::Syskm,
+        Role::SysDG => Privilege::Sysdg,
     }
 }
 
@@ -89,6 +113,7 @@ impl Task {
         self.engine.connect(&self.target)?;
         Ok(())
     }
+
     pub fn target(&self) -> &Target {
         &self.target
     }

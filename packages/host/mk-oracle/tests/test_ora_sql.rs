@@ -9,10 +9,31 @@ mod common;
 
 use mk_oracle::config::ora_sql::{AuthType, Config, EngineTag, Role};
 use mk_oracle::ora_sql::backend;
+use std::path::PathBuf;
+use std::sync::OnceLock;
 
 use crate::common::tools::{SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_BASE};
 use mk_oracle::types::{Credentials, InstanceName};
 
+static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+fn _init_runtime_path() -> PathBuf {
+    let _this_file: PathBuf = PathBuf::from(file!());
+    _this_file
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("oci-runtimes")
+        .join("light-21")
+}
+
+fn change_cwd_to_runtime_path() {
+    let runtime_location = RUNTIME_PATH.get_or_init(_init_runtime_path).clone();
+    std::env::set_current_dir(runtime_location).unwrap();
+}
 fn make_base_config(
     credentials: &Credentials,
     auth_type: AuthType,
@@ -97,8 +118,9 @@ fn test_local_connection() {
         InstanceName::from(endpoint.point),
     );
 
+    change_cwd_to_runtime_path();
+
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
-    assert!(r.is_err());
-    //assert!(r.is_ok(), "Failed to connect: {:?}", r.err());
+    assert!(r.is_ok());
 }

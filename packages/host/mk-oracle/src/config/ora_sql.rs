@@ -304,6 +304,7 @@ pub enum Role {
     SysKM,
     SysASM,
 }
+
 impl Role {
     pub fn from_yaml(auth: &Yaml) -> Option<Self> {
         auth.get_string(keys::ROLE)

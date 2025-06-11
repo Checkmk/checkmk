@@ -215,6 +215,10 @@ try {
     if ($packClean) {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
+    if ($packBuild -or $packTest) {
+        bazel build //packages/host/mk-oracle:oci_light_win_x86
+    }
+
     if ($packBuild) {
         $cwd = Get-Location
         Write-Host "Killing processes in $target_dir" -ForegroundColor White

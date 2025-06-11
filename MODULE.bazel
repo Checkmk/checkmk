@@ -245,6 +245,23 @@ http_archive(
 )
 
 http_archive(
+    name = "oci-basic-light-win-x86",
+    #downloaded_file_path = "oci-basic-light-win-x86.zip",
+    build_file_content = """
+filegroup(
+    name = "srcs",
+    srcs = glob(["instantclient_21_18/*.dll"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "9a9d0a40b230eea8a308422ab4b2fd36f2cafb7cb2102a0c4a0a22242aca2126",
+    urls = [
+        "https://download.oracle.com/otn_software/nt/instantclient/2118000/instantclient-basiclite-nt-21.18.0.0.0dbru.zip",
+        UPSTREAM_MIRROR_URL + "/instantclient-basiclite-nt-21.18.0.0.0dbru.zip",
+    ],
+)
+
+http_archive(
     name = "openssl",
     build_file = "//omd/packages/openssl:BUILD.openssl.bazel",
     sha256 = "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",

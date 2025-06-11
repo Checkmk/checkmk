@@ -33,7 +33,9 @@ run_files() {
     return "${RETCODE}"
 }
 
+# Example invocations:
+# tests/unit-shell/runner.sh test_bourne_shell.sh
+# tests/unit-shell/runner.sh tests/unit-shell/agents/test_bourne_shell.sh
+PATTERN="$(basename "${1:-test_*.sh}")"
 # watch out! make sure a failure is reflected in the exit code
-PATTERN=${1:-*}
-PATTERN="**/test_$(basename "${PATTERN/test_/}" ".sh").sh"
-find "${_REPO}/tests/unit-shell" -wholename "${PATTERN}" | run_files
+find "${_REPO}/tests/unit-shell" -name "${PATTERN}" | run_files

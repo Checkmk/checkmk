@@ -59,6 +59,10 @@ def test_error_does_not_raise() -> None:
         ("0 name", None),
         ("0 name -", ("0", "name", "-", None)),
         ('0 "name with space" -', ("0", "name with space", "-", None)),
+        (
+            '0 "name with space"  metric=0   info with spaces',
+            ("0", "name with space", "metric=0", "info with spaces"),
+        ),
         ("0 name - info text", ("0", "name", "-", "info text")),
         ("0 name - results' text has a quote", ("0", "name", "-", "results' text has a quote")),
         ("0 name - has a backslash\\", ("0", "name", "-", "has a backslash\\")),
@@ -266,6 +270,19 @@ def test_regex_parser(
             ),
             id="invalid format, empty line",
         ),
+        pytest.param(
+            ["CannotSeparateThis"],
+            local.LocalSection(
+                errors={
+                    "Line #1": local.LocalError(
+                        output="CannotSeparateThis",
+                        reason="Could not parse line into components (status, service name, performance data, status detail)",
+                    )
+                },
+                data={},
+            ),
+            id="invalid format, cannot separate",
+        ),
     ],
 )
 def test_parse(string_table_row: list[str], expected_parsed_data: local.LocalSection) -> None:
@@ -378,10 +395,11 @@ def test_compute_state() -> None:
 
 
 @pytest.mark.parametrize(
-    "string_table_row,is_discovered,expected_result",
+    "string_table_row,item,is_discovered,expected_result",
     [
         pytest.param(
             ["1", "ut_item_name", "metric=0", "Detail"],
+            "ut_item_name",
             True,
             [
                 Result(state=State.WARN, summary="Detail"),
@@ -392,6 +410,7 @@ def test_compute_state() -> None:
         ),
         pytest.param(
             ["1", "ut_item_name", "metric=0"],
+            "ut_item_name",
             True,
             [
                 Result(state=State.OK, notice="Metric: 0.00"),
@@ -401,39 +420,43 @@ def test_compute_state() -> None:
         ),
         pytest.param(
             ["1", "ut_item_name", "-"],
+            "ut_item_name",
             True,
             [],
             id="empty metric; should not be discovered!",  # TODO: this documents a bug, see SUP-17314
         ),
         pytest.param(
             ["1", "ut_item_name"],
-            False,
+            "Line #1",
+            True,
             [],
             id="empty metric",
         ),
         pytest.param(
             ["1"],
-            False,
+            "Line #1",
+            True,
             [],
             id="single element",
         ),
         pytest.param(
             ["UT_RANDOM_STRING"],
-            False,
+            "Line #1",
+            True,
             [],
             id="single random string",
         ),
     ],
 )
 def test_check_sub_17314(
-    string_table_row: list[str], is_discovered: bool, expected_result: list[Result]
+    string_table_row: list[str], item: str, is_discovered: bool, expected_result: list[Result]
 ) -> None:
     assert (
         list(local.check_local("ut_item_name", {}, local.parse_local([string_table_row])))
         == expected_result
     )
     assert list(local.discover_local(local.parse_local([string_table_row]))) == (
-        [Service(item="ut_item_name")] if is_discovered else []
+        [Service(item=item)] if is_discovered else []
     )
 
 

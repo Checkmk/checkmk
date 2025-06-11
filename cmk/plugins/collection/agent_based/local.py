@@ -202,8 +202,8 @@ def _split_check_result(line: str) -> tuple[str, str, str, str | None] | None:
     forbidden_service_name_characters = r"\"\'"
     match = re.match(
         r"^"
-        r"([^ ]+) "  # -                                   - service state (permissive)
-        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) "  # - - optionally quoted service name
+        r"([^ ]+) +"  # -                                   - service state (permissive)
+        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) +"  # - - optionally quoted service name
         r"([^ ]+)"  # -                                    - perf data
         r"( +(.*))?"  # -                                  - service string
         r"$" % ((forbidden_service_name_characters,) * 3),
@@ -271,7 +271,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
     # turn split lines into monolithic strings again in order to be able to handle
     # all input in the same manner. current `local` sections are 0-separated anyway so
     # joining is only needed for legacy input
-    for line in (l[0] if len(l) == 1 else " ".join(l) for l in string_table):
+    for i, line in enumerate(l[0] if len(l) == 1 else " ".join(l) for l in string_table):
         # divide optional cache-info and whitespace-stripped rest
         split_cache_match = re.match(r"^(cached\(\d+,\d+\))? *(.*) *$", line)
         assert split_cache_match
@@ -282,6 +282,10 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
 
         raw_components = _split_check_result(raw_result)
         if not raw_components:
+            errors[f"Line #{i + 1}"] = LocalError(
+                output=line,
+                reason="Could not parse line into components (status, service name, performance data, status detail)",
+            )
             continue
 
         # these are raw components - not checked for validity yet

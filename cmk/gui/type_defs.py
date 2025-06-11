@@ -767,11 +767,15 @@ class Key(BaseModel):
 
     def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
         return CertificateWithPrivateKey(
-            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
+            certificate=self.to_certificate(),
             private_key=RsaPrivateKey.load_pem(
                 EncryptedPrivateKeyPEM(self.private_key), passphrase
             ),
         )
+
+    def to_certificate(self) -> Certificate:
+        """convert the string certificate to Certificate object"""
+        return Certificate.load_pem(CertificatePEM(self.certificate))
 
     def fingerprint(self, algorithm: HashAlgorithm) -> str:
         """return the fingerprint aka hash of the certificate as a hey string"""

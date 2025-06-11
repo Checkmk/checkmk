@@ -58,6 +58,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
     assert "Checkmk Site" in self_signed_cert.certificate.organization_name
+    assert self_signed_cert.certificate.not_valid_after == FROZEN_NOW + relativedelta(hours=2)
 
 
 @pytest.mark.parametrize(

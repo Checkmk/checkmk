@@ -405,6 +405,10 @@ class Certificate:
     def not_valid_before(self) -> datetime:
         return self._cert.not_valid_before
 
+    @property
+    def not_valid_after(self) -> datetime:
+        return self._cert.not_valid_after
+
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
         Verify that this certificate was signed by `signer`.

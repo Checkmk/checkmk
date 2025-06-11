@@ -7,10 +7,9 @@
 import socket
 import time
 
-from cmk.base.check_legacy_includes.f5_bigip import DETECT
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render, SNMPTree
+from cmk.plugins.lib.f5_bigip import F5_BIGIP
 
 check_info = {}
 
@@ -226,7 +225,7 @@ def check_f5_bigip_vserver(item, params, parsed):
 
 check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
     name="f5_bigip_vserver",
-    detect=DETECT,
+    detect=F5_BIGIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.10",
         oids=[

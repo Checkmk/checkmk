@@ -8,10 +8,11 @@
 
 import time
 
-from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
+from cmk.base.check_legacy_includes.f5_bigip import get_conn_rate_params
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.plugins.lib.f5_bigip import F5_BIGIP
 
 check_info = {}
 
@@ -93,7 +94,7 @@ def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
     name="f5_bigip_conns",
     parse_function=parse_f5_bigip_conns,
-    detect=DETECT,
+    detect=F5_BIGIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.1.2",
         oids=["1.8", "9.2", "9.6", "9.9", "1.56"],

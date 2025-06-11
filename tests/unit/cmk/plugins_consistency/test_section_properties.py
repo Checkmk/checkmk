@@ -96,17 +96,6 @@ def test_detect_spec_dedup(
         ("climaveneta_alarm", "climaveneta_fan", "climaveneta_temp"),
         ("dell_idrac_fans", "dell_idrac_power", "dell_idrac_raid"),
         ("f5_bigip_cluster_status_v11_2", "f5_bigip_vcmpfailover", "f5_bigip_vcmpguests"),
-        (
-            "f5_bigip_apm",
-            "f5_bigip_chassis_temp",
-            "f5_bigip_conns",
-            "f5_bigip_cpu_temp",
-            "f5_bigip_fans",
-            "f5_bigip_pool",  # already migrated
-            "f5_bigip_psu",
-            "f5_bigip_snat",
-            "f5_bigip_vserver",
-        ),
         ("hp_procurve_cpu", "hp_procurve_mem", "hp_procurve_sensors"),
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),

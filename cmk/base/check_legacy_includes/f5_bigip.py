@@ -3,13 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import all_of, contains
-
-DETECT = all_of(
-    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2"),
-    contains(".1.3.6.1.4.1.3375.2.1.4.1.0", "big-ip"),
-)
-
 
 def get_conn_rate_params(params):
     # upper_bound is dict, tuple or None

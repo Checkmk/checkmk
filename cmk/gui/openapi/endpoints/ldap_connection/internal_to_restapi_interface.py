@@ -228,7 +228,10 @@ class ConnectionConfig:
                 )
             else:
                 store: APIBindStore = config["bind_credentials"]
-                bind_credentials = (store["bind_dn"], ("store", store["password_store_id"]))
+                bind_credentials = (
+                    store["bind_dn"],
+                    ("store", store["password_store_id"]),
+                )
         else:
             bind_credentials = None
 
@@ -416,7 +419,7 @@ class Users:
                 if config["user_id_attribute"]["state"] == "enabled"
                 else None
             ),
-            lower_user_ids=True if config["user_id_case"] == "convert_to_lowercase" else None,
+            lower_user_ids=(True if config["user_id_case"] == "convert_to_lowercase" else None),
             create_only_on_login=True if config["create_users"] == "on_login" else None,
         )
 
@@ -440,7 +443,7 @@ class Users:
             "umlauts_in_user_ids": (
                 "keep_umlauts" if self.user_id_umlauts == "keep" else "replace_umlauts"
             ),
-            "create_users": "on_sync" if self.create_only_on_login is None else "on_login",
+            "create_users": ("on_sync" if self.create_only_on_login is None else "on_login"),
         }
         return r
 
@@ -733,7 +736,7 @@ def groups_to_attributes_internal_to_api(
                     {
                         "group_cn": group["cn"],
                         "attribute_to_set": "navigation_bar_icons",
-                        "value": "do_not_show_title" if nh[1] == "hide" else "show_title",
+                        "value": ("do_not_show_title" if nh[1] == "hide" else "show_title"),
                     }
                 )
 
@@ -794,7 +797,7 @@ def groups_to_attributes_internal_to_api(
                     {
                         "group_cn": group["cn"],
                         "attribute_to_set": "visibility_of_hosts_or_services",
-                        "value": "show_all" if fa[1] is None else "show_for_user_contacts_only",
+                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),
                     }
                 )
 
@@ -810,7 +813,9 @@ def groups_to_attributes_internal_to_api(
     return api_groups
 
 
-def sync_attribute_to_internal(api_field: SYNC_ATTRIBUTE | None) -> None | SyncAttribute:
+def sync_attribute_to_internal(
+    api_field: SYNC_ATTRIBUTE | None,
+) -> None | SyncAttribute:
     if api_field is None:
         return None
 
@@ -866,7 +871,10 @@ def groups_to_attributes_api_to_int(
                 timeranges: APICustomTimeRange = dn_value_api["custom_time_range"]
                 v_int["timerange"] = (timeranges["from_time"], timeranges["to_time"])
 
-            disable_notifications: DISABLE_NOTIFICATIONS = ("disable_notifications", v_int)
+            disable_notifications: DISABLE_NOTIFICATIONS = (
+                "disable_notifications",
+                v_int,
+            )
 
             groups_to_sync = {
                 "cn": group["group_cn"],
@@ -891,7 +899,7 @@ def groups_to_attributes_api_to_int(
                         "cn": navbaricons["group_cn"],
                         "attribute": (
                             "nav_hide_icons_title",
-                            "hide" if navbaricons["value"] == "do_not_show_title" else None,
+                            ("hide" if navbaricons["value"] == "do_not_show_title" else None),
                         ),
                     }
 
@@ -926,7 +934,11 @@ def groups_to_attributes_api_to_int(
                         "cn": starturl["group_cn"],
                         "attribute": (
                             "start_url",
-                            None if starturl["value"] == "default_start_url" else starturl["value"],
+                            (
+                                None
+                                if starturl["value"] == "default_start_url"
+                                else starturl["value"]
+                            ),
                         ),
                     }
 
@@ -936,7 +948,11 @@ def groups_to_attributes_api_to_int(
                         "cn": tempunit["group_cn"],
                         "attribute": (
                             "temperature_unit",
-                            None if tempunit["value"] == "default_temp_unit" else tempunit["value"],
+                            (
+                                None
+                                if tempunit["value"] == "default_temp_unit"
+                                else tempunit["value"]
+                            ),
                         ),
                     }
 
@@ -1116,7 +1132,7 @@ class SyncPlugins:
                 groups_to_roles[k] = [  # type: ignore[literal-required]
                     {
                         "group_dn": groupdn,
-                        "search_in": search_in if search_in is not None else "this_connection",
+                        "search_in": (search_in if search_in is not None else "this_connection"),
                     }
                     for groupdn, search_in in rolespec_collection
                 ]

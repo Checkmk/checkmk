@@ -236,7 +236,8 @@ class ClearFailedNotificationPage(Page):
             for row in failed_notifications:
                 table.row()
                 table.cell(
-                    _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
+                    _("Time"),
+                    cmk.utils.render.approx_age(time.time() - row[header["time"]]),
                 )
                 table.cell(_("Contact"), row[header["contact_name"]])
                 table.cell(_("Plug-in"), row[header["command_name"]])
@@ -245,12 +246,17 @@ class ClearFailedNotificationPage(Page):
                 table.cell(_("Output"), row[header["comment"]])
 
     def _page_menu(
-        self, acktime: float, failed_notifications: LivestatusResponse, breadcrumb: Breadcrumb
+        self,
+        acktime: float,
+        failed_notifications: LivestatusResponse,
+        breadcrumb: Breadcrumb,
     ) -> PageMenu:
         confirm_url = make_simple_link(
             make_confirm_delete_link(
                 url=makeactionuri(
-                    request, transactions, [("acktime", str(acktime)), ("_confirm", "1")]
+                    request,
+                    transactions,
+                    [("acktime", str(acktime)), ("_confirm", "1")],
                 ),
                 title=_("Acknowledge all failed notifications"),
                 message=("Up to: %s") % cmk.utils.render.date_and_time(acktime),

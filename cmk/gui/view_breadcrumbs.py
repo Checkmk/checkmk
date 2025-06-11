@@ -30,7 +30,11 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
             title=view_title(service_view_spec, context={}),
             url=makeuri_contextless(
                 request,
-                [("view_name", "service"), ("host", host_name), ("service", service_name)],
+                [
+                    ("view_name", "service"),
+                    ("host", host_name),
+                    ("service", service_name),
+                ],
                 filename="view.py",
             ),
         )

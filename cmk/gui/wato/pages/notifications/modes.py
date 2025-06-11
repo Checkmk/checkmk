@@ -72,11 +72,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.site_config import (
-    has_wato_slave_sites,
-    site_is_local,
-    wato_slave_sites,
-)
+from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
@@ -148,9 +144,7 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.notification_parameter import (
-    notification_parameter_registry,
-)
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     NotificationParameterConfigFile,
@@ -323,7 +317,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     ),
                     elements=[
                         FixedValue(
-                            value=False, title=_("Do not match Event Console alerts"), totext=""
+                            value=False,
+                            title=_("Do not match Event Console alerts"),
+                            totext="",
                         ),
                         Dictionary(
                             title=_("Match only Event Console alerts"),
@@ -437,7 +433,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
                     html.icon_button(
-                        links.clone, _("Create a copy of this notification rule"), "clone"
+                        links.clone,
+                        _("Create a copy of this notification rule"),
+                        "clone",
                     )
                     html.icon_button(links.delete, _("Delete this notification rule"), "delete")
                     html.element_dragger_url("tr", base_url=links.drag)
@@ -448,7 +446,10 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell("", css=["narrow"])
                 if rule.get("disabled"):
-                    html.icon("cross", _("This rule is currently disabled and will not be applied"))
+                    html.icon(
+                        "cross",
+                        _("This rule is currently disabled and will not be applied"),
+                    )
                 else:
                     html.empty_icon_button()
 
@@ -476,7 +477,8 @@ class ABCNotificationsMode(ABCEventsMode):
                 table.cell(_("Effect"), css=["narrow"])
                 if notify_method is None:
                     html.icon(
-                        "cancel_notifications", _("Cancel notifications for this plug-in type")
+                        "cancel_notifications",
+                        _("Cancel notifications for this plug-in type"),
                     )
                 else:
                     html.icon(
@@ -495,7 +497,10 @@ class ABCNotificationsMode(ABCEventsMode):
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
-                        url, _("Context information about this rule"), "url", target="_blank"
+                        url,
+                        _("Context information about this rule"),
+                        "url",
+                        target="_blank",
                     )
                     html.write_text_permissive("&nbsp;")
                 html.write_text_permissive(rule["description"])
@@ -719,7 +724,12 @@ class ModeNotifications(ABCNotificationsMode):
                                     icon_name="clipboard",
                                     item=make_simple_link(
                                         folder_preserving_link(
-                                            [("mode", ModeNotificationParametersOverview.name())]
+                                            [
+                                                (
+                                                    "mode",
+                                                    ModeNotificationParametersOverview.name(),
+                                                )
+                                            ]
                                         )
                                     ),
                                     is_shortcut=True,
@@ -833,13 +843,16 @@ class ModeNotifications(ABCNotificationsMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Show user rules"),
-                        icon_name="toggle_on" if self._show_user_rules else "toggle_off",
+                        icon_name=("toggle_on" if self._show_user_rules else "toggle_off"),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
                                 transactions,
                                 [
-                                    ("_show_user", "" if self._show_user_rules else "1"),
+                                    (
+                                        "_show_user",
+                                        "" if self._show_user_rules else "1",
+                                    ),
                                 ],
                             )
                         ),
@@ -895,7 +908,8 @@ class ModeNotifications(ABCNotificationsMode):
     def _get_date(self, context: NotificationContext) -> str:
         if "MICROTIME" in context:
             return time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(float(context["MICROTIME"]) / 1000000.0)
+                "%Y-%m-%d %H:%M:%S",
+                time.localtime(float(context["MICROTIME"]) / 1000000.0),
             )
         return (
             context.get("SHORTDATETIME")
@@ -1033,12 +1047,18 @@ def _get_vue_data() -> Notifications:
                 ),
                 setup_link=makeuri_contextless(
                     request,
-                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    [
+                        ("varname", "notification_fallback_email"),
+                        ("mode", "edit_configvar"),
+                    ],
                     filename="wato.py",
                 ),
                 do_not_show_again_link=makeuri_contextless(
                     request,
-                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    [
+                        ("varname", "notification_fallback_email"),
+                        ("mode", "edit_configvar"),
+                    ],
                     filename="wato.py",
                 ),
             )
@@ -1295,13 +1315,16 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     ),
                     PageMenuEntry(
                         title=_("Show user rules"),
-                        icon_name="toggle_on" if self._show_user_rules else "toggle_off",
+                        icon_name=("toggle_on" if self._show_user_rules else "toggle_off"),
                         item=make_simple_link(
                             makeactionuri(
                                 request,
                                 transactions,
                                 [
-                                    ("_show_user", "" if self._show_user_rules else "1"),
+                                    (
+                                        "_show_user",
+                                        "" if self._show_user_rules else "1",
+                                    ),
                                 ],
                             )
                         ),
@@ -1359,7 +1382,8 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 table.cell(_("Count"), str(len(uuids)), css=["number"])
                 if len(uuids) >= maxcount:
                     html.icon(
-                        "warning", _("Number of notifications exceeds maximum allowed number")
+                        "warning",
+                        _("Number of notifications exceeds maximum allowed number"),
                     )
         return True
 
@@ -1373,7 +1397,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
             return
 
         with table_element(
-            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
+            table_id="backlog",
+            title=_("Analysis: Recent notifications"),
+            sortable=False,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1393,7 +1419,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
                 replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
                 html.icon_button(
-                    replay_url, _("Replay this notification, send it again!"), "reload_cmk"
+                    replay_url,
+                    _("Replay this notification, send it again!"),
+                    "reload_cmk",
                 )
 
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
@@ -1812,7 +1840,9 @@ class ModeTestNotifications(ModeNotifications):
             return
 
         with table_element(
-            table_id="notification_test", title=_("Analysis: Test notifications"), sortable=False
+            table_id="notification_test",
+            title=_("Analysis: Test notifications"),
+            sortable=False,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -1846,9 +1876,12 @@ class ModeTestNotifications(ModeNotifications):
                 if context.get("SERVICESTATE"):
                     css = "state svcstate state"
                     last_state_name = context["PREVIOUSSERVICEHARDSTATE"]
-                    last_state = {"OK": "0", "WARNING": "1", "CRITICAL": "2", "UNKNOWN": "3"}[
-                        last_state_name
-                    ]
+                    last_state = {
+                        "OK": "0",
+                        "WARNING": "1",
+                        "CRITICAL": "2",
+                        "UNKNOWN": "3",
+                    }[last_state_name]
                     state = context["SERVICESTATEID"]
                     state_name = context["SERVICESTATE"]
                 else:
@@ -2342,7 +2375,8 @@ def _get_resulting_notifications_count(
 def _validate_general_opts(value: dict, varprefix: str) -> None:
     if not value["on_hostname_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_on_hostname_hint", _("Please provide a hostname to test with.")
+            f"{varprefix}_p_on_hostname_hint",
+            _("Please provide a hostname to test with."),
         )
 
     if request.has_var("_test_service_notifications") and not value["on_service_hint"]:
@@ -3027,7 +3061,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "contact_match_macros",
                 "contact_match_groups",
             ],
-            hidden_keys=["contact_emails"] if edition(paths.omd_root) == Edition.CSE else [],
+            hidden_keys=(["contact_emails"] if edition(paths.omd_root) == Edition.CSE else []),
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,
@@ -3129,9 +3163,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             text=self._log_text(self._edit_nr),
         )
         flash(
-            _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
-            if self._new
-            else _("Notification rule number #%d successfully edited!") % self._edit_nr,
+            (
+                _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
+                if self._new
+                else _("Notification rule number #%d successfully edited!") % self._edit_nr
+            ),
         )
 
         if back_mode := request.var("back_mode"):
@@ -3200,7 +3236,8 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
-                None, _("The user you are trying to edit notification rules for does not exist.")
+                None,
+                _("The user you are trying to edit notification rules for does not exist."),
             )
         user_spec = self._users[self._user_id()]
         return user_spec.setdefault("notification_rules", [])
@@ -3246,7 +3283,10 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def title(self) -> str:
         if self._new:
             return _("Add notification rule for user %s") % self._user_id()
-        return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+        return _("Edit notification rule %d of user %s") % (
+            self._edit_nr,
+            self._user_id(),
+        )
 
 
 class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
@@ -3396,14 +3436,16 @@ class ModeNotificationParametersOverview(WatoMode):
         all_parameters = NotificationParameterConfigFile().load_for_reading()
         filtered_parameters = list(self._get_parameter_rulesets(all_parameters))
         return NotificationParametersOverview(
-            parameters=[
-                RuleSection(
-                    i18n=_("Parameters for"),
-                    topics=[RuleTopic(i18n=None, rules=filtered_parameters)],
-                )
-            ]
-            if filtered_parameters
-            else [],
+            parameters=(
+                [
+                    RuleSection(
+                        i18n=_("Parameters for"),
+                        topics=[RuleTopic(i18n=None, rules=filtered_parameters)],
+                    )
+                ]
+                if filtered_parameters
+                else []
+            ),
             i18n={
                 "no_parameter_match": _(
                     "Found no matching parameters. Please try another search term."
@@ -3504,7 +3546,8 @@ class ABCNotificationParameterMode(WatoMode):
             ):
                 return recompose(notification_parameter_registry.parameter_called()).valuespec
             raise MKUserError(
-                None, _("No notification parameters for method '%s' found") % self._method()
+                None,
+                _("No notification parameters for method '%s' found") % self._method(),
             )
 
         if isinstance(plugin, NotificationParameters):
@@ -3513,7 +3556,10 @@ class ABCNotificationParameterMode(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Notification parameter"), breadcrumb, form_name="parameter", button_name="_save"
+            _("Notification parameter"),
+            breadcrumb,
+            form_name="parameter",
+            button_name="_save",
         )
 
     def action(self) -> ActionResult:
@@ -3575,7 +3621,9 @@ class ABCNotificationParameterMode(WatoMode):
     def _vue_field_id(self) -> str:
         return "_vue_edit_notification_parameter"
 
-    def _get_parameter_value_and_origin(self) -> tuple[NotificationParameterItem, DataOrigin]:
+    def _get_parameter_value_and_origin(
+        self,
+    ) -> tuple[NotificationParameterItem, DataOrigin]:
         if request.has_var(self._vue_field_id()):
             return (
                 json.loads(request.get_str_input_mandatory(self._vue_field_id())),
@@ -3724,7 +3772,9 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 links = self._parameter_links(parameter, parameter_id, nr)
                 html.icon_button(links.edit, _("Edit this notification parameter"), "edit")
                 html.icon_button(
-                    links.clone, _("Create a copy of this notification parameter"), "clone"
+                    links.clone,
+                    _("Create a copy of this notification parameter"),
+                    "clone",
                 )
                 html.element_dragger_url("tr", base_url=links.drag)
                 html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
@@ -3735,7 +3785,10 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 url = parameter.get("docu_url")
                 if url:
                     html.icon_button(
-                        url, _("Context information about this parameter"), "url", target="_blank"
+                        url,
+                        _("Context information about this parameter"),
+                        "url",
+                        target="_blank",
                     )
                     html.write_text_permissive("&nbsp;")
                 html.write_text_permissive(parameter["general"]["description"])
@@ -3845,7 +3898,10 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             if self._clone_id:
                 return _("Clone %s notification parameter") % self._method_name()
             return _("Add %s notification parameter") % self._method_name()
-        return _("Edit %s notification parameter #%s") % (self._method_name(), self._edit_nr)
+        return _("Edit %s notification parameter #%s") % (
+            self._method_name(),
+            self._edit_nr,
+        )
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:

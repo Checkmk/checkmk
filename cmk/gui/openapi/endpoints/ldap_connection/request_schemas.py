@@ -434,13 +434,19 @@ class LDAPUsersRequest(BaseSchema):
     search_filter = fields.Nested(
         LDAPUserSearchFilterRequestSelector,
         description="Enable and define an optional LDAP filter.",
-        example={"state": "enabled", "filter": "(&(objectclass=user)(objectcategory=person))"},
+        example={
+            "state": "enabled",
+            "filter": "(&(objectclass=user)(objectcategory=person))",
+        },
         load_default={"state": "disabled"},
     )
     filter_group = fields.Nested(
         LDAPUserGroupFilterRequestSelector,
         description="Enable and define the DN of a group object which is used to filter the users.",
-        example={"state": "enabled", "filter": "CN=cmk-users,OU=groups,DC=example,DC=com"},
+        example={
+            "state": "enabled",
+            "filter": "CN=cmk-users,OU=groups,DC=example,DC=com",
+        },
         load_default={"state": "disabled"},
     )
     user_id_attribute = fields.Nested(
@@ -962,7 +968,10 @@ class LDAPConnectionConfigRequest(BaseSchema):
                 "filter": "(&(objectclass=user)(objectcategory=person))",
             },
             "filter_group": {"state": "enabled", "filter": "filtergroupexample"},
-            "user_id_attribute": {"state": "enabled", "attribute": "userattributeexample"},
+            "user_id_attribute": {
+                "state": "enabled",
+                "attribute": "userattributeexample",
+            },
             "user_id_case": "convert_to_lowercase",
             "umlauts_in_user_ids": "keep_umlauts",
             "create_users": "on_login",

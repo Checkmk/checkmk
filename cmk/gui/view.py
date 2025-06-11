@@ -136,7 +136,8 @@ class View:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         registered_sorters = all_sorters(active_config)
         return self._get_sorter_entries(
-            self.user_sorters if self.user_sorters else self.spec["sorters"], registered_sorters
+            self.user_sorters if self.user_sorters else self.spec["sorters"],
+            registered_sorters,
         )
 
     def _compute_sort_url_parameter(
@@ -160,7 +161,9 @@ class View:
         )
 
     def _get_sorter_entries(
-        self, sorter_list: Iterable[SorterSpec], registered_sorters: Mapping[str, Sorter]
+        self,
+        sorter_list: Iterable[SorterSpec],
+        registered_sorters: Mapping[str, Sorter],
     ) -> list[SorterEntry]:
         sorters: list[SorterEntry] = []
         for entry in sorter_list:
@@ -176,7 +179,7 @@ class View:
                     sorter=sorter,
                     negate=entry.negate,
                     join_key=entry.join_key,
-                    parameters=sorter_spec[1] if isinstance(sorter_spec, tuple) else None,
+                    parameters=(sorter_spec[1] if isinstance(sorter_spec, tuple) else None),
                 )
             )
         return sorters

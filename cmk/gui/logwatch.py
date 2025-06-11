@@ -303,7 +303,10 @@ def show_file(site, host_name, file_name):
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(host_name, title)
     make_header(
-        html, title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename)
+        html,
+        title,
+        breadcrumb,
+        _show_file_page_menu(breadcrumb, site, host_name, int_filename),
     )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
@@ -312,7 +315,10 @@ def show_file(site, host_name, file_name):
 
     try:
         log_chunks = parse_file(
-            site, host_name, int_filename, hidecontext=request.var("_hidecontext", "no") == "yes"
+            site,
+            host_name,
+            int_filename,
+            hidecontext=request.var("_hidecontext", "no") == "yes",
         )
     except Exception as e:
         if active_config.debug:
@@ -398,7 +404,10 @@ def _show_file_page_menu(
                                 title=_("All log files"),
                                 icon_name="logwatch",
                                 item=make_simple_link(
-                                    makeuri(request, [("site", ""), ("host", ""), ("file", "")])
+                                    makeuri(
+                                        request,
+                                        [("site", ""), ("host", ""), ("file", "")],
+                                    )
                                 ),
                             ),
                         ],
@@ -567,7 +576,8 @@ def do_log_ack(site, host_name, file_name):
 
     html.show_message(
         "<b>{}</b><p>{}</p>".format(
-            _("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg
+            _("Acknowledged %s") % ack_msg,
+            _("Acknowledged all messages in %s.") % ack_msg,
         )
     )
     html.footer()
@@ -816,7 +826,10 @@ def logfiles_of_host(site, host_name):
                 "does not support fetching logfile information. Please upgrade "
                 "to a newer version."
             )
-            % (site, sites.states().get(site, sites.SiteStatus({})).get("program_version", "???"))
+            % (
+                site,
+                sites.states().get(site, sites.SiteStatus({})).get("program_version", "???"),
+            )
         )
     return file_names
 

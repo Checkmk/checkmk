@@ -122,7 +122,9 @@ class ConcreteUserContactOption(BaseSchema):
 
 class AuthOptionOutput(BaseSchema):
     auth_type = fields.String(
-        required=False, example="password", enum=["password", "automation", "saml2", "ldap"]
+        required=False,
+        example="password",
+        enum=["password", "automation", "saml2", "ldap"],
     )
     store_automation_secret = fields.Boolean(
         required=False,
@@ -204,7 +206,8 @@ class CustomUserAttributes(ValueTypedDictSchema):
     class ValueTypedDict:
         value_type = ValueTypedDictSchema.wrap_field(
             base.String(
-                description="Each tag is a mapping of string to string", validate=ensure_string
+                description="Each tag is a mapping of string to string",
+                validate=ensure_string,
             )
         )
 

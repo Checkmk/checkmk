@@ -31,7 +31,11 @@ def dashboard_breadcrumb(
 
 
 def kubernetes_dashboard_breadcrumb(
-    name: str, board: DashboardConfig, title: str, breadcrumb: Breadcrumb, context: VisualContext
+    name: str,
+    board: DashboardConfig,
+    title: str,
+    breadcrumb: Breadcrumb,
+    context: VisualContext,
 ) -> Breadcrumb:
     """Realize the Kubernetes hierarchy breadcrumb
 
@@ -131,7 +135,8 @@ def kubernetes_dashboard_breadcrumb(
                 BreadcrumbItem(
                     title,
                     makeuri_contextless(
-                        request, [("name", k8s_ids[obj_type]), ("host", host_name), *add_vars]
+                        request,
+                        [("name", k8s_ids[obj_type]), ("host", host_name), *add_vars],
                     ),
                 )
             )

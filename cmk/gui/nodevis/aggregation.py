@@ -203,7 +203,10 @@ class NodeVisualizationBIDataMapper:
             rule_name_idx = self._get_sibling_index("rule_name", parent_id + rule_name)
             own_id = f"#{rule_name}#{rule_name_idx}"
             aggr_path_id.append(
-                [rule_id["rule"], self._get_sibling_index("rule_id", parent_id + rule_id["rule"])]
+                [
+                    rule_id["rule"],
+                    self._get_sibling_index("rule_id", parent_id + rule_id["rule"]),
+                ]
             )
             aggr_path_name.append([rule_name, rule_name_idx])
         else:

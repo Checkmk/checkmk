@@ -260,12 +260,18 @@ class LDAPUsers(BaseSchema):
     search_filter = fields.Nested(
         LDAPUserSearchFilter,
         description="Enable and define an optional LDAP filter.",
-        example={"state": "enabled", "filter": "(&(objectclass=user)(objectcategory=person))"},
+        example={
+            "state": "enabled",
+            "filter": "(&(objectclass=user)(objectcategory=person))",
+        },
     )
     filter_group = fields.Nested(
         LDAPUserGroupFilter,
         description="Enable and define the DN of a group object which is used to filter the users.",
-        example={"state": "enabled", "filter": "CN=cmk-users,OU=groups,DC=example,DC=com"},
+        example={
+            "state": "enabled",
+            "filter": "CN=cmk-users,OU=groups,DC=example,DC=com",
+        },
     )
     user_id_attribute = fields.Nested(
         LDAPUserIDAttribute,
@@ -451,7 +457,10 @@ class LDAPDisableNotificationsValue(BaseSchema):
     custom_time_range = fields.Nested(
         LDAPFromToFields,
         description="Here you can specify a time range where no notifications are generated.",
-        example={"from_time": "2024-02-29T17:32:28+00:00", "to_time": "2024-02-29T12:53:34+00:00"},
+        example={
+            "from_time": "2024-02-29T17:32:28+00:00",
+            "to_time": "2024-02-29T12:53:34+00:00",
+        },
     )
 
 

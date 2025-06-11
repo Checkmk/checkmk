@@ -65,9 +65,7 @@ from cmk.gui.visuals import default_site_filter_heading_info
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.gui.wato import (
-    default_user_menu_topics,
-)
+from cmk.gui.wato import default_user_menu_topics
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.wato.pages import ldap, roles
 from cmk.gui.watolib import network_scan
@@ -107,11 +105,7 @@ from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.sites import site_management_registry, SiteManagement
 from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
-from cmk.gui.watolib.users import (
-    default_sites,
-    user_features_registry,
-    UserFeatures,
-)
+from cmk.gui.watolib.users import default_sites, user_features_registry, UserFeatures
 
 
 def register_pages() -> None:

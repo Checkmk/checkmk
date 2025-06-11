@@ -390,7 +390,9 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too-many-branches
+def _process_message(
+    msg_from_vs: MessageFromVS,
+) -> None:  # pylint: disable=too-many-branches
     msg = Message(
         text=MessageText(content_type="text", content=msg_from_vs["text"]),
         dest=msg_from_vs["dest"],

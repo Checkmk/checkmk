@@ -130,7 +130,7 @@ class AuthError(RuntimeError):
 
 
 class HPMSAConnection:
-    def __init__(self, hostaddress: str, opt_timeout: int) -> None:
+    def __init__(self, *, hostaddress: str, opt_timeout: int) -> None:
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
@@ -141,7 +141,7 @@ class HPMSAConnection:
         self._verify_ssl = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def login(self, username: str, password: str) -> None:
+    def login(self, *, username: str, password: str) -> None:
         try:
             session_key = self._get_session_key(hashlib.sha256, username, password)
         except (requests.exceptions.ConnectionError, AuthError):
@@ -155,7 +155,7 @@ class HPMSAConnection:
         login_hash = hash_class()
         login_hash.update(f"{username}_{password}".encode())
         login_uri = "login/%s" % login_hash.hexdigest()
-        response = self.get(login_uri)
+        response = self.get(uri=login_uri)
         xml_tree = ET.fromstring(response.text)
         response_element = xml_tree.find("./OBJECT/PROPERTY[@name='response']")
         if response_element is None:
@@ -170,7 +170,7 @@ class HPMSAConnection:
             )
         return session_key
 
-    def get(self, uri: str) -> requests.Response:
+    def get(self, *, uri: str) -> requests.Response:
         url = urljoin(self._base_url, uri)
         LOGGER.info("GET %r", url)
         # we must provide the verify keyword to every individual request call!
@@ -188,12 +188,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
-    connection = HPMSAConnection(args.hostaddress, opt_timeout)
-    connection.login(args.username, args.password)
+    connection = HPMSAConnection(hostaddress=args.hostaddress, opt_timeout=opt_timeout)
+    connection.login(username=args.username, password=args.password)
     parser = HTMLObjectParser()
 
     for element in api_get_objects:
-        response = connection.get("show/%s" % element)
+        response = connection.get(uri="show/%s" % element)
         try:
             parser.feed(response.text)
         except Exception:

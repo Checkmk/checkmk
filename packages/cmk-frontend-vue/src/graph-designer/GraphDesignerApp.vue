@@ -291,9 +291,16 @@ const dataScalar = ref<Metric>({
   metricName: null
 })
 
-let id = 0
 const graphLines: Ref<GraphLines> = ref(props.graph_lines)
 const selectedGraphLines: Ref<GraphLines> = ref([])
+
+function nextIndex(): number {
+  if (graphLines.value.length === 0) {
+    return 0
+  } else {
+    return Math.max(...graphLines.value.map((v) => v['id'])) + 1
+  }
+}
 
 function isDissolvable(graphLine: GraphLine) {
   switch (graphLine.type) {
@@ -346,7 +353,7 @@ function generateOperation(graphLine: Operation): Operation {
     operands.push(generateGraphLine(operand))
   }
   return {
-    id: id++,
+    id: nextIndex(),
     type: graphLine.type,
     color: graphLine.color,
     auto_title: graphLine.auto_title,
@@ -362,7 +369,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
   switch (graphLine.type) {
     case 'metric':
       return {
-        id: id++,
+        id: nextIndex(),
         type: graphLine.type,
         color: graphLine.color,
         auto_title: graphLine.auto_title,
@@ -377,7 +384,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
       }
     case 'scalar':
       return {
-        id: id++,
+        id: nextIndex(),
         type: graphLine.type,
         color: graphLine.color,
         auto_title: graphLine.auto_title,
@@ -392,7 +399,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
       }
     case 'constant':
       return {
-        id: id++,
+        id: nextIndex(),
         type: graphLine.type,
         color: graphLine.color,
         auto_title: graphLine.auto_title,
@@ -412,7 +419,7 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
       return generateOperation(graphLine)
     case 'transformation':
       return {
-        id: id++,
+        id: nextIndex(),
         type: graphLine.type,
         color: graphLine.color,
         auto_title: graphLine.auto_title,
@@ -479,7 +486,7 @@ async function addMetric() {
       dataConsolidationType.value
     )
     graphLines.value.push({
-      id: id++,
+      id: nextIndex(),
       type: 'metric',
       color: color,
       auto_title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
@@ -511,7 +518,7 @@ async function addScalar() {
   ) {
     const color: string = await fetchMetricColor(dataScalar.value.metricName, dataScalarType.value)
     graphLines.value.push({
-      id: id++,
+      id: nextIndex(),
       type: 'scalar',
       color: color,
       auto_title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
@@ -534,7 +541,7 @@ async function addScalar() {
 
 function addConstant() {
   graphLines.value.push({
-    id: id++,
+    id: nextIndex(),
     type: 'constant',
     color: '#ff0000',
     auto_title: `${props.i18n.constant} ${dataConstant.value}`,
@@ -572,7 +579,7 @@ function applySum() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'sum',
       color: firstOperand.color,
       auto_title: `${props.i18n.sum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -589,7 +596,7 @@ function applyProduct() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'product',
       color: firstOperand.color,
       auto_title: `${props.i18n.product} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -606,7 +613,7 @@ function applyDifference() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'difference',
       color: firstOperand.color,
       auto_title: `${props.i18n.difference} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -623,7 +630,7 @@ function applyFraction() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'fraction',
       color: firstOperand.color,
       auto_title: `${props.i18n.fraction} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -640,7 +647,7 @@ function applyAverage() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'average',
       color: firstOperand.color,
       auto_title: `${props.i18n.average} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -657,7 +664,7 @@ function applyMinimum() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'minimum',
       color: firstOperand.color,
       auto_title: `${props.i18n.minimum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -674,7 +681,7 @@ function applyMaximum() {
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'maximum',
       color: firstOperand.color,
       auto_title: `${props.i18n.maximum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
@@ -691,7 +698,7 @@ function applyTransformation() {
   const selectedGraphLine = selectedGraphLines.value[0]
   if (selectedGraphLine) {
     addGraphLineWithSelection({
-      id: id++,
+      id: nextIndex(),
       type: 'transformation',
       color: '#ff0000',
       auto_title: `${props.i18n.percentile} ${dataTransformation.value} ${props.i18n.of} ${selectedGraphLine.auto_title}`,

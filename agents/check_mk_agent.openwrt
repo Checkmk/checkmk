@@ -1089,12 +1089,13 @@ _run_cached_internal() {
     # threshold in seconds for how long the process is allowed to be running before it is killed (see below for details)
 
     shift 5
-    # $* is now the command to run
 
     if ${DISABLE_CACHING:-false}; then
-        # We need the re-splitting to be compatible with the caching case, so:
-        # shellcheck disable=SC2068,SC2294
-        eval $@
+        # We need to be compatible with the caching case. This section mirrors the implementation
+        # below.
+        cat <<HERE | "${CURRENT_SHELL}"
+            $*
+HERE
         return
     fi
 

@@ -68,6 +68,20 @@ test_run_cached_plugin() {
 
 }
 
+test_run_cached_plugin_no_cache() {
+
+    set_up_current_shell
+    OUTPUT="$(CURRENT_SHELL="${CURRENT_SHELL}" DISABLE_CACHING="true" _run_cached_internal "plugins_my_plugin" 170 180 540 360 "echo '<<<plugins_my_section>>>'; echo 'testoutput'")"
+
+    expected() {
+        echo "<<<plugins_my_section>>>"
+        echo "testoutput"
+    }
+
+    assertEquals "$(expected)" "$OUTPUT"
+
+}
+
 test_run_cached_local() {
 
     MTIME="$(stat -c %X "$LOCA_CACHE")"

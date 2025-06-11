@@ -15,6 +15,7 @@ import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+import { graphRenderer } from '@/graph-designer/graph'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import AgentConnectionTestApp from '@/mode-host/AgentConnectionTestApp.vue'
 
@@ -87,9 +88,11 @@ function setupVue() {
         }
         case 'graph_designer': {
           app = createApp(GraphDesignerApp, {
+            graph_id: appData.graph_id,
             graph_lines: appData.graph_lines,
             graph_options: appData.graph_options,
-            i18n: appData.i18n
+            i18n: appData.i18n,
+            graph_renderer: graphRenderer
           })
           break
         }

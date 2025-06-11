@@ -262,6 +262,32 @@ function get_id_of_graph(ajax_context: AjaxContext) {
     return "graph_" + g_current_graph_id++;
 }
 
+export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: HTMLDivElement) {
+    // Detect whether or not a new graph_id has to be calculated. During the view
+    // data reload create_graph() is called again for all already existing graphs.
+    // In this situation the graph_id needs to be detected and reused instead of
+    // calculating a new one. Otherwise e.g. g_graphs will grow continously.
+    const ajax_context = ajax_graph["context"];
+    const graph_id = get_id_of_graph(ajax_context);
+
+    container.setAttribute("id", graph_id);
+    container.className = "graph_container";
+    container.innerHTML = ajax_graph["html"];
+
+    const embedded_script = document.createElement("script");
+    container.parentNode.appendChild(embedded_script);
+
+    // Now register and paint the graph
+    ajax_context["graph_id"] = graph_id;
+    //TODO: perhaps reformat this so we have two GraphArtwork interfaces
+    // before and after these assignments
+    g_graphs[graph_id] = ajax_graph["graph"];
+    g_graphs[graph_id]["ajax_context"] = ajax_context;
+    g_graphs[graph_id]["render_config"] = ajax_graph["context"]["render_config"];
+    g_graphs[graph_id]["id"] = graph_id;
+    render_graph(g_graphs[graph_id]);
+}
+
 export function create_graph(
     html_code: string,
     graph_artwork: GraphArtwork,

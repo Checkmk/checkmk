@@ -3,11 +3,12 @@
     "type": "object",
     "title": "graph_designer_content",
     "properties": {
+        "graph_id": { "type": "string" },
         "graph_lines": { "$ref": "#/$defs/graph_lines" },
         "graph_options": { "$ref": "#/$defs/graph_options" },
         "i18n": { "$ref": "#/$defs/i18n" }
     },
-    "required": ["graph_lines", "graph_options", "i18n"],
+    "required": ["graph_id", "graph_lines", "graph_options", "i18n"],
     "$defs": {
         "graph_line_id": { "type": "integer" },
         "graph_line_color": { "type": "string" },

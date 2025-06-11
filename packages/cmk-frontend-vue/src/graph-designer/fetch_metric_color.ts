@@ -7,13 +7,13 @@
 import { cmkFetch } from '@/lib/cmkFetch'
 import { CmkError } from '@/lib/error'
 
-interface MaybeApiError {
+export interface MaybeApiError {
   result?: string
   result_code?: number
   severity?: 'error'
 }
 
-class AjaxResponseError extends CmkError {
+export class AjaxResponseError extends CmkError {
   response: MaybeApiError
 
   constructor(message: string, response: MaybeApiError) {

@@ -23,7 +23,7 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { computed, ref, type Ref } from 'vue'
+import { computed, onMounted, ref, type Ref, watch } from 'vue'
 import {
   convertFromExplicitVerticalRange,
   convertFromUnit,
@@ -42,11 +42,14 @@ import { type SpecLineType, type Topic } from '@/graph-designer/type_defs'
 import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'
 import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
+import { type GraphRenderer } from '@/graph-designer/graph'
 
 const props = defineProps<{
+  graph_id: string
   graph_lines: GraphLines
   graph_options: GraphOptions
   i18n: I18N
+  graph_renderer: GraphRenderer
 }>()
 
 // Specs
@@ -730,6 +733,47 @@ function dragElement(event: DragEvent) {
   graphLines.value.splice(dragReturn.targetIndex, 0, movedEntry)
 }
 
+// Graph update
+
+const graphContainerRef = ref()
+
+onMounted(() => {
+  props.graph_renderer(
+    props.graph_id,
+    graphLines.value,
+    {
+      unit: convertFromUnit(dataUnit.value),
+      explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
+      omit_zero_metrics: dataOmitZeroMetrics.value
+    },
+    graphContainerRef.value
+  )
+})
+
+watch(
+  () => [
+    graphLines.value,
+    dataUnit.value,
+    dataExplicitVerticalRange.value,
+    dataOmitZeroMetrics.value
+  ],
+  () => {
+    props.graph_renderer(
+      props.graph_id,
+      graphLines.value,
+      {
+        unit: convertFromUnit(dataUnit.value),
+        explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
+        omit_zero_metrics: dataOmitZeroMetrics.value
+      },
+      graphContainerRef.value
+    )
+  },
+  { deep: true }
+)
+
+// Form
+
 const graphDesignerContentAsJson = computed(() => {
   return JSON.stringify({
     graph_lines: graphLines.value,
@@ -743,6 +787,8 @@ const graphDesignerContentAsJson = computed(() => {
 </script>
 
 <template>
+  <div ref="graphContainerRef"></div>
+
   <table ref="tableRef" class="data oddeven graph_designer_metrics">
     <tbody>
       <tr>

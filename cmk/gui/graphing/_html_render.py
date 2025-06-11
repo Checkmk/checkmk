@@ -564,7 +564,7 @@ class AjaxGraph(cmk.gui.pages.Page):
         try:
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
-            response_data = _render_ajax_graph(context, metrics_from_api)
+            response_data = render_ajax_graph(context, metrics_from_api)
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -574,7 +574,7 @@ class AjaxGraph(cmk.gui.pages.Page):
         return None
 
 
-def _render_ajax_graph(
+def render_ajax_graph(
     context: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> JsonSerializable:

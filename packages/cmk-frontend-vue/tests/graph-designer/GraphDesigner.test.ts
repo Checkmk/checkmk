@@ -3,12 +3,24 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+
 import { render } from '@testing-library/vue'
+import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+
+function fakeGraphRenderer(
+  graph_id: string,
+  graph_lines: GraphLines,
+  graph_options: GraphOptions,
+  container: HTMLDivElement
+) {
+  return
+}
 
 test('Render GraphDesignerApp', () => {
   render(GraphDesignerApp, {
     props: {
+      graph_id: 'graph id',
       graph_lines: [],
       graph_options: {
         unit: 'first_entry_with_unit',
@@ -79,7 +91,8 @@ test('Render GraphDesignerApp', () => {
         unit_first_entry_with_unit: 'unit_first_entry_with_unit',
         visible: 'visible',
         warning: 'warning'
-      }
+      },
+      graph_renderer: fakeGraphRenderer
     }
   })
 })

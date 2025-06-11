@@ -889,7 +889,7 @@ class CheckboxMatchHostTags:
                         values_host_tags[grouptagid] = tag_condition_nor
 
                 elif "tag_id" in value:
-                    is_or_is_not = cast(TagGroupIsOrIsNot, value)
+                    is_or_is_not = value
                     if value["operator"] == "is_not":
                         tag_condition_ne: TagConditionNE = {"$ne": is_or_is_not["tag_id"]}
                         values_host_tags[grouptagid] = tag_condition_ne

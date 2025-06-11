@@ -967,16 +967,7 @@ def matches_tag_condition(
 
         if "$nor" in tag_condition:
             return not hosttags.intersection(
-                {
-                    (
-                        taggroup_id,
-                        opt_tag_id,
-                    )
-                    for opt_tag_id in cast(
-                        TagConditionNOR,
-                        tag_condition,
-                    )["$nor"]
-                }
+                {(taggroup_id, opt_tag_id) for opt_tag_id in tag_condition["$nor"]}
             )
 
         raise NotImplementedError()

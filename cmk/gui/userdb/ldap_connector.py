@@ -1216,7 +1216,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 continue
 
             if user_id:
-                result[user_id] = cast(LDAPUserSpec, ldap_user)
+                result[user_id] = ldap_user
                 result[user_id]["dn"] = [dn]  # also add the DN
 
         return result

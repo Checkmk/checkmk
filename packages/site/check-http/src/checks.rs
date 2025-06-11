@@ -9,7 +9,10 @@ use reqwest::{
     tls::TlsInfo,
     Method, StatusCode, Url, Version,
 };
-use std::time::{Duration, SystemTime};
+use std::{
+    error::Error,
+    time::{Duration, SystemTime},
+};
 use x509_parser::{certificate::X509Certificate, prelude::FromDer};
 
 use crate::checking_types::{
@@ -153,6 +156,17 @@ fn check_reqwest_error(
     err: reqwest::Error,
     request_information: RequestInformation,
 ) -> Vec<CheckResult> {
+    let mut source = err.source();
+    let mut causes = Vec::new();
+    while let Some(s) = source {
+        causes.push(s.to_string());
+        source = s.source();
+    }
+    let cause = match causes.is_empty() {
+        true => String::new(),
+        false => causes.join(": "),
+    };
+
     if err.is_timeout() {
         notice(
             State::Crit,
@@ -166,11 +180,17 @@ fn check_reqwest_error(
         // Hit one of max_redirs, sticky, stickyport
         | err.is_redirect()
     {
-        notice(State::Crit, &err.to_string().replace('\n', " - "))
+        notice(
+            State::Crit,
+            &(err.to_string() + ": " + &cause).replace('\n', " - "),
+        )
     } else {
         // The errors coming from reqwest are usually short and don't contain
         // newlines, but we want to be safe.
-        notice(State::Unknown, &err.to_string().replace('\n', " - "))
+        notice(
+            State::Unknown,
+            &(err.to_string() + ": " + &cause).replace('\n', " - "),
+        )
     }
     .into_iter()
     .flatten()

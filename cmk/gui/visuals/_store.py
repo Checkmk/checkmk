@@ -379,14 +379,20 @@ def local_file_exists(visual_type: VisualTypeName, visual_name: str) -> bool:
 
 
 def _get_local_path(visual_type: VisualTypeName) -> Path:
-    if visual_type == "dashboards":
-        return cmk.utils.paths.local_dashboards_dir
-    if visual_type == "views":
-        return cmk.utils.paths.local_views_dir
-    if visual_type == "reports":
-        return cmk.utils.paths.local_reports_dir
+    match visual_type:
+        case "dashboards":
+            local_path = cmk.utils.paths.local_dashboards_dir
+        case "views":
+            local_path = cmk.utils.paths.local_views_dir
+        case "reports":
+            local_path = cmk.utils.paths.local_reports_dir
+        case _:
+            raise MKUserError(None, _("This package type is not supported."))
 
-    raise MKUserError(None, _("This package type is not supported."))
+    # The directory can be removed during deinstallation of MKPs (SUP-23400).
+    # To avoid a crash in the GUI we ensure that the directory exists (CMK-23624).
+    local_path.mkdir(parents=True, exist_ok=True)
+    return local_path
 
 
 def _get_dynamic_visual_default_permissions() -> Sequence[RoleName]:

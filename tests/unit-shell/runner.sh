@@ -11,7 +11,7 @@ export UNIT_SH_PLUGINS_DIR="$UNIT_SH_AGENTS_DIR/plugins"
 
 run_file() {
     bname="${1##.*tests/unit-shell/}"
-    printf "%s" "${bname}"
+    printf "%s\n" "${bname}"
     if ! OUTPUT=$("${1}"); then
         _failed_tests="$_failed_tests ${bname}"
         printf "\n%s\n" "${OUTPUT}"

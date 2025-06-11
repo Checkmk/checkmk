@@ -38,6 +38,7 @@ function getIconName(status: DNSStatus): string {
 </template>
 
 <style scoped>
+/* TODO: Can be removed when CMK-23811 is fixed */
 .cmk-icon {
   display: inline-block;
 }

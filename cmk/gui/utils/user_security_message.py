@@ -15,6 +15,7 @@ from cmk.ccc.user import UserId
 from cmk.utils.mail import (
     Attachment,
     default_from_address,
+    get_template_html,
     MailString,
     multipart_mail,
     send_mail_sendmail,
@@ -38,106 +39,7 @@ from cmk.gui.message import Message, message_gui, MessageText
 
 
 def _security_msg_template_html(macro_func: Callable) -> Template:
-    return Template(macro_func() + _get_template_html())
-
-
-def _get_template_html() -> str:
-    return """
-<!DOCTYPE html>
-<html style="background-color: #EAEAEA;">
-    <head>
-        <title>HTML Email template</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-         <table width="100%" style=" border-collapse: collapse; ">
-             <tr>
-                 <td align="center" style="padding: 20px;">
-                     <table width="100%"
-                            align="center"
-                            style="max-width: 600px;
-                                   min-width: 220px;
-                                   border: 1px solid #ccc;
-                                   border-collapse: collapse;
-                                   background-color: #ffffff">
-                         <tr>
-                             <td style="height: 10px;
-                                        line-height: 10px;
-                                        font-size: 0;
-                                        mso-line-height-rule: exactly">&nbsp;</td>
-                         </tr>
-                         <tr>
-                             <td align="center" style="padding: 8px;">
-                                 <table align="center" style=" border-collapse: collapse; width: 100%; min-width: 220px;
-                                     max-width: 536px"">
-                                     <tr>
-                                         <td>
-                                             <img src="cid:checkmk_logo.png"
-                                                  alt="Checkmk Logo"
-                                                  style="display: block;
-                                                         width: 110px;
-                                                         height: 30px;
-                                                         border: 0" />
-                                         </td>
-                                     </tr>
-                                 </table>
-                                 <table align="center"
-                                        width="100%"
-                                        style="min-width: 220px;
-                                               max-width: 536px">
-                                     <tr>
-                                         <td style="padding: 5px 0 20px 0;">
-                                             <table width="100%">
-                                                 <tr>
-                                                     <td style="border-bottom: 1px solid #e5e5e5;
-                                                                height: 1px;
-                                                                line-height: 1px;
-                                                                mso-line-height-rule: exactly">
-                                                         <!--[if mso]>
-                                                             <div style=" border-bottom: 1px solid #e5e5e5; width: 536px; height: 1px; line-height: 1px; mso-line-height-rule: exactly; ">
-                                                                 &nbsp;
-                                                             </div>
-                                                         <![endif]-->
-                                                         <span style="display: block; width: 100%; height: 1px; line-height: 1px">&nbsp;</span>
-                                                     </td>
-                                                 </tr>
-                                             </table>
-                                         </td>
-                                     </tr>
-                                    <tr>
-                                        <td>
-                                        {{ msg(event_time) }}
-                                        </td>
-                                    </tr>
-                                 </table>
-                                 <tr>
-                                     <td style="height: 10px;
-                                                line-height: 10px;
-                                                font-size: 0;
-                                                mso-line-height-rule: exactly">&nbsp;</td>
-                                 </tr>
-                                 <tr>
-                                     <td style="height: 10px;
-                                                line-height: 10px;
-                                                font-size: 0;
-                                                mso-line-height-rule: exactly">&nbsp;</td>
-                                 </tr>
-                             </table>
-                         </td>
-                     </tr>
-                 </table>
-                 <table align="center" style="margin: 0 auto;">
-                     <tr>
-                         <td>
-                             <p style="text-align: center; margin: 0; color: #23496d">
-                               Sent by Checkmk
-                             </p>
-                         </td>
-                     </tr>
-                 </table>
-    </body>
-</html>
-"""
+    return Template(macro_func() + get_template_html())
 
 
 def _security_msg_template_txt() -> Template:
@@ -165,7 +67,7 @@ If you are not the initiator of this event, please contact your administrator.
 
 def _password_change_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     Your <b>password has been successfully changed</b> at {{event_time}}
     <br><br>
     We are sending this notice to ensure the privacy and security of your
@@ -179,7 +81,7 @@ def _password_change_macro() -> str:
 
 def _webauthn_added_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     A new <b>two-factor authentication method has been successfully added</b>
     to your account:
     <br><br>
@@ -199,7 +101,7 @@ def _webauthn_added_macro() -> str:
 
 def _webauthn_removed_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     A <b>two-factor authentication method has been removed</b> from your account:
     <br><br>
     <b>Method</b>: webauthn security token
@@ -221,7 +123,7 @@ def _webauthn_removed_macro() -> str:
 # TODO still waiting for CMK-22437
 def _totp_added_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     A new <b>two-factor authentication method has been successfully added</b>
     to your account:
     <br><br>
@@ -241,7 +143,7 @@ def _totp_added_macro() -> str:
 
 def _totp_removed_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     A <b>two-factor authentication method has been removed</b> from your account:
     <br><br>
     <b>Method</b>: authenticator app
@@ -262,7 +164,7 @@ def _totp_removed_macro() -> str:
 
 def _backup_used_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     A <b>backup code has been used to log in to your account</b> at {{ event_time }}
     <br><br>
     We are sending this notice to ensure the privacy and security of your
@@ -277,7 +179,7 @@ def _backup_used_macro() -> str:
 
 def _backup_reset_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     Your <b>backup codes have been successfully regenerated</b> at {{ event_time }}
     <br><br>
     We are sending this notice to ensure the privacy and security of your
@@ -292,7 +194,7 @@ def _backup_reset_macro() -> str:
 
 def _backup_revoked_macro() -> str:
     return """
-{% macro msg(event_time) %}
+{% macro msg(content) %}
     All <b>backup codes associated with your account have been revoked</b> at
     {{ event_time }}. These codes can no longer be used for login.
     <br><br>

@@ -13,24 +13,24 @@ from typing import override
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicSegment
+from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 
 
-def any_show_more_items(topics: list[TopicMenuTopic]) -> bool:
+def any_show_more_items(topics: list[MainMenuTopic]) -> bool:
     return any(item.is_show_more for topic in topics for item in topic.entries)
 
 
 def get_main_menu_items_prefixed_by_segment(
-    entry_holder: TopicMenuTopic | TopicMenuTopicSegment,
+    entry_holder: MainMenuTopic | MainMenuTopicSegment,
     prefix: str | None = None,
-) -> list[TopicMenuItem]:
-    collected_items: list[TopicMenuItem] = []
+) -> list[MainMenuItem]:
+    collected_items: list[MainMenuItem] = []
     for entry in entry_holder.entries:
-        if isinstance(entry, TopicMenuTopicSegment):
+        if isinstance(entry, MainMenuTopicSegment):
             collected_items.extend(
                 get_main_menu_items_prefixed_by_segment(entry, prefix=entry.title)
             )
-        elif isinstance(entry, TopicMenuItem):
+        elif isinstance(entry, MainMenuItem):
             if prefix is not None:
                 entry = copy.deepcopy(entry)
                 entry.title = f"{prefix} | {entry.title}"
@@ -38,7 +38,7 @@ def get_main_menu_items_prefixed_by_segment(
     return collected_items
 
 
-class MegaMenuRegistry(Registry[MegaMenu]):
+class MainMenuRegistry(Registry[MainMenu]):
     """A registry that contains the menu entries of the main navigation.
 
     All menu entries must be obtained via this registry to avoid cyclic
@@ -48,9 +48,9 @@ class MegaMenuRegistry(Registry[MegaMenu]):
     Examples:
 
         >>> from cmk.gui.i18n import _l
-        >>> from cmk.gui.type_defs import MegaMenu
-        >>> from cmk.gui.main_menu import mega_menu_registry
-        >>> mega_menu_registry.register(MegaMenu(
+        >>> from cmk.gui.type_defs import MainMenu
+        >>> from cmk.gui.main_menu import main_menu_registry
+        >>> main_menu_registry.register(MainMenu(
         ...     name="monitoring",
         ...     title=_l("Monitor"),
         ...     icon="main_monitoring",
@@ -58,29 +58,29 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         ...     topics=lambda: [],
         ...     search=None,
         ... ))
-        MegaMenu(...)
-        >>> assert mega_menu_registry["monitoring"].sort_index == 5
+        MainMenu(...)
+        >>> assert main_menu_registry["monitoring"].sort_index == 5
 
     """
 
     @override
-    def plugin_name(self, instance: MegaMenu) -> str:
+    def plugin_name(self, instance: MainMenu) -> str:
         return instance.name
 
-    def menu_monitoring(self) -> MegaMenu:
+    def menu_monitoring(self) -> MainMenu:
         return self["monitoring"]
 
-    def menu_customize(self) -> MegaMenu:
+    def menu_customize(self) -> MainMenu:
         return self["customize"]
 
-    def menu_setup(self) -> MegaMenu:
+    def menu_setup(self) -> MainMenu:
         return self["setup"]
 
-    def menu_help(self) -> MegaMenu:
+    def menu_help(self) -> MainMenu:
         return self["help"]
 
-    def menu_user(self) -> MegaMenu:
+    def menu_user(self) -> MainMenu:
         return self["user"]
 
 
-mega_menu_registry = MegaMenuRegistry()
+main_menu_registry = MainMenuRegistry()

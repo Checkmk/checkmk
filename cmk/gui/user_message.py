@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -71,7 +71,7 @@ class PageUserMessage(Page):
 
     @override
     def page(self) -> None:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), _("Messages"))
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), _("Messages"))
         make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))
 
         for flashed_msg in get_flashed_messages():

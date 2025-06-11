@@ -805,9 +805,9 @@ class LDAPSyncPluginsRequest(BaseSchema):
         description="Synchronizes the email of the LDAP user account into Checkmk when enabled",
         load_default={"state": "disabled"},
     )
-    mega_menu_icons = fields.Nested(
+    main_menu_icons = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
-        description="When enabled, in the mega menus you can select between two options: Have a green icon"
+        description="When enabled, in the main menus you can select between two options: Have a green icon"
         " only for the headlines – the 'topics' – for lean design. Or have a colored icon for every entry"
         " so that over time you can zoom in more quickly to a specific entry.",
         load_default={"state": "disabled"},

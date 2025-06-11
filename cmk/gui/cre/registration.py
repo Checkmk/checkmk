@@ -35,7 +35,7 @@ from cmk.gui.help_menu import (
     default_info_line,
     default_learning_entries,
 )
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_family_registry, endpoint_registry, versioned_endpoint_registry
@@ -131,7 +131,7 @@ def register(edition: Edition) -> None:
     ldap.register(mode_registry)
     roles.register(mode_registry)
     common_registration(
-        mega_menu_registry,
+        main_menu_registry,
         job_registry,
         crash_report_registry,
         permission_section_registry,
@@ -204,7 +204,7 @@ def register(edition: Edition) -> None:
         permission_section_registry,
         snapin_registry,
         dashlet_registry,
-        mega_menu_registry,
+        main_menu_registry,
         view_menu_topics=sidebar.default_view_menu_topics,
     )
     wato_registration.register(
@@ -227,7 +227,7 @@ def register(edition: Edition) -> None:
         config_variable_group_registry,
         snapin_registry,
         match_item_generator_registry,
-        mega_menu_registry,
+        main_menu_registry,
         ac_test_registry,
         contact_group_usage_finder_registry,
         notification_parameter_registry,

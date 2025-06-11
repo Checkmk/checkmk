@@ -454,7 +454,7 @@ def test_all_rulespec_groups_have_main_group() -> None:
 
 
 def test_rulespec_groups_have_unique_names() -> None:
-    # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
+    # The title is e.g. shown in the main menu search. With duplicate entries a user could not
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
     assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"

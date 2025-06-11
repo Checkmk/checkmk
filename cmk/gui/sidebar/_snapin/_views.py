@@ -17,28 +17,28 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.type_defs import ABCMainMenuSearch, MainMenu, MainMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
-from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
+from ._helpers import footnotelinks, make_main_menu, show_main_menu
 from ._registry import SnapinRegistry
 
 
 def register(
     page_registry: PageRegistry,
     snapin_registry: SnapinRegistry,
-    mega_menu_registry: MegaMenuRegistry,
-    view_menu_topics: Callable[[], list[TopicMenuTopic]],
+    main_menu_registry: MainMenuRegistry,
+    view_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     snapin_registry.register(Views)
     page_registry.register_page_handler("export_views", ajax_export_views)
 
-    mega_menu_registry.register(
-        MegaMenu(
+    main_menu_registry.register(
+        MainMenu(
             name="monitoring",
             title=_l("Monitor"),
             icon="main_monitoring",
@@ -63,7 +63,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=make_topic_menu(view_menu_items()))
+        show_main_menu(treename="views", menu=make_main_menu(view_menu_items()))
 
         links = []
         if user.may("general.edit_views"):
@@ -81,8 +81,8 @@ def ajax_export_views() -> None:
 
 
 @request_memoize()
-def default_view_menu_topics() -> list[TopicMenuTopic]:
-    return make_topic_menu(view_menu_items())
+def default_view_menu_topics() -> list[MainMenuTopic]:
+    return make_main_menu(view_menu_items())
 
 
 def view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
@@ -99,7 +99,7 @@ def view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes
                 visual["icon"] = None  # Is currently not configurable for pagetypes
-                visual["megamenu_search_terms"] = []  # Is currently not configurable for pagetypes
+                visual["main_menu_search_terms"] = []  # Is currently not configurable for pagetypes
 
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 
@@ -124,7 +124,7 @@ def view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
     return visuals_to_show
 
 
-class MonitoringSearch(ABCMegaMenuSearch):
+class MonitoringSearch(ABCMainMenuSearch):
     """Search field in the monitoring menu"""
 
     def show_search_field(self) -> None:

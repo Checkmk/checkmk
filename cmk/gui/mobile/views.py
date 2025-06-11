@@ -105,7 +105,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # View of all current service problems
         "mobile_svcproblems": {
@@ -160,7 +160,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # View of unhandled service problems
         "mobile_svcproblems_unack": {
@@ -221,7 +221,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # Service details
         "mobile_service": {
@@ -269,7 +269,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All services of one host
         "mobile_host": {
@@ -316,7 +316,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # Host details
         "mobile_hoststatus": {
@@ -380,7 +380,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # Search hosts
         "mobile_searchhost": {
@@ -423,7 +423,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # List all host problems
         "mobile_hostproblems": {
@@ -469,7 +469,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # List unhandled host problems
         "mobile_hostproblems_unack": {
@@ -515,7 +515,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All Nagios Events at all
         "mobile_events": {
@@ -562,7 +562,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All Notifications at all
         "mobile_notifications": {
@@ -625,7 +625,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All events of a Host
         "mobile_hostsvcevents": {
@@ -675,7 +675,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All events of one service
         "mobile_svcevents": {
@@ -719,7 +719,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All Notfications of a contact
         "mobile_contactnotifications": {
@@ -781,7 +781,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All Notfications of Host
         "mobile_hostsvcnotifications": {
@@ -844,7 +844,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
         # All Notfications of a service
         "mobile_svcnotifications": {
@@ -898,7 +898,7 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         },
     }
 )

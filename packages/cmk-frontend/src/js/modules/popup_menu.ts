@@ -502,25 +502,25 @@ export function graph_export(page: string) {
 }
 
 /****************************************
- * Mega menu
+ * Main menu
  ****************************************/
 
-export function initialize_mega_menus() {
+export function initialize_main_menus() {
     ["resize", "load"].forEach(event => {
         window.addEventListener(event, () => {
-            resize_all_mega_menu_popups();
+            resize_all_main_menu_popups();
         });
     });
 }
 
-function resize_all_mega_menu_popups() {
+function resize_all_main_menu_popups() {
     for (const popup of querySelectorAllByClassName("popup_menu_handler")) {
-        resize_mega_menu_popup(popup);
+        resize_main_menu_popup(popup);
     }
 }
 
-export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
-    /* Resize a mega menu to the size of its content. Three cases are considered here:
+export function resize_main_menu_popup(menu_popup: Nullable<HTMLElement>) {
+    /* Resize a main menu to the size of its content. Three cases are considered here:
      *   1) The overview of all topics is opened.
      *   2) The extended menu that shows all items of a topic is opened.
      *   3) The menu's search results are opened.
@@ -533,7 +533,7 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
         return;
     }
 
-    const ncol = mega_menu_last_topic_grow(topics);
+    const ncol = main_menu_last_topic_grow(topics);
     const search_results = menu_popup.getElementsByClassName("hidden").length;
     const extended_topic = Array.prototype.slice
         .call(topics)
@@ -561,7 +561,7 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
                 remove_class(topic, "single_column"),
             );
             remove_class(menu_popup, "single_column");
-            resize_mega_menu_popup(menu_popup);
+            resize_main_menu_popup(menu_popup);
             return;
         }
         menu_popup.style.width =
@@ -585,7 +585,7 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
     }
 }
 
-function mega_menu_last_topic_grow(topics: HTMLCollectionOf<HTMLElement>) {
+function main_menu_last_topic_grow(topics: HTMLCollectionOf<HTMLElement>) {
     // For each column, let the last topic grow by setting/removing the css class "grow"
     // Return the number of columns
     if (topics.length === 0) {
@@ -622,7 +622,7 @@ function maximum_popup_width() {
     );
 }
 
-export function mega_menu_show_all_items(current_topic_id: string) {
+export function main_menu_show_all_items(current_topic_id: string) {
     const current_topic = document.getElementById(current_topic_id);
     const main_menu: HTMLElement = current_topic!.closest(".main_menu")!;
 
@@ -650,17 +650,17 @@ export function mega_menu_show_all_items(current_topic_id: string) {
     remove_class(current_topic, "extendable");
     add_class(current_topic, "extended");
     add_class(main_menu, "extended_topic");
-    resize_mega_menu_popup(popup_menu);
+    resize_main_menu_popup(popup_menu);
 }
 
-export function mega_menu_collapse_topic(current_topic_id: string) {
+export function main_menu_collapse_topic(current_topic_id: string) {
     const current_topic = document.getElementById(current_topic_id);
     const main_menu: HTMLElement = current_topic!.closest(".main_menu")!;
 
     remove_class(current_topic, "extended");
     current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
 
-    // See comment in mega_menu_show_all_items
+    // See comment in main_menu_show_all_items
     const previously_extended_topic = main_menu.getElementsByClassName(
         "topic previously_extended",
     )[0] as HTMLElement;
@@ -677,11 +677,11 @@ export function mega_menu_collapse_topic(current_topic_id: string) {
     popup_menu.style.minHeight = "";
 
     remove_class(main_menu, "extended_topic");
-    mega_menu_hide_entries(main_menu.id);
-    resize_mega_menu_popup(popup_menu);
+    main_menu_hide_entries(main_menu.id);
+    resize_main_menu_popup(popup_menu);
 }
 
-export function mega_menu_reset_default_expansion(main_menu_name: string) {
+export function main_menu_reset_default_expansion(main_menu_name: string) {
     const main_menu: HTMLElement | null = document.getElementById(
         "main_menu_" + main_menu_name,
     );
@@ -702,11 +702,11 @@ export function mega_menu_reset_default_expansion(main_menu_name: string) {
     }
 
     remove_class(main_menu, "extended_topic");
-    mega_menu_hide_entries(main_menu.id);
-    resize_mega_menu_popup(main_menu.closest(".popup_menu_handler")!);
+    main_menu_hide_entries(main_menu.id);
+    resize_main_menu_popup(main_menu.closest(".popup_menu_handler")!);
 }
 
-export function mega_menu_hide_entries(menu_id: string) {
+export function main_menu_hide_entries(menu_id: string) {
     const menu = document.getElementById(menu_id);
     const more_is_active = menu?.classList.contains("more");
     const topics = menu?.getElementsByClassName(
@@ -738,7 +738,7 @@ export function mega_menu_hide_entries(menu_id: string) {
             else remove_class(topic, "extendable");
         }
     });
-    resize_mega_menu_popup(menu!.parentElement!);
+    resize_main_menu_popup(menu!.parentElement!);
 }
 
 export function focus_search_field(input_id: string) {

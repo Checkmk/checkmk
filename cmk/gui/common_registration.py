@@ -49,7 +49,7 @@ from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -62,7 +62,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.type_defs import TopicMenuTopicEntries
+from cmk.gui.type_defs import MainMenuTopicEntries
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
@@ -108,7 +108,7 @@ from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 
 def register(
-    mega_menu_registry: MegaMenuRegistry,
+    main_menu_registry: MainMenuRegistry,
     job_registry: BackgroundJobRegistry,
     crash_report_registry: CrashReportRegistry,
     permission_section_registry: PermissionSectionRegistry,
@@ -156,14 +156,14 @@ def register(
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
-    help_learning_entries: Callable[[], TopicMenuTopicEntries],
-    help_developer_entries: Callable[[], TopicMenuTopicEntries],
-    help_about_checkmk_entries: Callable[[], TopicMenuTopicEntries],
+    help_learning_entries: Callable[[], MainMenuTopicEntries],
+    help_developer_entries: Callable[[], MainMenuTopicEntries],
+    help_about_checkmk_entries: Callable[[], MainMenuTopicEntries],
 ) -> None:
     hooks.register_thread_cache_cleanup()
-    pagetypes.register(mega_menu_registry)
+    pagetypes.register(main_menu_registry)
     help_menu.register(
-        mega_menu_registry,
+        main_menu_registry,
         help_info_line,
         help_learning_entries,
         help_developer_entries,

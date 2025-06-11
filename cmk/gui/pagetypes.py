@@ -53,7 +53,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
-from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
+from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
@@ -81,11 +81,11 @@ from cmk.gui.type_defs import (
     AnnotatedUserId,
     HTTPVariables,
     Icon,
-    MegaMenu,
+    MainMenu,
+    MainMenuItem,
+    MainMenuTopic,
+    MainMenuTopicEntries,
     PermissionName,
-    TopicMenuItem,
-    TopicMenuTopic,
-    TopicMenuTopicEntries,
     Visual,
 )
 from cmk.gui.user_sites import get_configured_site_choices
@@ -192,9 +192,9 @@ class PagetypeTopicConfig(OverridableConfig):
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
-def register(mega_menu_registry_: MegaMenuRegistry) -> None:
-    mega_menu_registry_.register(
-        MegaMenu(
+def register(main_menu_registry_: MainMenuRegistry) -> None:
+    main_menu_registry_.register(
+        MainMenu(
             name="customize",
             title=_l("Customize"),
             icon="main_customize",
@@ -1337,7 +1337,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
 def make_breadcrumb(
     title: str, page_name: str, list_url: str, parent_title: str | None = None
 ) -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_customize())
+    breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
 
     breadcrumb.append(BreadcrumbItem(title=parent_title or title, url=list_url))
 
@@ -1929,7 +1929,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
             "public": False if self.config.public is None else self.config.public,
             "packaged": False,
             "link_from": {},
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         }
 
 
@@ -2303,15 +2303,15 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics() -> list[TopicMenuTopic]:
-    general_entries: TopicMenuTopicEntries = []
-    monitoring_entries: TopicMenuTopicEntries = []
-    graph_entries: TopicMenuTopicEntries = []
-    business_reporting_entries: TopicMenuTopicEntries = []
+def _customize_menu_topics() -> list[MainMenuTopic]:
+    general_entries: MainMenuTopicEntries = []
+    monitoring_entries: MainMenuTopicEntries = []
+    graph_entries: MainMenuTopicEntries = []
+    business_reporting_entries: MainMenuTopicEntries = []
 
     if user.may("general.edit_views"):
         monitoring_entries.append(
-            TopicMenuItem(
+            MainMenuItem(
                 name="views",
                 title=_("Views"),
                 url="edit_views.py",
@@ -2323,7 +2323,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
 
     if user.may("general.edit_dashboards"):
         monitoring_entries.append(
-            TopicMenuItem(
+            MainMenuItem(
                 name="dashboards",
                 title=_("Dashboards"),
                 url="edit_dashboards.py",
@@ -2335,7 +2335,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
 
     if user.may("general.edit_reports"):
         business_reporting_entries.append(
-            TopicMenuItem(
+            MainMenuItem(
                 name="reports",
                 title=_("Reports"),
                 url="edit_reports.py",
@@ -2349,7 +2349,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
         if not user.may(f"general.edit_{page_type_.type_name()}"):
             continue
 
-        item = TopicMenuItem(
+        item = MainMenuItem(
             name=page_type_.type_name(),
             title=page_type_.phrase("title_plural"),
             url="%ss.py" % page_type_.type_name(),
@@ -2372,19 +2372,19 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             monitoring_entries.append(item)
 
     topics = [
-        TopicMenuTopic(
+        MainMenuTopic(
             name="general",
             title=_("General"),
             icon="topic_general",
             entries=general_entries,
         ),
-        TopicMenuTopic(
+        MainMenuTopic(
             name="visualization",
             title=_("Visualization"),
             icon="topic_visualization",
             entries=monitoring_entries,
         ),
-        TopicMenuTopic(
+        MainMenuTopic(
             name="graphs",
             title=_("Graphs"),
             icon="topic_graphs",
@@ -2394,7 +2394,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
 
     if _has_reporting():
         topics.append(
-            TopicMenuTopic(
+            MainMenuTopic(
                 name="business_reporting",
                 title=_("Business reporting"),
                 icon="topic_reporting",

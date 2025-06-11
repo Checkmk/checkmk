@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The user profile mega menu and related AJAX endpoints"""
+"""The user profile main menu and related AJAX endpoints"""
 
 from collections.abc import Callable
 
@@ -11,11 +11,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, TopicMenuTopicEntries
+from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -24,15 +24,15 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 def register(
     page_registry: PageRegistry,
-    mega_menu_registry: MegaMenuRegistry,
-    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    main_menu_registry: MainMenuRegistry,
+    user_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
 
-    mega_menu_registry.register(
-        MegaMenu(
+    main_menu_registry.register(
+        MainMenu(
             name="user",
             title=_l("User"),
             icon="main_user",
@@ -68,9 +68,9 @@ def _sidebar_position_id(stored_value: str) -> str:
 
 def default_user_menu_topics(
     add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
-) -> list[TopicMenuTopic]:
-    quick_entries: TopicMenuTopicEntries = [
-        TopicMenuItem(
+) -> list[MainMenuTopic]:
+    quick_entries: MainMenuTopicEntries = [
+        MainMenuItem(
             name="ui_theme",
             title=_("Color theme"),
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_ui_theme.py")',
@@ -79,7 +79,7 @@ def default_user_menu_topics(
             icon="color_mode",
             button_title=_get_current_theme_title(),
         ),
-        TopicMenuItem(
+        MainMenuItem(
             name="sidebar_position",
             title=_("Sidebar position"),
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_sidebar_position.py")',
@@ -90,9 +90,9 @@ def default_user_menu_topics(
         ),
     ]
 
-    entries: TopicMenuTopicEntries = (
+    entries: MainMenuTopicEntries = (
         [
-            TopicMenuItem(
+            MainMenuItem(
                 name="user_profile",
                 title=_("Edit profile"),
                 url="user_profile.py",
@@ -106,7 +106,7 @@ def default_user_menu_topics(
 
     if user.may("general.change_password") and add_change_password_menu_item:
         entries.append(
-            TopicMenuItem(
+            MainMenuItem(
                 name="change_password",
                 title=_("Change password"),
                 url="user_change_pw.py",
@@ -117,7 +117,7 @@ def default_user_menu_topics(
 
     if user.may("general.manage_2fa") and add_two_factor_menu_item:
         entries.append(
-            TopicMenuItem(
+            MainMenuItem(
                 name="two_factor",
                 title=_("Two-factor authentication"),
                 url="user_two_factor_overview.py",
@@ -127,7 +127,7 @@ def default_user_menu_topics(
         )
 
     entries.append(
-        TopicMenuItem(
+        MainMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
@@ -140,7 +140,7 @@ def default_user_menu_topics(
     if user.may("general.edit_notifications"):
         entries.insert(
             1,
-            TopicMenuItem(
+            MainMenuItem(
                 name="notification_rules",
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
@@ -150,18 +150,18 @@ def default_user_menu_topics(
         )
 
     return [
-        TopicMenuTopic(
+        MainMenuTopic(
             name="user_interface",
             title=_("User interface"),
             icon="topic_user_interface",
             entries=quick_entries,
         ),
-        TopicMenuTopic(
+        MainMenuTopic(
             name="user_messages",
             title=_("User messages"),
             icon="topic_events",
             entries=[
-                TopicMenuItem(
+                MainMenuItem(
                     name="user_messages",
                     title=_("Received messages"),
                     url="user_message.py",
@@ -170,7 +170,7 @@ def default_user_menu_topics(
                 )
             ],
         ),
-        TopicMenuTopic(
+        MainMenuTopic(
             name="user_profile",
             title=_("User profile"),
             icon="topic_profile",

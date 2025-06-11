@@ -62,7 +62,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -2151,7 +2151,7 @@ class PageBackupRestore:
 
         # Special handling for Checkmk / CMA differences
         title = _("Insert passphrase")
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), title)
         make_header(html, title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
 
         html.show_user_errors()

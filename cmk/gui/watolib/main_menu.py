@@ -169,7 +169,7 @@ class ABCMainModule(MenuItem, abc.ABC):
         yield
 
     @classmethod
-    def megamenu_search_terms(cls) -> Sequence[str]:
+    def main_menu_search_terms(cls) -> Sequence[str]:
         """This class method allows adding additional match texts for the search"""
         return []
 

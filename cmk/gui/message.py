@@ -26,7 +26,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -236,7 +236,7 @@ def page_message() -> None:
         raise MKAuthException(_("You are not allowed to use the message module."))
 
     title = _("Send user message")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+    breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
     make_header(html, title, breadcrumb, menu)
 

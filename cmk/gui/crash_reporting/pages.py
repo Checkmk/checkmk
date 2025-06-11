@@ -38,7 +38,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -163,7 +163,7 @@ class PageCrash(ABCCrashReportPage):
 
     def _breadcrumb(self, title: str) -> Breadcrumb:
         breadcrumb = make_topic_breadcrumb(
-            mega_menu_registry.menu_monitoring(),
+            main_menu_registry.menu_monitoring(),
             PagetypeTopics.get_topic("analyze").title(),
         )
 

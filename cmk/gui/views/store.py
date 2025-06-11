@@ -34,7 +34,7 @@ def internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
     # Need to assume that we are right for now. We will have to introduce parsing there to do a real
     # conversion in one of the following typing steps.
     raw_view.setdefault("packaged", False)
-    raw_view.setdefault("megamenu_search_terms", [])
+    raw_view.setdefault("main_menu_search_terms", [])
     return _sorter_specs_to_runtime_format(_column_specs_to_runtime_format(raw_view))  # type: ignore[arg-type]
 
 

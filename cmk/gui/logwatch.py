@@ -30,7 +30,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_link,
@@ -88,7 +88,7 @@ def page_show():
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
     title = _("All problematic log files")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
     make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):

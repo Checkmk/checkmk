@@ -68,10 +68,10 @@ class ConcreteUserInterfaceAttributes(BaseSchema):
         enum=["hide", "show"],
         example="hide",
     )
-    mega_menu_icons = fields.String(
+    main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "
-        "mega menus or alternatively only for the headlines (the 'topics')",
+        "main menus or alternatively only for the headlines (the 'topics')",
         enum=["topic", "entry"],
         example="topic",
     )

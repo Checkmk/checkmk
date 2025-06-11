@@ -1304,15 +1304,15 @@ export function update_werks_trigger(
     }
 }
 function create_initial_ids(menu: string, what: string, start_url: string) {
-    const mega_menu_help_div = document.getElementById(
-        "popup_trigger_mega_menu_" + menu,
+    const main_menu_help_div = document.getElementById(
+        "popup_trigger_main_menu_" + menu,
     )!.firstChild;
-    const help_div = mega_menu_help_div!.childNodes[2];
+    const help_div = main_menu_help_div!.childNodes[2];
 
     const l = document.createElement("span");
     l.setAttribute("id", what + "_label");
     l.style.display = "none";
-    mega_menu_help_div?.insertBefore(l, help_div);
+    main_menu_help_div?.insertBefore(l, help_div);
 
     // Also update popup content
     const info_line_span = document.getElementById("info_line_" + menu);

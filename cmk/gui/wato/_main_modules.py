@@ -356,7 +356,7 @@ class MainModuleHWSWInventory(ABCMainModule):
         return True
 
     @classmethod
-    def megamenu_search_terms(cls) -> Sequence[str]:
+    def main_menu_search_terms(cls) -> Sequence[str]:
         return ["hardware", "software"]
 
 

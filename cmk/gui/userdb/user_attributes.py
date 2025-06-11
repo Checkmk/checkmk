@@ -304,7 +304,7 @@ class UIIconPlacement(UserAttribute):
         return DropdownChoice(
             title=_("Mega menu icons"),
             help=_(
-                "In the mega menus you can select between two options: "
+                "In the main menus you can select between two options: "
                 "Have a green icon only for the headlines – the 'topics' – "
                 "for lean design. Or have a colored icon for every entry so that "
                 "over time you can zoom in more quickly to a specific entry."

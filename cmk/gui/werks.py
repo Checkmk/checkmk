@@ -36,7 +36,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.num_split import cmp_version
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
@@ -136,7 +136,7 @@ class ChangeLogPage(Page):
 
     @override
     def page(self) -> PageResult:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help"], self._title())
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], self._title())
 
         werk_table_options = _werk_table_options_from_request()
 
@@ -285,7 +285,7 @@ def page_werk() -> None:
         werk.title,
     )
 
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help"])
+    breadcrumb = make_main_menu_breadcrumb(main_menu_registry["help"])
     breadcrumb.append(
         BreadcrumbItem(
             title=_("Change log (Werks)"),

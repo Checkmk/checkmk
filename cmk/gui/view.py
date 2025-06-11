@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -298,7 +298,7 @@ class View:
             )
 
             breadcrumb = make_topic_breadcrumb(
-                mega_menu_registry.menu_monitoring(),
+                main_menu_registry.menu_monitoring(),
                 pagetypes.PagetypeTopics.get_topic(self.spec["topic"]).title(),
             )
             breadcrumb.append(

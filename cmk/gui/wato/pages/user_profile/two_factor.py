@@ -46,7 +46,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_javascript_link,
     make_simple_form_page_menu,
@@ -670,7 +670,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
         self.secret = secret
 
     def _breadcrumb(self) -> Breadcrumb:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         breadcrumb.insert(
             -1,
             BreadcrumbItem(
@@ -809,7 +809,7 @@ class EditCredentialAlias(ABCUserProfilePage):
         super().__init__("general.manage_2fa")
 
     def _breadcrumb(self) -> Breadcrumb:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         breadcrumb.insert(
             -1,
             BreadcrumbItem(

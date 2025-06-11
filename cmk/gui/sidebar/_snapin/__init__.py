@@ -5,9 +5,9 @@
 
 from collections.abc import Callable
 
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import TopicMenuTopic
+from cmk.gui.type_defs import MainMenuTopic
 
 from . import _views
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
@@ -23,9 +23,9 @@ from ._helpers import footnotelinks as footnotelinks
 from ._helpers import heading as heading
 from ._helpers import iconlink as iconlink
 from ._helpers import link as link
-from ._helpers import make_topic_menu as make_topic_menu
+from ._helpers import make_main_menu as make_main_menu
 from ._helpers import render_link as render_link
-from ._helpers import show_topic_menu as show_topic_menu
+from ._helpers import show_main_menu as show_main_menu
 from ._helpers import snapin_site_choice as snapin_site_choice
 from ._helpers import snapin_width as snapin_width
 from ._helpers import write_snapin_exception as write_snapin_exception
@@ -50,8 +50,8 @@ from ._views import view_menu_items as view_menu_items
 def register(
     snapin_registry_: SnapinRegistry,
     page_registry: PageRegistry,
-    mega_menu_registry: MegaMenuRegistry,
-    view_menu_topics: Callable[[], list[TopicMenuTopic]],
+    main_menu_registry: MainMenuRegistry,
+    view_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     snapin_registry_.register(Bookmarks)
     snapin_registry_.register(Dashboards)
@@ -64,6 +64,6 @@ def register(
     snapin_registry_.register(SiteStatus)
     snapin_registry_.register(Speedometer)
     snapin_registry_.register(TacticalOverviewSnapin)
-    _views.register(page_registry, snapin_registry_, mega_menu_registry, view_menu_topics)
+    _views.register(page_registry, snapin_registry_, main_menu_registry, view_menu_topics)
     page_registry.register_page("ajax_search_monitoring")(PageSearchMonitoring)
     page_registry.register_page("ajax_search_setup")(PageSearchSetup)

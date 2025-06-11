@@ -61,7 +61,7 @@ class ApiInterfaceAttributes(TypedDict, total=False):
     interface_theme: Literal["default", "dark", "light"]
     sidebar_position: Literal["left", "right"]
     navigation_bar_icons: Literal["show", "hide"]
-    mega_menu_icons: Literal["topic", "entry"]
+    main_menu_icons: Literal["topic", "entry"]
     show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
     contextual_help_icon: Literal["show_icon", "hide_icon"]
 
@@ -656,9 +656,9 @@ def _interface_options_to_internal_format(
             "show": None,
             "hide": "hide",
         }[show_icon_titles]
-    if mega_menu_icons := api_interface_options.get("mega_menu_icons"):
+    if main_menu_icons := api_interface_options.get("main_menu_icons"):
         internal_inteface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
-            mega_menu_icons
+            main_menu_icons
         ]
     if show_mode := api_interface_options.get("show_mode"):
         internal_inteface_options["show_mode"] = {
@@ -691,7 +691,7 @@ def _interface_options_to_api_format(
         )
 
     if "icons_per_item" in internal_interface_options:
-        attributes["mega_menu_icons"] = (
+        attributes["main_menu_icons"] = (
             "topic" if internal_interface_options["icons_per_item"] is None else "entry"
         )
 

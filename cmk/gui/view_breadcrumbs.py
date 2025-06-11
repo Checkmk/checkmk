@@ -10,7 +10,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _u
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.store import get_permitted_views
@@ -48,7 +48,7 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     allhosts_view_spec = permitted_views["allhosts"]
 
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(),
+        main_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic(allhosts_view_spec["topic"]).title(),
     )
 

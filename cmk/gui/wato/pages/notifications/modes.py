@@ -58,7 +58,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import syslog_facilities, syslog_priorities
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
@@ -74,7 +74,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -2562,8 +2562,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         super().__init__()
         user.need_permission("general.edit_notifications")
 
-    def main_menu(self) -> MegaMenu:
-        return mega_menu_registry.menu_user()
+    def main_menu(self) -> MainMenu:
+        return main_menu_registry.menu_user()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(

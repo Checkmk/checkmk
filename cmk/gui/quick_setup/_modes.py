@@ -480,7 +480,7 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
 
     @classmethod
     @override
-    def megamenu_search_terms(cls) -> Sequence[str]:
+    def main_menu_search_terms(cls) -> Sequence[str]:
         return ["aws"]
 
 
@@ -520,7 +520,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
 
     @classmethod
     @override
-    def megamenu_search_terms(cls) -> Sequence[str]:
+    def main_menu_search_terms(cls) -> Sequence[str]:
         return ["azure"]
 
 
@@ -560,7 +560,7 @@ class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
 
     @classmethod
     @override
-    def megamenu_search_terms(cls) -> Sequence[str]:
+    def main_menu_search_terms(cls) -> Sequence[str]:
         return ["gcp"]
 
 

@@ -5,7 +5,7 @@
  */
 
 import {call_ajax} from "./ajax";
-import {resize_mega_menu_popup, toggle_popup} from "./popup_menu";
+import {resize_main_menu_popup, toggle_popup} from "./popup_menu";
 import {add_class, remove_class} from "./utils";
 
 let g_call_ajax_obj: null | XMLHttpRequest = null;
@@ -114,7 +114,7 @@ class Search {
         } else {
             /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
             handler_data.obj.innerHTML = response.result;
-            resize_mega_menu_popup(handler_data.menu_popup);
+            resize_main_menu_popup(handler_data.menu_popup);
         }
         return;
     }
@@ -140,7 +140,7 @@ export function on_input_search(id: string) {
         }
         current_search.previous_timeout_id = window.setTimeout(function () {
             current_search.execute_search();
-            resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
+            resize_main_menu_popup(document.getElementById("popup_menu_" + id));
         }, 300);
         remove_class(
             document.getElementById("content_inner_" + id + "_search"),
@@ -164,7 +164,7 @@ export function on_click_collapse_topic(topic: string) {
             add_class(li, "hidden");
         }
     });
-    resize_mega_menu_popup(current_topic.closest(".popup_menu_handler"));
+    resize_main_menu_popup(current_topic.closest(".popup_menu_handler"));
 }
 
 export function on_click_show_all_results(
@@ -185,7 +185,7 @@ export function on_click_show_all_results(
             remove_class(li, "hidden");
         }
     });
-    resize_mega_menu_popup(document.getElementById(popup_menu_id));
+    resize_main_menu_popup(document.getElementById(popup_menu_id));
 }
 
 function get_current_search(id: string) {
@@ -222,7 +222,7 @@ export function on_click_reset(id: string) {
         document.getElementById("content_inner_" + id + "_search"),
         "extended_topic",
     );
-    resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
+    resize_main_menu_popup(document.getElementById("popup_menu_" + id));
 }
 
 export function on_key_down(id: string) {
@@ -251,7 +251,7 @@ export function on_key_down(id: string) {
                 toggle_popup(
                     event,
                     this,
-                    "mega_menu_" + id,
+                    "main_menu_" + id,
                     {type: "inline"},
                     null,
                     null,
@@ -276,7 +276,7 @@ function follow_current_search_query(current_search: Search) {
                 toggle_popup(
                     event,
                     this,
-                    "mega_menu_" + current_search.id,
+                    "main_menu_" + current_search.id,
                     {type: "inline"},
                     null,
                     null,

@@ -66,7 +66,7 @@ class DashboardStore:
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
     raw_dashboard["packaged"] = False
-    raw_dashboard.setdefault("megamenu_search_terms", [])
+    raw_dashboard.setdefault("main_menu_search_terms", [])
     return {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps

@@ -5,7 +5,7 @@
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.http import request
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import HTTPVariables, VisualContext
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -19,7 +19,7 @@ def dashboard_breadcrumb(
     name: str, board: DashboardConfig, title: str, context: VisualContext
 ) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(),
+        main_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic(board["topic"]).title(),
     )
 

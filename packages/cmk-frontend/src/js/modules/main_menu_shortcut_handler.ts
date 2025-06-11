@@ -7,7 +7,7 @@
 import {KeyShortcutService} from "./keyShortcuts";
 
 export function handle_main_menu(id: string): void {
-    const menu_id = "popup_trigger_mega_menu_".concat(id);
+    const menu_id = "popup_trigger_main_menu_".concat(id);
     let menu_document = document;
     if (!document || !menu_document.getElementById("main_menu"))
         menu_document = window.parent.document;

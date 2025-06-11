@@ -108,7 +108,7 @@ $border-radius-top: $theme-border-radius $theme-border-radius 0 0;
 $border-radius-left: $theme-border-radius 0 0 $theme-border-radius;
 $border-radius-right: 0 $theme-border-radius $theme-border-radius 0;
 
-$single-column-mega-menu-width: 360px;
+$single-column-main-menu-width: 360px;
 $theme-snapin-width: 240px;
 /* TODO: There are two implementations of toggle switches. One in _wato.scss
  * and one in _main.scss. Can we use just one implementation?
@@ -121,8 +121,8 @@ $page-header-height: 58px;
 $popup-filters-border-radius: 2px;
 $simplebar-scrollbar-width: 8px;
 $simplebar-track-width: $simplebar-scrollbar-width + 6px;
-$megamenu-navbar-height: 60px;
-$megamenu-spacing-bottom: 20px;
+$mainmenu-navbar-height: 60px;
+$mainmenu-spacing-bottom: 20px;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
 $dashlet-anchor-size-slim: 20px;
@@ -139,5 +139,5 @@ $mobile-form-element-focus-box-shadow: 0 0 12px rgb(51, 136, 204);
 $mobile-background-color: rgb(249, 249, 249);
 $trial-expiration-warn-color: rgb(255, 76, 0);
 $label-filters-label-max-width: 196px;
-$mega-menu-entry-margin-left: 28px;
+$main-menu-entry-margin-left: 28px;
 $popup-border-width: 4px;

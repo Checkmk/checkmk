@@ -127,7 +127,7 @@
     &.help > div.popup_menu {
       @include small-menu;
       box-sizing: border-box;
-      min-width: calc($single-column-mega-menu-width + $popup-border-width);
+      min-width: calc($single-column-main-menu-width + $popup-border-width);
     }
 
     &.user > div.popup_menu {
@@ -189,8 +189,8 @@
       top: $page-header-height;
       bottom: 0;
       left: 64px;
-      min-width: $single-column-mega-menu-width;
-      padding-bottom: $megamenu-spacing-bottom;
+      min-width: $single-column-main-menu-width;
+      padding-bottom: $mainmenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
 
@@ -222,7 +222,7 @@
 
       div.navigation_bar {
         display: flex;
-        height: $megamenu-navbar-height;
+        height: $mainmenu-navbar-height;
         border-bottom: 1px solid $headline-color;
 
         div.search_bar {
@@ -250,7 +250,7 @@
         display: flex;
         flex-flow: column wrap;
         height: calc(
-          100vh - #{$page-header-height} - #{$megamenu-navbar-height} - #{$megamenu-spacing-bottom}
+          100vh - #{$page-header-height} - #{$mainmenu-navbar-height} - #{$mainmenu-spacing-bottom}
         );
         padding: 0;
         overflow-y: auto;
@@ -264,7 +264,7 @@
         }
 
         &.search > div.topic {
-          width: $single-column-mega-menu-width;
+          width: $single-column-main-menu-width;
 
           li a {
             @include ellipsis-text-overflow;
@@ -278,7 +278,7 @@
           box-sizing: border-box;
 
           &.single_column {
-            width: $single-column-mega-menu-width;
+            width: $single-column-main-menu-width;
           }
 
           input[type="button"] {
@@ -338,7 +338,7 @@
           }
 
           li {
-            margin-left: $mega-menu-entry-margin-left;
+            margin-left: $main-menu-entry-margin-left;
 
             a {
               display: block;
@@ -447,7 +447,7 @@
 
             li {
               width: auto;
-              max-width: $single-column-mega-menu-width - 60px;
+              max-width: $single-column-main-menu-width - 60px;
               padding-left: 0;
 
               &.show_all_items {
@@ -479,12 +479,12 @@
             }
 
             > span {
-              margin-left: $mega-menu-entry-margin-left;
+              margin-left: $main-menu-entry-margin-left;
               font-weight: $font-weight-bold;
             }
 
             li {
-              margin-left: calc($mega-menu-entry-margin-left + $spacing);
+              margin-left: calc($main-menu-entry-margin-left + $spacing);
             }
           }
         }

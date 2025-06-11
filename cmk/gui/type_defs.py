@@ -294,7 +294,7 @@ class Visual(TypedDict):
     public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
-    megamenu_search_terms: Sequence[str]
+    main_menu_search_terms: Sequence[str]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -571,8 +571,8 @@ class SetOnceDict(dict):
         raise NotImplementedError("Deleting items are not supported.")
 
 
-class ABCMegaMenuSearch(ABC):
-    """Abstract base class for search fields in mega menus"""
+class ABCMainMenuSearch(ABC):
+    """Abstract base class for search fields in main menus"""
 
     def __init__(self, name: str) -> None:
         self._name = name
@@ -597,10 +597,8 @@ class _Icon(TypedDict):
 Icon = str | _Icon
 
 
-# TODO: rename prefixes and names "MegaMenu" and "TopicMenu" to "MainMenu"
-#       https://jira.lan.tribe29.com/browse/CMK-23667
 @dataclass(kw_only=True, slots=True)
-class _TopicMenuEntry:
+class _MainMenuEntry:
     name: str
     title: str
     sort_index: int
@@ -609,49 +607,49 @@ class _TopicMenuEntry:
 
 
 @dataclass(kw_only=True, slots=True)
-class TopicMenuItem(_TopicMenuEntry):
+class MainMenuItem(_MainMenuEntry):
     url: str
     target: str = "main"
     button_title: str | None = None
-    megamenu_search_terms: Sequence[str] = ()
+    main_menu_search_terms: Sequence[str] = ()
 
 
 @dataclass(kw_only=True, slots=True)
-class TopicMenuTopicSegment(_TopicMenuEntry):
+class MainMenuTopicSegment(_MainMenuEntry):
     mode: Literal["multilevel", "indented"]
-    entries: list[TopicMenuItem | TopicMenuTopicSegment]
+    entries: list[MainMenuItem | MainMenuTopicSegment]
     max_entries: int = 10
     hide: bool = False
 
 
-TopicMenuTopicEntries = list[TopicMenuItem | TopicMenuTopicSegment]
+MainMenuTopicEntries = list[MainMenuItem | MainMenuTopicSegment]
 
 
-class TopicMenuTopic(NamedTuple):
+class MainMenuTopic(NamedTuple):
     name: str
     title: str
-    entries: TopicMenuTopicEntries
+    entries: MainMenuTopicEntries
     max_entries: int = 10
     icon: Icon | None = None
     hide: bool = False
 
 
-class MegaMenuVueApp(NamedTuple):
+class MainMenuVueApp(NamedTuple):
     name: str
     data: dict = {}
     class_: list[str] = []
 
 
-class MegaMenu(NamedTuple):
+class MainMenu(NamedTuple):
     name: str
     title: str | LazyString
     icon: Icon
     sort_index: int
-    topics: Callable[[], list[TopicMenuTopic]] | None
-    search: ABCMegaMenuSearch | None = None
+    topics: Callable[[], list[MainMenuTopic]] | None
+    search: ABCMainMenuSearch | None = None
     info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False
-    vue_app: MegaMenuVueApp | None = None
+    vue_app: MainMenuVueApp | None = None
     onopen: str | None = None
 
 

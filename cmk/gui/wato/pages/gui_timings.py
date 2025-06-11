@@ -6,7 +6,7 @@ from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageRegistry, PageResult
 
 
@@ -15,7 +15,7 @@ class GuiTimingsPage(Page):
         return "GUI timings"
 
     def page(self) -> PageResult:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help"], _("Info"))
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], _("Info"))
         make_header(
             html,
             self._title(),

@@ -33,7 +33,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, mega_menu_registry
+from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import (
     HTTPVariables,
@@ -1432,20 +1432,20 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
     def get_results(self, query: str) -> list[SearchResult]:
         return [
             SearchResult(
-                title=topic_menu_item.title,
-                url=topic_menu_item.url,
+                title=main_menu_item.title,
+                url=main_menu_item.url,
             )
-            for topic_menu_topic in (
-                mega_menu_registry["monitoring"].topics()
-                if mega_menu_registry["monitoring"].topics
+            for main_menu_topic in (
+                main_menu_registry["monitoring"].topics()
+                if main_menu_registry["monitoring"].topics
                 else []
             )
-            for topic_menu_item in get_main_menu_items_prefixed_by_segment(topic_menu_topic)
+            for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
             if any(
                 query.lower() in match_text.lower()
                 for match_text in [
-                    topic_menu_item.title,
-                    *topic_menu_item.megamenu_search_terms,
+                    main_menu_item.title,
+                    *main_menu_item.main_menu_search_terms,
                 ]
             )
         ]
@@ -1485,7 +1485,7 @@ class MenuSearchResultsRenderer(abc.ABC):
     def render(self, query: str) -> str:
         try:
             results = self.generate_results(query)
-        # Don't render the IncorrectLabelInputError in Mega Menu to make the handling of
+        # Don't render the IncorrectLabelInputError in Main Menu to make the handling of
         # incorrect inputs consistent with other search querys
         except IncorrectLabelInputError:
             return ""
@@ -1508,8 +1508,8 @@ class MenuSearchResultsRenderer(abc.ABC):
         # {topic: (Icon(Topic): green, Icon(Item): colorful)}
         mapping: dict[str, tuple[Icon, Icon]] = {}
         for menu in [
-            mega_menu_registry.menu_setup(),
-            mega_menu_registry.menu_monitoring(),
+            main_menu_registry.menu_setup(),
+            main_menu_registry.menu_monitoring(),
         ]:
             mapping[str(menu.title)] = (
                 (menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0]),

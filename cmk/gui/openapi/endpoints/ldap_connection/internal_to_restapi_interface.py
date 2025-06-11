@@ -541,7 +541,7 @@ class APICustomTimeRange(APICheckboxEnabled):
 
 API_GROUP_ATTRIBUTE_NAME = Literal[
     "disable_notifications",
-    "mega_menu_icons",
+    "main_menu_icons",
     "navigation_bar_icons",
     "show_mode",
     "ui_sidebar_position",
@@ -563,9 +563,9 @@ class APIDisableNotifications(TypedDict):
     value: APIDisableNotificationsValue
 
 
-class APIMegaMenuIcons(TypedDict):
+class APIMainMenuIcons(TypedDict):
     group_cn: str
-    attribute_to_set: Literal["mega_menu_icons"]
+    attribute_to_set: Literal["main_menu_icons"]
     value: Literal["per_topic", "per_entry"]
 
 
@@ -641,7 +641,7 @@ class APICustom(TypedDict):
 
 GROUPS_TO_SYNC_VALUE = (
     APIDisableNotifications
-    | APIMegaMenuIcons
+    | APIMainMenuIcons
     | APINavBarIcons
     | APIShowMore
     | APIUISideBarPosition
@@ -677,7 +677,7 @@ class APISyncPlugins(TypedDict, total=False):
     authentication_expiration: SYNC_ATTRIBUTE
     disable_notifications: SYNC_ATTRIBUTE
     email_address: SYNC_ATTRIBUTE
-    mega_menu_icons: SYNC_ATTRIBUTE
+    main_menu_icons: SYNC_ATTRIBUTE
     navigation_bar_icons: SYNC_ATTRIBUTE
     pager: SYNC_ATTRIBUTE
     show_mode: SYNC_ATTRIBUTE
@@ -725,7 +725,7 @@ def groups_to_attributes_internal_to_api(
                 api_groups.append(
                     {
                         "group_cn": group["cn"],
-                        "attribute_to_set": "mega_menu_icons",
+                        "attribute_to_set": "main_menu_icons",
                         "value": "per_entry" if ii[1] == "entry" else "per_topic",
                     }
                 )
@@ -883,13 +883,13 @@ def groups_to_attributes_api_to_int(
 
         else:
             match group["attribute_to_set"]:
-                case "mega_menu_icons":
-                    megaicons = cast(APIMegaMenuIcons, group)
+                case "main_menu_icons":
+                    main_menu_icons = cast(APIMainMenuIcons, group)
                     groups_to_sync = {
-                        "cn": megaicons["group_cn"],
+                        "cn": main_menu_icons["group_cn"],
                         "attribute": (
                             "icons_per_item",
-                            None if megaicons["value"] == "per_topic" else "entry",
+                            None if main_menu_icons["value"] == "per_topic" else "entry",
                         ),
                     }
 
@@ -1040,7 +1040,7 @@ class SyncPlugins:
             config.pop("disable_notifications", None)
         )
         ap["email"] = sync_attribute_to_internal(config.pop("email_address", None))
-        ap["icons_per_item"] = sync_attribute_to_internal(config.pop("mega_menu_icons", None))
+        ap["icons_per_item"] = sync_attribute_to_internal(config.pop("main_menu_icons", None))
         ap["nav_hide_icons_title"] = sync_attribute_to_internal(
             config.pop("navigation_bar_icons", None)
         )
@@ -1084,7 +1084,7 @@ class SyncPlugins:
             "authentication_expiration": checkbox_state("auth_expire"),
             "disable_notifications": checkbox_state("disable_notifications"),
             "email_address": checkbox_state("email"),
-            "mega_menu_icons": checkbox_state("icons_per_item"),
+            "main_menu_icons": checkbox_state("icons_per_item"),
             "navigation_bar_icons": checkbox_state("nav_hide_icons_title"),
             "pager": checkbox_state("pager"),
             "show_mode": checkbox_state("show_mode"),

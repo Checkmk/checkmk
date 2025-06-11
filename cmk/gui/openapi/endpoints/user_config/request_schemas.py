@@ -200,10 +200,10 @@ class UserInterfaceAttributes(BaseSchema):
         enum=["hide", "show"],
         load_default="hide",
     )
-    mega_menu_icons = fields.String(
+    main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "
-        "mega menus or alternatively only for the headlines (the 'topics')",
+        "main menus or alternatively only for the headlines (the 'topics')",
         enum=["topic", "entry"],
         load_default="topic",
     )
@@ -391,7 +391,7 @@ class CreateUser(CustomUserAttributes):
             "interface_theme": "default",
             "sidebar_position": "right",
             "navigation_bar_icons": "hide",
-            "mega_menu_icons": "topic",
+            "main_menu_icons": "topic",
             "show_mode": "default",
             "contextual_help_icon": "show_icon",
         },
@@ -417,10 +417,10 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         "respective titles",
         enum=["hide", "show"],
     )
-    mega_menu_icons = fields.String(
+    main_menu_icons = fields.String(
         required=False,
         description="This option decides if colored icon should be shown foe every entry in the "
-        "mega menus or alternatively only for the headlines (the 'topics')",
+        "main menus or alternatively only for the headlines (the 'topics')",
         enum=["topic", "entry"],
     )
     show_mode = fields.String(

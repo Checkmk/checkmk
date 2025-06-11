@@ -19,7 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import filter_available_site_choices
-from cmk.gui.type_defs import Choices, Icon, TopicMenuItem, TopicMenuTopic, Visual
+from cmk.gui.type_defs import Choices, Icon, MainMenuItem, MainMenuTopic, Visual
 from cmk.gui.utils.html import HTML
 from cmk.gui.visuals import visual_title
 
@@ -116,12 +116,12 @@ def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[Si
     return only_sites
 
 
-def make_topic_menu(
+def make_main_menu(
     visuals: Sequence[tuple[str, tuple[str, Visual]]],
-) -> list[TopicMenuTopic]:
+) -> list[MainMenuTopic]:
     topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
 
-    by_topic: dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
+    by_topic: dict[pagetypes.PagetypeTopics, MainMenuTopic] = {}
 
     for visual_type_name, (name, visual) in visuals:
         if visual["hidden"] or visual.get("mobile"):
@@ -142,9 +142,9 @@ def make_topic_menu(
 
         url = _visual_url(visual_type_name, name)
 
-        topic_menu_topic = by_topic.setdefault(
+        main_menu_topic = by_topic.setdefault(
             topic,
-            TopicMenuTopic(
+            MainMenuTopic(
                 name=topic.name(),
                 title=topic.title(),
                 max_entries=topic.max_entries(),
@@ -153,8 +153,8 @@ def make_topic_menu(
                 hide=topic.hide(),
             ),
         )
-        topic_menu_topic.entries.append(
-            TopicMenuItem(
+        main_menu_topic.entries.append(
+            MainMenuItem(
                 name=name,
                 title=visual_title(
                     visual_type_name, visual, visual["context"], skip_title_context=True
@@ -163,13 +163,13 @@ def make_topic_menu(
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
-                megamenu_search_terms=visual["megamenu_search_terms"],
+                main_menu_search_terms=visual["main_menu_search_terms"],
             )
         )
 
     # Sort the entries of all topics
-    for topic_menu in by_topic.values():
-        topic_menu.entries.sort(key=lambda i: (i.sort_index, i.title))
+    for main_menu in by_topic.values():
+        main_menu.entries.sort(key=lambda i: (i.sort_index, i.title))
 
     # Return the sorted topics
     return [
@@ -201,14 +201,12 @@ def _visual_url(visual_type_name: str, name: str) -> str:
     raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
 
 
-def show_topic_menu(
-    treename: str, menu: list[TopicMenuTopic], show_item_icons: bool = False
-) -> None:
+def show_main_menu(treename: str, menu: list[MainMenuTopic], show_item_icons: bool = False) -> None:
     for topic in menu:
         _show_topic(treename, topic, show_item_icons)
 
 
-def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> None:
+def _show_topic(treename: str, topic: MainMenuTopic, show_item_icons: bool) -> None:
     if not topic.entries:
         return
 

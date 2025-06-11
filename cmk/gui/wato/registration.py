@@ -7,13 +7,13 @@
 from collections.abc import Callable
 
 from cmk.gui.background_job import BackgroundJobRegistry
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.type_defs import TopicMenuTopic
+from cmk.gui.type_defs import MainMenuTopic
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -85,12 +85,12 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     snapin_registry: SnapinRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
-    mega_menu_registry: MegaMenuRegistry,
+    main_menu_registry: MainMenuRegistry,
     ac_test_registry: ACTestRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     replication_path_registry: ReplicationPathRegistry,
-    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    user_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -118,7 +118,7 @@ def register(
         automation_command_registry,
         job_registry,
         match_item_generator_registry,
-        mega_menu_registry,
+        main_menu_registry,
         user_menu_topics,
     )
     _permissions.register(permission_section_registry, permission_registry)
@@ -138,7 +138,7 @@ def register(
         replication_path_registry,
     )
     _tracing.register(config_variable_registry)
-    _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
+    _snapins.register(snapin_registry, match_item_generator_registry, main_menu_registry)
     _notification_settings.register(config_variable_registry)
     _notification_parameter_registration.register(notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)

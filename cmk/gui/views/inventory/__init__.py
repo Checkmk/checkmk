@@ -225,7 +225,7 @@ def _register_views(
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
-        "megamenu_search_terms": [],
+        "main_menu_search_terms": [],
     }
 
     # View for the items of one host
@@ -266,7 +266,7 @@ def _register_views(
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
-        "megamenu_search_terms": [],
+        "main_menu_search_terms": [],
     }
 
 

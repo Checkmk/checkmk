@@ -19,7 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
@@ -311,7 +311,7 @@ def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 def dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(),
+        main_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic(board["topic"]).title(),
     )
     breadcrumb.append(

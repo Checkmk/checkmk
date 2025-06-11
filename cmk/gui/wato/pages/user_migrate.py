@@ -16,7 +16,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_confirmed_form_submit_link,
     make_simple_link,
@@ -53,7 +53,7 @@ class ModeUserMigrate(WatoMode):
         return _("Migrate users to another connection")
 
     def breadcrumb(self) -> Breadcrumb:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), self.title())
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_setup(), self.title())
         breadcrumb.insert(
             -1,
             BreadcrumbItem(

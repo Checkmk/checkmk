@@ -66,7 +66,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
                 "attribute_to_sync": "disable_notifications",
             },
             "email_address": {"state": "enabled", "attribute_to_sync": "mail"},
-            "mega_menu_icons": {"state": "enabled", "attribute_to_sync": "icons_per_item"},
+            "main_menu_icons": {"state": "enabled", "attribute_to_sync": "icons_per_item"},
             "navigation_bar_icons": {
                 "state": "enabled",
                 "attribute_to_sync": "nav_hide_icons_title",
@@ -105,7 +105,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
                     },
                     {
                         "group_cn": "groupcn2",
-                        "attribute_to_set": "mega_menu_icons",
+                        "attribute_to_set": "main_menu_icons",
                         "value": "per_entry",
                     },
                     {
@@ -234,7 +234,7 @@ def test_get_ldap_connection_min_config(clients: ClientRegistry) -> None:
             "authentication_expiration": {"state": "disabled"},
             "disable_notifications": {"state": "disabled"},
             "email_address": {"state": "disabled"},
-            "mega_menu_icons": {"state": "disabled"},
+            "main_menu_icons": {"state": "disabled"},
             "navigation_bar_icons": {"state": "disabled"},
             "pager": {"state": "disabled"},
             "show_mode": {"state": "disabled"},

@@ -39,7 +39,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.nodevis import frontend_texts
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.type_defs import (
@@ -220,7 +220,7 @@ class ABCTopologyPage(Page):
     def show_topology(self) -> None:
         visual_spec = self.visual_spec()
         breadcrumb = make_topic_breadcrumb(
-            mega_menu_registry.menu_monitoring(),
+            main_menu_registry.menu_monitoring(),
             PagetypeTopics.get_topic(visual_spec["topic"]).title(),
         )
         breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
@@ -304,7 +304,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "link_from": {},
             "add_context_to_title": True,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         }
 
     @classmethod
@@ -346,7 +346,7 @@ class NetworkTopologyPage(ABCTopologyPage):
             "link_from": {},
             "add_context_to_title": True,
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         }
 
     @classmethod
@@ -1454,7 +1454,7 @@ def _register_builtin_views():
                 "sort_index": 99,
                 "is_show_more": False,
                 "packaged": False,
-                "megamenu_search_terms": [],
+                "main_menu_search_terms": [],
             },
             "topology_hover_host": {
                 "browser_reload": 0,
@@ -1495,7 +1495,7 @@ def _register_builtin_views():
                 "sort_index": 99,
                 "is_show_more": False,
                 "packaged": False,
-                "megamenu_search_terms": [],
+                "main_menu_search_terms": [],
             },
             "topology_hover_service": {
                 "add_context_to_title": True,
@@ -1539,7 +1539,7 @@ def _register_builtin_views():
                 "title": "Service",
                 "topic": "other",
                 "user_sortable": True,
-                "megamenu_search_terms": [],
+                "main_menu_search_terms": [],
             },
         }
     )

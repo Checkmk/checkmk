@@ -20,7 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -203,7 +203,7 @@ class ClearFailedNotificationPage(Page):
             if get_enabled_remote_sites_for_logged_in_user(user):
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
-                    mega_menu_registry.menu_monitoring(), title
+                    main_menu_registry.menu_monitoring(), title
                 )
                 make_header(html, title, breadcrumb)
 
@@ -220,7 +220,7 @@ class ClearFailedNotificationPage(Page):
     # TODO: We should really recode this to use the view and a normal view command / action
     def _show_page(self, acktime: float, failed_notifications: LivestatusResponse) -> None:
         title = _("Confirm failed notifications")
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+        breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
 
         page_menu = self._page_menu(acktime, failed_notifications, breadcrumb)
 

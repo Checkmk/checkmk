@@ -5,19 +5,19 @@
 
 from collections.abc import Callable
 
-from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import TopicMenuTopic
+from cmk.gui.type_defs import MainMenuTopic
 
 from . import async_replication, change_password, edit_profile, mega_menu, replicate, two_factor
 
 
 def register(
     page_registry: PageRegistry,
-    mega_menu_registry: MegaMenuRegistry,
-    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    main_menu_registry: MainMenuRegistry,
+    user_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
-    mega_menu.register(page_registry, mega_menu_registry, user_menu_topics)
+    mega_menu.register(page_registry, main_menu_registry, user_menu_topics)
     two_factor.register(page_registry)
     two_factor.register(page_registry)
     edit_profile.register(page_registry)

@@ -30,12 +30,12 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
+from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import TopicMenuTopic
+from cmk.gui.type_defs import MainMenuTopic
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -55,10 +55,10 @@ from ._snapin import footnotelinks as footnotelinks
 from ._snapin import heading as heading
 from ._snapin import iconlink as iconlink
 from ._snapin import link as link
-from ._snapin import make_topic_menu as make_topic_menu
+from ._snapin import make_main_menu as make_main_menu
 from ._snapin import PageHandlers as PageHandlers
 from ._snapin import render_link as render_link
-from ._snapin import show_topic_menu as show_topic_menu
+from ._snapin import show_main_menu as show_main_menu
 from ._snapin import SidebarSnapin as SidebarSnapin
 from ._snapin import snapin_registry as snapin_registry
 from ._snapin import snapin_site_choice as snapin_site_choice
@@ -84,8 +84,8 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
-    mega_menu_registry_: MegaMenuRegistry,
-    view_menu_topics: Callable[[], list[TopicMenuTopic]],
+    main_menu_registry_: MainMenuRegistry,
+    view_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -104,7 +104,7 @@ def register(
     _snapin.register(
         snapin_registry_,
         page_registry,
-        mega_menu_registry_,
+        main_menu_registry_,
         view_menu_topics,
     )
     dashlet_registry.register(SnapinDashlet)
@@ -148,9 +148,9 @@ def _register_pre_21_plugin_api() -> None:
         ("heading", heading),
         ("iconlink", iconlink),
         ("link", link),
-        ("make_topic_menu", make_topic_menu),
+        ("make_main_menu", make_main_menu),
         ("render_link", render_link),
-        ("show_topic_menu", show_topic_menu),
+        ("show_main_menu", show_main_menu),
         ("snapin_site_choice", snapin_site_choice),
         ("snapin_width", snapin_width),
         ("write_snapin_exception", write_snapin_exception),
@@ -798,7 +798,7 @@ def page_add_snapin() -> None:
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     title = _("Add sidebar element")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_customize(), title)
+    breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_customize(), title)
     make_header(html, title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
     used_snapins = _used_snapins()

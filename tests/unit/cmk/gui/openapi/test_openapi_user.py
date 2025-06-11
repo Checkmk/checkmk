@@ -122,7 +122,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
         "auth_option": {},
         "interface_options": {
             "interface_theme": "default",
-            "mega_menu_icons": "topic",
+            "main_menu_icons": "topic",
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -715,7 +715,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
         "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
-            "mega_menu_icons": "topic",
+            "main_menu_icons": "topic",
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -804,7 +804,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
         "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
-            "mega_menu_icons": "topic",
+            "main_menu_icons": "topic",
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
@@ -917,7 +917,7 @@ def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:
             "interface_theme": "dark",
             "sidebar_position": "left",
             "navigation_bar_icons": "show",
-            "mega_menu_icons": "entry",
+            "main_menu_icons": "entry",
             "show_mode": "enforce_show_more",
         },
     )
@@ -926,7 +926,7 @@ def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:
     assert interface_options["interface_theme"] == "dark"
     assert interface_options["sidebar_position"] == "left"
     assert interface_options["navigation_bar_icons"] == "show"
-    assert interface_options["mega_menu_icons"] == "entry"
+    assert interface_options["main_menu_icons"] == "entry"
     assert interface_options["show_mode"] == "enforce_show_more"
 
     resp = clients.User.edit(username=username, interface_options={"interface_theme": "light"})
@@ -1043,7 +1043,7 @@ def test_openapi_custom_attributes_of_user(
                 "interface_theme": "dark",
                 "sidebar_position": "left",
                 "navigation_bar_icons": "show",
-                "mega_menu_icons": "entry",
+                "main_menu_icons": "entry",
                 "show_mode": "enforce_show_more",
             },
             extra={
@@ -1086,7 +1086,7 @@ def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) ->
                 "interface_theme": "dark",
                 "sidebar_position": "left",
                 "navigation_bar_icons": "show",
-                "mega_menu_icons": "entry",
+                "main_menu_icons": "entry",
                 "show_mode": "enforce_show_more",
             },
             extra={
@@ -1116,7 +1116,7 @@ def test_create_user_with_non_existing_custom_attribute(
             "interface_theme": "dark",
             "sidebar_position": "left",
             "navigation_bar_icons": "show",
-            "mega_menu_icons": "entry",
+            "main_menu_icons": "entry",
             "show_mode": "enforce_show_more",
         },
         extra={

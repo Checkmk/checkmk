@@ -363,7 +363,7 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "public": False,
             "link_from": {},
             "packaged": False,
-            "megamenu_search_terms": [],
+            "main_menu_search_terms": [],
         }
     )
     if inventory_join_macros := dashlet.get("inventory_join_macros"):

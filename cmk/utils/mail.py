@@ -9,8 +9,12 @@ import re
 import socket
 import subprocess
 from email.message import Message
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formatdate, parseaddr
-from typing import TypeVar
+from typing import Literal, NamedTuple, TypeVar
 
 from cmk.utils import paths
 from cmk.utils import version as cmk_version
@@ -163,3 +167,64 @@ def set_mail_headers(
     mail["X-Auto-Response-Suppress"] = "DR,RN,NRN,OOF,AutoReply"
 
     return mail
+
+
+class AttachmentNamedTuple(NamedTuple):
+    what: Literal["img"]
+    name: str
+    contents: bytes | str
+    how: str
+
+
+# Keeping this for compatibility reasons
+AttachmentUnNamedTuple = tuple[str, str, bytes | str, str]
+AttachmentTuple = AttachmentNamedTuple | AttachmentUnNamedTuple
+AttachmentList = list[AttachmentTuple]
+
+
+# TODO: Just use a single EmailContent parameter.
+def multipart_mail(
+    target: str,
+    subject: str,
+    from_address: str,
+    reply_to: str,
+    content_txt: str,
+    content_html: str,
+    attach: AttachmentList | None = None,
+) -> MIMEMultipart:
+    if attach is None:
+        attach = []
+
+    m = MIMEMultipart("related", _charset="utf-8")
+
+    alt = MIMEMultipart("alternative")
+
+    # The plain text part
+    txt = MIMEText(content_txt, "plain", _charset="utf-8")
+    alt.attach(txt)
+
+    # The html text part
+    html = MIMEText(content_html, "html", _charset="utf-8")
+    alt.attach(html)
+
+    m.attach(alt)
+
+    # Add all attachments
+    for what, name, contents, how in attach:
+        part = (
+            MIMEImage(contents, name=name)
+            if what == "img"
+            else MIMEApplication(contents, name=name)
+        )
+        part.add_header("Content-ID", "<%s>" % name)
+        # how must be inline or attachment
+        part.add_header("Content-Disposition", how, filename=name)
+        m.attach(part)
+
+    return set_mail_headers(
+        MailString(target),
+        MailString(subject),
+        MailString(from_address),
+        MailString(reply_to),
+        m,
+    )

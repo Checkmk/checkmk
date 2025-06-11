@@ -887,7 +887,7 @@ class RulesAPI(BaseAPI):
         return value
 
     def get_all_names(self, ruleset_name: str) -> list[str]:
-        return [_.get("id") for _ in self.get_all(ruleset_name)]
+        return [_["id"] for _ in self.get_all(ruleset_name)]
 
 
 class RulesetsAPI(BaseAPI):
@@ -901,7 +901,7 @@ class RulesetsAPI(BaseAPI):
         return value
 
     def get_all_names(self) -> list[str]:
-        return [_.get("id") for _ in self.get_all()]
+        return [_["id"] for _ in self.get_all()]
 
 
 class BrokerConnectionsAPI(BaseAPI):

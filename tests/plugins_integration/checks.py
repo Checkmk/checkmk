@@ -124,9 +124,7 @@ def get_host_names(
     dump_dir = (dump_dir or config.dump_dir_integration) / ("piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
-        agent_host_names = [
-            _.get("id") for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})
-        ]
+        agent_host_names = [_["id"] for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})]
         snmp_host_names = [_.get("id") for _ in hosts if "tag_snmp_ds" in _.get("attributes", {})]
     else:
         agent_host_names = []

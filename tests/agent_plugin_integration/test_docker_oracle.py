@@ -580,7 +580,7 @@ def test_docker_oracle(
     ]
 
     actual_services = [
-        _.get("extensions")
+        _["extensions"]
         for _ in checkmk.openapi.services.get_host_services(
             oracle.name, columns=["state", "description"]
         )
@@ -589,7 +589,7 @@ def test_docker_oracle(
     ]
 
     missing_services = [
-        service.get("description")
+        service["description"]
         for service in expected_services
         if service.get("description") not in [_.get("description") for _ in actual_services]
     ]

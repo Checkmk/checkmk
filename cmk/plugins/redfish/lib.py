@@ -231,10 +231,10 @@ def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
         value = entry.get("ReadingVolts", 0)
     elif "ReadingCelsius" in entry.keys():
         value = entry.get("ReadingCelsius", 0)
+    value = _try_convert_to_float(value)
     if value is None:
         return None
 
-    value = _try_convert_to_float(value)
     min_range = _try_convert_to_float(entry.get("MinReadingRange", None))
     max_range = _try_convert_to_float(entry.get("MaxReadingRange", None))
     min_warn = _try_convert_to_float(entry.get("LowerThresholdNonCritical", None))

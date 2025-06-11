@@ -85,7 +85,7 @@ def is_latest(image_tag: str) -> bool:
 
 def get_docker_image_and_registry(
     version: str, editions: Sequence[Edition], registries: list[Registry]
-) -> Iterator[tuple[DockerImage, str, Registry]]:
+) -> Iterator[tuple[DockerImage, Edition, Registry]]:
     for edition in editions:
         registry = edition_to_registry(edition, registries)
 

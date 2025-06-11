@@ -51,7 +51,7 @@ __all__ = [
     "STATE_MARKERS",
 ]
 
-_DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg,misc]
+_DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg]
 
 
 _DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]  # type: ignore[explicit-any]

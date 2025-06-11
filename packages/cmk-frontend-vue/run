@@ -129,7 +129,7 @@ run_check_format() {
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
-        --machine \
+        --quiet \
         :all
     bazel run :format.check "$(pwd)"
     # this should be a `bazel run` target which can operate on the workspace

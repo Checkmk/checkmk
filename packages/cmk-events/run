@@ -128,7 +128,7 @@ run_check_format() {
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
-        --machine \
+        --quiet \
         :all
     bazel run //:format.check "$(realpath cmk)" "$(realpath tests)"
 }

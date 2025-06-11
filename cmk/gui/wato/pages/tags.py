@@ -690,7 +690,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(makeuri(request, []))
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         aux_tag_spec = vs.from_html_vars("aux_tag")
@@ -714,7 +714,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         update_tag_config(changed_hosttags_config, pprint_value=active_config.wato_pprint_config)
 
-        return redirect(makeuri(request, []))
+        return redirect(mode_url("tags"))
 
     def page(self) -> None:
         with html.form_context("aux_tag"):
@@ -781,7 +781,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         check_csrf_token()
 
         if not transactions.check_transaction():
-            return redirect(makeuri(request, []))
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         tag_group_spec = vs.from_html_vars("tag_group")
@@ -843,7 +843,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if isinstance(message, str):
             flash(message)
 
-        return redirect(makeuri(request, [], delvars=["_delete"]))
+        return redirect(mode_url("tags"))
 
     def page(self) -> None:
         with html.form_context("tag_group", method="POST"):

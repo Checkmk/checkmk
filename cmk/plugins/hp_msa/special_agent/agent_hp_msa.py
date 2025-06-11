@@ -154,8 +154,8 @@ class HPMSAConnection:
     def _get_session_key(self, hash_class: Callable, username: str, password: str) -> str:
         login_hash = hash_class()
         login_hash.update(f"{username}_{password}".encode())
-        login_url = "login/%s" % login_hash.hexdigest()
-        response = self.get(login_url)
+        login_uri = "login/%s" % login_hash.hexdigest()
+        response = self.get(login_uri)
         xml_tree = ET.fromstring(response.text)
         response_element = xml_tree.find("./OBJECT/PROPERTY[@name='response']")
         if response_element is None:
@@ -170,8 +170,8 @@ class HPMSAConnection:
             )
         return session_key
 
-    def get(self, url_suffix: str) -> requests.Response:
-        url = urljoin(self._base_url, url_suffix)
+    def get(self, uri: str) -> requests.Response:
+        url = urljoin(self._base_url, uri)
         LOGGER.info("GET %r", url)
         # we must provide the verify keyword to every individual request call!
         response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)

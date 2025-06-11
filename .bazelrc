@@ -7,7 +7,8 @@ try-import %workspace%/user.bazelrc
 try-import %workspace%/remote.bazelrc
 
 # Use local registry to add local download mirrors
-common --registry="file://%workspace%/bazel/registry"
+common:linux --registry="file://%workspace%/bazel/registry"
+common:windows --registry="file:///%workspace%/bazel/registry"
 common --registry=https://bcr.bazel.build
 
 # default/common bazel args for all commands supporting it

@@ -228,7 +228,7 @@ ENV RUSTUP_HOME=/opt/rust/rustup
 
 COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
-common:ci --@//:filesystem_layout=fhs
+common:ci --@//bazel/cmk/filesystem_layout=fhs
 common:ci --action_env=DISTRO=${DISTRO}
 common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
 common:ci --action_env=RUSTUP_HOME=${RUSTUP_HOME}

@@ -25,7 +25,7 @@ common --cycles
 common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
 # We standardized on Ubuntu, a Debian-based distro, so LSB
-common --@//:filesystem_layout=lsb
+common --@//bazel/cmk/filesystem_layout=lsb
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
@@ -67,7 +67,7 @@ common:ci --local_resources=memory=HOST_RAM*.67
 common:ci --remote_upload_local_results=true
 
 # No standard in the CI where we must explicitly differentiate between LSB and FHS.
-common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
+common:ci --@//bazel/cmk/filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always

@@ -2,8 +2,8 @@ cc_import(
     name = "libxml2_shared",
     shared_library = select(
         {
-            "@//:lsb_filesystem_layout": "lib/x86_64-linux-gnu/libxml2.so",
-            "@//:fhs_filesystem_layout": "lib64/libxml2.so",
+            "@//bazel/cmk/filesystem_layout:lsb": "lib/x86_64-linux-gnu/libxml2.so",
+            "@//bazel/cmk/filesystem_layout:fhs": "lib64/libxml2.so",
         },
         no_match_error = "Please build with lsb or fhs filesystem layout",
     ),

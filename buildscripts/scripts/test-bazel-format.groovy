@@ -8,7 +8,7 @@ def main() {
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
             name: "test-bazel-format",
-            cmd: "make -C tests test-format-bazel-docker",
+            cmd: "make -C tests test-format-bazel",
             output_file: "bazel-prettier.txt",
         ]);
 

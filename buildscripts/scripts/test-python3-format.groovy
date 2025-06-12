@@ -8,7 +8,7 @@ def main() {
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
             name: "test-format-python",
-            cmd: "make -C tests test-format-python-docker",
+            cmd: "make -C tests test-format-python",
             // output_file can not be used here as the venv and bazel setup
             // would be part of it as well, leading to unwanted output
         ]);

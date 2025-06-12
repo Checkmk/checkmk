@@ -647,51 +647,7 @@ include("//bazel/module:rust/site.MODULE.bazel")
 
 include("//bazel/module:rust/host.MODULE.bazel")
 
-go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.22.10")
-
-go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
-go_deps.from_file(go_mod = "//:go.mod")
-use_repo(
-    go_deps,
-    "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_fileexporter",
-    "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_syslogexporter",
-    "com_github_open_telemetry_opentelemetry_collector_contrib_extension_basicauthextension",
-    "com_github_open_telemetry_opentelemetry_collector_contrib_processor_transformprocessor",
-    "com_github_open_telemetry_opentelemetry_collector_contrib_receiver_prometheusreceiver",
-    "io_opentelemetry_go_collector_component",
-    "io_opentelemetry_go_collector_confmap",
-    "io_opentelemetry_go_collector_confmap_provider_envprovider",
-    "io_opentelemetry_go_collector_confmap_provider_fileprovider",
-    "io_opentelemetry_go_collector_confmap_provider_httpprovider",
-    "io_opentelemetry_go_collector_confmap_provider_httpsprovider",
-    "io_opentelemetry_go_collector_confmap_provider_yamlprovider",
-    "io_opentelemetry_go_collector_connector",
-    "io_opentelemetry_go_collector_exporter",
-    "io_opentelemetry_go_collector_extension",
-    "io_opentelemetry_go_collector_otelcol",
-    "io_opentelemetry_go_collector_processor",
-    "io_opentelemetry_go_collector_processor_batchprocessor",
-    "io_opentelemetry_go_collector_receiver",
-    "io_opentelemetry_go_collector_receiver_otlpreceiver",
-)
-
-# The overrides are needed to avoid issues like:
-# no such package '@@gazelle~~go_deps~com_github_prometheus_prometheus//gogoproto': BUILD file not found in directory 'gogoproto' of external repository
-# See conversation here: https://github.com/bazel-contrib/bazel-gazelle/issues/1035
-# The mentioned solution 'build_file_proto_mode = "disable_global"' is deprecated and was moved to 'gazelle_override':
-# https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
-
-go_deps.gazelle_override(
-    directives = [
-        "gazelle:proto disable",
-    ],
-    path = "github.com/prometheus/prometheus",
-)
-go_deps.gazelle_override(
-    build_file_generation = "on",
-    path = "github.com/cncf/xds/go",
-)
+include("//bazel/module:gazelle/go.MODULE.bazel")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
 node.toolchain(node_version = "22.14.0")

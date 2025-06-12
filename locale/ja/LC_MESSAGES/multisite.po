@@ -17464,6 +17464,10 @@ msgstr "通知したいイベントを定義します。"
 msgid "Define host assignment"
 msgstr "ホスト割り当ての定義"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "保留中のPodレベルを定義する"
+
 msgid "Define levels for pending pods"
 msgstr "保留中のPodレベルを定義する"
 
@@ -17536,6 +17540,13 @@ msgid ""
 msgstr ""
 "最大セッション時間を定義します。最大値に達した場合、ユーザは再認証する必要が"
 "あります。"
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -33622,6 +33633,10 @@ msgstr "構成同期ステータスの解釈"
 msgid "Interpretation of Registration States"
 msgstr "登録状態の解釈"
 
+#, fuzzy
+msgid "Interpretation of VM Tools States"
+msgstr "Podステータスの解釈"
+
 msgid "Interpretation of failover cluster state"
 msgstr "フェイルオーバークラスターの状態の解釈"
 
@@ -39766,6 +39781,16 @@ msgid "Metric name"
 msgstr "メトリックのラベル"
 
 #, fuzzy
+msgid "Metric name (exact match)"
+msgstr "ホスト名(完全一致)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
+
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
@@ -42898,6 +42923,14 @@ msgstr "ない"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Present"
+msgstr "現在ではない"
+
+#, fuzzy
+msgid "Not Started"
+msgstr "始まっていない。"
 
 #, fuzzy
 msgid "Not a list"
@@ -64233,6 +64266,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "クラスターには少なくとも1つのノードが必要です"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
@@ -64498,6 +64535,10 @@ msgid ""
 msgstr ""
 "メトリックラベルは、結果のサービスのステータス詳細のクエリ値と一緒に表示され"
 "ます。何も指定されていない場合、メトリック名がラベルとして使用されます。"
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "秘密鍵"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -83565,6 +83606,10 @@ msgstr "ホスト %s のすべてのログファイル"
 msgid "all logfiles on all hosts"
 msgstr "すべてのホストのすべてのログファイル"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "無効なトピック"
+
 msgid "all special agents"
 msgstr "全ての特別なエージェント"
 
@@ -85282,6 +85327,10 @@ msgstr "ソケットは使用されていません"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "ソケットは、ネットワークに残っているパケットを閉じた後、待機しています"
 
+#, fuzzy
+msgid "specific metrics"
+msgstr "特定のサイト"
+
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
 
@@ -86612,10 +86661,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 #, fuzzy
 #~ msgid "Invalid integer number"
 #~ msgstr "無効なファイル名"
-
-#, fuzzy
-#~ msgid "Invalid metric"
-#~ msgstr "無効なトピック"
 
 #, fuzzy
 #~ msgid "Invalid multiple choice value"

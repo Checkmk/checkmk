@@ -18337,6 +18337,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host toewijzing definiëren"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definieer niveaus voor in afwachting van pods"
+
 msgid "Define levels for pending pods"
 msgstr "Definieer niveaus voor in afwachting van pods"
 
@@ -18411,6 +18415,13 @@ msgstr "Definieer lagere niveaus voor het aantal beëindigde containers"
 msgid ""
 "Define the maximum allowed session duration. If reached, the user has to re-"
 "authenticate. Sessions are not set to persist on browser termination."
+msgstr ""
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
 msgstr ""
 
 msgid ""
@@ -35180,6 +35191,10 @@ msgstr "Interpretatie van Config Sync Status"
 msgid "Interpretation of Registration States"
 msgstr "Interpretatie van registratiestaten"
 
+#, fuzzy
+msgid "Interpretation of VM Tools States"
+msgstr "Interpretatie van pod status"
+
 msgid "Interpretation of failover cluster state"
 msgstr "Interpretatie van failover clustertoestand"
 
@@ -41595,6 +41610,16 @@ msgid "Metric name"
 msgstr "Metrisch etiket"
 
 #, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Hostnaam (exacte match)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
+
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
@@ -44823,6 +44848,14 @@ msgstr "Niet"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Present"
+msgstr "niet aanwezig"
+
+#, fuzzy
+msgid "Not Started"
+msgstr "Niet begonnen."
 
 #, fuzzy
 msgid "Not a list"
@@ -67143,6 +67176,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "De limiet voor de transportvertraging in <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -67424,6 +67461,10 @@ msgstr ""
 "Het metric label wordt getoond naast de opgevraagde waarde in het "
 "statusdetail van de resulterende dienst. De naam van de metriek wordt als "
 "label gebruikt als er niets is gespecificeerd."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Geheime sleutel"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -87777,6 +87818,10 @@ msgstr "alle logbestanden van host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle logbestanden op alle hosts"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "Ongeldig onderwerp"
+
 msgid "all special agents"
 msgstr "alle speciale agenten"
 
@@ -89545,6 +89590,10 @@ msgstr ""
 "socket wacht na het sluiten op alle pakketten die op het netwerk "
 "achterblijven"
 
+#, fuzzy
+msgid "specific metrics"
+msgstr "Specifieke sites"
+
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"
 
@@ -90822,10 +90871,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Invalid integer number"
 #~ msgstr "Ongeldige bestandsnaam"
-
-#, fuzzy
-#~ msgid "Invalid metric"
-#~ msgstr "Ongeldig onderwerp"
 
 #, fuzzy
 #~ msgid "Invalid multiple choice value"

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 09:16+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -18343,6 +18343,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definiți atribuirea gazdei"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definirea nivelurilor pentru podurile în așteptare"
+
 msgid "Define levels for pending pods"
 msgstr "Definirea nivelurilor pentru podurile în așteptare"
 
@@ -18426,6 +18430,13 @@ msgid ""
 msgstr ""
 "Definiți durata maximă a sesiunii. Dacă este atinsă, utilizatorul trebuie să "
 "se autentifice din nou."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -35284,6 +35295,10 @@ msgstr "Interpretarea stării de sincronizare a configurației"
 msgid "Interpretation of Registration States"
 msgstr "Interpretarea statelor de înregistrare"
 
+#, fuzzy
+msgid "Interpretation of VM Tools States"
+msgstr "Interpretarea statutului de păstăi"
+
 msgid "Interpretation of failover cluster state"
 msgstr "Interpretarea stării clusterului de failover"
 
@@ -41665,6 +41680,16 @@ msgid "Metric name"
 msgstr "Etichetă metrică"
 
 #, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Numele gazdei (potrivire exactă)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
+
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
@@ -44912,6 +44937,14 @@ msgstr "Nu"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Present"
+msgstr "nu este prezent"
+
+#, fuzzy
+msgid "Not Started"
+msgstr "Nu a început."
 
 #, fuzzy
 msgid "Not a list"
@@ -67320,6 +67353,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -67603,6 +67640,10 @@ msgstr ""
 "Eticheta metrică este afișată alături de valoarea interogată în detaliile de "
 "stare ale serviciului rezultat. Numele metricii va fi luat ca etichetă dacă "
 "nu s-a specificat nimic."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Cheia secretă"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -88002,6 +88043,10 @@ msgstr "toate fișierele jurnal ale gazdei %s"
 msgid "all logfiles on all hosts"
 msgstr "toate fișierele jurnal de pe toate gazdele"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "Subiect nevalabil"
+
 msgid "all special agents"
 msgstr "toți agenții speciali"
 
@@ -89767,6 +89812,10 @@ msgstr "nu este folosită"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
+#, fuzzy
+msgid "specific metrics"
+msgstr "Situri specifice"
+
 msgid "specify manually ->"
 msgstr "specificați manual ->"
 
@@ -91071,10 +91120,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Invalid integer number"
 #~ msgstr "Nume de fișier invalid"
-
-#, fuzzy
-#~ msgid "Invalid metric"
-#~ msgstr "Subiect nevalabil"
 
 #, fuzzy
 #~ msgid "Invalid multiple choice value"

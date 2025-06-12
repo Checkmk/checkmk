@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 13:46+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -17754,6 +17754,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Levels für ausstehende Pods festlegen"
+
 msgid "Define levels for pending pods"
 msgstr "Levels für ausstehende Pods festlegen"
 
@@ -17832,6 +17836,13 @@ msgstr ""
 "Legen Sie die maximal zulässige Sitzungsdauer fest. Wird sie erreicht, muss "
 "sich der Benutzer erneut authentifizieren. Die Sitzungen bleiben beim "
 "Beenden des Browsers nicht bestehen."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -33875,6 +33886,10 @@ msgstr "Interpretation des Konfigurationssynchronisationszustands"
 msgid "Interpretation of Registration States"
 msgstr "Interpratation der Registrierungszustände"
 
+#, fuzzy
+msgid "Interpretation of VM Tools States"
+msgstr "Interpretation des Pod-Zustands"
+
 msgid "Interpretation of failover cluster state"
 msgstr "Interpretation des Failover-Cluster-Zustands"
 
@@ -40027,6 +40042,16 @@ msgstr "Metrik-Levels"
 msgid "Metric name"
 msgstr "Metrik-Name"
 
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Host-Name (exakter Match)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
+
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
@@ -43086,6 +43111,14 @@ msgstr "Nicht"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr "Nicht vor: %s - nicht nach: %s"
+
+#, fuzzy
+msgid "Not Present"
+msgstr "nicht vorhanden"
+
+#, fuzzy
+msgid "Not Started"
+msgstr "Nicht gestartet."
 
 msgid "Not a list"
 msgstr "Dies ist keine Liste"
@@ -64595,6 +64628,10 @@ msgstr ""
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
 
+#, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Der Cluster muss zumindest einen Knoten haben"
+
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -64889,6 +64926,10 @@ msgstr ""
 "Die Bezeichnung der Metrik wird neben dem abgefragten Wert im Zustandsdetail "
 "des resultierenden Dienstes angezeigt. Der Metrikname wird als Bezeichnung "
 "genommen, wenn nichts angegeben wurde."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Benutzername darf nicht leer sein"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -84605,6 +84646,10 @@ msgstr "alle Log-Dateien von Host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle Log-Dateien auf allen Hosts"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "Ungültige Metrik"
+
 msgid "all special agents"
 msgstr "alle Spezialagenten"
 
@@ -86315,6 +86360,10 @@ msgstr "Anschluss wird nicht verwendet"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
 
+#, fuzzy
+msgid "specific metrics"
+msgstr "Bestimmte Benutzer"
+
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
 
@@ -87831,9 +87880,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Invalid integer number"
 #~ msgstr "Ungültige Integer-Nummer"
-
-#~ msgid "Invalid metric"
-#~ msgstr "Ungültige Metrik"
 
 #~ msgid "Invalid multiple choice value"
 #~ msgstr "Ungültiger Wert für Mehrfachauswahl"

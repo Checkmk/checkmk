@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 09:15+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/dev/fr/"
@@ -18460,6 +18460,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Définir l'affectation des hôtes"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Définir des niveaux pour les pods en attente"
+
 msgid "Define levels for pending pods"
 msgstr "Définir des niveaux pour les pods en attente"
 
@@ -18538,6 +18542,13 @@ msgstr ""
 msgid ""
 "Define the maximum allowed session duration. If reached, the user has to re-"
 "authenticate. Sessions are not set to persist on browser termination."
+msgstr ""
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
 msgstr ""
 
 msgid ""
@@ -35466,6 +35477,10 @@ msgstr "Interprétation de l'état de la Config Sync"
 msgid "Interpretation of Registration States"
 msgstr "Interprétation des États d'enregistrement"
 
+#, fuzzy
+msgid "Interpretation of VM Tools States"
+msgstr "Interprétation de l'état des pods"
+
 msgid "Interpretation of failover cluster state"
 msgstr "Interprétation de l'état du cluster de basculement"
 
@@ -41911,6 +41926,16 @@ msgid "Metric name"
 msgstr "Étiquette métrique"
 
 #, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Nom d'hôte (correspondance exacte)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
+
+#, fuzzy
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
 "must start with a letter or digit."
@@ -45162,6 +45187,14 @@ msgstr "Non"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Present"
+msgstr "pas présent"
+
+#, fuzzy
+msgid "Not Started"
+msgstr "Pas encore commencé."
 
 #, fuzzy
 msgid "Not a list"
@@ -67712,6 +67745,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "La limite pour le retard de transport dans <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Le cluster doit avoir au moins un nœud"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -67999,6 +68036,10 @@ msgstr ""
 "L'étiquette de la métrique est affichée à côté de la valeur demandée dans le "
 "détail de l'état du service résultant. Le nom de la métrique sera pris comme "
 "étiquette si rien n'a été spécifié."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Clé secrète"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -88599,6 +88640,10 @@ msgstr "tous les fichiers journaux de l'hôte %s"
 msgid "all logfiles on all hosts"
 msgstr "tous les fichiers journaux sur tous les hôtes"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "Sujet non valide"
+
 msgid "all special agents"
 msgstr "tous les agents spéciaux"
 
@@ -90360,6 +90405,10 @@ msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "La socket attend, après sa fermeture, les paquets restants sur le réseau"
 
+#, fuzzy
+msgid "specific metrics"
+msgstr "Sites spécifiques"
+
 msgid "specify manually ->"
 msgstr "spécifier manuellement ->"
 
@@ -91622,10 +91671,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Invalid integer number"
 #~ msgstr "Nom de fichier non valide"
-
-#, fuzzy
-#~ msgid "Invalid metric"
-#~ msgstr "Sujet non valide"
 
 #, fuzzy
 #~ msgid "Invalid multiple choice value"

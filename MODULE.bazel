@@ -591,6 +591,14 @@ pip.parse(
 )
 use_repo(pip, "cmk_requirements")
 
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "cmk_types",
+    pip_requirements = "@cmk_requirements//:requirements.bzl",
+    requirements_txt = "//:requirements.txt",
+)
+use_repo(types, "cmk_types")
+
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
@@ -634,14 +642,6 @@ register_toolchains(
     "@musl_toolchains_hub//:all",
     "//bazel/toolchains/cc/gcc/local:linux_x86_64",
 )
-
-types = use_extension("@rules_mypy//mypy:types.bzl", "types")
-types.requirements(
-    name = "cmk_types",
-    pip_requirements = "@cmk_requirements//:requirements.bzl",
-    requirements_txt = "//:requirements.txt",
-)
-use_repo(types, "cmk_types")
 
 include("//bazel/module:rust/site.MODULE.bazel")
 

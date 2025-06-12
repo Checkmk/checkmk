@@ -124,6 +124,7 @@ def dump_host(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     hostname: HostName,
+    primary_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     *,
     ip_address_of: IPLookup,
     ip_address_of_mgmt: IPLookupOptional,
@@ -143,7 +144,6 @@ def dump_host(
     print_("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ip_stack_config = config_cache.ip_stack_config(hostname)
-    primary_family = config_cache.default_address_family(hostname)
     ipaddress = (
         None if ip_stack_config is IPStackConfig.NO_IP else ip_address_of(hostname, primary_family)
     )

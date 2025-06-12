@@ -819,6 +819,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             service_name_config,
             plugins,
             hostname,
+            ip_lookup_config.default_address_family(hostname),
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,

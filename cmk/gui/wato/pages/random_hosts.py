@@ -12,6 +12,7 @@ from cmk.ccc.hostaddress import HostName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -84,7 +85,7 @@ class ModeRandomHosts(WatoMode):
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((HostName(host_name), {"ipaddress": "127.0.0.1"}, None))
-            folder.create_hosts(hosts_to_create)
+            folder.create_hosts(hosts_to_create, pprint_value=active_config.wato_pprint_config)
             return count
 
         total_created = 0
@@ -98,6 +99,8 @@ class ModeRandomHosts(WatoMode):
                     break
                 i += 1
 
-            subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
+            subfolder = folder.create_subfolder(
+                folder_name, "Subfolder %02d" % i, {}, pprint_value=active_config.wato_pprint_config
+            )
             total_created += self._create_random_hosts(subfolder, count, folders, levels - 1)
         return total_created

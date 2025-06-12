@@ -27,12 +27,6 @@ copy_to_directory(
 )
 
 string_flag(
-    name = "cmk_version",
-    build_setting_default = "UNSET",
-    visibility = ["//:__subpackages__"],
-)
-
-string_flag(
     # For a discussion of Linux Standard Base (LSB) vs Filesystem Hierarchy Standard (FHS),
     # see https://lists.linux-foundation.org/pipermail/lsb-discuss/2011-February/006674.html
     #

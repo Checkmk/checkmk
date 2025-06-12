@@ -6,7 +6,7 @@ load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
 define_from_flag(
     name = "cmk_version_define",
     macro = "VERSION",
-    value = "//:cmk_version",
+    value = "//bazel/cmk/version",
 )
 
 # Keep code using VERSION apart to minimize cache invalidation.

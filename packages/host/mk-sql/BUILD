@@ -7,7 +7,7 @@ file_from_flag(
     name = "version.rs",
     out = "src/version.rs",
     content = ['pub const VERSION: &str = "{VERSION}";'],
-    replace_labels = {"VERSION": "//:cmk_version"},
+    replace_labels = {"VERSION": "//bazel/cmk/version"},
     visibility = ["//visibility:private"],
 )
 

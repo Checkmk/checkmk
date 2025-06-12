@@ -110,7 +110,7 @@ file_from_flag(
         "",
     ],
     replace_labels = {
-        "cmk_version": "//:cmk_version",
+        "cmk_version": "//bazel/cmk/version",
         "cmk_edition": "//bazel/cmk/edition",
     },
 )

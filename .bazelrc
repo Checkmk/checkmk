@@ -36,7 +36,7 @@ common --test_summary=detailed
 ## For specific commands
 # Always require debug info.
 # build --copt="-g"
-build --flag_alias=cmk_version=//:cmk_version
+build --flag_alias=cmk_version=//bazel/cmk/version
 build --flag_alias=cmk_edition=//bazel/cmk/edition
 build --flag_alias=cmk_distro=//bazel/cmk/distro
 

@@ -36,6 +36,7 @@ $packFormat = $false
 $packCheckFormat = $false
 $packTest = $false
 $packDoc = $false
+$packOci = $false
 
 # repo/branch specific short path
 # TODO(sk): move it to CI upon confirmation that screen works as intended
@@ -68,6 +69,7 @@ function Write-Help() {
     Write-Host "  -F, --check-format   check for  $package_name correct formatting"
     Write-Host "  -B, --build          build binary $package_name"
     Write-Host "  -T, --test           run  $package_name unit tests"
+    Write-Host "  -O, --oci            repackage Oracle Instant Client"
     Write-Host "  --shorten link path  change dir from current using link"
     Write-Host ""
     Write-Host "Examples:"
@@ -93,6 +95,7 @@ else {
             { $("-C", "--clippy") -contains $_ } { $packClippy = $true }
             { $("-T", "--test") -contains $_ } { $packTest = $true }
             { $("-D", "--documentation") -contains $_ } { $packDoc = $true }
+            { $("-O", "--oci") -contains $_ } { $packOci = $true }
             "--clean" { $packClean = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
@@ -215,10 +218,18 @@ try {
     if ($packClean) {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
-    if ($packBuild -or $packTest) {
-        bazel build //packages/host/mk-oracle:oci_light_win_x86
+    if ($packBuild -or $packTest -or - $packOci) {
+        $target = "//packages/host/mk-oracle:oci_light_win_x86"
+        & bazel build $target
+        if ($LASTEXITCODE -eq 0) {
+            $oci_light_win_x86_zip = (& bazel cquery $target  --output=starlark  --starlark:expr='target.files.to_list()[0].path' )
+            Write-Host "Oracle runtime light/win/x86: $oci_light_win_x86_zip" -ForegroundColor Green
+            Copy-Item -Path "$root_dir/$oci_light_win_x86" -Destination "$arte_dir/" -Force -ErrorAction Stop
+        }
+        else {
+            Write-Host "Failed Oracle runtime light/win/x86: $oci_light_win_x86" -ForegroundColor Red
+        }
     }
-
     if ($packBuild) {
         $cwd = Get-Location
         Write-Host "Killing processes in $target_dir" -ForegroundColor White

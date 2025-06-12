@@ -78,29 +78,12 @@ create_venv(
                "//packages/unixcat:unixcat_tar",
                ":license_info",
            ] + select({
-               "//bazel/cmk/distro:almalinux_8": ["//omd/packages/xinetd"],
-               "//bazel/cmk/distro:almalinux_9": ["//omd/packages/xinetd"],
-               "//bazel/cmk/distro:cma_4": [],
-               "//bazel/cmk/distro:debian_11": [],
-               "//bazel/cmk/distro:debian_12": [],
-               "//bazel/cmk/distro:sles_15sp3": [
+               "//bazel/cmk/distro:almalinux": ["//omd/packages/xinetd"],
+               "//bazel/cmk/distro:sles": [
                    "//omd/packages/libgsf",
                    "//omd/packages/xinetd",
                ],
-               "//bazel/cmk/distro:sles_15sp4": [
-                   "//omd/packages/libgsf",
-                   "//omd/packages/xinetd",
-               ],
-               "//bazel/cmk/distro:sles_15sp5": [
-                   "//omd/packages/libgsf",
-                   "//omd/packages/xinetd",
-               ],
-               "//bazel/cmk/distro:sles_15sp6": [
-                   "//omd/packages/libgsf",
-                   "//omd/packages/xinetd",
-               ],
-               "//bazel/cmk/distro:ubuntu_22.04": [],
-               "//bazel/cmk/distro:ubuntu_24.04": [],
+               "//conditions:default": [],
            }) +
            edition_deps[edition],
 ) for edition in [

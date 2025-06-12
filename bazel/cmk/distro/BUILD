@@ -1,3 +1,4 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 package(default_visibility = ["//visibility:public"])
@@ -30,9 +31,22 @@ config_setting(
     flag_values = {":distro": "almalinux-9"},
 )
 
+selects.config_setting_group(
+    name = "almalinux",
+    match_all = [
+        ":almalinux_8",
+        ":almalinux_9",
+    ],
+)
+
 config_setting(
     name = "cma_4",
     flag_values = {":distro": "cma-4"},
+)
+
+selects.config_setting_group(
+    name = "cma",
+    match_all = [":cma_4"],
 )
 
 config_setting(
@@ -43,6 +57,14 @@ config_setting(
 config_setting(
     name = "debian_12",
     flag_values = {":distro": "debian-12"},
+)
+
+selects.config_setting_group(
+    name = "debian",
+    match_all = [
+        ":debian_11",
+        ":debian_12",
+    ],
 )
 
 config_setting(
@@ -65,6 +87,16 @@ config_setting(
     flag_values = {":distro": "sles-15sp6"},
 )
 
+selects.config_setting_group(
+    name = "sles",
+    match_all = [
+        ":sles_15sp3",
+        ":sles_15sp4",
+        ":sles_15sp5",
+        ":sles_15sp6",
+    ],
+)
+
 config_setting(
     name = "ubuntu_22.04",
     flag_values = {":distro": "ubuntu-22.04"},
@@ -73,4 +105,12 @@ config_setting(
 config_setting(
     name = "ubuntu_24.04",
     flag_values = {":distro": "ubuntu-24.04"},
+)
+
+selects.config_setting_group(
+    name = "ubuntu",
+    match_all = [
+        ":ubuntu_22.04",
+        ":ubuntu_24.04",
+    ],
 )

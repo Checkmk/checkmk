@@ -26,12 +26,6 @@ copy_to_directory(
     visibility = ["//:__subpackages__"],
 )
 
-alias(
-    # Remove this target after the next rebuild of our docker images.
-    name = "filesystem_layout",
-    actual = "//bazel/cmk/filesystem_layout",
-)
-
 string_flag(
     name = "repo_license",
     build_setting_default = REPO_LICENSE,

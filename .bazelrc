@@ -37,7 +37,7 @@ common --test_summary=detailed
 # Always require debug info.
 # build --copt="-g"
 build --flag_alias=cmk_version=//:cmk_version
-build --flag_alias=cmk_edition=//:cmk_edition
+build --flag_alias=cmk_edition=//bazel/cmk/edition
 build --flag_alias=cmk_distro=//bazel/cmk/distro
 
 # For some obscure reason, the re2 project made itself valgrind-dirty by default:

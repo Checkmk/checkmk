@@ -85,9 +85,9 @@ ts_project(
 py_library(
     name = "cmk_shared_typing_formatter",
     srcs = [
-        "source/vue_formspec/postprocess.py",
         "utils/__init__.py",
         "utils/format.py",
+        "utils/postprocess.py",
     ],
     imports = ["."],
 )

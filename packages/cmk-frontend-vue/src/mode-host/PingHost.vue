@@ -50,10 +50,9 @@ interface Result {
 }
 
 const statusElements: Ref<Record<string, Result>> = ref({})
-const isNoIP = ref(false)
-const ipAddressFamilyInputActive = ref(false)
-const ipv4InputActive = ref(false)
-const ipv6InputActive = ref(false)
+const isNoIP = ref(
+  props.ipAddressFamilyInputElement.checked && props.ipAddressFamilySelectElement.value === 'no-ip'
+)
 const controller = ref(new AbortController())
 const ajaxRequestInProgress = ref(false)
 
@@ -61,21 +60,25 @@ onMounted(() => {
   props.formElement.addEventListener('change', (e) => {
     switch (e.target) {
       case props.formElement:
-        if (props.ipAddressFamilySelectElement.value === 'no-ip') {
-          isNoIP.value = true
-          statusElements.value = {}
+        switch (props.ipAddressFamilySelectElement.value) {
+          case 'ip-v4-only':
+          case 'ip-v6-only':
+          case 'ip-v4v6':
+            isNoIP.value = false
+            break
+          case 'no-ip':
+            isNoIP.value = true
+            statusElements.value = {}
+            break
         }
         break
       case props.ipAddressFamilyInputElement:
-        ipAddressFamilyInputActive.value = !ipAddressFamilyInputActive.value
         isNoIP.value =
-          ipAddressFamilyInputActive.value && props.ipAddressFamilySelectElement.value === 'no-ip'
-        break
-      case props.ipv4InputButtonElement:
-        ipv4InputActive.value = !ipv4InputActive.value
-        break
-      case props.ipv6InputButtonElement:
-        ipv6InputActive.value = !ipv6InputActive.value
+          props.ipAddressFamilyInputElement.checked &&
+          props.ipAddressFamilySelectElement.value === 'no-ip'
+        if (isNoIP.value) {
+          statusElements.value = {}
+        }
         break
     }
   })
@@ -84,7 +87,7 @@ onMounted(() => {
       statusElements.value = {}
       return
     }
-    if (ipv4InputActive.value || ipv6InputActive.value) {
+    if (props.ipv4InputButtonElement.checked || props.ipv6InputButtonElement.checked) {
       return
     }
     callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)

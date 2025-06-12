@@ -44,7 +44,7 @@ def migrate_diskstat_inventory(value: object) -> Mapping[str, object]:
         return value
 
     return {
-        **{f: f in value for f in ("summary", "lvm", "vxvm", "diskless")},
+        **{f: f in value and value[f] for f in ("summary", "lvm", "vxvm", "diskless")},
         **({} if physical is None else {"physical": "name"}),
     }
 

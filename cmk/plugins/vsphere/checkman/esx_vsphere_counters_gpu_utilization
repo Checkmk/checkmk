@@ -1,0 +1,14 @@
+title: VMware ESX Host Systems: GPU Utilization
+agents: vsphere
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check measures the GPU {utilization} over all monitored
+ GPUs of the system.
+
+item:
+ The fixed statement {{SUMMARY}}
+
+discovery:
+ One service is created for each ESX GPU.

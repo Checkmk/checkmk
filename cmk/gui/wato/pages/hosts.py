@@ -9,6 +9,7 @@ import copy
 from collections.abc import Collection, Iterator
 from dataclasses import asdict
 from typing import Final, overload
+from urllib.parse import unquote
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -897,7 +898,7 @@ class PageAjaxPingHost(AjaxPage):
         result = ping_host(
             automation_config=make_automation_config(active_config.sites[site_id]),
             ping_host_input=PingHostInput(
-                ip_or_dns_name=ip_or_dns_name,
+                ip_or_dns_name=unquote(ip_or_dns_name),
                 base_cmd=cmd,
             ),
         )

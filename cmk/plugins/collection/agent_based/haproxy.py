@@ -49,6 +49,14 @@ class HAProxyServerStatus(Enum):
     NO_CHECK = "no check"
 
 
+class Backend(NamedTuple):
+    status: str
+    uptime: int | None
+    active: int | None
+    backup: int | None
+    stot: int | None
+
+
 class Frontend(NamedTuple):
     status: str
     stot: int | None
@@ -60,9 +68,11 @@ class Server(NamedTuple):
     uptime: int | None
     active: int | None
     backup: int | None
+    stot: int | None
 
 
 class Section(NamedTuple):
+    backends: dict[str, Backend]
     frontends: dict[str, Frontend]
     servers: dict[str, Server]
 
@@ -90,10 +100,11 @@ def status_result(status: str, params: Mapping[str, Any]) -> CheckResult:
 
 
 def parse_haproxy(string_table: StringTable) -> Section:
+    backends = {}
     frontends = {}
     servers = {}
     for line in string_table:
-        if len(line) <= 32 or line[32] not in ("0", "2"):
+        if len(line) <= 32 or line[32] not in ("0", "1", "2"):
             continue
 
         status = line[17]
@@ -106,23 +117,73 @@ def parse_haproxy(string_table: StringTable) -> Section:
                 continue
             frontends[name] = Frontend(status=status, stot=stot)
 
-        elif line[32] == "2":
-            name = f"{line[0]}/{line[1]}"
-            layer_check = line[36]
+        elif line[32] in ["1", "2"]:
             uptime = parse_int(line[23])
             active = parse_int(line[19])
             backup = parse_int(line[20])
+            try:
+                stot = int(line[7])
+            except ValueError:
+                continue
 
-            servers[name] = Server(
-                status=status, layer_check=layer_check, uptime=uptime, active=active, backup=backup
-            )
+            if line[32] in "1":
+                name = line[0]
 
-    return Section(frontends=frontends, servers=servers)
+                backends[name] = Backend(
+                    status=status,
+                    uptime=uptime,
+                    active=active,
+                    backup=backup,
+                    stot=stot,
+                )
+            elif line[32] == "2":
+                name = f"{line[0]}/{line[1]}"
+                layer_check = line[36]
+
+                servers[name] = Server(
+                    status=status,
+                    layer_check=layer_check,
+                    uptime=uptime,
+                    active=active,
+                    backup=backup,
+                    stot=stot,
+                )
+
+    return Section(backends=backends, frontends=frontends, servers=servers)
 
 
 agent_section_haproxy = AgentSection(
     name="haproxy",
     parse_function=parse_haproxy,
+)
+
+
+def discover_haproxy_backend(section: Section) -> DiscoveryResult:
+    for key in section.backends.keys():
+        yield Service(item=key)
+
+
+def check_haproxy_backend(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from haproxy_result(item, params, section.backends.get(item))
+
+
+check_plugin_haproxy_backend = CheckPlugin(
+    name="haproxy_backend",
+    sections=["haproxy"],
+    service_name="HAProxy Backend %s",
+    discovery_function=discover_haproxy_backend,
+    check_function=check_haproxy_backend,
+    check_ruleset_name="haproxy_server",
+    check_default_parameters={
+        HAProxyServerStatus.UP.value: State.OK.value,
+        HAProxyServerStatus.DOWN.value: State.CRIT.value,
+        HAProxyServerStatus.NOLB.value: State.CRIT.value,
+        HAProxyServerStatus.MAINT.value: State.CRIT.value,
+        HAProxyServerStatus.MAINT_VIA.value: State.WARN.value,
+        HAProxyServerStatus.MAINT_RES.value: State.WARN.value,
+        HAProxyServerStatus.DRAIN.value: State.CRIT.value,
+        HAProxyServerStatus.NO_CHECK.value: State.CRIT.value,
+    },
 )
 
 
@@ -168,7 +229,12 @@ def discover_haproxy_server(section: Section) -> DiscoveryResult:
 
 
 def check_haproxy_server(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    data = section.servers.get(item)
+    yield from haproxy_result(item, params, section.servers.get(item))
+
+
+def haproxy_result(
+    item: str, params: Mapping[str, Any], data: Server | Backend | None
+) -> CheckResult:
     if data is None:
         return
 
@@ -182,11 +248,19 @@ def check_haproxy_server(item: str, params: Mapping[str, Any], section: Section)
     else:
         yield Result(state=State.CRIT, summary="Neither active nor backup")
 
-    yield Result(state=State.OK, summary=f"Layer Check: {data.layer_check}")
+    if isinstance(data, Server):
+        yield Result(state=State.OK, summary=f"Layer Check: {data.layer_check}")
 
     uptime = data.uptime
     if uptime is not None:
         yield Result(state=State.OK, summary=f"Up since {render.timespan(uptime)}")
+
+    if data.stot:
+        value_store = get_value_store()
+        session_rate = get_rate(value_store, f"sessions.{item}", time(), data.stot)
+        yield from check_levels_v1(
+            value=session_rate, metric_name="session_rate", label="Session Rate"
+        )
 
 
 check_plugin_haproxy_server = CheckPlugin(

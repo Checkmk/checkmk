@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 08:33+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
@@ -45241,6 +45241,14 @@ msgstr "Numărul de conexiuni curente"
 msgid "Number of current sessions"
 msgstr "Numărul de sesiuni curente"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Niveluri procentuale ale numărului curent de fire în threadpool"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Procentul de fire curente ocupate în threadpool"
+
 msgid "Number of currently running sessions"
 msgstr "Numărul de sesiuni în curs de desfășurare"
 
@@ -66702,16 +66710,6 @@ msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
 
-#, python-format
-msgid "The list of host tags must be a list, but is %r"
-msgstr "Lista de etichete gazdă trebuie să fie o listă, dar este %r."
-
-#, python-format
-msgid "The list of host tags must only contain strings but also contains %r"
-msgstr ""
-"Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
-"conține și %r."
-
 #, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -86364,9 +86362,6 @@ msgid "You have no permission for changes in this rule using %s."
 msgstr ""
 "Nu aveți permisiunea de a efectua modificări în această regulă folosind %s."
 
-msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "Nu ați configurat niciun <a href=\"wato.py?mode=tags\">tags</a>."
-
 #, fuzzy
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -88228,9 +88223,6 @@ msgstr "este necesară"
 msgid "is used in"
 msgstr "Acest utilizator"
 
-msgid "isnot"
-msgstr "nu este"
-
 msgid "jitter"
 msgstr "jitter"
 
@@ -89026,9 +89018,6 @@ msgstr ""
 msgid "sessions"
 msgstr "sesiuni"
 
-msgid "set"
-msgstr "seteaza"
-
 msgid "settings"
 msgstr "setări"
 
@@ -89443,6 +89432,25 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, python-format
+#~ msgid "The list of host tags must be a list, but is %r"
+#~ msgstr "Lista de etichete gazdă trebuie să fie o listă, dar este %r."
+
+#, python-format
+#~ msgid "The list of host tags must only contain strings but also contains %r"
+#~ msgstr ""
+#~ "Lista de etichete gazdă trebuie să conțină numai șiruri de caractere, dar "
+#~ "conține și %r."
+
+#~ msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
+#~ msgstr "Nu ați configurat niciun <a href=\"wato.py?mode=tags\">tags</a>."
+
+#~ msgid "isnot"
+#~ msgstr "nu este"
+
+#~ msgid "set"
+#~ msgstr "seteaza"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Stare gazdă dorită pentru gazda Nutanix definită"

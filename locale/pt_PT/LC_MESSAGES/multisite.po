@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 08:33+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -45154,6 +45154,14 @@ msgstr "Número de ligações actuais"
 msgid "Number of current sessions"
 msgstr "Número de sessões em curso"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Níveis percentuais de contagem de roscas atuais no conjunto de roscas"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Percentagem de roscas de corrente ocupadas no conjunto de roscas"
+
 msgid "Number of currently running sessions"
 msgstr "Número de sessões actualmente em curso"
 
@@ -66518,15 +66526,6 @@ msgstr "O histórico de utilização da licença tem mais de cinco dias."
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "O limite para o atraso do transporte em <tt>v$dataguard_stats</tt>"
 
-#, python-format
-msgid "The list of host tags must be a list, but is %r"
-msgstr "A lista de tags do host deve ser uma lista, mas é %r"
-
-#, python-format
-msgid "The list of host tags must only contain strings but also contains %r"
-msgstr ""
-"A lista de tags do host deve conter apenas strings, mas também contém %r"
-
 #, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -86081,9 +86080,6 @@ msgstr "Você não tem permissão para alterações neste pacote BI %s."
 msgid "You have no permission for changes in this rule using %s."
 msgstr "Você não tem permissão para alterações nesta regra usando %s."
 
-msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "Você não configurou nenhuma <a href=\"wato.py?mode=tags\">tags</a>."
-
 #, fuzzy
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -87935,9 +87931,6 @@ msgstr "é necessário"
 msgid "is used in"
 msgstr "Este usuário"
 
-msgid "isnot"
-msgstr "isot"
-
 msgid "jitter"
 msgstr "agir de maneira nervosa"
 
@@ -88720,9 +88713,6 @@ msgstr ""
 msgid "sessions"
 msgstr "sessões"
 
-msgid "set"
-msgstr "conjunto"
-
 msgid "settings"
 msgstr "definições"
 
@@ -89138,6 +89128,24 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, python-format
+#~ msgid "The list of host tags must be a list, but is %r"
+#~ msgstr "A lista de tags do host deve ser uma lista, mas é %r"
+
+#, python-format
+#~ msgid "The list of host tags must only contain strings but also contains %r"
+#~ msgstr ""
+#~ "A lista de tags do host deve conter apenas strings, mas também contém %r"
+
+#~ msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
+#~ msgstr "Você não configurou nenhuma <a href=\"wato.py?mode=tags\">tags</a>."
+
+#~ msgid "isnot"
+#~ msgstr "isot"
+
+#~ msgid "set"
+#~ msgstr "conjunto"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "Estado do host desejado para o host Nutanix definido"

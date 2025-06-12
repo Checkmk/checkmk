@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-06-11 08:33+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -45548,6 +45548,15 @@ msgstr "Nombre de connexions actuelles"
 msgid "Number of current sessions"
 msgstr "Nombre de sessions en cours"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr ""
+"Niveaux de pourcentage du nombre actuel de threads dans le pool de threads"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Pourcentage de threads actuels occupés dans le pool de threads"
+
 msgid "Number of currently running sessions"
 msgstr "Nombre de sessions en cours"
 
@@ -67152,16 +67161,6 @@ msgstr ""
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "La limite pour le retard de transport dans <tt>v$dataguard_stats</tt>"
 
-#, python-format
-msgid "The list of host tags must be a list, but is %r"
-msgstr "La liste des balises d'hôte doit être une liste, mais est %r"
-
-#, python-format
-msgid "The list of host tags must only contain strings but also contains %r"
-msgstr ""
-"La liste des balises d'hôtes ne doit contenir que des chaînes de caractères "
-"mais contient également %r"
-
 #, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -87048,9 +87047,6 @@ msgid "You have no permission for changes in this rule using %s."
 msgstr ""
 "Vous n'avez pas l'autorisation de modifier cette règle en utilisant %s."
 
-msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "Vous n'avez pas configuré de <a href=\"wato.py?mode=tags\">tags</a>."
-
 #, fuzzy
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -88910,9 +88906,6 @@ msgstr "est nécessaire"
 msgid "is used in"
 msgstr "Cet utilisateur"
 
-msgid "isnot"
-msgstr "n'est pas"
-
 msgid "jitter"
 msgstr "gigue"
 
@@ -89702,9 +89695,6 @@ msgstr ""
 msgid "sessions"
 msgstr "sessions"
 
-msgid "set"
-msgstr "set"
-
 #, fuzzy
 msgid "settings"
 msgstr "Paramètres"
@@ -90117,6 +90107,26 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, python-format
+#~ msgid "The list of host tags must be a list, but is %r"
+#~ msgstr "La liste des balises d'hôte doit être une liste, mais est %r"
+
+#, python-format
+#~ msgid "The list of host tags must only contain strings but also contains %r"
+#~ msgstr ""
+#~ "La liste des balises d'hôtes ne doit contenir que des chaînes de "
+#~ "caractères mais contient également %r"
+
+#~ msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
+#~ msgstr ""
+#~ "Vous n'avez pas configuré de <a href=\"wato.py?mode=tags\">tags</a>."
+
+#~ msgid "isnot"
+#~ msgstr "n'est pas"
+
+#~ msgid "set"
+#~ msgstr "set"
 
 #, python-format
 #~ msgid ""

@@ -45169,6 +45169,14 @@ msgstr "Aantal huidige verbindingen"
 msgid "Number of current sessions"
 msgstr "Aantal lopende sessies"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "Percentage van het huidige aantal threads in de threadpool"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "Percentage van huidige threads bezig in threadpool"
+
 msgid "Number of currently running sessions"
 msgstr "Aantal lopende sessies"
 
@@ -66546,14 +66554,6 @@ msgstr "De gebruiksgeschiedenis van de licentie is ouder dan vijf dagen."
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "De limiet voor de transportvertraging in <tt>v$dataguard_stats</tt>"
 
-#, python-format
-msgid "The list of host tags must be a list, but is %r"
-msgstr "De lijst van host tags moet een lijst zijn, maar is %r"
-
-#, python-format
-msgid "The list of host tags must only contain strings but also contains %r"
-msgstr "De lijst van host tags mag alleen strings bevatten maar bevat ook %r"
-
 #, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -86187,9 +86187,6 @@ msgstr "U hebt geen toestemming voor wijzigingen in dit BI-pakket %s."
 msgid "You have no permission for changes in this rule using %s."
 msgstr "U hebt geen toestemming voor wijzigingen in deze regel met %s."
 
-msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "U hebt geen <a href=\"wato.py?mode=tags\">tags</a> geconfigureerd."
-
 #, fuzzy
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
@@ -88037,9 +88034,6 @@ msgstr "is vereist"
 msgid "is used in"
 msgstr "Deze gebruiker"
 
-msgid "isnot"
-msgstr "is niet"
-
 msgid "jitter"
 msgstr "jitter"
 
@@ -88828,9 +88822,6 @@ msgstr ""
 msgid "sessions"
 msgstr "sessies"
 
-msgid "set"
-msgstr "set"
-
 #, fuzzy
 msgid "settings"
 msgstr "Instellingen"
@@ -89245,6 +89236,24 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, python-format
+#~ msgid "The list of host tags must be a list, but is %r"
+#~ msgstr "De lijst van host tags moet een lijst zijn, maar is %r"
+
+#, python-format
+#~ msgid "The list of host tags must only contain strings but also contains %r"
+#~ msgstr ""
+#~ "De lijst van host tags mag alleen strings bevatten maar bevat ook %r"
+
+#~ msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
+#~ msgstr "U hebt geen <a href=\"wato.py?mode=tags\">tags</a> geconfigureerd."
+
+#~ msgid "isnot"
+#~ msgstr "is niet"
+
+#~ msgid "set"
+#~ msgstr "set"
 
 #, python-format
 #~ msgid ""

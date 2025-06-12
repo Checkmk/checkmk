@@ -43359,6 +43359,14 @@ msgstr "現在の接続数"
 msgid "Number of current sessions"
 msgstr "現在のセッション数"
 
+#, fuzzy
+msgid "Number of current thread count in threadpool"
+msgstr "スレッドプール内の現在のスレッド数のパーセンテージレベル"
+
+#, fuzzy
+msgid "Number of current threads busy in threadpool"
+msgstr "スレッドプールでビジー状態の現在のスレッドの割合"
+
 msgid "Number of currently running sessions"
 msgstr "現在実行中のセッションの数"
 
@@ -63826,16 +63834,6 @@ msgstr "ライセンスの使用履歴は少なくとも3日前に更新され�
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
 
-#, python-format
-msgid "The list of host tags must be a list, but is %r"
-msgstr "ホストタグのリストはリストである必要がありますが、 %r です"
-
-#, python-format
-msgid "The list of host tags must only contain strings but also contains %r"
-msgstr ""
-"ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
-"ている必要があります"
-
 #, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -82158,9 +82156,6 @@ msgstr "このBIパック%sを変更する権限がありません。"
 msgid "You have no permission for changes in this rule using %s."
 msgstr "%sを使用してこのルールを変更する権限がありません。"
 
-msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
-msgstr "<a href=\"wato.py?mode=tags\">タグ</a>を設定していません。"
-
 msgid ""
 "You have not configured any local or remotes sites. Multisite will "
 "implicitly add the data of the local monitoring site. If you add remotes "
@@ -83989,9 +83984,6 @@ msgstr "必須"
 msgid "is used in"
 msgstr "このユーザー"
 
-msgid "isnot"
-msgstr "ではありません"
-
 msgid "jitter"
 msgstr "ジッター"
 
@@ -84766,9 +84758,6 @@ msgstr ""
 msgid "sessions"
 msgstr "セッション"
 
-msgid "set"
-msgstr "セット"
-
 msgid "settings"
 msgstr "設定"
 
@@ -85182,6 +85171,25 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "RCC プロファイル設定 (%s Robotmk Core MKP がインストールされているため)"
+
+#, python-format
+#~ msgid "The list of host tags must be a list, but is %r"
+#~ msgstr "ホストタグのリストはリストである必要がありますが、 %r です"
+
+#, python-format
+#~ msgid "The list of host tags must only contain strings but also contains %r"
+#~ msgstr ""
+#~ "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含ま"
+#~ "れている必要があります"
+
+#~ msgid "You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."
+#~ msgstr "<a href=\"wato.py?mode=tags\">タグ</a>を設定していません。"
+
+#~ msgid "isnot"
+#~ msgstr "ではありません"
+
+#~ msgid "set"
+#~ msgstr "セット"
 
 #~ msgid "Wanted Host State for defined Nutanix Host"
 #~ msgstr "定義されたNutanixの希望のホスト状態"

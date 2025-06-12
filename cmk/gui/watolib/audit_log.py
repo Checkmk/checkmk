@@ -200,30 +200,21 @@ def _log_entry(
 
 
 def build_audit_log_filter(options: AuditLogFilterRaw) -> AuditLogFilter:
-    result: AuditLogFilter = {}
-
-    object_ident = options.get("object_ident", "")
-    user_id = options.get("user_id")
-    filter_regex = options.get("filter_regex", "")
-    object_type = options.get("object_type")
-    timestamp_from = options.get("timestamp_from")
-    timestamp_to = options.get("timestamp_to")
-
-    if timestamp_from:
+    result = AuditLogFilter()
+    if timestamp_from := options.get("timestamp_from"):
         result["timestamp_from"] = timestamp_from
-
-    if timestamp_to:
+    if timestamp_to := options.get("timestamp_to"):
         result["timestamp_to"] = timestamp_to
-
-    if object_ident:
+    if object_ident := options.get("object_ident", ""):
         result["object_ident"] = object_ident
-
-    if user_id is not None:
+    if (user_id := options.get("user_id")) is not None:
         result["user_id"] = user_id
-
-    if filter_regex:
+    if filter_regex := options.get("filter_regex", ""):
         result["filter_regex"] = filter_regex
-
-    result["object_type"] = {"": "All", None: "None"}.get(object_type, object_type)  # type: ignore[arg-type]
-
+    if (object_type := options.get("object_type")) is None:
+        result["object_type"] = "None"
+    elif object_type == "":
+        result["object_type"] = "All"
+    else:
+        result["object_type"] = object_type
     return result

@@ -72,13 +72,16 @@ class AgentBiFilter(BaseModel):
     groups: list[str] = Field(default_factory=list)
 
 
+# Help mypy a bit...
+def _agent_bi_additional_options_factory() -> AgentBiAdditionalOptions:
+    return AgentBiAdditionalOptions()
+
+
 class AgentBiConfig(BaseModel):
     assignments: AgentBiAssignments | None = None
     authentication: AgentBiAutomationUserAuthentication | AgentBiUserAuthentication | None = None
     filter: AgentBiFilter = Field(default_factory=AgentBiFilter)
-    # mypy sees here a dict[Any, Any] I could fix that with lambda but then pylint will complain
-    # with unnecessary-lambda. I chose simple and I guess efficient way?
-    options: AgentBiAdditionalOptions = Field(default_factory=dict)  # type: ignore[arg-type]
+    options: AgentBiAdditionalOptions = Field(default_factory=_agent_bi_additional_options_factory)
     site_url: str | None = None
 
 

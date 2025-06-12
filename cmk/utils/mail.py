@@ -220,3 +220,102 @@ def multipart_mail(
     return set_mail_headers(
         MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
     )
+
+
+def get_template_html() -> str:
+    return """
+<!DOCTYPE html>
+<html style="background-color: #EAEAEA;">
+    <head>
+        <title>HTML Email template</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+         <table width="100%" style=" border-collapse: collapse; ">
+             <tr>
+                 <td align="center" style="padding: 20px;">
+                     <table width="100%"
+                            align="center"
+                            style="max-width: 600px;
+                                   min-width: 220px;
+                                   border: 1px solid {{ '#ff0000' if important|default(false) else '#ccc' }};
+                                   border-collapse: collapse;
+                                   background-color: #ffffff">
+                         <tr>
+                             <td style="height: 10px;
+                                        line-height: 10px;
+                                        font-size: 0;
+                                        mso-line-height-rule: exactly">&nbsp;</td>
+                         </tr>
+                         <tr>
+                             <td align="center" style="padding: 8px;">
+                                 <table align="center" style=" border-collapse: collapse; width: 100%; min-width: 220px;
+                                     max-width: 536px"">
+                                     <tr>
+                                         <td>
+                                             <img src="cid:checkmk_logo.png"
+                                                  alt="Checkmk Logo"
+                                                  style="display: block;
+                                                         width: 110px;
+                                                         height: 30px;
+                                                         border: 0" />
+                                         </td>
+                                     </tr>
+                                 </table>
+                                 <table align="center"
+                                        width="100%"
+                                        style="min-width: 220px;
+                                               max-width: 536px">
+                                     <tr>
+                                         <td style="padding: 5px 0 20px 0;">
+                                             <table width="100%">
+                                                 <tr>
+                                                     <td style="border-bottom: 1px solid #e5e5e5;
+                                                                height: 1px;
+                                                                line-height: 1px;
+                                                                mso-line-height-rule: exactly">
+                                                         <!--[if mso]>
+                                                             <div style=" border-bottom: 1px solid #e5e5e5; width: 536px; height: 1px; line-height: 1px; mso-line-height-rule: exactly; ">
+                                                                 &nbsp;
+                                                             </div>
+                                                         <![endif]-->
+                                                         <span style="display: block; width: 100%; height: 1px; line-height: 1px">&nbsp;</span>
+                                                     </td>
+                                                 </tr>
+                                             </table>
+                                         </td>
+                                     </tr>
+                                    <tr>
+                                        <td>
+                                        {{ msg(content) }}
+                                        </td>
+                                    </tr>
+                                 </table>
+                                 <tr>
+                                     <td style="height: 10px;
+                                                line-height: 10px;
+                                                font-size: 0;
+                                                mso-line-height-rule: exactly">&nbsp;</td>
+                                 </tr>
+                                 <tr>
+                                     <td style="height: 10px;
+                                                line-height: 10px;
+                                                font-size: 0;
+                                                mso-line-height-rule: exactly">&nbsp;</td>
+                                 </tr>
+                             </table>
+                         </td>
+                     </tr>
+                 </table>
+                 <table align="center" style="margin: 0 auto;">
+                     <tr>
+                         <td>
+                             <p style="text-align: center; margin: 0; color: #23496d">
+                               Sent by Checkmk
+                             </p>
+                         </td>
+                     </tr>
+                 </table>
+    </body>
+</html>
+"""

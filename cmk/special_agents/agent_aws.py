@@ -19,7 +19,7 @@ import logging
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
@@ -77,7 +77,7 @@ NOW = datetime.now()
 AWSStrings = bytes | str
 
 
-Dimension = dict[Literal["Name", "Value"], str | None]
+Dimension = Mapping[Literal["Name", "Value"], str | None]
 
 
 class MetricData(TypedDict):
@@ -4823,12 +4823,13 @@ class WAFV2WebACL(AWSSectionCloudwatch):
                 "since metrics for CloudFront-WAFs can only be "
                 "accessed from this region"
             )
-        self._metric_dimensions: list[Dimension] = [
-            {"Name": "WebACL", "Value": None},
-            {"Name": "Rule", "Value": "ALL"},
-        ]
+
+        self._static_metric_dimensions: Collection[Dimension] = [{"Name": "Rule", "Value": "ALL"}]
         if is_regional:
-            self._metric_dimensions.append({"Name": "Region", "Value": self._region})
+            self._static_metric_dimensions = [
+                *self._static_metric_dimensions,
+                {"Name": "Region", "Value": self._region},
+            ]
 
     @property
     def name(self) -> str:
@@ -4852,8 +4853,6 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         metrics: Metrics = []
 
         for idx, (piggyback_hostname, web_acl) in enumerate(colleague_contents.content.items()):
-            self._metric_dimensions[0]["Value"] = web_acl["Name"]
-
             for metric_name in ["AllowedRequests", "BlockedRequests"]:
                 metrics.append(
                     {
@@ -4863,7 +4862,10 @@ class WAFV2WebACL(AWSSectionCloudwatch):
                             "Metric": {
                                 "Namespace": "AWS/WAFV2",
                                 "MetricName": metric_name,
-                                "Dimensions": self._metric_dimensions,
+                                "Dimensions": [
+                                    {"Name": "WebACL", "Value": web_acl["Name"]},
+                                    *self._static_metric_dimensions,
+                                ],
                             },
                             "Period": self.period,
                             "Stat": "Sum",

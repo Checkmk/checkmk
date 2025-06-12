@@ -218,8 +218,8 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
         WAFV2Limits(None, "region", config, "WRONG")  # type: ignore[arg-type]
         WAFV2WebACL(None, "region", config, False)  # type: ignore[arg-type]
 
-    assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3  # type: ignore[arg-type]
-    assert len(WAFV2WebACL(None, "us-east-1", config, False)._metric_dimensions) == 2  # type: ignore[arg-type]
+    assert len(WAFV2WebACL(None, "region", config, True)._static_metric_dimensions) == 2  # type: ignore[arg-type]
+    assert len(WAFV2WebACL(None, "us-east-1", config, False)._static_metric_dimensions) == 1  # type: ignore[arg-type]
 
 
 def _test_limits(wafv2_sections):

@@ -12,10 +12,10 @@ filegroup(
 selects.config_setting_group(
     name = "sles",
     match_any = [
-        "@//:sles_15sp3",
-        "@//:sles_15sp4",
-        "@//:sles_15sp5",
-        "@//:sles_15sp6",
+        "@//bazel/cmk/distro:sles_15sp3",
+        "@//bazel/cmk/distro:sles_15sp4",
+        "@//bazel/cmk/distro:sles_15sp5",
+        "@//bazel/cmk/distro:sles_15sp6",
     ],
 )
 

@@ -576,29 +576,6 @@ python.single_version_platform_override(
 python.defaults(python_version = "3.12.11")
 python.toolchain(python_version = "3.12.11")
 
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-pip.parse(
-    environment = {
-        # Hack for building extensions from source.
-        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
-        "CC": "gcc-13",
-    },
-    hub_name = "cmk_requirements",
-    python_version = "3.12.11",
-    requirements_by_platform = {
-        "@//:requirements.txt": "linux_*",
-    },
-)
-use_repo(pip, "cmk_requirements")
-
-types = use_extension("@rules_mypy//mypy:types.bzl", "types")
-types.requirements(
-    name = "cmk_types",
-    pip_requirements = "@cmk_requirements//:requirements.bzl",
-    requirements_txt = "//:requirements.txt",
-)
-use_repo(types, "cmk_types")
-
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
@@ -642,6 +619,8 @@ register_toolchains(
     "@musl_toolchains_hub//:all",
     "//bazel/toolchains/cc/gcc/local:linux_x86_64",
 )
+
+include("//bazel/module:py.MODULE.bazel")
 
 include("//bazel/module:rust/site.MODULE.bazel")
 

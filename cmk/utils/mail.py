@@ -239,7 +239,7 @@ def get_template_html() -> str:
                             align="center"
                             style="max-width: 600px;
                                    min-width: 220px;
-                                   border: 1px solid #ccc;
+                                   border: 1px solid {{ '#ff0000' if important|default(false) else '#ccc' }};
                                    border-collapse: collapse;
                                    background-color: #ffffff">
                          <tr>

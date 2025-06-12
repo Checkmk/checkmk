@@ -10,7 +10,6 @@ from cmk.ccc.site import url_prefix
 
 from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, TextInput, Transform
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
@@ -63,44 +62,6 @@ def notification_macro_help_fs() -> Help:
 
 def local_site_url() -> str:
     return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
-
-
-def get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-    return Transform(
-        valuespec=CascadingDropdown(
-            title=_("URL prefix for links to Checkmk"),
-            help=_(
-                "If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
-                "and service links within the notification is filled "
-                "automatically. If you specify an URL prefix here, then "
-                "several parts of the notification are armed with hyperlinks "
-                "to your Checkmk GUI. In both cases, the recipient of the "
-                "notification can directly visit the host or service in "
-                "question in Checkmk. Specify an absolute URL including the "
-                "<tt>.../check_mk/</tt>."
-            ),
-            choices=[
-                ("automatic_http", _("Automatic HTTP")),
-                ("automatic_https", _("Automatic HTTPs")),
-                (
-                    "manual",
-                    _("Specify URL prefix"),
-                    TextInput(
-                        regex="^(http|https)://.*/check_mk/$",
-                        regex_error=_(
-                            "The URL must begin with <tt>http</tt> or "
-                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."
-                        ),
-                        size=64,
-                        default_value=default_choice,
-                    ),
-                ),
-            ],
-            default_value=default_value,
-        ),
-        to_valuespec=_transform_to_valuespec_html_mail_url_prefix,
-        from_valuespec=_transform_from_valuespec_html_mail_url_prefix,
-    )
 
 
 # We have to transform because 'add_to_event_context'

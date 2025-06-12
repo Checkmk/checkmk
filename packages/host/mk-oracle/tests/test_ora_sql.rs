@@ -26,8 +26,8 @@ fn _init_runtime_path() -> PathBuf {
         .unwrap()
         .parent()
         .unwrap()
-        .join("oci-runtimes")
-        .join("light-21")
+        .join("runtimes")
+        .join("oci_light_win_x86_zip")
 }
 
 fn change_cwd_to_runtime_path() {

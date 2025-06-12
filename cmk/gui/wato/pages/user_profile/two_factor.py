@@ -16,6 +16,7 @@ from urllib import parse
 from uuid import uuid4
 
 import fido2
+import fido2.features
 from fido2.server import Fido2Server
 from fido2.webauthn import (
     AttestedCredentialData,
@@ -98,10 +99,11 @@ from cmk.crypto.totp import TOTP
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
 
-try:  # this fails if its set multiple times (which sometimes happens in doctests)
-    fido2.features.webauthn_json_mapping.enabled = True
-except ValueError:
-    pass
+# NOTE: In fido2 >= 2.0.0, this feature has been removed and is enabled per default, see
+# https://github.com/Yubico/python-fido2/blob/main/doc/Migration_1-2.adoc#removal-of-featureswebauthn_json_mapping
+# TODO: Remove this when we upgraded to fido2 2.0.0.
+if _webauthn_json_mapping := getattr(fido2.features, "webauthn_json_mapping", None):
+    _webauthn_json_mapping.enabled = True
 
 
 def make_fido2_server() -> Fido2Server:
@@ -978,8 +980,10 @@ class UserWebAuthnRegisterComplete(JsonPage):
         try:
             auth_data = make_fido2_server().register_complete(
                 state=session.session_info.webauthn_action_state,
-                client_data=data.client_data,
-                attestation_object=data.attestation_object,
+                response={  # TODO: Passing a RegistrationResponse would be nicer here.
+                    "client_data": data.client_data,
+                    "attestation_object": data.attestation_object,
+                },
             )
         except ValueError as e:
             if "Invalid origin in ClientData" in str(e):
@@ -1279,10 +1283,12 @@ class UserWebAuthnLoginComplete(JsonPage):
                     AttestedCredentialData.unpack_from(v["credential_data"])[0]
                     for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
                 ],
-                credential_id=data.credential_id,
-                client_data=data.client_data,
-                auth_data=data.authenticator_data,
-                signature=data.signature,
+                response={  # TODO: Passing an AuthenticationResponse would be nicer here.
+                    "credential_id": data.credential_id,
+                    "client_data": data.client_data,
+                    "auth_data": data.authenticator_data,
+                    "signature": data.signature,
+                },
             )
         except BaseException:
             _log_event_auth("Webauthn")

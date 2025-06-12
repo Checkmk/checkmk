@@ -58,15 +58,29 @@ class TypeCMKEdition:
     CME = Edition.CME
 
     def __init__(self, edition: Edition | None = None) -> None:
-        self._edition: type[Edition] | Edition
+        self._edition_data: type[Edition] | Edition
         self._edition_data = Edition if not edition else edition
 
     def __call__(self, edition: Edition) -> "TypeCMKEdition":
         """Return a new instance, which is initialized with an 'Edition' value."""
         return TypeCMKEdition(edition)
 
+    def __eq__(self, item: object) -> bool:
+        """Enable comparison of two `TypeCMKEdition` objects.
+
+        Only compare objects which have an instantiated `edition_data` attribute.
+        """
+        if isinstance(item, self.__class__):
+            return self.edition_data == item.edition_data
+        raise TypeError(f"Expected comparison with another '{self.__class__.__name__}' object!")
+
     @property
     def edition_data(self) -> Edition:
+        """Return an instantiated attribute of type `Edition`.
+
+        Raises:
+            AttributeError: raised when the edition is not instantiated.
+        """
         if isinstance(self._edition_data, Edition) and hasattr(self._edition_data, "value"):
             return self._edition_data
         raise AttributeError(
@@ -271,9 +285,7 @@ class CMKVersion:
 
     def _check_instance(self, other: object) -> None:
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(
-                f"Expected comparison with another '{self.__class__.__name__}' object!"
-            )
+            raise TypeError(f"Expected comparison with another '{self.__class__.__name__}' object!")
 
     def __eq__(self, other: object) -> bool:
         self._check_instance(other)

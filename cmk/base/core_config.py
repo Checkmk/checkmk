@@ -147,9 +147,12 @@ def duplicate_service_warning(
 
 
 def _cluster_ping_command(
-    config_cache: ConfigCache, host_name: HostName, ip: HostAddress
+    config_cache: ConfigCache,
+    host_name: HostName,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ip: HostAddress,
 ) -> CoreCommand | None:
-    ping_args = check_icmp_arguments_of(config_cache, host_name)
+    ping_args = check_icmp_arguments_of(config_cache, host_name, family)
     if ip:  # Do check cluster IP address if one is there
         return "check-mk-host-ping!%s" % ping_args
     if ping_args:  # use check_icmp in cluster mode
@@ -160,6 +163,7 @@ def _cluster_ping_command(
 def host_check_command(
     config_cache: ConfigCache,
     host_name: HostName,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ip: HostAddress,
     is_clust: bool,
     default_host_check_command: str,
@@ -170,13 +174,13 @@ def host_check_command(
 
     if value == "smart":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_name, ip)
+            return _cluster_ping_command(config_cache, host_name, family, ip)
         return "check-mk-host-smart"
 
     if value == "ping":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_name, ip)
-        ping_args = check_icmp_arguments_of(config_cache, host_name)
+            return _cluster_ping_command(config_cache, host_name, family, ip)
+        ping_args = check_icmp_arguments_of(config_cache, host_name, family)
         if ping_args:  # use special arguments
             return "check-mk-host-ping!%s" % ping_args
         return None
@@ -222,19 +226,16 @@ def autodetect_plugin(command_line: str) -> str:
 def check_icmp_arguments_of(
     config_cache: ConfigCache,
     hostname: HostName,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     add_defaults: bool = True,
-    family: socket.AddressFamily | None = None,
 ) -> str:
     levels = config_cache.ping_levels(hostname)
     if not add_defaults and not levels:
         return ""
 
-    if family is None:
-        family = config_cache.default_address_family(hostname)
-
     args = []
 
-    if family is socket.AF_INET6:
+    if family is socket.AddressFamily.AF_INET6:
         args.append("-6")
 
     rta = 200.0, 500.0

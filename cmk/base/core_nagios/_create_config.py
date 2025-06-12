@@ -6,6 +6,7 @@
 
 import base64
 import itertools
+import socket
 import sys
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
@@ -91,6 +92,7 @@ class NagiosCore(core_config.MonitoringCore):
             plugins.check_plugins,
             licensing_handler,
             passwords,
+            default_address_family,
             ip_address_of,
             service_depends_on,
         )
@@ -116,6 +118,9 @@ class NagiosCore(core_config.MonitoringCore):
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
         ip_address_of: ip_lookup.IPLookup,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
@@ -145,6 +150,7 @@ class NagiosCore(core_config.MonitoringCore):
             ),
             licensing_handler=licensing_handler,
             passwords=passwords,
+            default_address_family=default_address_family,
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
         )
@@ -229,6 +235,9 @@ def create_config(
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
 ) -> None:
@@ -245,6 +254,7 @@ def create_config(
             service_name_config,
             plugins,
             hostname,
+            default_address_family(hostname),
             passwords,
             licensing_counter,
             ip_address_of,
@@ -285,6 +295,7 @@ def _create_nagios_config_host(
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
+    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
@@ -296,7 +307,9 @@ def _create_nagios_config_host(
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:
-        host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
+        host_spec = create_nagios_host_spec(
+            cfg, config_cache, hostname, host_ip_family, host_attrs, ip_address_of
+        )
         cfg.write_object("host", host_spec)
 
     return NotificationHostConfig(
@@ -307,6 +320,7 @@ def _create_nagios_config_host(
             service_name_config,
             plugins,
             hostname,
+            host_ip_family,
             host_attrs,
             stored_passwords,
             license_counter,
@@ -321,6 +335,7 @@ def create_nagios_host_spec(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     hostname: HostName,
+    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     attrs: ObjectAttributes,
     ip_address_of: ip_lookup.IPLookup,
 ) -> ObjectSpec:
@@ -384,6 +399,7 @@ def create_nagios_host_spec(
     command = core_config.host_check_command(
         config_cache,
         hostname,
+        host_ip_family,
         ip,
         hostname in config_cache.hosts_config.clusters,
         "ping",
@@ -539,6 +555,7 @@ def create_nagios_servicedefs(
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
+    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
@@ -714,14 +731,16 @@ def create_nagios_servicedefs(
         ping_services.append("PING")
 
     if config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
-        if config_cache.default_address_family(hostname) is AddressFamily.AF_INET6:
+        if host_ip_family is AddressFamily.AF_INET6:
             if "PING IPv4" not in services_ids:
                 ping_services.append("PING IPv4")
         elif "PING IPv6" not in services_ids:
             ping_services.append("PING IPv6")
 
     for ping_service in ping_services:
-        _add_ping_service(cfg, config_cache, hostname, host_attrs, ping_service, license_counter)
+        _add_ping_service(
+            cfg, config_cache, hostname, host_ip_family, host_attrs, ping_service, license_counter
+        )
 
     return service_labels
 
@@ -865,12 +884,14 @@ def _add_ping_service(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     host_name: HostName,
+    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: Mapping[str, Any],
     ping_service: _PingServiceNames,
     licensing_counter: Counter,
 ) -> None:
     ipaddress = host_attrs["address"]
     service_labels = _get_service_labels(config_cache.label_manager, host_name, ping_service)
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     match ping_service:
         case "PING IPv4":
             family = AddressFamily.AF_INET
@@ -879,12 +900,12 @@ def _add_ping_service(
             family = AddressFamily.AF_INET6
             node_ips_name = "_NODEIPS_6"
         case "PING":
-            family = config_cache.default_address_family(host_name)
+            family = host_ip_family
             node_ips_name = "_NODEIPS"
         case _:
             assert_never(f"Unexpected ping service name: {ping_service}")
 
-    arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
+    arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family)
 
     if host_name in config_cache.hosts_config.clusters:
         arguments += " -m 1 " + host_attrs[node_ips_name]  # may raise exception - it's intentional

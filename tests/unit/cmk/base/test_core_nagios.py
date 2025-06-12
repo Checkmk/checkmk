@@ -332,7 +332,9 @@ def test_create_nagios_host_spec(
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
 
-    host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
+    host_spec = create_nagios_host_spec(
+        cfg, config_cache, hostname, socket.AddressFamily.AF_INET, host_attrs, ip_address_of
+    )
     assert host_spec == result
 
 
@@ -361,7 +363,12 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
     cfg = NagiosConfig(io.StringIO(), [hostname])
     host_spec = create_nagios_host_spec(
-        cfg, config_cache, hostname, host_attrs, ip_address_of=lambda *a: HostAddress("")
+        cfg,
+        config_cache,
+        hostname,
+        socket.AddressFamily.AF_INET,
+        host_attrs,
+        ip_address_of=lambda *a: HostAddress(""),
     )
     assert host_spec["_SERVICE_PERIOD"] == "24X7"
     assert "service_period" not in host_spec
@@ -614,6 +621,7 @@ def test_create_nagios_servicedefs_active_check(
         config_cache.make_passive_service_name_config(),
         {},
         hostname,
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,
@@ -654,6 +662,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         config_cache.make_passive_service_name_config(),
         {},
         hostname,
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,
@@ -777,6 +786,7 @@ def test_create_nagios_servicedefs_with_warnings(
         config_cache.make_passive_service_name_config(),
         {},
         HostName("my_host"),
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,
@@ -845,6 +855,7 @@ def test_create_nagios_servicedefs_omit_service(
         config_cache.make_passive_service_name_config(),
         {},
         hostname,
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,
@@ -915,6 +926,7 @@ def test_create_nagios_servicedefs_invalid_args(
         config_cache.make_passive_service_name_config(),
         {},
         hostname,
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,
@@ -1001,6 +1013,7 @@ def test_create_nagios_config_commands(
         config_cache.make_passive_service_name_config(),
         {},
         hostname,
+        socket.AddressFamily.AF_INET,
         host_attrs,
         {},
         license_counter,

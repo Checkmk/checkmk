@@ -1388,6 +1388,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     config_cache = load_config(plugins).config_cache
+    ip_lookup_config = config_cache.ip_lookup_config()
 
     hostnames = args if args else None
 
@@ -1424,8 +1425,9 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         passwords=cmk.utils.password_store.load(
             cmk.utils.password_store.pending_password_store_path()
         ),
+        default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            config_cache.ip_lookup_config(),
+            ip_lookup_config,
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),

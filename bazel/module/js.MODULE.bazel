@@ -1,0 +1,29 @@
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
+node.toolchain(node_version = "22.14.0")
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm", dev_dependency = True)
+use_repo(pnpm, "pnpm")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm_cmk_shared_typing",
+    npmrc = "//packages/cmk-shared-typing:.npmrc",
+    pnpm_lock = "//packages/cmk-shared-typing:pnpm-lock.yaml",
+)
+use_repo(npm, "npm_cmk_shared_typing")
+npm.npm_translate_lock(
+    name = "npm_cmk_frontend_vue",
+    npmrc = "//packages/cmk-frontend-vue:.npmrc",
+    pnpm_lock = "//packages/cmk-frontend-vue:pnpm-lock.yaml",
+)
+use_repo(npm, "npm_cmk_frontend_vue")
+npm.npm_translate_lock(
+    name = "npm_cmk_frontend",
+    npmrc = "//packages/cmk-frontend:.npmrc",
+    pnpm_lock = "//packages/cmk-frontend:pnpm-lock.yaml",
+)
+use_repo(npm, "npm_cmk_frontend")
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext.deps()
+use_repo(rules_ts_ext, "npm_typescript")

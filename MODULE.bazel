@@ -643,9 +643,9 @@ types.requirements(
 )
 use_repo(types, "cmk_types")
 
-include("//packages/site:site.MODULE.bazel")
+include("//bazel/module:rust/site.MODULE.bazel")
 
-include("//packages/host:host.MODULE.bazel")
+include("//bazel/module:rust/host.MODULE.bazel")
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = "1.22.10")

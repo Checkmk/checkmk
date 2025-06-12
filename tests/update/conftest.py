@@ -121,7 +121,7 @@ def _setup(
             if not disable_rules_injection:
                 inject_rules(test_site)
 
-        hostname = "test-host"
+        hostname = os.listdir(DUMPS_DIR)[0]
         with _setup_host(test_site, hostname=hostname, ip_address="127.0.0.1"):
             yield test_site, target_edition, interactive_mode, hostname
     finally:

@@ -1722,7 +1722,7 @@ HERE
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
 
             # Start it.
-            # We're running two parrallel blocks, implementing a timeout. Roughly:
+            # We're running two parallel blocks, implementing a timeout. Roughly:
             # First block: Run command then kill ourselves (including the other block!)
             # Second block: Sleep for a while. If I survive: Handle the fact that block one did not kill me.
             cat <<HERE | _nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &

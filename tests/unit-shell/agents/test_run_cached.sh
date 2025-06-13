@@ -68,6 +68,26 @@ test_run_cached_plugin() {
 
 }
 
+test_run_cached_async() {
+    NAME="plugins_async"
+    CACHEFILE="${CACHEDIR}/${NAME}.cache"
+    (
+        CURRENT_SHELL='/bin/bash' MK_RUN_ASYNC_PARTS=true MK_RUN_SYNC_PARTS=false \
+            _run_cached_internal "$NAME" 170 180 540 360 "echo '<<<plugins_async>>>'; echo 'async'"
+    )
+
+    while [ ! -e "$CACHEFILE" ]; do
+        sleep 0.1
+    done
+    expected() {
+        echo "<<<plugins_async>>>"
+        echo "async"
+    }
+
+    assertEquals "$(expected)" "$(cat "${CACHEFILE}")"
+
+}
+
 test_run_cached_plugin_no_cache() {
 
     set_up_current_shell

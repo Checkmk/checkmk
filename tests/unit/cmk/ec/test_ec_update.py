@@ -56,7 +56,7 @@ def test_update_events_that_cant_be_acked(
     with pytest.raises(MKClientError) as excinfo:
         status_server.handle_client(s, True, "127.0.0.1")
 
-    assert "You cannot acknowledge an event that is not open." in str(excinfo.value)
+    assert f"You cannot acknowledge event 1, it is {test_phase}." in str(excinfo.value)
 
 
 def test_update_multiple_evens(event_status: EventStatus, status_server: StatusServer) -> None:

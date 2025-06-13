@@ -1,0 +1,14 @@
+Title: Fixed error handling for EC bulk commands
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1749810529
+Edition: cre
+Level: 1
+Version: 2.2.0p44
+
+The event console commands "Update & acknowledge" and "Change state" can be
+done for multiple events at once via checkboxes. If an error happened during
+the processing, events after that were not processed further. This has been
+fixed: Processing continues after an error now, but you can still see all
+errors in the event console log.

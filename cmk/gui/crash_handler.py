@@ -102,7 +102,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
 
         return cls(
             crashdir,
-            cls.make_crash_info(version_info, GUIDetails(**(details or {}), **request_details)),  # type: ignore[typeddict-item]
+            cls.make_crash_info(version_info, GUIDetails(**{**(details or {}), **request_details})),  # type: ignore[typeddict-item]
         )
 
     def url(self) -> str:

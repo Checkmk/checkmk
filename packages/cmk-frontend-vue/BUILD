@@ -23,6 +23,7 @@ SRCS = [
     "tsconfig.test.json",
     "vite.config.demo.ts",
     "vite.config.ts",
+    "src/components/_demo/index.html",
     "//packages/cmk-frontend:src",
     ":node_modules/@eslint",
     ":node_modules/@testing-library",

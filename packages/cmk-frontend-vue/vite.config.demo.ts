@@ -17,7 +17,7 @@ export default defineConfig(() => {
     server: {
       strictPort: true,
       fs: {
-        allow: ['.', '../../../../cmk-frontend/']
+        strict: false
       },
       proxy: {
         '/site-api': {

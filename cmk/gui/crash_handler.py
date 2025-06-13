@@ -100,9 +100,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
         return super().from_exception(
             crashdir,
             version_info,
-            details=GUIDetails(**details, **request_details)
-            if details
-            else GUIDetails(**request_details),  # type: ignore[typeddict-item]
+            details=GUIDetails(**{**(details or {}), **request_details}),  # type: ignore[typeddict-item]
             type_specific_attributes=type_specific_attributes,
         )
 

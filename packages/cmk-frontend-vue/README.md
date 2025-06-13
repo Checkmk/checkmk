@@ -1,26 +1,33 @@
 # cmk-frontend-vue
 
-Checkmk vue experiments
+## Development
 
-## development
+The run script and BUILD bazel file define the entry points to this
+component.
 
 ```sh
+./run -h
 ./run --all
 ```
 
-### trying out changes in a site
+### Trying out changes in a site
 
 #### f12
 
 f12 is working, but is using the production ready build process and therefore not
 super fast (currently six seconds)
 
-#### vite dev server
+#### Dev server
 
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
-* run `bazel run :vite`
+To watch file changes across the bazelized components, you need to use
+`ibazel` instead of `bazel`.
+
+* download https://github.com/bazelbuild/bazel-watcher/releases/latest/download/ibazel_linux_amd64
+  and add it to your path
+* run `ibazel run :vite`
 * surf to `http://localhost:5173/<yoursite>/check_mk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
@@ -29,42 +36,9 @@ vite dev server is used.
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
 
-### testing components outsite a site
+### Demo App
 
-* run `bazel run vite -- --config vite.config.demo.ts`
+To try our reusable components outside a checkmk site, you can
+
+* run `ibazel run :vite -- --config vite.config.demo.ts`
 * surf to `http://localhost:5173/`
-
-
-### Location of files and folders
-src/
-    form/  # files for form rendering
-        index.ts     # Includes exports. E.g FormApp, ValiationMessages
-        FormApp.vue  # Main entry point
-        components/  # Files for the forms feature
-            utils/   # Utilities for forms
-            forms/   # Implementation of forms
-            FormEdit.vue
-            FormReadonly.vue
-            FormHelp.vue
-            FormValidation.vue
-    quick-setup/
-        QuickSetupApp.vue # Main entry point
-        components/  # Files for the quick-setup feature
-            widgets/
-            elements/
-            QuickSetupStage.vue
-            ...
-    global-settings/ # upcoming: global settings rendering
-        GlobalSettingsApp.vue
-        components/  # Files for the global-setting feature
-    graph-designer/  # upcoming: reworked graph designer
-        GraphDesignerApp.vue
-        components/  # Files for the graph-designer feature
-    notification/
-        NotificationOverviewApp.vue  # Overview page for notifications
-        NotificationParametersOverviewApp.vue # Overview page for notification parameter
-        components/
-            CoreStats.vue  # Core statistics on notification overview page
-            FallbackWarning.vue  # Warning about missing fallback Email address on notification overview page
-            NotificationRules.vue  # Notification rule list on notification overview page
-            NotificationStats.vue  # Notification statistics on notification overview page

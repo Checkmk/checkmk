@@ -138,7 +138,7 @@ class EWS(_Connection):
         for parent_folder in [self._account.inbox.parent, self._account.inbox]:
             i = 0
             for i, fname in enumerate(subfolder_names):
-                if f := next(parent_folder.glob(fname).resolve(), None):  # type: ignore[union-attr]
+                if f := next(parent_folder.glob(fname).resolve(), None):
                     if i == len(subfolder_names) - 1:  # full match - folder path already exists
                         return f
                     parent_folder = f

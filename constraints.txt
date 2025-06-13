@@ -10,3 +10,4 @@ pysnmp-lextudio==6.1.2 # CMK-23472
 snmpsim-lextudio==1.1.0 # CMK-23472
 boto3<1.37.25  # Pinned due to 1.37.25 not being presented as suitable for our builds -> builds fail CMK-23473
 pydantic<2.11  # Newer versions lead to test failures CMK-23474
+pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-24026

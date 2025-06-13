@@ -3628,7 +3628,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         compiler.addSearchers(*[PyPackageSearcher(x) for x in PySnmpCodeGen.defaultMibPackages])
 
         # never recompile MIBs with MACROs
-        compiler.addSearchers(StubSearcher(*PySnmpCodeGen.baseMibs))  # type: ignore[has-type]
+        compiler.addSearchers(StubSearcher(*PySnmpCodeGen.baseMibs))
 
         try:
             if not content or content.isspace():

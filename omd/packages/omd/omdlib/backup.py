@@ -71,7 +71,10 @@ def _backup_site_to_tarfile(
         )
 
     with RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
-        with tarfile.TarFile.open(
+        # FIXME: The typing of _backup_site_to_tarfile and its callers is broken: One has to bundle
+        # the fileobj and the mode together in a way that no nonsensical combinations are possible.
+        # Currently they *are* possible, and exactly that makes mypy unhappy.
+        with tarfile.TarFile.open(  # type: ignore[call-overload]
             fileobj=fh,
             mode=mode,
         ) as tar:

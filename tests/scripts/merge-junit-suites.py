@@ -77,7 +77,9 @@ for suite, value in suites.items():
             items = value.get(attr, "").split(",") + [child.attrib.get(attr)]
             value[attr] = ", ".join({_ for _ in items if _})
         for attr in min_attr:
-            value[attr] = min(child.attrib.get(attr), value.get(attr, child.attrib.get(attr)))
+            val = child.attrib.get(attr)
+            assert val is not None
+            value[attr] = min(val, value.get(attr, val))
         if node_idx < last_node_idx:
             for grandchild in child:
                 if node := root.find(f"testsuite[@name='{suite}']"):

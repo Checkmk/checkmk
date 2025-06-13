@@ -223,6 +223,7 @@ def dump_host(
         for source in sources.make_sources(
             plugins,
             hostname,
+            primary_family,
             ipaddress,
             config_cache.ip_stack_config(hostname),
             fetcher_factory=config_cache.fetcher_factory(
@@ -255,6 +256,7 @@ def dump_host(
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,
+                primary_family,
                 ipaddress,
                 password_store_file=used_password_store,
                 passwords=passwords,

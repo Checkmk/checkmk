@@ -1700,6 +1700,7 @@ class ConfigCache:
     def make_snmp_config(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress,
         source_type: SourceType,
         *,
@@ -1736,7 +1737,7 @@ class ConfigCache:
         snmp_config = self.__snmp_config.setdefault(
             (host_name, ip_address, source_type),
             SNMPHostConfig(
-                is_ipv6_primary=self.default_address_family(host_name) is socket.AF_INET6,
+                is_ipv6_primary=host_ip_family is socket.AF_INET6,
                 hostname=host_name,
                 ipaddress=ip_address,
                 credentials=credentials,
@@ -2048,11 +2049,15 @@ class ConfigCache:
     def has_management_board(self, host_name: HostName) -> bool:
         return self.management_protocol(host_name) is not None
 
-    def management_address(self, host_name: HostName) -> HostAddress | None:
+    def management_address(
+        self,
+        host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ) -> HostAddress | None:
         if mgmt_host_address := host_attributes.get(host_name, {}).get("management_address"):
             return mgmt_host_address
 
-        if self.default_address_family(host_name) is socket.AF_INET6:
+        if host_ip_family is socket.AF_INET6:
             return ipv6addresses.get(host_name)
 
         return ipaddresses.get(host_name)
@@ -2351,6 +2356,7 @@ class ConfigCache:
     def active_check_services(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         host_attrs: ObjectAttributes,
         final_service_name_config: FinalServiceNameConfig,
         ip_address_of: IPLookup,
@@ -2383,7 +2389,7 @@ class ConfigCache:
             get_ssc_host_config(
                 host_name,
                 self.alias(host_name),
-                self.default_address_family(host_name),
+                host_ip_family,
                 self.ip_stack_config(host_name),
                 additional_addresses_ipv4,
                 additional_addresses_ipv6,
@@ -2480,6 +2486,7 @@ class ConfigCache:
     def special_agent_command_lines(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
         passwords: Mapping[str, str],
         password_store_file: Path,
@@ -2488,7 +2495,7 @@ class ConfigCache:
         if not (host_special_agents := self.special_agents(host_name)):
             return
 
-        host_attrs = self.get_host_attributes(host_name, ip_address_of)
+        host_attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
             host_name,
@@ -2496,7 +2503,7 @@ class ConfigCache:
             get_ssc_host_config(
                 host_name,
                 self.alias(host_name),
-                self.default_address_family(host_name),
+                host_ip_family,
                 self.ip_stack_config(host_name),
                 *self.additional_ipaddresses(host_name),
                 {
@@ -3281,6 +3288,7 @@ class ConfigCache:
     def get_host_attributes(
         self,
         hostname: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address_of: IPLookup,
     ) -> ObjectAttributes:
         attrs = self.extra_host_attributes(hostname)
@@ -3318,7 +3326,7 @@ class ConfigCache:
         )
         attrs["_ADDRESS_6"] = "" if v6address is None else v6address
 
-        ipv6_is_default = self.default_address_family(hostname) is socket.AF_INET6
+        ipv6_is_default = host_ip_family is socket.AF_INET6
         attrs["address"] = attrs["_ADDRESS_6"] if ipv6_is_default else attrs["_ADDRESS_4"]
         attrs["_ADDRESS_FAMILY"] = "6" if ipv6_is_default else "4"
 
@@ -3346,6 +3354,7 @@ class ConfigCache:
     def get_cluster_attributes(
         self,
         hostname: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         nodes: Sequence[HostName],
         ip_address_of: IPLookup,
     ) -> dict:
@@ -3377,9 +3386,7 @@ class ConfigCache:
                 else:
                     node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
-        node_ips = (
-            node_ips_6 if self.default_address_family(hostname) is socket.AF_INET6 else node_ips_4
-        )
+        node_ips = node_ips_6 if host_ip_family is socket.AF_INET6 else node_ips_4
 
         for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
             attrs[f"_NODEIPS{suffix}"] = " ".join(val)
@@ -3509,12 +3516,13 @@ class ConfigCache:
     def translate_commandline(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
         template: str,
         ip_address_of: IPLookup,
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
-            attrs = self.get_host_attributes(host_name, ip_address_of)
+            attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
             if host_name in self.hosts_config.clusters:
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
@@ -3522,6 +3530,7 @@ class ConfigCache:
                 attrs.update(
                     self.get_cluster_attributes(
                         host_name,
+                        host_ip_family,
                         parents_list,
                         ip_address_of,
                     )
@@ -3898,6 +3907,7 @@ class FetcherFactory:
         self,
         plugins: AgentBasedPlugins,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress,
         *,
         source_type: SourceType,
@@ -3905,6 +3915,7 @@ class FetcherFactory:
     ) -> SNMPFetcher:
         snmp_config = self._config_cache.make_snmp_config(
             host_name,
+            host_ip_family,
             ip_address,
             source_type,
             backend_override=fetcher_config.backend_override,
@@ -3979,6 +3990,7 @@ class FetcherFactory:
     def make_tcp_fetcher(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress,
         *,
         tls_config: TLSConfig,
@@ -3986,7 +3998,7 @@ class FetcherFactory:
         return TCPFetcher(
             host_name=host_name,
             address=(ip_address, self._agent_port(host_name)),
-            family=self._config_cache.default_address_family(host_name),
+            family=host_ip_family,
             timeout=self._tcp_connect_timeout(host_name),
             encryption_handling=self._encryption_handling(host_name),
             pre_shared_secret=self._symmetric_agent_encryption(host_name),
@@ -4004,23 +4016,27 @@ class FetcherFactory:
     def _make_program_commandline(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
         ip_address_of: IPLookup,
         program: str,
     ) -> str:
         return self._config_cache.translate_commandline(
-            host_name, ip_address, program, ip_address_of
+            host_name, host_ip_family, ip_address, program, ip_address_of
         )
 
     def make_program_fetcher(
         self,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
         *,
         program: str,
         stdin: str | None,
     ) -> ProgramFetcher:
-        cmdline = self._make_program_commandline(host_name, ip_address, self._ip_lookup, program)
+        cmdline = self._make_program_commandline(
+            host_name, host_ip_family, ip_address, self._ip_lookup, program
+        )
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
 
     def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:

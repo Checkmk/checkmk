@@ -5,6 +5,7 @@
 
 
 import logging
+import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
@@ -1505,6 +1506,7 @@ def test_commandline_discovery(
             ip_lookup=lambda *a: HostAddress(""),
         ),
         agent_based_plugins,
+        default_address_family=lambda *a: socket.AddressFamily.AF_INET,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=lambda *a: HostAddress(""),

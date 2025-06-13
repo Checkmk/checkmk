@@ -331,6 +331,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             config_cache,
             config_cache.fetcher_factory(service_configurer, ip_address_of),
             plugins,
+            default_address_family=ip_lookup_config.default_address_family,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             ip_address_of=ip_address_of,
@@ -457,6 +458,9 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             )
             preview = _get_discovery_preview(
                 run_settings.host_config.host_name,
+                {
+                    run_settings.host_config.host_name: run_settings.host_config.host_primary_family
+                }.__getitem__,
                 OnError.RAISE,
                 fetcher,
                 file_cache_options,
@@ -517,6 +521,7 @@ class AutomationDiscoveryPreview(Automation):
             config_cache,
             config_cache.fetcher_factory(service_configurer, ip_address_of_with_fallback),
             plugins,
+            default_address_family=ip_lookup_config.default_address_family,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
             ip_address_of=ip_address_of_with_fallback,
@@ -530,6 +535,7 @@ class AutomationDiscoveryPreview(Automation):
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
+        ip_family = ip_lookup_config.default_address_family(host_name)
         ip_address = (
             None
             if host_name in hosts_config.clusters
@@ -537,11 +543,12 @@ class AutomationDiscoveryPreview(Automation):
             # We *must* do the lookup *before* calling `get_host_attributes()`
             # because...  I don't know... global variables I guess.  In any case,
             # doing it the other way around breaks one integration test.
-            # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
-            else ip_address_of_bare(host_name, ip_lookup_config.default_address_family(host_name))
+            # note (mo): The behavior of repeated lookups changed. The above _might_ not be true anymore.
+            else ip_address_of_bare(host_name, ip_family)
         )
         return _get_discovery_preview(
             host_name,
+            ip_lookup_config.default_address_family,
             on_error,
             fetcher,
             file_cache_options,
@@ -559,6 +566,9 @@ automations.register(AutomationDiscoveryPreview())
 
 def _get_discovery_preview(
     host_name: HostName,
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     on_error: OnError,
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
@@ -576,6 +586,7 @@ def _get_discovery_preview(
 
         check_preview = _execute_discovery(
             host_name,
+            default_address_family,
             on_error,
             ip_address_of,
             ip_address,
@@ -624,6 +635,7 @@ def _active_check_preview_rows(
     config_cache: ConfigCache,
     final_service_name_config: FinalServiceNameConfig,
     host_name: HostName,
+    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ip_address_of: ip_lookup.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
     ignored_services = config.IgnoredActiveServices(config_cache, host_name)
@@ -657,7 +669,8 @@ def _active_check_preview_rows(
         )
         for active_service in config_cache.active_check_services(
             host_name,
-            config_cache.get_host_attributes(host_name, ip_address_of),
+            host_ip_family,
+            config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
             cmk.utils.password_store.load(password_store_file),
@@ -702,6 +715,9 @@ def _make_compute_check_parameters_of_autocheck(
 
 def _execute_discovery(
     host_name: HostName,
+    default_address_family: Callable[
+        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ],
     on_error: OnError,
     ip_address_of: ip_lookup.IPLookup,
     ip_address: HostAddress | None,
@@ -803,7 +819,11 @@ def _execute_discovery(
             h: [
                 *table,
                 *_active_check_preview_rows(
-                    config_cache, service_name_config.final_service_name_config, h, ip_address_of
+                    config_cache,
+                    service_name_config.final_service_name_config,
+                    h,
+                    default_address_family(h),
+                    ip_address_of,
                 ),
                 *config_cache.custom_check_preview_rows(h),
             ]
@@ -909,6 +929,7 @@ def _execute_autodiscovery(
         config_cache,
         config_cache.fetcher_factory(service_configurer, slightly_different_ip_address_of),
         ab_plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=slightly_different_ip_address_of,
@@ -1715,6 +1736,7 @@ class AutomationAnalyseServices(Automation):
             )
 
         ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+        ip_family = ip_lookup_config.default_address_family(host_name)
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
         )
@@ -1739,6 +1761,7 @@ class AutomationAnalyseServices(Automation):
                     service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                     plugins=plugins,
                     host_name=host_name,
+                    host_ip_family=ip_family,
                     servicedesc=servicedesc,
                     ip_address_of=ip_lookup.ConfiguredIPLookup(
                         ip_lookup_config,
@@ -1761,6 +1784,7 @@ class AutomationAnalyseServices(Automation):
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         servicedesc: str,
         ip_address_of: ip_lookup.IPLookup,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -1784,6 +1808,7 @@ class AutomationAnalyseServices(Automation):
                     config_cache,
                     service_name_config.final_service_name_config,
                     host_name,
+                    host_ip_family,
                     ip_address_of,
                     servicedesc,
                 ),
@@ -1912,6 +1937,7 @@ class AutomationAnalyseServices(Automation):
         config_cache: ConfigCache,
         final_service_name_config: FinalServiceNameConfig,
         host_name: HostName,
+        host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address_of: ip_lookup.IPLookup,
         servicedesc: str,
     ) -> Iterable[_FoundService]:
@@ -1919,7 +1945,8 @@ class AutomationAnalyseServices(Automation):
 
         for active_service in config_cache.active_check_services(
             host_name,
-            config_cache.get_host_attributes(host_name, ip_address_of),
+            host_ip_family,
+            config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
             cmk.utils.password_store.load(password_store_file),
@@ -2934,7 +2961,7 @@ class AutomationDiagHost(Automation):
                         loading_result.config_cache,
                         test,
                         loading_result.config_cache.make_snmp_config(
-                            host_name, ipaddress, SourceType.HOST, backend_override=None
+                            host_name, ip_family, ipaddress, SourceType.HOST, backend_override=None
                         ),
                         host_name,
                         ipaddress,
@@ -2994,6 +3021,7 @@ class AutomationDiagHost(Automation):
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         ip_lookup_config = config_cache.ip_lookup_config()
+        ip_family = ip_lookup_config.default_address_family(host_name)
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -3016,6 +3044,7 @@ class AutomationDiagHost(Automation):
         for source in sources.make_sources(
             plugins,
             host_name,
+            ip_family,
             ipaddress,
             config_cache.ip_stack_config(host_name),
             fetcher_factory=config_cache.fetcher_factory(service_configurer, ip_address_of),
@@ -3047,6 +3076,7 @@ class AutomationDiagHost(Automation):
             management_protocol=config_cache.management_protocol(host_name),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 host_name,
+                ip_family,
                 ipaddress,
                 password_store_file=pending_passwords_file,
                 passwords=passwords,
@@ -3064,7 +3094,7 @@ class AutomationDiagHost(Automation):
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=config_cache.translate_commandline(
-                        host_name, ipaddress, cmd, ip_address_of
+                        host_name, ip_family, ipaddress, cmd, ip_address_of
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
@@ -3282,10 +3312,13 @@ class AutomationActiveCheck(Automation):
         config_cache = loading_result.config_cache
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
+        ip_lookup_config = config_cache.ip_lookup_config()
+        ip_family = ip_lookup_config.default_address_family(host_name)
+
         # Maybe we add some meaningfull error handling here someday?
         # This reflects the effetive behavior when the error handler was inroduced.
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            config_cache.ip_lookup_config(),
+            ip_lookup_config,
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=lambda *a, **kw: None,
         )
@@ -3297,6 +3330,7 @@ class AutomationActiveCheck(Automation):
 
                 command_line = self._replace_macros(
                     host_name,
+                    ip_family,
                     entry["service_description"],
                     entry.get("command_line", ""),
                     ip_address_of,
@@ -3315,11 +3349,12 @@ class AutomationActiveCheck(Automation):
         with redirect_stdout(open(os.devnull, "w")):
             # The IP lookup used to write to stdout, that is not the case anymore.
             # The redirect might not be needed anymore.
-            host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
+            host_attrs = config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
 
         password_store_file = cmk.utils.password_store.pending_password_store_path()
         for service_data in config_cache.active_check_services(
             host_name,
+            ip_family,
             host_attrs,
             FinalServiceNameConfig(
                 config_cache.ruleset_matcher,
@@ -3360,6 +3395,7 @@ class AutomationActiveCheck(Automation):
     def _replace_macros(
         self,
         hostname: HostName,
+        ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         service_desc: str,
         commandline: str,
         ip_address_of: ip_lookup.IPLookup,
@@ -3367,7 +3403,7 @@ class AutomationActiveCheck(Automation):
         config_cache: ConfigCache,
     ) -> str:
         macros = ConfigCache.get_host_macros_from_attributes(
-            hostname, config_cache.get_host_attributes(hostname, ip_address_of)
+            hostname, config_cache.get_host_attributes(hostname, ip_family, ip_address_of)
         )
 
         service_attrs = core_config.get_service_attributes(
@@ -3534,6 +3570,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources.make_sources(
                     plugins,
                     hostname,
+                    ip_family,
                     ipaddress,
                     ip_stack_config,
                     fetcher_factory=config_cache.fetcher_factory(
@@ -3567,6 +3604,7 @@ class AutomationGetAgentOutput(Automation):
                     management_protocol=config_cache.management_protocol(hostname),
                     special_agent_command_lines=config_cache.special_agent_command_lines(
                         hostname,
+                        ip_family,
                         ipaddress,
                         password_store_file=core_password_store_file,
                         passwords=cmk.utils.password_store.load(core_password_store_file),
@@ -3620,7 +3658,7 @@ class AutomationGetAgentOutput(Automation):
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
                 snmp_config = config_cache.make_snmp_config(
-                    hostname, ipaddress, SourceType.HOST, backend_override=None
+                    hostname, ip_family, ipaddress, SourceType.HOST, backend_override=None
                 )
                 backend = make_snmp_backend(
                     snmp_config,

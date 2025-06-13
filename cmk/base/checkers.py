@@ -10,6 +10,7 @@ from __future__ import annotations
 import functools
 import itertools
 import logging
+import socket
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -346,6 +347,9 @@ class CMKFetcher:
         plugins: AgentBasedPlugins,
         *,
         # alphabetically sorted
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
         ip_address_of: IPLookup,
@@ -360,7 +364,7 @@ class CMKFetcher:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
-        self.default_address_family: Final = config_cache.default_address_family
+        self.default_address_family: Final = default_address_family
         self.factory: Final = factory
         self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
@@ -394,6 +398,7 @@ class CMKFetcher:
             hosts = [
                 (
                     host_name,
+                    self.default_address_family(host_name),
                     (ip_stack_config := self.config_cache.ip_stack_config(host_name)),
                     ip_address
                     or (
@@ -409,6 +414,7 @@ class CMKFetcher:
             hosts = [
                 (
                     node,
+                    self.default_address_family(node),
                     (ip_stack_config := self.config_cache.ip_stack_config(node)),
                     (
                         None
@@ -433,6 +439,7 @@ class CMKFetcher:
                 make_sources(
                     self.plugins,
                     current_host_name,
+                    current_ip_family,
                     current_ip_address,
                     current_ip_stack_config,
                     fetcher_factory=self.factory,
@@ -473,6 +480,7 @@ class CMKFetcher:
                     management_protocol=self.config_cache.management_protocol(current_host_name),
                     special_agent_command_lines=self.config_cache.special_agent_command_lines(
                         current_host_name,
+                        current_ip_family,
                         current_ip_address,
                         passwords,
                         self.password_store_file,
@@ -485,7 +493,7 @@ class CMKFetcher:
                         current_host_name
                     ),
                 )
-                for current_host_name, current_ip_stack_config, current_ip_address in hosts
+                for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
             ),
             simulation=self.simulation_mode,
             file_cache_options=self.file_cache_options,

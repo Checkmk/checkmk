@@ -154,6 +154,7 @@ def inventory_as_check(
             ip_address_of,
         ),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,

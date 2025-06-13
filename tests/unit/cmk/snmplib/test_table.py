@@ -6,6 +6,7 @@
 
 import dataclasses
 import logging
+import socket
 from collections.abc import Sequence
 from functools import partial
 from typing import NoReturn
@@ -146,6 +147,7 @@ def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
     assert (
         config_cache.make_snmp_config(
             HostName("abc"),
+            socket.AddressFamily.AF_INET,
             HostAddress("1.2.3.4"),
             SourceType.HOST,
             backend_override=None,
@@ -155,6 +157,7 @@ def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
     assert (
         config_cache.make_snmp_config(
             HostName("localhost"),
+            socket.AddressFamily.AF_INET,
             HostAddress("1.2.3.4"),
             SourceType.HOST,
             backend_override=None,

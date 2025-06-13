@@ -5,6 +5,7 @@
 
 
 import shutil
+import socket
 from collections.abc import Mapping
 
 import pytest
@@ -76,7 +77,7 @@ def test_do_create_config_nagios(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
-        default_address_family=ip_lookup_config.default_address_family,
+        default_address_family=lambda host_name: socket.AddressFamily.AF_INET,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
             ip_lookup_config,
             allow_empty=(),
@@ -117,7 +118,7 @@ def test_do_create_config_nagios_collects_passwords(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
-        default_address_family=ip_lookup_config.default_address_family,
+        default_address_family=lambda host_name: socket.AddressFamily.AF_INET,
         ip_address_of=ip_address_of,
         ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,
@@ -173,7 +174,9 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
 
     assert (
         config_cache.get_host_attributes(
-            HostName("test-host"), ip_address_of=lambda *a: HostAddress("1.2.3.4")
+            HostName("test-host"),
+            socket.AddressFamily.AF_INET,
+            ip_address_of=lambda *a: HostAddress("1.2.3.4"),
         )
         == expected_attrs
     )
@@ -310,7 +313,7 @@ def test_template_translation(
 
     assert (
         config_cache.translate_commandline(
-            hostname, ipaddress, template, lambda *a: HostAddress("")
+            hostname, socket.AddressFamily.AF_INET, ipaddress, template, lambda *a: HostAddress("")
         )
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
     )

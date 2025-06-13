@@ -330,7 +330,9 @@ def test_create_nagios_host_spec(
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+    host_attrs = config_cache.get_host_attributes(
+        hostname, socket.AddressFamily.AF_INET, ip_address_of
+    )
 
     host_spec = create_nagios_host_spec(
         cfg, config_cache, hostname, socket.AddressFamily.AF_INET, host_attrs, ip_address_of
@@ -358,7 +360,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     config_cache = ts.apply(monkeypatch)
 
     host_attrs = config_cache.get_host_attributes(
-        hostname, ip_address_of=lambda *a: HostAddress("")
+        hostname, socket.AddressFamily.AF_INET, ip_address_of=lambda *a: HostAddress("")
     )
 
     cfg = NagiosConfig(io.StringIO(), [hostname])
@@ -652,7 +654,9 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
 
     config_cache = ts.apply(monkeypatch)
 
-    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of_return_local)
+    host_attrs = config_cache.get_host_attributes(
+        hostname, socket.AddressFamily.AF_INET, ip_address_of_return_local
+    )
     outfile = io.StringIO()
     cfg = NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")

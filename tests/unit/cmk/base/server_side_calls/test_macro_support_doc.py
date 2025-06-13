@@ -151,7 +151,9 @@ def _iter_macros(documented_macros: Sequence[str], resources: Iterable[str]) -> 
 def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None) -> None:
     host_name = HostName("test-host")
     ip_address_of = lambda *a: HostAddress("")
-    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
+    host_attrs = config_cache.get_host_attributes(
+        host_name, socket.AddressFamily.AF_INET, ip_address_of
+    )
 
     host_macros = base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
     resource_macros = base_config.get_resource_macros()
@@ -203,7 +205,9 @@ def test_special_agent_macros(
     host_name = HostName("test-host")
     ip_address_of = lambda *a: HostAddress("")
 
-    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
+    host_attrs = config_cache.get_host_attributes(
+        host_name, socket.AddressFamily.AF_INET, ip_address_of
+    )
     macros = {
         "<IP>": "127.0.0.1",
         "<HOST>": host_name,

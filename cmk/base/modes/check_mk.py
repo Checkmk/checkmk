@@ -662,6 +662,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         for source in sources.make_sources(
             plugins,
             hostname,
+            ip_family,
             ipaddress,
             ip_stack_config,
             fetcher_factory=config_cache.fetcher_factory(
@@ -694,6 +695,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,
+                ip_family,
                 ipaddress,
                 passwords=cmk.utils.password_store.load(pending_passwords_file),
                 password_store_file=pending_passwords_file,
@@ -1125,12 +1127,13 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
-        ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
+        ip_family = ip_lookup_config.default_address_family(hostname)
+        ipaddress = ip_address_of(hostname, ip_family)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(
-            hostname, ipaddress, SourceType.HOST, backend_override=snmp_backend_override
+            hostname, ip_family, ipaddress, SourceType.HOST, backend_override=snmp_backend_override
         )
         _do_snmpwalk(
             options,
@@ -1218,12 +1221,15 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     for hostname in (HostName(hn) for hn in hostnames):
         if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
-        ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
+
+        ip_family = ip_lookup_config.default_address_family(hostname)
+        ipaddress = ip_address_of(hostname, ip_family)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(
             hostname,
+            ip_family,
             ipaddress,
             SourceType.HOST,
             backend_override=snmp_backend_override,
@@ -1971,6 +1977,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             ip_address_of,
         ),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
@@ -2297,6 +2304,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             ip_address_of,
         ),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
@@ -2492,6 +2500,7 @@ def run_checking(
         config_cache,
         config_cache.fetcher_factory(service_configurer, ip_address_of),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
@@ -2728,6 +2737,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             ip_address_of,
         ),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
@@ -2988,6 +2998,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
             ip_address_of,
         ),
         plugins,
+        default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,

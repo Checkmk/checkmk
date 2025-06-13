@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -53,9 +55,11 @@ def _make_sources(
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
     ipaddress = HostAddress("127.0.0.1")
+    ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
     return make_sources(
         AgentBasedPlugins.empty(),
         hostname,
+        ip_family,
         ipaddress,
         IPStackConfig.IPv4,
         fetcher_factory=config_cache.fetcher_factory(
@@ -94,6 +98,7 @@ def _make_sources(
         management_protocol=config_cache.management_protocol(hostname),
         special_agent_command_lines=config_cache.special_agent_command_lines(
             hostname,
+            ip_family,
             ipaddress,
             password_store_file=Path("/pw/store"),
             passwords={},

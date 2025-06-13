@@ -441,7 +441,7 @@ def test_host_config_management_address(
     ts.set_option("host_attributes", {hostname: attrs})
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.management_address(hostname) == result
+    assert config_cache.management_address(hostname, socket.AddressFamily.AF_INET) == result
 
 
 @pytest.mark.parametrize(
@@ -3113,7 +3113,10 @@ def test_get_active_service_data_crash(
     list(
         config_cache.active_check_services(
             host_name,
-            config_cache.get_host_attributes(host_name, lambda *a, **kw: HostAddress("")),
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name, socket.AddressFamily.AF_INET, lambda *a, **kw: HostAddress("")
+            ),
             FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
             lambda *a, **kw: HostAddress(""),
             {},

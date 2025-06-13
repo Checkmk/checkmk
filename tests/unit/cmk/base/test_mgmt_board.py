@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: This should be realized as unit tests
-
+import socket
 from collections.abc import Mapping
 from typing import Literal
 
@@ -48,7 +47,7 @@ def test_mgmt_explicit_settings(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
     assert config_cache.management_credentials(host, protocol) == credentials
 
 
@@ -64,7 +63,7 @@ def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
-    assert config_cache.management_address(host) == "127.0.0.2"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.2"
     assert config_cache.management_credentials(host, "snmp") == "public"
 
 
@@ -81,7 +80,7 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host) is False
     assert config_cache.management_protocol(host) is None
-    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
 
 
 @pytest.mark.parametrize(
@@ -126,7 +125,7 @@ def test_mgmt_config_ruleset(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
     assert config_cache.management_credentials(host, protocol) == ruleset_credentials
 
 
@@ -178,7 +177,7 @@ def test_mgmt_config_ruleset_order(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
-    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
     assert config_cache.management_credentials(host, "snmp") == "RULESET1"
 
 
@@ -225,7 +224,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
     assert config_cache.management_credentials(host, protocol) == host_credentials
 
 
@@ -442,7 +441,12 @@ def test_mgmt_board_ip_addresses(
     ts.set_option(cred_attribute, {hostname: credentials})
 
     config_cache = ts.apply(monkeypatch)
+    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
+        socket.AddressFamily.AF_INET6
+        if tags.get("address_family") == "ip-v6-only"
+        else socket.AddressFamily.AF_INET
+    )
     assert config_cache.has_management_board(hostname)
     assert config_cache.management_protocol(hostname) == protocol
-    assert config_cache.management_address(hostname) == ip_address_result
+    assert config_cache.management_address(hostname, ip_family) == ip_address_result
     assert config_cache.management_credentials(hostname, protocol) == credentials

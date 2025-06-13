@@ -305,7 +305,7 @@ def _create_nagios_config_host(
     cfg.write_str("# %s\n" % hostname)
     cfg.write_str("# ----------------------------------------------------\n")
 
-    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+    host_attrs = config_cache.get_host_attributes(hostname, host_ip_family, ip_address_of)
     if config.generate_hostconf:
         host_spec = create_nagios_host_spec(
             cfg, config_cache, hostname, host_ip_family, host_attrs, ip_address_of
@@ -343,7 +343,9 @@ def create_nagios_host_spec(
 
     if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.get_cluster_nodes_for_config(hostname)
-        attrs.update(config_cache.get_cluster_attributes(hostname, nodes, ip_address_of))
+        attrs.update(
+            config_cache.get_cluster_attributes(hostname, host_ip_family, nodes, ip_address_of)
+        )
 
     #   _
     #  / |
@@ -595,6 +597,7 @@ def create_nagios_servicedefs(
     active_services = []
     for service_data in config_cache.active_check_services(
         hostname,
+        host_ip_family,
         host_attrs,
         service_name_config.final_service_name_config,
         ip_address_of,

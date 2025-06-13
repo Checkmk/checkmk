@@ -78,7 +78,10 @@ class IPLookupConfig:
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ]
-    management_address: Callable[[HostName], HostAddress | None]
+    management_address: Callable[
+        [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+        HostAddress | None,
+    ]
     is_dyndns_host: Callable[[HostName], bool]
     ipv4_addresses: Mapping[HostName, HostAddress]
     ipv6_addresses: Mapping[HostName, HostAddress]
@@ -97,7 +100,7 @@ def make_lookup_mgmt_board_ip_address(
         if family is None:
             family = ip_config.default_address_family(host_name)
 
-        mgmt_address: Final = ip_config.management_address(host_name)
+        mgmt_address: Final = ip_config.management_address(host_name, family)
         try:
             mgmt_ipa = (
                 None

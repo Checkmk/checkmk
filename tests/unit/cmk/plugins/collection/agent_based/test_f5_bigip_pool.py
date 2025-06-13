@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import LevelsT, Result, Service, State
 from cmk.plugins.collection.agent_based.f5_bigip_pool import (
     check_f5_bigip_pool,
     f5_bigip_pool_get_down_members,
@@ -176,7 +176,7 @@ def test_f5_bigip_pool_get_down_members(down_info: list[PoolMember], expected: s
 
 
 @pytest.mark.parametrize(
-    "active_members,defined_members,levels_lower,expected_state,additional_in_summary",
+    "active_members,defined_members,input_lower,expected_state,additional_in_summary",
     [
         (2, 4, (2, 1), State.OK, ""),
         (1, 2, (2, 1), State.WARN, " (warn/crit below 2/1)"),
@@ -190,12 +190,13 @@ def test_f5_bigip_pool_get_down_members(down_info: list[PoolMember], expected: s
 def test_check_f5_bigip_pool_states(
     active_members: int,
     defined_members: int,
-    levels_lower: tuple[int, int],
+    input_lower: tuple[int, int],
     expected_state: State,
     additional_in_summary: str,
 ) -> None:
     expected_in_summary = f"Members up: {active_members}{additional_in_summary}"
     section = _make_section(active_members=active_members, defined_members=defined_members)
+    levels_lower: LevelsT = ("fixed", input_lower)
     results = list(check_f5_bigip_pool("pool1", {"levels_lower": levels_lower}, section))
 
     assert len(results) == 2
@@ -220,7 +221,7 @@ def test_check_f5_bigip_pool_down_members_in_summary() -> None:
     section: Mapping[str, Section] = _make_section(
         active_members=1, defined_members=2, members_info=members_info
     )
-    params: Mapping[str, tuple[int, int]] = {"levels_lower": (2, 1)}
+    params: Mapping[str, LevelsT] = {"levels_lower": ("fixed", (2, 1))}
     results = list(check_f5_bigip_pool("pool1", params, section))
 
     assert len(results) == 3
@@ -230,7 +231,7 @@ def test_check_f5_bigip_pool_down_members_in_summary() -> None:
 
 def test_check_f5_bigip_pool_item_not_found() -> None:
     section: Mapping[str, Section] = _make_section()
-    params: Mapping[str, tuple[int, int]] = {"levels_lower": (2, 1)}
+    params: Mapping[str, LevelsT] = {"levels_lower": ("fixed", (2, 1))}
 
     results = list(check_f5_bigip_pool("not_a_pool", params, section))
 

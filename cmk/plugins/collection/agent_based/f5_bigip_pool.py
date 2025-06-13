@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Result,
     Service,
     SNMPSection,
@@ -110,7 +111,7 @@ def f5_bigip_pool_get_down_members(members_info: list[PoolMember]) -> str:
 
 
 def check_f5_bigip_pool(
-    item: str, params: Mapping[str, tuple[int, int]], section: Mapping[str, Section]
+    item: str, params: Mapping[str, LevelsT], section: Mapping[str, Section]
 ) -> CheckResult:
     pool = section.get(item)
     if not pool:
@@ -121,7 +122,7 @@ def check_f5_bigip_pool(
     else:
         yield from check_levels(
             value=pool.active_members,
-            levels_lower=("fixed", params["levels_lower"]),
+            levels_lower=params["levels_lower"],
             render_func=str,
             label="Members up",
         )
@@ -161,12 +162,11 @@ snmp_section_f5_bigip_pool = SNMPSection(
     ],
 )
 
-
 check_plugin_f5_bigip_pool = CheckPlugin(
     name="f5_bigip_pool",
     service_name="Load Balancing Pool %s",
     discovery_function=inventory_f5_bigip_pool,
     check_function=check_f5_bigip_pool,
     check_ruleset_name="f5_pools",
-    check_default_parameters={"levels_lower": (2, 1)},
+    check_default_parameters={"levels_lower": ("fixed", (2, 1))},
 )

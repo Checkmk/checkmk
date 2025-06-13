@@ -419,7 +419,10 @@ export function render_input_range(
     parent: d3Selection,
     range_options: InputRangeOptions,
     value: number,
-    option_changed_callback: (option_id: string, new_value: number) => void,
+    option_changed_callback: (
+        option_id: string,
+        new_value: number,
+    ) => void = () => {},
 ) {
     parent
         .selectAll("td.text." + range_options.id)

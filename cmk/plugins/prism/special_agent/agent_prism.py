@@ -5,7 +5,7 @@
 import base64
 import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NotRequired, TypedDict
 
 import requests
@@ -67,6 +67,12 @@ class SessionManager:
             raise e
 
         return resp.json()
+
+
+def _is_only_ovh(hosts_obj: Mapping[str, Iterable[Mapping[str, str]]]) -> bool:
+    return all(
+        [host.get("hypervisor_type", "") == "kAcropolis" for host in hosts_obj.get("entities", [])]
+    )
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -139,7 +145,7 @@ def fetch_from_gateway(
             {
                 "protection_domains": session_manager.get(f"{base_url_v2}/protection_domains"),
                 "remote_support": session_manager.get(f"{base_url_v2}/cluster/remote_support"),
-                "ha": session_manager.get(f"{base_url_v2}/ha"),
+                "ha": session_manager.get(f"{base_url_v2}/ha") if _is_only_ovh(hosts_obj) else {},
                 "hosts_networks": hosts_networks,
             }
         )

@@ -2469,40 +2469,43 @@ def connection(
             "site_id": remote_site.id,
         }
 
+    configuration_connection = {
+        "enable_replication": True,
+        "url_of_remote_site": remote_site.internal_url,
+        "disable_remote_configuration": True,
+        "ignore_tls_errors": True,
+        "direct_login_to_web_gui_allowed": True,
+        "user_sync": {"sync_with_ldap_connections": "all"},
+        "replicate_event_console": True,
+        "replicate_extensions": True,
+    }
+    # stay backwards-compatible for performance tests:
+    # only set message_broker_port for CMK2.4.0+
+    if central_site.version == remote_site.version >= CMKVersion("2.4.0"):
+        configuration_connection["message_broker_port"] = remote_site.message_broker_port
+    site_config: dict[str, object] = {
+        "basic_settings": basic_settings,
+        "status_connection": {
+            "connection": {
+                "socket_type": "tcp",
+                "host": remote_site.http_address,
+                "port": remote_site.livestatus_port,
+                "encrypted": False,
+                "verify": False,
+            },
+            "proxy": {
+                "use_livestatus_daemon": "direct",
+            },
+            "connect_timeout": 2,
+            "persistent_connection": False,
+            "url_prefix": f"/{remote_site.id}/",
+            "status_host": {"status_host_set": "disabled"},
+            "disable_in_status_gui": False,
+        },
+        "configuration_connection": configuration_connection,
+    }
     logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
-    central_site.openapi.sites.create(
-        {
-            "basic_settings": basic_settings,
-            "status_connection": {
-                "connection": {
-                    "socket_type": "tcp",
-                    "host": remote_site.http_address,
-                    "port": remote_site.livestatus_port,
-                    "encrypted": False,
-                    "verify": False,
-                },
-                "proxy": {
-                    "use_livestatus_daemon": "direct",
-                },
-                "connect_timeout": 2,
-                "persistent_connection": False,
-                "url_prefix": f"/{remote_site.id}/",
-                "status_host": {"status_host_set": "disabled"},
-                "disable_in_status_gui": False,
-            },
-            "configuration_connection": {
-                "enable_replication": True,
-                "url_of_remote_site": remote_site.internal_url,
-                "disable_remote_configuration": True,
-                "ignore_tls_errors": True,
-                "direct_login_to_web_gui_allowed": True,
-                "user_sync": {"sync_with_ldap_connections": "all"},
-                "replicate_event_console": True,
-                "replicate_extensions": True,
-                "message_broker_port": remote_site.message_broker_port,
-            },
-        }
-    )
+    central_site.openapi.sites.create(site_config)
     logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
     central_site.openapi.sites.login(remote_site.id)
     logger.info("Activating site setup changes")

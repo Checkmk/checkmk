@@ -63,7 +63,10 @@ def _parameter_valuespec_livestatus_status():
             ),
             (
                 "enable_event_handlers",
-                MonitoringState(title="State when event handlers are disabled", default_value=0),
+                MonitoringState(
+                    title="State when alert handlers ('event handlers' when using nagios core) are disabled",
+                    default_value=0,
+                ),
             ),
             (
                 "enable_flap_detection",

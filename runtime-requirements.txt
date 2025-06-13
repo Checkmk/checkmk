@@ -2494,6 +2494,7 @@ requests==2.32.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-probe-core/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   azure-core
     #   exchangelib

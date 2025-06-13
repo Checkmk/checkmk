@@ -23,7 +23,7 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { computed, onMounted, ref, type Ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, type Ref, watch } from 'vue'
 import {
   convertFromExplicitVerticalRange,
   convertFromUnit,
@@ -51,6 +51,28 @@ const props = defineProps<{
   i18n: I18N
   graph_renderer: GraphRenderer
 }>()
+
+const preventLeaving = ref(false)
+
+const handleBrowserDialog = (event: BeforeUnloadEvent) => {
+  if (preventLeaving.value) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
+
+const handlePreventLeaving = (prevent: boolean) => {
+  preventLeaving.value = prevent
+  if (prevent) {
+    window.addEventListener('beforeunload', handleBrowserDialog)
+  } else {
+    window.removeEventListener('beforeunload', handleBrowserDialog)
+  }
+}
+
+onBeforeUnmount(() => {
+  handlePreventLeaving(false)
+})
 
 // Specs
 
@@ -758,6 +780,7 @@ watch(
     dataOmitZeroMetrics.value
   ],
   () => {
+    handlePreventLeaving(true)
     props.graph_renderer(
       props.graph_id,
       graphLines.value,
@@ -773,6 +796,10 @@ watch(
 )
 
 // Form
+
+window.addEventListener('submit', () => {
+  handlePreventLeaving(false)
+})
 
 const graphDesignerContentAsJson = computed(() => {
   return JSON.stringify({

@@ -2265,16 +2265,22 @@ class StatusServer(ECServerThread):
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_ids, user, acknowledged, comment, contact = arguments
+        failures = list[str]()
         for event_id in event_ids.split(","):
             event = self._event_status.event(int(event_id))
             if not event:
-                raise MKClientError(f"No event with id {event_id}")
-            # Note the common practice: We validate parameters *before* doing any changes.
+                failures.append(f"No event with id {event_id}.")
+                continue
             if acknowledged:
-                ack = int(acknowledged)
-                if ack and event["phase"] not in {"open", "ack"}:
-                    raise MKClientError("You cannot acknowledge an event that is not open.")
-                event["phase"] = "ack" if ack else "open"
+                if not int(acknowledged):
+                    event["phase"] = "open"
+                elif event["phase"] in {"open", "ack"}:
+                    event["phase"] = "ack"
+                else:
+                    failures.append(
+                        f"You cannot acknowledge event {event_id}, it is {event['phase']}."
+                    )
+                    continue
             if comment:
                 event["comment"] = comment
             if contact:
@@ -2282,6 +2288,8 @@ class StatusServer(ECServerThread):
             if user:
                 event["owner"] = user
             self._history.add(event, "UPDATE", user)
+        if failures:
+            raise MKClientError(" ".join(failures))
 
     def handle_command_create(self, arguments: list[str]) -> None:
         # Would rather use process_syslog_messages(), but we are already
@@ -2292,14 +2300,18 @@ class StatusServer(ECServerThread):
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
         event_ids, user, newstate = arguments
+        failures = list[str]()
         for event_id in event_ids.split(","):
             event = self._event_status.event(int(event_id))
             if not event:
-                raise MKClientError(f"No event with id {event_id}")
+                failures.append(f"No event with id {event_id}.")
+                continue
             event["state"] = int(newstate)
             if user:
                 event["owner"] = user
             self._history.add(event, "CHANGESTATE", user)
+        if failures:
+            raise MKClientError(" ".join(failures))
 
     def handle_command_reload(self) -> None:
         self._reload_config_event.set()

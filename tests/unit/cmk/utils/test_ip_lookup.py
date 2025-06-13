@@ -64,6 +64,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName(dual_stack), {TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.add_cluster(HostName(cluster))
     config_cache = ts.apply(monkeypatch)
+    ip_lookup_config = config_cache.ip_lookup_config()
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
@@ -73,14 +74,14 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         }[(host, family)],
     )
 
-    assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
-    assert config_cache.ip_stack_config(localhost) is ip_lookup.IPStackConfig.IPv4
-
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        config_cache.ip_lookup_config(),
+        ip_lookup_config,
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=lambda *a: None,
     )
+
+    assert ip_lookup_config.default_address_family(localhost) is socket.AddressFamily.AF_INET
+    assert config_cache.ip_stack_config(localhost) is ip_lookup.IPStackConfig.IPv4
 
     assert (
         ip_address_of(
@@ -97,10 +98,10 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         == "::1"
     )
 
-    assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
+    assert ip_lookup_config.default_address_family(no_ip) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(no_ip) is ip_lookup.IPStackConfig.NO_IP
 
-    assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
+    assert ip_lookup_config.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(dual_stack) is ip_lookup.IPStackConfig.DUAL_STACK
     assert (
         ip_address_of(
@@ -117,7 +118,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         == _FALLBACK_ADDRESS_IPV6
     )
 
-    assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
+    assert ip_lookup_config.default_address_family(cluster) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(cluster) is ip_lookup.IPStackConfig.IPv4  # That's strange
     assert (
         ip_address_of(
@@ -134,7 +135,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         == ""
     )
 
-    assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
+    assert ip_lookup_config.default_address_family(bad_host) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(bad_host) is ip_lookup.IPStackConfig.IPv4  # That's strange
     assert (
         ip_address_of(
@@ -151,7 +152,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         == _FALLBACK_ADDRESS_IPV6
     )
 
-    assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
+    assert ip_lookup_config.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
     assert (
         config_cache.ip_stack_config(undiscoverable) is ip_lookup.IPStackConfig.IPv4
     )  # That's strange

@@ -8,6 +8,7 @@ These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """
 
+import socket
 from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
@@ -162,7 +163,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     host_config = base_config.get_ssc_host_config(
         host_name,
         config_cache.alias(host_name),
-        config_cache.default_address_family(host_name),
+        socket.AddressFamily.AF_INET,
         config_cache.ip_stack_config(host_name),
         additional_addresses_ipv4,
         additional_addresses_ipv6,
@@ -215,7 +216,7 @@ def test_special_agent_macros(
     host_config = base_config.get_ssc_host_config(
         host_name,
         config_cache.alias(host_name),
-        config_cache.default_address_family(host_name),
+        socket.AddressFamily.AF_INET,
         config_cache.ip_stack_config(host_name),
         additional_addresses_ipv4,
         additional_addresses_ipv6,

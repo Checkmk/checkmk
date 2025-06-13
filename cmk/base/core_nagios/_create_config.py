@@ -358,9 +358,7 @@ def create_nagios_host_spec(
             if hostname in config_cache.hosts_config.clusters
             else config.host_template
         ),
-        "address": (
-            ip if ip else ip_lookup.fallback_ip_for(config_cache.default_address_family(hostname))
-        ),
+        "address": (ip if ip else ip_lookup.fallback_ip_for(host_ip_family)),
         "alias": attrs["alias"],
     }
 

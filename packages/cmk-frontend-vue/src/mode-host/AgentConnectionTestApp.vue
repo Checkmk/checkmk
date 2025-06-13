@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import AgentConnectionTest from '@/components/AgentConnectionTest.vue'
 import type { I18N } from 'cmk-shared-typing/typescript/agent_connection_test'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 defineProps<{
   url: string
@@ -17,17 +17,26 @@ defineProps<{
   input_ipv6: string
 }>()
 
-const formEditHost = document.getElementById('form_edit_host')
-const changeTagAgent = document.getElementById('cb_host_change_tag_agent')
-const tagAgent = document.getElementById('tag_agent')
 const showTest = ref(true)
-formEditHost.addEventListener('change', (e) => {
-  switch (e.target) {
-    case formEditHost || changeTagAgent:
-      if (tagAgent.value) {
-        showTest.value = tagAgent.value === 'all-agents' || tagAgent.value === 'cmk-agent'
-      }
+
+onMounted(() => {
+  const formEditHost = document.getElementById('form_edit_host') as HTMLFormElement | null
+  if (!formEditHost) {
+    throw new Error(`Form with id "${'form_edit_host'}" not found`)
   }
+
+  const changeTagAgent = document.getElementById(
+    'cb_host_change_tag_agent'
+  ) as HTMLInputElement | null
+  const tagAgent = document.getElementById('tag_agent') as HTMLSelectElement | null
+  formEditHost.addEventListener('change', (e: Event) => {
+    switch (e.target) {
+      case formEditHost || changeTagAgent:
+        if (tagAgent) {
+          showTest.value = tagAgent.value === 'all-agents' || tagAgent.value === 'cmk-agent'
+        }
+    }
+  })
 })
 </script>
 

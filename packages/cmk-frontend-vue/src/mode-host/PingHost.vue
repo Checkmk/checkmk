@@ -57,7 +57,7 @@ const controller = ref(new AbortController())
 const ajaxRequestInProgress = ref(false)
 
 onMounted(() => {
-  props.formElement.addEventListener('change', (e) => {
+  props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
       case props.formElement:
         switch (props.ipAddressFamilySelectElement.value) {

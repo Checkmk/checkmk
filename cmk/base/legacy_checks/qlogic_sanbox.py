@@ -79,7 +79,7 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
         if sensor_id == item:
             sensor_status = int(sensor_status)
             if sensor_status < 0 or sensor_status >= len(qlogic_sanbox_status_map):
-                sensor_status_descr = sensor_status
+                sensor_status_descr = str(sensor_status)
             else:
                 sensor_status_descr = qlogic_sanbox_status_map[int(sensor_status)]
 
@@ -155,7 +155,7 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
         if sensor_id == item:
             sensor_status = int(sensor_status)
             if sensor_status < 0 or sensor_status >= len(qlogic_sanbox_status_map):
-                sensor_status_descr = sensor_status
+                sensor_status_descr = str(sensor_status)
             else:
                 sensor_status_descr = qlogic_sanbox_status_map[int(sensor_status)]
 

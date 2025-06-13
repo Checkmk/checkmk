@@ -31,7 +31,7 @@ def _migrate_to_valid_ident(value: object) -> Sequence[str]:
         "sensor-readings": "sensor_readings",
     }
 
-    return [name_mapping.get(s, s) for s in value]
+    return [name_mapping.get(s, s) for s in value if isinstance(s, str)]
 
 
 def _form_special_agent_cisco_meraki() -> Dictionary:

@@ -144,7 +144,7 @@ def rename_amd_remove_conversion_arg(value: object) -> dict[str, object]:
 
     value.pop("_NEEDS_CONVERSION", None)
 
-    return {_KEY_MAP.get(k, k): v for k, v in value.items()}
+    return {_KEY_MAP.get(k, k): v for k, v in value.items() if isinstance(k, str)}
 
 
 def migrate_to_float(value: object) -> float:

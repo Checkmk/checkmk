@@ -691,7 +691,9 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         config = self._get_catalog_converter().convert_catalog_to_flat_config(config)
 
         if "ident" in config:
-            self._ident = config.pop("ident")
+            ident = config.pop("ident")
+            assert isinstance(ident, str | None)  # horrible typing of config...
+            self._ident = ident
         assert self._ident is not None
         entries = self._store.load_for_modification()
 

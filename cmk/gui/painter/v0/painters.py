@@ -1218,13 +1218,8 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
         None: "",  # column is not available if the Nagios core is used
     }
 
-    return (
-        "",
-        reasons.get(
-            row[what + "_notification_postponement_reason"],
-            row[what + "_notification_postponement_reason"],
-        ),
-    )
+    reason: str = row[what + "_notification_postponement_reason"]
+    return ("", reasons.get(reason, reason))
 
 
 class PainterSvcNotificationPostponementReason(Painter):
@@ -3445,7 +3440,7 @@ def _paint_discovery_output(
     renderer: RenderLink,
     theme: Theme,
 ) -> CellSpec:
-    value = row[field]
+    value: str = row[field]
     if field == "discovery_state":
         ruleset_url = "wato.py?mode=edit_ruleset&varname=ignored_services"
         discovery_url = "wato.py?mode=inventory&host=%s&mode=inventory" % row["host_name"]
@@ -4546,7 +4541,8 @@ class PainterLogDetailsHistory(Painter):
 
         # has to be placed after format_plugin_output() to keep links save from
         # escaping
-        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
+        host_custom_variables: dict = row.get("host_custom_variables", {})
+        custom_vars = row.get("service_custom_variables", host_custom_variables)
         escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
         if long_output_len > max_len and escape_plugin_output and non_displayable_html:
             setting_link_tag = self.url_renderer.link_from_filename(

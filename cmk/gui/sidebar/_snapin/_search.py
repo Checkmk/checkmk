@@ -486,6 +486,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         # Add additional info to the display text
         for element in elements:
             hostname = element.row.get("host_name", element.row.get("name"))
+            assert hostname is not None  # TODO: Why is this the case? Needed for correct typing.
             if "&host_regex=" not in element.url:
                 element.url += "&host_regex=%s" % hostname
 
@@ -1298,6 +1299,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
         if row and filter_name not in ["allservices", "searchsvc"]:
             hostname = row.get("host_name", row.get("name"))
+            assert hostname is not None  # TODO: Why is this the case? Needed for correct typing.
             return hostname, [(filter_name, hostname)]
 
         url_infos = []

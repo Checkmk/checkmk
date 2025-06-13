@@ -48673,14 +48673,6 @@ msgstr ""
 "set X-Forwarded-Proto \"https\"</tt>を設定する必要があることに注意してくださ"
 "い。"
 
-#, fuzzy
-msgid ""
-"Please note that your site will be deleted when the trial period ends or "
-"when you activate a license. "
-msgstr ""
-"無料トライアル中です！トライアル期間が終了すると、あなたのサイトは削除されま"
-"すのでご注意ください。 "
-
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -62448,13 +62440,6 @@ msgid ""
 msgstr ""
 "リクエストのURI。これは'/'で始まり、ドメイン(例: '/index.html')を含まないよう"
 "にする必要があります。"
-
-msgid ""
-"The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
-"check_mk/</tt>."
-msgstr ""
-"URLは、<tt>http</tt>または<tt>https</tt>で始まり、<tt>/check_mk/</tt>で終わる"
-"必要があります。"
 
 msgid "The URL must begin with https://"
 msgstr "URLは https:// で始まる必要があります"
@@ -83237,6 +83222,9 @@ msgstr "拡張機能のサイズは%sです。"
 msgid "Your filename must not end with a slash."
 msgstr "ファイル名はスラッシュで終わらせてはなりません。"
 
+msgid "Your free trial is active! "
+msgstr ""
+
 msgid "Your host name has an invalid format."
 msgstr "ホスト名の形式が無効です。"
 
@@ -85707,6 +85695,21 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy
+#~ msgid ""
+#~ "Please note that your site will be deleted when the trial period ends or "
+#~ "when you activate a license. "
+#~ msgstr ""
+#~ "無料トライアル中です！トライアル期間が終了すると、あなたのサイトは削除され"
+#~ "ますのでご注意ください。 "
+
+#~ msgid ""
+#~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
+#~ "check_mk/</tt>."
+#~ msgstr ""
+#~ "URLは、<tt>http</tt>または<tt>https</tt>で始まり、<tt>/check_mk/</tt>で終"
+#~ "わる必要があります。"
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

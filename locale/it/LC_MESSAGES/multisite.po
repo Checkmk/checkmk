@@ -50434,11 +50434,6 @@ msgstr ""
 "\"https\"</tt> nella configurazione di Apache del sistema per indicare alla "
 "GUI di Checkmk la configurazione SSL."
 
-msgid ""
-"Please note that your site will be deleted when the trial period ends or "
-"when you activate a license. "
-msgstr ""
-
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -64715,13 +64710,6 @@ msgid ""
 msgstr ""
 "L'URI della richiesta. Questo dovrebbe iniziare con '/' e non includere il "
 "dominio (ad esempio '/index.html')."
-
-msgid ""
-"The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
-"check_mk/</tt>."
-msgstr ""
-"L'URL deve iniziare con <tt>http</tt> o <tt>https</tt> e finire con <tt>/"
-"check_mk/</tt>."
 
 #, fuzzy
 msgid "The URL must begin with https://"
@@ -86726,6 +86714,9 @@ msgstr "Le tue estensioni hanno una dimensione di %s."
 msgid "Your filename must not end with a slash."
 msgstr "Il tuo nome di file non deve finire con una barra."
 
+msgid "Your free trial is active! "
+msgstr ""
+
 #, fuzzy
 msgid "Your host name has an invalid format."
 msgstr "Il tuo hostname ha un formato non valido."
@@ -89207,6 +89198,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid ""
+#~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
+#~ "check_mk/</tt>."
+#~ msgstr ""
+#~ "L'URL deve iniziare con <tt>http</tt> o <tt>https</tt> e finire con <tt>/"
+#~ "check_mk/</tt>."
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

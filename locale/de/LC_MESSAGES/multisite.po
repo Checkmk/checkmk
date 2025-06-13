@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-11 13:46+0000\n"
+"PO-Revision-Date: 2025-06-12 17:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -17754,9 +17754,8 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
 
-#, fuzzy
 msgid "Define levels for"
-msgstr "Levels für ausstehende Pods festlegen"
+msgstr "Levels festlegen für"
 
 msgid "Define levels for pending pods"
 msgstr "Levels für ausstehende Pods festlegen"
@@ -33886,9 +33885,8 @@ msgstr "Interpretation des Konfigurationssynchronisationszustands"
 msgid "Interpretation of Registration States"
 msgstr "Interpratation der Registrierungszustände"
 
-#, fuzzy
 msgid "Interpretation of VM Tools States"
-msgstr "Interpretation des Pod-Zustands"
+msgstr "Interpretation des Zustands der VM-Werkzeuge"
 
 msgid "Interpretation of failover cluster state"
 msgstr "Interpretation des Failover-Cluster-Zustands"
@@ -48731,13 +48729,6 @@ msgstr ""
 "Checkmk-Oberfläche über die SSL-Einrichtung zu informieren."
 
 msgid ""
-"Please note that your site will be deleted when the trial period ends or "
-"when you activate a license. "
-msgstr ""
-"Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der Testzeitraum "
-"endet oder wenn Sie eine Lizenz aktivieren. "
-
-msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
 "please look at the output of the agent (cmk -d HOSTNAME). The service names "
@@ -62633,13 +62624,6 @@ msgid ""
 msgstr ""
 "Die URI der Anfrage. Sie sollte mit '/' beginnen, und die Domain nicht "
 "beinhalten (beispielsweise '/index.html')."
-
-msgid ""
-"The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
-"check_mk/</tt>."
-msgstr ""
-"Die URL muss mit <tt>http</tt> oder <tt>https</tt> beginnen und mit <tt>/"
-"check_mk/</tt> enden."
 
 msgid "The URL must begin with https://"
 msgstr "Die URL muss mit https:// beginnen"
@@ -84267,6 +84251,9 @@ msgstr "Ihre Erweitrungen haben eine Größe von %s."
 msgid "Your filename must not end with a slash."
 msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
 
+msgid "Your free trial is active! "
+msgstr ""
+
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
 
@@ -86738,6 +86725,20 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "Please note that your site will be deleted when the trial period ends or "
+#~ "when you activate a license. "
+#~ msgstr ""
+#~ "Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der "
+#~ "Testzeitraum endet oder wenn Sie eine Lizenz aktivieren. "
+
+#~ msgid ""
+#~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"
+#~ "check_mk/</tt>."
+#~ msgstr ""
+#~ "Die URL muss mit <tt>http</tt> oder <tt>https</tt> beginnen und mit <tt>/"
+#~ "check_mk/</tt> enden."
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

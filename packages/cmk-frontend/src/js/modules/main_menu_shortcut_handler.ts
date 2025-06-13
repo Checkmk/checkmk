@@ -54,4 +54,15 @@ export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
             handle_main_menu("setup");
         },
     );
+
+    keyShortcuts.on(
+        {
+            key: ["k"],
+            ctrl: true,
+            preventDefault: true,
+        },
+        () => {
+            handle_main_menu("search");
+        },
+    );
 }

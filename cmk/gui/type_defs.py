@@ -645,14 +645,14 @@ class MainMenuTopic(NamedTuple):
     hide: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass()
 class MainMenuData: ...
 
 
-class MainMenuVueApp(NamedTuple):
+@dataclass
+class MainMenuVueApp:
     name: str
     data: Callable[[Request], MainMenuData]
-    class_: list[str] = []
 
 
 class MainMenu(NamedTuple):

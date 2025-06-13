@@ -37,6 +37,7 @@ from cmk.gui import (
     painter_options,
     prediction,
     rulespec,
+    search_menu,
     user_message,
     valuespec,
     weblib,
@@ -167,6 +168,7 @@ def register(
 ) -> None:
     hooks.register_thread_cache_cleanup()
     pagetypes.register(main_menu_registry)
+    search_menu.register(main_menu_registry)
     help_menu.register(
         main_menu_registry,
         help_info_line,

@@ -20,7 +20,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.urls import makeuri
 
 
-@dataclass(frozen=True)
+@dataclass
 class ChangesMenuItem(MainMenuData):
     activate_changes_url: str
     user_has_activate_foreign: bool
@@ -57,7 +57,6 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             vue_app=MainMenuVueApp(
                 name="cmk-main-menu-changes",
                 data=_data,
-                class_=[],
             ),
         )
     )

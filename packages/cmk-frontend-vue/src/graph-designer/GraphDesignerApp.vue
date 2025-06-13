@@ -695,19 +695,19 @@ function applyMaximum() {
 }
 
 function applyTransformation() {
-  const selectedGraphLine = selectedGraphLines.value[0]
-  if (selectedGraphLine) {
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
     addGraphLineWithSelection({
       id: nextIndex(),
       type: 'transformation',
-      color: '#ff0000',
-      auto_title: `${props.i18n.percentile} ${dataTransformation.value} ${props.i18n.of} ${selectedGraphLine.auto_title}`,
+      color: firstOperand.color,
+      auto_title: `${props.i18n.percentile} ${dataTransformation.value} ${props.i18n.of} ${firstOperand.auto_title}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
       mirrored: false,
       percentile: dataTransformation.value,
-      operand: selectedGraphLine
+      operand: firstOperand
     })
   }
 }

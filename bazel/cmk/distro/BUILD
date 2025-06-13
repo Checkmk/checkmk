@@ -33,7 +33,7 @@ config_setting(
 
 selects.config_setting_group(
     name = "almalinux",
-    match_all = [
+    match_any = [
         ":almalinux_8",
         ":almalinux_9",
     ],
@@ -46,7 +46,7 @@ config_setting(
 
 selects.config_setting_group(
     name = "cma",
-    match_all = [":cma_4"],
+    match_any = [":cma_4"],
 )
 
 config_setting(
@@ -61,7 +61,7 @@ config_setting(
 
 selects.config_setting_group(
     name = "debian",
-    match_all = [
+    match_any = [
         ":debian_11",
         ":debian_12",
     ],
@@ -89,7 +89,7 @@ config_setting(
 
 selects.config_setting_group(
     name = "sles",
-    match_all = [
+    match_any = [
         ":sles_15sp3",
         ":sles_15sp4",
         ":sles_15sp5",
@@ -109,7 +109,7 @@ config_setting(
 
 selects.config_setting_group(
     name = "ubuntu",
-    match_all = [
+    match_any = [
         ":ubuntu_22.04",
         ":ubuntu_24.04",
     ],

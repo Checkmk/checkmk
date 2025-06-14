@@ -12782,6 +12782,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk met tijden prestatiegegevens"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
@@ -18194,6 +18197,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host toewijzing definiëren"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definieer niveaus voor in afwachting van pods"
+
 msgid "Define levels for pending pods"
 msgstr "Definieer niveaus voor in afwachting van pods"
 
@@ -18268,6 +18275,13 @@ msgstr "Definieer lagere niveaus voor het aantal beëindigde containers"
 msgid ""
 "Define the maximum allowed session duration. If reached, the user has to re-"
 "authenticate. Sessions are not set to persist on browser termination."
+msgstr ""
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
 msgstr ""
 
 msgid ""
@@ -41251,6 +41265,16 @@ msgstr "Metrisch etiket"
 
 msgid "Metric levels"
 msgstr "Metrische niveaus"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Hostnaam (exacte match)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -65947,6 +65971,19 @@ msgstr "De toegestane contactgroepen van de map zijn <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "De volgende %s kon niet worden gevonden: %s"
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66555,6 +66592,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "De limiet voor de transportvertraging in <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -66835,6 +66876,10 @@ msgstr ""
 "Het metric label wordt getoond naast de opgevraagde waarde in het "
 "statusdetail van de resulterende dienst. De naam van de metriek wordt als "
 "label gebruikt als er niets is gespecificeerd."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "De naam van de instantie en het back-uptype"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -80575,6 +80620,10 @@ msgstr "%s Verklaart"
 msgid "User Base-DN"
 msgstr "Gebruiker Base-DN"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Laser-id"
+
 msgid "User ID"
 msgstr "Gebruikers-ID"
 
@@ -87067,6 +87116,10 @@ msgstr "alle logbestanden van host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle logbestanden op alle hosts"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "metrisch"
+
 msgid "all special agents"
 msgstr "alle speciale agenten"
 
@@ -88860,6 +88913,10 @@ msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "socket wacht na het sluiten op alle pakketten die op het netwerk "
 "achterblijven"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Specifieke sites"
 
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"

@@ -12779,6 +12779,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk com dados de desempenho temporal"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
@@ -18188,6 +18191,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definir atribuição de anfitrião"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definir níveis para pods pendentes"
+
 msgid "Define levels for pending pods"
 msgstr "Definir níveis para pods pendentes"
 
@@ -18265,6 +18272,13 @@ msgid ""
 msgstr ""
 "Definir a duração máxima da sessão. Se for atingida, o utilizador tem de se "
 "autenticar novamente."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -41245,6 +41259,16 @@ msgstr "Etiqueta métrica"
 
 msgid "Metric levels"
 msgstr "Níveis métricos"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Nome do anfitrião (correspondência exacta)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -65927,6 +65951,19 @@ msgstr "Os grupos de contato permitidos para a pasta são <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "O seguinte %s não pôde ser encontrado: %s"
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66527,6 +66564,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "O limite para o atraso do transporte em <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -66810,6 +66851,10 @@ msgstr ""
 "A etiqueta métrica é exibida ao lado do valor consultado no detalhe de "
 "status do serviço resultante. O nome da métrica será tomado como etiqueta se "
 "nada tiver sido especificado."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "O nome da instância e o tipo de backup"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -80512,6 +80557,10 @@ msgstr "%s Afirmações"
 msgid "User Base-DN"
 msgstr "Base de Usuários -DN"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Identificação a laser"
+
 msgid "User ID"
 msgstr "Identificação do usuário"
 
@@ -86971,6 +87020,10 @@ msgstr "todos os ficheiros de registo do anfitrião %s"
 msgid "all logfiles on all hosts"
 msgstr "todos os ficheiros de registo em todos os anfitriões"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "métrica"
+
 msgid "all special agents"
 msgstr "todos os agentes especiais"
 
@@ -88750,6 +88803,10 @@ msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "soquete está esperando após o fechamento por quaisquer pacotes deixados na "
 "rede"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Locais específicos"
 
 msgid "specify manually ->"
 msgstr "especificar manualmente ->"

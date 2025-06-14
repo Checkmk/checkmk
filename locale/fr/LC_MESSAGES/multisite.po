@@ -12870,6 +12870,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk avec les données de performance de temps"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk : BI"
@@ -18344,6 +18347,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Définir l'affectation des hôtes"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Définir des niveaux pour les pods en attente"
+
 msgid "Define levels for pending pods"
 msgstr "Définir des niveaux pour les pods en attente"
 
@@ -18421,6 +18428,13 @@ msgstr "Définir des niveaux inférieurs pour le nombre de conteneurs terminés"
 msgid ""
 "Define the maximum allowed session duration. If reached, the user has to re-"
 "authenticate. Sessions are not set to persist on browser termination."
+msgstr ""
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
 msgstr ""
 
 msgid ""
@@ -41602,6 +41616,16 @@ msgstr "Étiquette métrique"
 
 msgid "Metric levels"
 msgstr "Niveaux métriques"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Nom d'hôte (correspondance exacte)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66553,6 +66577,19 @@ msgstr "Les groupes de contacts autorisés du dossier sont <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "L'élément suivant %s n'a pas pu être trouvé : %s"
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -67162,6 +67199,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "La limite pour le retard de transport dans <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Le cluster doit avoir au moins un nœud"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -67448,6 +67489,10 @@ msgstr ""
 "L'étiquette de la métrique est affichée à côté de la valeur demandée dans le "
 "détail de l'état du service résultant. Le nom de la métrique sera pris comme "
 "étiquette si rien n'a été spécifié."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Le nom de l'instance et le type de sauvegarde"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -81341,6 +81386,10 @@ msgstr "%s Assertions"
 msgid "User Base-DN"
 msgstr "Numéro de base de l'utilisateur"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Identification du laser"
+
 msgid "User ID"
 msgstr "ID utilisateur"
 
@@ -87941,6 +87990,10 @@ msgstr "tous les fichiers journaux de l'hôte %s"
 msgid "all logfiles on all hosts"
 msgstr "tous les fichiers journaux sur tous les hôtes"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "métrique"
+
 msgid "all special agents"
 msgstr "tous les agents spéciaux"
 
@@ -89732,6 +89785,10 @@ msgstr "la prise n'est pas utilisée"
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr ""
 "La socket attend, après sa fermeture, les paquets restants sur le réseau"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Sites spécifiques"
 
 msgid "specify manually ->"
 msgstr "spécifier manuellement ->"

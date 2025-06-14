@@ -12863,6 +12863,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk con datos de rendimiento de tiempos"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
@@ -18311,6 +18314,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definir la asignación de host"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definir los niveles de las vainas pendientes"
+
 msgid "Define levels for pending pods"
 msgstr "Definir los niveles de las vainas pendientes"
 
@@ -18391,6 +18398,13 @@ msgid ""
 msgstr ""
 "Establezca la duración máxima de la sesión. Si se alcanza, el usuario deberá "
 "autenticarse de nuevo."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -41570,6 +41584,16 @@ msgstr "Etiqueta métrica"
 
 msgid "Metric levels"
 msgstr "Niveles métricos"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Nombre de host (coincidencia exacta)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66513,6 +66537,19 @@ msgstr "Los grupos de contactos permitidos de la carpeta son <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "No se ha podido encontrar el siguiente %s: %s"
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -67118,6 +67155,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "El límite para el retraso de transporte en <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "El clúster debe tener al menos un nodo"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -67404,6 +67445,10 @@ msgstr ""
 "La etiqueta de la métrica se muestra junto al valor consultado en el detalle "
 "del estado del servicio resultante. El nombre de la métrica se tomará como "
 "etiqueta si no se ha especificado nada."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "El nombre de la instancia y el tipo de copia de seguridad"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -81242,6 +81287,10 @@ msgstr "%s afirma"
 msgid "User Base-DN"
 msgstr "Usuario Base-DN"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Identificación láser"
+
 msgid "User ID"
 msgstr "ID de usuario"
 
@@ -87771,6 +87820,10 @@ msgstr "todos los archivos de registro del host %s"
 msgid "all logfiles on all hosts"
 msgstr "todos los archivos de registro en todos los hosts"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "métrica"
+
 msgid "all special agents"
 msgstr "todos los agentes especiales"
 
@@ -89572,6 +89625,10 @@ msgstr "la toma de corriente no se utiliza"
 
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "el socket espera después de cerrarse los paquetes que quedan en la red"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Sitios específicos"
 
 msgid "specify manually ->"
 msgstr "especificar manualmente ->"

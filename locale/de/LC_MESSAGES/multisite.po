@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-12 17:00+0000\n"
+"PO-Revision-Date: 2025-06-14 08:46+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -12603,6 +12603,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk mit Zeitmetriken"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI: Bytes"
 
@@ -17919,6 +17922,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Levels für ausstehende Pods festlegen"
+
 msgid "Define levels for pending pods"
 msgstr "Levels für ausstehende Pods festlegen"
 
@@ -17996,6 +18003,13 @@ msgstr ""
 "Legen Sie die maximal zulässige Sitzungsdauer fest. Wird sie erreicht, muss "
 "sich der Benutzer erneut authentifizieren. Die Sitzungen bleiben beim "
 "Beenden des Browsers nicht bestehen."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -22072,7 +22086,7 @@ msgstr "Elektrische Leistung"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -40505,6 +40519,16 @@ msgstr "Metrik-Bezeichnung"
 
 msgid "Metric levels"
 msgstr "Metrik-Levels"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Host-Name (exakter Match)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
@@ -64746,6 +64770,19 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -65357,6 +65394,10 @@ msgstr ""
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
 
+#, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Der Cluster muss zumindest einen Knoten haben"
+
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -65643,6 +65684,10 @@ msgstr ""
 "Die Bezeichnung der Metrik wird neben dem abgefragten Wert im Zustandsdetail "
 "des resultierenden Dienstes angezeigt. Der Metrikname wird als Bezeichnung "
 "genommen, wenn nichts angegeben wurde."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Der Instanzname und der Backup-Typ"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -78896,6 +78941,10 @@ msgstr "%s Asserts"
 msgid "User Base-DN"
 msgstr "Basis-DN für Benutzer"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Laser ID"
+
 msgid "User ID"
 msgstr "Benutzername"
 
@@ -85429,6 +85478,10 @@ msgstr "alle Log-Dateien von Host %s"
 msgid "all logfiles on all hosts"
 msgstr "alle Log-Dateien auf allen Hosts"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "Metrik"
+
 msgid "all special agents"
 msgstr "alle Spezialagenten"
 
@@ -87191,6 +87244,10 @@ msgstr "Anschluss wird nicht verwendet"
 
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Bestimmte Instanzen"
 
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"

@@ -12791,6 +12791,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk cu date de performanță ori"
 
+msgid "Checkmk: Agent bakery signing keys expire soon"
+msgstr ""
+
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
@@ -18199,6 +18202,10 @@ msgstr ""
 msgid "Define host assignment"
 msgstr "Definiți atribuirea gazdei"
 
+#, fuzzy
+msgid "Define levels for"
+msgstr "Definirea nivelurilor pentru podurile în așteptare"
+
 msgid "Define levels for pending pods"
 msgstr "Definirea nivelurilor pentru podurile în așteptare"
 
@@ -18282,6 +18289,13 @@ msgid ""
 msgstr ""
 "Definiți durata maximă a sesiunii. Dacă este atinsă, utilizatorul trebuie să "
 "se autentifice din nou."
+
+msgid ""
+"Define the metric name to be monitored here as an exact match. Metric names "
+"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
+"datapoint names</a>. This needs to be an exact match to the metric name in "
+"the service."
+msgstr ""
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -41302,6 +41316,16 @@ msgstr "Etichetă metrică"
 
 msgid "Metric levels"
 msgstr "Niveluri metrice"
+
+#, fuzzy
+msgid "Metric name (exact match)"
+msgstr "Numele gazdei (potrivire exactă)"
+
+#, python-format
+msgid ""
+"Metric names can only be defined once. Found the following keys multiple "
+"times: %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66103,6 +66127,19 @@ msgstr "Grupurile de contacte permise de dosar's sunt <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Următorul %s nu a putut fi găsit: %s."
 
+#, python-format
+msgid ""
+"The following agent bakery signature keys expire in %d days or less. Please "
+"replace them as soon as possible. To update the signature key, please add "
+"the newly created as an additional key to the affected agent updater rule(s) "
+"and bake the agent again. After all affected hosts have been updated, you "
+"may remove the old signature key savely.<br><br> You must not remove the old "
+"signature key until every host is updated and  accepting the new key! Please "
+"also notice, that the agent updater on the  affected hosts rejects all "
+"updated agents as soon as the affected signature key is expired.<br><br> For "
+"detailed information please consider the %s"
+msgstr ""
+
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -66711,6 +66748,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
 
 #, fuzzy
+msgid "The list needs to have at least one element"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
 msgstr ""
@@ -66993,6 +67034,10 @@ msgstr ""
 "Eticheta metrică este afișată alături de valoarea interogată în detaliile de "
 "stare ale serviciului rezultat. Numele metricii va fi luat ca etichetă dacă "
 "nu s-a specificat nimic."
+
+#, fuzzy
+msgid "The metric name can't be empty"
+msgstr "Numele instanței și tipul de backup"
 
 #, fuzzy, python-format
 msgid "The minimum allowed length is %s."
@@ -80754,6 +80799,10 @@ msgstr "%s Afirmă"
 msgid "User Base-DN"
 msgstr "Utilizator Base-DN"
 
+#, fuzzy
+msgid "User Guide"
+msgstr "Identificare laser"
+
 msgid "User ID"
 msgstr "ID-ul utilizatorului"
 
@@ -87264,6 +87313,10 @@ msgstr "toate fișierele jurnal ale gazdei %s"
 msgid "all logfiles on all hosts"
 msgstr "toate fișierele jurnal de pe toate gazdele"
 
+#, fuzzy
+msgid "all metrics"
+msgstr "metric"
+
 msgid "all special agents"
 msgstr "toți agenții speciali"
 
@@ -89054,6 +89107,10 @@ msgstr "nu este folosită"
 
 msgid "socket is waiting after closing for any packets left on the network"
 msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
+
+#, fuzzy
+msgid "specific metrics"
+msgstr "Situri specifice"
 
 msgid "specify manually ->"
 msgstr "specificați manual ->"

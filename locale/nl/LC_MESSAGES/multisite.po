@@ -730,10 +730,6 @@ msgstr ""
 "heeft, vul dan uw licentiegegevens in op de %s."
 
 #, python-format
-msgid "%s of %s"
-msgstr "%s van %s"
-
-#, python-format
 msgid "%s of %s%%"
 msgstr "%s van %s%%"
 
@@ -4216,9 +4212,6 @@ msgstr "Nieuwe actie toevoegen"
 msgid "Add new aggregation"
 msgstr "Nieuwe aggregatie toevoegen"
 
-msgid "Add new constant"
-msgstr "Nieuwe constante toevoegen"
-
 msgid "Add new element"
 msgstr "Nieuw element toevoegen"
 
@@ -4260,9 +4253,6 @@ msgstr "Nieuwe mapping toevoegen"
 msgid "Add new match criteria"
 msgstr "Nieuwe wedstrijdcriteria toevoegen"
 
-msgid "Add new metric"
-msgstr "Nieuwe metriek toevoegen"
-
 #, fuzzy
 msgid "Add new name"
 msgstr "Nieuwe tijd toevoegen"
@@ -4289,9 +4279,6 @@ msgstr "Nieuwe rij toevoegen"
 
 msgid "Add new rule"
 msgstr "Nieuwe regel toevoegen"
-
-msgid "Add new scalar"
-msgstr "Nieuwe scalair toevoegen"
 
 #, fuzzy
 msgid "Add new scrape configuration"
@@ -5182,6 +5169,14 @@ msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
 #, fuzzy
 msgid "Agent certificates"
 msgstr "Agent Certificaten"
+
+#, fuzzy
+msgid "Agent connection successful"
+msgstr "Agent %s succesvol"
+
+#, fuzzy
+msgid "Agent connection test running"
+msgstr "Time-out verbinding instellen"
 
 msgid "Agent controller"
 msgstr "Agent controller"
@@ -6407,6 +6402,9 @@ msgstr ""
 msgid "Already installed the agent?"
 msgstr "Installeer Python altijd met agent"
 
+msgid "Already installed the agent? If so, please check your firewall settings"
+msgstr ""
+
 msgid "Also bulk outside of time period"
 msgstr "Ook bulk buiten de periode"
 
@@ -7090,9 +7088,6 @@ msgstr ""
 msgid "Apply logwatch patterns"
 msgstr "Pas logwatch patronen toe"
 
-msgid "Apply operation on all checked metrics: "
-msgstr "Bewerking toepassen op alle gecontroleerde metrieken: "
-
 #, fuzzy
 msgid "Apply rule to temporary tablespaces"
 msgstr "Regel toepassen op tijdelijke Tablespaces"
@@ -7160,9 +7155,6 @@ msgstr "Solliciteer naar"
 
 msgid "Apply to combined graphs"
 msgstr "Toepassen op gecombineerde grafieken"
-
-msgid "Apply transformation on checked metric: "
-msgstr "Transformatie toepassen op gecontroleerde metriek: "
 
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
@@ -7792,11 +7784,6 @@ msgstr "Automatisch krimpen aan"
 
 msgid "Auto-disconnect time"
 msgstr "Automatische ontkoppelingstijd"
-
-msgid ""
-"Auto: Round the fractional part to the given fractional digits or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Autodetect instanties"
@@ -12653,6 +12640,10 @@ msgstr "Checkmk agent"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agent / API integraties"
 
+#, fuzzy
+msgid "Checkmk agent connection failed"
+msgstr "Checkmk agent verbindingsmodus"
+
 msgid "Checkmk agent connection mode"
 msgstr "Checkmk agent verbindingsmodus"
 
@@ -13730,9 +13721,6 @@ msgstr "Kloon deze metriek"
 #, fuzzy
 msgid "Clone this managed robot"
 msgstr "Beheerde objecten"
-
-msgid "Clone this metric"
-msgstr "Kloon deze metriek"
 
 msgid "Clone this schedule entry"
 msgstr "Kloon dit schema item"
@@ -15195,6 +15183,11 @@ msgstr "Duur van de verbinding"
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Verbinding gemaakt. De verbindingsinstellingen lijken in orde te zijn."
 
+msgid ""
+"Connection failed, enter new hostname to check again or download and install "
+"the Checkmk agent."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
 msgstr "Een regelpakket met deze ID bestaat al."
@@ -15352,10 +15345,6 @@ msgstr "Consolidatiefuncties"
 #, fuzzy
 msgid "Constant"
 msgstr "Instantie"
-
-#, python-format
-msgid "Constant value %.2f"
-msgstr "Constante waarde %.2f"
 
 msgid "Consumed capacity"
 msgstr "Verbruikte capaciteit"
@@ -18869,9 +18858,6 @@ msgstr "Dit logo verwijderen"
 msgid "Delete this managed robot"
 msgstr "Verwijder deze tag groep"
 
-msgid "Delete this metric"
-msgstr "Verwijder deze metriek"
-
 #, fuzzy
 msgid "Delete this notification parameter"
 msgstr "Verwijder deze meldingsregel"
@@ -19161,6 +19147,10 @@ msgstr "Zet OpenHardwareMonitor in (headless)"
 #, fuzzy
 msgid "Deploy Oracle databases plug-in"
 msgstr "Implementeer ORACLE databases plugin"
+
+#, fuzzy
+msgid "Deploy Podman plug-in"
+msgstr "Implementeer Mailman plugin"
 
 #, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
@@ -21112,9 +21102,6 @@ msgstr ""
 "<i>nee</i> zet voor slechts enkele van je hosts zonder de andere parameters "
 "in te stellen."
 
-msgid "Do not graph completely zero metrics"
-msgstr "Grafiek niet volledig nul metriek"
-
 msgid "Do not group"
 msgstr "Niet groeperen"
 
@@ -21183,9 +21170,6 @@ msgstr "Onderneem geen actie, laat dit bericht vallen, stop de verwerking"
 
 msgid "Do not perform periodic service discovery check"
 msgstr "Voer geen periodieke service discovery check uit"
-
-msgid "Do not query volume performance counters"
-msgstr "Vraag niet naar volume prestatiecounters"
 
 msgid "Do not regard required mirror space as free space"
 msgstr "Beschouw de vereiste spiegelruimte niet als vrije ruimte"
@@ -23513,6 +23497,10 @@ msgstr "Inzendingen"
 msgid "Entry"
 msgstr "Ingang"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "Omgevingsvariabelen"
+
 msgid "Environment Variables"
 msgstr "Omgevingsvariabelen"
 
@@ -25279,6 +25267,10 @@ msgstr "Fetch had slechte headers"
 msgid "Fetch head"
 msgstr "Haal hoofd"
 
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "Verzamel informatie over..."
+
 msgid "Fetch intervals for SNMP sections"
 msgstr "Fetch intervals voor SNMP secties"
 
@@ -26536,10 +26528,6 @@ msgstr "Regelpakketten gevonden"
 msgid "Fraction"
 msgstr "Fractie"
 
-#, fuzzy
-msgid "Fractional digits"
-msgstr "Fractie"
-
 msgid "Fragmentation"
 msgstr "Fragmentatie"
 
@@ -27303,9 +27291,6 @@ msgstr "Korrelgrootte"
 msgid "Graph"
 msgstr "Grafiek"
 
-msgid "Graph Options"
-msgstr "Grafiek Opties"
-
 msgid "Graph collection"
 msgstr "Grafiekverzameling"
 
@@ -27315,10 +27300,6 @@ msgstr "Grafiekverzameling '%s' bestaat niet"
 
 msgid "Graph collections"
 msgstr "Grafiek collecties"
-
-#, fuzzy
-msgid "Graph designer"
-msgstr "GUI-ontwerp"
 
 msgid "Graph is disabled"
 msgstr "Grafiek is uitgeschakeld"
@@ -27366,9 +27347,6 @@ msgstr "Grafieksjabloon"
 #, python-format
 msgid "Graph template %s is missing a title"
 msgstr "Grafieksjabloon %s mist een titel"
-
-msgid "Graph them anyway"
-msgstr "Grafiek ze toch"
 
 msgid "Graph time range"
 msgstr "Grafiek tijd bereik"
@@ -28341,13 +28319,6 @@ msgid ""
 msgstr ""
 "Hier kunt u instellen of en hoe het aanmaken van RRD-bestanden wordt gelogd "
 "(in het logbestand var/log/cmc.log)"
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"Hier kunt u instellen of de prestatiecounters moeten worden opgevraagd. Dit "
-"kan behoorlijk wat CPU belasting besparen op grotere systemen."
 
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
@@ -35125,6 +35096,10 @@ msgstr "Interface"
 msgid "Interface %s"
 msgstr "Interface %s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "Interface"
+
 msgid "Interface groups"
 msgstr "Interface groepen"
 
@@ -36805,6 +36780,9 @@ msgstr "LUN is alleen-lezen"
 
 msgid "LUN name"
 msgstr "LUN-naam"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "LVM-volumes (Linux)"
@@ -41651,9 +41629,6 @@ msgstr "Metriek van de dienst"
 msgid "Metrics path"
 msgstr "Metriek"
 
-msgid "Metrics with all zero values"
-msgstr "Metriek met alle nulwaarden"
-
 msgid "MiB"
 msgstr "MiB"
 
@@ -41870,15 +41845,6 @@ msgstr "Spiegel aanzichten"
 #, fuzzy
 msgid "Mirrored"
 msgstr "Gespiegeld gebied"
-
-msgid "Mirrored Area"
-msgstr "Gespiegeld gebied"
-
-msgid "Mirrored Line"
-msgstr "Gespiegelde lijn"
-
-msgid "Mirrored Stacked"
-msgstr "Gespiegeld Gestapeld"
 
 #, fuzzy
 msgid "Mirroring"
@@ -43687,6 +43653,10 @@ msgid "Network Inbound"
 msgstr "Netwerk uit"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "Netwerk interfaces"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "Netwerk interfaces"
 
@@ -43705,6 +43675,10 @@ msgstr "Netwerk Load Balancers"
 
 #, fuzzy
 msgid "Network Outbound"
+msgstr "Netwerk uit"
+
+#, fuzzy
+msgid "Network Ports"
 msgstr "Netwerk uit"
 
 #, fuzzy
@@ -44305,9 +44279,6 @@ msgstr "Geen overeenkomende hosts/diensten."
 
 msgid "No matching metrics found"
 msgstr "Geen overeenkomstige metriek gevonden"
-
-msgid "No metrics in this graph yet."
-msgstr "Nog geen metriek in deze grafiek."
 
 msgid "No monitoring core"
 msgstr "Geen bewakingskern"
@@ -47099,9 +47070,6 @@ msgstr "Operatie"
 #, fuzzy
 msgid "Operation Errors"
 msgstr "Bedieningsfouten"
-
-msgid "Operation on selected metrics"
-msgstr "Werking op geselecteerde metriek"
 
 msgid "Operational port states to discover"
 msgstr "Operationele poort toestanden te ontdekken"
@@ -50114,9 +50082,6 @@ msgstr "Prestatiegegevens instellingen"
 msgid "Performance graph"
 msgstr "Prestatie grafiek"
 
-msgid "Performance improvements"
-msgstr "Prestatieverbeteringen"
-
 msgid "Performance options"
 msgstr "Prestatie-opties"
 
@@ -50583,12 +50548,6 @@ msgstr ""
 "dergelijk specifiek geval zich niet voordoet, moet u de bewaking van UNDO "
 "niet activeren."
 
-msgid "Please check one metric you want to apply a transformation"
-msgstr "Gelieve een metriek aan te vinken die u wilt omvormen"
-
-msgid "Please check the metrics you want to combine by an operation"
-msgstr "Controleer de metriek die u wilt combineren door een bewerking"
-
 msgid ""
 "Please check whether or not your backups are stored securely. In case you "
 "are storing your backup on a storage system the storage may already be "
@@ -50716,6 +50675,11 @@ msgstr "Geef een tijd op."
 
 msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
+
+#, fuzzy
+msgid "Please enter a hostname to test Checkmk agent connection"
+msgstr ""
+"Gelieve een hostnaam in te stellen voor de herclassificatie van de hoststatus"
 
 #, fuzzy
 msgid "Please enter a name."
@@ -50997,9 +50961,6 @@ msgstr "Selecteer ten minste één element"
 
 msgid "Please select at least one messaging method."
 msgstr "Kies ten minste één berichtmethode."
-
-msgid "Please select at least one metric"
-msgstr "Selecteer ten minste één metriek"
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
@@ -51377,6 +51338,10 @@ msgstr "Pod hulpbronnen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod bronnen: StatefulSet"
 
+#, fuzzy
+msgid "Podman Monitoring"
+msgstr "Toezicht"
+
 msgid "Pods"
 msgstr "Pods"
 
@@ -51539,6 +51504,10 @@ msgstr "Vermogen"
 
 msgid "Power Presence Sensors"
 msgstr "Stroom Aanwezigheid Sensoren"
+
+#, fuzzy
+msgid "Power Supplies"
+msgstr "Stroomvoorziening"
 
 msgid "Power Usage"
 msgstr "Stroomverbruik"
@@ -52424,6 +52393,10 @@ msgstr "Opslaan en naar service configuratie gaan"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "Gratis tapes"
 
 msgid "Quantum Storage Status"
 msgstr "Quantum Opslag Status"
@@ -56427,6 +56400,10 @@ msgstr "STunnel status"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "Status"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -56619,14 +56596,8 @@ msgstr "Taaknaam planner"
 msgid "Scheduling report in background failed: %s"
 msgstr "Schema rapport op achtergrond mislukt: %s"
 
-msgid "Scientific (engineering)"
-msgstr ""
-
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
-msgstr ""
-
-msgid "Scientific (standard)"
 msgstr ""
 
 #, python-format
@@ -57320,6 +57291,13 @@ msgid ""
 msgstr ""
 "Selecteer de LDAP-versie die door de LDAP-server wordt gebruikt. De meeste "
 "moderne servers gebruiken LDAP versie 3."
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -60366,6 +60344,10 @@ msgstr "Foutafhandeling"
 msgid "Smoke monitoring"
 msgstr "Netwerkbewaking"
 
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Kluisjes"
+
 msgid "Snapshot build currently in progress"
 msgstr "Snapshot build is bezig"
 
@@ -61683,9 +61665,6 @@ msgstr "Stapels"
 
 msgid "Stacked"
 msgstr "Stacked"
-
-msgid "Stacked Area"
-msgstr "Gestapeld gebied"
 
 msgid "Stacks"
 msgstr "Stapels"
@@ -63029,9 +63008,6 @@ msgstr "Strikt - Zichtbaar als alle leden zichtbaar zijn"
 msgid "Strict - Visible if user is contact for the service"
 msgstr "Strikt - Zichtbaar als gebruiker contactpersoon is voor de dienst"
 
-msgid "Strict: Round the fractional part to the given fractional digits."
-msgstr ""
-
 msgid "String"
 msgstr "String"
 
@@ -63068,9 +63044,6 @@ msgstr "Teksten die verwacht worden in het antwoord van de server"
 
 msgid "Strong"
 msgstr "Sterk"
-
-msgid "Style"
-msgstr "Stijl"
 
 msgid "Style of connection lines"
 msgstr "Stijl van verbindingslijnen"
@@ -64257,6 +64230,10 @@ msgstr "Temperatuur rijstrook %d"
 msgid "Temperature Lane 9"
 msgstr "Temperatuur rijstrook %d"
 
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "Temperatuur alarm"
+
 msgid "Temperature Trend Analysis"
 msgstr "Trendanalyse temperatuur"
 
@@ -64331,6 +64308,10 @@ msgstr "Terse"
 
 msgid "Test"
 msgstr "Test"
+
+#, fuzzy
+msgid "Test Checkmk agent connection"
+msgstr "Checkmk agent verbindingsmodus"
 
 #, fuzzy
 msgid "Test a self defined notification against your ruleset."
@@ -74338,6 +74319,10 @@ msgstr ""
 "Momenteel zijn niet alle opties beschikbaar in alle besturingssystemen."
 
 #, fuzzy
+msgid "This will deploy the agent plug-in <tt>mk_podman</tt>."
+msgstr "Dit zal de agent plugin <tt>mk_mongodb.py</tt> implementeren."
+
+#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -75395,9 +75380,6 @@ msgstr "Voorgestelde acties wijzigen"
 
 msgid "Toggle the sidebar"
 msgstr "Schakel de zijbalk"
-
-msgid "Toggle the visibility of this metric"
-msgstr "Schakel de zichtbaarheid van deze metriek"
 
 msgid ""
 "Toggle to either send notifications or suppress all previous notifications "
@@ -78012,6 +77994,10 @@ msgstr "Verkeersmanager"
 msgid "Traffic Received"
 msgstr "Ontvangen verkeer"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "Verkeer Verzonden"
+
 msgid "Traffic Sent"
 msgstr "Verkeer Verzonden"
 
@@ -78045,9 +78031,6 @@ msgstr "Transformeer status uitgang"
 #, fuzzy
 msgid "Transformation"
 msgstr "Thermische informatie"
-
-msgid "Transformation on selected metric"
-msgstr "Transformatie op geselecteerde metriek"
 
 #, fuzzy, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
@@ -79058,10 +79041,6 @@ msgstr "Onbekend type overeenkomst: %s"
 msgid "Unknown metric"
 msgstr "Onbekende gebruiker"
 
-#, python-format
-msgid "Unknown metric type %s"
-msgstr "Onbekend metriek type %s"
-
 msgid "Unknown paths"
 msgstr "Onbekende paden"
 
@@ -79332,9 +79311,6 @@ msgstr "Status bijwerken"
 
 msgid "Update status of this host"
 msgstr "Update status van deze host"
-
-msgid "Update transform"
-msgstr "Transformatie bijwerken"
 
 msgid "Updated attributes: "
 msgstr "Bijgewerkte attributen: "
@@ -82915,6 +82891,9 @@ msgstr "Volumegroep"
 
 msgid "Volume Groups (LVM)"
 msgstr "Volumegroepen (LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 #, fuzzy
 msgid "Volume group name"
@@ -89959,6 +89938,111 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, python-format
+#~ msgid "%s of %s"
+#~ msgstr "%s van %s"
+
+#~ msgid "Add new constant"
+#~ msgstr "Nieuwe constante toevoegen"
+
+#~ msgid "Add new metric"
+#~ msgstr "Nieuwe metriek toevoegen"
+
+#~ msgid "Add new scalar"
+#~ msgstr "Nieuwe scalair toevoegen"
+
+#~ msgid "Apply operation on all checked metrics: "
+#~ msgstr "Bewerking toepassen op alle gecontroleerde metrieken: "
+
+#~ msgid "Apply transformation on checked metric: "
+#~ msgstr "Transformatie toepassen op gecontroleerde metriek: "
+
+#~ msgid "Clone this metric"
+#~ msgstr "Kloon deze metriek"
+
+#, python-format
+#~ msgid "Constant value %.2f"
+#~ msgstr "Constante waarde %.2f"
+
+#~ msgid "Delete this metric"
+#~ msgstr "Verwijder deze metriek"
+
+#~ msgid "Do not graph completely zero metrics"
+#~ msgstr "Grafiek niet volledig nul metriek"
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "Vraag niet naar volume prestatiecounters"
+
+#, fuzzy
+#~ msgid "Fractional digits"
+#~ msgstr "Fractie"
+
+#~ msgid "Graph Options"
+#~ msgstr "Grafiek Opties"
+
+#, fuzzy
+#~ msgid "Graph designer"
+#~ msgstr "GUI-ontwerp"
+
+#~ msgid "Graph them anyway"
+#~ msgstr "Grafiek ze toch"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "Hier kunt u instellen of de prestatiecounters moeten worden opgevraagd. "
+#~ "Dit kan behoorlijk wat CPU belasting besparen op grotere systemen."
+
+#~ msgid "Metrics with all zero values"
+#~ msgstr "Metriek met alle nulwaarden"
+
+#~ msgid "Mirrored Area"
+#~ msgstr "Gespiegeld gebied"
+
+#~ msgid "Mirrored Line"
+#~ msgstr "Gespiegelde lijn"
+
+#~ msgid "Mirrored Stacked"
+#~ msgstr "Gespiegeld Gestapeld"
+
+#~ msgid "No metrics in this graph yet."
+#~ msgstr "Nog geen metriek in deze grafiek."
+
+#~ msgid "Operation on selected metrics"
+#~ msgstr "Werking op geselecteerde metriek"
+
+#~ msgid "Performance improvements"
+#~ msgstr "Prestatieverbeteringen"
+
+#~ msgid "Please check one metric you want to apply a transformation"
+#~ msgstr "Gelieve een metriek aan te vinken die u wilt omvormen"
+
+#~ msgid "Please check the metrics you want to combine by an operation"
+#~ msgstr "Controleer de metriek die u wilt combineren door een bewerking"
+
+#~ msgid "Please select at least one metric"
+#~ msgstr "Selecteer ten minste één metriek"
+
+#~ msgid "Stacked Area"
+#~ msgstr "Gestapeld gebied"
+
+#~ msgid "Style"
+#~ msgstr "Stijl"
+
+#~ msgid "Toggle the visibility of this metric"
+#~ msgstr "Schakel de zichtbaarheid van deze metriek"
+
+#~ msgid "Transformation on selected metric"
+#~ msgstr "Transformatie op geselecteerde metriek"
+
+#, python-format
+#~ msgid "Unknown metric type %s"
+#~ msgstr "Onbekend metriek type %s"
+
+#~ msgid "Update transform"
+#~ msgstr "Transformatie bijwerken"
 
 #~ msgid ""
 #~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"

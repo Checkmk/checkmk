@@ -731,10 +731,6 @@ msgstr ""
 "tem uma licença, introduza os detalhes da sua licença em %s."
 
 #, python-format
-msgid "%s of %s"
-msgstr "%s de %s"
-
-#, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
@@ -4216,9 +4212,6 @@ msgstr "Adicionar nova ação"
 msgid "Add new aggregation"
 msgstr "Adicionar nova agregação"
 
-msgid "Add new constant"
-msgstr "Adicionar nova constante"
-
 msgid "Add new element"
 msgstr "Adicionar novo elemento"
 
@@ -4260,9 +4253,6 @@ msgstr "Adicionar novo mapeamento"
 msgid "Add new match criteria"
 msgstr "Adicionar novos critérios de correspondência"
 
-msgid "Add new metric"
-msgstr "Adicionar nova métrica"
-
 #, fuzzy
 msgid "Add new name"
 msgstr "Adicionar novo tempo"
@@ -4289,9 +4279,6 @@ msgstr "Adicionar nova linha"
 
 msgid "Add new rule"
 msgstr "Adicionar nova regra"
-
-msgid "Add new scalar"
-msgstr "Adicionar novo escalar"
 
 #, fuzzy
 msgid "Add new scrape configuration"
@@ -5177,6 +5164,14 @@ msgstr "Plugins baseados em agentes (verificações, inventário)"
 #, fuzzy
 msgid "Agent certificates"
 msgstr "Certificados de agente"
+
+#, fuzzy
+msgid "Agent connection successful"
+msgstr "Agente %s bem sucedido"
+
+#, fuzzy
+msgid "Agent connection test running"
+msgstr "Definir o tempo limite de conexão"
 
 msgid "Agent controller"
 msgstr "Controlador de agentes"
@@ -6413,6 +6408,9 @@ msgstr ""
 msgid "Already installed the agent?"
 msgstr "Sempre instalar o Python com o agente"
 
+msgid "Already installed the agent? If so, please check your firewall settings"
+msgstr ""
+
 msgid "Also bulk outside of time period"
 msgstr "Também a granel fora do período de tempo"
 
@@ -7097,9 +7095,6 @@ msgstr ""
 msgid "Apply logwatch patterns"
 msgstr "Aplicar padrões de logwatch"
 
-msgid "Apply operation on all checked metrics: "
-msgstr "Aplicar a operação em todas as métricas verificadas: "
-
 #, fuzzy
 msgid "Apply rule to temporary tablespaces"
 msgstr "Aplicar regra aos Tablespaces temporários"
@@ -7167,9 +7162,6 @@ msgstr "Aplicar para"
 
 msgid "Apply to combined graphs"
 msgstr "Aplicar em gráficos combinados"
-
-msgid "Apply transformation on checked metric: "
-msgstr "Aplicar transformação em métrica verificada: "
 
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
@@ -7804,11 +7796,6 @@ msgstr "Auto encolher em"
 
 msgid "Auto-disconnect time"
 msgstr "Tempo de desconexão automática"
-
-msgid ""
-"Auto: Round the fractional part to the given fractional digits or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Autodetecção de instâncias"
@@ -12653,6 +12640,10 @@ msgstr "agente Checkmk"
 msgid "Checkmk agent / API integrations"
 msgstr "Agentes Checkmk / integrações de API"
 
+#, fuzzy
+msgid "Checkmk agent connection failed"
+msgstr "Modo de ligação do agente Checkmk"
+
 msgid "Checkmk agent connection mode"
 msgstr "Modo de ligação do agente Checkmk"
 
@@ -13732,9 +13723,6 @@ msgstr "Clonar esta métrica"
 #, fuzzy
 msgid "Clone this managed robot"
 msgstr "Objetos Gerenciados"
-
-msgid "Clone this metric"
-msgstr "Clonar esta métrica"
 
 msgid "Clone this schedule entry"
 msgstr "Clonar esta entrada de horário"
@@ -15193,6 +15181,11 @@ msgstr "Durações de ligação"
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Conexão estabelecida. As configurações da conexão parecem estar bem."
 
+msgid ""
+"Connection failed, enter new hostname to check again or download and install "
+"the Checkmk agent."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
 msgstr "Já existe um pacote de regras com esta identificação."
@@ -15348,10 +15341,6 @@ msgstr "Funções de consolidação"
 #, fuzzy
 msgid "Constant"
 msgstr "Instância"
-
-#, python-format
-msgid "Constant value %.2f"
-msgstr "Valor constante %.2f"
 
 msgid "Consumed capacity"
 msgstr "Capacidade consumida"
@@ -18865,9 +18854,6 @@ msgstr "Eliminar este logótipo"
 msgid "Delete this managed robot"
 msgstr "Eliminar este grupo de etiquetas"
 
-msgid "Delete this metric"
-msgstr "Eliminar esta métrica"
-
 #, fuzzy
 msgid "Delete this notification parameter"
 msgstr "Eliminar esta regra de notificação"
@@ -19156,6 +19142,10 @@ msgstr "Implantar OpenHardwareMonitor (sem cabeça)"
 #, fuzzy
 msgid "Deploy Oracle databases plug-in"
 msgstr "Implementar o plug-in de bases de dados ORACLE"
+
+#, fuzzy
+msgid "Deploy Podman plug-in"
+msgstr "Implementar o plugin Mailman"
 
 #, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
@@ -21113,9 +21103,6 @@ msgstr ""
 "para <i>no</i> para apenas alguns dos seus hosts sem definir nenhum dos "
 "outros parâmetros."
 
-msgid "Do not graph completely zero metrics"
-msgstr "Não faça um gráfico completamente zero métricas"
-
 msgid "Do not group"
 msgstr "Não agrupar"
 
@@ -21184,9 +21171,6 @@ msgstr "Não execute nenhuma ação, largue esta mensagem, pare o processamento"
 
 msgid "Do not perform periodic service discovery check"
 msgstr "Não realizar verificação periódica da descoberta de serviços"
-
-msgid "Do not query volume performance counters"
-msgstr "Não consultar os contadores de desempenho de volume"
 
 msgid "Do not regard required mirror space as free space"
 msgstr "Não considere o espaço necessário para o espelho como espaço livre"
@@ -23512,6 +23496,10 @@ msgstr "Entradas por linha"
 msgid "Entry"
 msgstr "Entrada"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "Variáveis de ambiente"
+
 msgid "Environment Variables"
 msgstr "Variáveis de ambiente"
 
@@ -25274,6 +25262,10 @@ msgstr "Fetch tinha maus cabeçalhos"
 msgid "Fetch head"
 msgstr "Buscar cabeça"
 
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "Recolher informações sobre..."
+
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalos de busca para as secções SNMP"
 
@@ -26536,10 +26528,6 @@ msgstr "Pacotes de regras encontrados"
 msgid "Fraction"
 msgstr "Fração"
 
-#, fuzzy
-msgid "Fractional digits"
-msgstr "Fração"
-
 msgid "Fragmentation"
 msgstr "Fragmentação"
 
@@ -27307,9 +27295,6 @@ msgstr "Tamanho do grânulo"
 msgid "Graph"
 msgstr "Gráfico"
 
-msgid "Graph Options"
-msgstr "Opções Gráficas"
-
 msgid "Graph collection"
 msgstr "Coleção de gráficos"
 
@@ -27319,10 +27304,6 @@ msgstr "A colecção de gráficos '%s' não existe"
 
 msgid "Graph collections"
 msgstr "Colecções gráficas"
-
-#, fuzzy
-msgid "Graph designer"
-msgstr "desenho GUI"
 
 msgid "Graph is disabled"
 msgstr "O gráfico está desativado"
@@ -27371,9 +27352,6 @@ msgstr "Modelo gráfico"
 #, python-format
 msgid "Graph template %s is missing a title"
 msgstr "O modelo gráfico %s falta um título"
-
-msgid "Graph them anyway"
-msgstr "Gráficos de qualquer maneira"
 
 msgid "Graph time range"
 msgstr "Intervalo de tempo do gráfico"
@@ -28343,13 +28321,6 @@ msgid ""
 msgstr ""
 "Aqui você pode configurar se e como a criação de arquivos RRD está sendo "
 "logada (no arquivo de log var/log/cmc.log)"
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"Aqui você pode configurar se os contadores de desempenho devem ser "
-"consultados. Isto pode poupar bastante carga de CPU em sistemas maiores."
 
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
@@ -35117,6 +35088,10 @@ msgstr "Interface"
 msgid "Interface %s"
 msgstr "Interface %s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "Interface"
+
 msgid "Interface groups"
 msgstr "Grupos de interface"
 
@@ -36791,6 +36766,9 @@ msgstr "LUN é somente leitura"
 
 msgid "LUN name"
 msgstr "nome LUN"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "LVM volumes (Linux)"
@@ -41643,9 +41621,6 @@ msgstr "Métricas de serviço"
 msgid "Metrics path"
 msgstr "Métricas"
 
-msgid "Metrics with all zero values"
-msgstr "Métricas com todos os valores zero"
-
 msgid "MiB"
 msgstr "MiB"
 
@@ -41861,15 +41836,6 @@ msgstr "Vistas de espelho"
 #, fuzzy
 msgid "Mirrored"
 msgstr "Área espelhada"
-
-msgid "Mirrored Area"
-msgstr "Área espelhada"
-
-msgid "Mirrored Line"
-msgstr "Linha Espelhada"
-
-msgid "Mirrored Stacked"
-msgstr "Empilhados Espelhados"
 
 #, fuzzy
 msgid "Mirroring"
@@ -43676,6 +43642,10 @@ msgid "Network Inbound"
 msgstr "Saída de rede"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "Interfaces de rede"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "Interfaces de rede"
 
@@ -43694,6 +43664,10 @@ msgstr "Equilibradores de carga de rede"
 
 #, fuzzy
 msgid "Network Outbound"
+msgstr "Saída de rede"
+
+#, fuzzy
+msgid "Network Ports"
 msgstr "Saída de rede"
 
 #, fuzzy
@@ -44291,9 +44265,6 @@ msgstr "Sem anfitriões/serviços correspondentes."
 
 msgid "No matching metrics found"
 msgstr "Não foram encontradas métricas correspondentes"
-
-msgid "No metrics in this graph yet."
-msgstr "Ainda não há métricas neste gráfico."
 
 msgid "No monitoring core"
 msgstr "Sem núcleo de monitorização"
@@ -47065,9 +47036,6 @@ msgstr "Operação"
 #, fuzzy
 msgid "Operation Errors"
 msgstr "Erros de operação"
-
-msgid "Operation on selected metrics"
-msgstr "Operação em métricas selecionadas"
 
 msgid "Operational port states to discover"
 msgstr "Estados operacionais portuários a descobrir"
@@ -50071,9 +50039,6 @@ msgstr "Configurações dos dados de desempenho"
 msgid "Performance graph"
 msgstr "Gráfico de desempenho"
 
-msgid "Performance improvements"
-msgstr "Melhorias de desempenho"
-
 msgid "Performance options"
 msgstr "Opções de desempenho"
 
@@ -50535,14 +50500,6 @@ msgstr ""
 "situações muito raras com condições prévias muito específicas. Se não tiver "
 "um caso tão específico, não deve activar a monitorização de UNDO."
 
-msgid "Please check one metric you want to apply a transformation"
-msgstr ""
-"Por favor, verifique uma métrica que você deseja aplicar uma transformação"
-
-msgid "Please check the metrics you want to combine by an operation"
-msgstr ""
-"Por favor, verifique as métricas que você quer combinar por uma operação"
-
 msgid ""
 "Please check whether or not your backups are stored securely. In case you "
 "are storing your backup on a storage system the storage may already be "
@@ -50675,6 +50632,10 @@ msgstr "Por favor, introduza uma hora."
 
 msgid "Please enter a filename."
 msgstr "Por favor, introduza um nome de ficheiro."
+
+#, fuzzy
+msgid "Please enter a hostname to test Checkmk agent connection"
+msgstr "Por favor, defina um hostname para reclassificação do estado anfitrião"
 
 #, fuzzy
 msgid "Please enter a name."
@@ -50960,9 +50921,6 @@ msgstr "Por favor, selecione pelo menos um elemento"
 
 msgid "Please select at least one messaging method."
 msgstr "Seleccione pelo menos um método de envio de mensagens."
-
-msgid "Please select at least one metric"
-msgstr "Por favor, selecione pelo menos uma métrica"
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
@@ -51350,6 +51308,10 @@ msgstr "Recursos do pod: Espaço de nome"
 msgid "Pod resources: StatefulSet"
 msgstr "Recursos do pod: StatefulSet"
 
+#, fuzzy
+msgid "Podman Monitoring"
+msgstr "Monitorização"
+
 msgid "Pods"
 msgstr "Pods"
 
@@ -51509,6 +51471,10 @@ msgstr "Energia"
 
 msgid "Power Presence Sensors"
 msgstr "Sensores de presença de energia"
+
+#, fuzzy
+msgid "Power Supplies"
+msgstr "Fontes de alimentação"
 
 msgid "Power Usage"
 msgstr "Uso de energia"
@@ -52391,6 +52357,10 @@ msgstr "Salvar e ir para a configuração de serviço"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "Fitas gratuitas"
 
 msgid "Quantum Storage Status"
 msgstr "Status de armazenamento quântico"
@@ -56417,6 +56387,10 @@ msgstr "Estado do túnel"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "Estado"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -56609,14 +56583,8 @@ msgstr "Nome do trabalho do agendador"
 msgid "Scheduling report in background failed: %s"
 msgstr "Relatório de programação em segundo plano falhou: %s"
 
-msgid "Scientific (engineering)"
-msgstr ""
-
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
-msgstr ""
-
-msgid "Scientific (standard)"
 msgstr ""
 
 #, python-format
@@ -57312,6 +57280,13 @@ msgid ""
 msgstr ""
 "Seleccione a versão LDAP que o servidor LDAP está a servir. A maioria dos "
 "servidores modernos usa a versão 3 do LDAP."
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -60350,6 +60325,10 @@ msgstr "Manuseamento de fumo"
 msgid "Smoke monitoring"
 msgstr "Monitorização do fumo"
 
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Cofres"
+
 msgid "Snapshot build currently in progress"
 msgstr "Construção instantânea actualmente em curso"
 
@@ -61677,9 +61656,6 @@ msgstr "Pilhas"
 
 msgid "Stacked"
 msgstr "Empilhado"
-
-msgid "Stacked Area"
-msgstr "Área Empilhada"
 
 msgid "Stacks"
 msgstr "Pilhas"
@@ -63026,9 +63002,6 @@ msgstr "Rigoroso - Visível se todos os membros estiverem visíveis"
 msgid "Strict - Visible if user is contact for the service"
 msgstr "Rigoroso - Visível se o usuário for o contato para o serviço"
 
-msgid "Strict: Round the fractional part to the given fractional digits."
-msgstr ""
-
 msgid "String"
 msgstr "Cordão"
 
@@ -63063,9 +63036,6 @@ msgstr "Strings a esperar na resposta do servidor"
 
 msgid "Strong"
 msgstr "Forte"
-
-msgid "Style"
-msgstr "Estilo"
 
 msgid "Style of connection lines"
 msgstr "Estilo das linhas de conexão"
@@ -64252,6 +64222,10 @@ msgstr "Faixa de temperatura %d"
 msgid "Temperature Lane 9"
 msgstr "Faixa de temperatura %d"
 
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "Alerta de temperatura"
+
 msgid "Temperature Trend Analysis"
 msgstr "Análise da Tendência de Temperatura"
 
@@ -64324,6 +64298,10 @@ msgstr "Terse"
 
 msgid "Test"
 msgstr "Teste"
+
+#, fuzzy
+msgid "Test Checkmk agent connection"
+msgstr "Modo de ligação do agente Checkmk"
 
 #, fuzzy
 msgid "Test a self defined notification against your ruleset."
@@ -74298,6 +74276,10 @@ msgstr ""
 "sistemas operativos."
 
 #, fuzzy
+msgid "This will deploy the agent plug-in <tt>mk_podman</tt>."
+msgstr "Isso implantará o plug-in do agente <tt>mk_mongodb.py</tt>."
+
+#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -75353,9 +75335,6 @@ msgstr "Alternar as ações sugeridas"
 
 msgid "Toggle the sidebar"
 msgstr "Alternar a barra lateral"
-
-msgid "Toggle the visibility of this metric"
-msgstr "Alternar a visibilidade desta métrica"
 
 msgid ""
 "Toggle to either send notifications or suppress all previous notifications "
@@ -77967,6 +77946,10 @@ msgstr "Gestor de tráfego"
 msgid "Traffic Received"
 msgstr "Tráfego Recebido"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "Tráfego Enviado"
+
 msgid "Traffic Sent"
 msgstr "Tráfego Enviado"
 
@@ -78000,9 +77983,6 @@ msgstr "Saída do estado da transformação"
 #, fuzzy
 msgid "Transformation"
 msgstr "Informação térmica"
-
-msgid "Transformation on selected metric"
-msgstr "Transformação em métrica selecionada"
 
 #, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
@@ -79009,10 +78989,6 @@ msgstr "Tipo de partida desconhecido: %s"
 msgid "Unknown metric"
 msgstr "Usuário desconhecido"
 
-#, python-format
-msgid "Unknown metric type %s"
-msgstr "Tipo de métrica desconhecida %s"
-
 msgid "Unknown paths"
 msgstr "Caminhos desconhecidos"
 
@@ -79279,9 +79255,6 @@ msgstr "Status de atualização"
 
 msgid "Update status of this host"
 msgstr "Status de atualização deste host"
-
-msgid "Update transform"
-msgstr "Atualizar transformação"
 
 msgid "Updated attributes: "
 msgstr "Atributos actualizados: "
@@ -82851,6 +82824,9 @@ msgstr "Grupo de Volume"
 
 msgid "Volume Groups (LVM)"
 msgstr "Grupos de Volume (LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 #, fuzzy
 msgid "Volume group name"
@@ -89854,6 +89830,113 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, python-format
+#~ msgid "%s of %s"
+#~ msgstr "%s de %s"
+
+#~ msgid "Add new constant"
+#~ msgstr "Adicionar nova constante"
+
+#~ msgid "Add new metric"
+#~ msgstr "Adicionar nova métrica"
+
+#~ msgid "Add new scalar"
+#~ msgstr "Adicionar novo escalar"
+
+#~ msgid "Apply operation on all checked metrics: "
+#~ msgstr "Aplicar a operação em todas as métricas verificadas: "
+
+#~ msgid "Apply transformation on checked metric: "
+#~ msgstr "Aplicar transformação em métrica verificada: "
+
+#~ msgid "Clone this metric"
+#~ msgstr "Clonar esta métrica"
+
+#, python-format
+#~ msgid "Constant value %.2f"
+#~ msgstr "Valor constante %.2f"
+
+#~ msgid "Delete this metric"
+#~ msgstr "Eliminar esta métrica"
+
+#~ msgid "Do not graph completely zero metrics"
+#~ msgstr "Não faça um gráfico completamente zero métricas"
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "Não consultar os contadores de desempenho de volume"
+
+#, fuzzy
+#~ msgid "Fractional digits"
+#~ msgstr "Fração"
+
+#~ msgid "Graph Options"
+#~ msgstr "Opções Gráficas"
+
+#, fuzzy
+#~ msgid "Graph designer"
+#~ msgstr "desenho GUI"
+
+#~ msgid "Graph them anyway"
+#~ msgstr "Gráficos de qualquer maneira"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "Aqui você pode configurar se os contadores de desempenho devem ser "
+#~ "consultados. Isto pode poupar bastante carga de CPU em sistemas maiores."
+
+#~ msgid "Metrics with all zero values"
+#~ msgstr "Métricas com todos os valores zero"
+
+#~ msgid "Mirrored Area"
+#~ msgstr "Área espelhada"
+
+#~ msgid "Mirrored Line"
+#~ msgstr "Linha Espelhada"
+
+#~ msgid "Mirrored Stacked"
+#~ msgstr "Empilhados Espelhados"
+
+#~ msgid "No metrics in this graph yet."
+#~ msgstr "Ainda não há métricas neste gráfico."
+
+#~ msgid "Operation on selected metrics"
+#~ msgstr "Operação em métricas selecionadas"
+
+#~ msgid "Performance improvements"
+#~ msgstr "Melhorias de desempenho"
+
+#~ msgid "Please check one metric you want to apply a transformation"
+#~ msgstr ""
+#~ "Por favor, verifique uma métrica que você deseja aplicar uma transformação"
+
+#~ msgid "Please check the metrics you want to combine by an operation"
+#~ msgstr ""
+#~ "Por favor, verifique as métricas que você quer combinar por uma operação"
+
+#~ msgid "Please select at least one metric"
+#~ msgstr "Por favor, selecione pelo menos uma métrica"
+
+#~ msgid "Stacked Area"
+#~ msgstr "Área Empilhada"
+
+#~ msgid "Style"
+#~ msgstr "Estilo"
+
+#~ msgid "Toggle the visibility of this metric"
+#~ msgstr "Alternar a visibilidade desta métrica"
+
+#~ msgid "Transformation on selected metric"
+#~ msgstr "Transformação em métrica selecionada"
+
+#, python-format
+#~ msgid "Unknown metric type %s"
+#~ msgstr "Tipo de métrica desconhecida %s"
+
+#~ msgid "Update transform"
+#~ msgstr "Atualizar transformação"
 
 #~ msgid ""
 #~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"

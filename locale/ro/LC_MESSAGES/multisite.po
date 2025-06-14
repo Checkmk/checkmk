@@ -736,10 +736,6 @@ msgstr ""
 "aveți deja o licență, vă rugăm să introduceți detaliile licenței dvs. în %s."
 
 #, python-format
-msgid "%s of %s"
-msgstr "%s din %s"
-
-#, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
@@ -4231,9 +4227,6 @@ msgstr "Adăugați o nouă acțiune"
 msgid "Add new aggregation"
 msgstr "Adăugați o nouă agregare"
 
-msgid "Add new constant"
-msgstr "Adăugați o nouă constantă"
-
 msgid "Add new element"
 msgstr "Adaungă un nou element"
 
@@ -4273,9 +4266,6 @@ msgstr "Adaugă o nouă mapare"
 msgid "Add new match criteria"
 msgstr "Adăugați noi criterii de potrivire"
 
-msgid "Add new metric"
-msgstr "Adăugați o nouă măsurătoare"
-
 #, fuzzy
 msgid "Add new name"
 msgstr "Adăugați o nouă oră"
@@ -4301,9 +4291,6 @@ msgstr "Adăugați un nou rând"
 
 msgid "Add new rule"
 msgstr "Adăugați o nouă regulă"
-
-msgid "Add new scalar"
-msgstr "Adăugați un nou scalar"
 
 #, fuzzy
 msgid "Add new scrape configuration"
@@ -5191,6 +5178,14 @@ msgstr "Plugin-uri bazate pe agent (depreciat)"
 
 msgid "Agent certificates"
 msgstr "Certificate de agent"
+
+#, fuzzy
+msgid "Agent connection successful"
+msgstr "Agent %s a reușit"
+
+#, fuzzy
+msgid "Agent connection test running"
+msgstr "Setați timeout-ul conexiunii"
 
 msgid "Agent controller"
 msgstr "Controlor agent"
@@ -6417,6 +6412,9 @@ msgstr ""
 msgid "Already installed the agent?"
 msgstr "Instalați întotdeauna Python cu agentul"
 
+msgid "Already installed the agent? If so, please check your firewall settings"
+msgstr ""
+
 msgid "Also bulk outside of time period"
 msgstr "De asemenea, vrac în afara perioadei de timp"
 
@@ -7097,9 +7095,6 @@ msgstr ""
 msgid "Apply logwatch patterns"
 msgstr "Aplicați modelele logwatch"
 
-msgid "Apply operation on all checked metrics: "
-msgstr "Aplicați operațiunea pe toate metricile verificate: "
-
 #, fuzzy
 msgid "Apply rule to temporary tablespaces"
 msgstr "Aplicarea regulii la Tablespaces temporare"
@@ -7169,9 +7164,6 @@ msgstr "Aplicați la"
 
 msgid "Apply to combined graphs"
 msgstr "Se aplică la grafice combinate"
-
-msgid "Apply transformation on checked metric: "
-msgstr "Se aplică transformarea pe metrica verificată: "
 
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
@@ -7793,11 +7785,6 @@ msgstr "Auto shrink on"
 
 msgid "Auto-disconnect time"
 msgstr "Timp de deconectare automată"
-
-msgid ""
-"Auto: Round the fractional part to the given fractional digits or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Instanțe de autodetecție"
@@ -12668,6 +12655,10 @@ msgstr "Agent Checkmk"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agent / integrări API"
 
+#, fuzzy
+msgid "Checkmk agent connection failed"
+msgstr "Modul de conectare a agentului Checkmk"
+
 msgid "Checkmk agent connection mode"
 msgstr "Modul de conectare a agentului Checkmk"
 
@@ -13751,9 +13742,6 @@ msgstr "Clonați această metrică"
 #, fuzzy
 msgid "Clone this managed robot"
 msgstr "Obiecte gestionate"
-
-msgid "Clone this metric"
-msgstr "Clonați această metrică"
 
 msgid "Clone this schedule entry"
 msgstr "Clonați această intrare în program"
@@ -15208,6 +15196,11 @@ msgstr "Duratele de conectare"
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Conexiune stabilită. Setările de conectare par a fi în regulă."
 
+msgid ""
+"Connection failed, enter new hostname to check again or download and install "
+"the Checkmk agent."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Connection id %s already exists."
 msgstr "Există deja un pachet de reguli cu acest ID."
@@ -15363,10 +15356,6 @@ msgstr "Funcții de consolidare"
 #, fuzzy
 msgid "Constant"
 msgstr "Instanța"
-
-#, python-format
-msgid "Constant value %.2f"
-msgstr "Valoare constantă %.2f"
 
 msgid "Consumed capacity"
 msgstr "Capacitate consumată"
@@ -18887,9 +18876,6 @@ msgstr "Ștergeți acest logo"
 msgid "Delete this managed robot"
 msgstr "Ștergeți acest grup de etichete"
 
-msgid "Delete this metric"
-msgstr "Ștergeți această măsurătoare"
-
 #, fuzzy
 msgid "Delete this notification parameter"
 msgstr "Ștergeți această regulă de notificare"
@@ -19184,6 +19170,10 @@ msgstr "Implementați OpenHardwareMonitor (fără cap)"
 #, fuzzy
 msgid "Deploy Oracle databases plug-in"
 msgstr "Implementarea plugin-ului pentru baze de date ORACLE"
+
+#, fuzzy
+msgid "Deploy Podman plug-in"
+msgstr "Implementați plugin-ul Mailman"
 
 #, fuzzy
 msgid "Deploy Robotmk scheduler and agent plug-in"
@@ -21151,9 +21141,6 @@ msgstr ""
 "listei dvs. care să seteze doar activarea la <i>nu</i> doar pentru unele "
 "dintre gazdele dvs. fără a seta niciunul dintre ceilalți parametri."
 
-msgid "Do not graph completely zero metrics"
-msgstr "Nu reprezentați grafic metrici complet zero"
-
 msgid "Do not group"
 msgstr "Nu grupați"
 
@@ -21223,9 +21210,6 @@ msgstr ""
 
 msgid "Do not perform periodic service discovery check"
 msgstr "Nu efectuați verificarea periodică a descoperirii serviciilor"
-
-msgid "Do not query volume performance counters"
-msgstr "Nu interogați contoarele de performanță a volumului"
 
 msgid "Do not regard required mirror space as free space"
 msgstr "Nu considerați spațiul în oglindă necesar ca spațiu liber"
@@ -23580,6 +23564,10 @@ msgstr "Intrări pe rând"
 msgid "Entry"
 msgstr "Intrare"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "Variabile de mediu"
+
 msgid "Environment Variables"
 msgstr "Variabile de mediu"
 
@@ -25350,6 +25338,10 @@ msgstr "Fetch a avut anteturi proaste"
 msgid "Fetch head"
 msgstr "Capul de aducere"
 
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "Colectați informații despre..."
+
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervale de preluare pentru secțiunile SNMP"
 
@@ -26607,10 +26599,6 @@ msgstr "Pachete de reguli găsite"
 msgid "Fraction"
 msgstr "Fracțiune"
 
-#, fuzzy
-msgid "Fractional digits"
-msgstr "Fracțiune"
-
 msgid "Fragmentation"
 msgstr "Fragmentare"
 
@@ -27367,9 +27355,6 @@ msgstr "Dimensiunea granulelor"
 msgid "Graph"
 msgstr "Grafic"
 
-msgid "Graph Options"
-msgstr "Opțiuni grafice"
-
 msgid "Graph collection"
 msgstr "Colecția de grafice"
 
@@ -27379,10 +27364,6 @@ msgstr "Colecția de grafice \"%s\" nu există"
 
 msgid "Graph collections"
 msgstr "Colecții de grafice"
-
-#, fuzzy
-msgid "Graph designer"
-msgstr "Proiectare GUI"
 
 msgid "Graph is disabled"
 msgstr "Graficul este dezactivat"
@@ -27431,9 +27412,6 @@ msgstr "Șablon grafic"
 #, python-format
 msgid "Graph template %s is missing a title"
 msgstr "Șablonul grafic %s nu are un titlu"
-
-msgid "Graph them anyway"
-msgstr "Graficați-le oricum"
 
 msgid "Graph time range"
 msgstr "Intervalul de timp al graficului"
@@ -28392,14 +28370,6 @@ msgid ""
 msgstr ""
 "Aici puteți configura dacă și cum este înregistrată crearea fișierelor RRD "
 "(în fișierul jurnal var/log/cmc.log)."
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"Aici puteți configura dacă contoarele de performanță trebuie să fie "
-"interogate. Acest lucru poate economisi destul de mult din sarcina CPU pe "
-"sistemele mari."
 
 # georgem ###
 msgid ""
@@ -35228,6 +35198,10 @@ msgstr "Interfață"
 msgid "Interface %s"
 msgstr "Interfața %s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "Interfață"
+
 # georgem ##############
 msgid "Interface groups"
 msgstr "Grupuri de interfețe"
@@ -36906,6 +36880,9 @@ msgstr "LUN este numai pentru citire"
 
 msgid "LUN name"
 msgstr "Numele LUN"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "Volume LVM (Linux)"
@@ -41721,9 +41698,6 @@ msgstr "Măsurători de serviciu"
 msgid "Metrics path"
 msgstr "Metrici"
 
-msgid "Metrics with all zero values"
-msgstr "Metrici cu toate valorile zero"
-
 msgid "MiB"
 msgstr "MiB"
 
@@ -41938,15 +41912,6 @@ msgstr "Vederi în oglindă"
 #, fuzzy
 msgid "Mirrored"
 msgstr "Zona oglinzată"
-
-msgid "Mirrored Area"
-msgstr "Zona oglinzată"
-
-msgid "Mirrored Line"
-msgstr "Linia de oglinzi"
-
-msgid "Mirrored Stacked"
-msgstr "În oglindă stivuite"
 
 msgid "Mirroring"
 msgstr "Oglindirea"
@@ -43782,6 +43747,10 @@ msgid "Network Inbound"
 msgstr "Rețea afară"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "Interfețe de rețea"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "Interfețe de rețea"
 
@@ -43800,6 +43769,10 @@ msgstr "Balansatoare de sarcină în rețea"
 
 #, fuzzy
 msgid "Network Outbound"
+msgstr "Rețea afară"
+
+#, fuzzy
+msgid "Network Ports"
 msgstr "Rețea afară"
 
 #, fuzzy
@@ -44396,9 +44369,6 @@ msgstr "Nu există gazde/servicii corespunzătoare."
 
 msgid "No matching metrics found"
 msgstr "Nu s-au găsit metrici corespunzătoare"
-
-msgid "No metrics in this graph yet."
-msgstr "Nu există încă metrici în acest grafic."
 
 msgid "No monitoring core"
 msgstr "Fără miez de monitorizare"
@@ -47188,9 +47158,6 @@ msgstr "Operațiunea"
 #, fuzzy
 msgid "Operation Errors"
 msgstr "Erori de funcționare"
-
-msgid "Operation on selected metrics"
-msgstr "Operațiunea privind metricele selectate"
 
 msgid "Operational port states to discover"
 msgstr "Stări operaționale ale portului de descoperit"
@@ -50184,9 +50151,6 @@ msgstr "Setări privind datele de performanță"
 msgid "Performance graph"
 msgstr "Grafic de performanță"
 
-msgid "Performance improvements"
-msgstr "Îmbunătățiri de performanță"
-
 msgid "Performance options"
 msgstr "Opțiuni de performanță"
 
@@ -50652,14 +50616,6 @@ msgstr ""
 "nu aveți un astfel de caz specific, nu ar trebui să activați monitorizarea "
 "UNDO."
 
-msgid "Please check one metric you want to apply a transformation"
-msgstr "Vă rugăm să bifați o metrică la care doriți să aplicați o transformare"
-
-msgid "Please check the metrics you want to combine by an operation"
-msgstr ""
-"Vă rugăm să verificați metricile pe care doriți să le combinați printr-o "
-"operațiune"
-
 msgid ""
 "Please check whether or not your backups are stored securely. In case you "
 "are storing your backup on a storage system the storage may already be "
@@ -50793,6 +50749,11 @@ msgstr "Vă rugăm să introduceți o oră."
 
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
+
+#, fuzzy
+msgid "Please enter a hostname to test Checkmk agent connection"
+msgstr ""
+"Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de gazdă"
 
 #, fuzzy
 msgid "Please enter a name."
@@ -51078,9 +51039,6 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 
 msgid "Please select at least one messaging method."
 msgstr "Vă rugăm să selectați cel puțin o metodă de mesagerie."
-
-msgid "Please select at least one metric"
-msgstr "Vă rugăm să selectați cel puțin un sistem metric"
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
@@ -51470,6 +51428,10 @@ msgstr "Resursele din pod: Spațiul de nume"
 msgid "Pod resources: StatefulSet"
 msgstr "Resursele din pod: StatefulSet"
 
+#, fuzzy
+msgid "Podman Monitoring"
+msgstr "Monitorizare"
+
 msgid "Pods"
 msgstr "Păstăi"
 
@@ -51630,6 +51592,10 @@ msgstr "Putere"
 
 msgid "Power Presence Sensors"
 msgstr "Senzori de prezență de putere"
+
+#, fuzzy
+msgid "Power Supplies"
+msgstr "Surse de alimentare"
 
 msgid "Power Usage"
 msgstr "Utilizarea energiei"
@@ -52518,6 +52484,10 @@ msgstr "Salveaza configuratia manuala a verificarilor"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "Casete gratuite"
 
 msgid "Quantum Storage Status"
 msgstr "Starea Quantum Storage"
@@ -56519,6 +56489,10 @@ msgstr "STunnel status"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "Stare"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -56710,14 +56684,8 @@ msgstr "Numele lucrării Scheduler"
 msgid "Scheduling report in background failed: %s"
 msgstr "Programarea raportului în fundal a eșuat: %s."
 
-msgid "Scientific (engineering)"
-msgstr ""
-
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
-msgstr ""
-
-msgid "Scientific (standard)"
 msgstr ""
 
 #, python-format
@@ -57432,6 +57400,13 @@ msgid ""
 msgstr ""
 "Selectați versiunea LDAP pe care o deservește serverul LDAP. Majoritatea "
 "serverelor moderne utilizează versiunea 3 LDAP."
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -60518,6 +60493,10 @@ msgstr "Manipularea fumului"
 msgid "Smoke monitoring"
 msgstr "Monitorizarea fumului"
 
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Seifuri"
+
 msgid "Snapshot build currently in progress"
 msgstr "Construirea instantanee în curs de desfășurare"
 
@@ -61863,9 +61842,6 @@ msgstr "Stive"
 
 msgid "Stacked"
 msgstr "Stivuite"
-
-msgid "Stacked Area"
-msgstr "Suprafața stivuită"
 
 msgid "Stacks"
 msgstr "Stive"
@@ -63220,9 +63196,6 @@ msgid "Strict - Visible if user is contact for the service"
 msgstr ""
 "Strict - Vizibil dacă utilizatorul este persoana de contact pentru serviciu"
 
-msgid "Strict: Round the fractional part to the given fractional digits."
-msgstr ""
-
 msgid "String"
 msgstr "Șir de caractere"
 
@@ -63259,9 +63232,6 @@ msgstr "Șiruri de caractere de așteptat în răspunsul serverului"
 
 msgid "Strong"
 msgstr "Puternic"
-
-msgid "Style"
-msgstr "Stil"
 
 msgid "Style of connection lines"
 msgstr "Stilul liniilor de conectare"
@@ -64431,6 +64401,10 @@ msgstr "Culoarul de temperatură %d"
 msgid "Temperature Lane 9"
 msgstr "Culoarul de temperatură %d"
 
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "Alertă de temperatură"
+
 msgid "Temperature Trend Analysis"
 msgstr "Analiza tendinței temperaturii"
 
@@ -64504,6 +64478,10 @@ msgstr "Tern"
 
 msgid "Test"
 msgstr "Test"
+
+#, fuzzy
+msgid "Test Checkmk agent connection"
+msgstr "Modul de conectare a agentului Checkmk"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr ""
@@ -74619,6 +74597,10 @@ msgstr ""
 "operare."
 
 #, fuzzy
+msgid "This will deploy the agent plug-in <tt>mk_podman</tt>."
+msgstr "Aceasta va implementa pluginul agent <tt>mk_mongodb.py</tt>."
+
+#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -75680,9 +75662,6 @@ msgstr "Comutați acțiunile sugerate"
 
 msgid "Toggle the sidebar"
 msgstr "Comutați bara laterală"
-
-msgid "Toggle the visibility of this metric"
-msgstr "Comutați vizibilitatea acestei măsurători"
 
 msgid ""
 "Toggle to either send notifications or suppress all previous notifications "
@@ -78216,6 +78195,10 @@ msgstr "Manager de trafic"
 msgid "Traffic Received"
 msgstr "Traficul primit"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "Trafic trimis"
+
 msgid "Traffic Sent"
 msgstr "Trafic trimis"
 
@@ -78247,9 +78230,6 @@ msgstr "Transformare ieșire de stare"
 #, fuzzy
 msgid "Transformation"
 msgstr "Informații termice"
-
-msgid "Transformation on selected metric"
-msgstr "Transformare pe metrica selectată"
 
 #, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
@@ -79258,10 +79238,6 @@ msgstr "Tip de meci necunoscut: %s."
 msgid "Unknown metric"
 msgstr "Serviciu necunoscut"
 
-#, python-format
-msgid "Unknown metric type %s"
-msgstr "Tip metric necunoscut %s"
-
 msgid "Unknown paths"
 msgstr "Trasee necunoscute"
 
@@ -79526,9 +79502,6 @@ msgstr "Actualizarea statutului"
 
 msgid "Update status of this host"
 msgstr "Actualizarea statutului acestei gazde"
-
-msgid "Update transform"
-msgstr "Actualizarea transformării"
 
 msgid "Updated attributes: "
 msgstr "Atribute actualizate: "
@@ -83121,6 +83094,9 @@ msgstr "Grupul de volum"
 
 msgid "Volume Groups (LVM)"
 msgstr "Grupuri de volume (LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 #, fuzzy
 msgid "Volume group name"
@@ -90183,6 +90159,115 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, python-format
+#~ msgid "%s of %s"
+#~ msgstr "%s din %s"
+
+#~ msgid "Add new constant"
+#~ msgstr "Adăugați o nouă constantă"
+
+#~ msgid "Add new metric"
+#~ msgstr "Adăugați o nouă măsurătoare"
+
+#~ msgid "Add new scalar"
+#~ msgstr "Adăugați un nou scalar"
+
+#~ msgid "Apply operation on all checked metrics: "
+#~ msgstr "Aplicați operațiunea pe toate metricile verificate: "
+
+#~ msgid "Apply transformation on checked metric: "
+#~ msgstr "Se aplică transformarea pe metrica verificată: "
+
+#~ msgid "Clone this metric"
+#~ msgstr "Clonați această metrică"
+
+#, python-format
+#~ msgid "Constant value %.2f"
+#~ msgstr "Valoare constantă %.2f"
+
+#~ msgid "Delete this metric"
+#~ msgstr "Ștergeți această măsurătoare"
+
+#~ msgid "Do not graph completely zero metrics"
+#~ msgstr "Nu reprezentați grafic metrici complet zero"
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "Nu interogați contoarele de performanță a volumului"
+
+#, fuzzy
+#~ msgid "Fractional digits"
+#~ msgstr "Fracțiune"
+
+#~ msgid "Graph Options"
+#~ msgstr "Opțiuni grafice"
+
+#, fuzzy
+#~ msgid "Graph designer"
+#~ msgstr "Proiectare GUI"
+
+#~ msgid "Graph them anyway"
+#~ msgstr "Graficați-le oricum"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "Aici puteți configura dacă contoarele de performanță trebuie să fie "
+#~ "interogate. Acest lucru poate economisi destul de mult din sarcina CPU pe "
+#~ "sistemele mari."
+
+#~ msgid "Metrics with all zero values"
+#~ msgstr "Metrici cu toate valorile zero"
+
+#~ msgid "Mirrored Area"
+#~ msgstr "Zona oglinzată"
+
+#~ msgid "Mirrored Line"
+#~ msgstr "Linia de oglinzi"
+
+#~ msgid "Mirrored Stacked"
+#~ msgstr "În oglindă stivuite"
+
+#~ msgid "No metrics in this graph yet."
+#~ msgstr "Nu există încă metrici în acest grafic."
+
+#~ msgid "Operation on selected metrics"
+#~ msgstr "Operațiunea privind metricele selectate"
+
+#~ msgid "Performance improvements"
+#~ msgstr "Îmbunătățiri de performanță"
+
+#~ msgid "Please check one metric you want to apply a transformation"
+#~ msgstr ""
+#~ "Vă rugăm să bifați o metrică la care doriți să aplicați o transformare"
+
+#~ msgid "Please check the metrics you want to combine by an operation"
+#~ msgstr ""
+#~ "Vă rugăm să verificați metricile pe care doriți să le combinați printr-o "
+#~ "operațiune"
+
+#~ msgid "Please select at least one metric"
+#~ msgstr "Vă rugăm să selectați cel puțin un sistem metric"
+
+#~ msgid "Stacked Area"
+#~ msgstr "Suprafața stivuită"
+
+#~ msgid "Style"
+#~ msgstr "Stil"
+
+#~ msgid "Toggle the visibility of this metric"
+#~ msgstr "Comutați vizibilitatea acestei măsurători"
+
+#~ msgid "Transformation on selected metric"
+#~ msgstr "Transformare pe metrica selectată"
+
+#, python-format
+#~ msgid "Unknown metric type %s"
+#~ msgstr "Tip metric necunoscut %s"
+
+#~ msgid "Update transform"
+#~ msgstr "Actualizarea transformării"
 
 #~ msgid ""
 #~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"

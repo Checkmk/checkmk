@@ -39,7 +39,7 @@ def parse_adva_fsp_current(string_table: StringTable) -> Section:
     return {
         index_aid: SensorData(
             name=unit_name,
-            crit=float(current_str) / 1000.0,
+            crit=float(upper_threshold_str) / 1000.0,
             current=float(current_str) / 1000.0,
         )
         for current_str, upper_threshold_str, power_str, unit_name, index_aid in string_table

@@ -352,6 +352,7 @@ class CMKFetcher:
         ],
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
+        get_ip_stack_config: Callable[[HostName], IPStackConfig],
         ip_address_of: IPLookup,
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
@@ -369,6 +370,7 @@ class CMKFetcher:
         self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
+        self.get_ip_stack_config: Final = get_ip_stack_config
         self.ip_address_of: Final = ip_address_of
         self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
@@ -415,7 +417,7 @@ class CMKFetcher:
                 (
                     node,
                     self.default_address_family(node),
-                    (ip_stack_config := self.config_cache.ip_stack_config(node)),
+                    (ip_stack_config := self.get_ip_stack_config(node)),
                     (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP

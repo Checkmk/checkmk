@@ -19,6 +19,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.paths
+from cmk.utils.ip_lookup import IPStackConfig
 
 import cmk.base.config as base_config
 from cmk.base.config import ConfigCache
@@ -166,7 +167,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
         host_name,
         config_cache.alias(host_name),
         socket.AddressFamily.AF_INET,
-        config_cache.ip_stack_config(host_name),
+        IPStackConfig.IPv4,
         additional_addresses_ipv4,
         additional_addresses_ipv6,
         macros,
@@ -221,7 +222,7 @@ def test_special_agent_macros(
         host_name,
         config_cache.alias(host_name),
         socket.AddressFamily.AF_INET,
-        config_cache.ip_stack_config(host_name),
+        IPStackConfig.IPv4,
         additional_addresses_ipv4,
         additional_addresses_ipv6,
         macros,

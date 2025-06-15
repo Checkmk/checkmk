@@ -19,6 +19,7 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
@@ -1509,6 +1510,7 @@ def test_commandline_discovery(
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,
         ip_address_of=lambda *a: HostAddress(""),
         ip_address_of_mandatory=lambda *a: HostAddress(""),
         ip_address_of_mgmt=lambda *a: HostAddress(""),

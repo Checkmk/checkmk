@@ -72,6 +72,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_config: Hosts,
         service_name_config: PassiveServiceNameConfig,
+        get_ip_stack_config: Callable[[HostName], IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[AddressFamily.AF_INET, AddressFamily.AF_INET6]
         ],
@@ -92,6 +93,7 @@ class NagiosCore(core_config.MonitoringCore):
             plugins.check_plugins,
             licensing_handler,
             passwords,
+            get_ip_stack_config,
             default_address_family,
             ip_address_of,
             service_depends_on,
@@ -105,6 +107,7 @@ class NagiosCore(core_config.MonitoringCore):
             service_name_config,
             plugins,
             discovery_rules,
+            get_ip_stack_config,
             ip_address_of,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
@@ -118,6 +121,7 @@ class NagiosCore(core_config.MonitoringCore):
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
+        get_ip_stack_config: Callable[[HostName], IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
         ],
@@ -150,6 +154,7 @@ class NagiosCore(core_config.MonitoringCore):
             ),
             licensing_handler=licensing_handler,
             passwords=passwords,
+            get_ip_stack_config=get_ip_stack_config,
             default_address_family=default_address_family,
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
@@ -163,6 +168,7 @@ class NagiosCore(core_config.MonitoringCore):
         service_name_config: PassiveServiceNameConfig,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+        get_ip_stack_config: Callable[[HostName], IPStackConfig],
         ip_address_of: ip_lookup.IPLookup,
         *,
         precompile_mode: PrecompileMode,
@@ -176,6 +182,7 @@ class NagiosCore(core_config.MonitoringCore):
             service_name_config,
             plugins,
             discovery_rules,
+            get_ip_stack_config,
             ip_address_of,
             precompile_mode=precompile_mode,
         )
@@ -235,6 +242,7 @@ def create_config(
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ],
@@ -254,6 +262,7 @@ def create_config(
             service_name_config,
             plugins,
             hostname,
+            get_ip_stack_config(hostname),
             default_address_family(hostname),
             passwords,
             licensing_counter,
@@ -295,6 +304,7 @@ def _create_nagios_config_host(
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
+    ip_stack_config: IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
@@ -320,6 +330,7 @@ def _create_nagios_config_host(
             service_name_config,
             plugins,
             hostname,
+            ip_stack_config,
             host_ip_family,
             host_attrs,
             stored_passwords,
@@ -555,6 +566,7 @@ def create_nagios_servicedefs(
     service_name_config: PassiveServiceNameConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
+    ip_stack_config: IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
@@ -597,6 +609,7 @@ def create_nagios_servicedefs(
     active_services = []
     for service_data in config_cache.active_check_services(
         hostname,
+        ip_stack_config,
         host_ip_family,
         host_attrs,
         service_name_config.final_service_name_config,
@@ -731,7 +744,7 @@ def create_nagios_servicedefs(
     if not services_ids and not active_checks_rules_exist and not custom_checks:
         ping_services.append("PING")
 
-    if config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
+    if ip_stack_config is IPStackConfig.DUAL_STACK:
         if host_ip_family is AddressFamily.AF_INET6:
             if "PING IPv4" not in services_ids:
                 ping_services.append("PING IPv4")

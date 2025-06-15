@@ -2356,6 +2356,7 @@ class ConfigCache:
     def active_check_services(
         self,
         host_name: HostName,
+        host_ip_stack_config: ip_lookup.IPStackConfig,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         host_attrs: ObjectAttributes,
         final_service_name_config: FinalServiceNameConfig,
@@ -2390,7 +2391,7 @@ class ConfigCache:
                 host_name,
                 self.alias(host_name),
                 host_ip_family,
-                self.ip_stack_config(host_name),
+                host_ip_stack_config,
                 additional_addresses_ipv4,
                 additional_addresses_ipv6,
                 macros,

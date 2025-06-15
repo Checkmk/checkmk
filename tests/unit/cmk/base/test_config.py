@@ -266,8 +266,8 @@ def test_is_ipv4_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert (IPStackConfig.IPv4 in config_cache.ip_stack_config(hostname)) is result
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    assert (IPStackConfig.IPv4 in ip_lookup_config.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -285,8 +285,8 @@ def test_is_ipv6_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert (IPStackConfig.IPv6 in config_cache.ip_stack_config(hostname)) is result
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    assert (IPStackConfig.IPv6 in ip_lookup_config.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -304,8 +304,8 @@ def test_is_ipv4v6_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    assert (ip_lookup_config.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
 
 
 def _assert_not_called(*args: object) -> NoReturn:
@@ -371,8 +371,8 @@ def test_is_no_ip_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.NO_IP) is result
+    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    assert (ip_lookup_config.ip_stack_config(hostname) is IPStackConfig.NO_IP) is result
 
 
 @pytest.mark.parametrize(
@@ -3113,6 +3113,7 @@ def test_get_active_service_data_crash(
     list(
         config_cache.active_check_services(
             host_name,
+            IPStackConfig.IPv4,
             socket.AddressFamily.AF_INET,
             config_cache.get_host_attributes(
                 host_name, socket.AddressFamily.AF_INET, lambda *a, **kw: HostAddress("")

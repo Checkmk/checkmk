@@ -77,6 +77,7 @@ def test_do_create_config_nagios(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
+        get_ip_stack_config=lambda host_name: ip_lookup.IPStackConfig.IPv4,
         default_address_family=lambda host_name: socket.AddressFamily.AF_INET,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
             ip_lookup_config,
@@ -118,6 +119,7 @@ def test_do_create_config_nagios_collects_passwords(
         core_scenario.make_passive_service_name_config(),
         AgentBasedPlugins.empty(),
         discovery_rules={},
+        get_ip_stack_config=lambda host_name: ip_lookup.IPStackConfig.IPv4,
         default_address_family=lambda host_name: socket.AddressFamily.AF_INET,
         ip_address_of=ip_address_of,
         ip_address_of_mgmt=lambda *a: None,

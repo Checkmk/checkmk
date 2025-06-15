@@ -61,6 +61,7 @@ def do_reload(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ],
@@ -80,6 +81,7 @@ def do_reload(
         config_cache,
         hosts_config,
         service_name_config,
+        get_ip_stack_config,
         default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
@@ -99,6 +101,7 @@ def do_restart(
     config_cache: ConfigCache,
     host_config: Hosts,
     service_name_config: PassiveServiceNameConfig,
+    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
     ],
@@ -124,6 +127,7 @@ def do_restart(
                 service_name_config=service_name_config,
                 plugins=plugins,
                 discovery_rules=discovery_rules,
+                get_ip_stack_config=get_ip_stack_config,
                 default_address_family=default_address_family,
                 ip_address_of=ip_address_of,
                 ip_address_of_mgmt=ip_address_of_mgmt,

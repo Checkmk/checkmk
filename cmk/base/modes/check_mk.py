@@ -632,7 +632,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
-        ip_stack_config = config_cache.ip_stack_config(hostname)
+        ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
         ipaddress = (
             None
             if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
@@ -821,6 +821,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             service_name_config,
             plugins,
             hostname,
+            ip_lookup_config.ip_stack_config(hostname),
             ip_lookup_config.default_address_family(hostname),
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
@@ -1124,7 +1125,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
-        if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+        if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
         ip_family = ip_lookup_config.default_address_family(hostname)
@@ -1219,7 +1220,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
 
     assert hostnames
     for hostname in (HostName(hn) for hn in hostnames):
-        if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+        if ip_lookup_config.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
         ip_family = ip_lookup_config.default_address_family(hostname)
@@ -1431,6 +1432,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         passwords=cmk.utils.password_store.load(
             cmk.utils.password_store.pending_password_store_path()
         ),
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
             ip_lookup_config,
@@ -1518,6 +1520,7 @@ def mode_update() -> None:
                 service_name_config=loading_result.config_cache.make_passive_service_name_config(),
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
+                get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
                 ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
@@ -1589,6 +1592,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         loading_result.config_cache,
         hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
+        ip_lookup_config.ip_stack_config,
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
@@ -1658,6 +1662,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         loading_result.config_cache,
         hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
+        ip_lookup_config.ip_stack_config,
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
@@ -1980,6 +1985,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
@@ -2307,6 +2313,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
@@ -2503,6 +2510,7 @@ def run_checking(
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
@@ -2740,6 +2748,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
@@ -3001,6 +3010,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),

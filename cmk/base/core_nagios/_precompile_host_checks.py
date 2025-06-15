@@ -18,7 +18,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import assert_never
 
@@ -115,6 +115,7 @@ def precompile_hostchecks(
     service_name_config: PassiveServiceNameConfig,
     plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
     ip_address_of: IPLookup,
     *,
     precompile_mode: PrecompileMode,
@@ -142,6 +143,7 @@ def precompile_hostchecks(
                 service_name_config,
                 config_path,
                 hostname,
+                get_ip_stack_config,
                 plugins,
                 ip_address_of=ip_address_of,
                 precompile_mode=precompile_mode,
@@ -164,6 +166,7 @@ def dump_precompiled_hostcheck(
     service_name_config: PassiveServiceNameConfig,
     config_path: Path,
     hostname: HostName,
+    get_ip_stack_config: Callable[[HostName], IPStackConfig],
     plugins: AgentBasedPlugins,
     *,
     ip_address_of: IPLookup,
@@ -173,15 +176,15 @@ def dump_precompiled_hostcheck(
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
         config_cache, service_name_config, hostname, plugins
     )
+    ip_stack_config = get_ip_stack_config(hostname)
 
     # IP addresses
-    ip_stack_config = config_cache.ip_stack_config(hostname)
     needed_ipaddresses: dict[HostName, HostAddress] = {}
     needed_ipv6addresses: dict[HostName, HostAddress] = {}
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
-            node_ip_stack_config = config_cache.ip_stack_config(node)
+            node_ip_stack_config = get_ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
                 needed_ipaddresses[node] = ip_address_of(node, socket.AddressFamily.AF_INET)
 

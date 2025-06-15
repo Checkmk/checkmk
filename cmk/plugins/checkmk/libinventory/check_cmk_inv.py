@@ -157,6 +157,7 @@ def inventory_as_check(
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
+        get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),

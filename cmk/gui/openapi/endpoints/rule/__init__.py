@@ -510,7 +510,7 @@ def _create_rule(
             ),
         ),
         RuleOptions.from_config(properties),
-        value,
+        ruleset.valuespec().transform_value(value),
     )
 
     return rule

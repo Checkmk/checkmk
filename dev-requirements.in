@@ -30,6 +30,7 @@ pipfile # for generating import names during int tests
 playwright  # used for in-browser testing
 polyfactory # used for generating mock data for unit tests
 pre-commit  # used to fix / find issues before committing changes
+prometheus-client # used for testing otel integration
 py-import-cycles  # used in tests/Makefile
 pylint  # used by test/Makefile's test-pylint target
 pylint-pydantic

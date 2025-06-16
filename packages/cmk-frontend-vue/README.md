@@ -41,4 +41,4 @@ cmk-frontend-vue project.
 To try our reusable components outside a checkmk site, you can
 
 * run `ibazel run :vite -- --config vite.config.demo.ts`
-* surf to `http://localhost:5173/`
+* surf to `http://localhost:5174/`

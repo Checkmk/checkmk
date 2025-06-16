@@ -31,8 +31,7 @@ fn controller_command_path_impl() -> OsString {
 fn controller_command_path_impl() -> OsString {
     let cwd = std::env::current_dir().unwrap();
     // Binary has same name as parent directory
-    let relative_path: std::path::PathBuf =
-        ["packages", "host", "mk-sql", "mk-sql"].iter().collect();
+    let relative_path: std::path::PathBuf = ["packages", "mk-sql", "mk-sql"].iter().collect();
     let path = cwd.join(relative_path);
     assert!(path.is_file());
     path.into()

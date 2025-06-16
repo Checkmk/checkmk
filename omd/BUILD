@@ -28,7 +28,7 @@ create_venv(
     srcs = [
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
-        "//packages/site/check-http:check_http_pkg",
+        "//packages/check-http:check_http_pkg",
     ],
     extension = "tar.gz",
     deps = [

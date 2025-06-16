@@ -5,8 +5,8 @@
 
 [workspace]
 members = [
-    "check-cert",
-    "check-http",
+    "../../../packages/check-cert",
+    "../../../packages/check-http",
 ]
 package.edition = "2021"
 resolver = "2"

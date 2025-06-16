@@ -632,9 +632,9 @@ function Clear-All() {
     }
 
     Write-Host "Cleaning packages..."
-    Build-Package $true "host/cmk-agent-ctl" "Controller" "--clean"
-    Build-Package $true "host/mk-sql" "MK-SQL" "--clean"
-    Build-Package $true "host/mk-oracle" "mk-oracle" "--clean"
+    Build-Package $true "cmk-agent-ctl" "Controller" "--clean"
+    Build-Package $true "mk-sql" "MK-SQL" "--clean"
+    Build-Package $true "mk-oracle" "mk-oracle" "--clean"
 
     Clear-Artifacts
 
@@ -672,14 +672,14 @@ try {
 
     # BUILDING
     Build-Agent
-    Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
+    Build-Package $argCtl "cmk-agent-ctl" "Controller"
     if ($argSkipSqlTest -ne $true) {
-        Build-Package $argSql "host/mk-sql" "MK-SQL"
-        Build-Package $argOracle "host/mk-oracle" "mk-oracle"
+        Build-Package $argSql "mk-sql" "MK-SQL"
+        Build-Package $argOracle "mk-oracle" "mk-oracle"
     }
     else {
-        Build-Package $argSql "host/mk-sql" "MK-SQL" --build
-        Build-Package $argOracle "host/mk-oracle" "mk-oracle" --build
+        Build-Package $argSql "mk-sql" "MK-SQL" --build
+        Build-Package $argOracle "mk-oracle" "mk-oracle" --build
     }
     Build-Ohm
     Build-Ext

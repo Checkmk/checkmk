@@ -118,22 +118,22 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/\\|^packages/site/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/\\|^packages/site/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_MK_ORACLE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-oracle/\\|^packages/host/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/\\|^packages/host/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/\\|^requirements/rust' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
@@ -482,7 +482,7 @@ STAGES:
 
     - NAME: "Package check-cert"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
-      DIR: "packages/site/check-cert"
+      DIR: "packages/check-cert"
       COMMAND: "./run --all &> ${RESULTS}/check-cert.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-cert files changed"
@@ -490,7 +490,7 @@ STAGES:
 
     - NAME: "Package check-http"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
-      DIR: "packages/site/check-http"
+      DIR: "packages/check-http"
       COMMAND: "./run --all &> ${RESULTS}/check-http.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No check-http files changed"
@@ -529,7 +529,7 @@ STAGES:
 
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
-      DIR: "packages/host/cmk-agent-ctl"
+      DIR: "packages/cmk-agent-ctl"
       COMMAND: "./run --all &> ${RESULTS}/cmk-agent-ctl.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-agent-ctl files changed"
@@ -651,7 +651,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
-      DIR: "packages/host/mk-sql"
+      DIR: "packages/mk-sql"
       COMMAND: "./run --all &> ${RESULTS}/mk-sql.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-sql files changed"
@@ -661,7 +661,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_ORACLE_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
-      DIR: "packages/host/mk-oracle"
+      DIR: "packages/mk-oracle"
       COMMAND: "./run --all &> ${RESULTS}/mk-oracle.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"

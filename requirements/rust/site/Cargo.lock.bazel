@@ -1,5 +1,5 @@
 {
-  "checksum": "8b70cdc409e031af5a7278583a60b5725394d7b38a23ae4421461c373bc2b39d",
+  "checksum": "88ed6c02ebb4d2f9dfdaef6b9cc72c253cb84fcf40a8f81c2105b174c94c9056",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -16387,8 +16387,8 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "check-cert 0.1.0": "packages/site/check-cert",
-    "check-http 0.1.0": "packages/site/check-http"
+    "check-cert 0.1.0": "packages/check-cert",
+    "check-http 0.1.0": "packages/check-http"
   },
   "conditions": {
     "aarch64-linux-android": [],

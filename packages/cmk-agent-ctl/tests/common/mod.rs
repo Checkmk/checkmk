@@ -15,7 +15,6 @@ pub fn controller_command_path() -> path::PathBuf {
 pub fn controller_command_path() -> path::PathBuf {
     let mut path = std::env::current_dir().unwrap();
     path.push("packages");
-    path.push("host");
     path.push("cmk-agent-ctl");
     path.push("cmk-agent-ctl");
     assert!(path.is_file());

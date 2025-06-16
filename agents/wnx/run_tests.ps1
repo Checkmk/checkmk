@@ -415,7 +415,7 @@ try {
     }
 
     if ($testBuildCtl) {
-        cd $repo_root/packages/host/cmk-agent-ctl
+        cd $repo_root/packages/cmk-agent-ctl
         try {
             & pwsh ./run.ps1 --build
             if ($LASTEXITCODE -ne 0) {

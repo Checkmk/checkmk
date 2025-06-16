@@ -2,14 +2,14 @@ host_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate
 
 host_crates.from_cargo(
     name = "host_crates",
-    cargo_config = "//packages/host:.cargo/config.toml",
-    cargo_lockfile = "//packages/host:Cargo.lock",
-    lockfile = "//packages/host:Cargo.lock.bazel",
+    cargo_config = "//requirements/rust/host:.cargo/config.toml",
+    cargo_lockfile = "//requirements/rust/host:Cargo.lock",
+    lockfile = "//requirements/rust/host:Cargo.lock.bazel",
     manifests = [
-        "//packages/host:Cargo.toml",
-        "//packages/host/cmk-agent-ctl:Cargo.toml",
-        "//packages/host/mk-sql:Cargo.toml",
-        "//packages/host/mk-oracle:Cargo.toml",
+        "//requirements/rust/host:Cargo.toml",
+        "//packages/cmk-agent-ctl:Cargo.toml",
+        "//packages/mk-sql:Cargo.toml",
+        "//packages/mk-oracle:Cargo.toml",
     ],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )

@@ -1,5 +1,5 @@
 CHECK_CERT := check-cert
-CHECK_CERT_PACKAGE := packages/site/check-cert
+CHECK_CERT_PACKAGE := packages/check-cert
 
 CHECK_CERT_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_CERT)-build
 CHECK_CERT_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_CERT)-install

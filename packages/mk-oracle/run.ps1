@@ -26,8 +26,8 @@ $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
 #set target=x86_64-pc-windows-mscvc # 64 bit not used now
 $cargo_target = "i686-pc-windows-msvc"
-$workspace_dir = Split-Path -Path (Get-Location) -Parent
-$target_dir = Join-Path -Path $workspace_dir -ChildPath "target/$cargo_target"
+$root_workspace = (cargo locate-project --workspace | ConvertFrom-json).root | Get-Item
+$target_dir = Join-Path -Path $root_workspace.DirectoryName -ChildPath "target/$cargo_target"
 $exe_dir = Join-Path -Path $target_dir -ChildPath "release"
 
 $packBuild = $false
@@ -36,6 +36,7 @@ $packFormat = $false
 $packCheckFormat = $false
 $packTest = $false
 $packDoc = $false
+$packOci = $false
 
 # repo/branch specific short path
 # TODO(sk): move it to CI upon confirmation that screen works as intended
@@ -68,6 +69,7 @@ function Write-Help() {
     Write-Host "  -F, --check-format   check for  $package_name correct formatting"
     Write-Host "  -B, --build          build binary $package_name"
     Write-Host "  -T, --test           run  $package_name unit tests"
+    Write-Host "  -O, --oci            repackage Oracle Instant Client"
     Write-Host "  --shorten link path  change dir from current using link"
     Write-Host ""
     Write-Host "Examples:"
@@ -93,6 +95,7 @@ else {
             { $("-C", "--clippy") -contains $_ } { $packClippy = $true }
             { $("-T", "--test") -contains $_ } { $packTest = $true }
             { $("-D", "--documentation") -contains $_ } { $packDoc = $true }
+            { $("-O", "--oci") -contains $_ } { $packOci = $true }
             "--clean" { $packClean = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
@@ -140,13 +143,13 @@ function Start-ShortenPath($tgt_link, $path) {
 function Invoke-Cargo-With-Explicit-Package {
     param(
         [Parameter(
-            Mandatory=$True,
+            Mandatory = $True,
             Position = 0
         )]
         $cmd,
         [Parameter(
-            Mandatory=$False,
-            ValueFromRemainingArguments=$true,
+            Mandatory = $False,
+            ValueFromRemainingArguments = $true,
             Position = 1
         )]
         $further_args
@@ -183,11 +186,11 @@ function Update-Dirs() {
     $arte_dir = "$root_dir/artefacts"
     If (!(Test-Path -PathType container $arte_dir)) {
         Remove-Item $arte_dir -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
-        Write-Host "Creating arte dir: '$arte_dir'" -ForegroundColor White
+        Write-Host "Creating output dir: '$arte_dir'" -ForegroundColor White
         New-Item -ItemType Directory -Path $arte_dir -ErrorAction Stop > nul
     }
     $global:arte_dir = "$arte_dir"
-    Write-Host "Using arte dir: '$global:arte_dir'" -ForegroundColor White
+    Write-Host "Using output dir: '$global:arte_dir'" -ForegroundColor White
 }
 
 $result = 1
@@ -215,6 +218,25 @@ try {
     if ($packClean) {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
+    if ($packBuild -or $packTest -or - $packOci) {
+        $target = "//packages/mk-oracle:oci_light_win_x86"
+        & bazel build $target
+        if ($LASTEXITCODE -eq 0) {
+            $oci_light_win_x86_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )
+            $packaged = Split-Path "$oci_light_win_x86_zip" -leaf
+            Write-Host "Oracle runtime light/win/x86: $oci_light_win_x86_zip with name $packaged" -ForegroundColor Green
+            Copy-Item -Path "$root_dir/$oci_light_win_x86" -Destination "$arte_dir/" -Force -ErrorAction Stop
+            $source_hash = (Get-FileHash "$arte_dir/$packaged" -Algorithm SHA256).Hash
+            & mkdir "runtimes/$packaged" -ErrorAction SilentlyContinue | Out-Null
+            if (!(Test-Path "runtimes/$packaged/.hash") -or
+                ((Get-Content "runtimes/$packaged/.hash" -ErrorAction Stop) -ne $source_hash)) {
+                Set-Content "runtimes/$packaged/.hash" $source_hash -ErrorAction Stop
+            }
+        }
+        else {
+            Write-Host "Failed Oracle runtime light/win/x86: $oci_light_win_x86" -ForegroundColor Red
+        }
+    }
     if ($packBuild) {
         $cwd = Get-Location
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
@@ -236,6 +258,8 @@ try {
         if (-not (Test-Administrator)) {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
+        # TODO(timi): move it to CI
+        .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {

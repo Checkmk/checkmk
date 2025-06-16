@@ -5,7 +5,7 @@
 [package]
 name = "cmk-agent-ctl"
 version = "1.0.0"
-workspace = ".."
+workspace = "../../requirements/rust/host"
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

@@ -7,7 +7,7 @@ edition = "2021"
 clap = { version = "4.3.0", features = ["derive"] }
 lazy_static = "1.5.0"
 windows-service = "0.8.0"
-cmk-agent-ctl = { path = "../../../packages/host/cmk-agent-ctl" }
+cmk-agent-ctl = { path = "../../../packages/cmk-agent-ctl" }
 
 # as in  https://crates.io/crates/windows
 [dependencies.windows-sys]

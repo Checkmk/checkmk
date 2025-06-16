@@ -20,7 +20,7 @@ DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_$(VERSION)-1_all.deb
 DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
-HOST_PACKAGES_DIR := $(REPO_PATH)/packages/host
+HOST_PACKAGES_DIR := $(REPO_PATH)/packages
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
@@ -94,18 +94,18 @@ setversion:
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 
 $(AGENT_CTL):
-	bazel build //packages/host/cmk-agent-ctl:cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
-	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
+	install -m 755 $(REPO_PATH)/bazel-bin/packages/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
 	gzip --best --keep --force $(AGENT_CTL)
 
 $(MK_SQL):
-	bazel build //packages/host/mk-sql:mk-sql-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/mk-sql:mk-sql-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
-	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/mk-sql/mk-sql-musl $(MK_SQL)
+	install -m 755 $(REPO_PATH)/bazel-bin/packages/mk-sql/mk-sql-musl $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

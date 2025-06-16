@@ -1,5 +1,5 @@
 {
-  "checksum": "4c4635d68b932e4529f1a91be7aadd67ea56927560c78afcf332a4eab75d1bb9",
+  "checksum": "631262b304a5a53c512fc6bbd001a86db24b5992b5df883d2a95c92b65c37cbb",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -25695,9 +25695,9 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "cmk-agent-ctl 1.0.0": "packages/host/cmk-agent-ctl",
-    "mk-oracle 0.1.0": "packages/host/mk-oracle",
-    "mk-sql 0.1.0": "packages/host/mk-sql"
+    "cmk-agent-ctl 1.0.0": "packages/cmk-agent-ctl",
+    "mk-oracle 0.1.0": "packages/mk-oracle",
+    "mk-sql 0.1.0": "packages/mk-sql"
   },
   "conditions": {
     "aarch64-pc-windows-gnullvm": [],

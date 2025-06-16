@@ -5,9 +5,9 @@
 
 [workspace]
 members = [
-    "cmk-agent-ctl",
-    "mk-sql",
-    "mk-oracle",
+    "../../../packages/cmk-agent-ctl",
+    "../../../packages/mk-sql",
+    "../../../packages/mk-oracle",
 ]
 package.edition = "2021"
 resolver = "2"

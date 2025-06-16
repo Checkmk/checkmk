@@ -2,12 +2,12 @@ site_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate
 
 site_crates.from_cargo(
     name = "site_crates",
-    cargo_lockfile = "//packages/site:Cargo.lock",
-    lockfile = "//packages/site:Cargo.lock.bazel",
+    cargo_lockfile = "//requirements/rust/site:Cargo.lock",
+    lockfile = "//requirements/rust/site:Cargo.lock.bazel",
     manifests = [
-        "//packages/site:Cargo.toml",
-        "//packages/site/check-cert:Cargo.toml",
-        "//packages/site/check-http:Cargo.toml",
+        "//requirements/rust/site:Cargo.toml",
+        "//packages/check-cert:Cargo.toml",
+        "//packages/check-http:Cargo.toml",
     ],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )

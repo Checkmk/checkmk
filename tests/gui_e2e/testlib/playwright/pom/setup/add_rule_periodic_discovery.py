@@ -52,7 +52,7 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
 
     @property
     def hours_text_field(self) -> Locator:
-        return self.main_area.get_input("ve_1_p_check_interval_hours")
+        return self.main_area.locator("div.vs_age input").nth(1)
 
     @property
     def save_button(self) -> Locator:

@@ -8,7 +8,6 @@ $(MAINTENANCE_BUILD):
 	$(TOUCH) $@
 
 $(MAINTENANCE_INSTALL):
-	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/merge-crontabs $(DESTDIR)$(OMD_ROOT)/bin
 	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/diskspace $(DESTDIR)$(OMD_ROOT)/bin
 	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/logrotate $(DESTDIR)$(OMD_ROOT)/bin
 	$(TOUCH) $@

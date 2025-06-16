@@ -201,9 +201,10 @@ def agent_prism_main(args: Args) -> int:
     output_entities(gateway_objs["storage_pools"], "storage_pools")
     output_hosts(gateway_objs["hosts"], gateway_objs.get("hosts_networks", {}))
     output_vms(gateway_objs["vms"])
-    for key in ["protection_domains", "remote_support", "ha"]:
-        if key in gateway_objs:
-            output_entities(gateway_objs[key], key)  # type: ignore[literal-required] # TODO: Refactor typing...
+
+    for key in ("protection_domains", "remote_support", "ha"):
+        if key in gateway_objs and (value := gateway_objs[key]):
+            output_entities(value, key)
 
     LOGGING.info("all done. bye.")
     return 0

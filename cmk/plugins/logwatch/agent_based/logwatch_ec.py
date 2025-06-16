@@ -48,6 +48,8 @@ from . import commons as logwatch
 
 _MAX_SPOOL_SIZE = 1024**2
 
+_EC_CONNECTION_TIMEOUT = 5  # seconds
+
 
 CHECK_DEFAULT_PARAMETERS: logwatch.PreDictLogwatchEc = {
     "facility": 17,  # default to "local1"
@@ -505,7 +507,10 @@ class MessageForwarder:
         path: Path,
         events: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
-        ec.forward_to_unix_socket(events, path)
+        try:
+            ec.forward_to_unix_socket(events, path, _EC_CONNECTION_TIMEOUT)
+        except Exception as exc:
+            return LogwatchForwardedResult(exception=exc)
         return LogwatchForwardedResult(num_forwarded=len(events))
 
     # Spool the log messages to given spool directory.
@@ -628,6 +633,7 @@ class MessageForwarder:
         else:
             raise NotImplementedError()
 
+        sock.settimeout(_EC_CONNECTION_TIMEOUT)
         sock.connect((method_params["address"], method_params["port"]))
 
         try:

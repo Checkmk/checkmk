@@ -366,6 +366,7 @@ class SyslogMessage:
 def forward_to_unix_socket(
     syslog_messages: Iterable[SyslogMessage],
     path: Path | None = None,
+    conn_timeout: float | None = None,
 ) -> None:
     payload = b"".join(bytes(msg) + b"\n" for msg in syslog_messages)
     if not payload:
@@ -373,5 +374,6 @@ def forward_to_unix_socket(
     if path is None:
         path = create_paths(cmk.utils.paths.omd_root).event_socket.value
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        sock.settimeout(conn_timeout)
         sock.connect(str(path))
         sock.sendall(payload)

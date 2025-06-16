@@ -420,8 +420,8 @@ def configure_attributes(
 
 
 def _render_connection_test() -> None:
-    html.vue_app(
-        app_name="agent_connection_test",
+    html.vue_component(
+        component_name="cmk-agent-connection-test",
         data=asdict(
             AgentConnectionTest(
                 url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),

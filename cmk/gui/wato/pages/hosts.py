@@ -291,8 +291,8 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         host_name_attribute_key: Final[str] = "host"
         form_name: Final[str] = "edit_host"
-        html.vue_app(
-            app_name="mode_host",
+        html.vue_component(
+            component_name="cmk-mode-host",
             data=asdict(
                 ModeHost(
                     i18n=ModeHostI18n(

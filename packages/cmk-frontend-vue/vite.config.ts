@@ -21,6 +21,9 @@ export default defineConfig(({ command }) => {
             img: [],
             video: [],
             image: []
+          },
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith('cmk-')
           }
         }
       })

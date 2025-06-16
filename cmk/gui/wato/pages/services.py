@@ -633,8 +633,8 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def _render_agent_download_tooltip(self) -> None:
-        html.vue_app(
-            app_name="agent_download",
+        html.vue_component(
+            component_name="cmk-agent-download",
             data=asdict(
                 AgentDownload(
                     url=folder_preserving_link(

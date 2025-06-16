@@ -134,7 +134,7 @@ class MainMenuRenderer:
                 + classes,
             )
             if menu.vue_app:
-                html.vue_app(app_name=menu.vue_app.name, data=menu.vue_app.data)
+                html.vue_component(component_name=menu.vue_app.name, data=menu.vue_app.data)
             else:
                 MegaMenuRenderer().show(menu)
             html.close_div()

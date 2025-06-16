@@ -413,13 +413,12 @@ class HTMLWriter:
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("div", content, **kwargs))
 
-    def vue_app(self, app_name: str, data: dict[str, Any]) -> None:
+    def vue_component(self, component_name: str, data: dict[str, Any]) -> None:
         self.write_html(
             render_element(
-                "div",
+                component_name,
                 None,
-                data_cmk_vue_app_name=app_name,
-                data_cmk_vue_app_data=_dump_standard_compliant_json(data),
+                data=_dump_standard_compliant_json(data),
             )
         )
 

@@ -214,7 +214,9 @@ def render_vue_table(table: dict[str, Any]) -> None:
         use_d3_table = False
         if html.request.has_var("table_mode"):
             use_d3_table = html.request.var("table_mode") == "d3"
-        html.vue_app(app_name="d3_table" if use_d3_table else "vue_table", data=table_config)
+        html.vue_component(
+            component_name="cmk-d3-table" if use_d3_table else "cmk-vue-table", data=table_config
+        )
     except Exception:
         # Debug only. This block will vanish
         logger.warning("".join(traceback.format_exc()))

@@ -146,8 +146,8 @@ class ModeQuickSetupSpecialAgent(WatoMode):
     @override
     def page(self) -> None:
         enable_page_menu_entry(html, "inline_help")
-        html.vue_app(
-            app_name="quick_setup",
+        html.vue_component(
+            component_name="cmk-quick-setup",
             data={
                 "quick_setup_id": self._quick_setup_id,
                 "mode": "guided",

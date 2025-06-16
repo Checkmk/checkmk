@@ -887,8 +887,8 @@ class ModeNotifications(ABCNotificationsMode):
         self._show_rules(analyse=None)
 
     def _show_overview(self) -> None:
-        html.vue_app(
-            app_name="notification_overview",
+        html.vue_component(
+            component_name="cmk-notification-overview",
             data=asdict(_get_vue_data()),
         )
 
@@ -3360,8 +3360,8 @@ class ModeNotificationParametersOverview(WatoMode):
         return menu
 
     def page(self) -> None:
-        html.vue_app(
-            app_name="notification_parameters_overview",
+        html.vue_component(
+            component_name="cmk-notification-parameters-overview",
             data=asdict(self._get_notification_parameters_data()),
         )
 
@@ -3981,8 +3981,8 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 )
             )
 
-        html.vue_app(
-            app_name="quick_setup",
+        html.vue_component(
+            component_name="cmk-quick-setup",
             data={
                 "quick_setup_id": self._quick_setup_id,
                 "mode": "guided" if self._new and self._clone_nr < 0 else "overview",

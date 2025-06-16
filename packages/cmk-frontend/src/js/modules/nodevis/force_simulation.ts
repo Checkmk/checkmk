@@ -92,6 +92,11 @@ export class ForceSimulation {
     _update_gui(): number {
         const update_start = window.performance.now();
         this._enforce_free_float_styles_retranslation();
+        const force_nodes = this._get_force_nodes();
+        if (force_nodes.length == 0) {
+            this._simulation.alpha(0);
+            return window.performance.now() - update_start;
+        }
         compute_node_positions_from_list_of_nodes(this._get_force_nodes());
         this._viewport.update_gui_of_layers();
         return window.performance.now() - update_start;

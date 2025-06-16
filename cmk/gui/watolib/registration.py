@@ -84,7 +84,6 @@ from .rulespecs import (
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorBasicWATOConfig,
-    ConfigGeneratorLocalSiteConnection,
     ConfigGeneratorRegistrationUser,
 )
 from .search import launch_requests_processing_background, SearchIndexBackgroundJob
@@ -141,7 +140,6 @@ def register(
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
-    sample_config_generator_registry.register(ConfigGeneratorLocalSiteConnection)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)

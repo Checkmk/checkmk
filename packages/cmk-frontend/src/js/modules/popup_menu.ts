@@ -644,7 +644,7 @@ export function mega_menu_show_all_items(current_topic_id: string) {
 
     // Preserve the popup menu's height so there's no vertical jump
     // This only concerns our small menus "help" and "user"
-    const popup_menu: HTMLElement = main_menu.closest(".main_menu_popup")!;
+    const popup_menu: HTMLElement = main_menu.closest(".popup_menu_handler")!;
     popup_menu.style.minHeight = `${popup_menu.clientHeight}px`;
 
     remove_class(current_topic, "extendable");
@@ -673,7 +673,7 @@ export function mega_menu_collapse_topic(current_topic_id: string) {
         return;
     }
 
-    const popup_menu: HTMLElement = main_menu.closest(".main_menu_popup")!;
+    const popup_menu: HTMLElement = main_menu.closest(".popup_menu_handler")!;
     popup_menu.style.minHeight = "";
 
     remove_class(main_menu, "extended_topic");

@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.79"
+channel = "1.87"
 
 [toolchain.windows]
 targets = ["i686-pc-windows-msvc"]

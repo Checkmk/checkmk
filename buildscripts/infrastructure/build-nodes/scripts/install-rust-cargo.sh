@@ -14,7 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-DEFAULT_TOOLCHAIN_VERSION="1.79"
+DEFAULT_TOOLCHAIN_VERSION="1.87"
+
 DEFAULT_TARGET="x86_64-unknown-linux-gnu"
 DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${DEFAULT_TARGET}"
 DIR_NAME="rust"

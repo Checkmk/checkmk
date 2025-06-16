@@ -316,7 +316,9 @@ class SyslogForwarderUnixSocket(ABCSyslogForwarder):
     def forward(
         self,
         syslog_messages: Iterable[SyslogMessage],
+        conn_timeout: float | None = None,
     ) -> None:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(conn_timeout)
             sock.connect(self._path)
             sock.sendall(b"\n".join(bytes(msg) for msg in syslog_messages) + b"\n")

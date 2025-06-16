@@ -68,6 +68,9 @@ from .utils import logwatch
 
 _MAX_SPOOL_SIZE = 1024**2
 
+_EC_CONNECTION_TIMEOUT = 20  # seconds
+
+
 CHECK_DEFAULT_PARAMETERS: logwatch.ParameterLogwatchEc = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
@@ -552,7 +555,10 @@ class MessageForwarder:
     ) -> LogwatchForwardedResult:
         if not events:
             return LogwatchForwardedResult()
-        SyslogForwarderUnixSocket(path=path).forward(events)
+        try:
+            SyslogForwarderUnixSocket(path=path).forward(events, _EC_CONNECTION_TIMEOUT)
+        except Exception as exc:
+            return LogwatchForwardedResult(exception=exc)
         return LogwatchForwardedResult(num_forwarded=len(events))
 
     # Spool the log messages to given spool directory.
@@ -674,6 +680,7 @@ class MessageForwarder:
         else:
             raise NotImplementedError()
 
+        sock.settimeout(_EC_CONNECTION_TIMEOUT)
         sock.connect((method_params["address"], method_params["port"]))
 
         try:

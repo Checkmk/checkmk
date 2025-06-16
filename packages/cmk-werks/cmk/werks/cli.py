@@ -1098,7 +1098,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     if current_branch() != get_config().branch or current_repo() != get_config().repo:
         bail_out(
-            f"Werk IDs can only be reserved on the '{get_config().branch}' branch of the repository, not '{current_branch()}'."
+            f"Werk IDs can only be reserved on the '{get_config().branch}' branch on "
+            f"'{get_config().repo}', not '{current_branch()}' on '{current_repo()}'."
         )
 
     # Get the start werk_id to reserve

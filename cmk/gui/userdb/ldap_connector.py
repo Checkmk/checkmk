@@ -404,7 +404,7 @@ def _sync_existing_user(
     sync_user_result: SyncUsersResult,
     ldap_user_connector: LDAPUserConnector,
 ) -> None:
-    if checkmk_user_id != only_username:
+    if only_username and checkmk_user_id != only_username:
         return
 
     ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, checkmk_user_copy)
@@ -453,7 +453,7 @@ def _sync_new_user(
         return
 
     # Only one user should be synced, skip others.
-    if checkmk_user_id != only_username:
+    if only_username and checkmk_user_id != only_username:
         return
 
     ldap_user_connector.execute_active_sync_plugins(checkmk_user_id, ldap_user, new_checkmk_user)

@@ -5,8 +5,7 @@
 [package]
 name = "cmk-agent-ctl"
 version = "1.0.0"
-# next line is correct but fails pinning with bazel
-# workspace = ".."
+workspace = ".."
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

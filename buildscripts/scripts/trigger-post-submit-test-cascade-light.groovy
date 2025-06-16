@@ -50,7 +50,7 @@ def main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/${job_name}",
+                    relative_job_name: "${branch_base_folder}/light/${job_name}",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                     ],

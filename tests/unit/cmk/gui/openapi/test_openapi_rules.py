@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 import urllib
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 import pytest
@@ -250,6 +250,25 @@ def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
         conditions={},
     )
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
+
+
+def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
+    ruleset = "diskstat_inventory"
+    clients.Rule.create(
+        ruleset=ruleset,
+        folder="/",
+        properties={"description": "Test", "disabled": False},
+        value_raw="{'summary': True }",
+        conditions={},
+    )
+    rules_path = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
+    rules: Mapping[str, Any] = load_mk_file(rules_path, default={}, lock=False)
+    assert rules[ruleset][0]["value"] == {
+        "summary": True,
+        "lvm": False,
+        "vxvm": False,
+        "diskless": False,
+    }
 
 
 def test_openapi_list_rules(

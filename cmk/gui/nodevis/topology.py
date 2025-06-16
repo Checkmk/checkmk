@@ -584,11 +584,16 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
         if not node_ids:
             return response
 
-        for hostname in node_ids:
-            hostname_filters.append("Filter: host_name = %s" % livestatus.lqencode(hostname))
-        hostname_filters.append("Or: %d" % len(node_ids))
+        # If the host filter is going to be too large, simply query all hosts and do the
+        # filtering afterward. This reduces the load on the core.
+        # The amount of returned data is negligible
+        query_all_hosts = len(node_ids) > 500
+        if not query_all_hosts:
+            for hostname in node_ids:
+                hostname_filters.append("Filter: host_name = %s" % livestatus.lqencode(hostname))
+            hostname_filters.append("Or: %d" % len(node_ids))
 
-        with sites.prepend_site():
+        with sites.prepend_site(), sites.set_limit(self._topology_configuration.filter.max_nodes):
             columns = [
                 "name",
                 "state",
@@ -608,6 +613,10 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
             if entry["name"] in self._topology_nodes:
                 # Node already known
                 continue
+
+            if query_all_hosts and entry["name"] not in node_ids:
+                continue
+
             self._node_extra_info[entry["name"]] = {
                 "site": entry["site"],
                 "hostname": entry["name"],
@@ -1767,7 +1776,7 @@ def _get_hostnames_from_core(
     site_id = (
         SiteId(request.get_str_input_mandatory("site")) if request.get_str_input("site") else None
     )
-    with sites.only_sites(site_id):
+    with sites.only_sites(site_id), sites.set_limit(topology_configuration.filter.max_nodes):
         return {x[0] for x in sites.live().query(topology_configuration.filter.query)}
 
 

@@ -17,8 +17,8 @@ const props = defineProps<{
   id: string
   spec: FormSpec
   data: unknown
-  backendValidation: ValidationMessages
-  displayMode: 'edit' | 'readonly' | 'both'
+  validation: ValidationMessages
+  display_mode: 'edit' | 'readonly' | 'both'
 }>()
 
 const dataRef = ref()
@@ -30,7 +30,7 @@ immediateWatch(
 )
 
 immediateWatch(
-  () => props.displayMode,
+  () => props.display_mode,
   (newValue) => {
     activeMode.value = newValue
   }
@@ -68,11 +68,7 @@ const { ErrorBoundary } = useErrorBoundary()
         @click="toggleActiveMode"
       /><label v-if="showToggleMode">{{ activeMode }}</label>
       <div v-if="activeMode === 'readonly' || activeMode === 'both'">
-        <FormReadonly
-          :data="dataRef"
-          :backend-validation="backendValidation"
-          :spec="spec"
-        ></FormReadonly>
+        <FormReadonly :data="dataRef" :backend-validation="validation" :spec="spec"></FormReadonly>
       </div>
 
       <HelpText :help="spec.help" />
@@ -83,8 +79,8 @@ const { ErrorBoundary } = useErrorBoundary()
               <td>
                 <FormEdit
                   v-model:data="dataRef"
-                  :v-if="displayMode === 'edit' || displayMode === 'both'"
-                  :backend-validation="backendValidation"
+                  :v-if="display_mode === 'edit' || display_mode === 'both'"
+                  :backend-validation="validation"
                   :spec="spec"
                 />
                 <!-- This input field contains the computed json value which is sent when the form is submitted -->

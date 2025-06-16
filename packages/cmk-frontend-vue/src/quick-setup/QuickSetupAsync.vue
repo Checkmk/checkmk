@@ -59,7 +59,7 @@ let overviewModeLabel = ''
 
 const props = withDefaults(defineProps<QuickSetupAppProps>(), {
   mode: GUIDED_MODE,
-  toggleEnabled: false
+  toggle_enabled: false
 })
 
 const loadedAllStages = ref(false)
@@ -131,7 +131,7 @@ const nextStage = async (actionId: string) => {
       nextStageStructure = await getStageStructure(
         props.quick_setup_id,
         nextStageNumber,
-        props.objectId
+        props.object_id
       )
     } catch (err: unknown) {
       handleExceptionError(err)
@@ -182,7 +182,7 @@ const prevStage = () => {
 }
 
 const loadAllStages = async (): Promise<QSStageStore[]> => {
-  const data = await getAllStages(props.quick_setup_id, props.objectId)
+  const data = await getAllStages(props.quick_setup_id, props.object_id)
   const result: QSStageStore[] = []
 
   guidedModeLabel = data.guided_mode_string
@@ -244,7 +244,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
 }
 
 const loadGuidedStages = async (): Promise<QSStageStore[]> => {
-  const data: QuickSetupGuidedResponse = await getOverview(props.quick_setup_id, props.objectId)
+  const data: QuickSetupGuidedResponse = await getOverview(props.quick_setup_id, props.object_id)
   const result: QSStageStore[] = []
 
   guidedModeLabel = data.guided_mode_string
@@ -328,7 +328,7 @@ const save = async (buttonId: string) => {
       props.quick_setup_id,
       buttonId,
       userInput,
-      props.objectId,
+      props.object_id,
       handleBackgroundJobLogUpdate
     )
     loading.value = true
@@ -549,7 +549,7 @@ showQuickSetup.value = true
 
 <template>
   <ToggleButtonGroup
-    v-if="toggleEnabled"
+    v-if="toggle_enabled"
     v-model="currentMode"
     :options="[
       { label: guidedModeLabel, value: GUIDED_MODE },

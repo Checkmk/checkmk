@@ -47,8 +47,8 @@ function setupVue() {
             // eslint has a false positive: assuming `data` is part of a vue component
             // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
             data: appData.data,
-            backendValidation: appData.validation,
-            displayMode: appData.display_mode
+            validation: appData.validation,
+            display_mode: appData.display_mode
           })
           break
         }
@@ -56,8 +56,8 @@ function setupVue() {
           app = createApp(QuickSetup, {
             quick_setup_id: appData.quick_setup_id,
             mode: appData.mode,
-            toggleEnabled: appData.toggle_enabled,
-            objectId: appData.object_id || null
+            toggle_enabled: appData.toggle_enabled,
+            object_id: appData.object_id || null
           })
           break
         }

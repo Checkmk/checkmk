@@ -33,9 +33,9 @@ const { ErrorBoundary } = useErrorBoundary()
     <Suspense>
       <QuickSetupAsync
         :quick_setup_id="quick_setup_id"
-        :toggle-enabled="toggleEnabled"
+        :toggle_enabled="toggle_enabled"
         :mode="mode"
-        :object-id="objectId"
+        :object_id="object_id"
       />
       <template #fallback>
         <CmkIcon name="load-graph" size="xxlarge" />

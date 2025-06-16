@@ -23,11 +23,11 @@ export interface QuickSetupAppProps {
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
   mode: WizardMode
 
-  /** @property {boolean} toggleEnabled - When true, the toggling between mode via a button is enabled */
-  toggleEnabled: boolean
+  /** @property {boolean} toggle_enabled - When true, the toggling between mode via a button is enabled */
+  toggle_enabled: boolean
 
-  /** @property {string} objectId - Optional, if editing an existing object created by quick setup */
-  objectId: string | null
+  /** @property {string} object_id - Optional, if editing an existing object created by quick setup */
+  object_id: string | null
 }
 
 /**

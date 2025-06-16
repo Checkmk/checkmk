@@ -658,24 +658,28 @@ class EventServer(ECServerThread):
 
     def serve(self) -> None:
         pipe = self.open_pipe()
-        listen_list = [
-            f
-            for f in (
-                pipe,
-                self._syslog_udp,
-                self._syslog_tcp,
-                self._eventsocket,
-                self._snmp_trap_socket,
-            )
-            if f is not None
+        # We just read()/recvfrom() these, so we create no new FDs via them.
+        pipe_and_datagram_sockets = [
+            f for f in (pipe, self._syslog_udp, self._snmp_trap_socket) if f is not None
         ]
+        # We use accept() on these FDs, so we must be careful to avoid creating too many additional
+        # FDs. We use an arbitrary limit below (less than the usual 1024 FD_SETSIZE limit), so we
+        # don't accept() any more connections when there are already many of them. Connections get
+        # queued in the OS queue then, and when that is full, a client will get an error, which is
+        # the right thing here.
+        stream_sockets = [f for f in (self._syslog_tcp, self._eventsocket) if f is not None]
         client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
         select_timeout = 1
         unprocessed_pipe_data = b""
         while not self._terminate_event.is_set():
             try:
                 readable: list[FileDescr | socket.socket] = select.select(
-                    listen_list + list(client_sockets.keys()), [], [], select_timeout
+                    pipe_and_datagram_sockets
+                    + (stream_sockets if len(client_sockets) < 900 else [])
+                    + list(client_sockets.keys()),
+                    [],
+                    [],
+                    select_timeout,
                 )[0]
             except OSError as e:
                 if e.args[0] != errno.EINTR:

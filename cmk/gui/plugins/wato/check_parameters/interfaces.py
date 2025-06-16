@@ -743,10 +743,6 @@ def _vs_state_mappings() -> CascadingDropdown:
 
 
 def _migrate_parameter_valuespec_if(value: dict[str, object]) -> dict[str, object]:
-    if "speed" in value:
-        value["discovered_speed"] = value.pop("speed")
-    if "state" in value:
-        value["discovered_oper_status"] = value.pop("state")
     if "discovered_state" in value:
         value["discovered_oper_status"] = value.pop("discovered_state")
     return value

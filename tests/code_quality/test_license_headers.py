@@ -61,7 +61,6 @@ ignored_files = [
     "notifications/ilert",
     "notifications/signl4",
     "omd/packages/Python/pip",
-    "omd/packages/maintenance/merge-crontabs",
     "tests/integration_redfish/mockup-server/redfishMockupServer.py",
     "tests/integration_redfish/mockup-server/rfSsdpServer.py",
 ]

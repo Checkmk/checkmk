@@ -7,7 +7,6 @@ pkg_files(
     name = "bin_pkg",
     srcs = [
         "logrotate",
-        "merge-crontabs",
     ],
     attributes = pkg_attributes(
         mode = "0755",

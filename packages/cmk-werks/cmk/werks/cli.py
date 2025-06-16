@@ -1055,7 +1055,12 @@ def current_branch() -> str:
 
 
 def current_repo() -> str:
-    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("@")[-1]
+    return (
+        list(os.popen("git config --get remote.origin.url"))[0]
+        .strip()
+        .split("@")[-1]
+        .removesuffix(".git")
+    )
 
 
 def _reserve_werk_ids(

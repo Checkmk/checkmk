@@ -24,6 +24,7 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from enum import Enum
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, Required, TypedDict, TypeVar
@@ -224,6 +225,31 @@ OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
         "CPU Credits Consumed",
         "CPU Credits Remaining",
     ],
+}
+
+
+class FetchedResource(Enum):
+    """Available Azure resources, with section name, for API fetching"""
+
+    virtual_machines = ("Microsoft.Compute/virtualMachines", "virtualmachines")
+
+    def __init__(self, resource_type, section_name):
+        self.resource_type = resource_type
+        self.section_name = section_name
+
+    @property
+    def section(self):
+        return self.section_name
+
+    @property
+    def type(self):
+        return self.resource_type
+
+
+# list of metrics type handles within the new async functions
+# not to be gathered with the old methods
+METRICS_GATHERED_ASYNC = {
+    FetchedResource.virtual_machines.type,
 }
 
 
@@ -902,10 +928,6 @@ class MgmtApiClient(BaseAsyncApiClient):
     async def resources(self):
         return await self.get_async("resources", key="value", params={"api-version": "2019-05-01"})
 
-    async def vmview(self, group, name):
-        temp = "resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView"
-        return await self.get_async(temp % (group, name), params={"api-version": "2018-06-01"})
-
     async def app_gateway_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/applicationGateways/{}"
         return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -1296,17 +1318,6 @@ class AzureResource:
 def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
     items = ((k, mapping.get(k)) for k in keys)
     return {k: v for k, v in items if v is not None}
-
-
-async def process_vm(mgmt_client: MgmtApiClient, vmach: AzureResource, args: Args) -> None:
-    use_keys = ("statuses",)
-
-    inst_view = await mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
-    vmach.info["specific_info"] = filter_keys(inst_view, use_keys)
-
-    if args.piggyback_vms == "self":
-        vmach.piggytargets.remove(vmach.info["group"])
-        vmach.piggytargets.append(vmach.info["name"])
 
 
 def get_params_from_azure_id(
@@ -1751,7 +1762,30 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     section.write()
 
 
-async def gather_metrics(
+async def process_old_metrics(
+    mgmt_client: MgmtApiClient, resources: Sequence[AzureResource], args: Args
+) -> None:
+    resources = [
+        resource for resource in resources if resource.info["type"] not in METRICS_GATHERED_ASYNC
+    ]
+
+    await process_metrics(mgmt_client, resources, args)
+
+
+async def process_metrics(
+    mgmt_client: MgmtApiClient, resources: Sequence[AzureResource], args: Args
+) -> None:
+    errors = await _gather_metrics(mgmt_client, resources, args)
+
+    if not errors:
+        return
+
+    agent_info_section = AzureSection("agent_info")
+    agent_info_section.add(errors.dumpinfo())
+    agent_info_section.write()
+
+
+async def _gather_metrics(
     mgmt_client: MgmtApiClient, all_resources: Sequence[AzureResource], args: Args
 ) -> IssueCollector:
     """
@@ -1763,12 +1797,6 @@ async def gather_metrics(
 
     grouped_resource_ids = defaultdict(list)
     for resource in all_resources:
-        if (
-            resource.info["type"] == "Microsoft.Compute/virtualMachines"
-            and args.piggyback_vms == "grouphost"
-        ):
-            continue
-
         grouped_resource_ids[(resource.info["type"], resource.info["location"])].append(
             resource.info["id"]
         )
@@ -1831,7 +1859,6 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 async def process_resource(
     mgmt_client: MgmtApiClient,
     resource: AzureResource,
-    group_labels: GroupLabels,
     args: Args,
 ) -> Sequence[Section]:
     sections: list[Section] = []
@@ -1840,13 +1867,10 @@ async def process_resource(
     if resource_type not in enabled_services:
         return sections
 
-    if resource_type == "Microsoft.Compute/virtualMachines":
-        await process_vm(mgmt_client, resource, args)
+    if resource_type in METRICS_GATHERED_ASYNC:
+        return sections
 
-        if args.piggyback_vms == "self":
-            sections.append(get_vm_labels_section(resource, group_labels))
-
-    elif resource_type == "Microsoft.Network/applicationGateways":
+    if resource_type == "Microsoft.Network/applicationGateways":
         await process_app_gateway(mgmt_client, resource)
     elif resource_type == "Microsoft.RecoveryServices/vaults":
         await process_recovery_services_vaults(mgmt_client, resource)
@@ -1867,12 +1891,11 @@ async def process_resource(
 async def process_resources(
     mgmt_client: MgmtApiClient,
     resources: Sequence[AzureResource],
-    group_labels: GroupLabels,
     args: Args,
 ) -> AsyncIterator[Sequence[Section]]:
     for resource in resources:
         try:
-            yield await process_resource(mgmt_client, resource, group_labels, args)
+            yield await process_resource(mgmt_client, resource, args)
         except Exception as exc:
             if args.debug:
                 raise
@@ -2074,6 +2097,54 @@ async def process_resource_health(
     return _write_resource_health_section(resource_health_view, monitored_resources, args)
 
 
+async def process_virtual_machines(
+    api_client: MgmtApiClient,
+    args: Args,
+    group_labels: GroupLabels,
+    resources: Mapping[str, AzureResource],
+) -> None:
+    response = await api_client.get_async(
+        "providers/Microsoft.Compute/virtualMachines",
+        params={
+            "api-version": "2024-11-01",
+            "statusOnly": "true",  # fetching only run time status
+        },
+        key="value",
+    )
+
+    virtual_machines: list[AzureResource] = []
+    for vm in response:
+        try:
+            resource = resources[vm["id"].lower()]
+        except KeyError:
+            raise ApiErrorMissingData(
+                f"Virtual machine not found in monitored resources: {vm['id']}"
+            )
+
+        try:
+            statuses = vm.pop("properties")["instanceView"]["statuses"]
+        except KeyError:
+            raise ApiErrorMissingData("Virtual machine instance's statuses must be present")
+
+        resource.info["specific_info"] = {"statuses": statuses}
+        virtual_machines.append(resource)
+
+    if args.piggyback_vms == "self":
+        await process_metrics(api_client, virtual_machines, args)
+
+    for resource in virtual_machines:
+        if args.piggyback_vms == "self":
+            labels_section = get_vm_labels_section(resource, group_labels)
+            labels_section.write()
+
+        section = AzureSection(
+            FetchedResource.virtual_machines.section,
+            [resource.info["name"] if args.piggyback_vms == "self" else resource.info["group"]],
+        )
+        section.add(resource.dumpinfo())
+        section.write()
+
+
 class ResourceHealth(TypedDict, total=False):
     id: Required[str]
     properties: Required[Mapping[str, str]]
@@ -2140,6 +2211,33 @@ def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     return 0
 
 
+async def process_resources_async(
+    mgmt_client: MgmtApiClient,
+    args: Args,
+    group_labels: GroupLabels,
+    monitored_resources: Sequence[AzureResource],
+) -> None:
+    tasks = set()
+
+    monitored_types = {
+        type_ for r in monitored_resources if (type_ := r.info["type"]) in args.services
+    }
+    resources_by_id = {
+        r.info["id"].lower(): r for r in monitored_resources if r.info["type"] in monitored_types
+    }
+
+    if FetchedResource.virtual_machines.type in monitored_types:
+        tasks.add(process_virtual_machines(mgmt_client, args, group_labels, resources_by_id))
+
+    for coroutine in asyncio.as_completed(tasks):
+        try:
+            await coroutine
+        except Exception as e:
+            if args.debug:
+                raise
+            write_exception_to_agent_info_section(e, "Management client (async)")
+
+
 async def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
@@ -2167,12 +2265,11 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
 
     await usage_details(mgmt_client, monitored_groups, args)
 
-    if err := await gather_metrics(mgmt_client, monitored_resources, args):
-        agent_info_section = AzureSection("agent_info")
-        agent_info_section.add(err.dumpinfo())
-        agent_info_section.write()
+    await process_resources_async(mgmt_client, args, group_labels, monitored_resources)
 
-    all_sections = process_resources(mgmt_client, monitored_resources, group_labels, args)
+    await process_old_metrics(mgmt_client, monitored_resources, args)
+
+    all_sections = process_resources(mgmt_client, monitored_resources, args)
     async for resource_sections in all_sections:
         for section in resource_sections:
             section.write()

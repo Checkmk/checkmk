@@ -757,17 +757,21 @@ function dragElement(event: DragEvent) {
 
 // Graph update
 
+function computeGraphOptions(): GraphOptions {
+  return {
+    unit: convertFromUnit(dataUnit.value),
+    explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
+    omit_zero_metrics: dataOmitZeroMetrics.value
+  }
+}
+
 const graphContainerRef = ref()
 
 onMounted(() => {
   props.graph_renderer(
     props.graph_id,
     graphLines.value,
-    {
-      unit: convertFromUnit(dataUnit.value),
-      explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
-      omit_zero_metrics: dataOmitZeroMetrics.value
-    },
+    computeGraphOptions(),
     graphContainerRef.value
   )
 })
@@ -784,11 +788,7 @@ watch(
     props.graph_renderer(
       props.graph_id,
       graphLines.value,
-      {
-        unit: convertFromUnit(dataUnit.value),
-        explicit_vertical_range: convertFromExplicitVerticalRange(dataExplicitVerticalRange.value),
-        omit_zero_metrics: dataOmitZeroMetrics.value
-      },
+      computeGraphOptions(),
       graphContainerRef.value
     )
   },

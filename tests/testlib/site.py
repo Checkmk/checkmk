@@ -694,7 +694,7 @@ class Site:
         """run the "omd" command with the given mode and arguments.
 
         Args:
-            mode (str): The mode of the "omd" command. e.g. "status", "restart", "start", "stop"
+            mode (str): The mode of the "omd" command. e.g. "status", "restart", "start", "stop", "reload"
             args (str): More (optional) arguments to the "omd" command.
             check (bool, optional): Run cmd as check/strict - raise Exception on rc!=0.
 
@@ -1253,6 +1253,29 @@ class Site:
 
     def is_running(self) -> bool:
         return self.omd("status").returncode == 0
+
+    def get_omd_service_names_and_statuses(site: Site, service: str = "") -> dict[str, int]:
+        """
+        Return all service names and their statuses for the given site.
+        """
+        # Get all service names from 'omd status --bare <service>' command.
+        cmd = ["status", "--bare"]
+        if service:
+            cmd.append(service)
+        p = site.omd(*cmd, check=False)
+        services = {}
+        for line in p.stdout.strip().splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[0] != "OVERALL":
+                try:
+                    services[parts[0]] = int(parts[1])
+                except ValueError as e:
+                    raise ValueError(
+                        f"Expected status code to be an integer for service {parts[0]}"
+                    ) from e
+        if not services:
+            raise RuntimeError("No services found in 'omd status --bare' output:\n" + p.stdout)
+        return services
 
     def is_stopped(self) -> bool:
         # 0 -> fully running

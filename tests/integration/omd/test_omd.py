@@ -98,6 +98,51 @@ def test_run_omd_status_bare(site: Site) -> None:
         raise excp
 
 
+def test_run_omd_reload(site: Site) -> None:
+    """
+    Test the 'omd reload' command for the current site.
+    Verifies that the 'omd reload' command reloads all services of the current site.
+    """
+
+    expected: list[str] = list(set(site.get_omd_service_names_and_statuses().keys()))
+
+    p = site.omd("reload", check=False)
+    assert p.returncode == 0, "The 'omd reload' should return status 0"
+    assert p.stderr == "", "No error output expected from 'omd reload'"
+    assert site.is_running(), "Site should be running after 'omd reload'"
+
+    # Get list of service names which were stopped or reloaded during the 'omd reload' command.
+    reloaded = [l for l in p.stdout.splitlines() if l.startswith(("Stopping", "Reloading"))]
+    assert len(reloaded) > 0, "Expected at least one service reload or stop during reload"
+
+    # Check that all expected services are mentioned in the output of 'omd reload'
+    for service in reloaded:
+        expected = [s for s in expected if s not in service]
+    assert len(expected) == 0, (
+        "All services should be mentioned in the output of 'omd reload', "
+        "but the following service(s) were not found: %s" % ", ".join(expected)
+    )
+
+
+def test_run_omd_reload_service(site: Site) -> None:
+    """
+    Test the 'omd reload <service>' command for the current site.
+    Verifies that each service can be reloaded successfully.
+    """
+
+    expected: dict[str, int] = site.get_omd_service_names_and_statuses()
+
+    for service, status in expected.items():
+        p = site.omd("reload", service, check=False)
+        assert p.stderr == "", f"No error output expected from 'omd reload {service}'"
+        assert p.returncode == 0, f"The 'omd reload {service}' should return status 0"
+
+        after_reload = site.get_omd_service_names_and_statuses(service)
+        assert after_reload[service] == 0, (
+            f"The 'omd status {service}' should return status 0 after reload"
+        )
+
+
 def test_run_omd_backup_and_omd_restore(site: Site) -> None:
     """
     Test the 'omd backup' and 'omd restore' commands.
@@ -136,7 +181,6 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
 # omd start      [SERVICE]        Start services of one or all sites
 # omd stop       [SERVICE]        Stop services of site(s)
 # omd restart    [SERVICE]        Restart services of site(s)
-# omd reload     [SERVICE]        Reload services of site(s)
 # omd status     [SERVICE]        Show status of services of site(s)
 # omd config     ...              Show and set site configuration parameters
 # omd diff       ([RELBASE])      Shows differences compared to the original version files

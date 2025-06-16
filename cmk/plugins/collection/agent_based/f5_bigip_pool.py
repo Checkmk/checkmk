@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     SNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 from cmk.plugins.lib.f5_bigip import F5_BIGIP
@@ -115,21 +116,22 @@ def check_f5_bigip_pool(
     if not pool:
         return
 
-    result = set(
-        check_levels(
+    if pool.active_members == pool.defined_members:
+        yield Result(state=State.OK, summary=f"Members up: {pool.active_members}")
+    else:
+        yield from check_levels(
             value=pool.active_members,
             levels_lower=("fixed", params["levels_lower"]),
             render_func=str,
-            label=f"Members ({pool.defined_members}) up",
+            label="Members up",
         )
-    ).pop()
-    yield result
+
+    yield Result(state=State.OK, summary=f"Members total: {pool.defined_members}")
 
     if pool.active_members < pool.defined_members:
         down_list = f5_bigip_pool_get_down_members(pool.members_info)
         if down_list:
-            assert isinstance(result, Result)
-            yield Result(state=result.state, notice=f"down/disabled nodes: {down_list}")
+            yield Result(state=State.OK, summary=f"down/disabled nodes: {down_list}")
 
 
 snmp_section_f5_bigip_pool = SNMPSection(

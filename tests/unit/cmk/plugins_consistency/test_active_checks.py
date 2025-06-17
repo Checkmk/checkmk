@@ -13,6 +13,7 @@ from cmk.ccc import version as checkmk_version
 
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.elasticsearch.active_check import check_elasticsearch_query
+from cmk.plugins.sftp.active_check import check_sftp
 from cmk.server_side_calls_backend import load_active_checks
 
 TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
@@ -34,7 +35,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mailboxes": None,  # TODO
     "mkevents": None,  # TODO
     "notify_count": None,  # TODO
-    "sftp": None,  # TODO
+    "sftp": check_sftp,
     "smtp": None,  # TODO
     "sql": None,  # TODO
     "ssh": None,  # TODO
@@ -69,7 +70,7 @@ def test_all_checks_versions() -> None:
     assert not version_mismatch
 
 
-def test_special_agents_location() -> None:
+def test_active_checks_location() -> None:
     """Make sure all executables are where we expect them"""
     # TODO: Turn into this:
     # assert all(
@@ -94,7 +95,6 @@ def test_special_agents_location() -> None:
         "ldap",
         "mkevents",
         "notify_count",
-        "sftp",
         "smtp",
         "sql",
         "ssh",

@@ -2086,6 +2086,7 @@ class SiteFactory:
         ),
         min_version: CMKVersion = get_min_version(),
         conflict_mode: str = "keepold",
+        start_site_after_update: bool = True,
     ) -> Site:
         base_package = test_site.package
         self._package = target_package
@@ -2131,14 +2132,15 @@ class SiteFactory:
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
 
-        # start the site after manually installing it
-        site.start()
+        if start_site_after_update:
+            # start the site after manually installing it
+            site.start()
 
-        assert site.is_running(), "Site is not running!"
-        logger.info("Site %s is up", site.id)
+            assert site.is_running(), "Site is not running!"
+            logger.info("Site %s is up", site.id)
 
-        restart_httpd()
-        site.openapi.changes.activate_and_wait_for_completion()
+            restart_httpd()
+            site.openapi.changes.activate_and_wait_for_completion()
 
         return site
 

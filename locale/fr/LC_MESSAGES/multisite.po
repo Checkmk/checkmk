@@ -50841,11 +50841,6 @@ msgstr ""
 "Proto \"https\"</tt> dans la configuration de votre système Apache pour "
 "indiquer à l'interface graphique Checkmk la configuration SSL."
 
-msgid ""
-"Please note that your site will be deleted when the trial period ends or "
-"when you activate a license. "
-msgstr ""
-
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -87623,6 +87618,9 @@ msgstr "Vos extensions ont une taille de %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Votre nom de fichier ne doit pas se terminer par une barre oblique."
+
+msgid "Your free trial is active! "
+msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."

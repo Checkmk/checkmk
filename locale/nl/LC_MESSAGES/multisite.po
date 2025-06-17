@@ -50415,11 +50415,6 @@ msgstr ""
 "systeem Apache configuratie moet instellen om de Checkmk GUI te vertellen "
 "over de SSL setup."
 
-msgid ""
-"Please note that your site will be deleted when the trial period ends or "
-"when you activate a license. "
-msgstr ""
-
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -86752,6 +86747,9 @@ msgstr "Uw extensies hebben een grootte van %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Uw bestandsnaam mag niet eindigen met een schuine streep."
+
+msgid "Your free trial is active! "
+msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."

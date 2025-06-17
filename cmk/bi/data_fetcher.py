@@ -9,7 +9,14 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import (
+    LivestatusColumn,
+    LivestatusOutputFormat,
+    LivestatusResponse,
+    Query,
+    QuerySpecification,
+    SiteId,
+)
 
 from cmk.utils.hostaddress import HostName
 
@@ -99,8 +106,8 @@ class BIStructureFetcher:
         # Most of the columns are available via the hosts table
         # Querying the service tables provides additional info like service_tags/service_labels
         # If something happens (reload config) between the host and service query, we simply ignore it
-        host_query = "GET hosts\nColumns: %s\nCache: reload\n" % " ".join(
-            self._host_structure_columns()
+        host_query = Query(
+            QuerySpecification("hosts", self._host_structure_columns(), "Cache: reload")
         )
         host_rows = self.sites_callback.query(
             host_query,
@@ -109,8 +116,8 @@ class BIStructureFetcher:
             fetch_full_data=True,
         )
 
-        service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
-            self._service_structure_columns()
+        service_query = Query(
+            QuerySpecification("services", self._service_structure_columns(), "Cache: reload")
         )
         host_service_lookup: dict[HostName, list] = {}
         for row in self.sites_callback.query(
@@ -337,7 +344,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         if len(req_hosts) > 1:
             host_filter += f"Or: {len(req_hosts)}\n"
 
-        query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
+        query = Query(QuerySpecification("hosts", self.get_status_columns(), host_filter))
         return self.create_bi_status_data(
             self.sites_callback.query(
                 query, list(req_sites), output_format=LivestatusOutputFormat.JSON
@@ -356,10 +363,10 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         bygroup: bool,
         required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
     ) -> BIStatusInfo:
+        table = "hostsbygroup" if bygroup else "hosts"
+
         columns = self.get_status_columns() + host_columns
-        query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
-        query += "Columns: " + (" ".join(columns)) + "\n"
-        query += filter_header
+        query = Query(QuerySpecification(table, columns, filter_header))
         data = self.sites_callback.query(query, only_sites)
 
         # Now determine aggregation branches which include the site hosts
@@ -390,9 +397,8 @@ class BIStatusFetcher(ABCBIStatusFetcher):
                 host_filter += "Filter: name = %s\n" % host
             if len(remaining_hosts) > 1:
                 host_filter += "Or: %d\n" % len(remaining_hosts)
-            query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
-            query += "Columns: " + (" ".join(columns)) + "\n"
-            query += host_filter
+
+            query = Query(QuerySpecification(table, columns, host_filter))
             data.extend(self.sites_callback.query(query, list(remaining_sites)))
 
         return self.create_bi_status_data(data, extra_columns=host_columns)

@@ -13,6 +13,8 @@ from typing import TypedDict
 import psutil
 from redis import Redis
 
+from livestatus import Query, QuerySpecification
+
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -302,7 +304,9 @@ class BICompiler:
         }
 
         # The get status message also checks if the remote site is still alive
-        result = self._sites_callback.query("GET status\nColumns: program_start\nCache: reload")
+        result = self._sites_callback.query(
+            Query(QuerySpecification("status", ["program_start"], "Cache: reload"))
+        )
         program_start_times = {row[0]: int(row[1]) for row in result}
 
         for site_id, site_is_online in self._sites_callback.all_sites_with_id_and_online():

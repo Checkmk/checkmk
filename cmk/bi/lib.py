@@ -13,7 +13,7 @@ from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeV
 
 from marshmallow import Schema as marshmallow_Schema
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusOutputFormat, LivestatusResponse, Query, SiteId
 
 from cmk.ccc import plugin_registry
 
@@ -83,7 +83,7 @@ class NodeResultBundle(NamedTuple):
 class QueryCallback(Protocol):
     def __call__(
         self,
-        query: str,
+        query: Query,
         only_sites: list[SiteId] | None = None,
         output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
         fetch_full_data: bool = False,

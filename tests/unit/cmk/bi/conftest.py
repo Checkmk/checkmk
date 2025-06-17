@@ -10,7 +10,7 @@ import pytest
 
 from tests.unit.cmk.bi.bi_mocks import MockBIAggregationPack
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import LivestatusOutputFormat, LivestatusResponse, Query, SiteId
 
 from cmk.bi.data_fetcher import BIStatusFetcher, BIStructureFetcher
 from cmk.bi.filesystem import BIFileSystem
@@ -31,7 +31,7 @@ def fs(tmp_path: Path) -> BIFileSystem:
 
 
 def mock_query_callback(
-    query: str,
+    query: Query,
     only_sites: list[SiteId] | None = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,

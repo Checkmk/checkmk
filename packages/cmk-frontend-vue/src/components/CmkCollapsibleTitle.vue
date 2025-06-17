@@ -24,7 +24,7 @@ defineEmits(['toggleOpen'])
 </script>
 
 <template>
-  <button class="cmk-collapsible-title" @click="$emit('toggleOpen')">
+  <button class="cmk-collapsible-title" @click.prevent="$emit('toggleOpen')">
     <span
       class="cmk-collapsible-title__chevron"
       :class="`cmk-collapsible-title__chevron--${open ? 'bottom' : 'right'}`"

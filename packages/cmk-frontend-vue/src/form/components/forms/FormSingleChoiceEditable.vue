@@ -136,13 +136,13 @@ const { ErrorBoundary, error } = useErrorBoundary()
       <FormButton
         v-show="selectedObjectId !== null"
         icon="edit"
-        @click="openSlideIn(selectedObjectId)"
+        @click.prevent="openSlideIn(selectedObjectId)"
       >
         {{ spec.i18n.edit }}
       </FormButton>
       <CmkSpace v-show="selectedObjectId !== null" />
     </template>
-    <FormButton @click="openSlideIn(null)">
+    <FormButton @click.prevent="openSlideIn(null)">
       {{ spec.i18n.create }}
     </FormButton>
 

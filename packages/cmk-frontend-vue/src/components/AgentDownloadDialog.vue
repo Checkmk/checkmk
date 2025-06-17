@@ -41,7 +41,7 @@ const tooltipOpen = ref(true)
           :width="6"
           :height="6"
         />
-        <button class="tooltip-close" @click="tooltipOpen = false">×</button>
+        <button class="tooltip-close" @click.prevent="tooltipOpen = false">×</button>
         <CmkDialog
           :title="dialog_title"
           :message="dialog_message"

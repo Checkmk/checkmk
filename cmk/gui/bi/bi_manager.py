@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, Query, SiteId
+from livestatus import LivestatusResponse, Query, SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -44,10 +44,9 @@ def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
 def bi_livestatus_query(
     query: Query,
     only_sites: list[SiteId] | None = None,
-    output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,
 ) -> LivestatusResponse:
-    with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
+    with sites.only_sites(only_sites), sites.prepend_site():
         try:
             auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"
             sites.live().set_auth_domain(auth_domain)

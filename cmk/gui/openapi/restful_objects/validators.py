@@ -314,9 +314,11 @@ class RequestDataValidator:
         validation_error: pydantic.ValidationError,
     ) -> NoReturn:
         """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
+        # the context may contain the actual exception, which is usually not serializable
+        # the msg contains the exception details, which is hopefully enough to understand the issue
         errors = {
             RequestDataValidator._format_pydantic_location(error["loc"]): error
-            for error in validation_error.errors()
+            for error in validation_error.errors(include_context=False)
         }
         raise RestAPIRequestDataValidationException(
             title=http.client.responses[400],

@@ -18,7 +18,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
+from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, InvalidValue, VisitorOptions
 from ._utils import (
     base_i18n_form_spec,
     create_validation_error,
@@ -179,16 +179,20 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
         for topic_name, topic in self.form_spec.elements.items():
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
+                element_visitor = get_visitor(element.parameter_form, self.options)
                 if element_name not in topic_values:
                     if element.required:
+                        default_value_visitor = get_visitor(
+                            element.parameter_form, VisitorOptions(DataOrigin.DISK)
+                        )
+                        _spec, element_default_value = default_value_visitor.to_vue(DEFAULT_VALUE)
                         return create_validation_error(
-                            raw_value,
+                            element_default_value,
                             f"Required element {element_name} missing in topic {topic_name}",
                             location=[topic_name, element_name],
                         )
                     continue
 
-                element_visitor = get_visitor(element.parameter_form, self.options)
                 for validation in element_visitor.validate(topic_values[element_name]):
                     element_validations.append(
                         shared_type_defs.ValidationMessage(

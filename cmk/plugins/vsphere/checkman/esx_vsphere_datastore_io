@@ -5,6 +5,10 @@ license: GPLv2
 distribution: check_mk
 description:
  This check measures the number of written and read bytes and the latency for each datastore on an ESX host system.
+ It is important to note that ESX host systems do not always report valid data for the metrics mentioned above.
+ Metrics with currently invalid data are omitted until the ESX host system starts to report valid data.
+ If there is no valid data for any metric, the service will go stale.
+
  You can configure levels for the read, write and latency values.
 
 item:

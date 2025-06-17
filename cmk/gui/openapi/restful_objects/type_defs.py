@@ -47,6 +47,7 @@ DomainType = Literal[
     "metric",
     "notification_rule",
     "notification_parameter",
+    "otel_collector_config",
     "password",
     "parent_scan",
     "rule",

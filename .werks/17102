@@ -1,0 +1,60 @@
+Title: Agent Signature Key Expiry and Notifications
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1750167033
+Edition: cee
+Level: 1
+Version: 2.2.0p44
+
+<h3>Background</h3>
+
+
+Since Checkmk 2.2.0 agent signature keys in the Agent Bakery have inadvertently been created with a shortened lifetime of only two years.
+As a result, keys created shortly after the release of Checkmk 2.2.0 are about to expire in the next months.
+
+Since <a href="https://checkmk.com/werk/15064">Werk #15064</a>, imminent key expiry caused the <em>Check_MK Agent</em> service to go to a <code>WARN</code> / <code>CRIT</code> state, which could cause an overwhelming amount of email notifications for users with a large number of hosts.
+
+<h3>Changes</h3>
+
+
+To avoid sending too many notifications, the <em>Check_MK Agent</em> service will no longer change its state to indicate imminent certificate expiry.
+If a key is fully expired, the service will assume a <code>WARN</code> state.
+
+Instead of individual notifications per affected host administrators will now receive a user notification within the Checkmk GUI when a key is about to expire in 90 days.
+When a key is about to expire in 20 days all users will also receive a warning via email.
+
+The expiry date of your agent signature keys is now displayed in the list of keys in the Agent Bakery.
+
+In addition to that, newly generated signature keys have a lifetime of 10 years.
+
+This Werk is marked incompatible because we recommend that you review your agent signature keys and renew them if they are about to expire.
+
+<h3>Replacing keys before they expire</h3>
+
+
+You can replace signature keys while they are still valid via the agent bakery as follows:
+
+<ol>
+<li>Create a new signature key</li>
+<li>Select that new key under <em>Signature keys the agent will accept</em> in the <em>Agent updater</em> rule (you can uncheck the old key)</li>
+<li>Bake and sign agents <strong>with the old key</strong></li>
+<li>Verify that all agents have been updated</li>
+</ol>
+
+
+Sign future updates with the new key.
+
+<h3>Replacing expired keys</h3>
+
+
+If the signature key has expired the agent will no longer accept any updates signed with that key.
+If no other, still valid keys are available, you will need to force the update on each host manually:
+
+<ol>
+<li>Create a new signature key</li>
+<li>Select that new key under <em>Signature keys the agent will accept</em> in the <em>Agent updater</em> rule (you can uncheck the old key)</li>
+<li>Bake and sign agents <strong>with the new key</strong></li>
+<li>Log into the host and force the update without checking signatures using <code>cmk-update-agent --skip-signatures</code></li>
+<li>Use <code>cmk-update-agent show-config</code> to verify that the update succeeded</li>
+</ol>

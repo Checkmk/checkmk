@@ -13,7 +13,7 @@ from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, Typed
 
 from marshmallow import Schema as marshmallow_Schema
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, Query
+from livestatus import LivestatusResponse, Query
 
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
@@ -86,7 +86,6 @@ class QueryCallback(Protocol):
         self,
         query: Query,
         only_sites: list[SiteId] | None = None,
-        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
         fetch_full_data: bool = False,
     ) -> LivestatusResponse: ...
 

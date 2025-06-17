@@ -9,13 +9,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from livestatus import (
-    LivestatusColumn,
-    LivestatusOutputFormat,
-    LivestatusResponse,
-    Query,
-    QuerySpecification,
-)
+from livestatus import LivestatusColumn, LivestatusResponse, Query, QuerySpecification
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -112,7 +106,6 @@ class BIStructureFetcher:
         host_rows = self.sites_callback.query(
             host_query,
             list(only_sites.keys()),
-            output_format=LivestatusOutputFormat.JSON,
             fetch_full_data=True,
         )
 
@@ -123,7 +116,6 @@ class BIStructureFetcher:
         for row in self.sites_callback.query(
             service_query,
             list(only_sites.keys()),
-            output_format=LivestatusOutputFormat.JSON,
             fetch_full_data=True,
         ):
             description, tags, labels = row[2:]
@@ -345,11 +337,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             host_filter += f"Or: {len(req_hosts)}\n"
 
         query = Query(QuerySpecification("hosts", self.get_status_columns(), host_filter))
-        return self.create_bi_status_data(
-            self.sites_callback.query(
-                query, list(req_sites), output_format=LivestatusOutputFormat.JSON
-            )
-        )
+        return self.create_bi_status_data(self.sites_callback.query(query, list(req_sites)))
 
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns

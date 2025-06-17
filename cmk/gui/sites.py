@@ -11,7 +11,6 @@ from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
     ConnectedSite,
-    LivestatusOutputFormat,
     lqencode,
     MKLivestatusQueryError,
     MultiSiteConnection,
@@ -530,16 +529,6 @@ def only_sites(sites: None | list[SiteId] | SiteId) -> Iterator[None]:
         yield
     finally:
         live().set_only_sites(None)
-
-
-@contextmanager
-def output_format(use_format: LivestatusOutputFormat) -> Iterator[None]:
-    previous_format = live().get_output_format()
-    live().set_output_format(use_format)
-    try:
-        yield
-    finally:
-        live().set_output_format(previous_format)
 
 
 @contextmanager

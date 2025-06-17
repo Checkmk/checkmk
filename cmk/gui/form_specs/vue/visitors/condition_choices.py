@@ -145,7 +145,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fro
         return _parse_disk(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Conditions | InvalidValue[_FrontendModel]
+        self, parsed_value: Conditions | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.ConditionChoices, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -183,9 +183,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions, _Fro
             value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: Conditions
-    ) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(self, parsed_value: Conditions) -> list[shared_type_defs.ValidationMessage]:
         vue_value = (
             [_condition_to_value(name, c) for name, c in parsed_value.items()]
             if not isinstance(parsed_value, InvalidValue)

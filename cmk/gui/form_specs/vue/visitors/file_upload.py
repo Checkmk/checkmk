@@ -157,7 +157,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadM
         return base64.b64decode(Encrypter.decrypt(base64.b64decode(content)))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: FileUploadModel | InvalidValue[FileUploadModel]
+        self, parsed_value: FileUploadModel | InvalidValue[FileUploadModel]
     ) -> tuple[VueComponents.FileUpload, FileUploadModel]:
         title, help_text = get_title_and_help(self.form_spec)
         help_text = (

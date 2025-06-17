@@ -15,9 +15,9 @@ from ._type_defs import InvalidValue
 
 class CommentTextAreaVisitor(MultilineTextVisitor):
     def _to_vue(
-        self, raw_value: object, parsed_value: str | InvalidValue[str]
+        self, parsed_value: str | InvalidValue[str]
     ) -> tuple[shared_type_defs.CommentTextArea, str]:
-        multiline_text, value = super()._to_vue(raw_value, parsed_value)
+        multiline_text, value = super()._to_vue(parsed_value)
         multiline_text_args = asdict(multiline_text)
         multiline_text_args["type"] = "comment_text_area"
         return (

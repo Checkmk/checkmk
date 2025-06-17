@@ -31,15 +31,11 @@ class TransformVisitor(
             return InvalidValue(reason=_("Unable to transform value"), fallback_value=raw_value)
 
     def _to_vue(
-        self,
-        raw_value: object,
-        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[VueComponents.FormSpec, object]:
         return get_visitor(self.form_spec.wrapped_form_spec, self.options).to_vue(parsed_value)
 
-    def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel
-    ) -> list[VueComponents.ValidationMessage]:
+    def _validate(self, parsed_value: _ParsedValueModel) -> list[VueComponents.ValidationMessage]:
         return get_visitor(self.form_spec.wrapped_form_spec, self.options).validate(parsed_value)
 
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:

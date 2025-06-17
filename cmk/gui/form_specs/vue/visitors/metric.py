@@ -17,10 +17,8 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 class MetricVisitor(StringVisitor):
-    def _to_vue(
-        self, raw_value: object, parsed_value: str | InvalidValue[str]
-    ) -> tuple[shared_type_defs.Metric, str]:
-        string_autocompleter, value = super()._to_vue(raw_value, parsed_value)
+    def _to_vue(self, parsed_value: str | InvalidValue[str]) -> tuple[shared_type_defs.Metric, str]:
+        string_autocompleter, value = super()._to_vue(parsed_value)
         string_autocompleter_args = asdict(string_autocompleter)
         del string_autocompleter_args["type"]
         return (
@@ -52,9 +50,7 @@ class MetricVisitor(StringVisitor):
             value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: str
-    ) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(self, parsed_value: str) -> list[shared_type_defs.ValidationMessage]:
         metrics = [name for (name, _) in registered_metric_ids_and_titles(metrics_from_api)]
         if parsed_value not in metrics:
             return create_validation_error(parsed_value, _("Unknown metric"))

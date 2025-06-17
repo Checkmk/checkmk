@@ -90,7 +90,7 @@ class MultipleChoiceVisitor(
                 assert_never(other)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[
         shared_type_defs.DualListChoice | shared_type_defs.CheckboxListChoice, _FrontendModel
     ]:

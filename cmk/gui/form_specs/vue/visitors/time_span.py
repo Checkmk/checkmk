@@ -106,7 +106,7 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendMode
         return [IsFloat()] + list(custom_validate())
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.TimeSpan, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (

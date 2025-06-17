@@ -39,7 +39,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
         return localize(Label(" Activate this option"))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.OptionalChoice, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -70,7 +70,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel
+        self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         validation_errors: list[shared_type_defs.ValidationMessage] = []
         if parsed_value is not None:

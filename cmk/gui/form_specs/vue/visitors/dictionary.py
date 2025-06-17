@@ -82,9 +82,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
             )
 
     def _to_vue(
-        self,
-        raw_value: object,
-        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.Dictionary, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
@@ -145,7 +143,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel
+        self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}
         element_validations = []

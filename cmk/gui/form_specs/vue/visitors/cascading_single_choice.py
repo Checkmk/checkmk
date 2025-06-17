@@ -54,7 +54,7 @@ class CascadingSingleChoiceVisitor(
         return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.CascadingSingleChoice, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
@@ -95,7 +95,7 @@ class CascadingSingleChoiceVisitor(
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel
+        self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         selected_name, selected_value = parsed_value
 

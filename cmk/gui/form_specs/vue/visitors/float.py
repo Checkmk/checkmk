@@ -52,7 +52,7 @@ class FloatVisitor(FormSpecVisitor[Float, _ParsedValueModel, _FrontendModel]):
         return [IsFloat()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.Float, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         input_hint = compute_input_hint(self.form_spec.prefill)

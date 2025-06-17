@@ -61,7 +61,7 @@ class SingleChoiceEditableVisitor(
         return validators + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.SingleChoiceEditable, _FrontendModel]:
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (

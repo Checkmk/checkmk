@@ -38,7 +38,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
     @final
     def to_vue(self, raw_value: object) -> tuple[shared_type_defs.FormSpec, object]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
-        return self._to_vue(raw_value, parsed_value)
+        return self._to_vue(parsed_value)
 
     @final
     def validate(self, raw_value: object) -> list[shared_type_defs.ValidationMessage]:
@@ -48,7 +48,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
             return create_validation_error(parsed_value.fallback_value, parsed_value.reason)
 
         # Stage 2: Check if the value of the nested elements report problems
-        if nested_validations := self._validate(raw_value, parsed_value):
+        if nested_validations := self._validate(parsed_value):
             # NOTE: During the migration phase, the Stage1 errors from
             #       non-migrated visitors may appear here -> OK
             return nested_validations
@@ -56,7 +56,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
         # Stage 3: Execute validators of the element itself
         return compute_validation_errors(
             self._validators(),
-            self._to_vue(raw_value, parsed_value)[1],
+            self._to_vue(parsed_value)[1],
             self._to_disk(parsed_value),
         )
 
@@ -96,16 +96,14 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
 
     @abc.abstractmethod
     def _to_vue(
-        self, raw_value: object, parsed_value: ParsedValueModel | InvalidValue[FrontendModel]
+        self, parsed_value: ParsedValueModel | InvalidValue[FrontendModel]
     ) -> tuple[shared_type_defs.FormSpec, FrontendModel]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     def _validators(self) -> Sequence[Callable[[DiskModel], object]]:
         return compute_validators(self.form_spec)
 
-    def _validate(
-        self, raw_value: object, parsed_value: ParsedValueModel
-    ) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(self, parsed_value: ParsedValueModel) -> list[shared_type_defs.ValidationMessage]:
         """Validates the nested values of this form spec"""
         return []
 

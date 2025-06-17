@@ -108,7 +108,7 @@ class SingleChoiceVisitor(
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -165,7 +165,7 @@ class SingleChoiceVisitor(
         return message_localized
 
     def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel
+        self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         if not self._is_valid_choice(parsed_value):
             # The value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)

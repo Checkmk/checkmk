@@ -31,9 +31,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
         return raw_value
 
     def _to_vue(
-        self,
-        raw_value: object,
-        parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel],
+        self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.Labels, Mapping[str, str]]:
         title, help_text = get_title_and_help(self.form_spec)
 

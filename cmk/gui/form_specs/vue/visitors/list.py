@@ -38,9 +38,7 @@ class ListVisitor(
         return raw_value
 
     def _to_vue(
-        self,
-        raw_value: object,
-        parsed_value: _ParsedValueModel[T] | InvalidValue[_FrontendModel[T]],
+        self, parsed_value: _ParsedValueModel[T] | InvalidValue[_FrontendModel[T]]
     ) -> tuple[shared_type_defs.List, _FrontendModel[T]]:
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value
@@ -79,7 +77,7 @@ class ListVisitor(
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: _ParsedValueModel[T]
+        self, parsed_value: _ParsedValueModel[T]
     ) -> list[shared_type_defs.ValidationMessage]:
         element_validations: list[shared_type_defs.ValidationMessage] = []
         element_visitor = get_visitor(self.form_spec.element_template, self.options)

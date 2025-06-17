@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-12 17:00+0000\n"
+"PO-Revision-Date: 2025-06-16 18:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5049,13 +5049,11 @@ msgstr "Agenten-basierte Plugins (veraltet, ignoriert)"
 msgid "Agent certificates"
 msgstr "Agenten-Zertifikate"
 
-#, fuzzy
 msgid "Agent connection successful"
-msgstr "Agent %s erfolgreich"
+msgstr "Agentenverbindung erfolgreich"
 
-#, fuzzy
 msgid "Agent connection test running"
-msgstr "Verbindungstimeout festlegen"
+msgstr "Test der Agentenverbindung läuft"
 
 msgid "Agent controller"
 msgstr "Agent Controller"
@@ -7610,13 +7608,6 @@ msgstr "Automatisch erweiterbar"
 
 msgid "Automated environment setup"
 msgstr "Automatisierter Setup der Umgebung"
-
-msgid ""
-"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-"Automatisierter Setup der Umgebung (⚠ <b>nicht verfügbar</b>, da Robotmk-"
-"Kern-MKP installiert wurde)"
 
 msgid "Automatic"
 msgstr "Automatisch"
@@ -12196,9 +12187,8 @@ msgstr "Checkmk-Agent"
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk-Agent / API-Integrationen"
 
-#, fuzzy
 msgid "Checkmk agent connection failed"
-msgstr "Verbindungsmodus des Checkmk-Agenten"
+msgstr "Checkmk-Agentenverbindung fehlgeschlagen"
 
 msgid "Checkmk agent connection mode"
 msgstr "Verbindungsmodus des Checkmk-Agenten"
@@ -18550,9 +18540,8 @@ msgstr "OpenHardwareMonitor (kopflos) verteilen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Podman plug-in"
-msgstr "Mailman-Plugin verteilen"
+msgstr "Podman-Plugin verteilen"
 
 msgid "Deploy Robotmk scheduler and agent plug-in"
 msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
@@ -22723,9 +22712,8 @@ msgstr "Einträge pro Zeile"
 msgid "Entry"
 msgstr "Eintrag"
 
-#, fuzzy
 msgid "Environment Sensors"
-msgstr "Umgebungsvariablen"
+msgstr "Umgebungssensoren"
 
 msgid "Environment Variables"
 msgstr "Umgebungsvariablen"
@@ -24298,7 +24286,7 @@ msgid "Failover State: ACTIVE_FAILED"
 msgstr "Failover Zustand: ACTIVE_FAILED"
 
 msgid "Failover State: FAILBACK_PENDING"
-msgstr "Failover Zustand: FALLBACK_PENDING"
+msgstr "Failover Zustand: FAILBACK_PENDING"
 
 msgid "Failover State: FAILED_OVER"
 msgstr "Failover Zustand: FAILED_OVER"
@@ -24435,9 +24423,8 @@ msgstr "Der Fetch hatte schlechte Header"
 msgid "Fetch head"
 msgstr "Anfrage head"
 
-#, fuzzy
 msgid "Fetch information about..."
-msgstr "Informationen sammeln über..."
+msgstr "Informationen einsammeln über..."
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Abrufintervalle für SNMP-Sektionen"
@@ -33794,9 +33781,8 @@ msgstr "Schnittstelle"
 msgid "Interface %s"
 msgstr "Schnittstelle %s"
 
-#, fuzzy
 msgid "Interface FCP"
-msgstr "Schnittstelle"
+msgstr "FCP Schnittstelle"
 
 msgid "Interface groups"
 msgstr "Schnittstellengruppen"
@@ -39663,9 +39649,6 @@ msgstr "Mitglieder-Attribute"
 msgid "Members"
 msgstr "Mitglieder"
 
-msgid "Members "
-msgstr "Mitglieder "
-
 msgid "Members of contact groups"
 msgstr "Mitglieder der Kontaktgruppe"
 
@@ -40018,9 +40001,8 @@ msgstr "Metrik-Levels"
 msgid "Metric name"
 msgstr "Metrik-Name"
 
-#, fuzzy
 msgid "Metric name (exact match)"
-msgstr "Host-Name (exakter Match)"
+msgstr "Metrikname (exakter Match)"
 
 #, python-format
 msgid ""
@@ -41594,9 +41576,6 @@ msgstr "Name des Betriebssystembenutzers"
 msgid "Name of plug-in"
 msgstr "Name des Plugins"
 
-msgid "Name of pool"
-msgstr "Name des Pools"
-
 msgid "Name of service"
 msgstr "Name des Service"
 
@@ -41979,9 +41958,8 @@ msgstr "Netzwerk-E/A"
 msgid "Network Inbound"
 msgstr "Netzwerk eingehend"
 
-#, fuzzy
 msgid "Network Interfaces"
-msgstr "Netzwerkschnittstellen 1"
+msgstr "Netzwerkschnittstellen"
 
 msgid "Network Interfaces 1"
 msgstr "Netzwerkschnittstellen 1"
@@ -42001,9 +41979,8 @@ msgstr "Netzwerk-Load Balancer"
 msgid "Network Outbound"
 msgstr "Netzwerk ausgehend"
 
-#, fuzzy
 msgid "Network Ports"
-msgstr "Netzwerk ausgehend"
+msgstr "Netzwerk-Ports"
 
 msgid "Network Throughput"
 msgstr "Netzwerk-Durchsatz"
@@ -43081,13 +43058,11 @@ msgstr "Nicht"
 msgid "Not Before: %s - Not After: %s"
 msgstr "Nicht vor: %s - nicht nach: %s"
 
-#, fuzzy
 msgid "Not Present"
-msgstr "nicht vorhanden"
+msgstr "Nicht vorhanden"
 
-#, fuzzy
 msgid "Not Started"
-msgstr "Nicht gestartet."
+msgstr "Nicht gestartet"
 
 msgid "Not a list"
 msgstr "Dies ist keine Liste"
@@ -44914,13 +44889,6 @@ msgid ""
 msgstr ""
 "Kümmern Sie sich nur um Hosts, die Piggyback-Daten von Hosts erhalten, deren "
 "Name einem dieser regulären Ausdrücke entspricht."
-
-msgid ""
-"Only core functionality of Robotmk is shown, because the Core MKP has been "
-"installed."
-msgstr ""
-"Nur die Kernfunktionen von Robotmk werden angezeigt, weil der MKP-Kern "
-"installiert ist."
 
 msgid "Only discover monitors in the following states"
 msgstr "Nur Monitore in den folgenden Zuständen erkennen"
@@ -47027,9 +46995,8 @@ msgstr "Paketierte Dateien"
 msgid "Packages"
 msgstr "Pakete"
 
-#, fuzzy
 msgid "Packed Conda environment"
-msgstr "Verwendung aus der Umgebung"
+msgstr "Paketierte Conda-Umgebung"
 
 msgid "Packet loss"
 msgstr "Paketverlust"
@@ -48547,11 +48514,10 @@ msgstr "Bitte geben Sie einen Kommentar ein, nach dem Sie filtern möchten."
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
 
-#, fuzzy
 msgid "Please enter a hostname to test Checkmk agent connection"
 msgstr ""
-"Bitte legen Sie einen Host-Namen für die Neuklassifizierung des Host-"
-"Zustands fest"
+"Bitte geben Sie einen Host-Namen ein, um die Verbindung zum Checkmk-Agenten "
+"zu testen"
 
 msgid "Please enter a name."
 msgstr "Bitte geben Sie einen Namen ein."
@@ -49190,9 +49156,8 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "Podman Monitoring"
-msgstr "Monitoring"
+msgstr "Podman-Monitoring"
 
 msgid "Pods"
 msgstr "Pods"
@@ -49351,7 +49316,6 @@ msgstr "Leistung"
 msgid "Power Presence Sensors"
 msgstr "Sensoren für die Netzteilverfügbarkeit"
 
-#, fuzzy
 msgid "Power Supplies"
 msgstr "Netzteile"
 
@@ -50212,9 +50176,8 @@ msgstr "QoS: Qualität der Servicekonfiguration"
 msgid "Qps"
 msgstr "Qps"
 
-#, fuzzy
 msgid "Qtree Quotas"
-msgstr "Freie Bänder"
+msgstr ""
 
 msgid "Quantum Storage Status"
 msgstr "Quantum Speicher Zustand"
@@ -50419,22 +50382,14 @@ msgstr "benutzter RAM"
 msgid "RAM used (averaged)"
 msgstr "benutzter RAM (gemittelt)"
 
-#, fuzzy
 msgid "RCC (deprecated)"
-msgstr "Veraltet"
+msgstr "RCC (veraltet)"
 
 msgid "RCC Remote server address"
 msgstr "Adresse des RCC Remote-Servers"
 
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
-
-msgid ""
-"RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-"RCC-Profilkonfiguration (⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP "
-"installiert wurde)"
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
@@ -50741,9 +50696,8 @@ msgstr "Lesen"
 msgid "Read / Write queue length"
 msgstr "Lese/Schreib-Warteschlange"
 
-#, fuzzy
 msgid "Read Checkmk user guide"
-msgstr "Das offizielle Checkmk-Handbuch"
+msgstr "Lesen Sie das Checkmk-Handbuch"
 
 msgid "Read IO operations per second"
 msgstr "Lesende E/A-Operationen pro Sekunde"
@@ -51489,13 +51443,11 @@ msgstr "Relative Levels"
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen."
 
-#, fuzzy
 msgid "Relative manifest path"
-msgstr "Relativer Zeitpunkt des Alerts"
+msgstr "Relativer Pfad zum Manifest"
 
-#, fuzzy
 msgid "Relative path to Robotmk environment manifest"
-msgstr "Relativer Pfad zu robot.yaml"
+msgstr "Relativer Pfad zum Manifest der Robotmk-Umgebung"
 
 msgid "Relative path to robot.yaml"
 msgstr "Relativer Pfad zu robot.yaml"
@@ -53005,9 +52957,6 @@ msgstr ""
 "Robotmk (als Teil des Checkmk Synthetic Monitorings) integriert die "
 "Ergebnisse von Robot Framework-Tests als Checkmk-Services."
 
-msgid "Robotmk Enterprise features are hidden."
-msgstr "Robotmk Enterprise Funktionen sind verborgen."
-
 msgid "Robotmk KPI discovery"
 msgstr "Robotmk KPI Erkennung"
 
@@ -54020,9 +53969,8 @@ msgstr "STunnel-Zustand"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
-#, fuzzy
 msgid "SVM Status"
-msgstr "Zustand"
+msgstr "SVM-Zustand"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -57844,9 +57792,8 @@ msgstr "Behandlung von Rauch"
 msgid "Smoke monitoring"
 msgstr "Rauch-Monitoring"
 
-#, fuzzy
 msgid "SnapVaults"
-msgstr "Tresore"
+msgstr "SnapVaults"
 
 msgid "Snapshot build currently in progress"
 msgstr "Erstellen der Sicherung läuft gerade"
@@ -61607,9 +61554,8 @@ msgstr "Temperatur Lane 8"
 msgid "Temperature Lane 9"
 msgstr "Temperatur Lane 9"
 
-#, fuzzy
 msgid "Temperature Sensors"
-msgstr "Temperatur-Alert"
+msgstr "Temperatursensoren"
 
 msgid "Temperature Trend Analysis"
 msgstr "Temperatur-Trendanalyse"
@@ -61683,9 +61629,8 @@ msgstr "Knapp"
 msgid "Test"
 msgstr "Test"
 
-#, fuzzy
 msgid "Test Checkmk agent connection"
-msgstr "Verbindungsmodus des Checkmk-Agenten"
+msgstr "Test der Verbindung zum Checkmk-Agenten"
 
 msgid "Test a self defined notification against your ruleset."
 msgstr ""
@@ -64589,9 +64534,8 @@ msgstr ""
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
 
-#, fuzzy
 msgid "The list needs to have at least one element"
-msgstr "Der Cluster muss zumindest einen Knoten haben"
+msgstr "Die Liste muss mindestens ein Element enthalten"
 
 msgid ""
 "The livestatus connection to this site is configured not to be encrypted."
@@ -64888,9 +64832,8 @@ msgstr ""
 "des resultierenden Dienstes angezeigt. Der Metrikname wird als Bezeichnung "
 "genommen, wenn nichts angegeben wurde."
 
-#, fuzzy
 msgid "The metric name can't be empty"
-msgstr "Benutzername darf nicht leer sein"
+msgstr "Der Metrikname darf nicht leer sein"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -86698,8 +86641,38 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
-msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
-msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+#~ msgid ""
+#~ "Automated environment setup (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr ""
+#~ "Automatisierter Setup der Umgebung (⚠ <b>nicht verfügbar</b>, da Robotmk-"
+#~ "Kern-MKP installiert wurde)"
+
+#~ msgid "Members "
+#~ msgstr "Mitglieder "
+
+#~ msgid "Name of pool"
+#~ msgstr "Name des Pools"
+
+#~ msgid ""
+#~ "Only core functionality of Robotmk is shown, because the Core MKP has "
+#~ "been installed."
+#~ msgstr ""
+#~ "Nur die Kernfunktionen von Robotmk werden angezeigt, weil der MKP-Kern "
+#~ "installiert ist."
+
+#~ msgid ""
+#~ "RCC profile configuration (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr ""
+#~ "RCC-Profilkonfiguration (⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP "
+#~ "installiert wurde)"
+
+#~ msgid "Robotmk Enterprise features are hidden."
+#~ msgstr "Robotmk Enterprise Funktionen sind verborgen."
+
+#~ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
+#~ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #, python-format
 #~ msgid "%s of %s"

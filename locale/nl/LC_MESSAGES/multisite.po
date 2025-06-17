@@ -7814,12 +7814,6 @@ msgstr "Auto-uitbreidbaar"
 msgid "Automated environment setup"
 msgstr "Cloud-gebaseerde omgevingen"
 
-#, fuzzy
-msgid ""
-"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr "Gebruik SSL voor de verbinding."
-
 msgid "Automatic"
 msgstr "Automatisch"
 
@@ -41222,9 +41216,6 @@ msgstr "Lidmaatschapskenmerk"
 msgid "Members"
 msgstr "Leden"
 
-msgid "Members "
-msgstr "Leden "
-
 msgid "Members of contact groups"
 msgstr "Leden van contactgroepen"
 
@@ -43275,9 +43266,6 @@ msgstr "Naam van de gebruiker van het besturingssysteem"
 #, fuzzy
 msgid "Name of plug-in"
 msgstr "Naam van plugin"
-
-msgid "Name of pool"
-msgstr "Naam van het zwembad"
 
 msgid "Name of service"
 msgstr "Naam van de dienst"
@@ -46727,11 +46715,6 @@ msgid ""
 msgstr ""
 "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
 "overeenkomt met een van deze reguliere expressies."
-
-msgid ""
-"Only core functionality of Robotmk is shown, because the Core MKP has been "
-"installed."
-msgstr ""
 
 msgid "Only discover monitors in the following states"
 msgstr "Ontdek alleen monitors in de volgende staten"
@@ -52629,12 +52612,6 @@ msgstr "Aangepast URL-serveradres"
 msgid "RCC profile configuration"
 msgstr "Configuratie op afstand"
 
-#, fuzzy
-msgid ""
-"RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr "Gebruik SSL voor de verbinding."
-
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
 "specific RCC environment, for example proxy settings."
@@ -55304,10 +55281,6 @@ msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
-
-#, fuzzy
-msgid "Robotmk Enterprise features are hidden."
-msgstr "Ondernemingsfunctie"
 
 #, fuzzy
 msgid "Robotmk KPI discovery"
@@ -89936,8 +89909,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
-msgstr "Gebruik SSL voor de verbinding."
+#~ msgid ""
+#~ "Automated environment setup (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Members "
+#~ msgstr "Leden "
+
+#~ msgid "Name of pool"
+#~ msgstr "Naam van het zwembad"
+
+#, fuzzy
+#~ msgid ""
+#~ "RCC profile configuration (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Robotmk Enterprise features are hidden."
+#~ msgstr "Ondernemingsfunctie"
+
+#, fuzzy
+#~ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
+#~ msgstr "Gebruik SSL voor de verbinding."
 
 #, python-format
 #~ msgid "%s of %s"

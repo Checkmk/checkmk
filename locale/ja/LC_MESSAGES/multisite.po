@@ -7413,14 +7413,6 @@ msgstr "自動拡張可能"
 msgid "Automated environment setup"
 msgstr "自動環境セットアップ（RCC経由）"
 
-#, fuzzy
-msgid ""
-"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-"自動環境設定 (RCC 経由、Robotmk Core MKP がインストールされているため⚠<b>利用"
-"不可</b> )"
-
 msgid "Automatic"
 msgstr "自動"
 
@@ -39405,9 +39397,6 @@ msgstr "メンバー属性"
 msgid "Members"
 msgstr "メンバー"
 
-msgid "Members "
-msgstr "メンバー "
-
 msgid "Members of contact groups"
 msgstr "連絡先グループのメンバー"
 
@@ -41392,9 +41381,6 @@ msgstr "オペレーティングシステムユーザーの名前"
 
 msgid "Name of plug-in"
 msgstr "プラグイン名"
-
-msgid "Name of pool"
-msgstr "プールの名前"
 
 msgid "Name of service"
 msgstr "サービス名"
@@ -44713,12 +44699,6 @@ msgid ""
 msgstr ""
 "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
 "ストのみを対象とします。"
-
-msgid ""
-"Only core functionality of Robotmk is shown, because the Core MKP has been "
-"installed."
-msgstr ""
-"コアMKPがインストールされているため、Robotmkのコア機能のみが表示されます。"
 
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
@@ -50355,13 +50335,6 @@ msgid "RCC profile configuration"
 msgstr "RCCプロファイル設定"
 
 msgid ""
-"RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-"RCC プロファイル設定 (Robotmk Core MKP がインストールされているため ⚠<b>利用"
-"不可</b>)"
-
-msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
 "specific RCC environment, for example proxy settings."
 msgstr ""
@@ -52954,9 +52927,6 @@ msgid ""
 msgstr ""
 "Robotmkは（Checkmk Synthetic Monitoringの一部として）Robot Frameworkのテスト"
 "結果をCheckmkサービスとして統合します。"
-
-msgid "Robotmk Enterprise features are hidden."
-msgstr "Robotmk Enterpriseの機能は非表示です。"
 
 #, fuzzy
 msgid "Robotmk KPI discovery"
@@ -85669,8 +85639,38 @@ msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
 
-msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
-msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+#, fuzzy
+#~ msgid ""
+#~ "Automated environment setup (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr ""
+#~ "自動環境設定 (RCC 経由、Robotmk Core MKP がインストールされているため⚠<b>"
+#~ "利用不可</b> )"
+
+#~ msgid "Members "
+#~ msgstr "メンバー "
+
+#~ msgid "Name of pool"
+#~ msgstr "プールの名前"
+
+#~ msgid ""
+#~ "Only core functionality of Robotmk is shown, because the Core MKP has "
+#~ "been installed."
+#~ msgstr ""
+#~ "コアMKPがインストールされているため、Robotmkのコア機能のみが表示されます。"
+
+#~ msgid ""
+#~ "RCC profile configuration (⚠ <b>not available</b> because Robotmk Core "
+#~ "MKP has been installed)"
+#~ msgstr ""
+#~ "RCC プロファイル設定 (Robotmk Core MKP がインストールされているため ⚠<b>利"
+#~ "用不可</b>)"
+
+#~ msgid "Robotmk Enterprise features are hidden."
+#~ msgstr "Robotmk Enterpriseの機能は非表示です。"
+
+#~ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
+#~ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
 
 #, python-format
 #~ msgid "%s of %s"

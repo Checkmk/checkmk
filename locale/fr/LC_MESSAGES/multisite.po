@@ -7860,11 +7860,6 @@ msgstr "Auto-extensible"
 msgid "Automated environment setup"
 msgstr "Environnements basés sur les nuages"
 
-msgid ""
-"Automated environment setup (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-
 msgid "Automatic"
 msgstr "Automatique"
 
@@ -41531,9 +41526,6 @@ msgstr "Attribut de membre"
 msgid "Members"
 msgstr "Membres"
 
-msgid "Members "
-msgstr "Membres "
-
 msgid "Members of contact groups"
 msgstr "Membres des groupes de contact"
 
@@ -43605,9 +43597,6 @@ msgstr "Nom de l'utilisateur du système d'exploitation"
 #, fuzzy
 msgid "Name of plug-in"
 msgstr "Nom du plugin"
-
-msgid "Name of pool"
-msgstr "Nom de la piscine"
 
 msgid "Name of service"
 msgstr "Nom du service"
@@ -47078,11 +47067,6 @@ msgid ""
 msgstr ""
 "Ne se préoccupe que des hôtes qui reçoivent des données piggyback d'hôtes "
 "dont le nom correspond à l'une de ces expressions régulières."
-
-msgid ""
-"Only core functionality of Robotmk is shown, because the Core MKP has been "
-"installed."
-msgstr ""
 
 msgid "Only discover monitors in the following states"
 msgstr "Découvrez uniquement les moniteurs dans les états suivants"
@@ -53044,11 +53028,6 @@ msgid "RCC profile configuration"
 msgstr "Configuration à distance"
 
 msgid ""
-"RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
-"has been installed)"
-msgstr ""
-
-msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
 "specific RCC environment, for example proxy settings."
 msgstr ""
@@ -55757,9 +55736,6 @@ msgstr "Retirer l'emballage"
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
-msgstr ""
-
-msgid "Robotmk Enterprise features are hidden."
 msgstr ""
 
 #, fuzzy
@@ -90746,8 +90722,11 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
-msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
-msgstr ""
+#~ msgid "Members "
+#~ msgstr "Membres "
+
+#~ msgid "Name of pool"
+#~ msgstr "Nom de la piscine"
 
 #, python-format
 #~ msgid "%s of %s"

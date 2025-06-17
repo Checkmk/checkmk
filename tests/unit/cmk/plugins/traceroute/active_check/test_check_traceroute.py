@@ -7,7 +7,7 @@ from typing import Final
 
 import pytest
 
-from cmk.active_checks.check_traceroute import main, Route
+from cmk.plugins.traceroute.active_check.check_traceroute import main, Route
 
 
 class _MockRoutertracer:

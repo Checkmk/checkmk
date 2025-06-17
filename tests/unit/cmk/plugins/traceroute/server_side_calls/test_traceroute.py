@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.traceroute import active_check_traceroute
+from cmk.plugins.traceroute.server_side_calls.traceroute import active_check_traceroute
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 

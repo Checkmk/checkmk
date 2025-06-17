@@ -14,6 +14,7 @@ from cmk.ccc import version as checkmk_version
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.elasticsearch.active_check import check_elasticsearch_query
 from cmk.plugins.sftp.active_check import check_sftp
+from cmk.plugins.traceroute.active_check import check_traceroute
 from cmk.server_side_calls_backend import load_active_checks
 
 TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
@@ -40,7 +41,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "sql": None,  # TODO
     "ssh": None,  # TODO
     "tcp": None,  # TODO
-    "traceroute": None,  # TODO
+    "traceroute": check_traceroute,
     "uniserv": None,  # TODO
 }
 
@@ -99,7 +100,6 @@ def test_active_checks_location() -> None:
         "sql",
         "ssh",
         "tcp",
-        "traceroute",
         "uniserv",
     }
 

@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.active_checks.check_traceroute import main
+from cmk.plugins.traceroute.active_check.check_traceroute import main
 
 if __name__ == "__main__":
     sys.exit(main())

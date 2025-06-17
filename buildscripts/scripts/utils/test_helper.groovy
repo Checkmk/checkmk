@@ -4,12 +4,16 @@
 
 // execute tests, catch error and output log
 def execute_test(Map config = [:]) {
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def safe_branch_name = versioning.safe_branch_name();
+
     // update the default map content with the user provided config content
     // new key/value of provided map is automatically added to the defaultDict
     def defaultDict = [
         name: "",
         cmd: "",
         output_file: "",
+        container_name: "minimal-ubuntu-checkmk-${safe_branch_name}",
     ] << config;
 
     stage("Run ${defaultDict.name}") {
@@ -20,12 +24,24 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
-            sh("""
-                set -o pipefail
-                ${cmd}
-            """);
+
+            if (kubernetes_inherit_from == "UNSET") {
+                run_sh_command(cmd);
+            } else {
+                container(defaultDict.container_name) {
+                    println("'execute_test' is using k8s container '${defaultDict.container_name}'");
+                    run_sh_command(cmd);
+                }
+            }
         }
     }
+}
+
+def run_sh_command(cmd) {
+    sh("""
+        set -o pipefail
+        ${cmd}
+    """);
 }
 
 // create issues parser

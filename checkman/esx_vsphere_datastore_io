@@ -5,6 +5,12 @@ license: GPLv2
 distribution: check_mk
 description:
  This check measures the number of written and read bytes and the latency for each datastore on an ESX host system.
+ It is important to note that the devices sometimes report a value of **-1** for the read or write bytes, which indicates that the value is not available.
+ Because of this;
+  - The displayed metrics may be based on fewer than 3 values when some values are missing from the collection interval (e.g. [123, -1, 3])
+  - Metrics may not be displayed at all if no values are available for the specified time interval (e.g. [-1, -1, -1])
+  - If no metrics are available whatsoever, the check will go stale
+
  You can configure levels for the read, write and latency values.
 
 item:

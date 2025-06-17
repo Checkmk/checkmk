@@ -58,7 +58,7 @@ class SingleChoiceVisitor(
             ):
                 return InvalidValue(
                     reason=self._compute_invalid_value_display_message(raw_value),
-                    fallback_value=NO_SELECTION,
+                    fallback_value=prefill_default.fallback_value,
                 )
             raw_value = (
                 self.option_id(prefill_default)
@@ -97,6 +97,8 @@ class SingleChoiceVisitor(
                 and self.form_spec.invalid_element_validation.mode == InvalidElementMode.KEEP
             ):
                 # This is the only case where we might return `object` instead of T
+                # The value is tolerated -> not an InvalidValue
+                # Tolerated values might be written back to disk
                 return raw_value
             return InvalidValue(
                 reason=self._compute_invalid_value_display_message(raw_value),
@@ -119,9 +121,10 @@ class SingleChoiceVisitor(
         ]
 
         input_hint = compute_title_input_hint(self.form_spec.prefill)
+        # Check if the value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)
         if not self._is_valid_choice(parsed_value):
             parsed_value = InvalidValue(
-                reason=self._compute_invalid_value_display_message(raw_value),
+                reason=self._compute_invalid_value_display_message(parsed_value),
                 fallback_value=NO_SELECTION,
             )
             invalid_validation = self.form_spec.invalid_element_validation
@@ -137,7 +140,7 @@ class SingleChoiceVisitor(
                 elements=elements,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                frozen=self.form_spec.frozen and self._is_valid_choice(raw_value),
+                frozen=self.form_spec.frozen and self._is_valid_choice(parsed_value),
                 input_hint=input_hint or _("Please choose"),
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 i18n_base=base_i18n_form_spec(),
@@ -147,7 +150,7 @@ class SingleChoiceVisitor(
             else self.option_id(parsed_value),
         )
 
-    def _compute_invalid_value_display_message(self, raw_value: object) -> str:
+    def _compute_invalid_value_display_message(self, invalid_value: object) -> str:
         # Note: The InvalidElementValidator class offers an error_message and a "display" message
         #       On error, the "display" message is shown as dropdown choice input hint
         message = (
@@ -156,17 +159,18 @@ class SingleChoiceVisitor(
         ) or Message("Invalid choice %r")
         message_localized = localize(message)
         if "%s" in message_localized or "%r" in message_localized:
-            if raw_value == NO_SELECTION:
+            if invalid_value == NO_SELECTION:
                 return message_localized.replace("%s", "").replace("%r", "")
-            return message_localized % (raw_value,)
+            return message_localized % (invalid_value,)
         return message_localized
 
     def _validate(
         self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         if not self._is_valid_choice(parsed_value):
+            # The value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)
             return create_validation_error(
-                NO_SELECTION, self._compute_invalid_value_display_message(raw_value)
+                NO_SELECTION, self._compute_invalid_value_display_message(parsed_value)
             )
         return []
 

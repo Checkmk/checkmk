@@ -34,6 +34,7 @@ import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui import hooks, log
 from cmk.gui.config import (
+    default_single_site_configuration,
     load_config,
 )
 from cmk.gui.exceptions import MKUserError
@@ -501,7 +502,11 @@ class SiteManagement:
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
-        return SitesConfigFile().load_for_reading()
+        return (
+            sites_configurations
+            if (sites_configurations := SitesConfigFile().load_for_reading())
+            else default_single_site_configuration()
+        )
 
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, *, activate: bool, pprint_value: bool) -> None:

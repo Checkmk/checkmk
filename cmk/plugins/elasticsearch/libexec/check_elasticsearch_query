@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.active_checks.check_elasticsearch_query import main
+from cmk.plugins.elasticsearch.active_check.check_elasticsearch_query import main
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.active_checks.check_elasticsearch_query import (
+from cmk.plugins.elasticsearch.active_check.check_elasticsearch_query import (
     _check_levels,
     _check_lower_levels,
     _check_upper_levels,

@@ -16,6 +16,10 @@ from cmk.utils import password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# TODO: use these:
+__version__ = "2.5.0b1"
+USER_AGENT = f"checkmk-active-elasticsearch-query-{__version__}"
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(argv)

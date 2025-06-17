@@ -6,12 +6,15 @@ from pathlib import Path
 from shutil import copyfile
 from tempfile import mkdtemp
 
+import pytest
+
 from tests.integration.mkp import lib
 
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_site_aivalability_after_mkp_removal(site: Site, web: CMKWebSession) -> None:
     """
     Removing or disabling MKPs should not cause the entire UI to crash

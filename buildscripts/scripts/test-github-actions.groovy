@@ -4,18 +4,23 @@
 
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     dir("${checkout_dir}") {
         stage('Prepare checkout folder') {
             versioning.delete_non_cre_files();
         }
+
         targets = cmd_output(
             "grep target: .github/workflows/pr.yaml | cut -f2 -d':'"
-        ).split("\n").collect({target -> target.trim()})
+        ).split("\n").collect({target -> target.trim()});
+
+
         targets.each({target ->
-            stage(target) {
-                sh("make -C tests ${target}");
-            }
+            test_jenkins_helper.execute_test([
+                name: target,
+                cmd: "make -C tests ${target}",
+            ]);
         })
     }
 }

@@ -3,13 +3,13 @@
 /// file: test-python3-unit-all.groovy
 
 def main() {
-    stage('run test-unit-all') {
-        dir("${checkout_dir}") {
-            withCredentials([
-            ]) {
-                sh("make -C tests test-unit-all");
-            }
-        }
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+
+    dir("${checkout_dir}") {
+        test_jenkins_helper.execute_test([
+            name: "test-unit-all",
+            cmd: "make -C tests test-unit-all",
+        ]);
     }
 }
 

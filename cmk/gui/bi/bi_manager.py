@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse
+from livestatus import LivestatusOutputFormat, LivestatusResponse, Query
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
@@ -45,7 +45,7 @@ def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
 
 
 def bi_livestatus_query(
-    query: str,
+    query: Query,
     only_sites: list[SiteId] | None = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,

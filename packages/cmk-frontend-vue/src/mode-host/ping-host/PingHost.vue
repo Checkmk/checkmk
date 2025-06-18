@@ -8,10 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onMounted, ref, type Ref } from 'vue'
 import axios from 'axios'
 import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
-import { type ModeHostI18N } from 'cmk-shared-typing/typescript/mode_host'
+import { type I18NPingHost } from 'cmk-shared-typing/typescript/mode_host'
 
 const props = defineProps<{
-  i18n: ModeHostI18N
+  i18n: I18NPingHost
   formElement: HTMLFormElement
   ipAddressFamilySelectElement: HTMLSelectElement
   ipAddressFamilyInputElement: HTMLInputElement

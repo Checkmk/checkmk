@@ -5,13 +5,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type ModeHostFormKeys, type ModeHostI18N } from 'cmk-shared-typing/typescript/mode_host'
+import {
+  type ModeHostFormKeys,
+  type I18NPingHost,
+  type I18NAgentConnection
+} from 'cmk-shared-typing/typescript/mode_host'
 import PingHost from '@/mode-host/ping-host/PingHost.vue'
 import { onMounted, ref, type Ref } from 'vue'
+import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnectionTest.vue'
 
 const props = defineProps<{
-  i18n: ModeHostI18N
+  i18n_ping_host: I18NPingHost
+  i18n_agent_connection: I18NAgentConnection
   form_keys: ModeHostFormKeys
+  url: string
 }>()
 
 const formElement: Ref<HTMLFormElement | null> = ref(null)
@@ -23,6 +30,9 @@ const ipv6InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipAddressFamilySelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
+const tagAgentInputSelectElement: Ref<HTMLSelectElement | null> = ref(null)
+const tagAgentInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
+const tagAgentDefaultElement: Ref<HTMLDivElement | null> = ref(null)
 
 onMounted(() => {
   formElement.value = getElementBySelector(`form[id="form_${props.form_keys.form}"]`)
@@ -48,6 +58,15 @@ onMounted(() => {
   ipv6InputButtonElement.value = getElementBySelector(
     `input[id="${props.form_keys.cb_change}_${props.form_keys.ipv6_address}"]`
   )
+  tagAgentInputSelectElement.value = getElementBySelector(
+    `select[name="${props.form_keys.tag_agent}"]`
+  )
+  tagAgentInputButtonElement.value = getElementBySelector(
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.tag_agent}"]`
+  )
+  tagAgentDefaultElement.value = getElementBySelector(
+    `div[id="attr_default_${props.form_keys.tag_agent}"]`
+  )
 })
 
 function getElementBySelector<T>(selector: string): T {
@@ -72,7 +91,7 @@ function getElementBySelector<T>(selector: string): T {
       ipv4InputButtonElement &&
       ipv6InputButtonElement
     "
-    :i18n="i18n"
+    :i18n="i18n_ping_host"
     :form-element="formElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
     :ip-address-family-input-element="ipAddressFamilyInputElement"
@@ -83,6 +102,30 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
   ></PingHost>
+  <AgentConnectionTest
+    v-if="
+      formElement &&
+      hostnameInputElement &&
+      siteSelectElement &&
+      ipv4InputElement &&
+      ipv6InputElement &&
+      ipAddressFamilySelectElement &&
+      tagAgentInputSelectElement &&
+      tagAgentInputButtonElement &&
+      tagAgentDefaultElement
+    "
+    :form-element="formElement"
+    :change-tag-agent="tagAgentInputButtonElement"
+    :tag-agent="tagAgentInputSelectElement"
+    :tag-agent-default="tagAgentDefaultElement"
+    :hostname-input-element="hostnameInputElement"
+    :ipv4-input-element="ipv4InputElement"
+    :ipv6-input-element="ipv6InputElement"
+    :site-select-element="siteSelectElement"
+    :ip-address-family-select-element="ipAddressFamilySelectElement"
+    :i18n="i18n_agent_connection"
+    :url="url"
+  ></AgentConnectionTest>
 </template>
 
 <style scoped></style>

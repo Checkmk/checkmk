@@ -19,7 +19,6 @@ SOURCES_COMMON = [
     "setup.json",
     "user_frontend_config.json",
     "vue_formspec_components.json",
-    "agent_connection_test.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [

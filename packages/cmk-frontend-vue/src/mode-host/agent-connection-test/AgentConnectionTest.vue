@@ -10,41 +10,44 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import { type I18NAgentConnection } from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
 
 interface Props {
+  formElement: HTMLFormElement
+  changeTagAgent: HTMLInputElement
+  tagAgent: HTMLSelectElement
+  tagAgentDefault: HTMLDivElement
+  hostnameInputElement: HTMLInputElement
+  ipv4InputElement: HTMLInputElement
+  ipv6InputElement: HTMLInputElement
+  siteSelectElement: HTMLSelectElement
+  ipAddressFamilySelectElement: HTMLSelectElement
+  i18n: I18NAgentConnection
   url: string
-  dialog_message: string
-  slide_in_title: string
-  msg_start: string
-  msg_success: string
-  msg_loading: string
-  msg_missing: string
-  msg_error: string
-  input_hostname: string
-  input_ipv4: string
-  input_ipv6: string
 }
 
 const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
 const externalContent = ref('')
+const showTest = ref(true)
 
 const hostname = ref('')
 const ipV4 = ref('')
 const ipV6 = ref('')
+
 onMounted(() => {
-  // Add ipaddress validation
-  function watchInput(name: string, targetRef: Ref<string>) {
-    const input = document.querySelector(`[name="${name}"]`) as HTMLInputElement | null
-    if (!input) {
-      return
+  props.formElement.addEventListener('change', (e: Event) => {
+    switch (e.target) {
+      case props.formElement || props.changeTagAgent:
+        showTest.value =
+          props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
     }
-
-    targetRef.value = input.value
-
+  })
+  // Add ipaddress validation
+  function watchInput(input: HTMLInputElement, targetRef: Ref<string>) {
     input.addEventListener('input', () => {
       targetRef.value = input.value
       isLoading.value = false
@@ -53,9 +56,9 @@ onMounted(() => {
     })
   }
 
-  watchInput(props.input_hostname, hostname)
-  watchInput(props.input_ipv4, ipV4)
-  watchInput(props.input_ipv6, ipV6)
+  watchInput(props.hostnameInputElement, hostname)
+  watchInput(props.ipv4InputElement, ipV4)
+  watchInput(props.ipv6InputElement, ipV6)
 })
 
 const isLoading = ref(false)
@@ -64,18 +67,18 @@ const isError = ref(false)
 const errorDetails = ref('')
 const tooltipText = computed(() => {
   if (isLoading.value) {
-    return props.msg_loading
+    return props.i18n.msg_loading
   }
   if (isSuccess.value) {
-    return props.msg_success
+    return props.i18n.msg_success
   }
   if (isError.value) {
-    return props.msg_error
+    return props.i18n.msg_error
   }
   if (!hostname.value) {
-    return props.msg_missing
+    return props.i18n.msg_missing
   }
-  return props.msg_start
+  return props.i18n.msg_start
 })
 
 type AutomationResponse = {
@@ -92,45 +95,13 @@ type AjaxOptions = {
   method: 'POST' | 'GET'
 }
 
-// Add observer
-const getCurrentAddressFamily = () => {
-  const dropdownChoices = document.querySelector('#attr_entry_tag_address_family') as HTMLElement
-  if (dropdownChoices && dropdownChoices.offsetParent !== null) {
-    const selected = dropdownChoices.querySelector('select')
-    if (selected) {
-      return selected.value
-    }
-  }
-
-  const defaultChoice = document.querySelector('#attr_default_tag_address_family') as HTMLElement
-  if (defaultChoice && defaultChoice.offsetParent !== null) {
-    const defaultValue = defaultChoice.querySelector('b')
-    if (defaultValue) {
-      return defaultValue.textContent?.trim()
-    }
-  }
-
-  return 'ip-v4-only'
-}
-
 async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
   try {
-    const siteIdDefaultValue = document.getElementById('attr_default_site')
-    const siteIdDropdownValue = document.getElementById('attr_entry_site')
-    const siteId = ref('')
-    if (siteIdDefaultValue && siteIdDropdownValue) {
-      const siteIdDefaultValueVisibility = siteIdDefaultValue.getAttribute('style')
-      if (!siteIdDefaultValueVisibility) {
-        siteId.value = siteIdDefaultValue.textContent ?? ''
-      } else {
-        siteId.value = siteIdDropdownValue.textContent ?? ''
-      }
-    }
-
+    const siteId = ref(props.siteSelectElement.textContent ?? '')
     const postDataRaw = new URLSearchParams({
       host_name: hostname.value ?? '',
       ipaddress: ipV4.value ?? ipV6.value ?? '',
-      address_family: getCurrentAddressFamily() ?? 'ip-v4-only',
+      address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: '6556',
       timeout: '5',
       site_id: siteId.value.split(' - ')[0] ?? ''
@@ -179,56 +150,64 @@ function startAjax(): void {
     method: 'POST'
   })
 }
+const target = computed(() => {
+  if (props.changeTagAgent.checked) {
+    return props.tagAgent.parentNode as HTMLElement
+  }
+  return props.tagAgentDefault
+})
 </script>
 
 <template>
-  <CmkButton v-if="isLoading || isSuccess || isError" type="button">
-    <CmkIcon
-      v-if="isLoading && hostname !== ''"
-      name="load-graph"
-      size="xlarge"
+  <Teleport v-if="showTest" :to="target">
+    <CmkButton v-if="isLoading || isSuccess || isError" type="button">
+      <CmkIcon
+        v-if="isLoading && hostname !== ''"
+        name="load-graph"
+        size="xlarge"
+        :title="tooltipText"
+      />
+
+      <CmkIcon
+        v-else-if="isSuccess && hostname !== ''"
+        name="checkmark"
+        size="large"
+        :title="tooltipText"
+      />
+      <CmkIcon v-else-if="isError" name="cross" size="xlarge" :title="tooltipText" />
+    </CmkButton>
+
+    <CmkButton
+      v-if="!isLoading && !isSuccess && !isError"
+      type="button"
       :title="tooltipText"
-    />
+      :disabled="hostname === '' && ipV4 === '' && ipV6 === ''"
+      @click="startAjax"
+    >
+      <CmkIcon name="start" size="xlarge" :title="tooltipText" />
+    </CmkButton>
 
-    <CmkIcon
-      v-else-if="isSuccess && hostname !== ''"
-      name="checkmark"
-      size="large"
-      :title="tooltipText"
-    />
-    <CmkIcon v-else-if="isError" name="cross" size="xlarge" :title="tooltipText" />
-  </CmkButton>
-
-  <CmkButton
-    v-if="!isLoading && !isSuccess && !isError"
-    type="button"
-    :title="tooltipText"
-    :disabled="hostname === '' && ipV4 === '' && ipV6 === ''"
-    @click="startAjax"
-  >
-    <CmkIcon name="start" size="xlarge" :title="tooltipText" />
-  </CmkButton>
-
-  <CmkButton
-    v-if="errorDetails.includes('[Errno 111]')"
-    type="button"
-    :title="t('download-agent-title', 'Download agent')"
-    @click="slideInOpen = true"
-  >
-    {{ t('download-agent-button', 'Download Checkmk agent') }}
-  </CmkButton>
-  <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
-    {{ errorDetails }}
-  </span>
-  <SlideIn
-    :open="slideInOpen"
-    :header="{ title: slide_in_title, closeButton: true }"
-    @close="slideInOpen = false"
-  >
-    <div>{{ t('error', 'Error') }}: {{ errorDetails }}</div>
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <div v-html="externalContent"></div>
-  </SlideIn>
+    <CmkButton
+      v-if="errorDetails.includes('[Errno 111]')"
+      type="button"
+      :title="t('download-agent-title', 'Download agent')"
+      @click="slideInOpen = true"
+    >
+      {{ t('download-agent-button', 'Download Checkmk agent') }}
+    </CmkButton>
+    <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
+      {{ errorDetails }}
+    </span>
+    <SlideIn
+      :open="slideInOpen"
+      :header="{ title: i18n.slide_in_title, closeButton: true }"
+      @close="slideInOpen = false"
+    >
+      <div>{{ t('error', 'Error') }}: {{ errorDetails }}</div>
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div v-html="externalContent"></div>
+    </SlideIn>
+  </Teleport>
 </template>
 
 <style scoped>

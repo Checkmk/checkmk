@@ -4,11 +4,13 @@
     "title": "mode_host",
     "properties": {
         "form_keys": { "$ref": "#/$defs/mode_host_form_keys" },
-        "i18n": { "$ref": "#/$defs/mode_host_i18n" }
+        "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
+        "i18n_agent_connection": { "$ref": "#/$defs/i18n_agent_connection" },
+        "url": { "type": "string" }
     },
-    "required": ["form_keys", "i18n"],
+    "required": ["form_keys", "i18n_ping_host", "i18n_agent_connection", "url"],
     "$defs": {
-        "mode_host_i18n": {
+        "i18n_ping_host": {
             "type": "object",
             "properties": {
                 "loading": { "type": "string" },
@@ -25,6 +27,41 @@
                 "success_ip_pingable"
             ]
         },
+        "i18n_agent_connection": {
+            "type": "object",
+            "properties": {
+                "dialog_message": {
+                    "type": "string"
+                },
+                "slide_in_title": {
+                    "type": "string"
+                },
+                "msg_start": {
+                    "type": "string"
+                },
+                "msg_success": {
+                    "type": "string"
+                },
+                "msg_loading": {
+                    "type": "string"
+                },
+                "msg_missing": {
+                    "type": "string"
+                },
+                "msg_error": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dialog_message",
+                "slide_in_title",
+                "msg_start",
+                "msg_success",
+                "msg_loading",
+                "msg_missing",
+                "msg_error"
+            ]
+        },
         "mode_host_form_keys": {
             "type": "object",
             "properties": {
@@ -34,6 +71,7 @@
                 "ipv6_address": { "type": "string" },
                 "site": { "type": "string" },
                 "ip_address_family": { "type": "string" },
+                "tag_agent": { "type": "string" },
                 "cb_change": { "type": "string" }
             },
             "required": [
@@ -43,6 +81,7 @@
                 "ipv6_address",
                 "site",
                 "ip_address_family",
+                "tag_agent",
                 "cb_change"
             ]
         }

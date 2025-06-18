@@ -74,7 +74,12 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-from cmk.shared_typing.mode_host import ModeHost, ModeHostFormKeys, ModeHostI18n
+from cmk.shared_typing.mode_host import (
+    I18nAgentConnection,
+    I18nPingHost,
+    ModeHost,
+    ModeHostFormKeys,
+)
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
@@ -295,7 +300,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             component_name="cmk-mode-host",
             data=asdict(
                 ModeHost(
-                    i18n=ModeHostI18n(
+                    i18n_ping_host=I18nPingHost(
                         loading=_("Loading"),
                         error_host_not_dns_resolvable=_(
                             "Cannot resolve DNS. Enter a DNS-resolvable host name, an IP address "
@@ -308,6 +313,20 @@ class ABCHostMode(WatoMode, abc.ABC):
                         ),
                         success_ip_pingable=_("Successfully pinged IP address"),
                     ),
+                    i18n_agent_connection=I18nAgentConnection(
+                        dialog_message=_(
+                            "Already installed the agent? If so, please check your firewall settings"
+                        ),
+                        slide_in_title=_("Checkmk agent connection failed"),
+                        msg_start=_("Test Checkmk agent connection"),
+                        msg_success=_("Agent connection successful"),
+                        msg_loading=_("Agent connection test running"),
+                        msg_missing=_("Please enter a hostname to test Checkmk agent connection"),
+                        msg_error=_(
+                            "Connection failed, enter new hostname to check again "
+                            "or download and install the Checkmk agent."
+                        ),
+                    ),
                     form_keys=ModeHostFormKeys(
                         form=form_name,
                         host_name=host_name_attribute_key,
@@ -315,10 +334,12 @@ class ABCHostMode(WatoMode, abc.ABC):
                         ipv6_address=HostAttributeIPv6Address().name(),
                         site=HostAttributeSite().name(),
                         ip_address_family="tag_address_family",
+                        tag_agent="tag_agent",
                         cb_change="cb_host_change"
                         if not self._is_cluster()
                         else "cb_cluster_change",
                     ),
+                    url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),
                 )
             ),
         )

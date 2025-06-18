@@ -27,10 +27,12 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 
 <template>
   <CmkAlertBox v-if="props.error.value !== null" variant="error">
+    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
     <p>An unexpected error occurred:</p>
     <CmkIndent>
       <CmkHtml :html="props.error.value.message" />
     </CmkIndent>
+    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
     <p>Refresh the page to try again. If the problem persists, reach out to the Checkmk support.</p>
     <CmkCollapsibleTitle
       :title="'Details'"

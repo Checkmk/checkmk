@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts"></script>
 
 <template>
+  <!-- eslint-disable vue/no-bare-strings-in-template -->
   <h1>Welcome to Checkmk!</h1>
   <p>
     This is just a placeholder for the Welcome page. It will be used to guide you through the first
@@ -16,6 +17,7 @@ conditions defined in the file COPYING, which is part of this source code packag
     In case you want to change the start URL to the main dashboard, you can do so under User/Edit
     profile/Start URL.
   </p>
+  <!-- eslint-enable vue/no-bare-strings-in-template -->
 </template>
 
 <style scoped></style>

@@ -75,7 +75,62 @@ export default [
       curly: 'error',
       'prefer-template': 'error',
       'vue/prefer-template': 'error',
-      'vue/prop-name-casing': 'off'
+      'vue/prop-name-casing': 'off',
+      'vue/no-bare-strings-in-template': [
+        'error',
+        {
+          allowlist: [
+            'x',
+            '(',
+            ')',
+            ',',
+            '.',
+            '&',
+            '+',
+            '-',
+            '=',
+            '*',
+            '/',
+            '#',
+            '%',
+            '!',
+            '?',
+            ':',
+            '[',
+            ']',
+            '{',
+            '}',
+            '<',
+            '>',
+            '\u00b7',
+            '\u2022',
+            '\u2010',
+            '\u2013',
+            '\u2014',
+            '\u2212',
+            '|'
+          ],
+          attributes: {
+            '/.+/': [
+              'title',
+              'aria-label',
+              'aria-placeholder',
+              'aria-roledescription',
+              'aria-valuetext'
+            ],
+            input: ['placeholder'],
+            img: ['alt']
+          },
+          directives: ['v-text']
+        }
+      ]
+    }
+  },
+
+  {
+    files: ['src/components/_demo/**/*'],
+    rules: {
+      'vue/no-bare-strings-in-template': 'off'
     }
   }
 ]

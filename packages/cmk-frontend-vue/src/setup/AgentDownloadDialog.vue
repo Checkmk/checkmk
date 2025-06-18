@@ -41,6 +41,7 @@ const tooltipOpen = ref(true)
           :width="6"
           :height="6"
         />
+        <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
         <button class="tooltip-close" @click.prevent="tooltipOpen = false">×</button>
         <CmkDialog
           :title="dialog_title"

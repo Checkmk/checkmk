@@ -241,6 +241,7 @@ defineExpose({
     @keydown.up.prevent="selectPreviousElement"
   >
     <span :class="{ hidden: !showFilter, input: true }">
+      <!-- eslint-disable vue/no-bare-strings-in-template -->
       <input
         ref="suggestionInputRef"
         v-model="filterString"
@@ -249,6 +250,7 @@ defineExpose({
         @blur="inputLostFocus"
         @keydown.escape.prevent="emit('blur')"
       />
+      <!-- eslint-enable vue/no-bare-strings-in-template -->
     </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>

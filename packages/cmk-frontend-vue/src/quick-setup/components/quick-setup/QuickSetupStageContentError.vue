@@ -28,6 +28,7 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 <template>
   <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
     <CmkHtml :html="error.message" />
+    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
     <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
     <div v-else>
       <pre>{{ error.details }}</pre>

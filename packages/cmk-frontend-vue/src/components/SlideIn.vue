@@ -58,6 +58,7 @@ watch(
         <DialogTitle v-if="header" class="slide-in__title">
           <CmkLabel variant="title">{{ header.title }}</CmkLabel>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
+            <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
             <CmkIcon aria-label="Close" name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>

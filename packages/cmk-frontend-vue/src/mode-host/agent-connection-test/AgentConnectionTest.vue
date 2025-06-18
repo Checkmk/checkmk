@@ -199,7 +199,6 @@ function startAjax(): void {
   <CmkButton
     v-if="!isLoading && !isSuccess && !isError"
     type="button"
-    class="huhu"
     :title="tooltipText"
     :disabled="hostname === '' && ipV4 === '' && ipV6 === ''"
     @click="startAjax"
@@ -207,6 +206,7 @@ function startAjax(): void {
     <CmkIcon name="start" size="xlarge" :title="tooltipText" />
   </CmkButton>
 
+  <!-- eslint-disable vue/no-bare-strings-in-template -->
   <CmkButton
     v-if="errorDetails.includes('[Errno 111]')"
     type="button"
@@ -215,6 +215,7 @@ function startAjax(): void {
   >
     Download Checkmk agent
   </CmkButton>
+  <!-- eslint-enable vue/no-bare-strings-in-template -->
   <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
     {{ errorDetails }}
   </span>
@@ -223,6 +224,7 @@ function startAjax(): void {
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
+    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
     <div>Error: {{ errorDetails }}</div>
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-html="externalContent"></div>

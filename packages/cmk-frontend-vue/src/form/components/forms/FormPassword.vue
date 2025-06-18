@@ -96,12 +96,14 @@ const passwordStoreOptions = computed(() => {
   />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
+    <!-- eslint-disable vue/no-bare-strings-in-template -->
     <input
       v-model="explicitPassword"
       aria-label="explicit password"
       type="password"
       :placeholder="'******'"
     />
+    <!-- eslint-enable vue/no-bare-strings-in-template -->
   </template>
   <template v-if="data[0] === 'stored_password'">
     <template v-if="props.spec.password_store_choices.length === 0">

@@ -45,6 +45,7 @@ const { buttonPadding = '16px' } = defineProps<{
             There are NO automatic tests for the dragging behavior, see comment
             in tests. If you change anything here, test manually!
           -->
+          <!-- eslint-disable vue/no-bare-strings-in-template -->
           <div
             class="cmk-list-item__drag-button"
             aria-label="Drag to reorder"
@@ -54,16 +55,19 @@ const { buttonPadding = '16px' } = defineProps<{
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
           >
+            <!-- eslint-enable vue/no-bare-strings-in-template -->
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </div>
           <CmkSpace direction="horizontal" size="small" />
         </template>
+        <!-- eslint-disable vue/no-bare-strings-in-template -->
         <CmkIconButton
           name="close"
           size="small"
           aria-label="Remove element"
           @click.prevent="() => removeElement()"
         />
+        <!-- eslint-enable vue/no-bare-strings-in-template -->
       </div>
     </div>
     <div class="cmk-list-item__content">

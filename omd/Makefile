@@ -33,7 +33,6 @@ PACKAGES := \
     check-cert \
     omd \
     pnp4nagios \
-    heirloom-mailx \
     robotmk \
     xmlsec1 \
 

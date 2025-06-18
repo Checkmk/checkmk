@@ -35,6 +35,7 @@ create_venv(
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/erlang",
+               "//omd/packages/heirloom-mailx",
                "//omd/packages/heirloom-pkgtools",
                "//omd/packages/lcab",
                "//omd/packages/maintenance",

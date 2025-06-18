@@ -20,5 +20,18 @@ make(
         "all",
         "install",
     ],
+)
+
+filegroup(
+    name = "mailx",
+    srcs = [":heirloom-mailx"],
+    output_group = "mailx",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "share",
+    srcs = [":heirloom-mailx"],
+    output_group = "mailx.1",
     visibility = ["//visibility:public"],
 )

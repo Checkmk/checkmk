@@ -142,7 +142,29 @@ def test_check_prism_vm_stats_cpu(
                 ),
                 Metric("mem_total", 17175668233.0),
             ],
-            id="If the disk capacity are inside the filesystem levels, the check result is OK.",
+            id="standard",
+        ),
+        pytest.param(
+            {"levels_upper": (80.0, 90.0)},
+            {
+                "memoryCapacityInBytes": 68719476736,
+                "powerState": "on",
+                "stats": {
+                    "guest.memory_usage_bytes": "-1",
+                    "guest.memory_usage_ppm": "320210",
+                },
+            },
+            [
+                Result(state=State.OK, summary="Usage: 32.02% - 20.5 GiB of 64.0 GiB"),
+                Metric(
+                    "mem_used",
+                    22004663645.63456,
+                    levels=(54975581388.8, 61847529062.4),
+                    boundaries=(0.0, 68719476736.0),
+                ),
+                Metric("mem_total", 68719476736.0),
+            ],
+            id="mem_usage_bytes=minus_one",
         ),
     ],
 )

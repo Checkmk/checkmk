@@ -14368,6 +14368,9 @@ msgstr ""
 "moyenne précédente tout en appliquant un facteur pondéré à chacune d'entre "
 "elles."
 
+msgid "Compute host name from left part of the service.instance.id attribute."
+msgstr ""
+
 msgid "Compute range accoring to displayed data"
 msgstr "Calculer la portée en fonction des données affichées"
 
@@ -17011,6 +17014,10 @@ msgstr "Hôte personnalisé"
 msgid "Custom host attributes"
 msgstr "Attributs d'hôte personnalisés"
 
+#, fuzzy
+msgid "Custom host name computation"
+msgstr "Calcul du nom d'hôte"
+
 msgid "Custom host name prefix"
 msgstr "Préfixe de nom d'hôte personnalisé"
 
@@ -18433,8 +18440,9 @@ msgstr ""
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
-"datapoint names</a>. This needs to be an exact match to the metric name in "
-"the service."
+"datapoint attributes</a> and the <a href='https://checkmk.com/werk/"
+"18108'>Open Telemetry metric unit</a>. This needs to be an exact match to "
+"the metric name in the service."
 msgstr ""
 
 msgid ""
@@ -30819,6 +30827,10 @@ msgid "Host name or alias (regex)"
 msgstr "Nom d'hôte ou alias"
 
 #, fuzzy
+msgid "Host name rules"
+msgstr "Nom d'hôte : %s"
+
+#, fuzzy
 msgid "Host name template"
 msgstr "Modèle de nom d'hôte"
 
@@ -32541,7 +32553,15 @@ msgstr ""
 
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
-"into syslog format and forwarded to the Event Console."
+"into syslog format and forwarded to the Event Console.<br>The Event Console "
+"is optimized for handling critical events, not for processing high-frequency "
+"log data. When forwarding OpenTelemetry logs, carefully consider:"
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
+"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"and reduce the usefulness of the Event Console. We recommend filtering and "
+"preprocessing your logs to only forward meaningful events. For more "
+"information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
+"ec.html#tuning'>Event Console user guide.</a>"
 msgstr ""
 
 #, fuzzy

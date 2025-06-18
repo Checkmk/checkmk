@@ -13665,6 +13665,9 @@ msgstr ""
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
+msgid "Compute host name from left part of the service.instance.id attribute."
+msgstr ""
+
 msgid "Compute range accoring to displayed data"
 msgstr "表示されたデータに応じて範囲を計算します"
 
@@ -16168,6 +16171,10 @@ msgstr "カスタムホスト"
 msgid "Custom host attributes"
 msgstr "カスタムホスト属性"
 
+#, fuzzy
+msgid "Custom host name computation"
+msgstr "ホスト名算出"
+
 msgid "Custom host name prefix"
 msgstr "カスタムホスト名プレフィックス"
 
@@ -17530,8 +17537,9 @@ msgstr ""
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
-"datapoint names</a>. This needs to be an exact match to the metric name in "
-"the service."
+"datapoint attributes</a> and the <a href='https://checkmk.com/werk/"
+"18108'>Open Telemetry metric unit</a>. This needs to be an exact match to "
+"the metric name in the service."
 msgstr ""
 
 msgid ""
@@ -29310,6 +29318,10 @@ msgstr "ホスト名/IPアドレス"
 msgid "Host name or alias (regex)"
 msgstr "ホスト名またはエイリアス(正規表現)"
 
+#, fuzzy
+msgid "Host name rules"
+msgstr "ホスト名: %s"
+
 msgid "Host name template"
 msgstr "ホスト名のテンプレート"
 
@@ -30935,7 +30947,15 @@ msgstr ""
 
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
-"into syslog format and forwarded to the Event Console."
+"into syslog format and forwarded to the Event Console.<br>The Event Console "
+"is optimized for handling critical events, not for processing high-frequency "
+"log data. When forwarding OpenTelemetry logs, carefully consider:"
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
+"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"and reduce the usefulness of the Event Console. We recommend filtering and "
+"preprocessing your logs to only forward meaningful events. For more "
+"information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
+"ec.html#tuning'>Event Console user guide.</a>"
 msgstr ""
 
 msgid "If this error persists, please contact the Checkmk support team."

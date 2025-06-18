@@ -14353,6 +14353,9 @@ msgstr ""
 "\"Aplicar niveles de un solo núcleo\" o \"Gráficos para usos promediados de "
 "un solo núcleo\" está activada."
 
+msgid "Compute host name from left part of the service.instance.id attribute."
+msgstr ""
+
 msgid "Compute range accoring to displayed data"
 msgstr "Calcula el rango de acuerdo a los datos mostrados"
 
@@ -16976,6 +16979,10 @@ msgstr "Anfitrión personalizado"
 msgid "Custom host attributes"
 msgstr "Atributos personalizados del host"
 
+#, fuzzy
+msgid "Custom host name computation"
+msgstr "Cálculo del nombre de host"
+
 msgid "Custom host name prefix"
 msgstr "Prefijo de nombre de host personalizado"
 
@@ -18402,8 +18409,9 @@ msgstr ""
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
-"datapoint names</a>. This needs to be an exact match to the metric name in "
-"the service."
+"datapoint attributes</a> and the <a href='https://checkmk.com/werk/"
+"18108'>Open Telemetry metric unit</a>. This needs to be an exact match to "
+"the metric name in the service."
 msgstr ""
 
 msgid ""
@@ -30770,6 +30778,10 @@ msgid "Host name or alias (regex)"
 msgstr "Nombre de host o alias"
 
 #, fuzzy
+msgid "Host name rules"
+msgstr "Nombre de host: %s"
+
+#, fuzzy
 msgid "Host name template"
 msgstr "Plantilla de nombre de host"
 
@@ -32494,7 +32506,15 @@ msgstr ""
 
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
-"into syslog format and forwarded to the Event Console."
+"into syslog format and forwarded to the Event Console.<br>The Event Console "
+"is optimized for handling critical events, not for processing high-frequency "
+"log data. When forwarding OpenTelemetry logs, carefully consider:"
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
+"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"and reduce the usefulness of the Event Console. We recommend filtering and "
+"preprocessing your logs to only forward meaningful events. For more "
+"information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
+"ec.html#tuning'>Event Console user guide.</a>"
 msgstr ""
 
 #, fuzzy

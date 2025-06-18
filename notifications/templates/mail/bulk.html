@@ -42,9 +42,9 @@
                                         display: inline-block;
                                         /* Inline block to respect width */">
                                 {% if service_notification %}
-                                    {{ data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                    {{ entry.PREVIOUSSERVICEHARDSTATE[:4] }}
                                 {% else %}
-                                    {{ data.PREVIOUSHOSTHARDSTATE[:4] }}
+                                    {{ entry.PREVIOUSHOSTHARDSTATE[:4] }}
                                 {% endif %}
                             </div>
                         </td>
@@ -70,9 +70,9 @@
                                         display: inline-block;
                                         /* Inline block to respect width */">
                                 {% if service_notification %}
-                                    {{ data.SERVICESTATE[:4] }}
+                                    {{ entry.SERVICESTATE[:4] }}
                                 {% else %}
-                                    {{ data.HOSTSTATE[:4] }}
+                                    {{ entry.HOSTSTATE[:4] }}
                                 {% endif %}
                             </div>
                         </td>

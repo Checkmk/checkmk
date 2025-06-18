@@ -196,9 +196,9 @@ $result = 1
 try {
     $mainStartTime = Get-Date
 
-    & cargo --version > nul
+    & rustup --version > nul
     if ($lastexitcode -ne 0) {
-        Write-Error "Cargo not found, please install it and/or add to PATH" -ErrorAction Stop
+        Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop
     }
     &rustup update
     &rustup target add $cargo_target

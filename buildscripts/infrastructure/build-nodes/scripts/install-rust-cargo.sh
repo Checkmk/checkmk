@@ -15,14 +15,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
 DEFAULT_TOOLCHAIN_VERSION="1.79"
-# Some packages require specific toolchain versions.
-# These versions will be installed in addition to the default toolchain version.
-# List the versions separated by space, e.g. "1 2 3", and add a reason below.
-#
-# Reasons for added toolchains:
-# - 1.75: Currently used by all packages
-ADDITIONAL_TOOLCHAIN_VERSIONS="1.75"
-
 DEFAULT_TARGET="x86_64-unknown-linux-gnu"
 DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${DEFAULT_TARGET}"
 DIR_NAME="rust"
@@ -35,11 +27,6 @@ export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID="9-$DEFAULT_TOOLCHAIN_VERSION"
-# This adds all present toolchain versions to the build ID to make sure they are
-# included in the cached archive.
-for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-    BUILD_ID="$BUILD_ID-$toolchain_version"
-done
 # This adds all present targets to the build ID to make sure they are included
 # in the cached archive.
 BUILD_ID="$BUILD_ID-$DEFAULT_TARGET"
@@ -63,7 +50,6 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
-    "${CARGO_HOME}"/bin/rustup toolchain install $DEFAULT_TOOLCHAIN_VERSION $ADDITIONAL_TOOLCHAIN_VERSIONS
     "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION
     "${CARGO_HOME}"/bin/rustup update
 
@@ -76,9 +62,6 @@ build_package() {
     }
 
     remove_doc_dirs "$DEFAULT_TOOLCHAIN"
-    for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-        remove_doc_dirs "${toolchain_version}-${DEFAULT_TARGET}"
-    done
 }
 
 if [ "$1" != "link-only" ]; then
@@ -87,6 +70,3 @@ fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
 
 test_package "rustc --version" "^rustc $DEFAULT_TOOLCHAIN_VERSION\."
-for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-    test_package "$RUSTUP_HOME/toolchains/${toolchain_version}-${DEFAULT_TARGET}/bin/rustc --version" "^rustc $toolchain_version\."
-done

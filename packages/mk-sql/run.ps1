@@ -195,6 +195,7 @@ try {
         Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop
     }
     &rustup update
+    &rustup install
     &rustup target add $cargo_target
     & rustc --target $cargo_target -V
     & cargo -V

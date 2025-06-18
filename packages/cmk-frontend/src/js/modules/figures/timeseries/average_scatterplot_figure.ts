@@ -88,7 +88,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
             //@ts-ignore
             event.layerX - this.margin.left,
             //@ts-ignore
-            event.layerX - this.margin.top,
+            event.layerY - this.margin.top,
             10,
         );
         this._selected_scatterpoint = scatter_point;

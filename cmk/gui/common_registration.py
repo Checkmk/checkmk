@@ -39,6 +39,7 @@ from cmk.gui import (
     user_message,
     valuespec,
     weblib,
+    welcome,
     werks,
 )
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -305,3 +306,4 @@ def register(
     configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)
     rulespec.register(rulespec_registry, notification_parameter_registry)
+    welcome.register(page_registry)

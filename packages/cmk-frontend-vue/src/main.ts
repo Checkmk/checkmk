@@ -12,6 +12,7 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import AgentConnectionTestApp from '@/mode-host/AgentConnectionTestApp.vue'
+import WelcomeApp from './welcome/WelcomeApp.vue'
 
 import '@/assets/variables.css'
 
@@ -23,3 +24,4 @@ defineCmkComponent('cmk-notification-parameters-overview', NotificationParameter
 defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-agent-connection-test', AgentConnectionTestApp)
+defineCmkComponent('cmk-welcome', WelcomeApp)

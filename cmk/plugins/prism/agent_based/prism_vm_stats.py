@@ -129,11 +129,17 @@ def check_prism_vm_stats_mem(params: Mapping[str, Any], section: Section) -> Che
         yield Result(state=State.OK, summary="No memory usage data available")
         return
 
-    mem_usage = int(data.get("guest.memory_usage_ppm", 0)) / 10000.0
-    mem_total = int(mem_usage_bytes / mem_usage * 100)
-    if mem_total < 500000000:
-        mem_total = mem_total * 1024
-        mem_usage_bytes = mem_usage_bytes * 1024
+    if mem_usage_bytes == -1:
+        mem_total = section.get("memoryCapacityInBytes", 0)
+        memory_usage_ppm = int(data.get("guest.memory_usage_ppm", 0))
+        memory_usage_ratio = memory_usage_ppm / 10**6
+        mem_usage_bytes = mem_total * memory_usage_ratio
+    else:
+        mem_usage = int(data.get("guest.memory_usage_ppm", 0)) / 10000.0
+        mem_total = int(mem_usage_bytes / mem_usage * 100)
+        if mem_total < 500000000:
+            mem_total = mem_total * 1024
+            mem_usage_bytes = mem_usage_bytes * 1024
 
     yield from check_element(
         "Usage",

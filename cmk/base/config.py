@@ -3399,8 +3399,13 @@ class ConfigCache:
         if not nodes:
             return ()
 
-        self._verify_cluster_address_family(host_name, nodes)
-        self._verify_cluster_datasource(host_name, nodes)
+        ip_lookup_config = self.ip_lookup_config()
+        ip_stack_config = ip_lookup_config.ip_stack_config(host_name)
+
+        self._verify_cluster_address_family(
+            host_name, ip_stack_config, nodes, ip_lookup_config.default_address_family
+        )
+        self._verify_cluster_datasource(host_name, nodes, self.host_tags)
         nodes = list(nodes[:])
         active_hosts = {
             hn for hn in self.hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
@@ -3413,17 +3418,21 @@ class ConfigCache:
                 nodes.remove(node)
         return nodes
 
+    @staticmethod
     def _verify_cluster_address_family(
-        self,
         host_name: HostName,
+        ip_stack_config: ip_lookup.IPStackConfig,
         nodes: Iterable[HostName],
+        default_address_family: Callable[
+            [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+        ],
     ) -> None:
-        if self.ip_stack_config(host_name) is IPStackConfig.NO_IP:
+        if ip_stack_config is IPStackConfig.NO_IP:
             cluster_host_family = None
             address_families = []
         else:
             cluster_host_family = (
-                "IPv6" if self.default_address_family(host_name) is socket.AF_INET6 else "IPv4"
+                "IPv6" if default_address_family(host_name) is socket.AF_INET6 else "IPv4"
             )
             address_families = [
                 f"{host_name}: {cluster_host_family}",
@@ -3432,7 +3441,7 @@ class ConfigCache:
         address_family = cluster_host_family
         mixed = False
         for nodename in nodes:
-            family = "IPv6" if self.default_address_family(nodename) is socket.AF_INET6 else "IPv4"
+            family = "IPv6" if default_address_family(nodename) is socket.AF_INET6 else "IPv4"
             address_families.append(f"{nodename}: {family}")
             if address_family is None:
                 address_family = family
@@ -3444,16 +3453,17 @@ class ConfigCache:
                 f"""Cluster '{host_name}' has different primary address families: {", ".join(address_families)}"""
             )
 
+    @staticmethod
     def _verify_cluster_datasource(
-        self,
         host_name: HostName,
         nodes: Iterable[HostName],
+        host_tags: cmk.utils.tags.HostTags,
     ) -> None:
-        cluster_tg = self.host_tags.tags(host_name)
+        cluster_tg = host_tags.tags(host_name)
         cluster_agent_ds = cluster_tg.get(TagGroupID("agent"))
         cluster_snmp_ds = cluster_tg.get(TagGroupID("snmp_ds"))
         for nodename in nodes:
-            node_tg = self.host_tags.tags(nodename)
+            node_tg = host_tags.tags(nodename)
             node_agent_ds = node_tg.get(TagGroupID("agent"))
             node_snmp_ds = node_tg.get(TagGroupID("snmp_ds"))
             warn_text = f"Cluster '{host_name}' has different datasources as its node"

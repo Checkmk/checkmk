@@ -7,12 +7,12 @@ import logging
 
 import pytest
 
+from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, write_file
 
 from tests.plugins_integration.checks import (
     dump_path_site,
-    execute_dcd_cycle,
     get_host_names,
     get_piggyback_hosts,
     read_cmk_dump,

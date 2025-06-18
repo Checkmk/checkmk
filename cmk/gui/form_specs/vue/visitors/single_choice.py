@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from dataclasses import dataclass
 from typing import Generic, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
@@ -29,8 +30,20 @@ T = TypeVar("T")
 
 NO_SELECTION = None
 
-_ParsedValueModel = object
 _FrontendModel = str | None
+
+
+@dataclass
+class ToleratedValue:
+    value: object
+
+
+@dataclass
+class ValidValue:
+    value: object
+
+
+_ParsedValueModel = ToleratedValue | ValidValue
 
 
 class SingleChoiceVisitor(
@@ -99,13 +112,13 @@ class SingleChoiceVisitor(
                 # This is the only case where we might return `object` instead of T
                 # The value is tolerated -> not an InvalidValue
                 # Tolerated values might be written back to disk
-                return raw_value
+                return ToleratedValue(raw_value)
             return InvalidValue(
                 reason=self._compute_invalid_value_display_message(raw_value),
                 fallback_value=NO_SELECTION,
             )
 
-        return raw_value
+        return ValidValue(raw_value)
 
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
@@ -122,9 +135,9 @@ class SingleChoiceVisitor(
 
         input_hint = compute_title_input_hint(self.form_spec.prefill)
         # Check if the value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)
-        if not self._is_valid_choice(parsed_value):
+        if isinstance(parsed_value, ToleratedValue):
             parsed_value = InvalidValue(
-                reason=self._compute_invalid_value_display_message(parsed_value),
+                reason=self._compute_invalid_value_display_message(parsed_value.value),
                 fallback_value=NO_SELECTION,
             )
             invalid_validation = self.form_spec.invalid_element_validation
@@ -140,14 +153,14 @@ class SingleChoiceVisitor(
                 elements=elements,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                frozen=self.form_spec.frozen and self._is_valid_choice(parsed_value),
+                frozen=self.form_spec.frozen and isinstance(parsed_value, ValidValue),
                 input_hint=input_hint or _("Please choose"),
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 i18n_base=base_i18n_form_spec(),
             ),
             parsed_value.fallback_value
             if isinstance(parsed_value, InvalidValue)
-            else self.option_id(parsed_value),
+            else self.option_id(parsed_value.value),
         )
 
     def _compute_invalid_value_display_message(self, invalid_value: object) -> str:
@@ -167,12 +180,12 @@ class SingleChoiceVisitor(
     def _validate(
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        if not self._is_valid_choice(parsed_value):
+        if isinstance(parsed_value, ToleratedValue):
             # The value was tolerated (invalid choice, but kept due to InvalidElementMode.KEEP)
             return create_validation_error(
-                NO_SELECTION, self._compute_invalid_value_display_message(parsed_value)
+                NO_SELECTION, self._compute_invalid_value_display_message(parsed_value.value)
             )
         return []
 
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
-        return parsed_value
+        return parsed_value.value

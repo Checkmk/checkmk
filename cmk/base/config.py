@@ -2703,19 +2703,8 @@ class ConfigCache:
         tag_to_group_map: Mapping[TagID, TagGroupID], tag_list: Iterable[TagID]
     ) -> Mapping[TagGroupID, TagID]:
         # This assumes all needed aux tags of grouped are already in the tag_list
-
-        # Ensure the internal mandatory tag groups are set for all hosts
-        # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
-        # is currently responsible for calculating the host tags of a host.
-        # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
         return {
-            TagGroupID("piggyback"): TagID("auto-piggyback"),
-            TagGroupID("networking"): TagID("lan"),
-            TagGroupID("agent"): TagID("cmk-agent"),
-            TagGroupID("criticality"): TagID("prod"),
-            TagGroupID("snmp_ds"): TagID("no-snmp"),
-            TagGroupID("site"): TagID(omd_site()),
-            TagGroupID("address_family"): TagID("ip-v4-only"),
+            **cmk.utils.tags.fallback_tags(omd_site()),
             # Assume it's an aux tag in case there is a tag configured without known group
             **{tag_to_group_map.get(tag_id, TagGroupID(tag_id)): tag_id for tag_id in tag_list},
         }
@@ -2737,19 +2726,7 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             return host_tags[hostname]
 
-        # Handle not existing hosts (No need to performance optimize this)
-        # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
-        # is currently responsible for calculating the host tags of a host.
-        # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-        return {
-            TagGroupID("piggyback"): TagID("auto-piggyback"),
-            TagGroupID("networking"): TagID("lan"),
-            TagGroupID("agent"): TagID("cmk-agent"),
-            TagGroupID("criticality"): TagID("prod"),
-            TagGroupID("snmp_ds"): TagID("no-snmp"),
-            TagGroupID("site"): TagID(omd_site()),
-            TagGroupID("address_family"): TagID("ip-v4-only"),
-        }
+        return cmk.utils.tags.fallback_tags(omd_site())
 
     def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))

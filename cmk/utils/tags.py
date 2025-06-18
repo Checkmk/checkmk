@@ -791,3 +791,19 @@ def compute_datasources(tag_groups: Mapping[TagGroupID, TagID]) -> ComputedDataS
         is_all_agents_host=tag_groups.get(TagGroupID("agent")) == TagID("all-agents"),
         is_all_special_agents_host=tag_groups.get(TagGroupID("agent")) == TagID("special-agents"),
     )
+
+
+def fallback_tags(site: str) -> Mapping[TagGroupID, TagID]:
+    # Handle not existing hosts (No need to performance optimize this)
+    # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
+    # is currently responsible for calculating the host tags of a host.
+    # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
+    return {
+        TagGroupID("piggyback"): TagID("auto-piggyback"),
+        TagGroupID("networking"): TagID("lan"),
+        TagGroupID("agent"): TagID("cmk-agent"),
+        TagGroupID("criticality"): TagID("prod"),
+        TagGroupID("snmp_ds"): TagID("no-snmp"),
+        TagGroupID("site"): TagID(site),
+        TagGroupID("address_family"): TagID("ip-v4-only"),
+    }

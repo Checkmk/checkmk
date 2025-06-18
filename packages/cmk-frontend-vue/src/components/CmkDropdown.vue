@@ -157,7 +157,7 @@ const truncatedButtonLabel = computed(() =>
       :open="suggestionsShown"
       :group="startOfGroup ? 'start' : 'no'"
       :width="width"
-      @click.prevent="showSuggestions"
+      @click="showSuggestions"
     >
       <span class="cmk-dropdown--text"
         >{{ truncatedButtonLabel

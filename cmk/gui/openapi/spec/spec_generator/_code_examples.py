@@ -97,7 +97,9 @@ request = urllib.request.Request(
     method="{{ request_method | upper }}",
     headers={
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
+        {%- if content_type %}
         "Accept": "{{ content_type }}",
+        {% endif %}
         {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
@@ -143,7 +145,9 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- endif %}
   --write-out "\\nxxx-status_code=%{http_code}\\n" \\
   --header "Authorization: Bearer $USERNAME $PASSWORD" \\
+  {%- if content_type %}
   --header "Accept: {{ content_type }}" \\
+  {% endif %}
 {%- for header in header_params %}
   --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
@@ -190,7 +194,9 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
     --all \\
     {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
+    {%- if content_type %}
     "Accept: {{ content_type }}" \\
+    {% endif %}
 {%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
 {%- endfor %}
@@ -229,7 +235,9 @@ PASSWORD = "{{ password }}"
 
 session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
+{%- if content_type %}
 session.headers['Accept'] = '{{ content_type }}'
+{%- endif %}
 {%- if does_redirects %}
 session.max_redirects = 100  # increase if necessary
 {%- endif %}

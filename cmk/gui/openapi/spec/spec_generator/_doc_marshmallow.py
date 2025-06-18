@@ -178,17 +178,22 @@ def _marshmallow_endpoint_to_doc_endpoint(
         does_redirects=endpoint.does_redirects,
         supported_editions=endpoint.supported_editions,
     )
-    return DocEndpoint(
-        path=endpoint.path,
-        effective_path=effective_path,
-        method=endpoint.method,
-        family_name=family_name,
-        doc_group=endpoint.tag_group,
-        doc_sort_index=endpoint.sort,
-        operation_object=_to_operation_dict(
-            spec, spec_endpoint, schema_definitions, site_name, werk_id
-        ),
-    )
+    try:
+        return DocEndpoint(
+            path=endpoint.path,
+            effective_path=effective_path,
+            method=endpoint.method,
+            family_name=family_name,
+            doc_group=endpoint.tag_group,
+            doc_sort_index=endpoint.sort,
+            operation_object=_to_operation_dict(
+                spec, spec_endpoint, schema_definitions, site_name, werk_id
+            ),
+        )
+    except ValueError as e:
+        raise ValueError(
+            f"Failed to generate OpenAPI spec for endpoint {endpoint.operation_id}: {e}"
+        ) from e
 
 
 def _to_operation_dict(
@@ -198,10 +203,6 @@ def _to_operation_dict(
     site_name: str,
     werk_id: int | None = None,
 ) -> OperationObject:
-    assert spec_endpoint.operation_id is not None, (
-        "This object must be used in a decorator environment."
-    )
-
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
         openapi_header = header_to_add.copy()
@@ -418,7 +419,7 @@ class MarshmallowResponses:
     def generate_success_responses(
         expected_status_codes: set[StatusCodeInt],
         status_descriptions: Mapping[StatusCodeInt, str] | None,
-        content_type: str,
+        content_type: str | None,
         response_schema: RawParameter | None,
         response_headers: dict[str, OpenAPIParameter],
     ) -> ResponseType:
@@ -427,6 +428,8 @@ class MarshmallowResponses:
 
         # 2xx responses
         if 200 in expected_status_codes:
+            if content_type is None:
+                raise ValueError("Content-Type must be set for 200 responses.")
             if response_schema:
                 content: ContentObject = {content_type: {"schema": response_schema}}
             elif content_type.startswith("application/") or content_type.startswith("image/"):

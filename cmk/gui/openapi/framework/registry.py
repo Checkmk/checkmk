@@ -38,7 +38,7 @@ class RequestEndpoint:
     handler: HandlerFunction
     method: HTTPMethod
     accept: AcceptFieldType
-    content_type: str
+    content_type: str | None
     etag: ETagBehaviour | None
     operation_id: str
     doc_group: TagGroup
@@ -62,7 +62,7 @@ class VersionedSpecEndpoint:
     status_descriptions: Mapping[StatusCodeInt, str] | None
     additional_status_codes: Sequence[StatusCodeInt] | None
     method: HTTPMethod
-    content_type: str
+    content_type: str | None
     etag: ETagBehaviour | None
     permissions_required: BasePerm | None
     permissions_description: Mapping[str, str] | None

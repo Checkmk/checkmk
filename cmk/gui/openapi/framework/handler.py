@@ -70,7 +70,7 @@ def _dump_response[T: DataclassInstance](
 def _create_response(
     endpoint_response: TypedResponse[ApiResponseModel | None],
     response_body_type: type[ApiResponseModel] | None,
-    content_type: str,
+    content_type: str | None,
     *,
     fields_filter: FieldsFilter | None,
     add_etag: bool,

@@ -564,7 +564,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         path_entries: list[str],
         endpoint: AbstractWSGIApp,
         version: APIVersion,
-        content_type: str,
+        content_type: str | None,
         method: HTTPMethod | None = None,
     ) -> None:
         if method is None:

@@ -118,17 +118,22 @@ def pydantic_endpoint_to_doc_endpoint(
         does_redirects=bool(expected_status_codes & {201, 301, 302, 303}),
         supported_editions=endpoint.doc_supported_editions,
     )
-    return DocEndpoint(
-        path=endpoint.path,
-        effective_path=endpoint.path,
-        method=endpoint.method,
-        family_name=endpoint.family,
-        doc_group=endpoint.doc_group,
-        doc_sort_index=endpoint.doc_sort_index,
-        operation_object=_to_operation_dict(
-            spec, spec_endpoint, schema_definitions, site_name, endpoint.deprecated_werk_id
-        ),
-    )
+    try:
+        return DocEndpoint(
+            path=endpoint.path,
+            effective_path=endpoint.path,
+            method=endpoint.method,
+            family_name=endpoint.family,
+            doc_group=endpoint.doc_group,
+            doc_sort_index=endpoint.doc_sort_index,
+            operation_object=_to_operation_dict(
+                spec, spec_endpoint, schema_definitions, site_name, endpoint.deprecated_werk_id
+            ),
+        )
+    except ValueError as e:
+        raise ValueError(
+            f"Failed to generate OpenAPI spec for endpoint {endpoint.operation_id}: {e}"
+        ) from e
 
 
 def _to_operation_dict(
@@ -138,10 +143,6 @@ def _to_operation_dict(
     site_name: str,
     werk_id: int | None = None,
 ) -> OperationObject:
-    assert spec_endpoint.operation_id is not None, (
-        "This object must be used in a decorator environment."
-    )
-
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
         openapi_header = header_to_add.copy()
@@ -207,9 +208,7 @@ def _to_operation_dict(
         path_parameters = _get_parameters("path", schema_definitions.get_type("path"))
         query_parameters = _get_parameters("query", schema_definitions.get_type("query"))
     except PydanticInvalidForJsonSchema as e:
-        raise PydanticInvalidForJsonSchema(
-            f"Failed to generate schema for {spec_endpoint.operation_id} parameters: {e.message}"
-        ) from e
+        raise ValueError(f"Failed to generate parameter schemas: {e.message}") from e
 
     operation_spec["parameters"] = [*header_parameters, *path_parameters, *query_parameters]
 
@@ -353,7 +352,7 @@ class PydanticResponses:
     def generate_success_responses(
         expected_status_codes: set[StatusCodeInt],
         status_descriptions: Mapping[StatusCodeInt, str] | None,
-        content_type: str,
+        content_type: str | None,
         response_type_adapter: TypeAdapter | None,
         response_headers: dict[str, OpenAPIParameter],
     ) -> ResponseType:
@@ -362,6 +361,8 @@ class PydanticResponses:
 
         # 2xx responses
         if 200 in expected_status_codes:
+            if content_type is None:
+                raise ValueError("Content-Type must be set for 200 responses.")
             if response_type_adapter:
                 content: ContentObject = {content_type: {"schema": response_type_adapter}}
             elif content_type.startswith("application/") or content_type.startswith("image/"):

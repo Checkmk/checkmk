@@ -71,7 +71,7 @@ class EndpointMetadata:
     lowercase in the OpenAPI YAML-file, though both upper and lower-cased method-names
     are supported here."""
 
-    content_type: str = "application/json"
+    content_type: str | None = "application/json"
     """The content-type under which this endpoint shall be executed. Multiple endpoints may
     be defined for any one URL, but only one endpoint per url-content-type combination."""
 

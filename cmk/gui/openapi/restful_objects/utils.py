@@ -9,7 +9,7 @@ from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeInt, TagGroup
 
 
-def endpoint_ident(method: HTTPMethod, route_path: str, content_type: str) -> str:
+def endpoint_ident(method: HTTPMethod, route_path: str, content_type: str | None) -> str:
     """Provide an identity for an endpoint
 
     This can be used for keys in a dictionary, e.g. the ENDPOINT_REGISTRY."""
@@ -19,7 +19,7 @@ def endpoint_ident(method: HTTPMethod, route_path: str, content_type: str) -> st
 def identify_expected_status_codes(
     method: HTTPMethod,
     doc_category: TagGroup,
-    content_type: str,
+    content_type: str | None,
     etag: ETagBehaviour | None,
     has_response: bool,
     has_path_params: bool,
@@ -31,10 +31,16 @@ def identify_expected_status_codes(
     expected_status_codes = set(additional_status_codes)
     expected_status_codes.add(406)
 
-    if content_type != "application/json" or (content_type == "application/json" and has_response):
+    if content_type is None:
+        expected_status_codes.add(204)
+
+    elif content_type != "application/json" or (
+        content_type == "application/json" and has_response
+    ):
         expected_status_codes.add(200)
 
     if not has_response:
+        # TODO: this can be removed once marshmallow endpoints are gone
         expected_status_codes.add(204)
 
     if doc_category == "Setup":

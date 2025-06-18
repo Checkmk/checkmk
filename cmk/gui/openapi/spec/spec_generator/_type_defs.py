@@ -41,7 +41,7 @@ class SpecEndpoint:
     family_name: str
     etag: ETagBehaviour | None
     expected_status_codes: set[StatusCodeInt]
-    content_type: str
+    content_type: str | None
     method: HTTPMethod
     status_descriptions: Mapping[StatusCodeInt, str]
     tag_group: TagGroup

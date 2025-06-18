@@ -352,8 +352,11 @@ class HeaderValidator:
         )
 
     @staticmethod
-    def validate_accept_header(content_type: str, accept_mimetypes: MIMEAccept) -> None:
+    def validate_accept_header(content_type: str | None, accept_mimetypes: MIMEAccept) -> None:
         """Validate the Accept header in the request."""
+        if not content_type:
+            return  # ignore the accept header, if this endpoint does not return any data
+
         if not accept_mimetypes:
             raise RestAPIHeaderValidationException(
                 title="Not Acceptable",

@@ -116,10 +116,5 @@ def main(sys_args=None):
 
         tcp_socket.send(f"close:session={sid}\n".encode())
 
-    return state, infotext
-
-
-if __name__ == "__main__":
-    exitcode, info = main()
-    sys.stdout.write(f"{info}\n")
-    sys.exit(exitcode)
+    sys.stdout.write(f"{infotext}\n")
+    return state

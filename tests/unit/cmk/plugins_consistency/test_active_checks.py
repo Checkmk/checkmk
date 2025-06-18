@@ -15,6 +15,7 @@ from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.elasticsearch.active_check import check_elasticsearch_query
 from cmk.plugins.sftp.active_check import check_sftp
 from cmk.plugins.traceroute.active_check import check_traceroute
+from cmk.plugins.uniserv.active_check import check_uniserv
 from cmk.server_side_calls_backend import load_active_checks
 
 TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
@@ -34,7 +35,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mail": None,  # TODO
     "mail_loop": None,  # TODO
     "mailboxes": None,  # TODO
-    "mkevents": None,  # TODO
+    "mkevents": None,  # C
     "notify_count": None,  # TODO
     "sftp": check_sftp,
     "smtp": None,  # TODO
@@ -42,7 +43,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "ssh": None,  # TODO
     "tcp": None,  # TODO
     "traceroute": check_traceroute,
-    "uniserv": None,  # TODO
+    "uniserv": check_uniserv,
 }
 
 
@@ -100,7 +101,6 @@ def test_active_checks_location() -> None:
         "sql",
         "ssh",
         "tcp",
-        "uniserv",
     }
 
 

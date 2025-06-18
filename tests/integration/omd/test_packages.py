@@ -126,7 +126,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     CheckmkActiveCheck("check_sftp", path="lib/python3/cmk/plugins/sftp/libexec"),
     CheckmkActiveCheck("check_sql"),
     CheckmkActiveCheck("check_traceroute", path="lib/python3/cmk/plugins/traceroute/libexec"),
-    CheckmkActiveCheck("check_uniserv"),
+    CheckmkActiveCheck("check_uniserv", path="lib/python3/cmk/plugins/uniserv/libexec"),
 )
 
 

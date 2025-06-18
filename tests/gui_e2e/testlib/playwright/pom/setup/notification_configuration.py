@@ -124,6 +124,7 @@ class NotificationConfiguration(CmkPage):
     def delete_notification_rule(self, rule_id: int | str) -> None:
         self.notification_rule_delete_button(rule_id).click()
         self.delete_rule_confirmation_button.click()
+        self._notification_rule_row(rule_id).wait_for(state="detached")
 
     def _get_notification_stat_count(self, title: str) -> Locator:
         return (

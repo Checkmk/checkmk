@@ -36,7 +36,7 @@ from tests.testlib.utils import run
 logger = logging.getLogger(__name__)
 
 
-TDashobard = TypeVar("TDashobard", Dashboard, DashboardMobile)
+TDashboard = TypeVar("TDashboard", Dashboard, DashboardMobile)
 
 # loading pom fixtures
 setup_fixtures = [notification_user]
@@ -99,8 +99,8 @@ def _navigate_to_dashboard(
     page: Page,
     url: str,
     credentials: CmkCredentials,
-    dashboard_type: type[TDashobard],
-) -> TDashobard:
+    dashboard_type: type[TDashboard],
+) -> TDashboard:
     """Navigate to dashboard page.
 
     Performs a login to Checkmk site, if necessary.

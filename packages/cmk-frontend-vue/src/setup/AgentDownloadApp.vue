@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import AgentDownloadDialog from '@/components/AgentDownloadDialog.vue'
+import AgentDownloadDialog from '@/setup/AgentDownloadDialog.vue'
 import type { AgentDownloadI18N } from 'cmk-shared-typing/typescript/setup'
 
 defineProps<{

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import AgentConnectionTest from '@/components/AgentConnectionTest.vue'
+import AgentConnectionTest from '@/mode-host/agent-connection-test/AgentConnectionTest.vue'
 import type { I18N } from 'cmk-shared-typing/typescript/agent_connection_test'
 import { ref, onMounted } from 'vue'
 

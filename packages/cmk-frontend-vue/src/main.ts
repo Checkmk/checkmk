@@ -11,7 +11,7 @@ import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
-import AgentConnectionTestApp from '@/mode-host/AgentConnectionTestApp.vue'
+import AgentConnectionTestApp from '@/mode-host/agent-connection-test/AgentConnectionTestApp.vue'
 import WelcomeApp from './welcome/WelcomeApp.vue'
 
 import '@/assets/variables.css'

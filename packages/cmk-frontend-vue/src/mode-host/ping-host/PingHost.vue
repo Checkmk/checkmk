@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import axios from 'axios'
-import StatusBox, { type DNSStatus } from '@/mode-host/StatusBox.vue'
+import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
 import { type ModeHostI18N } from 'cmk-shared-typing/typescript/mode_host'
 
 const props = defineProps<{

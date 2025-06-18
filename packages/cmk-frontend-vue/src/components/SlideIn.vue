@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
+import usei18n from '@/lib/i18n'
 import {
   DialogClose,
   DialogTitle,
@@ -16,6 +17,8 @@ import {
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
+
+const { t } = usei18n('cmk-slide-in')
 
 export interface SlideInProps {
   open: boolean
@@ -58,8 +61,7 @@ watch(
         <DialogTitle v-if="header" class="slide-in__title">
           <CmkLabel variant="title">{{ header.title }}</CmkLabel>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-            <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-            <CmkIcon aria-label="Close" name="close" size="xsmall" />
+            <CmkIcon :aria-label="t('close-slidein', 'Close')" name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
 

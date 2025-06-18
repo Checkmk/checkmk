@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import usei18n from '@/lib/i18n'
 import {
   type QuickSetupStageContent,
   type DetailedError,
@@ -13,6 +14,8 @@ import {
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
+
+const { t } = usei18n('quick-setup-stage-content-error')
 
 const details = ref<boolean>(false)
 const props = defineProps<{ errors: QuickSetupStageContent['errors'] }>()
@@ -28,8 +31,9 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 <template>
   <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
     <CmkHtml :html="error.message" />
-    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-    <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
+    <CmkButton v-if="details === false" @click="details = true">{{
+      t('show-details', 'Show details')
+    }}</CmkButton>
     <div v-else>
       <pre>{{ error.details }}</pre>
     </div>

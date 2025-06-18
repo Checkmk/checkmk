@@ -5,12 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { nextTick, useTemplateRef, computed, ref, type Ref } from 'vue'
+import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 
 import { type Suggestion, ErrorResponse, Response } from './suggestions'
+
+const { t } = usei18n('cmk-suggestions')
 
 type SuggestionsFixed = {
   type: 'fixed'
@@ -241,16 +244,14 @@ defineExpose({
     @keydown.up.prevent="selectPreviousElement"
   >
     <span :class="{ hidden: !showFilter, input: true }">
-      <!-- eslint-disable vue/no-bare-strings-in-template -->
       <input
         ref="suggestionInputRef"
         v-model="filterString"
-        aria-label="filter"
+        :aria-label="t('filter-aria-label', 'filter')"
         type="text"
         @blur="inputLostFocus"
         @keydown.escape.prevent="emit('blur')"
       />
-      <!-- eslint-enable vue/no-bare-strings-in-template -->
     </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>

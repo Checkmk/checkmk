@@ -5,12 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, computed, type Ref } from 'vue'
+import usei18n from '@/lib/i18n'
 import { formatError } from '@/lib/error.ts'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
+
+const { t } = usei18n('cmk-error-boundary')
 
 const showDetails = ref<boolean>(false)
 
@@ -27,13 +30,18 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 
 <template>
   <CmkAlertBox v-if="props.error.value !== null" variant="error">
-    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-    <p>An unexpected error occurred:</p>
+    <p>{{ t('unexpected-error', 'An unexpected error occurred') }}:</p>
     <CmkIndent>
       <CmkHtml :html="props.error.value.message" />
     </CmkIndent>
-    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-    <p>Refresh the page to try again. If the problem persists, reach out to the Checkmk support.</p>
+    <p>
+      {{
+        t(
+          'refresh-page',
+          'Refresh the page to try again. If the problem persists, reach out to the Checkmk support.'
+        )
+      }}
+    </p>
     <CmkCollapsibleTitle
       :title="'Details'"
       :open="showDetails"

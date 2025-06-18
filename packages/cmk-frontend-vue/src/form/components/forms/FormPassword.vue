@@ -4,12 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
 import FormValidation from '@/form/components/FormValidation.vue'
 import type { Password } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import CmkDropdown from '@/components/CmkDropdown.vue'
+
+const { t } = usei18n('form-password')
 
 const props = defineProps<{
   spec: Password
@@ -96,14 +99,12 @@ const passwordStoreOptions = computed(() => {
   />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
-    <!-- eslint-disable vue/no-bare-strings-in-template -->
     <input
       v-model="explicitPassword"
-      aria-label="explicit password"
+      :aria-label="t('explicit-input-aria-label', 'explicit password')"
       type="password"
       :placeholder="'******'"
     />
-    <!-- eslint-enable vue/no-bare-strings-in-template -->
   </template>
   <template v-if="data[0] === 'stored_password'">
     <template v-if="props.spec.password_store_choices.length === 0">

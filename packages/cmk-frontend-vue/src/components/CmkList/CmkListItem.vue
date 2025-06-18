@@ -4,10 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
 import { type VariantProps, cva } from 'class-variance-authority'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+
+const { t } = usei18n('cmk-list-item')
 
 const listItemVariants = cva('', {
   variants: {
@@ -45,29 +48,25 @@ const { buttonPadding = '16px' } = defineProps<{
             There are NO automatic tests for the dragging behavior, see comment
             in tests. If you change anything here, test manually!
           -->
-          <!-- eslint-disable vue/no-bare-strings-in-template -->
           <div
             class="cmk-list-item__drag-button"
-            aria-label="Drag to reorder"
+            :aria-label="t('drag-aria-label', 'Drag to reorder')"
             role="button"
             :draggable="true"
             @dragstart="draggable?.dragStart"
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
           >
-            <!-- eslint-enable vue/no-bare-strings-in-template -->
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </div>
           <CmkSpace direction="horizontal" size="small" />
         </template>
-        <!-- eslint-disable vue/no-bare-strings-in-template -->
         <CmkIconButton
           name="close"
           size="small"
-          aria-label="Remove element"
+          :aria-label="t('remove-aria-label', 'Remove element')"
           @click.prevent="() => removeElement()"
         />
-        <!-- eslint-enable vue/no-bare-strings-in-template -->
       </div>
     </div>
     <div class="cmk-list-item__content">

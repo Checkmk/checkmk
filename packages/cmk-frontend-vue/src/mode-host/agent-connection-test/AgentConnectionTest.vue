@@ -6,9 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import type { Ref } from 'vue'
+import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+
+const { t } = usei18n('agent_connection_test')
 
 interface Props {
   url: string
@@ -206,16 +209,14 @@ function startAjax(): void {
     <CmkIcon name="start" size="xlarge" :title="tooltipText" />
   </CmkButton>
 
-  <!-- eslint-disable vue/no-bare-strings-in-template -->
   <CmkButton
     v-if="errorDetails.includes('[Errno 111]')"
     type="button"
-    title="Download agent"
+    :title="t('download-agent-title', 'Download agent')"
     @click="slideInOpen = true"
   >
-    Download Checkmk agent
+    {{ t('download-agent-button', 'Download Checkmk agent') }}
   </CmkButton>
-  <!-- eslint-enable vue/no-bare-strings-in-template -->
   <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
     {{ errorDetails }}
   </span>
@@ -224,8 +225,7 @@ function startAjax(): void {
     :header="{ title: slide_in_title, closeButton: true }"
     @close="slideInOpen = false"
   >
-    <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-    <div>Error: {{ errorDetails }}</div>
+    <div>{{ t('error', 'Error') }}: {{ errorDetails }}</div>
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-html="externalContent"></div>
   </SlideIn>

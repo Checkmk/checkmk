@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from tests.testlib.agent_dumps import copy_dumps
+from tests.testlib.agent_dumps import copy_dumps, read_disk_dump, read_piggyback_hosts_from_dump
 from tests.testlib.common.repo import qa_test_data_path
 from tests.testlib.dcd import dcd_connector, execute_dcd_cycle
 from tests.testlib.site import Site
@@ -157,28 +157,6 @@ def get_host_names(
             except UnicodeDecodeError:
                 logger.error('Could not decode dump file "%s"!', dump_file_name)
     return agent_host_names + snmp_host_names
-
-
-def read_disk_dump(host_name: str, piggyback: bool = False) -> str:
-    """Return the content of an agent dump from the dumps' folder."""
-    dump_dir = str(config.dump_dir_integration) + ("/piggyback" if piggyback else "")
-    dump_file_path = f"{dump_dir}/{host_name}"
-    with open(dump_file_path, encoding="utf-8") as dump_file:
-        return dump_file.read()
-
-
-def read_cmk_dump(host_name: str, site: Site, dump_type: str) -> str:
-    """Return the current agent or snmp dump via cmk."""
-    args = ["cmk", "--snmptranslate" if dump_type == "snmp" else "-d", host_name]
-    cmk_dump, _ = site.execute(
-        args,
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-    ).communicate()
-    if dump_type == "snmp":
-        cmk_dump = "\n".join([_.split("-->")[0].strip() for _ in str(cmk_dump).splitlines()])
-
-    return cmk_dump
 
 
 def _verify_check_result(
@@ -440,7 +418,7 @@ def setup_source_host_piggyback(
 
     with dcd_connector(site, dcd_interval, auto_cleanup=not config.skip_cleanup):
         pb_hosts_from_dump = read_piggyback_hosts_from_dump(
-            read_disk_dump(source_host_name, piggyback=True)
+            read_disk_dump(source_host_name, config.dump_dir_integration / "piggyback")
         )
         piggyback_hosts = None
         try:
@@ -494,16 +472,3 @@ def setup_source_host_piggyback(
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_ for _ in site.openapi.hosts.get_all_names() if _ != source_host]
-
-
-def read_piggyback_hosts_from_dump(dump: str) -> set[str]:
-    """Read piggyback hosts from the agent dump.
-
-    A piggyback host is defined by the pattern '<<<<host_name>>>>' within the agent dump.
-    """
-    piggyback_hosts: set[str] = set()
-    pattern = r"<<<<(.*?)>>>>"
-    matches = re.findall(pattern, dump)
-    piggyback_hosts.update(matches)
-    piggyback_hosts.discard("")  # '<<<<>>>>' pattern will match an empty string
-    return piggyback_hosts

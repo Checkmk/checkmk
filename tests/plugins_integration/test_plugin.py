@@ -7,13 +7,13 @@ import textwrap
 
 import pytest
 
+from tests.testlib.agent_dumps import read_cmk_dump, read_disk_dump
 from tests.testlib.site import Site
 
 from tests.plugins_integration.checks import (
+    config,
     get_host_names,
     process_check_output,
-    read_cmk_dump,
-    read_disk_dump,
     setup_host,
 )
 
@@ -28,7 +28,7 @@ def test_plugin(
     pytestconfig: pytest.Config,
 ) -> None:
     with setup_host(test_site, host_name):
-        disk_dump = read_disk_dump(host_name)
+        disk_dump = read_disk_dump(host_name, config.dump_dir_integration)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"
         if dump_type == "agent":
             cmk_dump = read_cmk_dump(host_name, test_site, "agent")

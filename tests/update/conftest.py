@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests.testlib.agent_dumps import inject_dumps
+from tests.testlib.agent_dumps import get_dump_names, inject_dumps
 from tests.testlib.site import Site
 from tests.testlib.version import (
     CMKEdition,
@@ -121,7 +121,7 @@ def _setup(
             if not disable_rules_injection:
                 inject_rules(test_site)
 
-        hostname = os.listdir(DUMPS_DIR)[0]
+        hostname = get_dump_names(DUMPS_DIR)[0]
         with _setup_host(test_site, hostname=hostname, ip_address="127.0.0.1"):
             yield test_site, target_edition, interactive_mode, hostname
     finally:

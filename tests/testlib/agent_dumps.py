@@ -11,8 +11,13 @@ This module provides helper functions to:
     and setting up a corresponding rule to simulate agent output.
 """
 
+import os
+import re
+import subprocess
 from pathlib import Path
 from typing import Final
+
+import pytest
 
 from tests.testlib.site import Site
 from tests.testlib.utils import logger, run
@@ -149,3 +154,69 @@ def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = Tru
 
     site_dumps_path = create_agent_dump_rule(site)
     copy_dumps(site, dumps_dir, site_dumps_path)
+
+
+def read_disk_dump(host_name: str, dump_dir: Path) -> str:
+    """Return the content of an agent dump from the dumps' folder."""
+    dump_file_path = f"{dump_dir}/{host_name}"
+    with open(dump_file_path, encoding="utf-8") as dump_file:
+        return dump_file.read()
+
+
+def read_cmk_dump(host_name: str, site: Site, dump_type: str) -> str:
+    """Return the current agent or snmp dump via cmk."""
+    args = ["cmk", "--snmptranslate" if dump_type == "snmp" else "-d", host_name]
+    cmk_dump, _ = site.execute(
+        args,
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    ).communicate()
+    if dump_type == "snmp":
+        cmk_dump = "\n".join([_.split("-->")[0].strip() for _ in str(cmk_dump).splitlines()])
+
+    return cmk_dump
+
+
+def read_piggyback_hosts_from_dump(dump: str) -> set[str]:
+    """Read piggyback hosts from the agent dump.
+
+    A piggyback host is defined by the pattern '<<<<host_name>>>>' within the agent dump.
+    """
+    piggyback_hosts: set[str] = set()
+    pattern = r"<<<<(.*?)>>>>"
+    matches = re.findall(pattern, dump)
+    piggyback_hosts.update(matches)
+    piggyback_hosts.discard("")  # '<<<<>>>>' pattern will match an empty string
+    return piggyback_hosts
+
+
+def _list_unskipped_files(
+    directory: Path, pattern: str | None = None, skipped_files: list[str] | None = None
+) -> list[str]:
+    if not directory.exists():
+        # need to skip here to abort the collection and return RC=5: "no tests collected"
+        pytest.skip(f'Folder "{directory}" not found; exiting!', allow_module_level=True)
+    return [
+        filename
+        for filename in os.listdir(directory)
+        if pattern is None
+        or re.match(pattern, filename)
+        and (not filename.startswith(".") and filename not in (skipped_files or []))
+        and os.path.isfile(os.path.join(directory, filename))
+    ]
+
+
+def get_dump_names(
+    dump_dir: Path,
+    skipped_dumps: list[str] | None = None,
+) -> list[str]:
+    """Return a list of agent dumps in a dump dir."""
+    return _list_unskipped_files(dump_dir, r"^agent-\d+\.\d+\.\d+\w*\d*-", skipped_dumps)
+
+
+def get_walk_names(
+    walk_dir: Path,
+    skipped_walks: list[str] | None = None,
+) -> list[str]:
+    """Return a list of snmp walks in a walk dir."""
+    return _list_unskipped_files(walk_dir, r"^snmp-", skipped_walks)

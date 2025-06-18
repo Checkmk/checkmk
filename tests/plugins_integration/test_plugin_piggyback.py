@@ -7,17 +7,16 @@ import logging
 
 import pytest
 
+from tests.testlib.agent_dumps import read_cmk_dump, read_disk_dump, read_piggyback_hosts_from_dump
 from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, write_file
 
 from tests.plugins_integration.checks import (
+    config,
     dump_path_site,
     get_host_names,
     get_piggyback_hosts,
-    read_cmk_dump,
-    read_disk_dump,
-    read_piggyback_hosts_from_dump,
     setup_source_host_piggyback,
 )
 
@@ -56,7 +55,7 @@ def test_plugin_piggyback(
     source_host_name: str,
 ) -> None:
     with setup_source_host_piggyback(test_site_piggyback, source_host_name):
-        disk_dump = read_disk_dump(source_host_name, piggyback=True)
+        disk_dump = read_disk_dump(source_host_name, config.dump_dir_integration / "piggyback")
         cmk_dump = read_cmk_dump(source_host_name, test_site_piggyback, "agent")
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 

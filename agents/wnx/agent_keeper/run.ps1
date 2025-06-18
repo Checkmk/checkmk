@@ -24,7 +24,6 @@ $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
-#set target=x86_64-pc-windows-mscvc # 64 bit not used now
 $cargo_target = "i686-pc-windows-msvc"
 
 $packBuild = $false
@@ -192,7 +191,7 @@ try {
     }
     &rustup update
     &rustup target add $cargo_target
-    & rustc -V
+    & rustc --target $cargo_target -V
     & cargo -V
 
     # Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),

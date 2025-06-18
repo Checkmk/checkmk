@@ -42,10 +42,21 @@ defineExpose({
 })
 
 defineProps<ButtonProps>()
+
+defineEmits(['click'])
 </script>
 
 <template>
-  <button ref="buttonRef" class="cmk-button" :class="buttonVariants({ variant })">
+  <button
+    ref="buttonRef"
+    class="cmk-button"
+    :class="buttonVariants({ variant })"
+    @click.prevent="
+      (e) => {
+        $emit('click', e)
+      }
+    "
+  >
     <slot />
   </button>
 </template>

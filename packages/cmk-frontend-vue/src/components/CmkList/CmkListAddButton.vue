@@ -14,8 +14,8 @@ defineProps<{
 </script>
 
 <template>
-  <FormButton v-if="addElementLabel!!" @click.prevent="addElement">
+  <FormButton v-if="addElementLabel!!" @click="addElement">
     {{ addElementLabel }}
   </FormButton>
-  <CmkIconButton v-else name="plus" @click.prevent="addElement" />
+  <CmkIconButton v-else name="plus" @click="addElement" />
 </template>

@@ -33,7 +33,7 @@ function setSelectedOption(value: string) {
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
       :aria-label="`Toggle ${option.label}`"
-      @click.prevent="setSelectedOption(option.value)"
+      @click="setSelectedOption(option.value)"
       >{{ option.label }}</CmkButton
     >
   </div>

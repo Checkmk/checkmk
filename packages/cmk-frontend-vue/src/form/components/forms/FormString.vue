@@ -67,7 +67,7 @@ const componentId = useId()
         :label="spec.label || ''"
         :start-of-group="true"
         :show-icon="true"
-      /><CmkDropdownButton group="end" @click.prevent="value = ''">
+      /><CmkDropdownButton group="end" @click="value = ''">
         <X class="form-string__button-clear-x" />
       </CmkDropdownButton>
     </div>

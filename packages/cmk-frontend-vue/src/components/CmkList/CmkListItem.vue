@@ -65,7 +65,7 @@ const { buttonPadding = '16px' } = defineProps<{
           name="close"
           size="small"
           :aria-label="t('remove-aria-label', 'Remove element')"
-          @click.prevent="() => removeElement()"
+          @click="() => removeElement()"
         />
       </div>
     </div>

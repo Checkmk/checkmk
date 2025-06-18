@@ -8,10 +8,19 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import { type CmkIconProps } from '@/components/CmkIcon.vue'
 
 defineProps<CmkIconProps>()
+
+defineEmits(['click'])
 </script>
 
 <template>
-  <button class="cmk-icon-button">
+  <button
+    class="cmk-icon-button"
+    @click.prevent="
+      (e) => {
+        $emit('click', e)
+      }
+    "
+  >
     <CmkIcon :name="name" :variant="variant" :size="size" :rotate="rotate" :title="title" />
   </button>
 </template>

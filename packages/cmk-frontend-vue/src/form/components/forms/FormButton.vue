@@ -21,10 +21,20 @@ defineExpose({
 
 const props = defineProps<FormButtonProps>()
 const iconName = props.icon || 'plus'
+
+defineEmits(['click'])
 </script>
 
 <template>
-  <button ref="buttonRef" class="form-button">
+  <button
+    ref="buttonRef"
+    class="form-button"
+    @click.prevent="
+      (e) => {
+        $emit('click', e)
+      }
+    "
+  >
     <CmkIcon :name="iconName" variant="inline" size="small" />
     <slot />
   </button>

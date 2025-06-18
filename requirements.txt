@@ -2968,7 +2968,7 @@ pytest==7.4.4 \
     #   -r dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
-    #   -r non-free/packages/cmk-probe-core/requirements.in
+    #   -r non-free/packages/cmk-relay-core/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   meraki
@@ -3249,7 +3249,7 @@ requests==2.32.3 \
     --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-probe-core/requirements.in
+    #   -r non-free/packages/cmk-relay-core/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   azure-core
     #   devpi-common

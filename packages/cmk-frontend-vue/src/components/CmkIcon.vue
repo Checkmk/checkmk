@@ -36,7 +36,8 @@ const cmkIconVariants = cva('', {
       medium: '15px',
       large: '18px',
       xlarge: '20px',
-      xxlarge: '32px'
+      xxlarge: '32px',
+      xxxlarge: '77px'
     }
   },
   defaultVariants: {

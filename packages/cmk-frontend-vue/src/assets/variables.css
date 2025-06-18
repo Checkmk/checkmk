@@ -25,8 +25,11 @@
   --default-help-icon-bg-color: rgb(6, 103, 193);
   --default-help-icon-bg-color-hover: rgb(56, 133, 205);
   --scrollbar-color: rgb(78, 93, 105);
+  --color-corporate-green-60: rgb(19, 190, 146);
+  --color-digital-green-50: rgb(102, 255, 204);
 
   /* Fonts */
+  --font-size-xxlarge: 18px;
   --font-size-xlarge: 16px;
   --font-size-large: 14px;
   --font-size-normal: 12px;
@@ -69,6 +72,8 @@
   --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
   --icon-connection-tests: url('~cmk-frontend/src/themes/facelift/images/icon_connection_tests.svg');
   --icon-validation-error: url('~cmk-frontend/src/themes/facelift/images/icon_validation_error.png');
+
+  --icon-checkmk-logo-min: url('~cmk-frontend/src/themes/facelift/images/icon_checkmk_logo_min.svg');
 }
 
 @layer theme {

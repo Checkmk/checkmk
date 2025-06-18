@@ -6,22 +6,30 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
+import WelcomeBanner from './components/WelcomeBanner.vue'
 
 const { t } = usei18n('welcome-app')
 </script>
 
 <template>
-  <h1>{{ t('header', 'Welcome to Checkmk!') }}</h1>
-  <!-- eslint-disable vue/no-bare-strings-in-template -->
+  <WelcomeBanner :completed-steps="1" :total-steps="5" />
+
   <p>
-    This is just a placeholder for the Welcome page. It will be used to guide you through the first
-    steps of using Checkmk.
+    {{
+      t(
+        'placeholder',
+        'This is just a placeholder for the Welcome page. It will be used to guide you through the first steps of using Checkmk.'
+      )
+    }}
   </p>
   <p>
-    In case you want to change the start URL to the main dashboard, you can do so under User/Edit
-    profile/Start URL.
+    {{
+      t(
+        'change-start-url',
+        'In case you want to change the start URL to the main dashboard, you can do so under User > Edit profile > Start URL.'
+      )
+    }}
   </p>
-  <!-- eslint-enable vue/no-bare-strings-in-template -->
 </template>
 
 <style scoped></style>

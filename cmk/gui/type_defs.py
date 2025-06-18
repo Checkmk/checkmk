@@ -10,7 +10,16 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
+from typing import (
+    Annotated,
+    Any,
+    Literal,
+    NamedTuple,
+    NewType,
+    NotRequired,
+    override,
+    TypedDict,
+)
 
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
@@ -636,7 +645,7 @@ class MainMenuTopic(NamedTuple):
 
 class MainMenuVueApp(NamedTuple):
     name: str
-    data: dict = {}
+    data: dict[str, object]
     class_: list[str] = []
 
 

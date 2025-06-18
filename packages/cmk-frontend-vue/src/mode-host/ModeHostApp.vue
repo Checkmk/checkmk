@@ -11,7 +11,7 @@ import { onMounted, ref, type Ref } from 'vue'
 
 const props = defineProps<{
   i18n: ModeHostI18N
-  formKeys: ModeHostFormKeys
+  form_keys: ModeHostFormKeys
 }>()
 
 const formElement: Ref<HTMLFormElement | null> = ref(null)
@@ -25,24 +25,28 @@ const ipAddressFamilySelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
 
 onMounted(() => {
-  formElement.value = getElementBySelector(`form[id="form_${props.formKeys.form}"]`)
+  formElement.value = getElementBySelector(`form[id="form_${props.form_keys.form}"]`)
   hostnameInputElement.value = document.querySelector(
-    `input.text[name="${props.formKeys.host_name}"]`
+    `input.text[name="${props.form_keys.host_name}"]`
   )
-  ipv4InputElement.value = getElementBySelector(`input.text[name="${props.formKeys.ipv4_address}"]`)
-  ipv6InputElement.value = getElementBySelector(`input.text[name="${props.formKeys.ipv6_address}"]`)
-  siteSelectElement.value = getElementBySelector(`select[name="${props.formKeys.site}"]`)
+  ipv4InputElement.value = getElementBySelector(
+    `input.text[name="${props.form_keys.ipv4_address}"]`
+  )
+  ipv6InputElement.value = getElementBySelector(
+    `input.text[name="${props.form_keys.ipv6_address}"]`
+  )
+  siteSelectElement.value = getElementBySelector(`select[name="${props.form_keys.site}"]`)
   ipAddressFamilySelectElement.value = getElementBySelector(
-    `select[name="${props.formKeys.ip_address_family}"]`
+    `select[name="${props.form_keys.ip_address_family}"]`
   )
   ipAddressFamilyInputElement.value = getElementBySelector(
-    `input[id="${props.formKeys.cb_change}_${props.formKeys.ip_address_family}"]`
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.ip_address_family}"]`
   )
   ipv4InputButtonElement.value = getElementBySelector(
-    `input[id="${props.formKeys.cb_change}_${props.formKeys.ipv4_address}"]`
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.ipv4_address}"]`
   )
   ipv6InputButtonElement.value = getElementBySelector(
-    `input[id="${props.formKeys.cb_change}_${props.formKeys.ipv6_address}"]`
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.ipv6_address}"]`
   )
 })
 

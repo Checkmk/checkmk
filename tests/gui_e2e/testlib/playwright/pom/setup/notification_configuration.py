@@ -104,17 +104,20 @@ class NotificationConfiguration(CmkPage):
         return self.main_area.locator("div[class='overview_container']")
 
     def collapse_notification_overview(self, collapse: bool = True) -> None:
-        is_overview_visible = self.notification_overview_container().is_visible()
+        container = self.notification_overview_container()
+        is_overview_visible = container.is_visible()
         if (collapse and is_overview_visible) or (not collapse and not is_overview_visible):
             self.main_area.locator().get_by_role("heading", name="Notification overview").locator(
                 "button"
             ).click()
+            container.wait_for(state="hidden" if collapse else "visible")
         else:
             logger.info("Notification overview is already in the desired state")
 
     def delete_notification_rule(self, rule_id: int | str) -> None:
         self.notification_rule_delete_button(rule_id).click()
         self.delete_rule_confirmation_button.click()
+        self._notification_rule_row(rule_id).wait_for(state="detached")
 
     def _get_notification_stat_count(self, title: str) -> Locator:
         return (

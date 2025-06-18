@@ -30,7 +30,6 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-22883; Investigation ongoing ...")
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: Dashboard,
@@ -107,7 +106,7 @@ def test_add_new_notification_rule(
     add_rule_page.description_text_field.fill(expected_notification_subject)
 
     logger.info("Go to review settings and save")
-    add_rule_page.goto_next_qs_stage()
+    add_rule_page.goto_next_qs_stage(is_last_stage=True)
     add_rule_page.save_and_test()
 
     logger.info("Disable the default notification rule")
@@ -115,15 +114,18 @@ def test_add_new_notification_rule(
     edit_rule_page.check_disable_rule(True)
     edit_rule_page.save_and_test()
 
-    add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
-    add_rule_filesystem_page.check_levels_for_user_free_space(True)
-    add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
-    add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
-    add_rule_filesystem_page.save_button.click()
-    add_rule_filesystem_page.activate_changes(test_site)
-
-    service_search_page = None
     try:
+        was_filesystem_ruleset_created = False
+
+        add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
+        add_rule_filesystem_page.check_levels_for_user_free_space(True)
+        add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
+        add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
+        add_rule_filesystem_page.save_button.click()
+        add_rule_filesystem_page.activate_changes(test_site)
+
+        was_filesystem_ruleset_created = True
+
         checkmk_agent = "Check_MK"
         service_search_page = ServiceSearchPage(dashboard_page.page)
         logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
@@ -144,11 +146,11 @@ def test_add_new_notification_rule(
             notification_configuration_page.page, rule_position=0
         )
         edit_notification_rule_page.check_disable_rule(False)
-        edit_notification_rule_page.apply_and_create_another_rule_button.click()
+        edit_notification_rule_page.apply_and_create_another_rule()
 
-        if service_search_page is not None:
+        if was_filesystem_ruleset_created:
             filesystems_rules_page = Ruleset(
-                service_search_page.page,
+                dashboard_page.page,
                 "Filesystems (used space and growth)",
                 "Service monitoring rules",
             )

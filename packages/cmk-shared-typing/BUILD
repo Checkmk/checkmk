@@ -17,6 +17,7 @@ SOURCES_COMMON = [
     "mode_host.json",
     "notifications.json",
     "setup.json",
+    "unified_search.json",
     "user_frontend_config.json",
     "vue_formspec_components.json",
 ]

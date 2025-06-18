@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "unified_search_config",
+    "properties": {
+        "providers": { "$ref": "#/$defs/providers" }
+    },
+    "required": ["providers"],
+    "$defs": {
+        "providers": {
+            "type": "object",
+            "properties": {
+                "monitoring": { "type": "boolean" },
+                "customize": { "type": "boolean" },
+                "setup": { "type": "boolean" }
+            },
+            "required": ["monitoring", "customize", "setup"]
+        }
+    }
+}

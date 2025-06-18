@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from livestatus import LivestatusColumn, LivestatusResponse, Query, QuerySpecification
+from livestatus import LivestatusResponse, Query, QuerySpecification
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -393,7 +393,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     @classmethod
     def create_bi_status_data(
-        cls, rows: LivestatusResponse, extra_columns: list[LivestatusColumn] | None = None
+        cls, rows: LivestatusResponse, extra_columns: list[str] | None = None
     ) -> BIStatusInfo:
         response = {}
         bi_data_end = len(cls.get_status_columns())
@@ -417,7 +417,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         return cls.get_status_columns().index("services_with_fullstate") + 1
 
     @classmethod
-    def get_status_columns(cls) -> list[LivestatusColumn]:
+    def get_status_columns(cls) -> list[str]:
         return [
             "name",
             "state",

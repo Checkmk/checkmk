@@ -404,7 +404,7 @@ class Helpers:
 
 
 @cache
-def get_livestatus_blob_columns() -> set[LivestatusColumn]:
+def get_livestatus_blob_columns() -> set[str]:
     # These columns should get queried from the core
     return {
         "current_host_mk_inventory",
@@ -435,8 +435,14 @@ def get_livestatus_blob_columns() -> set[LivestatusColumn]:
 @dataclass
 class QuerySpecification:
     table: str
-    columns: Sequence[LivestatusColumn] = field(default_factory=list)
+    columns: Sequence[str] = field(default_factory=list)
     headers: str = ""
+
+    def __post_init__(self) -> None:
+        if isinstance(self.columns, str):
+            raise TypeError(
+                "'columns' must be a sequence of column names, got %r" % type(self.columns).__name__
+            )
 
     @override
     def __str__(self) -> str:

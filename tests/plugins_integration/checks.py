@@ -9,13 +9,14 @@ import re
 import shlex
 import subprocess
 from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from tests.testlib.agent_dumps import copy_dumps
 from tests.testlib.common.repo import qa_test_data_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -327,23 +328,10 @@ def setup_site(site: Site, dump_path: Path, dump_dirs: Sequence[Path] | None = N
 
     logger.info("Injecting agent-output...")
     for dump_dir in dump_dirs:
-        for dump_name in get_host_names(dump_dir=dump_dir):
-            assert (
-                run(
-                    [
-                        "cp",
-                        "-f",
-                        f"{dump_dir}/{dump_name}",
-                        (
-                            f"{walk_path}/{dump_name}"
-                            if re.search(r"\bsnmp\b", dump_name)
-                            else f"{dump_path}/{dump_name}"
-                        ),
-                    ],
-                    sudo=True,
-                ).returncode
-                == 0
-            )
+        copy_dumps(site, dump_dir, dump_path, "agent-")
+        with suppress(subprocess.CalledProcessError):
+            # there may be no SNMP walks in the source folder, which is fine
+            copy_dumps(site, dump_dir, walk_path, "snmp-")
 
     for dump_type in ["agent", "snmp"]:
         host_folder = f"/{dump_type}"
@@ -443,19 +431,8 @@ def setup_source_host_piggyback(
     )
 
     logger.info("Injecting agent-output...")
-    dump_path_repo = str(qa_test_data_path() / "plugins_integration/dumps/piggyback")
-    assert (
-        run(
-            [
-                "cp",
-                "-f",
-                f"{dump_path_repo}/{source_host_name}",
-                f"{site.path(dump_path_site)}/{source_host_name}",
-            ],
-            sudo=True,
-        ).returncode
-        == 0
-    )
+    dump_path_repo = qa_test_data_path() / "plugins_integration/dumps/piggyback"
+    copy_dumps(site, dump_path_repo, site.path(dump_path_site), filename=source_host_name)
     site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True, strict=False)
 
     logger.info("Running service discovery...")

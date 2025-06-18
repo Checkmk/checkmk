@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
+from tests.gui_e2e.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.email import EmailPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
@@ -159,10 +160,9 @@ def test_filesystem_email_notifications(
         notification_configuration_page.check_total_sent_notifications_has_changed(total_sent)
         notification_configuration_page.check_failed_notifications_has_not_changed(total_failures)
 
-        new_page = dashboard_page.page.context.new_page()
-        email_page = EmailPage(new_page, html_file_path)
-        email_page.check_table_content(expected_content)
-        new_page.close()
+        with manage_new_page_from_browser_context(service_search_page.page.context) as new_page:
+            email_page = EmailPage(new_page, html_file_path)
+            email_page.check_table_content(expected_content)
 
     finally:
         logger.info("Delete the created rule")

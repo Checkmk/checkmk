@@ -30,7 +30,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-22883; Investigation ongoing ...")
+@pytest.mark.xfail(reason="CMK-22883; Investigation ongoing ...")
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: Dashboard,

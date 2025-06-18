@@ -263,12 +263,12 @@ test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
 test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
-	EDITION=cee $(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/) --numprocesses=1
+	EDITION=cee $(PYTEST) --screenshot-cmk=only-on-failure --output-cmk="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
-	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee) --numprocesses=1
+	$(PYTEST) --screenshot-cmk=only-on-failure --output-cmk="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
 
 test-gui-e2e-cce:
 	EDITION=cce $(MAKE) test-gui-e2e-non-free

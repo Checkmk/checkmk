@@ -16,7 +16,6 @@ import pytest
 import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
-from random_order.config import Config as RandomOrderConfig  # type: ignore[import-untyped]
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
@@ -282,14 +281,6 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
     items[:] = items[0 : config.getoption("--limit")]
-
-    # This is a workaround for the issue that pytest does not sort the collected items
-    # it is caused by a bug that is fixed in pytest 8.0.0:
-    # https://github.com/microsoft/playwright-pytest/issues/195
-    # TODO CMK-23788: Remove after pytest upgrade
-    if not RandomOrderConfig(config).is_enabled:
-        items.sort(key=lambda item: item.nodeid)
-
     for item in items:
         if config.getoption("--no-skip"):
             item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]

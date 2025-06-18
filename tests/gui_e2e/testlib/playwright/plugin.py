@@ -11,64 +11,272 @@ See: https://github.com/microsoft/playwright-pytest
 """
 
 import logging
+import os
+import re
 import typing as t
 from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
-from playwright._impl._api_structures import StorageState
-from playwright.sync_api import Page
-from pytest_playwright import CreateContextCallback
+from playwright.sync_api import (
+    Browser,
+    BrowserContext,
+    BrowserType,
+    Error,
+    Page,
+    Playwright,
+    sync_playwright,
+    Video,
+)
+
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 
 logger = logging.getLogger(__name__)
+_browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
+_browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
+_mobile_devices = ["iPhone 6", "Galaxy S8"]
+
+
+@pytest.fixture(scope="session", name="browser_type_launch_args")
+def fixture_browser_type_launch_args(pytestconfig: t.Any) -> dict:
+    """Return arguments to initialize playwright `Browser`_ object.
+
+    .. _Browser: https://playwright.dev/python/docs/api/class-browser
+    """
+    launch_options = {}
+    headed_option = pytestconfig.getoption("--headed-cmk")
+    if headed_option:
+        launch_options["headless"] = False
+    slowmo_option = pytestconfig.getoption("--slowmo-cmk")
+    if slowmo_option:
+        launch_options["slow_mo"] = slowmo_option
+    return launch_options
+
+
+def _build_artifact_path(
+    request: pytest.FixtureRequest, artifact_name: str = "", suffix: str = ""
+) -> Path:
+    output_dir = request.config.getoption("--output-cmk")
+    node_safepath = os.path.splitext(os.path.split(request.node.path)[1])[0]
+    # replace `[]`, `()`, whitespaces with `_`.
+    _name = re.sub(
+        r"[\[\]\(\)\s]",
+        "_",
+        f"{artifact_name}" if artifact_name else f"{node_safepath}__{request.node.name}",
+    )
+    build_artifact_path = Path(output_dir).absolute() / f"{_name}{suffix}"
+    logger.debug("build_artifact_path=%s", build_artifact_path)
+    return build_artifact_path
 
 
 @pytest.fixture(scope="session")
-def browser_context_args(
-    browser_context_args: dict[str, t.Any], pytestconfig: pytest.Config
-) -> dict[str, t.Any]:
-    """Define and return arguments to initialize a playwright `BrowserContext` object.
+def _playwright() -> t.Generator[Playwright, None, None]:
+    pw = sync_playwright().start()
+    yield pw
+    pw.stop()
 
-    This overrides the default `browser_context_args` fixture provided by pytest-playwright.
-    """
-    _viewport = (
+
+@pytest.fixture(scope="session")
+def _browser_type(_playwright: Playwright, _browser_name: str) -> BrowserType:
+    return t.cast(BrowserType, getattr(_playwright, _browser_name))
+
+
+@pytest.fixture(scope="session")
+def _browser(
+    _browser_type: BrowserType, browser_type_launch_args: dict
+) -> t.Generator[Browser, None, None]:
+    with exit_pytest_on_exceptions(
+        exceptions=(Error,), exit_msg="Install playwright within the environment!"
+    ):
+        browser = _browser_type.launch(**browser_type_launch_args)
+    yield browser
+    browser.close()
+
+
+@pytest.fixture(name="viewport", scope="session")
+def fixture_viewport(pytestconfig: pytest.Config) -> dict[str, int]:
+    return (
         {"width": 1600, "height": 900}
         if pytestconfig.getoption("--local-run")
         else {"width": 1920, "height": 1080}
     )
 
-    return {
-        **browser_context_args,
-        "locale": pytestconfig.getoption("--locale"),
-        "viewport": _viewport,
-    }
 
+@pytest.fixture(name="context_launch_kwargs", scope="session")
+def fixture_context_launch_kwargs(
+    pytestconfig: pytest.Config, viewport: dict[str, int]
+) -> dict[str, t.Any]:
+    """Define and return arguments to initialize a playwright `BrowserContext`_ object.
 
-@pytest.fixture(name="browser_storage_state", scope="module")
-def fixture_browser_storage_stage() -> StorageState:
-    """Create a storage state for the browser context.
-
-    This fixture is used to initialize the browser context with cookies and local storage data.
-    It returns an empty `StorageState` object, which can be updated later with actual data.
+    .. _BrowserContext: https://playwright.dev/python/docs/api/class-browsercontext
     """
-    return StorageState()
+    kwargs = {"locale": pytestconfig.getoption("--locale")}
+    if pytestconfig.getoption("--video-cmk"):
+        kwargs["record_video_dir"] = str(pytestconfig.getoption("--output-cmk"))
+        kwargs["record_video_size"] = viewport  # video size should match the viewport size
+    return kwargs
 
 
-@pytest.fixture
-@pytest.mark.browser_context_args
-def cmk_page(
-    new_context: CreateContextCallback, browser_storage_state: StorageState
+@pytest.fixture(scope="module")
+def _context(
+    _browser: Browser,
+    context_launch_kwargs: dict[str, t.Any],
+    viewport: dict[str, int],
+) -> t.Generator[BrowserContext, None, None]:
+    """Create a browser context(browser testing) for one test-module at a time."""
+    if "viewport" not in context_launch_kwargs:
+        context_launch_kwargs.update({"viewport": viewport})
+    with manage_new_browser_context(_browser, context_launch_kwargs) as context:
+        yield context
+
+
+@pytest.fixture(scope="module", params=_mobile_devices)
+def _context_mobile(
+    _playwright: Playwright,
+    _browser: Browser,
+    context_launch_kwargs: dict[str, t.Any],
+    request: pytest.FixtureRequest,
+) -> t.Generator[BrowserContext, None, None]:
+    """Create a browser context(mobile testing) for one test-module at a time."""
+    devices = _playwright.devices[str(request.param)]
+    with manage_new_browser_context(_browser, (context_launch_kwargs | devices)) as context:
+        yield context
+
+
+@contextmanager
+def manage_new_browser_context(
+    browser: Browser, context_kwargs: dict[str, t.Any] | None = None
+) -> Iterator[BrowserContext]:
+    """Creates a browser context and makes sure to close it (contextmanager).
+
+    `context_kwargs` are the arguments passed to `BrowserContext`_.
+
+    .. _BrowserContext: https://playwright.dev/python/docs/api/class-browsercontext
+    """
+    if not context_kwargs:
+        context_kwargs = {}
+    context = browser.new_context(**context_kwargs)
+    try:
+        yield context
+    finally:
+        context.close()
+
+
+@pytest.fixture(name="page")
+def fixture_page(
+    _context: BrowserContext, request: pytest.FixtureRequest
+) -> t.Generator[Page, None, None]:
+    """Create a new page in a browser for every test-case."""
+    with manage_new_page_from_browser_context(_context, request) as page:
+        yield page
+
+
+@pytest.fixture(name="page_mobile")
+def fixture_page_mobile(
+    _context_mobile: BrowserContext,
+    is_chromium: bool,
+    request: pytest.FixtureRequest,
+) -> t.Generator[Page, None, None]:
+    """Create a new page in a mobile browser for every test-case."""
+    if not is_chromium:
+        pytest.skip("Mobile emulation currently not supported on Firefox.")
+    with manage_new_page_from_browser_context(_context_mobile, request) as page:
+        yield page
+
+
+@contextmanager
+def manage_new_page_from_browser_context(
+    context: BrowserContext,
+    request: pytest.FixtureRequest | None = None,
+    video_name: str = "",
 ) -> Iterator[Page]:
-    """Create a new browser context and page for each test.
+    """Create a new page from the provided `BrowserContext` and close it (contextmanager).
 
-    It uses the `browser_storage_state` fixture to initialize the context with
-    the previous storage state, which contains cookies and local storage data.
-    This allows the page to start with a pre-defined state, such as being logged in.
+    Optionally, includes functionality
+        * to take a screenshot when a test-case fails.
+        * to record interactions occuring on the page.
+            + videos are recorded within the directory provided to `--output-cmk`
+            + custom `video_name` can be provided, exclude file extension.
+
+        NOTE: requires access to pytest fixture: `request`.
     """
-    context = new_context(storage_state=browser_storage_state)
+    pages: list[Page] = []
+    context.on("page", lambda page: pages.append(page))
+    page = context.new_page()
+    try:
+        yield page
+    finally:
+        _may_create_screenshot(request, pages)
+        page.close()
+        _may_record_video(page, request, video_name)
 
-    yield context.new_page()
 
-    browser_storage_state.update(context.storage_state())
+def _may_create_screenshot(
+    request: pytest.FixtureRequest | None,
+    pages: list[Page],
+) -> None:
+    if isinstance(request, pytest.FixtureRequest):
+        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
+        screenshot_option = request.config.getoption("--screenshot-cmk")
+        capture_screenshot = screenshot_option == "on" or (
+            failed and screenshot_option == "only-on-failure"
+        )
+        if not capture_screenshot:
+            return
+        for page in pages:
+            human_readable_status = "failed" if failed else "finished"
+            screenshot_path = _build_artifact_path(request, suffix=f"{human_readable_status}.png")
+            try:
+                page.screenshot(timeout=5432, path=screenshot_path)
+            except Error as e:
+                logger.info("Failed to create screenshot of page %s due to: %s", page, e)
+
+
+def _may_record_video(page: Page, request: pytest.FixtureRequest | None, video_name: str) -> None:
+    if isinstance(request, pytest.FixtureRequest) and isinstance(page.video, Video):
+        new_path = _build_artifact_path(request, artifact_name=video_name, suffix=".webm")
+        logger.info("Video recorded at: %s", Path(page.video.path()).replace(new_path))
+    else:
+        logger.debug("Video recording is disabled.")
+
+
+@pytest.fixture(scope="session", name="is_webkit")
+def fixture_is_webkit(_browser_name: str) -> bool:
+    """Identify whether browser is Webkit."""
+    return _browser_name == "webkit"
+
+
+@pytest.fixture(scope="session", name="is_firefox")
+def fixture_is_firefox(_browser_name: str) -> bool:
+    """Identify whether browser is Firefox."""
+    return _browser_name == "firefox"
+
+
+@pytest.fixture(scope="session", name="is_chromium")
+def fixture_is_chromium(_browser_name: str) -> bool:
+    """Identify whether browser is Chromium."""
+    return _browser_name == "chromium"
+
+
+@pytest.fixture(scope="session", name="_browser_name", params=_browser_engines)
+def fixture_browser_name(request: pytest.FixtureRequest) -> str:
+    """Returns the browser name(s).
+
+    Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
+    can be selected via the --browser-cmk flag in the CLI.
+    """
+    browser_name_param = str(request.param)
+    browser_names_cli = t.cast(list[str], request.config.getoption("--browser-cmk"))
+
+    if browser_name_param not in browser_names_cli and not len(browser_names_cli) == 0:
+        pytest.skip(
+            f"Only {', '.join(str(browser) for browser in browser_names_cli)} engine(s) selected "
+            f"from the CLI"
+        )
+    elif len(browser_names_cli) == 0 and browser_name_param not in _browser_engines_ci:
+        pytest.skip(f"{browser_name_param} engine not running in the CI. Still selectable via CLI")
+    return browser_name_param
 
 
 # Making test result information available in fixtures
@@ -90,9 +298,42 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom CLI arguments to GUI end to end testing framework."""
     group = parser.getgroup("playwright", "Playwright")
     group.addoption(
-        "--locale",
-        default="en-US",
-        help="The default locale of the browser.",
+        "--browser-cmk",
+        action="append",
+        default=[],
+        help="Browser engine which should be used",
+        choices=_browser_engines,
+    )
+    group.addoption(
+        "--headed-cmk",
+        action="store_true",
+        default=False,
+        help="Run tests in headed mode.",
+    )
+    group.addoption(
+        "--slowmo-cmk",
+        default=0,
+        type=int,
+        help="Run tests with slow mo",
+    )
+    group.addoption(
+        "--output-cmk",
+        default="test-results",
+        help="Directory for artifacts produced by tests, defaults to test-results.",
+    )
+    group.addoption(
+        "--screenshot-cmk",
+        default="only-on-failure",
+        choices=["on", "off", "only-on-failure"],
+        help="Whether to automatically capture a screenshot after each test. "
+        "If you choose only-on-failure, a screenshot of the failing page only will be created.",
+    )
+    group.addoption("--locale", default="en-US", help="The default locale of the browser.")
+    group.addoption(
+        "--video-cmk",
+        action="store_true",
+        default=False,
+        help="Record a video of interactions occurring in a page.",
     )
     group.addoption(
         "--local-run",

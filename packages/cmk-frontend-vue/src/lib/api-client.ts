@@ -72,13 +72,17 @@ export class Api {
     return this.fetch(url, params)
   }
 
-  private async fetch(url: string, params: RequestInit): Promise<ApiResponseBody<unknown>> {
+  private async fetch(url: string, params: RequestInit): Promise<ApiResponseBody<unknown> | null> {
     if (this.baseUrl) {
       url = this.baseUrl + url
     }
 
     const res = await cmkFetch(url, params)
     await res.raiseForStatus()
+
+    if (res.status === 204) {
+      return null
+    }
 
     return (await res.json()).result
   }

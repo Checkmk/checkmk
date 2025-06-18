@@ -6,23 +6,32 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { cva, type VariantProps } from 'class-variance-authority'
 
-const sizes = cva('', {
+const propsCva = cva('', {
   variants: {
     size: {
       small: 'small',
       medium: 'medium',
       large: 'large'
+    },
+    color: {
+      default: 'cmk-badge-default',
+      success: 'cmk-badge-success',
+      warning: 'cmk-badge-warning',
+      danger: 'cmk-badge-danger'
     }
   },
   defaultVariants: {
-    size: 'medium'
+    size: 'medium',
+    color: 'default'
   }
 })
 
-export type Sizes = VariantProps<typeof sizes>['size']
+export type Sizes = VariantProps<typeof propsCva>['size']
+export type Colors = VariantProps<typeof propsCva>['color']
 
 export interface CmkChipProps {
   size?: Sizes
+  color?: Colors
   content: string
 }
 
@@ -30,7 +39,7 @@ defineProps<CmkChipProps>()
 </script>
 
 <template>
-  <span class="cmk-chip" :class="sizes({ size })">
+  <span class="cmk-chip" :class="propsCva({ size, color })">
     {{ content }}
   </span>
 </template>
@@ -57,5 +66,22 @@ defineProps<CmkChipProps>()
 .large {
   font-size: 14px;
   padding: 5px 10px;
+}
+
+.cmk-badge-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--white);
+}
+
+.cmk-badge-warning {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.cmk-badge-success {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--black);
 }
 </style>

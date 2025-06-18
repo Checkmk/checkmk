@@ -33,6 +33,7 @@ from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.utils.structured_data import SDPath
 
 from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.http import Request
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
@@ -643,9 +644,13 @@ class MainMenuTopic(NamedTuple):
     hide: bool = False
 
 
+@dataclass(frozen=True)
+class MainMenuData: ...
+
+
 class MainMenuVueApp(NamedTuple):
     name: str
-    data: dict[str, object]
+    data: Callable[[Request], MainMenuData]
     class_: list[str] = []
 
 

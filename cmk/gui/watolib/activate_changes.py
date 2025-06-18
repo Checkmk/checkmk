@@ -1066,11 +1066,11 @@ def activate_site_changes(
 
 
 class ActivationSitesSummary(TypedDict):
-    site_id: str
-    site_name: str
+    siteId: str
+    siteName: str
     version: str
     changes: int
-    online_status: Literal[
+    onlineStatus: Literal[
         "online",
         "disabled",
         "down",
@@ -1083,16 +1083,16 @@ class ActivationSitesSummary(TypedDict):
 
 
 class PendingChangesSummary(TypedDict):
-    change_id: str
-    change_text: str
+    changeId: str
+    changeText: str
     user: str
     time: float
-    which_sites: str
+    whichSites: str
 
 
 class ActivationChangesSummary(TypedDict):
     sites: list[ActivationSitesSummary]
-    pending_changes: list[PendingChangesSummary]
+    pendingChanges: list[PendingChangesSummary]
 
 
 class ActivateChanges:
@@ -1320,34 +1320,34 @@ class ActivateChanges:
                 site_version = site_version.split("-", 1)[0]
             return site_version
 
-        return {
-            "sites": [
-                {
-                    "site_id": site["id"],
-                    "site_name": site["alias"],
-                    "version": _get_site_version(site_id),
-                    "changes": 0
+        return ActivationChangesSummary(
+            sites=[
+                ActivationSitesSummary(
+                    siteId=site["id"],
+                    siteName=site["alias"],
+                    version=_get_site_version(site_id),
+                    changes=0
                     if site["id"] not in site_change_counter
                     else site_change_counter[site["id"]],
-                    "online_status": "disabled"
+                    onlineStatus="disabled"
                     if site.get("disabled")
                     else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
-                }
+                )
                 for site_id, site in activation_sites().items()
             ],
-            "pending_changes": [
-                {
-                    "change_id": change["id"],
-                    "change_text": unescape(change["text"]),
-                    "user": change["user_id"],
-                    "time": change["time"],
-                    "which_sites": "All sites"
+            pendingChanges=[
+                PendingChangesSummary(
+                    changeId=change["id"],
+                    changeText=unescape(change["text"]),
+                    user=change["user_id"],
+                    time=change["time"],
+                    whichSites="All sites"
                     if affects_all_sites(change)
                     else ", ".join(sorted(change["affected_sites"])),
-                }
+                )
                 for _, change in self._all_changes
             ],
-        }
+        )
 
 
 def has_been_activated(change: ChangeSpec) -> bool:

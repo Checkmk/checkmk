@@ -4,22 +4,41 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from dataclasses import dataclass
+
 from cmk.gui import site_config
 from cmk.gui.config import active_config
-from cmk.gui.i18n import _, _l
+from cmk.gui.http import Request
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.type_defs import (
     MainMenu,
-    MainMenuItem,
-    MainMenuTopic,
+    MainMenuData,
+    MainMenuVueApp,
 )
+from cmk.gui.utils.urls import makeuri
+
+
+@dataclass(frozen=True)
+class ChangesMenuItem(MainMenuData):
+    activate_changes_url: str
 
 
 def _hide_menu() -> bool:
     if not user.may("wato.activate"):
         return True
     return site_config.is_wato_slave_site() and not active_config.wato_enabled
+
+
+def _data(request: Request) -> ChangesMenuItem:
+    return ChangesMenuItem(
+        activate_changes_url=makeuri(
+            request,
+            addvars=[("mode", "changelog")],
+            filename="wato.py",
+        ),
+    )
 
 
 def register(mega_menu_registry: MainMenuRegistry) -> None:
@@ -29,22 +48,12 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             title=_l("Changes"),
             icon="main_changes",
             sort_index=7,
-            topics=lambda: [
-                MainMenuTopic(
-                    name="changes",
-                    title=_("Activate changes"),
-                    icon="main_changes",
-                    entries=[
-                        MainMenuItem(
-                            name="changes",
-                            title=_("Activate changes"),
-                            sort_index=11,
-                            icon="main_changes",
-                            url="wato.py?mode=changelog",
-                        ),
-                    ],
-                )
-            ],
+            topics=None,
             hide=_hide_menu,
+            vue_app=MainMenuVueApp(
+                name="cmk-main-menu-changes",
+                data=_data,
+                class_=[],
+            ),
         )
     )

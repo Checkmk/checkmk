@@ -1272,23 +1272,24 @@ function mark_message_read(msg_id: string) {
 }
 
 interface Sites {
-    site_id: string;
-    site_name: string;
-    online_status: string;
-    changes: number;
-    version: string;
+  siteId: string
+  siteName: string
+  onlineStatus: string
+  changes: number
+  version: string
 }
 
 interface PendingChanges {
-    change_id: string;
-    change_text: string;
-    user: string;
-    time: string;
-    which_sites: string;
+  changeId: string
+  changeText: string
+  user: string
+  time: number
+  whichSites: string
+  timestring?: string
 }
 interface AjaxSidebarGetPendingChanges {
     sites: Array<Sites>;
-    pending_changes: Array<PendingChanges>;
+    pendingChanges: Array<PendingChanges>;
 }
 
 function handle_pending_changes(_data: any, response_text: string) {
@@ -1299,14 +1300,14 @@ function handle_pending_changes(_data: any, response_text: string) {
     }
     const l = document.getElementById("changes_label");
     if (l) {
-        if (response.result.pending_changes.length === 0) {
+        if (response.result.pendingChanges.length === 0) {
             l.style.display = "none";
             return;
         }
         l.innerText =
-            response.result.pending_changes.length > 10
+            response.result.pendingChanges.length > 10
                 ? "10+"
-                : response.result.pending_changes.length.toString();
+                : response.result.pendingChanges.length.toString();
         l.style.display = "inline";
     }
 }

@@ -7,6 +7,7 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 
+from dataclasses import asdict
 from typing import NamedTuple, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -131,7 +132,7 @@ class MainMenuRenderer:
             if menu.vue_app:
                 html.vue_component(
                     component_name=menu.vue_app.name,
-                    data=menu.vue_app.data,
+                    data=asdict(menu.vue_app.data(request)),
                 )
             else:
                 MainMenuPopupRenderer().show(menu)

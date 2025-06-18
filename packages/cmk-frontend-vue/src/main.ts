@@ -12,6 +12,7 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import WelcomeApp from './welcome/WelcomeApp.vue'
+import ChangesApp from './main-menu/ChangesApp.vue'
 
 import '@/assets/variables.css'
 
@@ -23,3 +24,4 @@ defineCmkComponent('cmk-notification-parameters-overview', NotificationParameter
 defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
+defineCmkComponent('cmk-main-menu-changes', ChangesApp)

@@ -21028,9 +21028,6 @@ msgstr "Onderneem geen actie, laat dit bericht vallen, stop de verwerking"
 msgid "Do not perform periodic service discovery check"
 msgstr "Voer geen periodieke service discovery check uit"
 
-msgid "Do not query volume performance counters"
-msgstr "Vraag niet naar volume prestatiecounters"
-
 msgid "Do not regard required mirror space as free space"
 msgstr "Beschouw de vereiste spiegelruimte niet als vrije ruimte"
 
@@ -23329,6 +23326,10 @@ msgstr "Inzendingen"
 msgid "Entry"
 msgstr "Ingang"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "Omgevingsvariabelen"
+
 msgid "Environment Variables"
 msgstr "Omgevingsvariabelen"
 
@@ -25079,6 +25080,10 @@ msgstr "Fetch had slechte headers"
 
 msgid "Fetch head"
 msgstr "Haal hoofd"
+
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "Verzamel informatie over..."
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Fetch intervals voor SNMP secties"
@@ -28146,13 +28151,6 @@ msgid ""
 msgstr ""
 "Hier kunt u instellen of en hoe het aanmaken van RRD-bestanden wordt gelogd "
 "(in het logbestand var/log/cmc.log)"
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"Hier kunt u instellen of de prestatiecounters moeten worden opgevraagd. Dit "
-"kan behoorlijk wat CPU belasting besparen op grotere systemen."
 
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
@@ -34856,6 +34854,10 @@ msgstr "Interface"
 msgid "Interface %s"
 msgstr "Interface %s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "Interface"
+
 msgid "Interface groups"
 msgstr "Interface groepen"
 
@@ -36533,6 +36535,9 @@ msgstr "LUN is alleen-lezen"
 
 msgid "LUN name"
 msgstr "LUN-naam"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "LVM-volumes (Linux)"
@@ -43326,6 +43331,10 @@ msgid "Network IO"
 msgstr "Netwerk IO"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "Netwerk interfaces"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "Netwerk interfaces"
 
@@ -43341,6 +43350,10 @@ msgstr "Netwerk Load Balancer Doelgroepen"
 
 msgid "Network Load balancers"
 msgstr "Netwerk Load Balancers"
+
+#, fuzzy
+msgid "Network Ports"
+msgstr "Netwerk uit"
 
 #, fuzzy, python-format
 msgid "Network adapter %d"
@@ -49694,9 +49707,6 @@ msgstr "Prestatiegegevens instellingen"
 msgid "Performance graph"
 msgstr "Prestatie grafiek"
 
-msgid "Performance improvements"
-msgstr "Prestatieverbeteringen"
-
 msgid "Performance options"
 msgstr "Prestatie-opties"
 
@@ -51117,6 +51127,10 @@ msgstr "Vermogen"
 msgid "Power Presence Sensors"
 msgstr "Stroom Aanwezigheid Sensoren"
 
+#, fuzzy
+msgid "Power Supplies"
+msgstr "Stroomvoorziening"
+
 msgid "Power Usage"
 msgstr "Stroomverbruik"
 
@@ -51991,6 +52005,10 @@ msgstr "Opslaan en naar service configuratie gaan"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "Gratis tapes"
 
 msgid "Quantum Storage Status"
 msgstr "Quantum Opslag Status"
@@ -55947,6 +55965,10 @@ msgstr "STunnel status"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "Status"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -56835,6 +56857,13 @@ msgid ""
 msgstr ""
 "Selecteer de LDAP-versie die door de LDAP-server wordt gebruikt. De meeste "
 "moderne servers gebruiken LDAP versie 3."
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -59874,6 +59903,10 @@ msgstr "Foutafhandeling"
 #, fuzzy
 msgid "Smoke monitoring"
 msgstr "Netwerkbewaking"
+
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Kluisjes"
 
 msgid "Snapshot build currently in progress"
 msgstr "Snapshot build is bezig"
@@ -63715,6 +63748,10 @@ msgstr "Temperatuur rijstrook %d"
 #, fuzzy
 msgid "Temperature Lane 9"
 msgstr "Temperatuur rijstrook %d"
+
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "Temperatuur alarm"
 
 msgid "Temperature Trend Analysis"
 msgstr "Trendanalyse temperatuur"
@@ -77371,6 +77408,10 @@ msgstr "Verkeersmanager"
 msgid "Traffic Received"
 msgstr "Ontvangen verkeer"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "Verkeer Verzonden"
+
 msgid "Traffic Sent"
 msgstr "Verkeer Verzonden"
 
@@ -82257,6 +82298,9 @@ msgstr "Volumegroep"
 
 msgid "Volume Groups (LVM)"
 msgstr "Volumegroepen (LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 #, fuzzy
 msgid "Volume group name"
@@ -89311,6 +89355,19 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "Vraag niet naar volume prestatiecounters"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "Hier kunt u instellen of de prestatiecounters moeten worden opgevraagd. "
+#~ "Dit kan behoorlijk wat CPU belasting besparen op grotere systemen."
+
+#~ msgid "Performance improvements"
+#~ msgstr "Prestatieverbeteringen"
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

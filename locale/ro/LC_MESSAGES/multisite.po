@@ -21066,9 +21066,6 @@ msgstr ""
 msgid "Do not perform periodic service discovery check"
 msgstr "Nu efectuați verificarea periodică a descoperirii serviciilor"
 
-msgid "Do not query volume performance counters"
-msgstr "Nu interogați contoarele de performanță a volumului"
-
 msgid "Do not regard required mirror space as free space"
 msgstr "Nu considerați spațiul în oglindă necesar ca spațiu liber"
 
@@ -23374,6 +23371,10 @@ msgstr "Intrări pe rând"
 msgid "Entry"
 msgstr "Intrare"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "Variabile de mediu"
+
 msgid "Environment Variables"
 msgstr "Variabile de mediu"
 
@@ -25128,6 +25129,10 @@ msgstr "Fetch a avut anteturi proaste"
 
 msgid "Fetch head"
 msgstr "Capul de aducere"
+
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "Colectați informații despre..."
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervale de preluare pentru secțiunile SNMP"
@@ -28175,14 +28180,6 @@ msgid ""
 msgstr ""
 "Aici puteți configura dacă și cum este înregistrată crearea fișierelor RRD "
 "(în fișierul jurnal var/log/cmc.log)."
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"Aici puteți configura dacă contoarele de performanță trebuie să fie "
-"interogate. Acest lucru poate economisi destul de mult din sarcina CPU pe "
-"sistemele mari."
 
 # georgem ###
 msgid ""
@@ -34938,6 +34935,10 @@ msgstr "Interfață"
 msgid "Interface %s"
 msgstr "Interfața %s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "Interfață"
+
 # georgem ##############
 msgid "Interface groups"
 msgstr "Grupuri de interfețe"
@@ -36613,6 +36614,9 @@ msgstr "LUN este numai pentru citire"
 
 msgid "LUN name"
 msgstr "Numele LUN"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "Volume LVM (Linux)"
@@ -43402,6 +43406,10 @@ msgid "Network IO"
 msgstr "Rețea IO"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "Interfețe de rețea"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "Interfețe de rețea"
 
@@ -43417,6 +43425,10 @@ msgstr "Grupuri țintă de echilibrare a încărcăturii de rețea"
 
 msgid "Network Load balancers"
 msgstr "Balansatoare de sarcină în rețea"
+
+#, fuzzy
+msgid "Network Ports"
+msgstr "Rețea afară"
 
 #, fuzzy, python-format
 msgid "Network adapter %d"
@@ -49742,9 +49754,6 @@ msgstr "Setări privind datele de performanță"
 msgid "Performance graph"
 msgstr "Grafic de performanță"
 
-msgid "Performance improvements"
-msgstr "Îmbunătățiri de performanță"
-
 msgid "Performance options"
 msgstr "Opțiuni de performanță"
 
@@ -51186,6 +51195,10 @@ msgstr "Putere"
 msgid "Power Presence Sensors"
 msgstr "Senzori de prezență de putere"
 
+#, fuzzy
+msgid "Power Supplies"
+msgstr "Surse de alimentare"
+
 msgid "Power Usage"
 msgstr "Utilizarea energiei"
 
@@ -52063,6 +52076,10 @@ msgstr "Salveaza configuratia manuala a verificarilor"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "Casete gratuite"
 
 msgid "Quantum Storage Status"
 msgstr "Starea Quantum Storage"
@@ -56017,6 +56034,10 @@ msgstr "STunnel status"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect (Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "Stare"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -56925,6 +56946,13 @@ msgid ""
 msgstr ""
 "Selectați versiunea LDAP pe care o deservește serverul LDAP. Majoritatea "
 "serverelor moderne utilizează versiunea 3 LDAP."
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -60005,6 +60033,10 @@ msgstr "Manipularea fumului"
 
 msgid "Smoke monitoring"
 msgstr "Monitorizarea fumului"
+
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Seifuri"
 
 msgid "Snapshot build currently in progress"
 msgstr "Construirea instantanee în curs de desfășurare"
@@ -63868,6 +63900,10 @@ msgstr "Culoarul de temperatură %d"
 #, fuzzy
 msgid "Temperature Lane 9"
 msgstr "Culoarul de temperatură %d"
+
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "Alertă de temperatură"
 
 msgid "Temperature Trend Analysis"
 msgstr "Analiza tendinței temperaturii"
@@ -77547,6 +77583,10 @@ msgstr "Manager de trafic"
 msgid "Traffic Received"
 msgstr "Traficul primit"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "Trafic trimis"
+
 msgid "Traffic Sent"
 msgstr "Trafic trimis"
 
@@ -82435,6 +82475,9 @@ msgstr "Grupul de volum"
 
 msgid "Volume Groups (LVM)"
 msgstr "Grupuri de volume (LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 #, fuzzy
 msgid "Volume group name"
@@ -89507,6 +89550,20 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "Nu interogați contoarele de performanță a volumului"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "Aici puteți configura dacă contoarele de performanță trebuie să fie "
+#~ "interogate. Acest lucru poate economisi destul de mult din sarcina CPU pe "
+#~ "sistemele mari."
+
+#~ msgid "Performance improvements"
+#~ msgstr "Îmbunătățiri de performanță"
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

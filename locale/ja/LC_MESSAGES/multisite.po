@@ -20095,9 +20095,6 @@ msgstr "アクションを実行せず、このメッセージをドロップし
 msgid "Do not perform periodic service discovery check"
 msgstr "定期的なサービス検出チェックを実行しないでください"
 
-msgid "Do not query volume performance counters"
-msgstr "ボリュームパフォーマンスカウンターを照会しないでください"
-
 msgid "Do not regard required mirror space as free space"
 msgstr "必要なミラースペースを空きスペースと見なさないでください"
 
@@ -22338,6 +22335,10 @@ msgstr "行あたりのエントリー"
 msgid "Entry"
 msgstr "エントリ"
 
+#, fuzzy
+msgid "Environment Sensors"
+msgstr "環境変数"
+
 msgid "Environment Variables"
 msgstr "環境変数"
 
@@ -24040,6 +24041,10 @@ msgstr "フェッチのヘッダーが不良でした"
 
 msgid "Fetch head"
 msgstr "フェッチヘッド"
+
+#, fuzzy
+msgid "Fetch information about..."
+msgstr "情報を収集する..."
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "SNMPセクションのフェッチ間隔"
@@ -26982,13 +26987,6 @@ msgid ""
 msgstr ""
 "ここで、RRDファイルの作成がログに記録されるかどうかとその方法を構成できます"
 "(ログファイルvar/log/cmc.logに)"
-
-msgid ""
-"Here you can configure whether the performance counters should get queried. "
-"This can save quite a lot of CPU load on larger systems."
-msgstr ""
-"ここで、パフォーマンスカウンターを照会するかどうかを構成できます。これによ"
-"り、大規模なシステムでCPU負荷を大幅に節約できます。"
 
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
@@ -33425,6 +33423,10 @@ msgstr "インターフェース"
 msgid "Interface %s"
 msgstr "インターフェース%s"
 
+#, fuzzy
+msgid "Interface FCP"
+msgstr "インターフェース"
+
 msgid "Interface groups"
 msgstr "インターフェイスグループ"
 
@@ -35049,6 +35051,9 @@ msgstr "LUNは読み取り専用です"
 
 msgid "LUN name"
 msgstr "LUN名"
+
+msgid "LUNs"
+msgstr ""
 
 msgid "LVM volumes (Linux)"
 msgstr "LVMボリューム(Linux)"
@@ -41584,6 +41589,10 @@ msgid "Network IO"
 msgstr "ネットワークIO"
 
 #, fuzzy
+msgid "Network Interfaces"
+msgstr "ネットワークインターフェース"
+
+#, fuzzy
 msgid "Network Interfaces 1"
 msgstr "ネットワークインターフェース"
 
@@ -41599,6 +41608,10 @@ msgstr "ネットワークロードバランサーのターゲットグループ
 
 msgid "Network Load balancers"
 msgstr "ネットワークロードバランサー"
+
+#, fuzzy
+msgid "Network Ports"
+msgstr "ネットワーク out"
 
 #, python-format
 msgid "Network adapter %d"
@@ -47709,9 +47722,6 @@ msgstr "パフォーマンスデータの設定"
 msgid "Performance graph"
 msgstr "パフォーマンスグラフ"
 
-msgid "Performance improvements"
-msgstr "パフォーマンスの向上"
-
 msgid "Performance options"
 msgstr "パフォーマンスオプション"
 
@@ -49055,6 +49065,10 @@ msgstr "Power"
 msgid "Power Presence Sensors"
 msgstr "パワープレゼンスセンサー"
 
+#, fuzzy
+msgid "Power Supplies"
+msgstr "電源供給装置"
+
 msgid "Power Usage"
 msgstr "電力使用量"
 
@@ -49907,6 +49921,10 @@ msgstr "QoS：サービス品質の設定"
 
 msgid "Qps"
 msgstr "Qps"
+
+#, fuzzy
+msgid "Qtree Quotas"
+msgstr "フリーのテープ"
 
 msgid "Quantum Storage Status"
 msgstr "クアンタムストレージステータス"
@@ -53731,6 +53749,10 @@ msgstr "STunnelの状態"
 msgid "SUSEConnect (Linux)"
 msgstr "SUSEConnect(Linux)"
 
+#, fuzzy
+msgid "SVM Status"
+msgstr "状態"
+
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
 
@@ -54602,6 +54624,13 @@ msgid ""
 msgstr ""
 "LDAPサーバーが提供しているLDAPのバージョンを選択します。最近のサーバーの多く"
 "は、LDAPバージョン3を使用しています。"
+
+msgid ""
+"Select the NetApp resources you would like to fetch from the API. Note that "
+"some sections depend on others: 'Volume Performance Counters' requires "
+"'Volumes' data. Performance counter sections may consume more resources and "
+"take longer to collect on large systems."
+msgstr ""
 
 msgid ""
 "Select the graph to be displayed by this element. In case the current "
@@ -57516,6 +57545,10 @@ msgstr "煙のハンドリング"
 
 msgid "Smoke monitoring"
 msgstr "煙の監視"
+
+#, fuzzy
+msgid "SnapVaults"
+msgstr "Vaults"
 
 msgid "Snapshot build currently in progress"
 msgstr "現在進行中のスナップショットビルド"
@@ -61178,6 +61211,10 @@ msgstr "温度レーン %d"
 #, fuzzy
 msgid "Temperature Lane 9"
 msgstr "温度レーン %d"
+
+#, fuzzy
+msgid "Temperature Sensors"
+msgstr "温度アラート"
 
 msgid "Temperature Trend Analysis"
 msgstr "温度傾向分析"
@@ -73743,6 +73780,10 @@ msgstr "トラフィックマネージャー"
 msgid "Traffic Received"
 msgstr "受信したトラフィック"
 
+#, fuzzy
+msgid "Traffic SVM"
+msgstr "送信されたトラフィック"
+
 msgid "Traffic Sent"
 msgstr "送信されたトラフィック"
 
@@ -78445,6 +78486,9 @@ msgstr "ボリュームグループ"
 
 msgid "Volume Groups (LVM)"
 msgstr "ボリュームグループ(LVM)"
+
+msgid "Volume Performance Counters (requires Volumes)"
+msgstr ""
 
 msgid "Volume group name"
 msgstr "ボリュームグループ名"
@@ -85243,6 +85287,19 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "RCC プロファイル設定 (%s Robotmk Core MKP がインストールされているため)"
+
+#~ msgid "Do not query volume performance counters"
+#~ msgstr "ボリュームパフォーマンスカウンターを照会しないでください"
+
+#~ msgid ""
+#~ "Here you can configure whether the performance counters should get "
+#~ "queried. This can save quite a lot of CPU load on larger systems."
+#~ msgstr ""
+#~ "ここで、パフォーマンスカウンターを照会するかどうかを構成できます。これによ"
+#~ "り、大規模なシステムでCPU負荷を大幅に節約できます。"
+
+#~ msgid "Performance improvements"
+#~ msgstr "パフォーマンスの向上"
 
 #, fuzzy
 #~ msgid ""

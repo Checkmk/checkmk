@@ -382,7 +382,7 @@ def setup_source_host_piggyback(
         piggyback_hosts = None
         try:
             execute_dcd_cycle(site, expected_pb_hosts=len(pb_hosts_from_dump))
-            piggyback_hosts = get_piggyback_hosts(site, source_host_name)
+            piggyback_hosts = site.openapi.hosts.get_all_names([source_host_name])
             assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host_name}"'
 
             hostnames = piggyback_hosts + [source_host_name]
@@ -424,10 +424,6 @@ def setup_source_host_piggyback(
                     force_foreign_changes=True, strict=False
                 )
                 execute_dcd_cycle(site, expected_pb_hosts=0)
-                assert not get_piggyback_hosts(site, source_host_name), (
+                assert not site.openapi.hosts.get_all_names([source_host_name]), (
                     "Piggyback hosts still found: %s" % piggyback_hosts
                 )
-
-
-def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    return [_ for _ in site.openapi.hosts.get_all_names() if _ != source_host]

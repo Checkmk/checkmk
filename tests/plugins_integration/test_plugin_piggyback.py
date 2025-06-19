@@ -20,7 +20,6 @@ from tests.testlib.utils import get_services_with_status, write_file
 from tests.plugins_integration.checks import (
     config,
     dump_path_site,
-    get_piggyback_hosts,
     setup_source_host_piggyback,
 )
 
@@ -65,7 +64,7 @@ def test_plugin_piggyback(
         cmk_dump = read_cmk_dump(source_host_name, test_site_piggyback, "agent")
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
-        piggyback_hostnames = get_piggyback_hosts(test_site_piggyback, source_host_name)
+        piggyback_hostnames = test_site_piggyback.openapi.hosts.get_all_names([source_host_name])
         piggyback_hostnames_from_dump = read_piggyback_hosts_from_dump(disk_dump)
         pb_hosts_symmetric_diff = set(piggyback_hostnames).symmetric_difference(
             piggyback_hostnames_from_dump

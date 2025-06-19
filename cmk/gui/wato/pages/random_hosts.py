@@ -8,7 +8,7 @@ for test and development."""
 import random
 from collections.abc import Collection
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -21,7 +21,8 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
@@ -79,12 +80,14 @@ class ModeRandomHosts(WatoMode):
             forms.end()
             html.hidden_fields()
 
-    def _create_random_hosts(self, folder, count, folders, levels):
+    def _create_random_hosts(self, folder: Folder, count: int, folders: int, levels: int) -> int:
         if levels == 0:
-            hosts_to_create: list[tuple[HostName, dict, None]] = []
+            hosts_to_create: list[tuple[HostName, HostAttributes, None]] = []
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
-                hosts_to_create.append((HostName(host_name), {"ipaddress": "127.0.0.1"}, None))
+                hosts_to_create.append(
+                    (HostName(host_name), {"ipaddress": HostAddress("127.0.0.1")}, None)
+                )
             folder.create_hosts(hosts_to_create, pprint_value=active_config.wato_pprint_config)
             return count
 

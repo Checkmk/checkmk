@@ -81,6 +81,7 @@ API_DOMAIN = Literal[
     "notification_parameter",
     "broker_connection",
     "background_job",
+    "acknowledge",
 ]
 
 
@@ -3234,6 +3235,68 @@ class BackgroundJobClient(RestApiClient):
         )
 
 
+class AcknowledgeClient(RestApiClient):
+    domain: API_DOMAIN = "acknowledge"
+
+    def remove_for_host(self, host_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={"acknowledge_type": "host", "host_name": host_name},
+            expect_ok=expect_ok,
+        )
+
+    def remove_for_host_group(self, host_group_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={"acknowledge_type": "hostgroup", "hostgroup_name": host_group_name},
+            expect_ok=expect_ok,
+        )
+
+    def remove_for_host_by_query(
+        self, query: dict[str, object], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={"acknowledge_type": "host_by_query", "query": query},
+            expect_ok=expect_ok,
+        )
+
+    def remove_for_service(
+        self, host_name: str, service_description: str, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={
+                "acknowledge_type": "service",
+                "host_name": host_name,
+                "service_description": service_description,
+            },
+            expect_ok=expect_ok,
+        )
+
+    def remove_for_service_group(self, service_group_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={"acknowledge_type": "servicegroup", "servicegroup_name": service_group_name},
+            expect_ok=expect_ok,
+        )
+
+    def remove_for_service_by_query(
+        self, query: dict[str, object], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={"acknowledge_type": "service_by_query", "query": query},
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3284,6 +3347,7 @@ class ClientRegistry:
     ManagedRobots: ManagedRobotsClient
     BrokerConnection: BrokerConnectionClient
     BackgroundJob: BackgroundJobClient
+    Acknowledge: AcknowledgeClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3326,4 +3390,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
+        Acknowledge=AcknowledgeClient(request_handler, url_prefix),
     )

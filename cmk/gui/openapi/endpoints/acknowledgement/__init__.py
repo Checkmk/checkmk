@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import unquote
 
-from cmk.utils.livestatus_helpers.expressions import And
+from cmk.utils.livestatus_helpers.expressions import And, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts, Services
 
@@ -29,11 +29,13 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_hostgroup_problem,
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
+    remove_acknowledgement,
 )
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.acknowledgement.request_schemas import (
     AcknowledgeHostRelatedProblem,
     AcknowledgeServiceRelatedProblem,
+    RemoveProblemAcknowledgement,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -90,6 +92,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     notify = body["notify"]
     persistent = body["persistent"]
     comment = body["comment"]
+    expire_on = body.get("expire_on")
 
     acknowledge_type = body["acknowledge_type"]
 
@@ -110,6 +113,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
             persistent=persistent,
             user=user.ident,
             comment=comment,
+            expire_on=expire_on,
         )
     elif acknowledge_type == "hostgroup":
         host_group = body["hostgroup_name"]
@@ -122,6 +126,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
                 persistent=persistent,
                 user=user.ident,
                 comment=comment,
+                expire_on=expire_on,
             )
         except ValueError:
             raise ProblemException(
@@ -147,6 +152,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
                 persistent=persistent,
                 user=user.ident,
                 comment=comment,
+                expire_on=expire_on,
             )
     else:
         raise ProblemException(
@@ -182,6 +188,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
     notify = body["notify"]
     persistent = body["persistent"]
     comment = body["comment"]
+    expire_on = body.get("expire_on")
     acknowledge_type = body["acknowledge_type"]
 
     if acknowledge_type == "service":
@@ -212,6 +219,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
             persistent=persistent,
             user=user.ident,
             comment=comment,
+            expire_on=expire_on,
         )
     elif acknowledge_type == "servicegroup":
         service_group = body["servicegroup_name"]
@@ -224,6 +232,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
                 persistent=persistent,
                 user=user.ident,
                 comment=comment,
+                expire_on=expire_on,
             )
         except ValueError:
             raise ProblemException(
@@ -257,7 +266,96 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
                 persistent=persistent,
                 user=user.ident,
                 comment=comment,
+                expire_on=expire_on,
             )
+    else:
+        raise ProblemException(
+            status=400,
+            title="Unhandled acknowledge-type.",
+            detail=f"The acknowledge-type {acknowledge_type!r} is not supported.",
+        )
+
+    return http.Response(status=204)
+
+
+def _delete_host_acknowledgements_with_query(
+    query: QueryExpression,
+) -> None:
+    live = sites.live()
+    results = Query([Hosts.name], query).fetchall(live, include_site_ids=True)
+    for entry in results:
+        remove_acknowledgement(
+            live,
+            site_id=entry["site"],
+            host_name=entry[Hosts.name.name],
+        )
+
+
+def _delete_service_acknowledgements_with_query(
+    query: QueryExpression,
+) -> None:
+    live = sites.live()
+    results = Query([Services.host_name, Services.description], query).fetchall(
+        live, include_site_ids=True
+    )
+    for entry in results:
+        remove_acknowledgement(
+            live,
+            site_id=entry["site"],
+            host_name=entry[Services.host_name.name],
+            service_description=entry[Services.description.name],
+        )
+
+
+@Endpoint(
+    constructors.domain_type_action_href("acknowledge", "delete"),
+    ".../delete",
+    method="post",
+    tag_group="Monitoring",
+    skip_locking=True,
+    request_schema=RemoveProblemAcknowledgement,
+    output_empty=True,
+    permissions_required=RW_PERMISSIONS,
+    update_config_generation=False,
+)
+def delete_acknowledgement(params: Mapping[str, Any]) -> Response:
+    """Remove acknowledgement on host or service problems."""
+    user.need_permission("action.acknowledge")
+    body = params["body"]
+    acknowledge_type = body["acknowledge_type"]
+
+    if acknowledge_type == "host":
+        _delete_host_acknowledgements_with_query(
+            And(Hosts.acknowledged > 0, Hosts.name == body["host_name"])
+        )
+
+    elif acknowledge_type == "hostgroup":
+        _delete_host_acknowledgements_with_query(
+            # equals() means contains, contains() means regex match :)
+            And(Hosts.acknowledged > 0, Hosts.groups.equals(body["hostgroup_name"]))
+        )
+
+    elif acknowledge_type == "host_by_query":
+        _delete_host_acknowledgements_with_query(body["query"])
+
+    elif acknowledge_type == "service":
+        _delete_service_acknowledgements_with_query(
+            And(
+                Services.acknowledged > 0,
+                Services.host_name == body["host_name"],
+                Services.description == body["service_description"],
+            )
+        )
+
+    elif acknowledge_type == "servicegroup":
+        _delete_service_acknowledgements_with_query(
+            # equals() means contains, contains() means regex match :)
+            And(Services.acknowledged > 0, Services.groups.equals(body["servicegroup_name"]))
+        )
+
+    elif acknowledge_type == "service_by_query":
+        _delete_service_acknowledgements_with_query(body["query"])
+
     else:
         raise ProblemException(
             status=400,
@@ -271,3 +369,4 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(set_acknowledgement_on_hosts)
     endpoint_registry.register(set_acknowledgement_on_services)
+    endpoint_registry.register(delete_acknowledgement)

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import abc
 import argparse
+import asyncio
 import datetime
 import enum
 import json
@@ -27,6 +28,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, Required, TypedDict, TypeVar
 
+import aiohttp  # type: ignore[import-not-found]
 import msal
 import requests
 
@@ -669,6 +671,105 @@ class BaseApiClient(abc.ABC):
             return json_data[key]
         except KeyError:
             raise _make_exception(json_data)
+
+
+class BaseAsyncApiClient(BaseApiClient):
+    async def _handle_ratelimit_async(self, session, method, url, **kwargs):
+        async def get_response():
+            async with session.request(method, url, **kwargs) as response:
+                await response.json()
+                return response
+
+        response = await get_response()
+        self._update_ratelimit(response)
+
+        for cool_off_interval in (5, 10):
+            if response.status != 429:
+                break
+
+            LOGGER.debug("Rate limit exceeded, waiting %s seconds", cool_off_interval)
+            await asyncio.sleep(cool_off_interval)
+            response = await get_response()
+            self._update_ratelimit(response)
+
+        return response
+
+    async def _request_async(
+        self,
+        method,
+        uri_end=None,
+        full_uri=None,
+        body=None,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
+        uri = full_uri or self._base_url + uri_end
+        if not uri:
+            raise ValueError("No URI provided")
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            response = await self._handle_ratelimit_async(
+                session,
+                method,
+                uri,
+                json=body,
+                params=params,
+                timeout=30,
+                proxy=self._http_proxy_config.to_requests_proxies(),
+            )
+            json_data = await response.json()
+            LOGGER.debug("response: %r", json_data)
+
+            if (error := json_data.get("error")) is not None:
+                raise _make_exception(error)
+
+            if key is None:
+                return json_data
+
+            data = self._lookup(json_data, key)
+
+            if next_link := json_data.get(next_page_key):
+                return data + await self._get_paginated_data_async(
+                    next_link=next_link,
+                    next_page_key=next_page_key,
+                    method=method,
+                    body=body,
+                    key=key,
+                )
+
+            return data
+
+    async def _get_paginated_data_async(
+        self,
+        next_link: str,
+        next_page_key: str,
+        method: str,
+        body: dict,
+        key: str,
+    ) -> list:
+        data = []
+        while next_link:
+            new_json_data = await self._request_async(method, full_uri=next_link, body=body)
+            data += self._lookup(new_json_data, key)
+            next_link = new_json_data.get(next_page_key)
+
+        return data
+
+    async def get_async(
+        self,
+        uri_end,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
+        return await self._request_async(
+            method="GET",
+            uri_end=uri_end,
+            key=key,
+            params=params,
+            next_page_key=next_page_key,
+        )
 
 
 class GraphApiClient(BaseApiClient):

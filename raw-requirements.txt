@@ -97,6 +97,7 @@ aiohttp==3.11.18 \
     --hash=sha256:fe7cdd3f7d1df43200e1c80f1aed86bb36033bf65e3c7cf46a2b97a253ef8798
     # via
     #   -c requirements.txt
+    #   -r cmk/requirements.in
     #   meraki
 aiosignal==1.3.2 \
     --hash=sha256:45cde58e409a301715980c2b01d0c28bdde3770d8290b5eb2173759d9acb31a5 \

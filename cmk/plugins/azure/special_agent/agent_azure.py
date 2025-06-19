@@ -773,7 +773,7 @@ class BaseAsyncApiClient(BaseApiClient):
 
         return response
 
-    async def _request_async(
+    async def request_async(
         self,
         method,
         uri_end=None,
@@ -782,12 +782,14 @@ class BaseAsyncApiClient(BaseApiClient):
         key=None,
         params=None,
         next_page_key="nextLink",
+        headers_expansion={},
     ):
         uri = full_uri or self._base_url + uri_end
         if not uri:
             raise ValueError("No URI provided")
 
-        async with aiohttp.ClientSession(headers=self._headers) as session:
+        # TODO: share session between requests!
+        async with aiohttp.ClientSession(headers={**self._headers, **headers_expansion}) as session:
             response = await self._handle_ratelimit_async(
                 session,
                 method,
@@ -829,7 +831,7 @@ class BaseAsyncApiClient(BaseApiClient):
     ) -> list:
         data = []
         while next_link:
-            new_json_data = await self._request_async(method, full_uri=next_link, body=body)
+            new_json_data = await self.request_async(method, full_uri=next_link, body=body)
             data += self._lookup(new_json_data, key)
             next_link = new_json_data.get(next_page_key)
 
@@ -842,51 +844,13 @@ class BaseAsyncApiClient(BaseApiClient):
         params=None,
         next_page_key="nextLink",
     ):
-        return await self._request_async(
+        return await self.request_async(
             method="GET",
             uri_end=uri_end,
             key=key,
             params=params,
             next_page_key=next_page_key,
         )
-
-
-class GraphApiClient(BaseApiClient):
-    def users(self, data=None, uri=None):
-        if data is None:
-            data = []
-
-        # the uri is the link to the next page for pagination of results
-        if uri:
-            response = self._get(uri)
-        else:
-            response = self._get("users?$top=%s" % 500)
-        data += response.get("value", [])
-
-        # check if there is a next page, otherwise return result
-        next_page = response.get("@odata.nextLink")
-        if next_page is None:
-            return data
-
-        # if there is another page, remove the base url to get uri
-        uri = next_page.replace(self._base_url, "")
-        return self.users(data=data, uri=uri)
-
-    def organization(self):
-        return self._get("organization", key="value")
-
-    def applications(self):
-        applications = self._get("applications", key="value", next_page_key="@odata.nextLink")
-        return self._filter_out_applications(applications)
-
-    @staticmethod
-    def _filter_out_applications(
-        applications: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        key_subset = {"id", "appId", "displayName", "passwordCredentials"}
-        return [
-            {k: app[k] for k in key_subset} for app in applications if app["passwordCredentials"]
-        ]
 
 
 class MgmtApiClient(BaseAsyncApiClient):
@@ -1012,7 +976,7 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         params["api-version"] = "2023-10-01"
         try:
-            return await self._request_async(
+            return await self.request_async(
                 "POST",
                 full_uri=self._regional_url(region) + "/metrics:getBatch",
                 body={"resourceids": resource_ids},
@@ -1026,7 +990,7 @@ class MgmtApiClient(BaseAsyncApiClient):
             )
             if retry_names:
                 params["metricnames"] = retry_names
-                return await self._request_async(
+                return await self.request_async(
                     "POST",
                     full_uri=self._regional_url(region) + "/metrics:getBatch",
                     body={"resourceids": resource_ids},
@@ -1697,35 +1661,41 @@ class MetricCache(DataCache):
         return live_data
 
 
-def write_section_ad(
-    graph_client: GraphApiClient, section: AzureSection, args: argparse.Namespace
-) -> None:
-    enabled_services = set(args.services)
-    # users
-    if "users_count" in enabled_services:
-        users = graph_client.users()
-        section.add(["users_count", len(users)])
+async def process_users(graph_api_client: BaseAsyncApiClient) -> AzureSection:
+    users_count = await graph_api_client.request_async(
+        "GET",
+        uri_end="users",
+        params={"$top": 1, "$count": "true"},
+        key="@odata.count",
+        headers_expansion={"ConsistencyLevel": "eventual"},
+    )
+    section = AzureSection("ad")
+    section.add(["users_count", users_count])
 
-    # organization
-    if "ad_connect" in enabled_services:
-        orgas = graph_client.organization()
-        section.add(["ad_connect", json.dumps(orgas)])
-
-    section.write()
+    return section
 
 
-def write_section_app_registrations(graph_client: GraphApiClient, args: argparse.Namespace) -> None:
-    if "app_registrations" not in args.services:
-        return
+async def process_organization(graph_api_client: BaseAsyncApiClient) -> AzureSection:
+    orgs = await graph_api_client.get_async("organization", key="value")
+    section = AzureSection("ad")
+    section.add(["ad_connect", json.dumps(orgs)])
+
+    return section
+
+
+async def process_app_registrations(graph_api_client: BaseAsyncApiClient) -> AzureSection:
+    apps = await graph_api_client.get_async(
+        "applications", key="value", next_page_key="@odata.nextLink"
+    )
+
+    key_subset = {"id", "appId", "displayName", "passwordCredentials"}
+    apps = [{k: app[k] for k in key_subset} for app in apps if app["passwordCredentials"]]
 
     section = AzureSection("app_registration", separator=0)
-
-    # app registration with client secrets
-    apps = graph_client.applications()
     for app_reg in apps:
         section.add([json.dumps(app_reg)])
 
-    section.write()
+    return section
 
 
 async def process_metrics(
@@ -1896,23 +1866,47 @@ def write_exception_to_agent_info_section(exception, component):
     write_to_agent_info_section(msg, component, 2)
 
 
-def main_graph_client(args: Args) -> None:
-    graph_client = GraphApiClient(
+async def main_graph_client(args: Args, monitored_services: set[str]) -> None:
+    tasks_map = {
+        "users_count": process_users,
+        "ad_connect": process_organization,
+        "app_registrations": process_app_registrations,
+    }
+    if not any(service in monitored_services for service in tasks_map):
+        return
+
+    def _handle_graph_client_exception(exc: Exception, debug: bool) -> None:
+        if isinstance(exc, ApiLoginFailed | ApiErrorAuthorizationRequestDenied):
+            # We are not raising the exception in debug mode.
+            # Having no permissions for the graph API is a legit configuration
+            write_exception_to_agent_info_section(exc, "Graph client (async)")
+        elif debug:
+            raise exc
+        else:
+            write_exception_to_agent_info_section(exc, "Graph client (async)")
+
+    graph_client = BaseAsyncApiClient(
         _get_graph_authority_urls(args.authority),
         deserialize_http_proxy_config(args.proxy),
     )
+
     try:
         graph_client.login(args.tenant, args.client, args.secret)
-        write_section_ad(graph_client, AzureSection("ad"), args)
-        write_section_app_registrations(graph_client, args)
-    except (ApiLoginFailed, ApiErrorAuthorizationRequestDenied) as exc:
-        # We are not raising the exception in debug mode.
-        # Having no permissions for the graph API is a legit configuration
-        write_exception_to_agent_info_section(exc, "Graph client")
     except Exception as exc:
-        if args.debug:
-            raise
-        write_exception_to_agent_info_section(exc, "Graph client")
+        _handle_graph_client_exception(exc, args.debug)
+
+    tasks = {
+        task_call(graph_client)
+        for service, task_call in tasks_map.items()
+        if service in monitored_services
+    }
+
+    for coroutine in asyncio.as_completed(tasks):
+        try:
+            section = await coroutine
+            section.write()
+        except Exception as exc:
+            _handle_graph_client_exception(exc, args.debug)
 
 
 async def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
@@ -2327,7 +2321,9 @@ def test_connections(args: Args, subscriptions: set[str]) -> int:
 
 
 async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) -> None:
+    monitored_services = set(args.services)
     await asyncio.gather(
+        main_graph_client(args, monitored_services),
         *{main_subscription(args, selector, subscription) for subscription in subscriptions},
     )
 
@@ -2352,9 +2348,8 @@ def main(argv=None):
 
     asyncio.run(collect_info(args, selector, subscriptions))
     LOGGER.debug("%s", selector)
-    main_graph_client(args)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -30,7 +30,6 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagsImportPatternOption,
     write_group_info,
     write_remaining_reads,
-    write_section_ad,
 )
 
 pytestmark = pytest.mark.checks
@@ -506,32 +505,6 @@ def test_write_group_info(
     write_group_info(monitored_groups, monitored_resources, group_tags)
     captured = capsys.readouterr()
     assert captured.out == expected_result
-
-
-@pytest.mark.parametrize(
-    "enabled_services",
-    [
-        [],
-        ["users_count"],
-        ["users_count", "ad_connect", "non_existing_service"],
-    ],
-)
-def test_write_section_ad(enabled_services: list[str]) -> None:
-    graph_client = MagicMock()
-    graph_client.users.return_value = {"key": "users_data"}
-    graph_client.organization.return_value = {"key": "organization_data"}
-    azure_section = MagicMock()
-    write_section_ad(graph_client, azure_section, Args(services=enabled_services))
-
-    if "users_count" in enabled_services:
-        graph_client.users.assert_called()
-    else:
-        graph_client.users.assert_not_called()
-
-    if "ad_connect" in enabled_services:
-        graph_client.organization.assert_called()
-    else:
-        graph_client.organization.assert_not_called()
 
 
 @pytest.mark.parametrize(

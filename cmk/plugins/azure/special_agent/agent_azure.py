@@ -293,7 +293,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     parser.add_argument(
         "--cache-id",
-        required=True,
+        required="--connection-test" not in sys.argv,
         help="Unique id for this special agent configuration",
     )
 

@@ -67,7 +67,7 @@ class MockMgmtApiClient(MgmtApiClient):
     async def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups
 
-    def vmview(self, group: str, name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
+    async def vmview(self, group: str, name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
         return self.vmviews[group][name]
 
     @property
@@ -202,7 +202,8 @@ class MockMgmtApiClient(MgmtApiClient):
         ),
     ],
 )
-def test_process_vm(
+@pytest.mark.asyncio
+async def test_process_vm(
     mgmt_client: MgmtApiClient,
     vmach_info: Mapping[str, Any],
     args: Args,
@@ -211,7 +212,7 @@ def test_process_vm(
     expected_piggyback_targets: Sequence[str],
 ) -> None:
     vmach = AzureResource(vmach_info, TagsImportPatternOption.import_all)
-    process_vm(mgmt_client, vmach, args)
+    await process_vm(mgmt_client, vmach, args)
 
     assert vmach.info == expected_info
     assert vmach.tags == expected_tags
@@ -416,7 +417,8 @@ def test_get_vm_labels_section(
     ],
 )
 @patch("cmk.plugins.azure.special_agent.agent_azure.gather_metrics", return_value=None)
-def test_process_resource(
+@pytest.mark.asyncio
+async def test_process_resource(
     mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
@@ -425,7 +427,7 @@ def test_process_resource(
     expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
 ) -> None:
     resource = AzureResource(resource_info, args.tag_key_pattern)
-    sections = process_resource(mgmt_client, resource, group_tags, args)
+    sections = await process_resource(mgmt_client, resource, group_tags, args)
     assert len(sections) == len(expected_result)
     for section, expected_section in zip(sections, expected_result):
         assert isinstance(section, expected_section[0])

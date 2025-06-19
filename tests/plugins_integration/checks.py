@@ -118,47 +118,6 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(
-    site: Site | None = None, dump_dir: Path | None = None, piggyback: bool = False
-) -> list[str]:
-    """Return the list of agent/snmp hosts via filesystem or site.openapi."""
-    dump_dir = (dump_dir or config.dump_dir_integration) / ("piggyback" if piggyback else "")
-    if site:
-        hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
-        agent_host_names = [_["id"] for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})]
-        snmp_host_names = [_.get("id") for _ in hosts if "tag_snmp_ds" in _.get("attributes", {})]
-    else:
-        agent_host_names = []
-        snmp_host_names = []
-        if not dump_dir.exists():
-            # need to skip here to abort the collection and return RC=5: "no tests collected"
-            pytest.skip(f'Folder "{dump_dir}" not found; exiting!', allow_module_level=True)
-        for dump_file_name in [
-            _
-            for _ in os.listdir(dump_dir)
-            if (not _.startswith(".") and _ not in config.skipped_dumps)
-            and os.path.isfile(os.path.join(dump_dir, _))
-        ]:
-            try:
-                dump_file_path = dump_dir / dump_file_name
-                with open(dump_file_path, encoding="utf-8") as dump_file:
-                    if re.match(r"^snmp-", dump_file_name) and dump_file.read(1) == ".":
-                        snmp_host_names.append(dump_file_name)
-                    elif re.match(r"^agent-\d+\.\d+\.\d+\w*\d*-", dump_file_name):
-                        agent_host_names.append(dump_file_name)
-                    else:
-                        raise Exception(
-                            f"A dump file name should start either with 'agent-X.X.XpX-' or with "
-                            f"'snmp-', where X.X.XpX defines the agent version used."
-                            f"This is not the case for {dump_file_name}"
-                        )
-            except OSError:
-                logger.error('Could not access dump file "%s"!', dump_file_name)
-            except UnicodeDecodeError:
-                logger.error('Could not decode dump file "%s"!', dump_file_name)
-    return agent_host_names + snmp_host_names
-
-
 def _verify_check_result(
     check_id: str,
     canon_data: dict[str, Any],

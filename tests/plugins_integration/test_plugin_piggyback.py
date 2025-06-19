@@ -7,7 +7,12 @@ import logging
 
 import pytest
 
-from tests.testlib.agent_dumps import read_cmk_dump, read_disk_dump, read_piggyback_hosts_from_dump
+from tests.testlib.agent_dumps import (
+    get_dump_names,
+    read_cmk_dump,
+    read_disk_dump,
+    read_piggyback_hosts_from_dump,
+)
 from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, write_file
@@ -15,7 +20,6 @@ from tests.testlib.utils import get_services_with_status, write_file
 from tests.plugins_integration.checks import (
     config,
     dump_path_site,
-    get_host_names,
     get_piggyback_hosts,
     setup_source_host_piggyback,
 )
@@ -49,7 +53,9 @@ def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
     return dump
 
 
-@pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
+@pytest.mark.parametrize(
+    "source_host_name", get_dump_names(config.dump_dir_integration / "piggyback")
+)
 def test_plugin_piggyback(
     test_site_piggyback: Site,
     source_host_name: str,
@@ -89,6 +95,6 @@ def test_plugin_piggyback(
             f"Host {pb_host_to_rm} was not removed from the agent dump."
         )
         execute_dcd_cycle(test_site_piggyback, expected_pb_hosts=len(pb_hosts))
-        assert pb_host_to_rm not in get_piggyback_hosts(test_site_piggyback, source_host_name), (
+        assert pb_host_to_rm not in test_site_piggyback.openapi.hosts.get_all_names(), (
             f"Host {pb_host_to_rm} was not removed from the site."
         )

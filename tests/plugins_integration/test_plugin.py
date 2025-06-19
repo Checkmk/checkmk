@@ -7,12 +7,11 @@ import textwrap
 
 import pytest
 
-from tests.testlib.agent_dumps import read_cmk_dump, read_disk_dump
+from tests.testlib.agent_dumps import get_dump_and_walk_names, read_cmk_dump, read_disk_dump
 from tests.testlib.site import Site
 
 from tests.plugins_integration.checks import (
     config,
-    get_host_names,
     process_check_output,
     setup_host,
 )
@@ -20,7 +19,7 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.parametrize("host_name", get_host_names())
+@pytest.mark.parametrize("host_name", get_dump_and_walk_names(config.dump_dir_integration))
 def test_plugin(
     test_site: Site,
     host_name: str,

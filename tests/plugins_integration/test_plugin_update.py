@@ -6,12 +6,12 @@ import logging
 
 import pytest
 
+from tests.testlib.agent_dumps import get_dump_and_walk_names
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
 from tests.plugins_integration.checks import (
     config,
-    get_host_names,
     setup_host,
 )
 
@@ -70,10 +70,10 @@ def test_plugin_update(
     psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
-    hostnames = get_host_names(dump_dir=config.dump_dir_integration) + get_host_names(
-        dump_dir=config.dump_dir_siteless
-    )
-    for host_name in (_ for _ in hostnames if _ not in config.skipped_dumps):
+    hostnames = get_dump_and_walk_names(
+        config.dump_dir_integration, config.skipped_dumps
+    ) + get_dump_and_walk_names(config.dump_dir_siteless, config.skipped_dumps)
+    for host_name in hostnames:
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 
@@ -87,7 +87,7 @@ def test_plugin_update(
 
     target_data = {}
     target_data_status_0 = {}
-    for host_name in get_host_names(test_site_update):
+    for host_name in test_site_update.openapi.hosts.get_all_names():
         target_data[host_name] = test_site_update.get_host_services(host_name)
 
         for skipped_check in config.skipped_checks:
@@ -114,13 +114,13 @@ def test_plugin_update(
         )
 
     test_site_update.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
-        get_host_names(test_site_update)
+        test_site_update.openapi.hosts.get_all_names()
     )
     test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data_sd = {}
     target_data_sd_status_0 = {}
-    for host_name in get_host_names(test_site_update):
+    for host_name in test_site_update.openapi.hosts.get_all_names():
         target_data_sd[host_name] = test_site_update.get_host_services(host_name)
         target_data_sd_status_0[host_name] = get_services_with_status(target_data_sd[host_name], 0)
 

@@ -35209,10 +35209,6 @@ msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
 "<tt>cmk/os_family:linux</tt>です。"
 
-#, fuzzy
-msgid "Labels need to be unique."
-msgstr "IDは一意である必要があります。"
-
 msgid "Lambda"
 msgstr "Lambda"
 
@@ -85647,6 +85643,10 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, fuzzy
+#~ msgid "Labels need to be unique."
+#~ msgstr "IDは一意である必要があります。"
 
 #, fuzzy
 #~ msgid ""

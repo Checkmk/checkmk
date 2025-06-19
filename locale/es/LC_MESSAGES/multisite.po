@@ -37102,10 +37102,6 @@ msgstr ""
 "Las etiquetas deben tener el formato <tt>[CLAVE]:[VALOR]</tt>. Por ejemplo "
 "<tt>cmk/os_family:linux</tt>."
 
-#, fuzzy
-msgid "Labels need to be unique."
-msgstr "El ID debe ser único."
-
 msgid "Lambda"
 msgstr "Lambda"
 
@@ -90640,6 +90636,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Labels need to be unique."
+#~ msgstr "El ID debe ser único."
 
 #, fuzzy
 #~ msgid ""

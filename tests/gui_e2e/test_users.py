@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 from collections.abc import Iterator
 
 import pytest
@@ -53,9 +54,10 @@ def create_new_role_by_cloning(
     edit_role_page.alias_text_field.fill(role_data.alias)
     edit_role_page.save_button.click()
     yield role_data
-    roles_and_permissions_page.navigate()
-    roles_and_permissions_page.delete_role(role_data.role_id)
-    roles_and_permissions_page.activate_changes(test_site)
+    if os.getenv("CLEANUP", "1") == "1":
+        roles_and_permissions_page.navigate()
+        roles_and_permissions_page.delete_role(role_data.role_id, test_site.openapi.user_role)
+        roles_and_permissions_page.activate_changes(test_site)
 
 
 @pytest.fixture(name="new_user")
@@ -77,9 +79,10 @@ def create_new_user(
     add_user_page.fill_users_data(user_data)
     add_user_page.save_button.click()
     yield user_data
-    users_page = Users(dashboard_page.page)
-    users_page.delete_user(user_data.user_id)
-    users_page.activate_changes(test_site)
+    if os.getenv("CLEANUP", "1") == "1":
+        users_page = Users(dashboard_page.page)
+        users_page.delete_user(user_data.user_id, test_site.openapi.users)
+        users_page.activate_changes(test_site)
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,7 @@ from marshmallow.fields import Field
 
 from cmk.fields.base import Integer, List, Nested, String
 from cmk.fields.primitives import (
+    AwareDateTime,
     Boolean,
     Constant,
     Date,
@@ -34,6 +35,7 @@ from cmk.fields.validators import (
 )
 
 __all__ = [
+    "AwareDateTime",
     "Boolean",
     "Constant",
     "Dict",

@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime as dt
 import json
 
 import pytest
+
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
@@ -310,6 +313,9 @@ def test_openapi_acknowledge_servicegroup(
     )
 
     live.expect_query(
+        "GET servicegroups\nColumns: name\nFilter: name = routers",
+    )
+    live.expect_query(
         "GET servicegroups\nColumns: members\nFilter: name = routers",
     )
     live.expect_query(
@@ -512,3 +518,266 @@ def test_openapi_acknowledge_host_with_non_matching_query(
             headers={"Accept": "application/json"},
             status=422,
         )
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_acknowledge_host_with_expire_on(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+    base = "/NO_SITE/check_mk/api/1.0"
+    in_the_future = dt.datetime.now(dt.UTC) + dt.timedelta(days=1)
+
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "example.com",
+                "state": 1,
+            },
+            {
+                "name": "heute",
+                "state": 0,
+            },
+        ],
+    )
+
+    live.expect_query(  # request data validation
+        "GET hosts\nColumns: name\nFilter: name = example.com"
+    )
+    live.expect_query("GET hosts\nColumns: state\nFilter: name = example.com")
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
+    live.expect_query(
+        f"COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged;{int(in_the_future.timestamp())}",
+        match_type="ellipsis",
+    )
+    with live:
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/acknowledge/collections/host",
+            content_type="application/json",
+            params=json.dumps(
+                {
+                    "acknowledge_type": "host",
+                    "host_name": "example.com",
+                    "sticky": False,
+                    "notify": False,
+                    "persistent": False,
+                    "comment": "Acknowledged",
+                    "expire_on": in_the_future.isoformat(),
+                }
+            ),
+            headers={"Accept": "application/json"},
+            status=204,
+        )
+
+
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize(
+    "host_name, expect_removal",
+    [
+        ["example.com", True],
+        ["heute", False],
+    ],
+)
+def test_openapi_remove_acknowledgement_for_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    host_name: str,
+    expect_removal: bool,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "hosts",
+        [
+            {"name": "example.com", "acknowledged": 1},
+            {"name": "heute", "acknowledged": 0},
+        ],
+    )
+
+    live.expect_query(  # request data validation
+        f"GET hosts\nColumns: name\nFilter: name = {host_name}"
+    )
+    live.expect_query(
+        [
+            "GET hosts",
+            "Columns: name",
+            "Filter: acknowledged > 0",
+            f"Filter: name = {host_name}",
+            "And: 2",
+        ]
+    )
+    if expect_removal:
+        live.expect_query(
+            f"COMMAND [...] REMOVE_HOST_ACKNOWLEDGEMENT;{host_name}",
+            match_type="ellipsis",
+        )
+
+    with live:
+        clients.Acknowledge.remove_for_host(host_name)
+
+
+@pytest.mark.usefixtures("with_groups")
+def test_openapi_remove_acknowledgement_for_host_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "example.com",
+                "acknowledged": 1,
+                "groups": ["windows"],
+            },
+            {
+                "name": "heute",
+                "acknowledged": 0,
+                "groups": ["windows"],
+            },
+            {
+                "name": "Unrelated",
+                "acknowledged": 1,
+                "groups": [],
+            },
+        ],
+    )
+    live.add_table(
+        "hostgroups",
+        [{"name": "windows"}],
+    )
+
+    live.expect_query(  # request data validation
+        [
+            "GET hostgroups",
+            "Columns: name",
+            "Filter: name = windows",
+        ]
+    )
+    live.expect_query(
+        [
+            "GET hosts",
+            "Columns: name",
+            "Filter: acknowledged > 0",
+            "Filter: groups >= windows",
+            "And: 2",
+        ]
+    )
+    live.expect_query(
+        "COMMAND [...] REMOVE_HOST_ACKNOWLEDGEMENT;example.com",
+        match_type="ellipsis",
+    )
+
+    with live:
+        clients.Acknowledge.remove_for_host_group("windows")
+
+
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize(
+    "host_name, service, expect_removal",
+    [
+        ["example.com", "CPU load", True],
+        ["heute", "Memory", False],
+    ],
+)
+def test_openapi_remove_acknowledgement_for_service(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    host_name: str,
+    service: str,
+    expect_removal: bool,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {"host_name": "example.com", "description": "CPU load", "acknowledged": 1},
+            {"host_name": "heute", "description": "Memory", "acknowledged": 0},
+        ],
+    )
+
+    live.expect_query(  # request data validation
+        f"GET hosts\nColumns: name\nFilter: name = {host_name}"
+    )
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+            "Filter: acknowledged > 0",
+            f"Filter: host_name = {host_name}",
+            f"Filter: description = {service}",
+            "And: 3",
+        ]
+    )
+    if expect_removal:
+        live.expect_query(
+            f"COMMAND [...] REMOVE_SVC_ACKNOWLEDGEMENT;{host_name};{service}",
+            match_type="ellipsis",
+        )
+
+    with live:
+        clients.Acknowledge.remove_for_service(host_name, service)
+
+
+@pytest.mark.usefixtures("with_groups")
+def test_openapi_remove_acknowledgement_for_service_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "example.com",
+                "description": "CPU load",
+                "acknowledged": 1,
+                "groups": ["routers"],
+            },
+            {
+                "host_name": "heute",
+                "description": "Memory",
+                "acknowledged": 0,
+                "groups": ["routers"],
+            },
+            {
+                "host_name": "example.com",
+                "description": "Unrelated",
+                "acknowledged": 1,
+                "groups": [],
+            },
+        ],
+    )
+    live.add_table(
+        "servicegroups",
+        [{"name": "routers"}],
+    )
+
+    live.expect_query(  # request data validation
+        [
+            "GET servicegroups",
+            "Columns: name",
+            "Filter: name = routers",
+        ]
+    )
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+            "Filter: acknowledged > 0",
+            "Filter: groups >= routers",
+            "And: 2",
+        ]
+    )
+    live.expect_query(
+        "COMMAND [...] REMOVE_SVC_ACKNOWLEDGEMENT;example.com;CPU load",
+        match_type="ellipsis",
+    )
+
+    with live:
+        clients.Acknowledge.remove_for_service_group("routers")

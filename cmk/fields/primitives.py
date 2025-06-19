@@ -27,6 +27,10 @@ class DateTime(base.OpenAPIAttributes, fields.DateTime):
     pass
 
 
+class AwareDateTime(base.OpenAPIAttributes, fields.AwareDateTime):
+    pass
+
+
 class Decimal(base.OpenAPIAttributes, fields.Decimal):
     pass
 

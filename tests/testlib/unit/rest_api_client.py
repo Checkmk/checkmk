@@ -76,6 +76,7 @@ API_DOMAIN = Literal[
     "broker_connection",
     "background_job",
     "acknowledge",
+    "otel_collector_config",
 ]
 
 
@@ -3198,6 +3199,38 @@ class BrokerConnectionClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class OtelConfigClient(RestApiClient):
+    domain: API_DOMAIN = "otel_collector_config"
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get", url=f"/domain-types/{self.domain}/collections/all", expect_ok=expect_ok
+        )
+
+    def create(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{config_id}",
+            expect_ok=expect_ok,
+        )
+
+
 class BackgroundJobClient(RestApiClient):
     domain: API_DOMAIN = "background_job"
 
@@ -3322,6 +3355,7 @@ class ClientRegistry:
     BrokerConnection: BrokerConnectionClient
     BackgroundJob: BackgroundJobClient
     Acknowledge: AcknowledgeClient
+    OtelConfigClient: OtelConfigClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3365,4 +3399,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),
+        OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
     )

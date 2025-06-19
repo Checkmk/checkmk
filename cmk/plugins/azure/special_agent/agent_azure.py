@@ -273,12 +273,18 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Send VM piggyback data to group host (default) or the VM iteself""",
     )
 
-    parser.add_argument(
+    group_subscription = parser.add_mutually_exclusive_group(required=True)
+    group_subscription.add_argument(
         "--subscription",
         dest="subscriptions",
         action="append",
         default=[],
         help="Azure subscription IDs",
+    )
+    group_subscription.add_argument(
+        "--all-subscriptions",
+        action="store_true",
+        help="Monitor all available Azure subscriptions",
     )
 
     # REQUIRED
@@ -611,6 +617,26 @@ class BaseApiClient(abc.ABC):
             next_link = new_json_data.get(next_page_key)
 
         return data
+
+    def request(
+        self,
+        method,
+        uri_end=None,
+        full_uri=None,
+        body=None,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
+        return self._request(
+            method=method,
+            uri_end=uri_end,
+            full_uri=full_uri,
+            body=body,
+            key=key,
+            params=params,
+            next_page_key=next_page_key,
+        )
 
     def _request(
         self,
@@ -2026,7 +2052,7 @@ def _write_resource_health_section(
         yield section
 
 
-def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
+def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     """We test the connection only via the Management API client, not via the Graph API client.
     The Graph API client is used for three specific services, which are disabled in the default
     setup when configured via the UI.
@@ -2091,6 +2117,30 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     write_remaining_reads(mgmt_client.ratelimit)
 
 
+def _get_all_tenant_subscriptions(args: Args) -> set[str]:
+    api_client = BaseApiClient(
+        _get_mgmt_authority_urls(args.authority, ""),
+        deserialize_http_proxy_config(args.proxy),
+    )
+    api_client.login(args.tenant, args.client, args.secret)
+    response = api_client.request(
+        method="GET",
+        full_uri="https://management.azure.com/subscriptions",
+        params={"api-version": "2022-12-01"},
+    )
+    return {item["subscriptionId"] for item in response.get("value", [])}
+
+
+def test_connections(args: Args, subscriptions: set[str]) -> int:
+    for subscription in subscriptions:
+        if (test_result := _test_connection(args, subscription)) != 0:
+            if isinstance(test_result, tuple):
+                sys.stderr.write(test_result[1])
+                return test_result[0]
+            return test_result
+    return 0
+
+
 def main(argv=None):
     if argv is None:
         password_store.replace_passwords()
@@ -2102,18 +2152,13 @@ def main(argv=None):
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
 
+    subscriptions = args.subscriptions or _get_all_tenant_subscriptions(args)
     if args.connection_test:
-        for subscription in args.subscriptions:
-            if (test_result := test_connection(args, subscription)) != 0:
-                if isinstance(test_result, tuple):
-                    sys.stderr.write(test_result[1])
-                    return test_result[0]
-                return test_result
-        return 0
+        return test_connections(args, subscriptions)
 
     LOGGER.debug("%s", selector)
     main_graph_client(args)
-    for subscription in args.subscriptions:
+    for subscription in subscriptions:
         main_subscription(args, selector, subscription)
     return 0
 

@@ -59,7 +59,9 @@ class ModeRandomHosts(WatoMode):
         count = request.get_integer_input_mandatory("count")
         folders = request.get_integer_input_mandatory("folders")
         levels = request.get_integer_input_mandatory("levels")
-        created = self._create_random_hosts(folder, count, folders, levels)
+        created = self._create_random_hosts(
+            folder, count, folders, levels, pprint_value=active_config.wato_pprint_config
+        )
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=folder.path()))
 
@@ -80,7 +82,9 @@ class ModeRandomHosts(WatoMode):
             forms.end()
             html.hidden_fields()
 
-    def _create_random_hosts(self, folder: Folder, count: int, folders: int, levels: int) -> int:
+    def _create_random_hosts(
+        self, folder: Folder, count: int, folders: int, levels: int, *, pprint_value: bool
+    ) -> int:
         if levels == 0:
             hosts_to_create: list[tuple[HostName, HostAttributes, None]] = []
             while len(hosts_to_create) < count:
@@ -88,7 +92,7 @@ class ModeRandomHosts(WatoMode):
                 hosts_to_create.append(
                     (HostName(host_name), {"ipaddress": HostAddress("127.0.0.1")}, None)
                 )
-            folder.create_hosts(hosts_to_create, pprint_value=active_config.wato_pprint_config)
+            folder.create_hosts(hosts_to_create, pprint_value=pprint_value)
             return count
 
         total_created = 0
@@ -103,7 +107,9 @@ class ModeRandomHosts(WatoMode):
                 i += 1
 
             subfolder = folder.create_subfolder(
-                folder_name, "Subfolder %02d" % i, {}, pprint_value=active_config.wato_pprint_config
+                folder_name, "Subfolder %02d" % i, {}, pprint_value=pprint_value
             )
-            total_created += self._create_random_hosts(subfolder, count, folders, levels - 1)
+            total_created += self._create_random_hosts(
+                subfolder, count, folders, levels - 1, pprint_value=pprint_value
+            )
         return total_created

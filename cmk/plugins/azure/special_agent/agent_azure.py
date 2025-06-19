@@ -569,6 +569,7 @@ class BaseApiClient(abc.ABC):
             next_page_key=next_page_key,
         )
 
+    # TODO: delete this in the future, substitute with _query_async
     def _query(self, uri_end, body, params=None):
         json_data = self._request_json_from_url(
             "POST", self._base_url + uri_end, body=body, params=params
@@ -700,6 +701,33 @@ class BaseApiClient(abc.ABC):
 
 
 class BaseAsyncApiClient(BaseApiClient):
+    async def _query_async(self, uri_end, body, params=None):
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.request(
+                "POST",
+                self._base_url + uri_end,
+                json=body,
+                params=params,
+                timeout=aiohttp.ClientTimeout(total=30),
+                proxy=self._http_proxy_config.to_requests_proxies(),
+            ) as response:
+                json_data = await response.json()
+                data = self._lookup(json_data, "properties")
+                columns = self._lookup(data, "columns")
+                rows = self._lookup(data, "rows")
+
+                next_link = data.get("nextLink")
+                while next_link:
+                    async with session.post(next_link, json=body) as new_response:
+                        new_json_data = await new_response.json()
+                        data = self._lookup(new_json_data, "properties")
+                        rows += self._lookup(data, "rows")
+                        next_link = data.get("nextLink")
+
+                common_metadata = {k: v for k, v in json_data.items() if k != "properties"}
+                processed_query = self._process_query(columns, rows, common_metadata)
+                return processed_query
+
     async def _handle_ratelimit_async(self, session, method, url, **kwargs):
         async def get_response():
             async with session.request(method, url, **kwargs) as response:
@@ -866,11 +894,13 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         return ",".join(sorted(retry_names))
 
-    def resourcegroups(self):
-        return self._get("resourcegroups", key="value", params={"api-version": "2019-05-01"})
+    async def resourcegroups(self):
+        return await self.get_async(
+            "resourcegroups", key="value", params={"api-version": "2019-05-01"}
+        )
 
-    def resources(self):
-        return self._get("resources", key="value", params={"api-version": "2019-05-01"})
+    async def resources(self):
+        return await self.get_async("resources", key="value", params={"api-version": "2019-05-01"})
 
     def vmview(self, group, name):
         temp = "resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView"
@@ -934,7 +964,7 @@ class MgmtApiClient(BaseAsyncApiClient):
         path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
         return self._get(path, key="value", params={"api-version": "2022-05-01"})
 
-    def usagedetails(self):
+    async def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         body = {
             "type": "ActualCost",
@@ -956,7 +986,7 @@ class MgmtApiClient(BaseAsyncApiClient):
                 "to": f"{yesterday}T23:59:59+00:00",
             },
         }
-        return self._query(
+        return await self._query_async(
             "/providers/Microsoft.CostManagement/query",
             body=body,
             # here 10000 might be too high,
@@ -1820,14 +1850,14 @@ def process_resources(
             write_exception_to_agent_info_section(exc, "Management client")
 
 
-def get_group_labels(
+async def get_group_labels(
     mgmt_client: MgmtApiClient,
     monitored_groups: Sequence[str],
     tag_key_pattern: TagsOption,
 ) -> GroupLabels:
     group_labels: dict[str, dict[str, str]] = {}
 
-    for group in mgmt_client.resourcegroups():
+    for group in await mgmt_client.resourcegroups():
         name = group["name"].lower()
 
         if tag_key_pattern == TagsImportPatternOption.ignore_all:
@@ -1913,7 +1943,7 @@ def main_graph_client(args: Args) -> None:
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
+async def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
         "offer MS-AZR-0146P",
@@ -1928,7 +1958,7 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[Mapping[str, A
     LOGGER.debug("get usage details")
 
     try:
-        usage_data = client.usagedetails()
+        usage_data = await client.usagedetails()
     except ApiError as exc:
         if any(s in exc.args[0] for s in NO_CONSUMPTION_API):
             raise NoConsumptionAPIError
@@ -1960,12 +1990,14 @@ def write_usage_section(
         section.write()
 
 
-def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args) -> None:
+async def usage_details(
+    mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args
+) -> None:
     if "usage_details" not in args.services:
         return
 
     try:
-        usage_section = get_usage_data(mgmt_client, args)
+        usage_section = await get_usage_data(mgmt_client, args)
         if not usage_section:
             write_to_agent_info_section(
                 "Azure API did not return any usage details", "Usage client", 0
@@ -2085,7 +2117,9 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
-        all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
+        all_resources = (
+            AzureResource(r, args.tag_key_pattern) for r in await mgmt_client.resources()
+        )
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
@@ -2096,10 +2130,10 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
         write_exception_to_agent_info_section(exc, "Management client")
         return
 
-    group_labels = get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
+    group_labels = await get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
-    usage_details(mgmt_client, monitored_groups, args)
+    await usage_details(mgmt_client, monitored_groups, args)
 
     if err := gather_metrics(mgmt_client, monitored_resources, args):
         agent_info_section = AzureSection("agent_info")

@@ -64,7 +64,7 @@ class MockMgmtApiClient(MgmtApiClient):
             "mock_subscription",
         )
 
-    def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
+    async def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups
 
     def vmview(self, group: str, name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
@@ -74,7 +74,7 @@ class MockMgmtApiClient(MgmtApiClient):
     def ratelimit(self) -> float:
         return self.rate_limit
 
-    def usagedetails(self) -> Sequence[object]:
+    async def usagedetails(self) -> Sequence[object]:
         if self.usage_details_exception is not None:
             raise self.usage_details_exception
 
@@ -445,10 +445,13 @@ def test_process_resource(
         )
     ],
 )
-def test_get_group_labels(
+@pytest.mark.asyncio
+async def test_get_group_labels(
     mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
 ) -> None:
-    group_tags = get_group_labels(mgmt_client, monitored_groups, TagsImportPatternOption.import_all)
+    group_tags = await get_group_labels(
+        mgmt_client, monitored_groups, TagsImportPatternOption.import_all
+    )
     assert group_tags == expected_result
 
 
@@ -722,7 +725,8 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
         ),
     ],
 )
-def test_usage_details(
+@pytest.mark.asyncio
+async def test_usage_details(
     args: Args,
     usage_data: Sequence[object],
     exception: Exception,
@@ -734,7 +738,7 @@ def test_usage_details(
     )
     monitored_groups = ["test1", "test2"]
 
-    usage_details(mgmt_client, monitored_groups, args)
+    await usage_details(mgmt_client, monitored_groups, args)
 
     captured = capsys.readouterr()
     assert captured.out == expected_result

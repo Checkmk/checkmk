@@ -2211,9 +2211,9 @@ redfish==3.2.9 \
     --hash=sha256:016cafb2790a7da725fc4d02d8edf86978cc14458df849557fb0b5f3ce7ca703 \
     --hash=sha256:3e88b379240c7b4ece5daa56baec3ecf8af35dc3c521c2789b013f988841f03f
     # via -r _requirements_runtime.txt
-redis==4.5.4 \
-    --hash=sha256:2c19e6767c474f2e85167909061d525ed65bea9301c0770bb151e041b7ac89a2 \
-    --hash=sha256:73ec35da4da267d6847e47f68730fdd5f62e2ca69e3ef5885c6a78a9374c3893
+redis==6.1.1 \
+    --hash=sha256:88c689325b5b41cedcbdbdfd4d937ea86cf6dab2222a83e86d8a466e4b3d2600 \
+    --hash=sha256:ed44d53d065bbe04ac6d76864e331cfe5c5353f86f6deccc095f8794fd15bb2e
     # via -r _requirements_runtime.txt
 referencing==0.36.2 \
     --hash=sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa \

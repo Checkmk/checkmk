@@ -49,7 +49,7 @@ python-active-directory==2.0.1
 docstring-parser==0.16 # direct dependency
 pyprof2calltree==1.4.5 # used for GUI/API profiling
 pyparsing==3.2.0
-redis==4.5.4 # needed by GUI (caching)
+redis==6.1.1 # needed by GUI (caching)
 fido2==1.2.0 # used for GUI 2fa webauthn
 opsgenie-sdk==2.1.5 # needed by opsgenie_issues
 tenacity==9.0.0 # used by opsgenie-sdk

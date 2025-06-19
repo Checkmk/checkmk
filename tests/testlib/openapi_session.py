@@ -541,7 +541,7 @@ class HostsAPI(BaseAPI):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()
+        value: list[dict[str, Any]] = response.json()["value"]
         return value
 
     def get(self, hostname: str) -> tuple[dict[Any, str], str] | None:

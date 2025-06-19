@@ -107,6 +107,15 @@ class CmkPage(LocatorHelper):
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self, site: Site | None = None) -> None:
+        """Activate changes using the UI.
+
+        Args:
+            site (Site | None, optional): Fail safe mechanism.
+                In case an error arises, UI related or otherwise,
+                make sure to activate the changes using REST-API.
+                Defaults to None.
+                NOTE: Activate 'foreign changes' is enabled using REST-API!
+        """
         logger.info("Activate changes")
         try:
             self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
@@ -115,12 +124,10 @@ class CmkPage(LocatorHelper):
             self.expect_success_state()
         except Exception as e:
             if site:
-                e.add_note(
-                    "Flake during changes activation."
-                    " The changes will be activated through the API."
-                )
+                logger.warning("fail-safe: could not activate changes using UI; using REST-API...")
                 site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
-            raise e
+            else:
+                raise e
 
     def goto(self, url: str, event: str = "load") -> None:
         """Override `Page.goto`. Additionally, wait for the page to `load`, by default.

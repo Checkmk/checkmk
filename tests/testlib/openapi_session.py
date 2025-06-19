@@ -112,6 +112,7 @@ class CMKOpenApiSession(requests.Session):
 
         self.changes = ChangesAPI(self)
         self.users = UsersAPI(self)
+        self.user_role = UserRoleAPI(self)
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
@@ -453,6 +454,15 @@ class UsersAPI(BaseAPI):
 
     def delete(self, username: str) -> None:
         response = self.session.delete(f"/objects/user_config/{username}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class UserRoleAPI(BaseAPI):
+    """Wrap REST-API interface to interact with `user role`."""
+
+    def delete(self, role_id: str) -> None:
+        response = self.session.delete(f"/objects/user_role/{role_id}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 

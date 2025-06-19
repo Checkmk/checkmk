@@ -8,9 +8,11 @@ import re
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.testlib.openapi_session import UsersAPI
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +63,28 @@ class Users(CmkPage):
     def delete_user_confirmation_button(self) -> Locator:
         return self._delete_user_confirmation_window().get_by_role("button", name="Delete")
 
-    def delete_user(self, username: str) -> None:
+    def delete_user(self, username: str, restapi: UsersAPI | None = None) -> None:
+        """Delete a user using the UI.
+
+        Args:
+            username (str): Name of the user to be deleted
+            restapi (CMKOpenApiSession | None, optional): Fail safe mechanism.
+                In case UI elements are not found,
+                make sure to delete the user using REST-API. Defaults to None.
+        """
         logger.info("Delete user '%s'", username)
-        self.delete_user_button(username).click()
-        self.delete_user_confirmation_button.click()
-        expect(self._user_row(username)).not_to_be_visible()
+        try:
+            self.delete_user_button(username).click()
+            self.delete_user_confirmation_button.click()
+        except PWTimeoutError as _:
+            if restapi:
+                logger.warning(
+                    "fail-safe: could not delete user: '%s' through UI; using REST-API...", username
+                )
+                restapi.delete(username)
+                self.page.reload()
+            else:
+                raise _
+        expect(
+            self._user_row(username), message=f"Expected user: '{username}' to be deleted!"
+        ).not_to_be_visible()

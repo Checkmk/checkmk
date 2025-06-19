@@ -960,9 +960,9 @@ class MgmtApiClient(BaseAsyncApiClient):
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
         )
 
-    def resource_health_view(self):
+    async def resource_health_view(self):
         path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
-        return self._get(path, key="value", params={"api-version": "2022-05-01"})
+        return await self.get_async(path, key="value", params={"api-version": "2022-05-01"})
 
     async def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -995,13 +995,13 @@ class MgmtApiClient(BaseAsyncApiClient):
             params={"api-version": "2021-10-01", "$top": "10000"},
         )
 
-    def metrics(self, region, resource_ids, params):
+    async def metrics(self, region, resource_ids, params):
         if self._regional_url is None:
             raise ValueError("Regional url not configured")
 
         params["api-version"] = "2023-10-01"
         try:
-            return self._request(
+            return await self._request_async(
                 "POST",
                 full_uri=self._regional_url(region) + "/metrics:getBatch",
                 body={"resourceids": resource_ids},
@@ -1015,7 +1015,7 @@ class MgmtApiClient(BaseAsyncApiClient):
             )
             if retry_names:
                 params["metricnames"] = retry_names
-                return self._request(
+                return await self._request_async(
                     "POST",
                     full_uri=self._regional_url(region) + "/metrics:getBatch",
                     body={"resourceids": resource_ids},
@@ -1648,7 +1648,7 @@ class MetricCache(DataCache):
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, *args: Any) -> Any:
+    async def get_live_data(self, *args: Any) -> Any:
         mgmt_client: MgmtApiClient = args[0]
         region: str = args[1]
         resource_ids: Sequence[str] = args[2]
@@ -1668,7 +1668,7 @@ class MetricCache(DataCache):
 
         raw_metrics = []
         for chunk in _chunks(resource_ids):
-            raw_metrics += mgmt_client.metrics(region, chunk, params)
+            raw_metrics += await mgmt_client.metrics(region, chunk, params)
 
         metrics = defaultdict(list)
 
@@ -1689,6 +1689,25 @@ class MetricCache(DataCache):
                     LOGGER.info(msg)
 
         return metrics
+
+    async def get_data_async(self, *args, **kwargs):
+        use_cache = kwargs.pop("use_cache", True)
+        if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
+            try:
+                return self.get_cached_data()
+            except (OSError, ValueError) as exc:
+                logging.info("Getting live data (failed to read from cache: %s).", exc)
+                if self.debug:
+                    raise
+
+        live_data = await self.get_live_data(*args)
+        try:
+            self._write_to_cache(live_data)
+        except (OSError, TypeError) as exc:
+            logging.info("Failed to write data to cache file: %s", exc)
+            if self.debug:
+                raise
+        return live_data
 
 
 def write_section_ad(
@@ -1722,7 +1741,7 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     section.write()
 
 
-def gather_metrics(
+async def gather_metrics(
     mgmt_client: MgmtApiClient, all_resources: Sequence[AzureResource], args: Args
 ) -> IssueCollector:
     """
@@ -1758,7 +1777,7 @@ def gather_metrics(
                 debug=args.debug,
             )
             try:
-                metrics = cache.get_data(
+                metrics = await cache.get_data_async(
                     mgmt_client,
                     resource_region,
                     resource_ids,
@@ -2031,18 +2050,18 @@ def _get_monitored_resource(
     return None
 
 
-def process_resource_health(
+async def process_resource_health(
     mgmt_client: MgmtApiClient, monitored_resources: Sequence[AzureResource], args: Args
-) -> Iterator[AzureSection]:
+) -> Sequence[AzureSection]:
     try:
-        resource_health_view = mgmt_client.resource_health_view()
+        resource_health_view = await mgmt_client.resource_health_view()
     except Exception as exc:
         if args.debug:
             raise
         write_exception_to_agent_info_section(exc, "Management client")
-        return
+        return []
 
-    yield from _write_resource_health_section(resource_health_view, monitored_resources, args)
+    return _write_resource_health_section(resource_health_view, monitored_resources, args)
 
 
 class ResourceHealth(TypedDict, total=False):
@@ -2054,7 +2073,7 @@ def _write_resource_health_section(
     resource_health_view: list[ResourceHealth],
     monitored_resources: Sequence[AzureResource],
     args: Args,
-) -> Iterator[AzureSection]:
+) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
     for health in resource_health_view:
@@ -2077,11 +2096,14 @@ def _write_resource_health_section(
 
         health_section[group].append(json.dumps(health_data))
 
+    sections = []
     for group, values in health_section.items():
         section = AzureSection("resource_health", [group.lower()])
         for value in values:
             section.add([value])
-        yield section
+        sections.append(section)
+
+    return sections
 
 
 def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
@@ -2135,7 +2157,7 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
 
     await usage_details(mgmt_client, monitored_groups, args)
 
-    if err := gather_metrics(mgmt_client, monitored_resources, args):
+    if err := await gather_metrics(mgmt_client, monitored_resources, args):
         agent_info_section = AzureSection("agent_info")
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()
@@ -2145,7 +2167,7 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
         for section in resource_sections:
             section.write()
 
-    for section in process_resource_health(mgmt_client, monitored_resources, args):
+    for section in await process_resource_health(mgmt_client, monitored_resources, args):
         section.write()
 
     write_remaining_reads(mgmt_client.ratelimit)

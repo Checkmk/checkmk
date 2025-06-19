@@ -859,12 +859,13 @@ def test_write_resource_health_section(
     assert captured.out == expected_output
 
 
-def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.asyncio
+async def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str]) -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )
 
-    list(process_resource_health(mgmt_client, [], Args(debug=False)))
+    list(await process_resource_health(mgmt_client, [], Args(debug=False)))
 
     captured = capsys.readouterr()
     assert captured.out == (
@@ -875,13 +876,16 @@ def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str
     )
 
 
-def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.asyncio
+async def test_process_resource_health_request_error_debug(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )
 
     with pytest.raises(Exception, match="Request failed"):
-        list(process_resource_health(mgmt_client, [], Args(debug=True)))
+        await process_resource_health(mgmt_client, [], Args(debug=True))
 
 
 @pytest.mark.parametrize(

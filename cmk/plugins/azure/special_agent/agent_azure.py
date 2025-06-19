@@ -836,7 +836,7 @@ class GraphApiClient(BaseApiClient):
         ]
 
 
-class MgmtApiClient(BaseApiClient):
+class MgmtApiClient(BaseAsyncApiClient):
     def __init__(
         self,
         authority_urls: _AuthorityURLs,
@@ -2076,7 +2076,7 @@ def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     return 0
 
 
-def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
+async def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
         deserialize_http_proxy_config(args.proxy),
@@ -2147,6 +2147,12 @@ def test_connections(args: Args, subscriptions: set[str]) -> int:
     return 0
 
 
+async def collect_info(args: Args, selector: Selector, subscriptions: set[str]) -> None:
+    await asyncio.gather(
+        *{main_subscription(args, selector, subscription) for subscription in subscriptions},
+    )
+
+
 def main(argv=None):
     if argv is None:
         password_store.replace_passwords()
@@ -2165,10 +2171,9 @@ def main(argv=None):
     if args.connection_test:
         return test_connections(args, subscriptions)
 
+    asyncio.run(collect_info(args, selector, subscriptions))
     LOGGER.debug("%s", selector)
     main_graph_client(args)
-    for subscription in subscriptions:
-        main_subscription(args, selector, subscription)
     return 0
 
 

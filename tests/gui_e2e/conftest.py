@@ -243,9 +243,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
 
     logger.info("Schedule the 'Check_MK' service")
     for host_name in created_hosts_list:
-        # we have to schedule the checks multiple times since some checks require it
-        for _ in range(3):
-            test_site.schedule_check(host_name, "Check_MK", 0, 60)
+        test_site.reschedule_services(host_name, 3, strict=False)
 
     yield dump_path_to_host_name_dict
     if os.getenv("CLEANUP", "1") == "1":

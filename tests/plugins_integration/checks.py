@@ -326,26 +326,7 @@ def setup_host(
         site.openapi.changes.activate_and_wait_for_completion()
 
         logger.info("Scheduling checks & checking for pending services...")
-        pending_checks = []
-        for idx in range(3):
-            # we have to schedule the checks multiple times (twice at least):
-            # => once to get baseline data
-            # => a second time to calculate differences
-            # => a third time since some checks require it
-            site.schedule_check(host_name, "Check_MK", 0, 60)
-            pending_checks = site.openapi.services.get_host_services(host_name, pending=True)
-            if idx > 0 and len(pending_checks) == 0:
-                break
-
-        if pending_checks:
-            logger.info(
-                '%s pending service(s) found on host "%s": %s',
-                len(pending_checks),
-                host_name,
-                ",".join(
-                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-                ),
-            )
+        site.reschedule_services(host_name, 3, strict=False)
         yield
     finally:
         if not (config.skip_cleanup or skip_cleanup):
@@ -385,34 +366,10 @@ def setup_source_host_piggyback(
             piggyback_hosts = site.openapi.hosts.get_all_names([source_host_name])
             assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host_name}"'
 
-            hostnames = piggyback_hosts + [source_host_name]
-            for hostname in hostnames:
-                assert site.get_host_services(hostname)["Check_MK"].state == 0
-                logger.info("Scheduling checks & checking for pending services...")
-                pending_checks = []
-                for idx in range(3):
-                    # we have to schedule the checks multiple times (twice at least):
-                    # => once to get baseline data
-                    # => a second time to calculate differences
-                    # => a third time since some checks require it
-                    site.schedule_check(hostname, "Check_MK", 0, 60)
-                    pending_checks = site.openapi.services.get_host_services(hostname, pending=True)
-                    if idx > 0 and len(pending_checks) == 0:
-                        break
-
-                if pending_checks:
-                    logger.info(
-                        '%s pending service(s) found on host "%s": %s',
-                        len(pending_checks),
-                        hostname,
-                        ",".join(
-                            _.get("extensions", {}).get("description", _.get("id"))
-                            for _ in pending_checks
-                        ),
-                    )
+            for host_name in piggyback_hosts + [source_host_name]:
+                site.reschedule_services(host_name, 3, strict=False)
 
             yield
-
         finally:
             if not config.skip_cleanup:
                 logger.info('Deleting source host "%s"...', source_host_name)

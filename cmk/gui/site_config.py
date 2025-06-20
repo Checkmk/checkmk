@@ -92,8 +92,5 @@ def is_single_local_site(sites: Mapping[SiteId, SiteConfiguration]) -> bool:
     return site_is_local(list(sites.values())[0])
 
 
-def wato_site_ids() -> list[SiteId]:
-    return [
-        omd_site(),
-        *wato_slave_sites(active_config.sites),
-    ]
+def wato_site_ids(site_configs: SiteConfigurations) -> list[SiteId]:
+    return [omd_site(), *wato_slave_sites(site_configs)]

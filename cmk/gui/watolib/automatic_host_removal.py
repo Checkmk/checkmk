@@ -69,7 +69,7 @@ def execute_host_removal_job(config: Config) -> None:
                         site_id: make_automation_config(
                             config.sites[site_id],
                         )
-                        for site_id in wato_site_ids()
+                        for site_id in wato_site_ids(config.sites)
                     },
                     debug=config.debug,
                 )
@@ -123,8 +123,8 @@ def _hosts_to_be_removed(
 ) -> list[tuple[SiteId, list[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
     return [
-        (site_id, _hosts_to_be_removed_for_site(site_id, automation_configs[site_id], debug=debug))
-        for site_id in wato_site_ids()
+        (site_id, _hosts_to_be_removed_for_site(site_id, automation_config, debug=debug))
+        for site_id, automation_config in automation_configs.items()
     ]
 
 

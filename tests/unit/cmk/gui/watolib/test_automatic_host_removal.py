@@ -62,7 +62,7 @@ def default_site_config() -> SiteConfiguration:
 
 @pytest.fixture(scope="function", autouse=True)
 def fixture_sitenames(mocker: MockerFixture) -> None:
-    mocker.patch.object(automatic_host_removal, "wato_site_ids", lambda: ["NO_SITE"])
+    mocker.patch.object(automatic_host_removal, "wato_site_ids", lambda x: ["NO_SITE"])
 
 
 @pytest.fixture(name="activate_changes_mock")

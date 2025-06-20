@@ -258,7 +258,7 @@ class ABCBIMode(WatoMode):
             text=text,
             user_id=user.id,
             domains=[ConfigDomainGUI()],
-            sites=wato_site_ids(),
+            sites=wato_site_ids(active_config.sites),
             use_git=active_config.wato_use_git,
         )
 

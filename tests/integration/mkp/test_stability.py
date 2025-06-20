@@ -15,7 +15,7 @@ from tests.testlib.web_session import CMKWebSession
 
 
 @pytest.mark.skip_if_edition("saas")
-def test_site_aivalability_after_mkp_removal(site: Site, web: CMKWebSession) -> None:
+def test_site_availability_after_mkp_removal(site: Site, web: CMKWebSession) -> None:
     """
     Removing or disabling MKPs should not cause the entire UI to crash
 
@@ -36,6 +36,8 @@ def test_site_aivalability_after_mkp_removal(site: Site, web: CMKWebSession) -> 
     lib.add_extension(site, tmp_mkp_path)
     lib.enable_extension(site, mkp_name)
     lib.disable_extension(site, mkp_name)
+    lib.remove_extension(site, mkp_name)
+    tmp_mkp_path.unlink(missing_ok=True)
 
     web.get("")
     # No explicit assertion needed. The crash report in the response will be detected by the site

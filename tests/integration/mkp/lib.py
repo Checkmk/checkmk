@@ -17,3 +17,7 @@ def enable_extension(site: Site, name: str) -> None:
 
 def disable_extension(site: Site, name: str) -> None:
     site.check_output(["mkp", "disable", name])
+
+
+def remove_extension(site: Site, name: str) -> None:
+    site.check_output(["mkp", "remove", name])

@@ -9,7 +9,6 @@ from cmk.ccc.version import __version__, edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
-from cmk.utils.urls import WELCOME_URL
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -57,7 +56,7 @@ def default_learning_entries() -> MainMenuTopicEntries:
         MainMenuItem(
             name="getting_started",
             title=_("Getting started"),
-            url=WELCOME_URL,
+            url="welcome.py",
             sort_index=10,
             icon="learning_beginner",
         ),

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.urls import is_allowed_url, WELCOME_URL
+from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -187,7 +187,7 @@ class StartURLUserAttribute(UserAttribute):
                         totext="",
                     ),
                     FixedValue(
-                        value=WELCOME_URL,
+                        value="welcome.py",
                         title=_("Get started (Welcome)"),
                         totext="",
                     ),

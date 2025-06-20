@@ -112,9 +112,8 @@ class MainMenuRenderer:
         with output_funnel.plugged():
             menu = main_menu_registry[popup_trigger.name]
             classes = []
-            onclick = ""
             if menu.vue_app:
-                onclick = "cmk.popup_menu.close_popup()"
+                classes.append("fullscreen-popup")
             else:
                 classes.append("popup_menu")
 
@@ -123,7 +122,6 @@ class MainMenuRenderer:
 
             html.open_div(
                 id_="popup_menu_%s" % popup_trigger.name,
-                onclick=onclick,
                 class_=[
                     "popup_menu_handler",
                 ]

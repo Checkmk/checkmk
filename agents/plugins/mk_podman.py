@@ -117,6 +117,7 @@ def query_container_inspect(
     session: requests_unixsocket.Session,
     socket_path: str,
     container_id: str,
+    container_name: str,
 ) -> None:
     endpoint = f"/v4.0.0/libpod/containers/{container_id}/json"
     try:
@@ -125,7 +126,7 @@ def query_container_inspect(
         section: JSONSection | Error = JSONSection("container_inspect", json.dumps(response.json()))
     except Exception as e:
         section = Error(_build_url_human_readable(socket_path, endpoint), str(e))
-    write_piggyback_section(target_host=container_id, section=section)
+    write_piggyback_section(target_host=f"{container_name}_{container_id[:12]}", section=section)
 
 
 def query_container_stats(
@@ -147,6 +148,12 @@ def _container_id_to_stats(stats_data: Mapping[str, object]) -> Mapping[str, obj
     return {stat["ContainerID"]: stat for stat in stats if "ContainerID" in stat}
 
 
+def _get_container_name(names: object) -> str:
+    if isinstance(names, list) and names:
+        return names[0].lstrip("/")
+    return "unnamed"
+
+
 def main() -> None:
     with requests_unixsocket.Session() as session:
         containers = query_containers(session, DEFAULT_SOCKET_PATH)
@@ -162,11 +169,13 @@ def main() -> None:
             if not (container_id := str(container.get("Id", ""))):
                 continue
 
-            query_container_inspect(session, DEFAULT_SOCKET_PATH, container_id)
+            container_name = _get_container_name(container["Names"])
+
+            query_container_inspect(session, DEFAULT_SOCKET_PATH, container_id, container_name)
 
             if stats := container_to_stats.get(container_id):
                 write_piggyback_section(
-                    target_host=container_id,
+                    target_host=f"{container_name}_{container_id[:12]}",
                     section=JSONSection("container_stats", json.dumps(stats)),
                 )
 

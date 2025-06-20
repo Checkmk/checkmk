@@ -273,7 +273,7 @@ function Create_IntegrationTestDir([String]$dir_prefix) {
     New-Item -ItemType Directory -Path "$root_dir\plugins" -ErrorAction Stop > nul
     Write-Host "Copy exe..." -Foreground White
     Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe $root_dir\check_mk_agent.exe > nul
-    Copy-Item $repo_root\packages\host\target\i686-pc-windows-msvc\release\cmk-agent-ctl.exe $root_dir\cmk-agent-ctl.exe > nul
+    Copy-Item $repo_root\requirements\rust\host\target\i686-pc-windows-msvc\release\cmk-agent-ctl.exe $root_dir\cmk-agent-ctl.exe > nul
 
     Write-Host "Copy cab..." -Foreground White
     Copy-Item "$results_dir\python-3.cab"  "$root_dir" -Force -ErrorAction Stop > nul        		# unpack

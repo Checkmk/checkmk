@@ -1878,7 +1878,9 @@ class SiteFactory:
             check=False,
         )
 
-        assert completed_process.returncode == 0
+        assert completed_process.returncode == 0, (
+            f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
+        )
 
         site = self.get_existing_site(site.id)
         site.start()

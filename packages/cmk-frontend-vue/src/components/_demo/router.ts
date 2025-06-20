@@ -40,6 +40,7 @@ import DemoFormTuple from './DemoFormTuple.vue'
 import DemoFormLabels from './DemoFormLabels.vue'
 import type { Component } from 'vue'
 import DemoHelp from './DemoHelp.vue'
+import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 
 interface Route {
   path: string
@@ -53,6 +54,11 @@ const routes: Route[] = [
     path: '/',
     name: 'home',
     component: DemoEmpty
+  },
+  {
+    path: '/progressbar',
+    name: 'CmkProgressbar',
+    component: DemoCmkProgressbar
   },
   {
     path: '/alertbox',

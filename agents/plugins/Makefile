@@ -4,7 +4,7 @@ include ../../artifacts.make
 THREE_TO_TWO := ../../scripts/run-uvenv 3to2
 
 # Not all plugins are working with Python 2 therefore these are skipped during 3to2 conversion
-PYTHON3_ONLY_PLUGINS := mk_sap.py
+PYTHON3_ONLY_PLUGINS := mk_sap.py mk_podman.py
 # New plugins are expected to all have a .py extension. This will discover them
 # automatically.  Old plugins without extension are explicitly whitelistet here
 # to be found.

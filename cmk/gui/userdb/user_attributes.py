@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.urls import is_allowed_url
+from cmk.utils.urls import is_allowed_url, WELCOME_URL
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -183,11 +183,16 @@ class StartURLUserAttribute(UserAttribute):
                 elements=[
                     FixedValue(
                         value=None,
-                        title=_("Use the default start URL"),
+                        title=_("Default start URL"),
+                        totext="",
+                    ),
+                    FixedValue(
+                        value=WELCOME_URL,
+                        title=_("Get started (Welcome)"),
                         totext="",
                     ),
                     TextInput(
-                        title=_("Use this custom start URL"),
+                        title=_("Custom start URL"),
                         help=_(
                             "When you point your browser to the Checkmk GUI, usually the dashboard "
                             "is shown in the main (right) frame. You can replace this with any other "

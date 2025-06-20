@@ -8,6 +8,8 @@ from collections.abc import Collection
 
 import cmk.utils.regex
 
+WELCOME_URL = "welcome.py"
+
 
 def is_allowed_url(
     url: str, cross_domain: bool = False, schemes: Collection[str] | None = None

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.urls import WELCOME_URL
+
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserSpec
 
@@ -26,4 +28,5 @@ def new_user_template(connection_id: str) -> UserSpec:
 
 
 def add_internal_attributes(usr: UserSpec) -> int:
+    usr.setdefault("start_url", WELCOME_URL)
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)

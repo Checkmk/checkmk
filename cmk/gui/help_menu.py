@@ -9,6 +9,7 @@ from cmk.ccc.version import __version__, edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
+from cmk.utils.urls import WELCOME_URL
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -53,6 +54,13 @@ def default_info_line() -> str:
 
 def default_learning_entries() -> TopicMenuTopicEntries:
     return [
+        TopicMenuItem(
+            name="getting_started",
+            title=_("Getting started"),
+            url=WELCOME_URL,
+            sort_index=10,
+            icon="learning_beginner",
+        ),
         TopicMenuItem(
             name="beginners_guide",
             title=_("Beginner's guide"),

@@ -325,6 +325,7 @@ def _get_expected_paths(
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
+        "var/check_mk/web/%s/start_url.mk" % user_id,
         "var/check_mk/stored_passwords",
         "var/check_mk/frozen_aggregations",
     ]

@@ -8,6 +8,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <template>
   <h1>Welcome to Checkmk!</h1>
+  <p>
+    This is just a placeholder for the Welcome page. It will be used to guide you through the first
+    steps of using Checkmk.
+  </p>
+  <p>
+    In case you want to change the start URL to the main dashboard, you can do so under User/Edit
+    profile/Start URL.
+  </p>
 </template>
 
 <style scoped></style>

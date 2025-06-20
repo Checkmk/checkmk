@@ -36,26 +36,31 @@ export class Api {
 
   public async post(
     url: string,
-    body: BodyInit | null = null,
+    body: unknown | null = null,
     options: ApiOptions = {}
   ): Promise<ApiResponseBody<unknown>> {
-    const params = this.prepareOptions(options, {
-      method: 'POST',
-      body
-    })
-
+    const opts: RequestInit = {
+      method: 'POST'
+    }
+    if (body !== null) {
+      opts.body = JSON.stringify(body)
+    }
+    const params = this.prepareOptions(options, opts)
     return this.fetch(url, params)
   }
 
   public async put(
     url: string,
-    body: BodyInit | null = null,
+    body: unknown | null = null,
     options: ApiOptions = {}
   ): Promise<ApiResponseBody<unknown>> {
-    const params = this.prepareOptions(options, {
-      method: 'PUT',
-      body
-    })
+    const opts: RequestInit = {
+      method: 'POST'
+    }
+    if (body !== null) {
+      opts.body = JSON.stringify(body)
+    }
+    const params = this.prepareOptions(options, opts)
     return this.fetch(url, params)
   }
 

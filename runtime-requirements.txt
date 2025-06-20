@@ -884,6 +884,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-relay-core/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 icalendar==6.1.3 \
     --hash=sha256:11eb5d21a1a9e119a6efc0f9e38f2cf1622ef97777cd25fb0dd7074d393a2a8d \
@@ -2495,7 +2496,6 @@ requests==2.32.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-relay-core/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   azure-core
     #   exchangelib

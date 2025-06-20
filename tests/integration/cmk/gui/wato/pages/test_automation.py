@@ -5,11 +5,10 @@
 
 from ast import literal_eval
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
+import pytest
+
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
-
-pytestmark = [skip_if_saas_edition]
 
 
 def _distributed_site_secret(site: Site) -> str:
@@ -29,6 +28,7 @@ def _distributed_site_secret(site: Site) -> str:
     return literal_eval(r.text)["login_secret"]
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_central_site_version_is_stored(site: Site) -> None:
     """With Werk #### we need to store information about the central site in order to figure out
     what authentication scheme to use, here I want to make sure this works"""
@@ -52,6 +52,7 @@ def test_central_site_version_is_stored(site: Site) -> None:
     )
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_wrong_central_site_version(site: Site) -> None:
     """Make sure that a malformed version does not make it to disk"""
 

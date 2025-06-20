@@ -20,7 +20,6 @@ from tests.composition.message_broker.utils import (
     timeout,
 )
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
-@skip_if_saas_edition
+@pytest.mark.skip_if_edition("saas")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
 
@@ -78,7 +77,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
     return int(site.run(["lib/omd/next_free_port", key, port]).stdout.strip())
 
 
-@skip_if_saas_edition
+@pytest.mark.skip_if_edition("saas")
 class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""

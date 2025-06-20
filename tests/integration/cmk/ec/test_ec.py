@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
@@ -287,7 +286,7 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
     _activate_ec_changes(site)
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     """Generate a message via the events pipe matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
@@ -314,7 +313,7 @@ def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     assert queried_event_messages[0] == event_message
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     """Generate a message via the events pipe not matching any EC rule.
 
@@ -336,7 +335,7 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     assert not queried_event_messages
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
@@ -367,7 +366,7 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receiver
     assert event_message in queried_event_messages[0]
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
@@ -389,7 +388,7 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
     assert not queried_event_messages
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_global_settings(
     site: Site, setup_ec: Iterator, enable_receivers: None, enable_snmp_trap_translation: None
 ) -> None:
@@ -417,7 +416,7 @@ def test_ec_global_settings(
     ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 @pytest.mark.parametrize("udp_enabled", [True, False], ids=["udp", "tcp"])
 def test_ec_rule_match_syslog(
     site: Site,
@@ -449,7 +448,7 @@ def test_ec_rule_match_syslog(
     assert queried_event_messages[0] == event_message
 
 
-@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.skip_if_edition("saas")(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_no_eol(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via events pipe and Syslog with no end-of-line matching an EC rule.
 

@@ -24,11 +24,15 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import if64, interfaces, uptime
 
-If64AdmSection = Sequence[str]
+If64AdmSection = Mapping[str, str]
 
 
 def parse_if64adm(string_table: StringTable) -> If64AdmSection:
-    return [sub_table[0] for sub_table in string_table]
+    return {
+        index: admin_status
+        for (index, admin_status) in string_table
+        if interfaces.saveint(index) > 0 and admin_status
+    }
 
 
 @dataclasses.dataclass(frozen=True)
@@ -67,8 +71,13 @@ snmp_section_if64adm = SimpleSNMPSection(
     name="if64adm",
     parse_function=parse_if64adm,
     fetch=SNMPTree(
-        base=if64.BASE_OID,
-        oids=["2.2.1.7"],  # ifAdminStatus
+        # If we simply used if64.BASE_OID here, the backend would complain that the base OID could
+        # be extended
+        base=f"{if64.BASE_OID}.2.2.1",
+        oids=[
+            "1",  # ifIndex
+            "7",  # ifAdminStatus
+        ],
     ),
     detect=if64.HAS_ifHCInOctets,
 )
@@ -78,10 +87,11 @@ def _add_admin_status_to_ifaces(
     section_if64: interfaces.Section[interfaces.TInterfaceType],
     section_if64adm: If64AdmSection | None,
 ) -> None:
-    if section_if64adm is None or len(section_if64) != len(section_if64adm):
+    if section_if64adm is None:
         return
-    for iface, admin_status in zip(section_if64, section_if64adm):
-        iface.attributes.admin_status = admin_status
+    for iface in section_if64:
+        if (admin_status := section_if64adm.get(iface.attributes.index)) is not None:
+            iface.attributes.admin_status = admin_status
 
 
 def _uptime_or_server_time(now: float, section_uptime: uptime.Section | None) -> float:

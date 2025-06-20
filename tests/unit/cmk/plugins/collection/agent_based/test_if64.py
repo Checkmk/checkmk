@@ -5,6 +5,46 @@
 
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.collection.agent_based import if64
+from cmk.plugins.lib import interfaces
+
+
+def test_parse_if64adm() -> None:
+    assert if64.parse_if64adm(
+        [
+            ["1", "1"],
+            ["2", ""],
+            ["3", "2"],
+        ]
+    ) == {
+        "1": "1",
+        "3": "2",
+    }
+
+
+def test_add_admin_status_to_ifaces() -> None:
+    ifaces = [
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="1",
+                descr="GigabitEthernet1/1",
+                alias="** Trunk to main switch **",
+                type="6",
+            ),
+            interfaces.Counters(),
+        ),
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(
+                index="2",
+                descr="Primary Internet connection",
+                alias="",
+                type="6",
+            ),
+            interfaces.Counters(),
+        ),
+    ]
+    if64._add_admin_status_to_ifaces(ifaces, {"1": "1"})
+    assert ifaces[0].attributes.admin_status == "1"
+    assert ifaces[1].attributes.admin_status is None
 
 
 def test_check_timestamps_decrease() -> None:

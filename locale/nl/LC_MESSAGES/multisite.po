@@ -17092,6 +17092,10 @@ msgstr "Aangepast zijbalk element"
 msgid "Custom sidebar elements"
 msgstr "Aangepaste zijbalk elementen"
 
+#, fuzzy
+msgid "Custom start URL"
+msgstr "Aangepaste URL"
+
 msgid "Custom states"
 msgstr "Aangepaste staten"
 
@@ -18204,6 +18208,10 @@ msgstr "Standaard timerbereik voor rapportage"
 
 msgid "Default rule pack"
 msgstr "Standaard regelpakket"
+
+#, fuzzy
+msgid "Default start URL"
+msgstr "Standaardstatus"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -27078,6 +27086,10 @@ msgid "Get header only"
 msgstr ""
 
 #, fuzzy
+msgid "Get started (Welcome)"
+msgstr "Resulterende staat"
+
+#, fuzzy
 msgid "Getting started"
 msgstr "Resulterende staat"
 
@@ -34289,8 +34301,9 @@ msgstr ""
 "waarschuwingen opgeslagen. Dit bestand wordt regelmatig hernoemd en opnieuw "
 "opgestart, wat hier kan worden geconfigureerd."
 
+#, fuzzy
 msgid ""
-"In the mega menus you can select between two options: Have a green icon only "
+"In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
@@ -80679,9 +80692,6 @@ msgstr "Gebruik de standaard taal (%s)"
 msgid "Use the default show mode"
 msgstr "Gebruik de standaard show mode"
 
-msgid "Use the default start URL"
-msgstr "Gebruik de standaard start URL"
-
 msgid "Use the default temperature unit"
 msgstr "Gebruik de standaardtemperatuureenheid"
 
@@ -80776,9 +80786,6 @@ msgid ""
 msgstr ""
 "Gebruik deze voorwaarde om services te selecteren op basis van de "
 "geconfigureerde servicelabels."
-
-msgid "Use this custom start URL"
-msgstr "Gebruik deze aangepaste start URL"
 
 msgid ""
 "Use this field to search for rules which have their explicit host condition "
@@ -89912,6 +89919,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Use the default start URL"
+#~ msgstr "Gebruik de standaard start URL"
+
+#~ msgid "Use this custom start URL"
+#~ msgstr "Gebruik deze aangepaste start URL"
 
 #, fuzzy
 #~ msgid "Labels need to be unique."

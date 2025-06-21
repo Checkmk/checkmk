@@ -16256,6 +16256,10 @@ msgstr "サイドバーのカスタマイズ"
 msgid "Custom sidebar elements"
 msgstr "サイドバーのカスタマイズ"
 
+#, fuzzy
+msgid "Custom start URL"
+msgstr "カスタムURL"
+
 msgid "Custom states"
 msgstr "カスタム状態"
 
@@ -17337,6 +17341,10 @@ msgstr "デフォルトのレポート時間範囲"
 
 msgid "Default rule pack"
 msgstr "デフォルトのルールパック"
+
+#, fuzzy
+msgid "Default start URL"
+msgstr "デフォルトステータス"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -25842,6 +25850,10 @@ msgstr "SFTPサーバーからファイルを取得する"
 msgid "Get header only"
 msgstr "ヘッダーのみを取得"
 
+#, fuzzy
+msgid "Get started (Welcome)"
+msgstr "スタート"
+
 msgid "Getting started"
 msgstr "スタート"
 
@@ -32746,8 +32758,9 @@ msgstr ""
 "履歴ファイルには、通知やアラートなどのすべてのイベントが保存されます。この"
 "ファイルは定期的に名前が変更され、再起動されます。これはここで構成できます。"
 
+#, fuzzy
 msgid ""
-"In the mega menus you can select between two options: Have a green icon only "
+"In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
@@ -76744,9 +76757,6 @@ msgstr "デフォルトの言語(%s)を使用する"
 msgid "Use the default show mode"
 msgstr "デフォルトの表示モードを使用する"
 
-msgid "Use the default start URL"
-msgstr "デフォルトの開始URLを使用する"
-
 msgid "Use the default temperature unit"
 msgstr "デフォルトの温度単位を使用する"
 
@@ -76833,9 +76843,6 @@ msgid ""
 msgstr ""
 "設定されたサービスラベルに基づいてサービスを選択するには、この条件を使用しま"
 "す。 "
-
-msgid "Use this custom start URL"
-msgstr "このカスタム開始URLを使用する"
 
 msgid ""
 "Use this field to search for rules which have their explicit host condition "
@@ -85643,6 +85650,12 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "Use the default start URL"
+#~ msgstr "デフォルトの開始URLを使用する"
+
+#~ msgid "Use this custom start URL"
+#~ msgstr "このカスタム開始URLを使用する"
 
 #, fuzzy
 #~ msgid "Labels need to be unique."

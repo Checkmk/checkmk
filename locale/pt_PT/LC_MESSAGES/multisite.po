@@ -17089,6 +17089,10 @@ msgstr "Elemento de barra lateral personalizado"
 msgid "Custom sidebar elements"
 msgstr "Elementos da barra lateral personalizados"
 
+#, fuzzy
+msgid "Custom start URL"
+msgstr "URL personalizado"
+
 msgid "Custom states"
 msgstr "Estados personalizados"
 
@@ -18199,6 +18203,10 @@ msgstr "Intervalo de temporização padrão para relatórios"
 
 msgid "Default rule pack"
 msgstr "Conjunto de regras predefinidas"
+
+#, fuzzy
+msgid "Default start URL"
+msgstr "Estado por defeito"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -27078,6 +27086,10 @@ msgid "Get header only"
 msgstr ""
 
 #, fuzzy
+msgid "Get started (Welcome)"
+msgstr "Estado resultante"
+
+#, fuzzy
 msgid "Getting started"
 msgstr "Estado resultante"
 
@@ -34283,8 +34295,9 @@ msgstr ""
 "salvos. Este arquivo está sendo renomeado e reiniciado regularmente, o que "
 "pode ser configurado aqui."
 
+#, fuzzy
 msgid ""
-"In the mega menus you can select between two options: Have a green icon only "
+"In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
@@ -80615,9 +80628,6 @@ msgstr "Use a língua padrão (%s)"
 msgid "Use the default show mode"
 msgstr "Use o modo de exibição padrão"
 
-msgid "Use the default start URL"
-msgstr "Use a URL de início padrão"
-
 msgid "Use the default temperature unit"
 msgstr "Utilizar a unidade de temperatura predefinida"
 
@@ -80711,9 +80721,6 @@ msgid ""
 msgstr ""
 "Use esta condição para selecionar serviços com base nas etiquetas de serviço "
 "configuradas."
-
-msgid "Use this custom start URL"
-msgstr "Use esta URL de início personalizada"
 
 msgid ""
 "Use this field to search for rules which have their explicit host condition "
@@ -89804,6 +89811,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Use the default start URL"
+#~ msgstr "Use a URL de início padrão"
+
+#~ msgid "Use this custom start URL"
+#~ msgstr "Use esta URL de início personalizada"
 
 #, fuzzy
 #~ msgid "Labels need to be unique."

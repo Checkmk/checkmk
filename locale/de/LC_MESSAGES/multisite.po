@@ -16547,6 +16547,10 @@ msgstr "Benutzerseitenleistenelement"
 msgid "Custom sidebar elements"
 msgstr "Benutzerseitenleistenelemente"
 
+#, fuzzy
+msgid "Custom start URL"
+msgstr "Benutzer-URL"
+
 msgid "Custom states"
 msgstr "Individuelle Zustände"
 
@@ -17632,6 +17636,10 @@ msgstr "Standard Berichtszeitraum"
 
 msgid "Default rule pack"
 msgstr "Standard-Regelpaket"
+
+#, fuzzy
+msgid "Default start URL"
+msgstr "Standardzustand"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -26210,6 +26218,10 @@ msgstr "Datei von SFTP-Server holen"
 msgid "Get header only"
 msgstr "Nur Header abfragen"
 
+#, fuzzy
+msgid "Get started (Welcome)"
+msgstr "Erste Schritte"
+
 msgid "Getting started"
 msgstr "Erste Schritte"
 
@@ -33022,8 +33034,9 @@ msgstr ""
 "Alerts gespeichert. Diese Datei wird in regelmäßigen Abständen umbenannt und "
 "neu gestartet, was hier konfiguriert werden kann."
 
+#, fuzzy
 msgid ""
-"In the mega menus you can select between two options: Have a green icon only "
+"In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
@@ -77674,9 +77687,6 @@ msgstr "Die Standardsprache (%s) verwenden"
 msgid "Use the default show mode"
 msgstr "Den Standardanzeigemodus verwenden"
 
-msgid "Use the default start URL"
-msgstr "Standard-URL benutzen"
-
 msgid "Use the default temperature unit"
 msgstr "Standard-Temperatureinheit verwenden"
 
@@ -77766,9 +77776,6 @@ msgid ""
 msgstr ""
 "Verwenden Sie diese Bedingung, um Dienste basierend auf den konfigurierten "
 "Service-Labels auszuwählen. "
-
-msgid "Use this custom start URL"
-msgstr "Individuelle Start-URL benutzen"
 
 msgid ""
 "Use this field to search for rules which have their explicit host condition "
@@ -86708,6 +86715,12 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Use the default start URL"
+#~ msgstr "Standard-URL benutzen"
+
+#~ msgid "Use this custom start URL"
+#~ msgstr "Individuelle Start-URL benutzen"
 
 #~ msgid "Labels need to be unique."
 #~ msgstr "Labels müssen eindeutig sein."

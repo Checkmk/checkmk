@@ -17104,6 +17104,10 @@ msgstr "Element personalizat de bară laterală"
 msgid "Custom sidebar elements"
 msgstr "Elemente personalizate pentru bara laterală"
 
+#, fuzzy
+msgid "Custom start URL"
+msgstr "URL personalizat"
+
 msgid "Custom states"
 msgstr "State personalizate"
 
@@ -18209,6 +18213,10 @@ msgstr "Interval de timp de raportare implicit"
 
 msgid "Default rule pack"
 msgstr "Pachet de reguli implicite"
+
+#, fuzzy
+msgid "Default start URL"
+msgstr "Stare implicită"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -27139,6 +27147,10 @@ msgid "Get header only"
 msgstr "Obține doar antetul"
 
 #, fuzzy
+msgid "Get started (Welcome)"
+msgstr "Starea rezultată"
+
+#, fuzzy
 msgid "Getting started"
 msgstr "Starea rezultată"
 
@@ -34387,8 +34399,9 @@ msgstr ""
 "și alertele. Acest fișier este redenumit și repornit în mod regulat, lucru "
 "care poate fi configurat aici."
 
+#, fuzzy
 msgid ""
-"In the mega menus you can select between two options: Have a green icon only "
+"In the main menus you can select between two options: Have a green icon only "
 "for the headlines – the 'topics' – for lean design. Or have a colored icon "
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
@@ -80875,9 +80888,6 @@ msgstr "Utilizați limba implicită (%s)"
 msgid "Use the default show mode"
 msgstr "Utilizați modul implicit de afișare"
 
-msgid "Use the default start URL"
-msgstr "Utilizați URL-ul de pornire implicit"
-
 msgid "Use the default temperature unit"
 msgstr "Utilizați unitatea de temperatură implicită"
 
@@ -80972,9 +80982,6 @@ msgid ""
 msgstr ""
 "Utilizați această condiție pentru a selecta serviciile pe baza etichetelor "
 "de servicii configurate."
-
-msgid "Use this custom start URL"
-msgstr "Utilizați acest URL de pornire personalizat"
 
 msgid ""
 "Use this field to search for rules which have their explicit host condition "
@@ -90133,6 +90140,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Use the default start URL"
+#~ msgstr "Utilizați URL-ul de pornire implicit"
+
+#~ msgid "Use this custom start URL"
+#~ msgstr "Utilizați acest URL de pornire personalizat"
 
 #, fuzzy
 #~ msgid "Labels need to be unique."

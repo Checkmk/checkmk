@@ -131,18 +131,17 @@ _WerkTableOptionColumns = Literal[
 
 
 class ChangeLogPage(Page):
-    def _title(self) -> str:
-        return _("Change log (Werks)")
-
     @override
     def page(self) -> PageResult:
-        breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], self._title())
+        breadcrumb = make_simple_page_breadcrumb(
+            main_menu_registry["help"], _("Change log (Werks)")
+        )
 
         werk_table_options = _werk_table_options_from_request()
 
         make_header(
             html,
-            self._title(),
+            _("Change log (Werks)"),
             breadcrumb,
             self._page_menu(breadcrumb, werk_table_options),
         )

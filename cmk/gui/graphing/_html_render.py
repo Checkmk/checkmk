@@ -554,10 +554,6 @@ def _graph_margin_ex(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraph(cmk.gui.pages.Page):
-    @classmethod
-    def ident(cls) -> str:
-        return "ajax_graph"
-
     def page(self) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
@@ -802,10 +798,6 @@ def _render_graph_container_html(
 
 
 class AjaxRenderGraphContent(AjaxPage):
-    @classmethod
-    def ident(cls) -> str:
-        return "ajax_render_graph_content"
-
     def page(self) -> PageResult:
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
@@ -953,10 +945,6 @@ def estimate_graph_step_for_html(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraphHover(cmk.gui.pages.Page):
-    @classmethod
-    def ident(cls) -> str:
-        return "ajax_graph_hover"
-
     def page(self) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")

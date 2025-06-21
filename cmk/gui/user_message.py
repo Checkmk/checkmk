@@ -39,9 +39,6 @@ def register(page_registry: PageRegistry) -> None:
 
 
 class PageUserMessage(Page):
-    def title(self) -> str:
-        return _("Your messages")
-
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -72,7 +69,7 @@ class PageUserMessage(Page):
     @override
     def page(self) -> None:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), _("Messages"))
-        make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))
+        make_header(html, _("Your messages"), breadcrumb, self.page_menu(breadcrumb))
 
         for flashed_msg in get_flashed_messages():
             html.show_message(flashed_msg.msg)

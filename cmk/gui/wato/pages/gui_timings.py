@@ -11,14 +11,11 @@ from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
 
 
 class GuiTimingsPage(Page):
-    def _title(self) -> str:
-        return "GUI timings"
-
     def page(self) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], _("Info"))
         make_header(
             html,
-            self._title(),
+            "GUI timings",
             breadcrumb=breadcrumb,
         )
 

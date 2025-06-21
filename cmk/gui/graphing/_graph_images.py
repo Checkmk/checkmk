@@ -58,10 +58,6 @@ from ._utils import get_graph_data_from_livestatus
 # of a host or service.
 #    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
-    @classmethod
-    def ident(cls) -> str:
-        return "ajax_graph_images"
-
     def page(self) -> None:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):

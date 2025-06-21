@@ -176,26 +176,10 @@ def load_plugins() -> None:
     _add_graphing_plugins(_load_graphing_plugins())
 
 
-# .
-#   .--Hover-Graph---------------------------------------------------------.
-#   |     _   _                           ____                 _           |
-#   |    | | | | _____   _____ _ __      / ___|_ __ __ _ _ __ | |__        |
-#   |    | |_| |/ _ \ \ / / _ \ '__|____| |  _| '__/ _` | '_ \| '_ \       |
-#   |    |  _  | (_) \ V /  __/ | |_____| |_| | | | (_| | |_) | | | |      |
-#   |    |_| |_|\___/ \_/ \___|_|        \____|_|  \__,_| .__/|_| |_|      |
-#   |                                                   |_|                |
-#   '----------------------------------------------------------------------'
-
-
-# This page is called for the popup of the graph icon of hosts/services.
 class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     @override
-    @classmethod
-    def ident(cls) -> str:
-        return "host_service_graph_popup"
-
-    @override
     def page(self) -> PageResult:
+        """This page is called for the popup of the graph icon of hosts/services."""
         host_service_graph_popup_cmk(
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
             request.get_validated_type_input_mandatory(HostName, "host_name"),
@@ -206,27 +190,10 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
         return None  # for mypy
 
 
-# .
-#   .--Graph Dashlet-------------------------------------------------------.
-#   |    ____                 _       ____            _     _      _       |
-#   |   / ___|_ __ __ _ _ __ | |__   |  _ \  __ _ ___| |__ | | ___| |_     |
-#   |  | |  _| '__/ _` | '_ \| '_ \  | | | |/ _` / __| '_ \| |/ _ \ __|    |
-#   |  | |_| | | | (_| | |_) | | | | | |_| | (_| \__ \ | | | |  __/ |_     |
-#   |   \____|_|  \__,_| .__/|_| |_| |____/ \__,_|___/_| |_|_|\___|\__|    |
-#   |                  |_|                                                 |
-#   +----------------------------------------------------------------------+
-#   |  This page handler is called by graphs embedded in a dashboard.      |
-#   '----------------------------------------------------------------------'
-
-
 class PageGraphDashlet(cmk.gui.pages.Page):
     @override
-    @classmethod
-    def ident(cls) -> str:
-        return "graph_dashlet"
-
-    @override
     def page(self) -> cmk.gui.pages.PageResult:
+        """This page handler is called by graphs embedded in a dashboard."""
         return host_service_graph_dashlet_cmk(
             parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
             GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),

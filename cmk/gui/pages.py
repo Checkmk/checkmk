@@ -39,16 +39,6 @@ PageResult = object
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
-    # TODO: In theory a page class could be registered below multiple URLs. For this case it would
-    # be better to move the ident out of the class, to the registry. At the moment the URL is stored
-    # in self._ident by PageRegistry.register_page().
-    # In practice this is no problem at the moment, because each page is accessible only through a
-    # single endpoint.
-
-    @classmethod
-    def ident(cls) -> str:
-        raise NotImplementedError()
-
     def handle_page(self) -> None:
         self.page()
 

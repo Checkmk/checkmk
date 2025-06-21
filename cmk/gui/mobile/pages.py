@@ -233,10 +233,6 @@ def page_login() -> None:
 
 
 class PageMobileIndex(Page):
-    @classmethod
-    def ident(cls) -> str:
-        return "mobile"
-
     def page(self) -> PageResult:
         _page_index()
         return None
@@ -297,10 +293,6 @@ def _page_index() -> None:
 
 
 class PageMobileView(Page):
-    @classmethod
-    def ident(cls) -> str:
-        return "mobile_view"
-
     def page(self) -> PageResult:
         _page_view(debug=active_config.debug)
         return None

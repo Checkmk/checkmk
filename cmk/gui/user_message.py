@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -31,10 +31,10 @@ from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("user_message")(PageUserMessage)
-    page_registry.register_page_handler("ajax_delete_user_message", ajax_delete_user_message)
-    page_registry.register_page_handler(
-        "ajax_acknowledge_user_message", ajax_acknowledge_user_message
+    page_registry.register(PageEndpoint("user_message", PageUserMessage))
+    page_registry.register(PageEndpoint("ajax_delete_user_message", ajax_delete_user_message))
+    page_registry.register(
+        PageEndpoint("ajax_acknowledge_user_message", ajax_acknowledge_user_message)
     )
 
 

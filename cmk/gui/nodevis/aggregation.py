@@ -20,7 +20,7 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.utils import BILayoutManagement, get_toggle_layout_designer_page_menu_entry
 from cmk.gui.page_menu import make_display_options_dropdown, PageMenu, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -39,11 +39,17 @@ def register(
     filter_registry: FilterRegistry,
     _icon_and_action_registry: IconRegistry,
 ) -> None:
-    page_registry.register_page("ajax_fetch_aggregation_data")(AjaxFetchAggregationData)
-    page_registry.register_page("ajax_save_bi_aggregation_layout")(AjaxSaveBIAggregationLayout)
-    page_registry.register_page("ajax_delete_bi_aggregation_layout")(AjaxDeleteBIAggregationLayout)
-    page_registry.register_page("ajax_load_bi_aggregation_layout")(AjaxLoadBIAggregationLayout)
-    page_registry.register_page_handler("bi_map", _bi_map)
+    page_registry.register(PageEndpoint("ajax_fetch_aggregation_data", AjaxFetchAggregationData))
+    page_registry.register(
+        PageEndpoint("ajax_save_bi_aggregation_layout", AjaxSaveBIAggregationLayout)
+    )
+    page_registry.register(
+        PageEndpoint("ajax_delete_bi_aggregation_layout", AjaxDeleteBIAggregationLayout)
+    )
+    page_registry.register(
+        PageEndpoint("ajax_load_bi_aggregation_layout", AjaxLoadBIAggregationLayout)
+    )
+    page_registry.register(PageEndpoint("bi_map", _bi_map))
     filter_registry.register(FilterTopologyMeshDepth())
     filter_registry.register(FilterTopologyMaxNodes())
     _register_builtin_views()

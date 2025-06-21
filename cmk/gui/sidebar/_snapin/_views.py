@@ -19,8 +19,13 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
-from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import ABCMainMenuSearch, MainMenu, MainMenuTopic, Visual
+from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.type_defs import (
+    ABCMainMenuSearch,
+    MainMenu,
+    MainMenuTopic,
+    Visual,
+)
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
@@ -35,7 +40,7 @@ def register(
     view_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
     snapin_registry.register(Views)
-    page_registry.register_page_handler("export_views", ajax_export_views)
+    page_registry.register(PageEndpoint("export_views", ajax_export_views))
 
     main_menu_registry.register(
         MainMenu(

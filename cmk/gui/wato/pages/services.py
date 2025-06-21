@@ -52,7 +52,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, PermissionName
@@ -131,11 +131,11 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register_page("ajax_service_discovery")(ModeAjaxServiceDiscovery)
-    page_registry.register_page_handler(
-        "ajax_popup_service_action_menu", ajax_popup_service_action_menu
+    page_registry.register(PageEndpoint("ajax_service_discovery", ModeAjaxServiceDiscovery))
+    page_registry.register(
+        PageEndpoint("ajax_popup_service_action_menu", ajax_popup_service_action_menu)
     )
-    page_registry.register_page("wato_ajax_execute_check")(ModeAjaxExecuteCheck)
+    page_registry.register(PageEndpoint("wato_ajax_execute_check", ModeAjaxExecuteCheck))
     mode_registry.register(ModeDiscovery)
     automation_command_registry.register(AutomationServiceDiscoveryJob)
     automation_command_registry.register(AutomationServiceDiscoveryJobSnapshot)

@@ -10,7 +10,7 @@ from cmk.ccc import store
 from cmk.utils import paths
 
 from cmk.gui import hooks, utils
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.gui.valuespec import AutocompleterRegistry
 
@@ -99,11 +99,11 @@ def register(
     site_choices: Callable[[], list[tuple[str, str]]],
     site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
 ) -> None:
-    page_registry.register_page("ajax_visual_filter_list_get_choice")(
-        PageAjaxVisualFilterListGetChoice
+    page_registry.register(
+        PageEndpoint("ajax_visual_filter_list_get_choice", PageAjaxVisualFilterListGetChoice)
     )
-    page_registry.register_page_handler("ajax_popup_add_visual", ajax_popup_add)
-    page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
+    page_registry.register(PageEndpoint("ajax_popup_add_visual", ajax_popup_add))
+    page_registry.register(PageEndpoint("ajax_add_visual", ajax_add_visual))
     info.register(_visual_info_registry)
     _filters.register(page_registry, filter_registry)
     _site_filters.register(

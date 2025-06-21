@@ -12,14 +12,14 @@ from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page_handler("index", page_index)
+    page_registry.register(PageEndpoint("index", page_index))
 
 
 def page_index() -> None:

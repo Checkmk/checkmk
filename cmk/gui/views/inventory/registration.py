@@ -5,7 +5,7 @@
 
 
 from cmk.gui.data_source import DataSourceRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
@@ -38,7 +38,7 @@ def register(
 ) -> None:
     _paint_functions.register(inv_paint_funtions)
     _builtin_display_hints.register(inventory_displayhints)
-    page_registry.register_page_handler("ajax_inv_render_tree", ajax_inv_render_tree)
+    page_registry.register(PageEndpoint("ajax_inv_render_tree", ajax_inv_render_tree))
     data_source_registry_.register(DataSourceInventoryHistory)
     painter_registry_.register(PainterInventoryTree)
     painter_registry_.register(PainterInvhistTime)

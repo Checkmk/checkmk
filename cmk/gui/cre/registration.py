@@ -10,7 +10,6 @@ from cmk.ccc.version import Edition
 
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
-import cmk.gui.pages
 import cmk.gui.wato._notification_parameter._mail as mail
 from cmk.gui import nagvis, sidebar, visuals
 from cmk.gui.background_job import job_registry
@@ -41,7 +40,7 @@ from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_family_registry, endpoint_registry, versioned_endpoint_registry
 from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
-from cmk.gui.pages import page_registry
+from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -109,12 +108,18 @@ from cmk.gui.watolib.users import default_sites, user_features_registry, UserFea
 
 
 def register_pages() -> None:
-    cmk.gui.pages.page_registry.register(PageGraphDashlet)
-    cmk.gui.pages.page_registry.register(PageHostServiceGraphPopup)
-    cmk.gui.pages.page_registry.register(html_render.AjaxRenderGraphContent)
-    cmk.gui.pages.page_registry.register(html_render.AjaxGraphHover)
-    cmk.gui.pages.page_registry.register(html_render.AjaxGraph)
-    cmk.gui.pages.page_registry.register(graph_images.AjaxGraphImagesForNotifications)
+    page_registry.register(PageEndpoint("graph_dashlet", PageGraphDashlet))
+    page_registry.register(PageEndpoint("host_service_graph_popup", PageHostServiceGraphPopup))
+
+    page_registry.register(
+        PageEndpoint("ajax_render_graph_content", html_render.AjaxRenderGraphContent)
+    )
+
+    page_registry.register(PageEndpoint("ajax_graph_hover", html_render.AjaxGraphHover))
+    page_registry.register(PageEndpoint("ajax_graph", html_render.AjaxGraph))
+    page_registry.register(
+        PageEndpoint("ajax_graph_images", graph_images.AjaxGraphImagesForNotifications)
+    )
 
 
 def register_painters() -> None:

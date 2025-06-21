@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
@@ -125,8 +125,8 @@ def register(
     mode_registry: ModeRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
-    page_registry.register_page("ajax_bi_rule_preview")(AjaxBIRulePreview)
-    page_registry.register_page("ajax_bi_aggregation_preview")(AjaxBIAggregationPreview)
+    page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview))
+    page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview))
 
     main_module_topic_registry.register(MainModuleTopicBI)
     main_module_registry.register(MainModuleBI)

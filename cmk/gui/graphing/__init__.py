@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
@@ -29,7 +29,7 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
-    page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
+    page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete))
     metric_operation_registry.register(MetricOpConstant)
     metric_operation_registry.register(MetricOpConstantNA)
     metric_operation_registry.register(MetricOpOperator)

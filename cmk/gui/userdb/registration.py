@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
@@ -50,7 +50,7 @@ def register(
         )
     )
 
-    page_registry.register_page_handler("ajax_userdb_sync", ajax_sync)
+    page_registry.register(PageEndpoint("ajax_userdb_sync", ajax_sync))
     job_registry.register(UserSyncBackgroundJob)
 
     ldap_connector.register(user_connector_registry)

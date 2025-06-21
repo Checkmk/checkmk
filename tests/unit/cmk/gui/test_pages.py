@@ -12,6 +12,7 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 
 import cmk.gui.pages
+from cmk.gui.pages import PageEndpoint
 
 
 def test_registered_pages() -> None:
@@ -259,16 +260,20 @@ def test_registered_pages() -> None:
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None:
+def test_page_registry_register_page_class(capsys: pytest.CaptureFixture[str]) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
-    @page_registry.register_page("234handler")
     class PageClass(cmk.gui.pages.Page):
         def page(self) -> None:
             sys.stdout.write("234")
 
-    handler = page_registry.get("234handler")
-    assert handler == PageClass
+    page_registry.register(PageEndpoint("234handler", PageClass))
+
+    endpoint = page_registry.get("234handler")
+    assert isinstance(endpoint, PageEndpoint)
+    handler = endpoint.handler
+    assert isinstance(handler, type)
+    assert issubclass(handler, PageClass)
 
     handler().handle_page()
     assert capsys.readouterr()[0] == "234"
@@ -283,12 +288,14 @@ def test_page_registry_register_page_handler(
     def page() -> None:
         sys.stdout.write("234")
 
-    page_registry.register_page_handler("234handler", page)
+    page_registry.register(PageEndpoint("234handler", page))
 
-    handler = page_registry["234handler"]
-    assert issubclass(handler, cmk.gui.pages.Page)
+    endpoint = page_registry.get("234handler")
+    assert isinstance(endpoint, PageEndpoint)
+    handler = endpoint.handler
+    assert not isinstance(handler, type)
 
-    handler().handle_page()
+    handler()
     assert capsys.readouterr()[0] == "234"
 
 

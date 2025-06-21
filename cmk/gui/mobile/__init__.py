@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.pages
+from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.views.layout import LayoutRegistry
 
 from .pages import page_login, PageMobileIndex, PageMobileView
@@ -11,8 +11,8 @@ from .views import LayoutMobileDataset, LayoutMobileList, LayoutMobileTable
 
 
 def register(layout_registry: LayoutRegistry) -> None:
-    cmk.gui.pages.page_registry.register(PageMobileIndex)
-    cmk.gui.pages.page_registry.register(PageMobileView)
+    page_registry.register(PageEndpoint("mobile", PageMobileIndex))
+    page_registry.register(PageEndpoint("mobile_view", PageMobileView))
     layout_registry.register(LayoutMobileTable)
     layout_registry.register(LayoutMobileList)
     layout_registry.register(LayoutMobileDataset)

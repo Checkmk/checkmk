@@ -5,7 +5,7 @@
 
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
@@ -100,9 +100,9 @@ def register(
     command_group_registry.register(CommandGroupAggregations)
     command_registry.register(CommandFreezeAggregation)
 
-    page_registry.register_page_handler("bi_set_assumption", ajax_set_assumption)
-    page_registry.register_page_handler("bi_save_treestate", ajax_save_treestate)
-    page_registry.register_page_handler("bi_render_tree", ajax_render_tree)
+    page_registry.register(PageEndpoint("bi_set_assumption", ajax_set_assumption))
+    page_registry.register(PageEndpoint("bi_save_treestate", ajax_save_treestate))
+    page_registry.register(PageEndpoint("bi_render_tree", ajax_render_tree))
 
     _filters.register(filter_registry)
     _config.register(

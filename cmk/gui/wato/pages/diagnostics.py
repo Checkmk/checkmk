@@ -67,7 +67,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.site_config import site_is_local
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -110,7 +110,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
+    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump))
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
     job_registry.register(DiagnosticsDumpBackgroundJob)

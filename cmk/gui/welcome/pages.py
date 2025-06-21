@@ -3,26 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 
 
 def register(page_registry: PageRegistry) -> None:
-    """Register the welcome page."""
-    page_registry.register_page("welcome")(WelcomePage)
+    page_registry.register(PageEndpoint("welcome", _welcome_page))
 
 
-class WelcomePage(Page):
-    @classmethod
-    @override
-    def ident(cls) -> str:
-        return "welcome"
-
-    @override
-    def page(self) -> None:
-        make_header(html, "Welcome", breadcrumb=Breadcrumb(), show_top_heading=False)
-        html.vue_component(component_name="cmk-welcome", data={})
+def _welcome_page() -> None:
+    make_header(html, "Welcome", breadcrumb=Breadcrumb(), show_top_heading=False)
+    html.vue_component(component_name="cmk-welcome", data={})

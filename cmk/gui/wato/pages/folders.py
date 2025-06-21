@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
@@ -110,8 +110,8 @@ TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register_page("ajax_popup_move_to_folder")(PageAjaxPopupMoveToFolder)
-    page_registry.register_page("ajax_set_foldertree")(PageAjaxSetFoldertree)
+    page_registry.register(PageEndpoint("ajax_popup_move_to_folder", PageAjaxPopupMoveToFolder))
+    page_registry.register(PageEndpoint("ajax_set_foldertree", PageAjaxSetFoldertree))
     mode_registry.register(ModeFolder)
     mode_registry.register(ModeEditFolder)
     mode_registry.register(ModeCreateFolder)

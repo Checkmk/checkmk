@@ -39,7 +39,6 @@ from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 
-import cmk.gui.pages
 from cmk.gui import sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
@@ -68,7 +67,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page
+from cmk.gui.pages import Page, page_registry, PageEndpoint
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission_section,
@@ -1954,7 +1953,7 @@ def declare(page_ty: type[Overridable]) -> None:
     page_types[page_ty.type_name()] = page_ty
 
     for path, page_func in page_ty.page_handlers().items():
-        cmk.gui.pages.page_registry.register_page_handler(path, page_func)
+        page_registry.register(PageEndpoint(path, page_func))
 
 
 def page_type(page_type_name: str) -> type[Overridable]:

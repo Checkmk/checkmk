@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     PermissionSection,
@@ -46,7 +46,7 @@ from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 def register(
     page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
 ) -> None:
-    page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
+    page_registry.register(PageEndpoint("clear_failed_notifications", ClearFailedNotificationPage))
     permission_section_registry.register(PERMISSION_SECTION_NOTIFICATION_PLUGINS)
 
 

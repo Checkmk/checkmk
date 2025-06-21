@@ -76,7 +76,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, Page, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
@@ -99,10 +99,12 @@ def register(
     icon_and_action_registry: IconRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
-    page_registry.register_page("parent_child_topology")(ParentChildTopologyPage)
-    page_registry.register_page("network_topology")(NetworkTopologyPage)
-    page_registry.register_page("ajax_initial_topology_filters")(AjaxInitialTopologyFilters)
-    page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
+    page_registry.register(PageEndpoint("parent_child_topology", ParentChildTopologyPage))
+    page_registry.register(PageEndpoint("network_topology", NetworkTopologyPage))
+    page_registry.register(
+        PageEndpoint("ajax_initial_topology_filters", AjaxInitialTopologyFilters)
+    )
+    page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology))
     icon_and_action_registry.register(NetworkTopologyIcon)
     cron_job_registry.register(
         CronJob(

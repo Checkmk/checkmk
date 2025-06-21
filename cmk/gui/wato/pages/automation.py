@@ -32,7 +32,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -53,8 +53,8 @@ tracer = trace.get_tracer()
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("automation_login")(PageAutomationLogin)
-    page_registry.register_page("noauth:automation")(PageAutomation)
+    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin))
+    page_registry.register(PageEndpoint("noauth:automation", PageAutomation))
 
 
 def _store_central_site_info() -> None:

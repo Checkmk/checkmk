@@ -12,7 +12,7 @@ import cmk.utils.paths
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfoRegistry
@@ -69,7 +69,7 @@ def register(
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
 ) -> None:
-    page_registry.register_page_handler("host_inv_api", page_host_inv_api)
+    page_registry.register(PageEndpoint("host_inv_api", page_host_inv_api))
     cron_job_registry.register(
         CronJob(
             name="execute_inventory_housekeeping_job",

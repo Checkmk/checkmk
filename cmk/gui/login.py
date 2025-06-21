@@ -40,7 +40,7 @@ from cmk.gui.logged_in import (
     user,
 )
 from cmk.gui.main import get_page_heading
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.session import session, UserContext
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import get_active_saml_connections
@@ -60,11 +60,11 @@ from cmk.crypto.password import Password
 def register(page_registry: PageRegistry) -> None:
     # TODO: only overwrite this in cse specific files
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        page_registry.register_page("login")(SaasLoginPage)
-        page_registry.register_page("logout")(SaasLogoutPage)
+        page_registry.register(PageEndpoint("login", SaasLoginPage))
+        page_registry.register(PageEndpoint("logout", SaasLogoutPage))
     else:
-        page_registry.register_page("login")(LoginPage)
-        page_registry.register_page("logout")(LogoutPage)
+        page_registry.register(PageEndpoint("login", LoginPage))
+        page_registry.register(PageEndpoint("logout", LogoutPage))
 
 
 @contextlib.contextmanager

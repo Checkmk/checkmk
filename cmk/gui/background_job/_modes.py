@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
@@ -36,7 +36,9 @@ def register(
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
 ) -> None:
-    page_registry.register_page("ajax_background_job_details")(ModeAjaxBackgroundJobDetails)
+    page_registry.register(
+        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails)
+    )
     mode_registry.register(ModeBackgroundJobsOverview)
     mode_registry.register(ModeBackgroundJobDetails)
     main_module_registry.register(MainModuleBackgroundJobs)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
@@ -39,21 +39,25 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
-    page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
-    page_registry.register_page("edit_dashlet")(EditDashletPage)
-    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
-    page_registry.register_page_handler("dashboard", page_dashboard)
-    page_registry.register_page_handler("dashboard_dashlet", ajax_dashlet)
-    page_registry.register_page_handler("edit_dashboards", page_edit_dashboards)
-    page_registry.register_page_handler("create_dashboard", page_create_dashboard)
-    page_registry.register_page_handler("edit_dashboard", page_edit_dashboard)
-    page_registry.register_page_handler("create_link_view_dashlet", page_create_link_view_dashlet)
-    page_registry.register_page_handler("create_view_dashlet", page_create_view_dashlet)
-    page_registry.register_page_handler("create_view_dashlet_infos", page_create_view_dashlet_infos)
-    page_registry.register_page_handler("clone_dashlet", page_clone_dashlet)
-    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
-    page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
+    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage))
+    page_registry.register(
+        PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters)
+    )
+    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage))
+    page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
+    page_registry.register(PageEndpoint("dashboard", page_dashboard))
+    page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
+    page_registry.register(PageEndpoint("edit_dashboards", page_edit_dashboards))
+    page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))
+    page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
+    page_registry.register(PageEndpoint("create_link_view_dashlet", page_create_link_view_dashlet))
+    page_registry.register(PageEndpoint("create_view_dashlet", page_create_view_dashlet))
+    page_registry.register(
+        PageEndpoint("create_view_dashlet_infos", page_create_view_dashlet_infos)
+    )
+    page_registry.register(PageEndpoint("clone_dashlet", page_clone_dashlet))
+    page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
+    page_registry.register(PageEndpoint("ajax_dashlet_pos", ajax_dashlet_pos))
 
     register_dashlets(dashlet_registry_, autocompleter_registry)
     register_builtin_dashboards(builtin_dashboards)

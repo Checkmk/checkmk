@@ -31,7 +31,7 @@ from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.site_config import site_is_local
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
@@ -56,8 +56,8 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
-    page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
+    page_registry.register(PageEndpoint("fetch_agent_output", PageFetchAgentOutput))
+    page_registry.register(PageEndpoint("download_agent_output", PageDownloadAgentOutput))
     automation_command_registry.register(AutomationFetchAgentOutputStart)
     automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
     automation_command_registry.register(AutomationFetchAgentOutputGetFile)

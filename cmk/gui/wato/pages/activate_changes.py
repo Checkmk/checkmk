@@ -46,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     show_confirm_cancel_dialog,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -81,8 +81,8 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register_page("ajax_start_activation")(PageAjaxStartActivation)
-    page_registry.register_page("ajax_activation_state")(PageAjaxActivationState)
+    page_registry.register(PageEndpoint("ajax_start_activation", PageAjaxStartActivation))
+    page_registry.register(PageEndpoint("ajax_activation_state", PageAjaxActivationState))
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
     automation_command_registry.register(AutomationActivateChanges)

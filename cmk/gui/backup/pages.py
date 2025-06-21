@@ -13,7 +13,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -22,7 +22,7 @@ from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register_page("ajax_backup_job_state")(PageAjaxBackupJobState)
+    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState))
     mode_registry.register(ModeBackup)
     mode_registry.register(ModeBackupTargets)
     mode_registry.register(ModeEditBackupTarget)

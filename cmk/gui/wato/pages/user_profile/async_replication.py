@@ -19,7 +19,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import sitenames
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
@@ -30,7 +30,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("wato_ajax_profile_repl")(ModeAjaxProfileReplication)
+    page_registry.register(PageEndpoint("wato_ajax_profile_repl", ModeAjaxProfileReplication))
 
 
 class ModeAjaxProfileReplication(AjaxPage):

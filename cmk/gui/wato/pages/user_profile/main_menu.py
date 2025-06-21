@@ -12,7 +12,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
@@ -27,9 +27,9 @@ def register(
     main_menu_registry: MainMenuRegistry,
     user_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
-    page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
-    page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
+    page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes))
+    page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition))
+    page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL))
 
     main_menu_registry.register(
         MainMenu(

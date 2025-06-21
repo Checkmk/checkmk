@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.session import session
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
@@ -34,7 +34,7 @@ from .abstract_page import ABCUserProfilePage
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("user_change_pw")(UserChangePasswordPage)
+    page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage))
 
 
 class UserChangePasswordPage(ABCUserProfilePage):

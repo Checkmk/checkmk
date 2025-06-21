@@ -39,7 +39,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.transaction_manager import transactions
@@ -59,7 +59,7 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page_handler("logwatch", page_show)
+    page_registry.register(PageEndpoint("logwatch", page_show))
 
 
 def page_show():

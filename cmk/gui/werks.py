@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageRegistry, PageResult
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import get_flashed_messages
@@ -74,8 +74,8 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("change_log")(ChangeLogPage)
-    page_registry.register_page_handler("werk", page_werk)
+    page_registry.register(PageEndpoint("change_log", ChangeLogPage))
+    page_registry.register(PageEndpoint("werk", page_werk))
 
 
 def get_werk_by_id(werk_id: int) -> Werk:

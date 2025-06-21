@@ -313,11 +313,16 @@ def may_see_url(url: str) -> bool:
 
 
 def _try_page(file_name: str) -> None:
-    page_handler = get_page_handler(file_name)
-    if page_handler:
-        with output_funnel.plugged():
-            page_handler()
-            output_funnel.drain()
+    handler = get_page_handler(file_name)
+    if not handler:
+        return
+
+    with output_funnel.plugged():
+        if isinstance(handler, type):
+            handler().handle_page()
+        else:
+            handler()
+        output_funnel.drain()
 
 
 class PermissionsHandler:

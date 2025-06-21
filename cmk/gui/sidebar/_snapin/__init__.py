@@ -6,7 +6,7 @@
 from collections.abc import Callable
 
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import MainMenuTopic
 
 from . import _views
@@ -65,5 +65,5 @@ def register(
     snapin_registry_.register(Speedometer)
     snapin_registry_.register(TacticalOverviewSnapin)
     _views.register(page_registry, snapin_registry_, main_menu_registry, view_menu_topics)
-    page_registry.register_page("ajax_search_monitoring")(PageSearchMonitoring)
-    page_registry.register_page("ajax_search_setup")(PageSearchSetup)
+    page_registry.register(PageEndpoint("ajax_search_monitoring", PageSearchMonitoring))
+    page_registry.register(PageEndpoint("ajax_search_setup", PageSearchSetup))

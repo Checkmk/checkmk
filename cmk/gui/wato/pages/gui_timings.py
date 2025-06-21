@@ -7,7 +7,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.pages import Page, PageRegistry, PageResult
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
 
 
 class GuiTimingsPage(Page):
@@ -40,4 +40,4 @@ class GuiTimingsPage(Page):
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("gui_timings")(GuiTimingsPage)
+    page_registry.register(PageEndpoint("gui_timings", GuiTimingsPage))

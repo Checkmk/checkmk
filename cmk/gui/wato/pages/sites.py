@@ -56,7 +56,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
     configured_sites,
     get_replication_site_id,
@@ -151,7 +151,7 @@ from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionO
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
+    page_registry.register(PageEndpoint("wato_ajax_fetch_site_status", PageAjaxFetchSiteStatus))
     mode_registry.register(ModeEditSite)
     mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)

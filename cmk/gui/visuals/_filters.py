@@ -21,7 +21,7 @@ from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
@@ -57,7 +57,7 @@ from .filter import filter_registry as global_filter_registry
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
-    page_registry.register_page("ajax_validate_filter")(PageValidateFilter)
+    page_registry.register(PageEndpoint("ajax_validate_filter", PageValidateFilter))
     register_host_and_service_basic_filters(filter_registry)
     register_host_address_filters(filter_registry)
     register_host_and_service_group_filters(filter_registry)

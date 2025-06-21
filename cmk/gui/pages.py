@@ -5,10 +5,10 @@
 
 
 import abc
-import functools
 import http.client as http_client
 import json
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, override
 
 import cmk.ccc.plugin_registry
@@ -115,59 +115,28 @@ class AjaxPage(Page, abc.ABC):
         response.set_data(json.dumps(resp, cls=CustomObjectJSONEncoder))
 
 
-class PageRegistry(cmk.ccc.plugin_registry.Registry[type[Page]]):
+@dataclass(frozen=True)
+class PageEndpoint:
+    ident: str
+    handler: PageHandlerFunc | type[Page]
+
+
+class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
     @override
-    def plugin_name(self, instance: type[Page]) -> str:
-        return instance.ident()
-
-    def register_page(self, path: str) -> Callable[[type[Page]], type[Page]]:
-        def wrap(plugin_class: type[Page]) -> type[Page]:
-            if not isinstance(plugin_class, type):
-                raise NotImplementedError()
-
-            # mypy is not happy with this. Find a cleaner way
-            plugin_class._ident = path  # type: ignore[attr-defined]
-            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
-
-            self.register(plugin_class)
-            return plugin_class
-
-        return wrap
-
-    def register_page_handler(self, path: str, page_handler: PageHandlerFunc) -> type[Page]:
-        cls_name = "PageClass%s" % path.title().replace(":", "")
-        cls = type(
-            cls_name,
-            (Page,),
-            {
-                "_wrapped_callable": (page_handler,),
-                "page": lambda self: self._wrapped_callable[0](),
-            },
-        )
-        self.register_page(path)(cls)
-        return cls
+    def plugin_name(self, instance: PageEndpoint) -> str:
+        return instance.ident
 
 
 page_registry = PageRegistry()
 
 
-def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHandlerFunc | None:
+def get_page_handler(
+    name: str, dflt: PageHandlerFunc | None = None
+) -> PageHandlerFunc | type[Page] | None:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-
-    def page_handler(hc: type[Page]) -> PageHandlerFunc:
-        # We pretend to wrap `hc.page` instead of `hc.handle_page`, because `hc.handle_page` is
-        # usually only defined on the superclass, which doesn't really help in debugging. The
-        # instance is not shown, and it is not 100% correct, but it's better than nothing at all.
-        @functools.wraps(hc.page)
-        def wrapper() -> None:
-            hc().handle_page()
-
-        return wrapper
-
-    if handle_class := page_registry.get(name):
-        return page_handler(handle_class)
-
+    if endpoint := page_registry.get(name):
+        return endpoint.handler
     return dflt

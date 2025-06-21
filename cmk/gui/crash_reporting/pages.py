@@ -46,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageRegistry
+from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
@@ -62,8 +62,8 @@ CrashReportRow = dict[str, str]
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("crash")(PageCrash)
-    page_registry.register_page("download_crash_report")(PageDownloadCrashReport)
+    page_registry.register(PageEndpoint("crash", PageCrash))
+    page_registry.register(PageEndpoint("download_crash_report", PageDownloadCrashReport))
     report_renderer_registry.register(ReportRendererGeneric)
     report_renderer_registry.register(ReportRendererSection)
     report_renderer_registry.register(ReportRendererCheck)

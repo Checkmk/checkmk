@@ -32,7 +32,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import MainMenuTopic
@@ -87,18 +87,18 @@ def register(
     main_menu_registry_: MainMenuRegistry,
     view_menu_topics: Callable[[], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
-    page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
-    page_registry.register_page("sidebar_ajax_add_snapin")(AjaxAddSnapin)
-    page_registry.register_page_handler("side", page_side)
-    page_registry.register_page_handler("sidebar_snapin", ajax_snapin)
-    page_registry.register_page_handler("sidebar_move_snapin", move_snapin)
-    page_registry.register_page_handler("sidebar_add_snapin", page_add_snapin)
-    page_registry.register_page_handler("sidebar_ajax_set_snapin_site", ajax_set_snapin_site)
-    page_registry.register_page_handler("sidebar_message_read", ajax_message_read)
-    page_registry.register_page("ajax_sidebar_get_messages")(PageAjaxSidebarGetMessages)
-    page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
-        PageAjaxSidebarGetUnackIncompWerks
+    page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin))
+    page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin))
+    page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin))
+    page_registry.register(PageEndpoint("side", page_side))
+    page_registry.register(PageEndpoint("sidebar_snapin", ajax_snapin))
+    page_registry.register(PageEndpoint("sidebar_move_snapin", move_snapin))
+    page_registry.register(PageEndpoint("sidebar_add_snapin", page_add_snapin))
+    page_registry.register(PageEndpoint("sidebar_ajax_set_snapin_site", ajax_set_snapin_site))
+    page_registry.register(PageEndpoint("sidebar_message_read", ajax_message_read))
+    page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages))
+    page_registry.register(
+        PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks)
     )
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(

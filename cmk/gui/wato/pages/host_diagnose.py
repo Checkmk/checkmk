@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.encrypter import Encrypter
@@ -59,7 +59,7 @@ class HostSpec(TypedDict):
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register_page("wato_ajax_diag_host")(PageAjaxDiagHost)
+    page_registry.register(PageEndpoint("wato_ajax_diag_host", PageAjaxDiagHost))
     mode_registry.register(ModeDiagHost)
 
 

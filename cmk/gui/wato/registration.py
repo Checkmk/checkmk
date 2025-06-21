@@ -8,7 +8,7 @@ from collections.abc import Callable
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
@@ -104,10 +104,12 @@ def register(
     icon_registry.register(DownloadSnmpWalkIcon)
     icon_registry.register(WatoIcon)
 
-    page_registry.register_page_handler("wato", page_handler)
-    page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
-    page_registry.register_page("ajax_dict_host_tag_condition_get_choice")(
-        PageAjaxDictHostTagConditionGetChoice
+    page_registry.register(PageEndpoint("wato", page_handler))
+    page_registry.register(PageEndpoint("ajax_popup_host_action_menu", ajax_popup_host_action_menu))
+    page_registry.register(
+        PageEndpoint(
+            "ajax_dict_host_tag_condition_get_choice", PageAjaxDictHostTagConditionGetChoice
+        )
     )
 
     filters.register(filter_registry)

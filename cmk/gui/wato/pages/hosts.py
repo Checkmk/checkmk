@@ -37,7 +37,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -89,8 +89,8 @@ def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     mode_registry.register(ModeEditHost)
     mode_registry.register(ModeCreateHost)
     mode_registry.register(ModeCreateCluster)
-    page_registry.register_page("ajax_ping_host")(PageAjaxPingHost)
-    page_registry.register_page("wato_ajax_diag_cmk_agent")(PageAjaxDiagCmkAgent)
+    page_registry.register(PageEndpoint("ajax_ping_host", PageAjaxPingHost))
+    page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent))
 
 
 class ABCHostMode(WatoMode, abc.ABC):

@@ -18,7 +18,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
@@ -28,7 +28,7 @@ from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
-    page_registry.register_page("ajax_vs_autocomplete")(PageVsAutocomplete)
+    page_registry.register(PageEndpoint("ajax_vs_autocomplete", PageVsAutocomplete))
     autocompleter_registry_.register_autocompleter(
         "monitored_hostname", monitored_hostname_autocompleter
     )

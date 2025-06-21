@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import PageRegistry
+from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -90,7 +90,7 @@ class Message(TypedDict):
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page_handler("message", page_message)
+    page_registry.register(PageEndpoint("message", page_message))
 
 
 def _parse_message(message: Message | MessageV0) -> Message:

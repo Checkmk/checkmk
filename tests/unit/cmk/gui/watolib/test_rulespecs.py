@@ -19,11 +19,11 @@ from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
-    MatchItemGeneratorRules,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,

@@ -71,12 +71,12 @@ from .notifications import (
     find_usages_of_contact_group_in_notification_rules,
 )
 from .parent_scan import ParentScanBackgroundJob
+from .rule_match_item_generator import MatchItemGeneratorRules
 from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
 )
 from .rulespecs import (
-    MatchItemGeneratorRules,
     rulespec_registry,
     RulespecGroupEnforcedServices,
     RulespecGroupRegistry,

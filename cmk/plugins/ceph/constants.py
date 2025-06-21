@@ -51,6 +51,7 @@ PG_STATES: Final[frozenset[str]] = frozenset(
         "active+undersized+degraded+remapped+backfilling",
         "active+undersized+degraded+remapped+backfill_toofull",
         "active+undersized+degraded+remapped+backfill_wait",
+        "active+undersized+degraded+remapped+backfill_wait+backfill_toofull",
         "active+undersized+degraded+remapped+inconsistent+backfilling",
         "active+undersized+degraded+remapped+inconsistent+backfill_toofull",
         "active+undersized+degraded+remapped+inconsistent+backfill_wait",

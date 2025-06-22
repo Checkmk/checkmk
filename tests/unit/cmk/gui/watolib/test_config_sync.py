@@ -276,7 +276,7 @@ def _generate_sync_snapshot(
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._activation_id,
-        activation_manager._sites,
+        {site_id: active_config.sites[site_id] for site_id in activation_manager._sites},
         {remote_site: rabbitmq.Definitions()},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
@@ -600,6 +600,7 @@ def _synchronize_site(
 
     calc_delta_result = activate_changes.calc_sync_delta(
         sync_state,
+        bool(snapshot_settings.site_config.get("sync_files")),
         file_filter_func,
         site_activation_state,
         sync_start,

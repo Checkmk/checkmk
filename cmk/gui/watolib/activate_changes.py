@@ -779,6 +779,7 @@ def fetch_sync_state(
 
 def calc_sync_delta(
     sync_state: SyncState,
+    file_sync_enabled: bool,
     file_filter_func: FileFilterFunc,
     site_activation_state: SiteActivationState,
     sync_start: float,
@@ -796,7 +797,7 @@ def calc_sync_delta(
             sync_delta = get_file_names_to_sync(
                 site_logger,
                 sync_state,
-                bool(active_config.sites[site_id].get("sync_files")),
+                file_sync_enabled,
                 file_filter_func,
             )
 
@@ -1475,7 +1476,9 @@ class ActivateChangesManager(ActivateChanges):
 
         with _debug_log_message("Preparing site snapshot settings"):
             self._site_snapshot_settings = self._get_site_snapshot_settings(
-                self._activation_id, self._sites, rabbitmq_definitions
+                self._activation_id,
+                {site_id: active_config.sites[site_id] for site_id in self._sites},
+                rabbitmq_definitions,
             )
         self._activate_until = (
             self._get_last_change_id() if activate_until is None else activate_until
@@ -1727,15 +1730,14 @@ class ActivateChangesManager(ActivateChanges):
     def _get_site_snapshot_settings(
         self,
         activation_id: ActivationId,
-        sites: list[SiteId],
+        site_configs: Mapping[SiteId, SiteConfiguration],
         rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
     ) -> dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 
-        for site_id in sites:
+        for site_id, site_config in site_configs.items():
             self._check_snapshot_creation_permissions(site_id)
 
-            site_config = active_config.sites[site_id]
             work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
             snapshot_components = _get_replication_components(site_config)
@@ -2393,6 +2395,7 @@ def _handle_active_tasks(
             func=copy_request_context(calc_sync_delta),
             args=(
                 sync_state,
+                bool(site_snapshot_settings[site_id].site_config.get("sync_files")),
                 file_filter_func,
                 activation_state,
                 sync_start_time,
@@ -2864,7 +2867,7 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
 def get_file_names_to_sync(
     site_logger: logging.Logger,
     sync_state: SyncState,
-    ldap_sync_enabled: bool,
+    file_sync_enabled: bool,
     file_filter_func: FileFilterFunc,
 ) -> SyncDelta:
     """Compare the response with the site_config directory of the site
@@ -2895,7 +2898,7 @@ def get_file_names_to_sync(
 
     # Files to be deleted
     to_delete = list(
-        (_filter_remote_files(remote_files_set) if ldap_sync_enabled else remote_files_set)
+        (_filter_remote_files(remote_files_set) if file_sync_enabled else remote_files_set)
         - central_files
     )
 

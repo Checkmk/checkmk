@@ -590,14 +590,14 @@ def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
     base_dir.joinpath("links/working-symlink-to-file").symlink_to("../etc/d3/xyz")
 
 
-def test_get_file_names_to_sync_without_ldap_sync(request_context: None) -> None:
+def test_get_file_names_to_sync_without_file_sync(request_context: None) -> None:
     remote, central = _get_test_file_infos()
     sync_delta = activate_changes.get_file_names_to_sync(
         site_logger=logger,
         sync_state=activate_changes.SyncState(
             central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
         ),
-        ldap_sync_enabled=False,
+        file_sync_enabled=False,
         file_filter_func=None,
     )
 
@@ -622,7 +622,7 @@ def test_get_file_names_to_sync_without_ldap_sync(request_context: None) -> None
     )
 
 
-def test_get_file_names_to_sync_with_ldap_sync(request_context: None) -> None:
+def test_get_file_names_to_sync_with_file_sync(request_context: None) -> None:
     remote, central = _get_test_file_infos()
     central["var/check_mk/web/orphaned/some_file"] = remote[
         "var/check_mk/web/orphaned/some_file"
@@ -643,7 +643,7 @@ def test_get_file_names_to_sync_with_ldap_sync(request_context: None) -> None:
         sync_state=activate_changes.SyncState(
             central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
         ),
-        ldap_sync_enabled=True,
+        file_sync_enabled=True,
         file_filter_func=None,
     )
 

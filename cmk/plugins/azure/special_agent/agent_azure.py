@@ -2068,7 +2068,7 @@ async def usage_details(
 
 async def process_resource_health(
     mgmt_client: MgmtApiClient,
-    resources_by_id: Mapping[str, AzureResource],
+    monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     response = await mgmt_client.get_async(
         "providers/Microsoft.ResourceHealth/availabilityStatuses",
@@ -2079,14 +2079,14 @@ async def process_resource_health(
         key="value",
     )
 
-    return _write_resource_health_section(response, resources_by_id)
+    return _write_resource_health_section(response, monitored_resources_by_id)
 
 
 async def process_virtual_machines(
     api_client: MgmtApiClient,
     args: Args,
     group_labels: GroupLabels,
-    resources: Mapping[str, AzureResource],
+    monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
@@ -2100,7 +2100,7 @@ async def process_virtual_machines(
     virtual_machines: list[AzureResource] = []
     for vm in response:
         try:
-            resource = resources[vm["id"].lower()]
+            resource = monitored_resources_by_id[vm["id"].lower()]
         except KeyError:
             raise ApiErrorMissingData(
                 f"Virtual machine not found in monitored resources: {vm['id']}"
@@ -2204,19 +2204,21 @@ async def process_resources_async(
     mgmt_client: MgmtApiClient,
     args: Args,
     group_labels: GroupLabels,
-    monitored_resources: Sequence[AzureResource],
+    selected_resources: Sequence[AzureResource],
 ) -> None:
-    monitored_types = {
-        type_ for r in monitored_resources if (type_ := r.info["type"]) in args.services
-    }
-    resources_by_id = {
-        r.info["id"].lower(): r for r in monitored_resources if r.info["type"] in monitored_types
+    monitored_resources_types = set(args.services)
+    monitored_resources_by_id = {
+        r.info["id"].lower(): r
+        for r in selected_resources
+        if r.info["type"] in monitored_resources_types
     }
 
-    tasks = {process_resource_health(mgmt_client, resources_by_id)}
+    tasks = {process_resource_health(mgmt_client, monitored_resources_by_id)}
 
-    if FetchedResource.virtual_machines.type in monitored_types:
-        tasks.add(process_virtual_machines(mgmt_client, args, group_labels, resources_by_id))
+    if FetchedResource.virtual_machines.type in monitored_resources_types:
+        tasks.add(
+            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
+        )
 
     for coroutine in asyncio.as_completed(tasks):
         try:
@@ -2241,9 +2243,13 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
             AzureResource(r, args.tag_key_pattern) for r in await mgmt_client.resources()
         )
 
-        monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
-
-        monitored_groups = sorted({r.info["group"] for r in monitored_resources})
+        # selected_resources are all the resources that match the selector
+        # they are NOT the "monitored resources" which also depend on the *services* selected
+        # here we need all these resources to ne able to create the monitored_groups sections
+        # -> I dont' know if this is actually intended (we are populating the agent information monitored-resources
+        #    with resources not really monitored"), but the agent behaved like this before
+        selected_resources = [r for r in all_resources if selector.do_monitor(r)]
+        monitored_groups = sorted({r.info["group"] for r in selected_resources})
     except Exception as exc:
         if args.debug:
             raise
@@ -2251,15 +2257,15 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
         return
 
     group_labels = await get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
-    write_group_info(monitored_groups, monitored_resources, group_labels)
+    write_group_info(monitored_groups, selected_resources, group_labels)
 
     await usage_details(mgmt_client, monitored_groups, args)
 
-    await process_resources_async(mgmt_client, args, group_labels, monitored_resources)
+    await process_resources_async(mgmt_client, args, group_labels, selected_resources)
 
-    await process_old_metrics(mgmt_client, monitored_resources, args)
+    await process_old_metrics(mgmt_client, selected_resources, args)
 
-    all_sections = process_resources(mgmt_client, monitored_resources, args)
+    all_sections = process_resources(mgmt_client, selected_resources, args)
     async for resource_sections in all_sections:
         for section in resource_sections:
             section.write()

@@ -361,7 +361,7 @@ def _common_args(
     if not params.disable_sni:
         args.append("--sni")
     if isinstance(host, ProxyHost) and (proxy_auth := host.proxy.auth):
-        args += ["-b", proxy_auth.password]
+        args += ["-b", proxy_auth.password.unsafe("%s:%%s" % proxy_auth.user)]
     if (specify_port := host.port) is not None:
         args += ["-p", "%s" % specify_port]
 

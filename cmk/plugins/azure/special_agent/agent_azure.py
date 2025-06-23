@@ -982,10 +982,6 @@ class MgmtApiClient(BaseAsyncApiClient):
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
         )
 
-    async def resource_health_view(self):
-        path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
-        return await self.get_async(path, key="value", params={"api-version": "2022-05-01"})
-
     async def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         body = {
@@ -2070,31 +2066,20 @@ async def usage_details(
         write_usage_section([], monitored_groups, args.tag_key_pattern)
 
 
-def _get_monitored_resource(
-    resource_id: str,
-    monitored_resources: Sequence[AzureResource],
-    args: Args,
-) -> AzureResource | None:
-    for resource in monitored_resources:
-        # different endpoints deliver ids in different case
-        if resource_id.lower() == resource.info["id"].lower():
-            return resource if resource.info["type"] in args.services else None
-
-    return None
-
-
 async def process_resource_health(
-    mgmt_client: MgmtApiClient, monitored_resources: Sequence[AzureResource], args: Args
+    mgmt_client: MgmtApiClient,
+    resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
-    try:
-        resource_health_view = await mgmt_client.resource_health_view()
-    except Exception as exc:
-        if args.debug:
-            raise
-        write_exception_to_agent_info_section(exc, "Management client")
-        return []
+    response = await mgmt_client.get_async(
+        "providers/Microsoft.ResourceHealth/availabilityStatuses",
+        params={
+            "api-version": "2025-05-01",
+            "$top": "1000",  # retrieves up to 1000 (still not clear what) per request
+        },
+        key="value",
+    )
 
-    return _write_resource_health_section(resource_health_view, monitored_resources, args)
+    return _write_resource_health_section(response, resources_by_id)
 
 
 async def process_virtual_machines(
@@ -2102,7 +2087,7 @@ async def process_virtual_machines(
     args: Args,
     group_labels: GroupLabels,
     resources: Mapping[str, AzureResource],
-) -> None:
+) -> Sequence[AzureSection]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
         params={
@@ -2132,6 +2117,7 @@ async def process_virtual_machines(
     if args.piggyback_vms == "self":
         await process_metrics(api_client, virtual_machines, args)
 
+    sections = []
     for resource in virtual_machines:
         if args.piggyback_vms == "self":
             labels_section = get_vm_labels_section(resource, group_labels)
@@ -2142,7 +2128,9 @@ async def process_virtual_machines(
             [resource.info["name"] if args.piggyback_vms == "self" else resource.info["group"]],
         )
         section.add(resource.dumpinfo())
-        section.write()
+        sections.append(section)
+
+    return sections
 
 
 class ResourceHealth(TypedDict, total=False):
@@ -2152,8 +2140,7 @@ class ResourceHealth(TypedDict, total=False):
 
 def _write_resource_health_section(
     resource_health_view: list[ResourceHealth],
-    monitored_resources: Sequence[AzureResource],
-    args: Args,
+    resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2162,7 +2149,9 @@ def _write_resource_health_section(
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])
 
-        if (resource := _get_monitored_resource(resource_id, monitored_resources, args)) is None:
+        try:
+            resource = resources_by_id[resource_id.lower()]
+        except KeyError:
             continue
 
         health_data = {
@@ -2217,8 +2206,6 @@ async def process_resources_async(
     group_labels: GroupLabels,
     monitored_resources: Sequence[AzureResource],
 ) -> None:
-    tasks = set()
-
     monitored_types = {
         type_ for r in monitored_resources if (type_ := r.info["type"]) in args.services
     }
@@ -2226,12 +2213,15 @@ async def process_resources_async(
         r.info["id"].lower(): r for r in monitored_resources if r.info["type"] in monitored_types
     }
 
+    tasks = {process_resource_health(mgmt_client, resources_by_id)}
+
     if FetchedResource.virtual_machines.type in monitored_types:
         tasks.add(process_virtual_machines(mgmt_client, args, group_labels, resources_by_id))
 
     for coroutine in asyncio.as_completed(tasks):
         try:
-            await coroutine
+            for section in await coroutine:
+                section.write()
         except Exception as e:
             if args.debug:
                 raise
@@ -2273,9 +2263,6 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
     async for resource_sections in all_sections:
         for section in resource_sections:
             section.write()
-
-    for section in await process_resource_health(mgmt_client, monitored_resources, args):
-        section.write()
 
     write_remaining_reads(mgmt_client.ratelimit)
 

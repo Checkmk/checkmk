@@ -25,7 +25,6 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     LabelsSection,
     MgmtApiClient,
     process_resource,
-    process_resource_health,
     ResourceHealth,
     Section,
     TagsImportPatternOption,
@@ -752,8 +751,8 @@ async def test_usage_details(
     "monitored_resources,resource_health,expected_output",
     [
         pytest.param(
-            [
-                AzureResource(
+            {
+                "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1": AzureResource(
                     {
                         "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
                         "name": "VM-test-1",
@@ -766,7 +765,7 @@ async def test_usage_details(
                     },
                     TagsImportPatternOption.import_all,
                 )
-            ],
+            },
             [
                 {
                     "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
@@ -793,8 +792,8 @@ async def test_usage_details(
             id="virtual_machine",
         ),
         pytest.param(
-            [
-                AzureResource(
+            {
+                "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1": AzureResource(
                     {
                         "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
                         "name": "VM-test-1",
@@ -808,7 +807,7 @@ async def test_usage_details(
                     },
                     TagsImportPatternOption.import_all,
                 )
-            ],
+            },
             [
                 {
                     "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
@@ -835,16 +834,17 @@ async def test_usage_details(
             id="virtual_machine_import_tags",
         ),
         pytest.param(
-            [],
+            {},
             [],
             "",
             id="no_resource",
         ),
     ],
 )
-def test_write_resource_health_section(
+@pytest.mark.asyncio
+async def test_write_resource_health_section(
     capsys: pytest.CaptureFixture[str],
-    monitored_resources: Sequence[AzureResource],
+    monitored_resources: Mapping[str, AzureResource],
     resource_health: list[ResourceHealth],
     expected_output: str,
 ) -> None:
@@ -852,7 +852,6 @@ def test_write_resource_health_section(
         _write_resource_health_section(
             resource_health,
             monitored_resources,
-            Args(debug=True, services=["Microsoft.Compute/virtualMachines"]),
         )
     )
 
@@ -861,35 +860,6 @@ def test_write_resource_health_section(
 
     captured = capsys.readouterr()
     assert captured.out == expected_output
-
-
-@pytest.mark.asyncio
-async def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str]) -> None:
-    mgmt_client = MockMgmtApiClient(
-        [], {}, 0, resource_health_exception=Exception("Request failed")
-    )
-
-    list(await process_resource_health(mgmt_client, [], Args(debug=False)))
-
-    captured = capsys.readouterr()
-    assert captured.out == (
-        "<<<<>>>>\n"
-        "<<<azure_agent_info:sep(124)>>>\n"
-        'agent-bailout|[2, "Management client: Request failed"]\n'
-        "<<<<>>>>\n"
-    )
-
-
-@pytest.mark.asyncio
-async def test_process_resource_health_request_error_debug(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    mgmt_client = MockMgmtApiClient(
-        [], {}, 0, resource_health_exception=Exception("Request failed")
-    )
-
-    with pytest.raises(Exception, match="Request failed"):
-        await process_resource_health(mgmt_client, [], Args(debug=True))
 
 
 @pytest.mark.parametrize(

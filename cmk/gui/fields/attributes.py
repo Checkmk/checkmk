@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import re
-import typing
 from collections.abc import Mapping
+from typing import Any, Literal, override
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
@@ -145,6 +145,7 @@ class IPNetworkCIDR(String):
     marshmallow.exceptions.ValidationError: Error handling 'broken', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
     """
 
+    @override
     def _deserialize(self, value, attr, data, **kwargs):
         try:
             network, mask = tuple(value.split("/"))
@@ -152,6 +153,7 @@ class IPNetworkCIDR(String):
         except ValueError:
             raise ValidationError("Expected an IP network in CIDR notation like '192.168.0.0/24'")
 
+    @override
     def _serialize(self, value, attr, obj, **kwargs):
         if isinstance(value, list | tuple) and len(value) == 2:
             return f"{value[0]}/{value[1]}"
@@ -278,6 +280,7 @@ class IPRange(OneOfSchema):
         "explicit_addresses": IPAddresses,
     }
 
+    @override
     def get_obj_type(self, obj):
         return {
             "ip_range": "address_range",
@@ -295,6 +298,7 @@ class IPRangeWithRegexp(OneOfSchema):
         "exclude_by_regexp": IPRegexp,
     }
 
+    @override
     def get_obj_type(self, obj):
         if isinstance(obj, dict):
             return obj["type"]
@@ -310,6 +314,7 @@ class DateConverter(Converter):
     # NOTE that 24:00 doesn't exist. This would be 00:00 on the next day, but the intended
     # meaning is "the last second/minute of this day", so we replace it with that.
 
+    @override
     def from_checkmk(self, data):
         """Converts a Checkmk date string to a datetime object
 
@@ -325,6 +330,7 @@ class DateConverter(Converter):
 
         return datetime.time(*data)
 
+    @override
     def to_checkmk(self, data):
         return data.hour, data.minute
 
@@ -542,7 +548,7 @@ class NetworkScan(BaseSchema):
     translate_names = Nested(TranslateNames)
 
     @validates_schema
-    def validate_tag_criticality(self, data: dict[str, typing.Any], **kwargs: typing.Any) -> None:
+    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:
         tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
@@ -559,6 +565,7 @@ class NetworkScan(BaseSchema):
 
 
 class NetworkScanResultState(String):
+    @override
     def _serialize(self, value, attr, obj, **kwargs):
         if value is None:
             return "running"
@@ -618,10 +625,8 @@ class LockedBy(BaseSchema, CheckmkTuple):
     )
 
 
-AuthProtocolType = typing.Literal[
-    "MD5-96", "SHA-1-96", "SHA-2-224", "SHA-2-256", "SHA-2-384", "SHA-2-512"
-]
-PrivacyProtocolType = typing.Literal[
+AuthProtocolType = Literal["MD5-96", "SHA-1-96", "SHA-2-224", "SHA-2-256", "SHA-2-384", "SHA-2-512"]
+PrivacyProtocolType = Literal[
     "CBC-DES",
     "AES-128",
     "3DES-EDE",
@@ -685,9 +690,11 @@ class MappingConverter[K, V](Converter):
     def __init__(self, mapping: Mapping[K, V]) -> None:
         self.mapping = mapping
 
+    @override
     def to_checkmk(self, data: K) -> V:
         return self.mapping[data]
 
+    @override
     def from_checkmk(self, data: V) -> K:
         for key, value in self.mapping.items():
             if data == value:
@@ -896,6 +903,7 @@ class SNMPCredentials(CmkOneOfSchema):
         "v3_auth_privacy": SNMPv3AuthPrivacy,
     }
 
+    @override
     def get_obj_type(self, obj):
         if isinstance(obj, str):
             return "v1_v2_community"
@@ -943,16 +951,16 @@ class HostAttributeManagementBoardField(String):
             enum=["none", "snmp", "ipmi"],
         )
 
-    def _deserialize(
-        self, value: object, attr: object, data: object, **kwargs: typing.Any
-    ) -> str | None:
+    @override
+    def _deserialize(self, value: object, attr: object, data: object, **kwargs: Any) -> str | None:
         # get value from api, convert it to cmk/python
         deserialized = super()._deserialize(value, attr, data, **kwargs)
         if deserialized == "none":
             return None
         return deserialized
 
-    def _serialize(self, value: str | None, attr: object, obj: object, **kwargs: typing.Any) -> str:
+    @override
+    def _serialize(self, value: str | None, attr: object, obj: object, **kwargs: Any) -> str:
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from enum import Enum
 from functools import cache
-from typing import Any, Literal, NotRequired, TypedDict, TypeVar
+from typing import Any, Literal, NotRequired, override, TypedDict, TypeVar
 
 import pyparsing as pp
 
@@ -30,29 +30,37 @@ class FieldsFilter(ABC):
 
 
 class _Included(FieldsFilter):
+    @override
     def is_included(self, field_path: str | None = None) -> bool:
         return True
 
+    @override
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
         return self
 
+    @override
     def apply(self, data: _T) -> _T:
         return data
 
+    @override
     def __repr__(self) -> str:
         return "Included"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _Included)
 
 
 class _Excluded(FieldsFilter):
+    @override
     def is_included(self, field_path: str | None = None) -> bool:
         return False
 
+    @override
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
         return self
 
+    @override
     def apply(self, data: _T) -> _T:
         # NOTE: It's unlikely that this will be called.
         # 1. _Excluded shouldn't exist at the root level. (or at least it wouldn't make sense)
@@ -65,20 +73,25 @@ class _Excluded(FieldsFilter):
             return {}
         return data
 
+    @override
     def __repr__(self) -> str:
         return "Excluded"
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _Excluded)
 
 
 class _SpecificFieldsFilter(FieldsFilter, ABC):
+    @override
     def __init__(self, fields: dict[str, FieldsFilter]) -> None:
         self.fields = fields
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.fields == other.fields
 
+    @override
     def is_included(self, field_path: str | None = None) -> bool:
         if field_path is None:
             # this is either _IncludeFields or _ExcludeFields which are both partially included
@@ -87,6 +100,7 @@ class _SpecificFieldsFilter(FieldsFilter, ABC):
         # _Included and _IncludeFields are obviously included, _ExcludeFields is partially included
         return not isinstance(nested, _Excluded)
 
+    @override
     def apply(self, data: _T) -> _T:
         if isinstance(data, list):
             return [self.apply(item) for item in data]
@@ -110,6 +124,7 @@ class _IncludeFields(_SpecificFieldsFilter):
 
         super().__init__(fields)
 
+    @override
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
         key, _, remainder = field_path.partition(".")
         if key not in self.fields:
@@ -118,6 +133,7 @@ class _IncludeFields(_SpecificFieldsFilter):
         nested = self.fields[key]
         return nested.get_nested_fields(remainder) if remainder else nested
 
+    @override
     def __repr__(self) -> str:
         fields = ", ".join(f"{key}={self.fields[key]!r}" for key in sorted(self.fields.keys()))
         return f"Include[{fields}]"
@@ -132,6 +148,7 @@ class _ExcludeFields(_SpecificFieldsFilter):
 
         super().__init__(fields)
 
+    @override
     def get_nested_fields(self, field_path: str) -> "FieldsFilter":
         key, _, remainder = field_path.partition(".")
         if key not in self.fields:
@@ -140,6 +157,7 @@ class _ExcludeFields(_SpecificFieldsFilter):
         nested = self.fields[key]
         return nested.get_nested_fields(remainder) if remainder else nested
 
+    @override
     def __repr__(self) -> str:
         fields = ", ".join(f"{key}={self.fields[key]!r}" for key in sorted(self.fields.keys()))
         return f"Exclude[{fields}]"
@@ -362,6 +380,7 @@ Examples:
     ) -> None:
         super().__init__(description=description, example=example, **kwargs)
 
+    @override
     def _deserialize(
         self, value: Any, attr: str | None, data: Mapping[str, Any] | None, **kwargs: Any
     ) -> FieldsFilter:
@@ -371,6 +390,7 @@ Examples:
         except ValueError:
             raise self.make_error("invalid_format")
 
+    @override
     def _serialize(
         self, value: Any, attr: str | None, obj: dict[str, Any] | None, **kwargs: Any
     ) -> str:

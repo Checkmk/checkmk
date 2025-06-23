@@ -7,7 +7,7 @@ import collections
 import typing
 from collections.abc import Mapping, Sequence
 from functools import cached_property
-from typing import cast, Self
+from typing import cast, override, Self
 
 from apispec.ext.marshmallow import common
 from marshmallow import (
@@ -41,6 +41,7 @@ class BaseSchema(Schema):
     validate_on_dump: bool = False
 
     @property
+    @override
     def dict_class(self) -> type:
         return dict
 
@@ -90,6 +91,7 @@ class BaseSchema(Schema):
         return data
 
     @classmethod
+    @override
     def from_dict(
         cls,
         fields: dict[str, ma_fields.Field],
@@ -186,6 +188,7 @@ class ValueTypedDictSchema(BaseSchema):
             result[key] = target_field.deserialize(value=value, data=data, attr=key)
         return result
 
+    @override
     def load(self, data, *, many=None, partial=None, unknown=None):
         if self._hooks[PRE_LOAD]:
             data = self._invoke_load_processors(
@@ -233,6 +236,7 @@ class ValueTypedDictSchema(BaseSchema):
 
         return result
 
+    @override
     def dump(self, obj: typing.Any, *, many: bool | None = None) -> object:
         many = self.many if many is None else bool(many)
         if self._hooks[PRE_DUMP]:
@@ -277,9 +281,11 @@ class LazySequence(Sequence):
     def _items(self) -> list[Schema]:
         return self._compute_items()
 
+    @override
     def __getitem__(self, i):
         return self._items[i]
 
+    @override
     def __len__(self) -> int:
         return len(self._items)
 
@@ -662,6 +668,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         return rv
 
+    @override
     def _serialize(
         self,
         value: typing.Any,
@@ -773,6 +780,7 @@ Keys 'optional1', 'required1' occur more than once.
                 del error_store.errors[key]
         return result
 
+    @override
     def _deserialize(
         self,
         value: Result | list[Result],

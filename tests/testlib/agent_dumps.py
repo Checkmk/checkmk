@@ -28,10 +28,10 @@ def create_agent_dump_rule(
     site: Site,
     dumps_path: Path | None = None,
     rule_folder: str = "/",
-) -> Path:
+) -> tuple[str, Path]:
     """Create a rule to read agent data from a dump path.
 
-    Returns the path of the dumps.
+    Returns the rule ID and the path of the dumps.
 
     Args:
         site: The test site.
@@ -45,23 +45,21 @@ def create_agent_dump_rule(
         logger.info('Creating folder "%s"...', dumps_path)
         _ = site.run(["mkdir", "-p", dumps_path.as_posix()])
     logger.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.rules.create(
+    rule_id = site.openapi.rules.create(
         value=rule_value,
         ruleset_name=ruleset_name,
         folder=rule_folder,
     )
-    logger.info('Rule "%s" created!', ruleset_name)
-
-    return dumps_path
+    return rule_id, dumps_path
 
 
 def create_snmp_walk_rule(
     site: Site,
     rule_folder: str = "/",
-) -> Path:
+) -> tuple[str, Path]:
     """Create a rule to read snmp data from a walk path.
 
-    Returns the path of the walks.
+    Returns the rule ID and the path of the walks.
 
     Args:
         site: The test site.
@@ -71,22 +69,22 @@ def create_snmp_walk_rule(
     ruleset_name = "usewalk_hosts"
     rule_value = True
     logger.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.rules.create(
+    rule_id = site.openapi.rules.create(
         value=rule_value,
         ruleset_name=ruleset_name,
         folder=rule_folder,
     )
-    logger.info('Rule "%s" created!', ruleset_name)
-
-    return walks_path
+    return rule_id, walks_path
 
 
 def create_program_call_rule(
     site: Site,
     program_call: str,
     rule_folder: str = "/",
-) -> None:
+) -> str:
     """Create a rule to read agent data from a program call.
+
+    Returns the rule ID.
 
     Args:
         site: The test site.
@@ -96,12 +94,12 @@ def create_program_call_rule(
     ruleset_name = "datasource_programs"
     rule_value = program_call
     logger.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.rules.create(
+    rule_id = site.openapi.rules.create(
         value=rule_value,
         ruleset_name=ruleset_name,
         folder=rule_folder,
     )
-    logger.info('Rule "%s" created!', ruleset_name)
+    return rule_id
 
 
 def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
@@ -148,8 +146,10 @@ def copy_dumps(
         run(["bash", "-c", f'cp -f {source_path} "{target_path}"'], sudo=True)
 
 
-def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> None:
+def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> str:
     """Create dump rule and copy agent dumps from dumps_dir to site.
+
+    Returns the rule_id of the agent dump rule.
 
     Args:
         site: The test site.
@@ -159,8 +159,10 @@ def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = Tru
     if check_dumps_up_to_date:
         _dumps_up_to_date(dumps_dir, get_min_version())
 
-    site_dumps_path = create_agent_dump_rule(site)
+    rule_id, site_dumps_path = create_agent_dump_rule(site)
     copy_dumps(site, dumps_dir, site_dumps_path)
+
+    return rule_id
 
 
 def read_disk_dump(host_name: str, dump_dir: Path) -> str:

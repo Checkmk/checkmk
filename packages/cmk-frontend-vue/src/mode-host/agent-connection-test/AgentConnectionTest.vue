@@ -37,13 +37,22 @@ const showTest = ref(true)
 const hostname = ref('')
 const ipV4 = ref('')
 const ipV6 = ref('')
+const targetElement = ref<HTMLElement>(
+  props.changeTagAgent.checked ? (props.tagAgent.parentNode as HTMLElement) : props.tagAgentDefault
+)
 
 onMounted(() => {
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
-      case props.formElement || props.changeTagAgent:
+      case props.formElement:
+      case props.changeTagAgent: {
         showTest.value =
           props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
+        targetElement.value = props.changeTagAgent.checked
+          ? (props.tagAgent.parentNode as HTMLElement)
+          : props.tagAgentDefault
+        break
+      }
     }
   })
   // Add ipaddress validation
@@ -150,16 +159,10 @@ function startAjax(): void {
     method: 'POST'
   })
 }
-const target = computed(() => {
-  if (props.changeTagAgent.checked) {
-    return props.tagAgent.parentNode as HTMLElement
-  }
-  return props.tagAgentDefault
-})
 </script>
 
 <template>
-  <Teleport v-if="showTest" :to="target">
+  <Teleport v-if="showTest" :to="targetElement">
     <CmkButton v-if="isLoading || isSuccess || isError" type="button">
       <CmkIcon
         v-if="isLoading && hostname !== ''"

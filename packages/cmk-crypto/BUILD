@@ -28,6 +28,7 @@ py_library(
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
+        "//packages/cmk-ccc:site",
         requirement("bcrypt"),
         requirement("cryptography"),
         requirement("pyasn1"),

@@ -7,20 +7,16 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TypeAlias
 from uuid import UUID
 
 from cryptography import x509 as pyca_x509
-from pyasn1.codec.der.decoder import decode as der_decode
-from pyasn1.codec.der.encoder import encode as der_encode
-from pyasn1.error import PyAsn1Error
-from pyasn1.type.char import UTF8String
+
+from cmk.ccc.site import SiteId
 
 X509NameOid: TypeAlias = pyca_x509.oid.NameOID
-
-# OID for internal use only
-OID_CHECKMK_SITE_SITENAME = pyca_x509.ObjectIdentifier("1.3.6.1.4.1.677775.1.1")
 
 
 @dataclass
@@ -147,46 +143,40 @@ class SAN:
         """
         return cls(pyca_x509.UniformResourceIdentifier(name.urn))
 
-    @staticmethod
-    def decode_site_name(san: SAN) -> str:
-        """Decode a Checkmk site name.
-
-        >>> SAN.decode_site_name(SAN.checkmk_site("morgen"))
-        'morgen'
-        """
-        if (
-            not isinstance(san.name, pyca_x509.OtherName)
-            or san.name.type_id != OID_CHECKMK_SITE_SITENAME
-        ):
-            raise ValueError("Invalid Checkmk site name type")
-
-        try:
-            decoded, leftover = der_decode(san.name.value, UTF8String)
-        except (TypeError, PyAsn1Error) as e:
-            raise ValueError(f"Invalid Checkmk site name encoding: {e!r}")
-
-        if leftover:
-            raise ValueError("Invalid Checkmk site name encoding")
-
-        return str(decoded.decode("utf-8"))
-
     @classmethod
-    def checkmk_site(cls, name: str) -> SAN:
+    def checkmk_site(cls, name: SiteId) -> SAN:
         """Create a SubjectAlternativeName that represents a Checkmk site name.
 
-        Use `decode_site_name` to show the name:
+        The site name is validated at runtime as the `SiteId` type doesn't implement any validation
+        at the moment.
 
-            >>> SAN.decode_site_name(SAN.checkmk_site("❤️"))
-            '❤️'
+        >>> SAN.checkmk_site(SiteId("testsite")).name.value
+        'urn:checkmk-site:testsite'
 
-        Usually you only want to check that two names match though:
-
-            >>> SAN.checkmk_site("morgen") == SAN.checkmk_site("morgen")
-            True
-            >>> SAN.checkmk_site("morgen") == SAN.checkmk_site("gestern")
-            False
+        >>> SAN.checkmk_site(SiteId("Invalid Space Site"))
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid site name: 'Invalid Space Site'
         """
-        return cls(pyca_x509.OtherName(OID_CHECKMK_SITE_SITENAME, der_encode(UTF8String(name))))
+        # Validation is duplicated from omd/omdlib/site_name.py
+        if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
+            raise ValueError(f"Invalid site name: {name!r}")
+
+        return cls(pyca_x509.UniformResourceIdentifier(f"urn:checkmk-site:{name}"))
+
+    @classmethod
+    def from_urn(cls, uri: str) -> SAN:
+        """Create a SubjectAlternativeName from a URN string.
+
+        Only "urn:" formats we implement are accepted. This function mostly serves internal
+        purposes. Use explicit constructors like `SAN.uuid()`, or `SAN.checkmk_site()` instead.
+        """
+        if uri.startswith("urn:uuid:"):
+            return cls.uuid(UUID(uri))
+        if uri.startswith("urn:checkmk-site:"):
+            return cls.checkmk_site(SiteId(uri.removeprefix("urn:checkmk-site:")))
+
+        raise ValueError(f"Invalid URI: {uri!r}")
 
 
 class SubjectAlternativeNames(list[SAN]):
@@ -201,15 +191,9 @@ class SubjectAlternativeNames(list[SAN]):
         """Create a SubjectAlternativeNames object from an x509.SubjectAlternativeName extension."""
         dns_names = [SAN.dns_name(name) for name in ext.get_values_for_type(pyca_x509.DNSName)]
         uris = [
-            SAN.uuid(UUID(uri))
-            for uri in ext.get_values_for_type(pyca_x509.UniformResourceIdentifier)
+            SAN.from_urn(u) for u in ext.get_values_for_type(pyca_x509.UniformResourceIdentifier)
         ]
-        site_names = [
-            SAN(name)
-            for name in ext.get_values_for_type(pyca_x509.OtherName)
-            if name.type_id == OID_CHECKMK_SITE_SITENAME
-        ]
-        return cls(dns_names + uris + site_names)
+        return cls(dns_names + uris)
 
     @classmethod
     def find_extension(cls, extensions: pyca_x509.Extensions) -> SubjectAlternativeNames | None:

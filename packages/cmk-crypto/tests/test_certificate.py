@@ -9,11 +9,14 @@ from contextlib import nullcontext as does_not_raise
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import NoReturn
+from uuid import UUID
 
 import pytest
 import time_machine
 from cryptography import x509 as pyca_x509
 from dateutil.relativedelta import relativedelta
+
+from cmk.ccc.site import SiteId
 
 from cmk.crypto.certificate import (
     Certificate,
@@ -295,6 +298,14 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
     (
         (SubjectAlternativeNames([])),
         (SubjectAlternativeNames([SAN.dns_name(n) for n in ["foo.bar", "bar.foo"]])),
+        (
+            SubjectAlternativeNames(
+                [
+                    SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
+                    SAN.checkmk_site(SiteId("testsite")),
+                ]
+            )
+        ),
     ),
 )
 def test_subject_alt_names(

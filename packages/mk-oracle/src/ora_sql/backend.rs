@@ -19,8 +19,9 @@ pub struct StdEngine {
 
 trait OraDbEngine {
     fn connect(&mut self, target: &Target) -> Result<()>;
-    //    where
-    //      Self: Sized;
+
+    #[allow(dead_code)]
+    fn query(&self, query: &str) -> Result<Vec<String>>;
 }
 
 impl OraDbEngine for StdEngine {
@@ -48,6 +49,19 @@ impl OraDbEngine for StdEngine {
 
         Ok(())
     }
+    fn query(&self, query: &str) -> Result<Vec<String>> {
+        let conn = self
+            .connection
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
+        let rows = conn.query(query, &[])?;
+        // Process rows if needed
+        let result: Vec<String> = rows
+            .map(|row| format!("{:?}", row))
+            .collect::<Vec<String>>();
+
+        Ok(result)
+    }
 }
 
 fn _to_privilege(role: &Role) -> Privilege {
@@ -68,6 +82,9 @@ impl OraDbEngine for SqlPlusEngine {
     fn connect(&mut self, _target: &Target) -> Result<()> {
         anyhow::bail!("Sql*Plus engine is not implemented yet")
     }
+    fn query(&self, _query: &str) -> Result<Vec<String>> {
+        anyhow::bail!("Sql*Plus engine is not implemented yet")
+    }
 }
 
 #[derive(Debug)]
@@ -76,8 +93,10 @@ impl OraDbEngine for JdbcEngine {
     fn connect(&mut self, _target: &Target) -> Result<()> {
         anyhow::bail!("Jdbc engine is not implemented yet")
     }
+    fn query(&self, _query: &str) -> Result<Vec<String>> {
+        anyhow::bail!("Jdbc engine is not implemented yet")
+    }
 }
-
 #[derive(Debug)]
 enum EngineType {
     Std,
@@ -112,6 +131,10 @@ impl Task {
     pub fn connect(&mut self) -> Result<()> {
         self.engine.connect(&self.target)?;
         Ok(())
+    }
+
+    pub fn query(&self, query: &str) -> Result<Vec<String>> {
+        self.engine.query(query)
     }
 
     pub fn target(&self) -> &Target {

@@ -24,14 +24,13 @@ fn _init_runtime_path() -> PathBuf {
         .unwrap()
         .parent()
         .unwrap()
-        .parent()
-        .unwrap()
         .join("runtimes")
-        .join("oci_light_win_x86_zip")
+        .join("oci_light_win_x86.zip")
 }
 
 fn change_cwd_to_runtime_path() {
     let runtime_location = RUNTIME_PATH.get_or_init(_init_runtime_path).clone();
+    eprintln!("RUNTIME {:?}", runtime_location);
     std::env::set_current_dir(runtime_location).unwrap();
 }
 fn make_base_config(
@@ -123,4 +122,18 @@ fn test_local_connection() {
     let mut task = backend::make_task(&config.endpoint()).unwrap();
     let r = task.connect();
     assert!(r.is_ok());
+    let result = task.query(
+        r"
+    select upper(i.INSTANCE_NAME)
+        ||'|'|| 'sys_time_model'
+        ||'|'|| S.STAT_NAME
+        ||'|'|| Round(s.value/1000000)
+    from v$instance i,
+        v$sys_time_model s
+    where s.stat_name in('DB time', 'DB CPU')
+    order by s.stat_name",
+    );
+    assert!(result.is_ok());
+    let rows = result.unwrap();
+    assert!(!rows.is_empty());
 }

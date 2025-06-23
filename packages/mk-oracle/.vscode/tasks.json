@@ -51,7 +51,7 @@
 			"type": "bazel",
 			"command": "test",
 			"targets": [
-				"//packages/host/mk-sql:all" // this is not tested yet "${input:pickTest}"
+				"//packages/mk-oracle:all" // this is not tested yet "${input:pickTest}"
 			],
 			//"options": [
 			//	"--runs_per_test=9"

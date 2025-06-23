@@ -190,10 +190,10 @@ http_file(
 
 http_file(
     name = "taplo.gz",
-    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+    integrity = "sha256-j+GWuJTM+QcvmNThAToYAwbhfSRIMLA5hu5ejqvrYVY=",
     urls = [
-        "https://github.com/tamasfe/taplo/releases/download/0.9.3/taplo-full-linux-x86.gz",
-        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-0.9.3.gz",
+        "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-linux-x86_64-0.10.0.gz",
     ],
 )
 

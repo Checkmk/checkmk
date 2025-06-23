@@ -56,6 +56,9 @@ const isNoIP = ref(
 const controller = ref(new AbortController())
 const ajaxRequestInProgress = ref(false)
 
+const typingTimer: Ref<ReturnType<typeof setTimeout> | null> = ref(null)
+const doneTypingInterval = 250
+
 onMounted(() => {
   props.formElement.addEventListener('change', (e: Event) => {
     switch (e.target) {
@@ -113,6 +116,9 @@ function callPingHostOnElement(
   cmd: PingCmd,
   isIpAddress: boolean
 ): void {
+  if (typingTimer.value) {
+    clearTimeout(typingTimer.value)
+  }
   const elementName = element.name
   if (!elementName) {
     return
@@ -131,13 +137,15 @@ function callPingHostOnElement(
     },
     element: element
   }
-  callAJAX(element.value, cmd, isIpAddress)
-    .then((result) => {
-      if (result && statusElements.value[elementName]) {
-        statusElements.value[elementName].status = result
-      }
-    })
-    .catch(() => {})
+  typingTimer.value = setTimeout(() => {
+    callAJAX(element.value, cmd, isIpAddress)
+      .then((result) => {
+        if (result && statusElements.value[elementName]) {
+          statusElements.value[elementName].status = result
+        }
+      })
+      .catch(() => {})
+  }, doneTypingInterval)
 }
 
 async function callAJAX(

@@ -34,7 +34,6 @@ from cmk.utils.ip_lookup import (
     IPStackConfig,
 )
 from cmk.utils.log import console
-from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -675,10 +674,7 @@ def _compute_final_check_parameters(
     # We delay every computation until needed.
 
     def make_prediction():
-        # Whatch out. The CMC has to agree on the path.
-        prediction_store = PredictionStore(
-            cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
-        )
+        prediction_store = PredictionStore(host_name=host_name, service_name=service.description)
         # In the past the creation of predictions (and the livestatus query needed)
         # was performed inside the check plug-ins context.
         # We should consider moving this side effect even further up the stack

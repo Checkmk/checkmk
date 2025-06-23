@@ -14,6 +14,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.utils.prediction import _grouping, _prediction, DataStat, PredictionStore
 
 Timestamp = int
@@ -224,7 +226,9 @@ class TestPredictionStore:
         (too_old_minute := _make_f("minute", 4)).touch()
         (stillok_minute := _make_f("minute", 2)).touch()
 
-        PredictionStore(tmp_path).remove_outdated_predictions(now)
+        store = PredictionStore(HostName("foo"), "bar")
+        store.path = tmp_path
+        store.remove_outdated_predictions(now)
 
         assert not too_old_day.exists()
         assert stillok_day.exists()

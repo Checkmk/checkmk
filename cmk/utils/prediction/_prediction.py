@@ -7,12 +7,17 @@ import logging
 import math
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Protocol, Self
+from typing import Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
+from cmk.ccc.hostaddress import HostName
+
 from cmk.agent_based.prediction_backend import PredictionInfo
 
+from ..misc import pnp_cleanup
+from ..paths import predictions_dir
+from ..servicename import ServiceName
 from ._grouping import time_slices
 
 logger = logging.getLogger("cmk.prediction")
@@ -76,14 +81,17 @@ class PredictionStore:
 
     def __init__(
         self,
-        path: Path,
+        host_name: HostName,
+        service_name: ServiceName,
     ) -> None:
-        self.path: Final = path
-        self.meta_file_path_template: Final = (
-            # make base dir safe for .format call
-            str(self.path).replace("{", "{{").replace("}", "}}")
-            + f"/{self.NAME_TEMPLATE}{self.INFO_FILE_SUFFIX}"
-        )
+        # Watch out. The CMC has to agree on the path.
+        self.path: Path = predictions_dir / host_name / pnp_cleanup(service_name)
+
+    @property
+    def meta_file_path_template(self) -> str:
+        # make base dir safe for .format call
+        safe_template = str(self.path).replace("{", "{{").replace("}", "}}")
+        return safe_template + f"/{self.NAME_TEMPLATE}{self.INFO_FILE_SUFFIX}"
 
     @classmethod
     def relative_data_file(cls, meta: PredictionInfo) -> Path:

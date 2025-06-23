@@ -14,6 +14,8 @@ This module provides helper functions to:
 import os
 import re
 import subprocess
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
@@ -237,3 +239,55 @@ def get_dump_and_walk_names(
 ) -> list[str]:
     """Return a list of agent dumps and snmp walks in a directory."""
     return get_dump_names(directory, skipped_files) + get_walk_names(directory, skipped_files)
+
+
+@contextmanager
+def dummy_agent_dump_generator(
+    site: Site,
+    host_name: str = "$HOSTNAME$",
+    service_count: int = 10,
+    payload_lines: int = 0,
+    pb_host_count: int = 0,
+    pb_service_count: int = 10,
+    rule_folder: str = "/",
+    cleanup: bool = True,
+) -> Iterator[str]:
+    """
+    Simulate agent dump corresponding to a host using 'datasource' / 'create program call' rule.
+
+    NOTE: All existing hosts will be affected!
+
+    Args:
+        site: The test site.
+        host_name: The name of the base host.
+        service_count: The number of services to be added per host.
+        payload_lines: The number of payload lines to be added per host.
+        pb_host_count: The number of piggyback hosts to be added.
+        pb_service_count: The number of services to be added per piggyback host.
+        rule_folder: The host folder in the site to create the program call rule in.
+        cleanup: Specifies if the program call rule is cleaned up at the end.
+    """
+    source_path = Path(__file__).parent.parent / "scripts/dummy_agent_dump_generator.py"
+    with site.copy_file(source_path, "dump_generator.py") as target_path:
+        args = [
+            "python3",
+            target_path.as_posix(),
+            "--host-name",
+            host_name,
+            "--service-count",
+            str(service_count),
+            "--payload",
+            str(payload_lines),
+            "--piggyback-hosts",
+            str(pb_host_count),
+            "--piggyback-services",
+            str(pb_service_count),
+        ]
+        rule_id = create_program_call_rule(site, f"{' '.join(args)}", rule_folder)
+        try:
+            site.openapi.changes.activate_and_wait_for_completion()
+            yield rule_id
+        finally:
+            if cleanup and site.openapi.rules.get(rule_id):
+                site.openapi.rules.delete(rule_id)
+                site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

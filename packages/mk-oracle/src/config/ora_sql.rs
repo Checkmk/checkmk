@@ -594,6 +594,10 @@ impl Endpoint {
         self.conn().hostname().clone()
     }
 
+    pub fn point(&self) -> PointName {
+        self.conn().point().clone()
+    }
+
     pub fn dump_compact(&self) -> String {
         format!(
             "host: {} port: {} user: {} auth: {:?}",
@@ -1168,6 +1172,7 @@ authentication:
             .unwrap();
         assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.port(), Port(9999));
+        assert_eq!(c.point().to_string(), "XE");
         assert_eq!(c.timeout(), Duration::from_secs(341));
     }
 

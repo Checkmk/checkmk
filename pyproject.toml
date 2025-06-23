@@ -698,6 +698,33 @@ no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true
 
+[[tool.mypy.overrides]]
+module = "cmk.relay.*"
+strict = true
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true

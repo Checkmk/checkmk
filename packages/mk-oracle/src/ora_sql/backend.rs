@@ -57,10 +57,24 @@ impl OraDbEngine for StdEngine {
         let rows = conn.query(query, &[])?;
         // Process rows if needed
         let result: Vec<String> = rows
-            .map(|row| format!("{:?}", row))
+            .map(|row| row_to_string(&row, ""))
             .collect::<Vec<String>>();
 
         Ok(result)
+    }
+}
+
+fn row_to_string(row: &oracle::Result<oracle::Row>, sep: &str) -> String {
+    use oracle::sql_type::FromSql;
+    if let Ok(r) = row {
+        r.sql_values()
+            .iter()
+            .map(|s| String::from_sql(s))
+            .map(|s| s.unwrap_or_else(|e| format!("Error: {}", e)))
+            .collect::<Vec<String>>()
+            .join(sep)
+    } else {
+        format!("Error: {}", row.as_ref().err().unwrap())
     }
 }
 

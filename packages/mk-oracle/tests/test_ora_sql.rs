@@ -114,7 +114,7 @@ fn test_local_connection() {
         Some(Role::SysDba),
         &endpoint.host,
         endpoint.port,
-        InstanceName::from(endpoint.point),
+        InstanceName::from(endpoint.point.clone()),
     );
 
     change_cwd_to_runtime_path();
@@ -135,5 +135,9 @@ fn test_local_connection() {
     );
     assert!(result.is_ok());
     let rows = result.unwrap();
+    eprintln!("Rows: {:?}", rows);
     assert!(!rows.is_empty());
+    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.point)));
+    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.point)));
+    assert_eq!(rows.len(), 2);
 }

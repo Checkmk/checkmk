@@ -1,5 +1,4 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:platform_transition_binary.bzl", "platform_transition_binary")
@@ -117,9 +116,4 @@ rust_test_suite(
         "@host_crates//:assert_cmd",
         "@host_crates//:tempfile",
     ],
-)
-
-pkg_zip(
-    name = "oci_light_win_x86",
-    srcs = ["@oci-basic-light-win-x86//:srcs"],
 )

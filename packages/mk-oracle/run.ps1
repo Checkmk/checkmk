@@ -216,22 +216,24 @@ try {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
     if ($packBuild -or $packTest -or - $packOci) {
-        $target = "//packages/mk-oracle:oci_light_win_x86"
+        $target = "//omd/packages/oci:all"
         & bazel build $target
         if ($LASTEXITCODE -eq 0) {
             $oci_light_win_x86_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )
             $packaged = Split-Path "$oci_light_win_x86_zip" -leaf
             Write-Host "Oracle runtime light/win/x86: $oci_light_win_x86_zip with name $packaged" -ForegroundColor Green
-            Copy-Item -Path "$root_dir/$oci_light_win_x86" -Destination "$arte_dir/" -Force -ErrorAction Stop
+            Copy-Item -Path "$root_dir/$oci_light_win_x86_zip" -Destination "$arte_dir/" -Force -ErrorAction Stop
             $source_hash = (Get-FileHash "$arte_dir/$packaged" -Algorithm SHA256).Hash
             & mkdir "runtimes/$packaged" -ErrorAction SilentlyContinue | Out-Null
             if (!(Test-Path "runtimes/$packaged/.hash") -or
                 ((Get-Content "runtimes/$packaged/.hash" -ErrorAction Stop) -ne $source_hash)) {
+                Write-Host "Oracle runtime light/win/x86: hash updated $source_hash" -ForegroundColor Green
                 Set-Content "runtimes/$packaged/.hash" $source_hash -ErrorAction Stop
             }
         }
         else {
             Write-Host "Failed Oracle runtime light/win/x86: $oci_light_win_x86" -ForegroundColor Red
+            exit(1)
         }
     }
     if ($packBuild) {

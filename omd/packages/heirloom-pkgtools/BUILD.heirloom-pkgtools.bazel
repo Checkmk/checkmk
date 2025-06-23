@@ -22,11 +22,11 @@ make(
     ],
     out_data_dirs = ["share"],
     postfix_script = """
-        mkdir -p ${INSTALLDIR}/share/man/man1/
+        mkdir -p $${INSTALLDIR}/share/man/man1/
         for F in pkgmk pkgtrans; do \
-            install -m 755 ${BUILD_TMPDIR}/pkgcmds/$F/$F ${INSTALLDIR}/bin/ ; \
-            install -m 644 ${BUILD_TMPDIR}/man/$F.1 ${INSTALLDIR}/share/man/man1/ ; \
-            gzip -f ${INSTALLDIR}/share/man/man1/$F.1 ; \
+            install -m 755 $${BUILD_TMPDIR}/pkgcmds/$$F/$$F $${INSTALLDIR}/bin/ ; \
+            install -m 644 $${BUILD_TMPDIR}/man/$$F.1 $${INSTALLDIR}/share/man/man1/ ; \
+            gzip -f $${INSTALLDIR}/share/man/man1/$$F.1 ; \
         done
 
     """,

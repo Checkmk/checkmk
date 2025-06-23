@@ -70,31 +70,31 @@ configure_make(
     ],
     out_include_dir = "include/python%s" % PYTHON_MAJOR_DOT_MINOR,
     postfix_script = """
-        py_install_dir="$BUILD_TMPDIR/{installPrefix}";
-        bin_dir="$INSTALLDIR/bin";
-        sysconfig_path="$INSTALLDIR/lib/python{pyMajMin}/_sysconfigdata__linux_x86_64-linux-gnu.py"
+        py_install_dir="$$BUILD_TMPDIR/{installPrefix}";
+        bin_dir="$$INSTALLDIR/bin";
+        sysconfig_path="$$INSTALLDIR/lib/python{pyMajMin}/_sysconfigdata__linux_x86_64-linux-gnu.py"
         # omd_prefix must be fixed-up to the corresponding omd path (e.g. /omd/versions/2.2.0p2.cee)
         omd_prefix="/replace-me"
 
         echo '### Compile and install sitecustomize.py ###';
-        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/sitecustomize.py $INSTALLDIR/lib/python{pyMajMin}/;
-        LD_LIBRARY_PATH=$py_install_dir/lib $py_install_dir/bin/python{pyMaj} -m py_compile $INSTALLDIR/lib/python{pyMajMin}/sitecustomize.py;
+        install -m 644 $$EXT_BUILD_ROOT/omd/packages/Python/sitecustomize.py $$INSTALLDIR/lib/python{pyMajMin}/;
+        LD_LIBRARY_PATH=$$py_install_dir/lib $$py_install_dir/bin/python{pyMaj} -m py_compile $$INSTALLDIR/lib/python{pyMajMin}/sitecustomize.py;
 
         echo '### Fix sysconfigdata ###';
         # For now 'OMD_VERSION' is not yet available in Bazel, therefore we use a well defined placeholder
-        sed -i "s|$py_install_dir|$omd_prefix|g" $sysconfig_path;
+        sed -i "s|$$py_install_dir|$$omd_prefix|g" $$sysconfig_path;
 
         # include & lib of openssl are found under different paths...
-        sed -i "s|$EXT_BUILD_DEPS/openssl/include|$omd_prefix/include/openssl|g" $sysconfig_path;
-        sed -i "s|$EXT_BUILD_DEPS/openssl/lib|$omd_prefix/lib|g" $sysconfig_path;
+        sed -i "s|$$EXT_BUILD_DEPS/openssl/include|$$omd_prefix/include/openssl|g" $$sysconfig_path;
+        sed -i "s|$$EXT_BUILD_DEPS/openssl/lib|$$omd_prefix/lib|g" $$sysconfig_path;
 
         # This one is not really helpful... but we don't want to have bazel paths in _sysconfig
-        sed -i "s|$BUILD_TMPDIR|$omd_prefix|g" $sysconfig_path;
+        sed -i "s|$$BUILD_TMPDIR|$$omd_prefix|g" $$sysconfig_path;
 
         # Fix shebang of scripts
-        cd $bin_dir && \
+        cd $$bin_dir && \
             ln -s python{pyMaj} python && \
-            sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
+            sed -i 's|^#!'$$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
 
         # Fix pip3 configuration by using own wrapper script
         # * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438
@@ -103,11 +103,11 @@ configure_make(
         # https://github.com/pypa/pip/blob/83c800d3b8b367b6ae1fbf92fd4f699612cecfc7/src/pip/_internal/operations/install/wheel.py#L422
         # * However, we may run into issues in the future again. It seems actually the module invocation (python -m pip) is more solid, see:
         # https://github.com/pypa/pip/issues/5599
-        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMaj};
-        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMajMin};
+        install -m 644 $$EXT_BUILD_ROOT/omd/packages/Python/pip $$bin_dir/pip{pyMaj};
+        install -m 644 $$EXT_BUILD_ROOT/omd/packages/Python/pip $$bin_dir/pip{pyMajMin};
 
         # Tests are not needed in final package
-        rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ;
+        rm -rf $$INSTALLDIR/lib/python{pyMajMin}/test ;
     """.format(
         installPrefix = INSTALL_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,

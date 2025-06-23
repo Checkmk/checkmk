@@ -30,12 +30,12 @@ configure_make(
     # without this bazel complains about missing .a files, lol
     out_headers_only = True,
     postfix_script = """
-        mkdir -p ${INSTALLDIR}/lib/nagios/plugins
-        install -m 755 ${BUILD_TMPDIR}/src/check_nrpe ${INSTALLDIR}/lib/nagios/plugins
+        mkdir -p $${INSTALLDIR}/lib/nagios/plugins
+        install -m 755 $${BUILD_TMPDIR}/src/check_nrpe $${INSTALLDIR}/lib/nagios/plugins
 
-        mkdir -p ${INSTALLDIR}/share/doc/nrpe
-        install -m 644 ${BUILD_TMPDIR}/*.md ${INSTALLDIR}/share/doc/nrpe
-        install -m 644 ${BUILD_TMPDIR}/LEGAL ${INSTALLDIR}/share/doc/nrpe
+        mkdir -p $${INSTALLDIR}/share/doc/nrpe
+        install -m 644 $${BUILD_TMPDIR}/*.md $${INSTALLDIR}/share/doc/nrpe
+        install -m 644 $${BUILD_TMPDIR}/LEGAL $${INSTALLDIR}/share/doc/nrpe
     """,
     targets = [
         "-C src check_nrpe",

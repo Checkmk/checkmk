@@ -31,7 +31,7 @@ configure_make(
         "mod_fcgid.so",
     ],
     postfix_script = """
-        cp modules/fcgid/.libs/mod_fcgid.so $INSTALLDIR/lib
+        cp modules/fcgid/.libs/mod_fcgid.so $$INSTALLDIR/lib
     """,
     targets = [""],
     visibility = ["//visibility:public"],

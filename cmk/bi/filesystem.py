@@ -38,11 +38,11 @@ class BIFileSystemCache:
         return self.site_structure_data / f"{BI_SITE_CACHE_PREFIX}.{site_id}.{timestamp}"
 
     def clear_compilation_cache(self) -> None:
-        self.compilation_lock.unlink()
-        self.last_compilation.unlink()
+        self.compilation_lock.unlink(missing_ok=True)
+        self.last_compilation.unlink(missing_ok=True)
 
         for compilation_path in self.compiled_aggregations.iterdir():
-            compilation_path.unlink()
+            compilation_path.unlink(missing_ok=True)
 
     @staticmethod
     def is_site_cache(fpath: Path) -> bool:

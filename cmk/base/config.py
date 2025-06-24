@@ -4128,7 +4128,6 @@ class FetcherFactory:
             time_settings=self._config_cache.get_piggybacked_hosts_time_settings(
                 piggybacked_hostname=host_name
             ),
-            omd_root=cmk.utils.paths.omd_root,
         )
 
 

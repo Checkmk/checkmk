@@ -21,7 +21,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.paths import omd_root
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
@@ -277,7 +276,6 @@ class TestPiggybackFetcher:
             hostname=HostName("host"),
             address=HostAddress("1.2.3.4"),
             time_settings=[],
-            omd_root=omd_root,
         )
 
     def test_repr(self, fetcher: PiggybackFetcher) -> None:

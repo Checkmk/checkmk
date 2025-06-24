@@ -584,7 +584,8 @@ impl SqlInstance {
             Ok(result) => result,
             Err(err) => {
                 log::error!("Failed to get counters: {}", err);
-                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+                // ATTENTION! Check plugin requires ERROR: at the start
+                format!("{sep}{sep}{}{sep}ERROR:{}\n", self.name, err).to_string()
             }
         }
     }
@@ -598,7 +599,8 @@ impl SqlInstance {
             Ok(result) => result,
             Err(err) => {
                 log::error!("Failed to get counters: {}", err);
-                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+                // ATTENTION! Check plugin requires ERROR: at the start
+                format!("{sep}{sep}{}{sep}ERROR:{}\n", self.name, err).to_string()
             }
         }
     }

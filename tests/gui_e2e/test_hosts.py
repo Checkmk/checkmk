@@ -167,7 +167,7 @@ def test_delete_host_row(
 
 
 def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> None:
-    """Validate pinging of a host."""
+    """Validate agent connection test of a host."""
     setup_host = SetupHost(dashboard_page.page)
     main_area = setup_host.main_area.locator()
     setup_host.add_host.click()
@@ -226,7 +226,7 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
 
 
 def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
-    """Validate pinging of a host."""
+    """Validate agent download slideout when creating a host."""
     setup_host = SetupHost(dashboard_page.page)
     main_area = setup_host.main_area.locator()
     setup_host.add_host.click()
@@ -247,8 +247,8 @@ def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
     slideout = main_area.locator("div.cmk-vue-app.slide-in__container")
     expect(slideout).to_be_visible()
 
-    slidout_close_button = main_area.locator(".slide-in__close")
-    slidout_close_button.click()
+    slideout_close_button = main_area.locator(".slide-in__close")
+    slideout_close_button.click()
 
     with setup_host.page.expect_popup() as popup_info:
         main_area.locator(
@@ -260,3 +260,34 @@ def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
     expect(docs_page).to_have_url(
         "https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents"
     )
+
+
+def test_ping_host(dashboard_page: Dashboard, test_site: Site) -> None:
+    """Validate pinging of a host."""
+    setup_host = SetupHost(dashboard_page.page)
+    main_area = setup_host.main_area.locator()
+    setup_host.add_host.click()
+
+    host_name_input_field = main_area.locator("input.text[name='host']")
+    ip_v4_address_input_field = main_area.locator("input.text[name='ipaddress']")
+    ip_v4_address_checkbox = main_area.locator("label[for='cb_host_change_ipaddress']")
+    status_loading = main_area.locator("div.status-box.loading").get_by_role("img")
+    status_invalid = main_area.locator("div.status-box.warn").get_by_role("img")
+    status_valid = main_area.locator("div.status-box.ok").get_by_role("img")
+
+    host_name_input_field.fill("foo")
+    expect(status_loading).to_be_visible()
+    expect(status_invalid).to_be_visible()
+
+    host_name_input_field.fill("localhost")
+    expect(status_loading).to_be_visible()
+    expect(status_valid).to_be_visible()
+
+    ip_v4_address_checkbox.click()
+    ip_v4_address_input_field.fill("foo")
+    expect(status_loading).to_be_visible()
+    expect(status_invalid).to_be_visible()
+
+    ip_v4_address_input_field.fill("127.0.0.1")
+    expect(status_loading).to_be_visible()
+    expect(status_valid).to_be_visible()

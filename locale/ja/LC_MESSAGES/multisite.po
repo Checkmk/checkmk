@@ -17531,9 +17531,10 @@ msgstr ""
 msgid ""
 "Define the metric name to be monitored here as an exact match. Metric names "
 "are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
-"datapoint attributes</a> and the <a href='https://checkmk.com/werk/"
-"18108'>Open Telemetry metric unit</a>. This needs to be an exact match to "
-"the metric name in the service."
+"datapoint attributes</a> or the <a href='https://checkmk.com/werk/"
+"18249'>Open Telemetry metric name</a> and the <a href='https://checkmk.com/"
+"werk/18249'>Open Telemetry metric unit</a> This needs to be an exact match "
+"to the metric name in the service."
 msgstr ""
 
 msgid ""
@@ -85612,6 +85613,10 @@ msgstr "昨日"
 #, python-format
 msgid "you have a connection overflow rate of %.2f/s"
 msgstr "接続オーバーフロー率は %.2f/s です"
+
+#, fuzzy, python-format
+msgid "you need to set %s parameter to either %s."
+msgstr "[%s]パラメータを設定する必要があります。"
 
 msgid "z/OS"
 msgstr "z/OS"

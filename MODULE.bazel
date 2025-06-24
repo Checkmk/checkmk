@@ -111,6 +111,15 @@ single_version_override(
 )
 
 single_version_override(
+    module_name = "aspect_rules_lint",
+    patch_strip = 1,
+    patches = [
+        # https://github.com/aspect-build/rules_lint/pull/576
+        "//bazel/patches:rules_lint-feat_format_toml.patch",
+    ],
+)
+
+single_version_override(
     module_name = "toolchains_llvm",
     patch_strip = 1,
     patches = ["//bazel/patches:toolchains_llvm-expose_full_archive.patch"],

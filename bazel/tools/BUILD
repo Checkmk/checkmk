@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -17,6 +18,7 @@ format_multirun(
     name = "format",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
+    toml = ":taplo_wrapper",
     visibility = ["//visibility:public"],
 )
 
@@ -73,17 +75,23 @@ sh_binary(
 )
 
 genrule(
-    name = "taplo_unzip_and_make_executable",
+    name = "taplo_bin",
     srcs = ["@taplo.gz//file"],
     outs = ["taplo"],
-    cmd = "gunzip -c $< > $@ && chmod +x $@",
+    cmd = "gunzip -c $< > $@",
+    executable = True,
 )
 
-# Shell wrapper to execute taplo in the callers working directory
-sh_binary(
-    name = "taplo_bin",
-    srcs = ["run-taplo"],
-    data = [":taplo_unzip_and_make_executable"],
+expand_template(
+    name = "taplo_wrapper",
+    out = "taplo_wrapper.sh",
+    data = [":taplo_bin"],
+    is_executable = True,
+    substitutions = {"{taplo_bin}": "$(execpath :taplo_bin)"},
+    template = [
+        "#!/bin/sh",
+        'exec env RUST_LOG=warn "./{taplo_bin}" "$@"',
+    ],
 )
 
 # TODO: Should we use buildifier more in the way aspect does?

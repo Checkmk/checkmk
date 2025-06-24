@@ -1,0 +1,205 @@
+diff --git a/README.md b/README.md
+index 1001ead..6f17227 100644
+--- a/README.md
++++ b/README.md
+@@ -53,6 +53,7 @@ Linters which are not language-specific:
+ | Shell                  | [shfmt]                   | [shellcheck]                     |
+ | Starlark               | [Buildifier]              |                                  |
+ | Swift                  | [SwiftFormat] (1)         |                                  |
++| TOML                   | [taplo]                   |                                  |
+ | TSX                    | [Prettier]                | [ESLint]                         |
+ | TypeScript             | [Prettier]                | [ESLint]                         |
+ | YAML                   | [yamlfmt]                 |                                  |
+@@ -83,6 +84,7 @@ Linters which are not language-specific:
+ [ruff]: https://docs.astral.sh/ruff/
+ [shellcheck]: https://www.shellcheck.net/
+ [shfmt]: https://github.com/mvdan/sh
++[taplo] : https://taplo.tamasfe.dev/
+ [clang-format]: https://clang.llvm.org/docs/ClangFormat.html
+ [clang-tidy]: https://clang.llvm.org/extra/clang-tidy/
+ [vale]: https://vale.sh/
+diff --git a/example/MODULE.bazel b/example/MODULE.bazel
+index c5463ac..0377228 100644
+--- a/example/MODULE.bazel
++++ b/example/MODULE.bazel
+@@ -1,5 +1,7 @@
+ "Bazel dependencies"
+ 
++http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
++
+ bazel_dep(name = "aspect_rules_lint", version = "0.0.0")
+ bazel_dep(name = "aspect_bazel_lib", version = "2.7.7")
+ bazel_dep(name = "aspect_rules_js", version = "2.0.0")
+@@ -27,6 +29,14 @@ local_path_override(
+     path = "..",
+ )
+ 
++http_file(
++    name = "taplo",
++    sha256 = "8fe196b894ccf9072f98d4e1013a180306e17d244830b03986ee5e8eabeb6156",
++    urls = [
++        "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz",
++    ],
++)
++
+ rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+ rules_ts_ext.deps()
+ use_repo(rules_ts_ext, "npm_typescript")
+diff --git a/example/src/BUILD.bazel b/example/src/BUILD.bazel
+index 9d4545e..4144c62 100644
+--- a/example/src/BUILD.bazel
++++ b/example/src/BUILD.bazel
+@@ -25,6 +25,12 @@ filegroup(
+     tags = ["markdown"],
+ )
+ 
++filegroup(
++    name = "toml",
++    srcs = ["hello.toml"],
++    tags = ["toml"],
++)
++
+ ts_project(
+     name = "ts_dep",
+     srcs = ["file-dep.ts"],
+diff --git a/example/src/hello.toml b/example/src/hello.toml
+new file mode 100644
+index 0000000..91d90bd
+--- /dev/null
++++ b/example/src/hello.toml
+@@ -0,0 +1,6 @@
++[pif]
++key="value"
++[pif.paf]
++list=["a", "b",
++"c"]
++
+diff --git a/example/tools/format/BUILD.bazel b/example/tools/format/BUILD.bazel
+index 49c878e..e77ca7b 100644
+--- a/example/tools/format/BUILD.bazel
++++ b/example/tools/format/BUILD.bazel
+@@ -4,6 +4,7 @@ This is in its own package because it has so many loading-time symbols,
+ we don't want to trigger eager fetches of these for builds that don't want to run format.
+ """
+ 
++load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
+ load("@aspect_rules_lint//format:defs.bzl", "format_multirun", "format_test")
+ load("@npm//:prettier/package_json.bzl", prettier = "bin")
+ load("@rules_java//java:defs.bzl", "java_binary")
+@@ -63,6 +64,26 @@ java_binary(
+     runtime_deps = ["@maven//:org_scalameta_scalafmt_cli_2_13"],
+ )
+ 
++genrule(
++    name = "taplo",
++    srcs = ["@taplo//file"],
++    outs = ["taplo_bin"],
++    cmd = "gunzip -c $< > $@",
++    executable = True,
++)
++
++expand_template(
++    name = "taplo_wrapper",
++    out = "taplo_wrapper.sh",
++    data = [":taplo_bin"],
++    is_executable = True,
++    substitutions = {"{taplo_bin}": "$(execpath :taplo_bin)"},
++    template = [
++        "#!/bin/sh",
++        'exec env RUST_LOG=warn "./{taplo_bin}" "$@"',
++    ],
++)
++
+ format_multirun(
+     name = "format",
+     c = "@llvm_toolchain_llvm//:bin/clang-format",
+@@ -93,6 +114,7 @@ format_multirun(
+     starlark = "@buildifier_prebuilt//:buildifier",
+     swift = ":swiftformat",
+     terraform = "@aspect_rules_lint//format:terraform",
++    toml = ":taplo_wrapper",
+     visibility = ["//:__subpackages__"],
+     xml = ":prettier",
+     yaml = "@aspect_rules_lint//format:yamlfmt",
+diff --git a/format/private/filter.jq b/format/private/filter.jq
+index 140c259..b8996a5 100644
+--- a/format/private/filter.jq
++++ b/format/private/filter.jq
+@@ -23,6 +23,7 @@ with_entries(select(.key | IN(
+     "SQL",
+     "Starlark",
+     "Swift",
++    "TOML",
+     "TSX",
+     "TypeScript"
+ )))
+diff --git a/format/private/format.sh b/format/private/format.sh
+index b6cf3dd..6f9350c 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -152,6 +152,7 @@ function ls-files {
+       # TODO: we should probably use https://terragrunt.gruntwork.io/docs/reference/cli-options/#hclfmt instead
+       # which does support the entire HCL language FWICT
+       'Terraform') patterns=('*.tf' '*.tfvars') ;;
++      'TOML') patterns=('*.toml') ;;
+ 
+       *)
+         echo >&2 "Internal error: unknown language $language"
+diff --git a/format/private/formatter_binary.bzl b/format/private/formatter_binary.bzl
+index 923b594..c16b7e7 100644
+--- a/format/private/formatter_binary.bzl
++++ b/format/private/formatter_binary.bzl
+@@ -13,6 +13,7 @@ TOOLS = {
+     "Starlark": "buildifier",
+     "Jsonnet": "jsonnetfmt",
+     "Terraform": "terraform-fmt",
++    "TOML": "taplo",
+     "Kotlin": "ktfmt",
+     "Java": "java-format",
+     "Scala": "scalafmt",
+@@ -51,6 +52,7 @@ CHECK_FLAGS = {
+     "ktfmt": "--set-exit-if-changed --dry-run",
+     "gofmt": "-l",
+     "buf": "format -d --exit-code --disable-symlinks",
++    "taplo": "format --check --diff",
+     "terraform-fmt": "fmt -check -diff",
+     "jsonnetfmt": "--test",
+     "scalafmt": "--test --respect-project-filters",
+@@ -74,6 +76,7 @@ FIX_FLAGS = {
+     "ktfmt": "",
+     "gofmt": "-w",
+     "buf": "format --write --disable-symlinks",
++    "taplo": "format",
+     "terraform-fmt": "fmt",
+     "jsonnetfmt": "--in-place",
+     # Force exclusions in the configuration file to be honored even when file paths are supplied
+diff --git a/format/test/BUILD.bazel b/format/test/BUILD.bazel
+index efce17c..7f437c6 100644
+--- a/format/test/BUILD.bazel
++++ b/format/test/BUILD.bazel
+@@ -58,6 +58,7 @@ format_multirun(
+     swift = ":mock_swiftformat.sh",
+     # TODO: this attribute should be renamed to hcl
+     terraform = ":mock_terraform-fmt.sh",
++    toml = ":mock_taplo.sh",
+     xml = ":mock_prettier.sh",
+     yaml = ":mock_yamlfmt.sh",
+ )
+diff --git a/format/test/format_test.bats b/format/test/format_test.bats
+index eb0412c..15f0715 100644
+--- a/format/test/format_test.bats
++++ b/format/test/format_test.bats
+@@ -84,6 +84,13 @@ bats_load_library "bats-assert"
+     assert_output --partial "+ ruff format --force-exclude example/src/subdir/unused_import.py"
+ }
+ 
++@test "should run taplo on TOML" {
++    run bazel run //format/test:format_TOML_with_taplo
++    assert_success
++
++    assert_output --partial "+ prettier --write_example/src/hello.toml"
++}
++
+ @test "should run terraform fmt on HCL" {
+     run bazel run //format/test:format_Terraform_with_terraform-fmt
+     assert_success

@@ -107,10 +107,6 @@ parse_options() {
 }
 
 run_format() {
-    bazel run \
-        --ui_event_filters=-info,-stderr \
-        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
-        format Cargo.toml
     bazel run //:format "$PWD"
 }
 

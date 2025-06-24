@@ -266,6 +266,7 @@ gazelle(
 alias(
     name = "format",
     actual = "//bazel/tools:format",
+    visibility = ["//visibility:public"],
 )
 
 alias(

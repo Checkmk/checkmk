@@ -149,6 +149,7 @@ constexpr const wchar_t *kInstall = L"install";           // owned by agent
 constexpr const wchar_t *kUserInstallDir = L"install";    // owned by agent
 constexpr const wchar_t *kBakery = L"bakery";             // owned by site
 constexpr const wchar_t *kState = L"state";               // owned by plugins
+constexpr const wchar_t *kLib = L"lib";                   // owned by agent
 constexpr const wchar_t *kPluginConfig = L"config";       // owned by plugins
 constexpr const wchar_t *kUserModules = L"modules";       // owned by agent
 constexpr const wchar_t *kInstalledModules = L"modules";  // owned by agent
@@ -166,6 +167,7 @@ namespace envs {
 
 // to inform plugins where place state file
 constexpr std::string_view kMkStateDirName{"MK_STATEDIR"};
+constexpr std::string_view kMkLibDirName{"MK_LIBDIR"};
 constexpr std::string_view kMkConfDirName{"MK_CONFDIR"};
 constexpr std::string_view kMkLocalDirName{"MK_LOCALDIR"};
 constexpr std::string_view kMkTempDirName{"MK_TEMPDIR"};

@@ -89,6 +89,9 @@ public:
         return data_ / dirs::kState;
     }
 
+    [[nodiscard]] std::filesystem::path getLib() const {
+        return data_ / dirs::kLib;
+    }
     [[nodiscard]] std::filesystem::path getAuState() const {
         return data_ / dirs::kAuStateLocation;
     }
@@ -339,6 +342,11 @@ public:
     auto getStateDir() const {
         std::lock_guard lk(lock_);
         return folders_.getState();
+    }
+
+    auto getLibDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getLib();
     }
 
     auto getAuStateDir() const {

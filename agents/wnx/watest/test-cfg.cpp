@@ -535,6 +535,7 @@ private:
         auto bat_file = fmt::format(
             "@echo start>{0}\n"
             "@if defined MK_STATEDIR echo %MK_STATEDIR%>>{0}\n"
+            "@if defined MK_LIBDIR echo %MK_LIBDIR%>>{0}\n"
             "@if defined MK_CONFDIR echo %MK_CONFDIR%>>{0}\n"
             "@if defined MK_LOCALDIR echo %MK_LOCALDIR%>>{0}\n"
             "@if defined MK_TEMPDIR echo %MK_TEMPDIR%>>{0}\n"
@@ -584,7 +585,7 @@ TEST(CmaCfg, SetupPluginEnvironmentComponent) {
     for (auto const &raw : table) {
         all.insert(raw);
     }
-    EXPECT_EQ(all.size(), 11);
+    EXPECT_EQ(all.size(), 12);
 }
 
 }  // namespace cma::cfg

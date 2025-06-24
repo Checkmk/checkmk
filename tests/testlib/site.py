@@ -351,7 +351,13 @@ class Site:
         )
 
     @tracer.instrument("Site.reschedule_services")
-    def reschedule_services(self, hostname: str, max_count: int = 10, strict: bool = True) -> None:
+    def reschedule_services(
+        self,
+        hostname: str,
+        max_count: int = 10,
+        strict: bool = True,
+        wait_timeout: int | None = None,
+    ) -> None:
         """Reschedule services in the test-site for a given host until no pending services are
         found.
 
@@ -359,6 +365,7 @@ class Site:
             hostname: Name of the target host.
             max_count: Maximum number of iterations.
             strict: Assert having no pending services.
+            wait_timeout: Number of seconds to wait for the service check.
         """
         count = 0
         while (
@@ -371,7 +378,7 @@ class Site:
                 hostname,
                 pformat(pending_services),
             )
-            self.schedule_check(hostname, "Check_MK", 0)
+            self.schedule_check(hostname, "Check_MK", 0, wait_timeout)
             count += 1
 
         if strict:

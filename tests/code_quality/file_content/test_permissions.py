@@ -16,11 +16,11 @@ from tests.code_quality.utils import ChangedFiles
 
 
 def is_executable(path: Path) -> bool:
-    return path.is_file() and os.access(path, os.X_OK)
+    return os.access(path, os.X_OK)
 
 
 def is_not_executable(path: Path) -> bool:
-    return path.is_file() and not os.access(path, os.X_OK)
+    return not os.access(path, os.X_OK)
 
 
 _GLOBAL_EXCLUDES = (

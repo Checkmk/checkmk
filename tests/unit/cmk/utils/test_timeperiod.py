@@ -28,12 +28,12 @@ def test_is_timeperiod_active() -> None:
             "wednesday": [("12:00", "13:00")],
         },
         TimeperiodName("time_period_3"): {
-            "alias": "Exclude via exception that matches",  # exclude matches
+            "alias": "Exceptional day/time that matches",  # exclude matches
             "2024-01-03": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
         TimeperiodName("time_period_4"): {
-            "alias": "Exclude via exception that does not match",  # exclude not matching
+            "alias": "Exclude via exceptional day/time that does not match",  # exclude not matching
             "2024-01-03": [("11:12", "11:15")],  # type: ignore[typeddict-unknown-key]
             "wednesday": [("11:00", "12:00")],
         },
@@ -47,23 +47,29 @@ def test_is_timeperiod_active() -> None:
             "exclude": [TimeperiodName("time_period_4")],
             "wednesday": [("00:00", "24:00")],
         },
+        TimeperiodName("time_period_7"): {
+            "alias": "Exclude by matching time, but not matching day",  # no time defined
+            "2024-01-04": [("11:10", "11:15")],  # type: ignore[typeddict-unknown-key]
+        },
     }
 
+    # 2024-01-03 11:11
     test_timestamp = 1704276660.0
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
         assert is_timeperiod_active(test_timestamp, TimeperiodName("time_period_1"), timeperiods)
         assert not is_timeperiod_active(
             test_timestamp, TimeperiodName("time_period_2"), timeperiods
         )
+        assert is_timeperiod_active(test_timestamp, TimeperiodName("time_period_3"), timeperiods)
         assert not is_timeperiod_active(
-            test_timestamp, TimeperiodName("time_period_3"), timeperiods
+            test_timestamp, TimeperiodName("time_period_4"), timeperiods
         )
-        assert is_timeperiod_active(test_timestamp, TimeperiodName("time_period_4"), timeperiods)
         assert not is_timeperiod_active(
             test_timestamp, TimeperiodName("time_period_5"), timeperiods
         )
+        assert is_timeperiod_active(test_timestamp, TimeperiodName("time_period_6"), timeperiods)
         assert not is_timeperiod_active(
-            test_timestamp, TimeperiodName("time_period_6"), timeperiods
+            test_timestamp, TimeperiodName("time_period_7"), timeperiods
         )
 
 

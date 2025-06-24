@@ -249,7 +249,7 @@ def main() {
         /// on our own..
         def files_to_upload = {
             dir("${deliverables_dir}") {
-                cmd_output("ls *.{deb,rpm,cma,tar.gz,json,csv} || true").split().toList();
+                cmd_output("ls *.{deb,rpm,cma,tar.gz} !(${bazel_log_prefix}*).{csv,json} || true").split().toList();
             }
         }();
         print("Found files to upload: ${files_to_upload}");

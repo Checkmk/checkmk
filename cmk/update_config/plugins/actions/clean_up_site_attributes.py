@@ -25,7 +25,10 @@ class CleanUpSiteAttributes(UpdateAction):
             site_spec["id"] = site_id
             site_spec.setdefault("message_broker_port", 5672)
             site_spec.setdefault("url_prefix", f"/{site_id}/")
+            site_spec.setdefault("user_sync", "all")
             site_spec.setdefault("proxy", None)
+            site_spec.setdefault("replicate_mkps", False)
+            site_spec.setdefault("status_host", None)
 
         site_mgmt.save_sites(
             configured_sites,

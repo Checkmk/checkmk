@@ -39,19 +39,16 @@ _PERMISSIONS = (
         ("*.checksum", "*.pyc", "*_2.py"),
     ),
     ("cmk/plugins/*/agent_based/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/bakery/*", is_not_executable, (), ()),
     ("cmk/plugins/*/graphing/*", is_not_executable, (), ()),
     ("cmk/plugins/*/libexec/*", is_executable, (), ()),
-    ("cmk/plugins/*/manpages/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/manpages/*/*", is_executable, (), ()),  # THIS SHOULD FAIL
+    ("cmk/plugins/*/checkman/*", is_not_executable, (), ()),
+    ("cmk/plugins/*/checkman/*/*", is_not_executable, (), ()),
     ("cmk/plugins/*/rulesets/*", is_not_executable, (), ()),
     ("cmk/plugins/*/server_side_calls/*", is_not_executable, (), ()),
-    ("pnp-templates/*", is_not_executable, (), ()),
     ("notifications/*", is_executable, ("README", "debug"), ()),
     ("bin/*", is_executable, ("Makefile", "mkevent.cc", "mkeventd_open514.cc"), ()),
     # Enterprise specific
     ("omd/packages/enterprise/bin/*", is_executable, (), ()),
-    ("omd/packages/enterprise/active_checks/*", is_executable, (), ()),
     (
         "non-free/packages/cmk-update-agent/*",
         is_executable,
@@ -90,11 +87,20 @@ def test_permissions(
     explicit_excludes: tuple[str, ...],
     exclude_patterns: tuple[str, ...],
 ) -> None:
-    for f in repo_path().glob(pattern):
-        if not f.is_file() or not changed_files.is_changed(f):
-            continue
-        if f.name in explicit_excludes or f.name in _GLOBAL_EXCLUDES:
-            continue
-        if any(fnmatch.fnmatch(f.name, p) for p in exclude_patterns):
-            continue
-        assert check_func(f), f"{f} has wrong permissions ({check_func!r})"
+    found_files = {
+        f
+        for f in repo_path().glob(pattern)
+        if (
+            f.is_file()
+            and f.name not in explicit_excludes
+            and f.name not in _GLOBAL_EXCLUDES
+            and not any(fnmatch.fnmatch(f.name, p) for p in exclude_patterns)
+        )
+    }
+    # see if we can update our test cases
+    assert found_files
+
+    tested_files = {f for f in found_files if changed_files.is_changed(f)}
+    offending_files = {f for f in tested_files if not check_func(f)}
+
+    assert not offending_files, f"{offending_files} have wrong permissions ({check_func!r})"

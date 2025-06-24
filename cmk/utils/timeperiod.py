@@ -123,9 +123,13 @@ def _get_timeperiods_conf_file_path() -> Path:
 
 # TODO improve typing of time_tuple_list, it's a list[tuple[str, str]]
 def _is_time_in_timeperiod(
-    current_time: str,
+    current_datetime: datetime,
     time_tuple_list: str | list[str] | list[tuple[str, str]],
+    current_day: datetime | None = None,
 ) -> bool:
+    current_time = current_datetime.strftime("%H:%M")
+    if current_day and current_day.date() != current_datetime.date():
+        return False
     for start, end in time_tuple_list:  # type: ignore[misc]
         if start <= current_time <= end:
             return True
@@ -157,16 +161,15 @@ def is_timeperiod_active(
         "sunday",
     ]
     current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
-    current_time = current_datetime.strftime("%H:%M")
     if _is_timeperiod_excluded_via_exception(
         timeperiod_definition,
         days,
-        current_time,
+        current_datetime,
     ):
         return False
 
     if (weekday := days[current_datetime.weekday()]) in timeperiod_definition:
-        return _is_time_in_timeperiod(current_time, timeperiod_definition[weekday])
+        return _is_time_in_timeperiod(current_datetime, timeperiod_definition[weekday])
 
     return False
 
@@ -190,18 +193,18 @@ def _is_timeperiod_excluded_via_timeperiod(
 def _is_timeperiod_excluded_via_exception(
     timeperiod_definition: TimeperiodSpec,
     days: list[str],
-    current_time: str,
+    current_time: datetime,
 ) -> bool:
     for key, value in timeperiod_definition.items():
         if key in days + ["alias", "exclude"]:
             continue
 
         try:
-            datetime.strptime(key, "%Y-%m-%d")
+            day = datetime.strptime(key, "%Y-%m-%d")
         except ValueError:
             continue
 
-        if _is_time_in_timeperiod(current_time, value):
+        if not _is_time_in_timeperiod(current_time, value, day):
             return True
 
     return False

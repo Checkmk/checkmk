@@ -220,3 +220,11 @@ def get_walk_names(
 ) -> list[str]:
     """Return a list of snmp walks in a walk dir."""
     return _list_unskipped_files(walk_dir, r"^snmp-", skipped_walks)
+
+
+def get_dump_and_walk_names(
+    directory: Path,
+    skipped_files: list[str] | None = None,
+) -> list[str]:
+    """Return a list of agent dumps and snmp walks in a directory."""
+    return get_dump_names(directory, skipped_files) + get_walk_names(directory, skipped_files)

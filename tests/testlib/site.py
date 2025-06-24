@@ -351,9 +351,15 @@ class Site:
         )
 
     @tracer.instrument("Site.reschedule_services")
-    def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
+    def reschedule_services(self, hostname: str, max_count: int = 10, strict: bool = True) -> None:
         """Reschedule services in the test-site for a given host until no pending services are
-        found."""
+        found.
+
+        Args:
+            hostname: Name of the target host.
+            max_count: Maximum number of iterations.
+            strict: Assert having no pending services.
+        """
         count = 0
         while (
             len(pending_services := self.get_host_services(hostname, pending=True)) > 0
@@ -368,10 +374,18 @@ class Site:
             self.schedule_check(hostname, "Check_MK", 0)
             count += 1
 
-        assert len(pending_services) == 0, (
-            "The following services are in pending state after rescheduling checks:"
-            f"\n{pformat(pending_services)}\n"
-        )
+        if strict:
+            assert len(pending_services) == 0, (
+                "The following services are in pending state after rescheduling checks:"
+                f"\n{pformat(pending_services)}\n"
+            )
+        if pending_services:
+            logger.info(
+                '%s pending service(s) found on host "%s": %s',
+                len(pending_services),
+                hostname,
+                ",".join(list(pending_services.keys())),
+            )
 
     @tracer.instrument("Site.wait_for_service_state_update")
     def wait_for_services_state_update(

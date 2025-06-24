@@ -43,6 +43,11 @@ TEST(CmaTools, AddVectorsStrings) {
     EXPECT_EQ(0, memcmp(op.data(), expected, op.size()));
 }
 
+TEST(CmaTools, GetEnv) {
+    EXPECT_TRUE(win::GetEnv("PATH").contains("System32"));
+    EXPECT_TRUE(win::GetEnv(L"PATH").contains(L"System32"));
+}
+
 TEST(CmaTools, Matchers) {
     using namespace cma::tools;
 

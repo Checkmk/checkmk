@@ -1144,6 +1144,21 @@ std::vector<std::string> GetInternalArray(const YAML::Node &yaml_node,
     return {};
 }
 
+namespace {
+void AddLibToPath() {
+    const auto lib_dir = wtools::ToUtf8(GetLibDir());
+    if (lib_dir.empty()) {
+        return;
+    }
+    const auto path = tools::win::GetEnv(std::string{"PATH"});
+    if (!path.contains(lib_dir)) {
+        const auto new_path = lib_dir + ";" + path;
+        tools::win::SetEnv(std::string{"PATH"}, new_path);
+    }
+}
+
+}  // namespace
+
 void SetupPluginEnvironment() {
     const std::array<std::pair<const std::string_view, const std::wstring>, 11>
         env_pairs{{{envs::kMkLocalDirName, GetLocalDir()},
@@ -1161,6 +1176,8 @@ void SetupPluginEnvironment() {
     for (const auto &[name, val] : env_pairs) {
         tools::win::SetEnv(std::string{name}, wtools::ToUtf8(val));
     }
+
+    AddLibToPath();
 }
 
 void ProcessPluginEnvironment(

@@ -329,14 +329,20 @@ private:
 
 template <typename T>
 std::basic_string<T> GetEnv(const T *name) noexcept {
-    T env_var_value[MAX_PATH] = {0};
-
+    std::basic_string<T> env_var_value;
     if constexpr (sizeof(T) == 1) {
-        ::GetEnvironmentVariableA(name, env_var_value, MAX_PATH);
+        DWORD size = GetEnvironmentVariableA(name, nullptr, 0);
+        env_var_value.resize(size);
+        GetEnvironmentVariableA(name, env_var_value.data(), size);
     } else {
-        ::GetEnvironmentVariableW(name, env_var_value, MAX_PATH);
+        DWORD size = GetEnvironmentVariableW(name, nullptr, 0);
+        env_var_value.resize(size);
+        GetEnvironmentVariableW(name, env_var_value.data(), size);
     }
-    return std::basic_string<T>(env_var_value);
+    while (!env_var_value.empty() && env_var_value.back() == 0) {
+        env_var_value.pop_back();
+    }
+    return env_var_value;
 }
 
 template <typename T>

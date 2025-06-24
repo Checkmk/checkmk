@@ -129,6 +129,7 @@ std::wstring GetUserModulesDir() noexcept;
 std::filesystem::path GetBakeryFile();
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
+std::wstring GetLibDir() noexcept;
 std::wstring GetAuStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
 std::wstring GetUpdateDir() noexcept;       // for incoming MSI
@@ -1025,8 +1026,8 @@ private:
     int max_wait_{kDefaultPluginTimeout};
 };
 
-std::vector<Plugins::ExeUnit> 
-LoadExeUnitsFromYaml(const std::vector<YAML::Node> &yaml_node) noexcept;
+std::vector<Plugins::ExeUnit> LoadExeUnitsFromYaml(
+    const std::vector<YAML::Node> &yaml_node) noexcept;
 
 // used to setup on start and forever. These environment variables are
 // stable

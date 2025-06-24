@@ -100,7 +100,7 @@ def useradd(
 
 # TODO: refactor gid to int
 def _groupadd(groupname: str, gid: str | None = None) -> None:
-    cmd = ["groupadd"]
+    cmd = ["groupadd", "-r"]
     if gid is not None:
         cmd += ["-g", "%d" % int(gid)]
     cmd.append(groupname)

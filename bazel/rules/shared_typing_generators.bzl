@@ -74,7 +74,7 @@ def json2python(name, srcs, data, formatter, extra_args, source_dir, target_dir)
 
         run_binary(
             name = "{}_{}".format(name, src.replace(".json", "")),
-            srcs = [src_path] + data,
+            srcs = data,
             outs = [out_path],
             args = [
                 "--input=$(location :{})".format(src_path),

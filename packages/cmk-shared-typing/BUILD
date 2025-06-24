@@ -95,7 +95,7 @@ py_library(
 json2python(
     name = "generated_py_files_special_dataclasses",
     srcs = SOURCES_SPECIAL_DATACLASSES,
-    data = ["header_py.txt"],
+    data = glob(["source/**/*.json"]) + ["header_py.txt"],
     extra_args = [
         "--use-field-description",
         "--use-title-as-name",
@@ -118,7 +118,7 @@ json2python(
 json2python(
     name = "generated_py_files_common",
     srcs = SOURCES_COMMON,
-    data = ["header_py.txt"],
+    data = glob(["source/**/*.json"]) + ["header_py.txt"],
     extra_args = [
         "--use-field-description",
         "--use-title-as-name",

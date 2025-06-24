@@ -24,7 +24,7 @@ export class SearchHistorySearchProvider extends SearchProvider {
               hist.query.indexOf(input) >= 0 ||
               hist.topic.indexOf(input) >= 0 ||
               hist.element.title.indexOf(input) >= 0 ||
-              hist.element.url.indexOf(input)
+              hist.element.url.indexOf(input) >= 0
             )
           })
           .sort((a, b) => b.date - a.date)

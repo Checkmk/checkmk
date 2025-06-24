@@ -8,7 +8,8 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-frontend-vue/node_modules/*"]
     },
     "moduleResolution": "node",
     "allowUnreachableCode": false,

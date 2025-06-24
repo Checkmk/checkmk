@@ -10,7 +10,7 @@ exports_files([
 ])
 
 py_library(
-    name = "cmk-plugin-apis",
+    name = "agent_based",
     srcs = [
         "cmk/agent_based/legacy/__init__.py",
         "cmk/agent_based/legacy/_loading.py",
@@ -35,6 +35,17 @@ py_library(
         "cmk/agent_based/v2/_plugins.py",
         "cmk/agent_based/v2/clusterize.py",
         "cmk/agent_based/v2/render.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "graphing",
+    srcs = [
         "cmk/graphing/__init__.py",
         "cmk/graphing/v1/__init__.py",
         "cmk/graphing/v1/_localize.py",
@@ -43,6 +54,14 @@ py_library(
         "cmk/graphing/v1/metrics.py",
         "cmk/graphing/v1/perfometers.py",
         "cmk/graphing/v1/translations.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "rulesets",
+    srcs = [
         "cmk/rulesets/__init__.py",
         "cmk/rulesets/v1/__init__.py",
         "cmk/rulesets/v1/_localize.py",
@@ -55,6 +74,14 @@ py_library(
         "cmk/rulesets/v1/form_specs/_preconfigured.py",
         "cmk/rulesets/v1/form_specs/validators.py",
         "cmk/rulesets/v1/rule_specs.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "server_side_calls",
+    srcs = [
         "cmk/server_side_calls/__init__.py",
         "cmk/server_side_calls/v1/__init__.py",
         "cmk/server_side_calls/v1/_active_checks.py",
@@ -62,7 +89,7 @@ py_library(
         "cmk/server_side_calls/v1/_utils.py",
     ],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("pydantic"),
     ],
@@ -71,7 +98,12 @@ py_library(
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = ["cmk-plugin-apis"],
+    srcs = [
+        ":agent_based",
+        ":graphing",
+        ":rulesets",
+        ":server_side_calls",
+    ],
     tags = ["no-mypy"],
 )
 
@@ -83,13 +115,49 @@ py_pytest_main(
 )
 
 py_test(
-    name = "unit",
+    name = "agent_based-test",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    srcs = glob(["tests/cmk/agent_based/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":agent_based",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "graphing-test",
+    size = "small",
+    srcs = glob(["tests/cmk/graphing/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":graphing",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "rulesets-test",
+    size = "small",
+    srcs = glob(["tests/cmk/rulesets/**/*.py"]) + [":__test__.py"],
     main = "__test__.py",
     deps = [
         ":__test__",
-        ":cmk-plugin-apis",
+        ":rulesets",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "server_side_calls-test",
+    size = "small",
+    srcs = glob(["tests/cmk/server_side_calls/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":server_side_calls",
         requirement("pytest"),
     ],
 )
@@ -100,7 +168,12 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-plugin-apis"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [":cmk-plugin-apis"],
+    deps = [
+        ":agent_based",
+        ":graphing",
+        ":rulesets",
+        ":server_side_calls",
+    ],
 )
 
 package_wheel(

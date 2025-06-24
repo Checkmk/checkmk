@@ -152,7 +152,10 @@ CMK_PACKAGES = [
     "//packages/cmk-livestatus-client:py_livestatus",
     "//packages/cmk-messaging",
     "//packages/cmk-mkp-tool",
-    "//packages/cmk-plugin-apis",
+    "//packages/cmk-plugin-apis:agent_based",
+    "//packages/cmk-plugin-apis:graphing",
+    "//packages/cmk-plugin-apis:rulesets",
+    "//packages/cmk-plugin-apis:server_side_calls",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

@@ -33,6 +33,7 @@ from .time_span import TimeSpanVisitor
 from .time_specific import TimeSpecificVisitor
 from .transform import TransformVisitor
 from .tuple import TupleVisitor
+from .two_column_dictionary import TwoColumnDictionaryVisitor
 
 __all__ = [
     "DataOrigin",
@@ -68,6 +69,7 @@ __all__ = [
     "TimeSpanVisitor",
     "TimeSpecificVisitor",
     "TransformVisitor",
+    "TwoColumnDictionaryVisitor",
     "TupleVisitor",
     "VisitorOptions",
     "LabelsVisitor",

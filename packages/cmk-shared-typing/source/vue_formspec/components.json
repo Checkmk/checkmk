@@ -402,6 +402,12 @@
         },
         "dictionary": {
             "id": "dictionary",
+            "properties": {
+                "type": {
+                    "const": "dictionary",
+                    "default": "dictionary"
+                }
+            },
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -409,10 +415,6 @@
                 {
                     "type": "object",
                     "properties": {
-                        "type": {
-                            "const": "dictionary",
-                            "default": "dictionary"
-                        },
                         "elements": {
                             "type": "array",
                             "items": {
@@ -432,27 +434,37 @@
                         "additional_static_elements": {
                             "type": ["object", "null"]
                         },
-                        "layout": {
-                            "title": "DictionaryLayout",
-                            "enum": ["one_column", "two_columns"],
-                            "default": "one_column"
-                        },
                         "i18n_base": {
                             "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
-                        "type",
                         "elements",
                         "static_elements_key",
                         "additional_static_elements",
                         "no_elements_text",
                         "groups",
-                        "layout",
                         "i18n_base"
                     ]
                 }
-            ]
+            ],
+            "required": ["type"]
+        },
+        "two_column_dictionary": {
+            "id": "two_column_dictionary",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "two_column_dictionary",
+                    "default": "two_column_dictionary"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/dictionary"
+                }
+            ],
+            "required": ["type"]
         },
         "single_choice_element": {
             "type": "object",
@@ -1665,6 +1677,9 @@
                 },
                 {
                     "$ref": "#/$defs/dictionary"
+                },
+                {
+                    "$ref": "#/$defs/two_column_dictionary"
                 },
                 {
                     "$ref": "#/$defs/list"

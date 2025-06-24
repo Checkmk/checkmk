@@ -72,7 +72,6 @@ const api: API<ObjectId, ObjectId> = {
       validators: [],
       help: 'dict help',
       i18n_base: { required: 'required' },
-      layout: 'one_column',
       no_elements_text: 'no_text',
       additional_static_elements: null,
       elements: [

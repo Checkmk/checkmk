@@ -43,7 +43,6 @@ function getDictionaryFormspec(
     help: 'dictionary help',
     i18n_base: { required: 'required' },
     groups: [],
-    layout: 'one_column',
     validators: [],
     no_elements_text: 'ut no elements text',
     additional_static_elements: null,
@@ -52,7 +51,6 @@ function getDictionaryFormspec(
         required: false,
         render_only: false,
         default_value: '',
-        layout: 'one_column',
         group: null,
         ...element
       }

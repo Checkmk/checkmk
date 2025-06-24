@@ -81,9 +81,9 @@ export function makeSingleChoice(
 export function makeDictionary(
   title: string,
   elements: FormSpec.DictionaryElement[]
-): FormSpec.Dictionary {
+): FormSpec.TwoColumnDictionary {
   return {
-    type: 'dictionary',
+    type: 'two_column_dictionary',
     title: title,
     help: '',
     i18n_base: { required: 'required' },
@@ -91,8 +91,7 @@ export function makeDictionary(
     elements: elements,
     groups: [],
     no_elements_text: '',
-    additional_static_elements: null,
-    layout: 'two_columns'
+    additional_static_elements: null
   }
 }
 

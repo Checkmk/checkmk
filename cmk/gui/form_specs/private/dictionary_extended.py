@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from cmk.rulesets.v1.form_specs import DefaultValue, DictGroup, Dictionary
-from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout, DictionaryLayout
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 T = TypeVar("T")
 
@@ -26,9 +26,6 @@ class DictionaryExtended(Dictionary):
     # them. Another approach would be to use a cascading single choice with your
     # default preselected.
     default_checked: list[str] | None = None
-
-    # Just here to split up work. Will be removed in this commit chain
-    _layout: DictionaryLayout = DictionaryLayout.one_column
 
     def __post_init__(self) -> None:
         for checked in self.default_checked or []:

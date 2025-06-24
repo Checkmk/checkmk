@@ -36,6 +36,7 @@ import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
+import FormTwoColumnDictionary from '../components/forms/FormTwoColumnDictionary.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {
@@ -47,6 +48,7 @@ const components: Record<Components['type'], Component> = {
   condition_choices: FormConditionChoices,
   data_size: FormDataSize,
   dictionary: FormDictionary,
+  two_column_dictionary: FormTwoColumnDictionary,
   dual_list_choice: FormDualListChoice,
   file_upload: FormFileUpload,
   fixed_value: FormFixedValue,

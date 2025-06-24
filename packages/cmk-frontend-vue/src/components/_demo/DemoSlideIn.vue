@@ -77,7 +77,6 @@ const catalog = ref<Catalog>({
                 } as String
               } as DictionaryElement
             ],
-            layout: 'one_column',
             groups: []
           } as Dictionary
         } as TopicElement

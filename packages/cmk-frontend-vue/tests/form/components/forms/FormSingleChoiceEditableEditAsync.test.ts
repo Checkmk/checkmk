@@ -55,7 +55,6 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
                 } as String
               }
             ],
-            layout: 'one_column',
             groups: []
           }
           return dict

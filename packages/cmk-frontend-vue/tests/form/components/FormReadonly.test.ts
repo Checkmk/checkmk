@@ -82,7 +82,6 @@ test('FormReadonly renders string', () => {
 
 const dictionaryFormSpec: FormSpec.Dictionary = {
   type: 'dictionary',
-  layout: 'one_column',
   title: 'fooTitle',
   help: 'fooHelp',
   i18n_base: { required: 'required' },

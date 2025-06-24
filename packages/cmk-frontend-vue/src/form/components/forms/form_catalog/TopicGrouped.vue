@@ -28,7 +28,6 @@ function convertToDictionarySpec(topicGroup: TopicGroup): Dictionary {
     type: 'dictionary',
     title: topicGroup.title,
     help: '',
-    layout: 'one_column',
     additional_static_elements: [],
     validators: [],
     groups: [],

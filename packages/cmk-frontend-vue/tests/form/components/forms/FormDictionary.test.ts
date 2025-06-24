@@ -42,7 +42,6 @@ const spec: FormSpec.Dictionary = {
   title: 'fooTitle',
   help: 'fooHelp',
   i18n_base: { required: 'required' },
-  layout: 'one_column',
   validators: [],
   groups: [],
   additional_static_elements: null,
@@ -206,7 +205,6 @@ test('FormDictionary renders required only once depending on label presence', as
     title: 'fooTitle',
     help: 'fooHelp',
     i18n_base: { required: 'required' },
-    layout: 'one_column',
     validators: [],
     groups: [],
     additional_static_elements: null,
@@ -280,7 +278,6 @@ test('FormDictionary appends default of required element if missing in data', as
     spec: {
       type: 'dictionary',
       title: 'fooTitle',
-      layout: 'one_column',
       help: 'fooHelp',
       i18n_base: { required: 'required' },
       groups: [],
@@ -327,7 +324,6 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
     return {
       type: 'dictionary',
       title: 'fooTitle',
-      layout: 'one_column',
       help: 'fooHelp',
       i18n_base: { required: 'required' },
       groups: [],
@@ -366,7 +362,6 @@ test('FormDictionary is able to be rerenderd: static value', async () => {
     return {
       type: 'dictionary',
       title: 'fooTitle',
-      layout: 'one_column',
       help: 'fooHelp',
       i18n_base: { required: 'required' },
       additional_static_elements: staticElements,
@@ -414,7 +409,6 @@ test('Default values of dict elements dont influence each other', async () => {
     title: 'dictTitle',
     help: 'fooHelp',
     i18n_base: { required: 'required' },
-    layout: 'one_column',
     validators: [],
     groups: [],
     no_elements_text: 'no_text',

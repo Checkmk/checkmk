@@ -35,7 +35,8 @@ import type {
   String,
   TimeSpan,
   TimeSpecific,
-  Tuple
+  Tuple,
+  TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
@@ -141,7 +142,6 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
     groups: [],
     no_elements_text: 'i18n no elements text',
     additional_static_elements: null,
-    layout: 'one_column',
     i18n_base: { required: 'i18n required' },
     ...options
   }
@@ -149,9 +149,35 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
 
 function getDictionaryTwoColumns(
   name: string,
-  options?: Partial<Omit<Dictionary, 'type'>>
-): Dictionary {
-  return getDictionary(name, { ...options, layout: 'two_columns' })
+  options?: Partial<Omit<TwoColumnDictionary, 'type'>>
+): TwoColumnDictionary {
+  return {
+    type: 'two_column_dictionary',
+    ...getFormSpecDefaults(name),
+    elements: [
+      {
+        name: 'one_element',
+        required: true,
+        render_only: false,
+        group: null,
+        default_value: 'default value required',
+        parameter_form: getString('required_string_in_dict')
+      },
+      {
+        name: 'two_element',
+        required: false,
+        render_only: false,
+        group: null,
+        default_value: 'default value optional',
+        parameter_form: getString('optional_string_in_dict')
+      }
+    ],
+    groups: [],
+    no_elements_text: 'i18n no elements text',
+    additional_static_elements: null,
+    i18n_base: { required: 'i18n required' },
+    ...options
+  }
 }
 
 function getList(name: string, options?: Partial<Omit<List, 'type'>>): List {

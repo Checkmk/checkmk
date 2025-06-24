@@ -60,7 +60,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const variant: DictionaryVariants['variant'] = 'one_column'
+const variant: DictionaryVariants['variant'] = 'two_columns'
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})

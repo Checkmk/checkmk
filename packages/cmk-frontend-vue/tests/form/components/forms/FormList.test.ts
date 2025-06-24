@@ -149,7 +149,6 @@ const dictSpec: FormSpec.Dictionary = {
   title: 'dictTitle',
   help: 'fooHelp',
   i18n_base: { required: 'required' },
-  layout: 'one_column',
   validators: [],
   groups: [],
   no_elements_text: 'no_text',

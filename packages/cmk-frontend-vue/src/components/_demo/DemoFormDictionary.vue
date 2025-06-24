@@ -35,7 +35,6 @@ const dictionarySpec: Dictionary = {
   validators: [],
   no_elements_text: 'no elements text',
   additional_static_elements: null,
-  layout: 'one_column',
   groups: [],
   elements: [
     {

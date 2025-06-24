@@ -191,7 +191,6 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     title: 'fooTitle',
     help: 'fooHelp',
     i18n_base: { required: 'required' },
-    layout: 'one_column',
     validators: [],
     groups: [],
     additional_static_elements: null,

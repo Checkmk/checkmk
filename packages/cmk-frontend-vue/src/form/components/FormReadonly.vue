@@ -32,7 +32,8 @@ import type {
   FileUpload,
   DictionaryElement,
   DictionaryGroup,
-  MultipleChoiceElement
+  MultipleChoiceElement,
+  TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
   groupNestedValidations,
@@ -56,7 +57,19 @@ function renderForm(
 ): VNode {
   switch (formSpec.type as Components['type']) {
     case 'dictionary':
-      return renderDict(formSpec as Dictionary, value as Record<string, unknown>, backendValidation)
+      return renderDict(
+        formSpec as Dictionary,
+        'one_column',
+        value as Record<string, unknown>,
+        backendValidation
+      )
+    case 'two_column_dictionary':
+      return renderDict(
+        formSpec as TwoColumnDictionary,
+        'two_columns',
+        value as Record<string, unknown>,
+        backendValidation
+      )
     case 'time_span':
       return renderTimeSpan(formSpec as TimeSpan, value as number)
     case 'string':
@@ -273,7 +286,8 @@ function renderFixedValue(formSpec: FixedValue): VNode {
 }
 
 function renderDict(
-  formSpec: Dictionary,
+  formSpec: Dictionary | TwoColumnDictionary,
+  layout: 'one_column' | 'two_columns',
   value: Record<string, unknown>,
   backendValidation: ValidationMessages
 ): VNode {
@@ -353,7 +367,7 @@ function renderDict(
 
   const cssClasses = [
     'form-readonly__dictionary',
-    formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : ''
+    layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : ''
   ]
 
   if (dictElements.length === 0) {

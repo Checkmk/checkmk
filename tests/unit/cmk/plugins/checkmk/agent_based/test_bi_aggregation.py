@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.bi_aggregation import check_bi_aggregation
+from cmk.plugins.checkmk.agent_based.bi_aggregation import check_bi_aggregation
 
 TEST_INFO = {
     "Host test": {

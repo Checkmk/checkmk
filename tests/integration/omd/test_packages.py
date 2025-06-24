@@ -111,7 +111,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_nrpe", expected="Version: 3.2.1"),
     MonitoringPlugin("check_snmp"),
     CheckmkActiveCheck("check_always_crit"),
-    CheckmkActiveCheck("check_bi_aggr"),
+    CheckmkActiveCheck("check_bi_aggr", path="lib/python3/cmk/plugins/checkmk/libexec"),
     CheckmkActiveCheck("check_disk_smb", path="lib/python3/cmk/plugins/smb/libexec"),
     CheckmkActiveCheck(
         "check_elasticsearch_query",

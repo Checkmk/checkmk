@@ -25,7 +25,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog=__file__.rsplit("/", 1)[-1], description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
         "-b",
@@ -286,7 +286,3 @@ def main(argv: Sequence[str]) -> None:
 
     sys.stdout.write("%s\n" % aggr_output)
     sys.exit(aggr_state)
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])

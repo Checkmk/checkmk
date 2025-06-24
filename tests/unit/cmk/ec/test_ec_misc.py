@@ -7,8 +7,6 @@
 import ipaddress
 
 import pytest
-from hypothesis import given, settings
-from hypothesis.strategies import ip_addresses
 
 from cmk.ec.main import allowed_ip, unmap_ipv4_address
 from cmk.ec.rule_matcher import match_ip_network
@@ -153,19 +151,42 @@ def test_match_ip_network_ipv6(pattern: str, ip: str, expected: bool) -> None:
     assert match_ip_network(pattern, ip) == expected
 
 
-@settings(max_examples=10)
-@given(ip_addresses(v=4).map(str))
+@pytest.mark.parametrize(
+    "ip",
+    [
+        "0.0.0.0",
+        "192.31.196.172",
+        "192.175.48.84",
+        "192.0.2.167",
+        "234.99.8.118",
+        "90.139.70.255",
+        "172.20.82.97",
+        "13.150.182.3",
+        "151.198.173.150",
+    ],
+)
 def test_match_ipv4_network_all_ip(ip: str) -> None:
     """Generated ip ipv4 addresses with network bits added manually"""
-
     assert match_ip_network(f"{ip}/24", ip) is True
     assert match_ip_network(f"{ip}/0", ip) is True
     assert match_ip_network(ip, f"{ip}/24") is False
     assert match_ip_network(f"{ip}/0", "") is True
 
 
-@settings(max_examples=10)
-@given(ip_addresses(v=6).map(str))
+@pytest.mark.parametrize(
+    "ip",
+    [
+        "::1",
+        "fc00::5ebc",
+        "2001:10::7fa6",
+        "2001:db8::b8a",
+        "f292:6503:d12a:e2c:b38a:8275:15f9:1b1",
+        "6bff:c9bc:afa:37e7:c5ac:bc89:fda4:a706",
+        "::",
+        "fc00::1d5e",
+        "fe80::2499:20b:fd13:be60",
+    ],
+)
 def test_match_ipv6_network_all_ip(ip: str) -> None:
     """Generated ip ipv6 addresses with network bits added manually"""
 

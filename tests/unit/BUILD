@@ -99,7 +99,6 @@ py_test(
         requirement("astroid"),
         requirement("fastapi"),
         requirement("httpx"),
-        requirement("hypothesis"),
         requirement("mypy-boto3-logs"),
         requirement("mypy-extensions"),
         requirement("pika"),

@@ -5,17 +5,11 @@
 
 import os
 from collections.abc import Mapping, Sequence
-from types import ModuleType
 
 import pytest
 import vcr  # type: ignore[import-untyped]
 
-from tests.testlib.unit.utils import import_module_hack
-
-
-@pytest.fixture(name="check_form_submit", scope="module")
-def fixture_check_form_submit() -> ModuleType:
-    return import_module_hack("active_checks/check_form_submit")
+from cmk.plugins.form_submit.active_check import check_form_submit
 
 
 @pytest.mark.parametrize(
@@ -59,7 +53,6 @@ def fixture_check_form_submit() -> ModuleType:
     ],
 )
 def test_check_form_submit_main(
-    check_form_submit: ModuleType,
     args: Sequence[str],
     expected_exitcode: int,
     expected_info: str,
@@ -112,7 +105,6 @@ def test_check_form_submit_main(
     ],
 )
 def test_ac_check_form_submit_host_states_no_levels(
-    check_form_submit: ModuleType,
     states: Mapping[str, tuple[int, str]],
     expected_status: int,
     expected_info: str,
@@ -136,7 +128,6 @@ def test_ac_check_form_submit_host_states_no_levels(
     ],
 )
 def test_ac_check_form_submit_host_states_levels(
-    check_form_submit: ModuleType,
     states: Mapping[str, tuple[int, str]],
     levels: tuple[int, int] | None,
     expected_status: int,

@@ -13,6 +13,7 @@ from cmk.ccc import version as checkmk_version
 
 from cmk.discover_plugins import family_libexec_dir
 from cmk.plugins.elasticsearch.active_check import check_elasticsearch_query
+from cmk.plugins.form_submit.active_check import check_form_submit
 from cmk.plugins.sftp.active_check import check_sftp
 from cmk.plugins.traceroute.active_check import check_traceroute
 from cmk.plugins.uniserv.active_check import check_uniserv
@@ -26,7 +27,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "disk_smb": None,  # TODO
     "dns": None,  # TODO
     "elasticsearch_query": check_elasticsearch_query,
-    "form_submit": None,  # TODO
+    "form_submit": check_form_submit,
     "ftp": None,  # TODO
     "http": None,  # TODO
     "httpv2": None,  # rust
@@ -89,7 +90,6 @@ def test_active_checks_location() -> None:
         "by_ssh",
         "cert",
         "dns",
-        "form_submit",
         "ftp",
         "http",
         "httpv2",

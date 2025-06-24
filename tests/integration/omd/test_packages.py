@@ -117,7 +117,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
         "check_elasticsearch_query",
         path="lib/python3/cmk/plugins/elasticsearch/libexec",
     ),
-    CheckmkActiveCheck("check_form_submit"),
+    CheckmkActiveCheck("check_form_submit", path="lib/python3/cmk/plugins/form_submit/libexec"),
     CheckmkActiveCheck("check_httpv2", usage_text="Usage"),
     CheckmkActiveCheck("check_mailboxes", path="lib/python3/cmk/plugins/emailchecks/libexec"),
     CheckmkActiveCheck("check_mail_loop", path="lib/python3/cmk/plugins/emailchecks/libexec"),

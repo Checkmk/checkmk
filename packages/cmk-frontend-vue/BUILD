@@ -34,7 +34,7 @@ SRCS = [
     ":node_modules/@types",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
-    ":node_modules/cmk-shared-typing",
+    ":node_modules/cmk-shared-typing-bzl",
     ":node_modules/eslint-plugin-vue",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
@@ -55,7 +55,7 @@ SRCS = [
 ])
 
 npm_link_package(
-    name = "node_modules/cmk-shared-typing",
+    name = "node_modules/cmk-shared-typing-bzl",
     src = "//packages/cmk-shared-typing:cmk_shared_typing_ts",
     package = "cmk-shared-typing",
     root_package = "packages/cmk-frontend-vue",

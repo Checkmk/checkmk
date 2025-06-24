@@ -177,6 +177,25 @@ new_local_repository(
     path = "/usr",
 )
 
+#TODO: This should be removed by using proper toolchain definitions: CMK-24205
+new_local_repository(
+    name = "cpp_libs",
+    build_file_content = """
+filegroup(
+    name = "cpp_libs",
+    srcs = glob([
+        "gcc-13.2.0/lib64/libgcc_s.so",
+        "gcc-13.2.0/lib64/libgcc_s.so.1",
+        "gcc-13.2.0/lib64/libstdc++.so",
+        "gcc-13.2.0/lib64/libstdc++.so.6",
+        "gcc-13.2.0/lib64/libstdc++.so.6.0.32",
+    ]),
+    visibility = ["//visibility:public"],
+)
+    """,
+    path = "/opt",
+)
+
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 

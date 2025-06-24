@@ -23,6 +23,15 @@ def test_clear_compilation_cache(fs: BIFileSystem) -> None:
     assert not fs.cache.last_compilation.exists()
 
 
+def test_clear_compilation_cache_is_idempotent(fs: BIFileSystem) -> None:
+    fs.cache.clear_compilation_cache()
+    fs.cache.clear_compilation_cache()
+
+    assert not any(fs.cache.compiled_aggregations.iterdir())
+    assert not fs.cache.compilation_lock.exists()
+    assert not fs.cache.last_compilation.exists()
+
+
 def test_cache_get_site_structure_data_path(fs: BIFileSystem) -> None:
     site_id = "heute"
     timestamp = "1744213607"

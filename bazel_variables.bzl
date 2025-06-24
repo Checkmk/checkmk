@@ -28,8 +28,10 @@ edition_python_deps = {
 edition_deps = {
     # NOTES:
     # * jaeger should be added to all editions EXCEPT saas - saas has its own tracing collector
+    # * nagvis should be added to all editions EXCEPT saas - see CMK-14926
     "cre": [
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/nagvis:pkg_tar",
     ],
     "cce": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -37,12 +39,14 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/nagvis:pkg_tar",
     ],
     "cee": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/nagvis:pkg_tar",
     ],
     "cme": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -50,6 +54,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/nagvis:pkg_tar",
     ],
     "cse": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -68,6 +73,7 @@ edition_skel_permissions = {
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/nagvis:skel.permissions",
     ],
     "cce": [
         "//omd/packages/maintenance:skel.permissions",
@@ -78,6 +84,7 @@ edition_skel_permissions = {
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/nagvis:skel.permissions",
     ],
     "cee": [
         "//omd/packages/maintenance:skel.permissions",
@@ -88,6 +95,7 @@ edition_skel_permissions = {
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/nagvis:skel.permissions",
     ],
     "cme": [
         "//omd/packages/maintenance:skel.permissions",
@@ -98,6 +106,7 @@ edition_skel_permissions = {
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/nagvis:skel.permissions",
     ],
     "cse": [
         "//omd/packages/maintenance:skel.permissions",

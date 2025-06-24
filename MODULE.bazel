@@ -627,6 +627,23 @@ exports_files([
     ],
 )
 
+http_archive(
+    name = "nagvis",
+    build_file = "//omd/packages/nagvis:BUILD.nagvis.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/nagvis/patches:0001-global.php.dif",
+        "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
+    ],
+    sha256 = "69ca223cf3a14ba77d6b168b242c3c2bd3b059c44142a618ed9968d24d5700ba",
+    strip_prefix = "nagvis-1.9.47",
+    urls = [
+        UPSTREAM_MIRROR_URL + "nagvis-1.9.47.tar.gz",
+        "https://www.nagvis.org/share/nagvis-1.9.47.tar.gz",
+    ],
+)
+
 repo_license(name = "repo_license")
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")

@@ -1,0 +1,61 @@
+exports_files(["etc/nagvis.ini.php-sample"])
+
+exports_files(["etc/geomap/demo-locations.csv"])
+
+exports_files(["etc/conf.d/demo.ini.php"])
+
+filegroup(
+    name = "share_fg",
+    srcs = glob([
+        "share/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "doc_general_fg",
+    srcs = [
+        "COPYING",
+        "README",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "doc_de_fg",
+    srcs = glob([
+        "docs/de_DE/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "doc_en_fg",
+    srcs = glob([
+        "docs/en_US/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "general",
+    srcs = glob([
+        "docs/general/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "NagVisCompressed_js",
+    srcs = [
+        "install_lib",
+    ] + glob(["share/frontend/nagvis-js/js/*.js"]),
+    outs = ["NagVisCompressed.js"],
+    cmd = """
+        . $(locations install_lib)
+        cp $$(dirname $(locations share/frontend/nagvis-js/js/ExtStacktrace.js))/*.js .
+        cmp_js .
+        mv NagVisCompressed.js $@
+        """,
+    visibility = ["//visibility:public"],
+)

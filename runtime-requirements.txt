@@ -555,6 +555,12 @@ exchangelib==5.5.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+execnet==2.1.1 \
+    --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
+    --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
+    # via
+    #   -c requirements.txt
+    #   pytest-xdist
 fastapi==0.115.13 \
     --hash=sha256:0a0cab59afa7bab22f5eb347f8c9864b681558c278395e94035a741fc10cd865 \
     --hash=sha256:55d1d25c2e1e0a0a50aceb1c8705cd932def273c102bff0b1c1da88b3c6eb307
@@ -2276,6 +2282,7 @@ pytest==7.4.4 \
     #   -r packages/cmk-werks/requirements.in
     #   meraki
     #   pytest-mock
+    #   pytest-xdist
 pytest-mock==3.14.1 \
     --hash=sha256:159e9edac4c451ce77a5cdb9fc5d1100708d2dd4ba3c3df572f14097351af80e \
     --hash=sha256:178aefcd11307d874b4cd3100344e7e2d888d9791a6a1d9bfe90fbc1b74fd1d0
@@ -2283,6 +2290,12 @@ pytest-mock==3.14.1 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-mknotifyd/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+pytest-xdist==3.7.0 \
+    --hash=sha256:7d3fbd255998265052435eb9daa4e99b62e6fb9cfb6efd1f858d4d8c0c7f0ca0 \
+    --hash=sha256:f9248c99a7c15b7d2f90715df93610353a485827bc06eefb6566d23f6400f126
+    # via
+    #   -c requirements.txt
+    #   -r non-free/packages/cmk-relay-core/requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \

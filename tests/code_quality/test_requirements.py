@@ -353,6 +353,7 @@ CEE_UNUSED_PACKAGES = [
     "setuptools-scm",
     "snmpsim-lextudio",
     "python-multipart",  # needed by fastapi
+    "pytest-xdist",  # pytest distributed testing
     # stub packages
     "types-python-dateutil",
     "types-markdown",

@@ -3030,7 +3030,9 @@ pytest-subtests==0.14.2 \
 pytest-xdist==3.7.0 \
     --hash=sha256:7d3fbd255998265052435eb9daa4e99b62e6fb9cfb6efd1f858d4d8c0c7f0ca0 \
     --hash=sha256:f9248c99a7c15b7d2f90715df93610353a485827bc06eefb6566d23f6400f126
-    # via -r dev-requirements.in
+    # via
+    #   -r dev-requirements.in
+    #   -r non-free/packages/cmk-relay-core/requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \

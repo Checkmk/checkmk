@@ -4,10 +4,7 @@
 #    https://earthly.dev/blog/rust-monorepo/
 
 [workspace]
-members = [
-    "../../../packages/check-cert",
-    "../../../packages/check-http",
-]
+members = ["../../../packages/check-cert", "../../../packages/check-http"]
 package.edition = "2021"
 resolver = "2"
 
@@ -16,7 +13,7 @@ resolver = "2"
 aes-gcm = "*"
 anyhow = "1.0.75"
 assertor = "*"
-tempfile = "*" 
+tempfile = "*"
 bytes = "*"
 clap = { version = "4.3.24", features = ["derive"] }
 encoding_rs = "*"
@@ -27,7 +24,7 @@ regex = "*"
 reqwest = "*"
 openssl = { version = "0.10.57" }
 openssl-probe = "0.1.5"
-scrypt = { version = "*", default-features = false}
+scrypt = { version = "*", default-features = false }
 time = "0.3.37"
 tokio = "*"
 tracing = "*"

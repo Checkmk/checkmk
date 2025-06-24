@@ -484,7 +484,7 @@ class Site:
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
             f"WaitObject: {hostname}\n"
-            f"WaitTimeout: {wait_timeout or self.check_wait_timeout * 1000:d}\n"
+            f"WaitTimeout: {(wait_timeout or self.check_wait_timeout) * 1000:d}\n"
             f"WaitTrigger: check\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
         )
@@ -2285,7 +2285,7 @@ class SiteFactory:
         self._index += 1
         return new_ident
 
-    def _site_obj(self, name: str, check_wait_timeout: int = 20) -> Site:
+    def _site_obj(self, name: str) -> Site:
         if f"{self._base_ident}{name}" in self._sites:
             return self._sites[f"{self._base_ident}{name}"]
         # For convenience, allow to retrieve site by name or full ident
@@ -2299,7 +2299,6 @@ class SiteFactory:
             site_id=site_id,
             reuse=False,
             enforce_english_gui=self._enforce_english_gui,
-            check_wait_timeout=check_wait_timeout,
         )
 
     def save_results(self) -> None:

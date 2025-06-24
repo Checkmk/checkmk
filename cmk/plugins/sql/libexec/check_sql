@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# DB2 support requires installation of the IBM Data Server Client:
+#  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
+# as well as the ibm_db2 Python DBI driver for DB2:
+#  https://pypi.org/pypi/ibm_db
+
+# SQLAnywhere support requires installation of the SAP SQL Anywhere binaries, the `sqlanydb` python
+# package, and certain environment variables set in the site's runtime environment. See the checkman
+# documentation for more information.
+"""Checkmk SQL database request check"""
+
+from cmk.plugins.sql.active_check.check_sql import main
+
+if __name__ == "__main__":
+    main()

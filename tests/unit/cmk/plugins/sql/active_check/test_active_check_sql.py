@@ -2,16 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from types import ModuleType
 
 import pytest
 
-from tests.testlib.unit.utils import import_module_hack
-
-
-@pytest.fixture(name="check_sql", scope="module")
-def fixture_check_sql() -> ModuleType:
-    return import_module_hack("active_checks/check_sql")
+from cmk.plugins.sql.active_check import check_sql
 
 
 @pytest.mark.parametrize(
@@ -24,7 +18,6 @@ def fixture_check_sql() -> ModuleType:
     ],
 )
 def test_process_result(
-    check_sql: ModuleType,
     result: list,
     warn: tuple[int, int],
     crit: tuple[float, int],

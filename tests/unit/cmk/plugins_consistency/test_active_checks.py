@@ -98,7 +98,6 @@ def test_active_checks_location() -> None:
         "mkevents",
         "notify_count",
         "smtp",
-        "sql",
         "ssh",
         "tcp",
     }

@@ -230,7 +230,7 @@ def _default_execute(
 
 
 def postgres_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import psycopg2  # type: ignore[import-untyped]
+    import psycopg2
 
     return psycopg2.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
@@ -254,7 +254,7 @@ def mysql_execute(
 
 
 def mssql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import pymssql
+    import pymssql  # type: ignore[import-not-found]
 
     return pymssql.connect(host=host, port=str(port), database=db_name, user=user, password=pwd)
 
@@ -277,7 +277,7 @@ def oracle_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> A
     sys.path.append(
         f"/usr/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     )
-    import oracledb
+    import oracledb  # type: ignore[import-not-found]
 
     try:
         oracledb.init_oracle_client()

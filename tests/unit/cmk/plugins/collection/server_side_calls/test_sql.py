@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.sql import active_check_sql
+from cmk.plugins.sql.server_side_calls.sql import active_check_sql
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 MINIMAL_CONFIG = {

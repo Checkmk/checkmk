@@ -29,7 +29,7 @@ _GLOBAL_EXCLUDES = (
 )
 
 _PERMISSIONS = (
-    # globbing pattern                check function,   explicit excludes, exclude patterns
+    # globbing pattern | check function | explicit excludes | exclude patterns
     ("active_checks/*", is_executable, ("Makefile", "check_mkevents.cc"), ()),
     ("agents/check_mk_agent.*", is_executable, ("check_mk_agent.spec",), ()),
     (
@@ -38,13 +38,6 @@ _PERMISSIONS = (
         ("BUILD", "README", "Makefile", "__init__.py"),
         ("*.checksum", "*.pyc", "*_2.py"),
     ),
-    ("cmk/plugins/*/agent_based/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/graphing/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/libexec/*", is_executable, (), ()),
-    ("cmk/plugins/*/checkman/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/checkman/*/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/rulesets/*", is_not_executable, (), ()),
-    ("cmk/plugins/*/server_side_calls/*", is_not_executable, (), ()),
     ("notifications/*", is_executable, ("README", "debug"), ()),
     ("bin/*", is_executable, ("Makefile", "mkevent.cc", "mkeventd_open514.cc"), ()),
     # Enterprise specific
@@ -104,3 +97,22 @@ def test_permissions(
     offending_files = {f for f in tested_files if not check_func(f)}
 
     assert not offending_files, f"{offending_files} have wrong permissions ({check_func!r})"
+
+
+def _executable_iff_in_libexec(path: Path) -> bool:
+    return ("libexec" in path.parts) is os.access(path, os.X_OK)
+
+
+def test_plugin_family_permissions(changed_files: ChangedFiles) -> None:
+    found_files = {
+        f
+        for f in repo_path().rglob("cmk/plugins/*")
+        if f.is_file() and f.name not in _GLOBAL_EXCLUDES
+    }
+    # see if we can remove this test
+    assert found_files
+
+    tested_files = {f for f in found_files if changed_files.is_changed(f)}
+    offending_files = {f for f in tested_files if not _executable_iff_in_libexec(f)}
+
+    assert not offending_files, f"{offending_files} have wrong permissions"

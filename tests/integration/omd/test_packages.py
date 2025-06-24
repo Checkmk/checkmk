@@ -122,7 +122,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     CheckmkActiveCheck("check_mailboxes", path="lib/python3/cmk/plugins/emailchecks/libexec"),
     CheckmkActiveCheck("check_mail_loop", path="lib/python3/cmk/plugins/emailchecks/libexec"),
     CheckmkActiveCheck("check_mail", path="lib/python3/cmk/plugins/emailchecks/libexec"),
-    CheckmkActiveCheck("check_notify_count"),
+    CheckmkActiveCheck("check_notify_count", path="lib/python3/cmk/plugins/checkmk/libexec"),
     CheckmkActiveCheck("check_sftp", path="lib/python3/cmk/plugins/sftp/libexec"),
     CheckmkActiveCheck("check_sql", path="lib/python3/cmk/plugins/sql/libexec"),
     CheckmkActiveCheck("check_traceroute", path="lib/python3/cmk/plugins/traceroute/libexec"),

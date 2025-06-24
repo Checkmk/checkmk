@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.notify_count import active_check_notify_count
+from cmk.plugins.checkmk.server_side_calls.notify_count import active_check_notify_count
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 HOST_CONFIG = HostConfig(

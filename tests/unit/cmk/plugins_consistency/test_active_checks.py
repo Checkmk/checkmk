@@ -38,7 +38,7 @@ TESTED_AC_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mail_loop": None,  # TODO
     "mailboxes": None,  # TODO
     "mkevents": None,  # C
-    "notify_count": None,  # TODO
+    "notify_count": None,  # FIXME: import currently has too many side effects
     "sftp": check_sftp,
     "smtp": None,  # TODO
     "sql": None,  # TODO
@@ -96,7 +96,6 @@ def test_active_checks_location() -> None:
         "icmp",
         "ldap",
         "mkevents",
-        "notify_count",
         "smtp",
         "ssh",
         "tcp",

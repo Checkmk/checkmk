@@ -40,6 +40,7 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
@@ -192,12 +193,13 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
 
 class PageGraphDashlet(cmk.gui.pages.Page):
     @override
-    def page(self) -> cmk.gui.pages.PageResult:
-        """This page handler is called by graphs embedded in a dashboard."""
-        return host_service_graph_dashlet_cmk(
-            parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
-            GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
-            metrics_from_api,
-            graphs_from_api,
-            graph_display_id=request.get_str_input_mandatory("id"),
+    def page(self) -> None:
+        html.write_html(
+            host_service_graph_dashlet_cmk(
+                parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
+                GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
+                metrics_from_api,
+                graphs_from_api,
+                graph_display_id=request.get_str_input_mandatory("id"),
+            )
         )

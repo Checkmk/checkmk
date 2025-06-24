@@ -200,6 +200,11 @@ class BaseUserAttributes(BaseSchema):
         ConcreteUserInterfaceAttributes,
         required=False,
     )
+    start_url = fields.String(
+        description="The URL that the user should be redirected to after login. There is a "
+        "'default_dashboard', a 'welcome_page', and any other will be treated as a custom URL",
+        example="welcome_page",
+    )
 
 
 class CustomUserAttributes(ValueTypedDictSchema):

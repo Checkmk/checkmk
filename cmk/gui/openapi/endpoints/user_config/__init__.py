@@ -138,10 +138,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
     username = api_attrs["username"]
 
     # The interface options must be set for a new user, but we restrict the setting through the API
-    internal_attrs: UserSpec = {
-        "start_url": None,
-        "force_authuser": False,
-    }
+    internal_attrs: UserSpec = {"force_authuser": False}
 
     internal_attrs = _api_to_internal_format(internal_attrs, api_attrs, new_user=True)
     edit_users(
@@ -306,6 +303,16 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             temperature_unit,
         )
 
+    match start_url := api_configurations.get("start_url"):
+        case "welcome_page":
+            attrs["start_url"] = "welcome.py"
+        case "default_dashboard":
+            attrs["start_url"] = None
+        case str():
+            attrs["start_url"] = start_url
+        case _:
+            ...  # do not modify start_url
+
     return attrs
 
 
@@ -347,6 +354,14 @@ def _internal_to_api_format(
         api_attrs["temperature_unit"] = _internal_temperature_format_to_api_format(
             internal_attrs["temperature_unit"]
         )
+
+    match start_url := internal_attrs.get("start_url"):
+        case None:
+            api_attrs["start_url"] = "default_dashboard"
+        case "welcome.py":
+            api_attrs["start_url"] = "welcome_page"
+        case _:
+            api_attrs["start_url"] = start_url
 
     api_attrs.update(
         {

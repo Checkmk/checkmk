@@ -128,6 +128,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
         },
+        "start_url": "default_dashboard",
     }
 
     resp = clients.User.edit(username=username, customer="provider")
@@ -722,6 +723,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
             "contextual_help_icon": "show_icon",
         },
         "temperature_unit": "fahrenheit",
+        "start_url": "default_dashboard",
     }
 
 
@@ -810,6 +812,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
         },
+        "start_url": "default_dashboard",
     }
 
 
@@ -1460,3 +1463,48 @@ def test_openapi_full_configuration(clients: ClientRegistry) -> None:
 def test_openapi_user_dismiss_warning(clients: ClientRegistry) -> None:
     clients.User.dismiss_warning(warning="notification_fallback")
     assert user.dismissed_warnings == {"notification_fallback"}
+
+
+def test_openapi_edit_user_should_not_modify_start_url(clients: ClientRegistry) -> None:
+    username = "user_1"
+    clients.User.create(
+        username=username,
+        fullname="User Test",
+        start_url="welcome_page",
+    )
+    assert (
+        clients.User.edit(
+            username=username,
+            fullname="User Test Updated",
+        ).json["extensions"]["start_url"]
+        == "welcome_page"
+    )
+
+
+def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
+    username = "user_2"
+    assert (
+        clients.User.create(
+            username=username,
+            fullname="User Test",
+        ).json["extensions"]["start_url"]
+        == "default_dashboard"
+    )
+
+    assert (
+        clients.User.edit(
+            username=username,
+            fullname="User Test Updated",
+            start_url="welcome_page",
+        ).json["extensions"]["start_url"]
+        == "welcome_page"
+    )
+
+    assert (
+        clients.User.edit(
+            username=username,
+            fullname="User Test Updated Again",
+            start_url="some_custom_url",
+        ).json["extensions"]["start_url"]
+        == "some_custom_url"
+    )

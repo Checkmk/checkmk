@@ -398,6 +398,13 @@ class CreateUser(CustomUserAttributes):
         example={"interface_theme": "dark"},
         description="",
     )
+    start_url = fields.String(
+        required=False,
+        load_default="default_dashboard",
+        description="The URL that the user should be redirected to after login. There is a "
+        "'default_dashboard', a 'welcome_page', and any other will be treated as a custom URL",
+        example="default_dashboard",
+    )
 
 
 class UserInterfaceUpdateAttributes(BaseSchema):
@@ -541,4 +548,10 @@ class UpdateUser(CustomUserAttributes):
         required=False,
         example={"interface_theme": "dark"},
         description="",
+    )
+    start_url = fields.String(
+        required=False,
+        description="The URL that the user should be redirected to after login. There is a "
+        "'default_dashboard', a 'welcome_page', and any other will be treated as a custom URL",
+        example="default_dashboard",
     )

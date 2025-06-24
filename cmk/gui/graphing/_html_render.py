@@ -1096,7 +1096,10 @@ def host_service_graph_dashlet_cmk(
     if graph_recipes:
         graph_recipe = graph_recipes[0]
     else:
-        raise MKGeneralException(_("Failed to calculate a graph recipe."))
+        return render_graph_error_html(
+            title=_("No graph recipe found"),
+            msg_or_exc=_("Failed to calculate a graph recipe."),
+        )
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.

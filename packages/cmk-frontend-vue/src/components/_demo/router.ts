@@ -41,6 +41,7 @@ import DemoFormLabels from './DemoFormLabels.vue'
 import type { Component } from 'vue'
 import DemoHelp from './DemoHelp.vue'
 import DemoCmkChip from './DemoCmkChip.vue'
+import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 
 interface Route {
@@ -60,6 +61,11 @@ const routes: Route[] = [
     path: '/progressbar',
     name: 'CmkProgressbar',
     component: DemoCmkProgressbar
+  },
+  {
+    path: '/badge',
+    name: 'CmkBadge',
+    component: DemoCmkBadge
   },
   {
     path: '/chip',

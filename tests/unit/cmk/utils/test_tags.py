@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.rulesets import ruleset_matcher
-from cmk.utils.tags import TagConfig, TagGroupID, TagID
+from cmk.utils.tags import get_tag_to_group_map, TagConfig, TagGroupID, TagID
 
 
 def test_get_tag_to_group_map() -> None:
@@ -38,7 +37,7 @@ def test_get_tag_to_group_map() -> None:
             ],
         }
     )
-    assert ruleset_matcher.get_tag_to_group_map(tag_config) == {
+    assert get_tag_to_group_map(tag_config) == {
         "bla": "bla",
         "lan": "networking",
         "prod": "criticality",

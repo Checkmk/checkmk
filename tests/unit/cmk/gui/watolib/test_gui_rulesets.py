@@ -22,10 +22,9 @@ from cmk.ccc.user import UserId
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
-from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
 
 from cmk.automations.results import AnalyzeHostRuleEffectivenessResult
 
@@ -46,7 +45,7 @@ from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
-    return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags))
+    return rulesets.Ruleset(ruleset_name, get_tag_to_group_map(active_config.tags))
 
 
 GEN_ID_COUNT = {"c": 0}
@@ -428,7 +427,7 @@ def test_ruleset_to_config(
 ) -> None:
     ruleset = rulesets.Ruleset(
         RuleGroup.CheckgroupParameters("local"),
-        ruleset_matcher.get_tag_to_group_map(active_config.tags),
+        get_tag_to_group_map(active_config.tags),
     )
     ruleset.replace_folder_config(
         folder_tree().root_folder(),
@@ -488,7 +487,7 @@ def test_ruleset_to_config_sub_folder(
 ) -> None:
     ruleset = rulesets.Ruleset(
         RuleGroup.CheckgroupParameters("local"),
-        ruleset_matcher.get_tag_to_group_map(active_config.tags),
+        get_tag_to_group_map(active_config.tags),
     )
 
     folder_tree().create_missing_folders("abc", pprint_value=False)

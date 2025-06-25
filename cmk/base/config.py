@@ -1671,7 +1671,7 @@ class ConfigCache:
     @staticmethod
     def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
-        return ruleset_matcher.get_tag_to_group_map(tags)
+        return cmk.utils.tags.get_tag_to_group_map(tags)
 
     def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(

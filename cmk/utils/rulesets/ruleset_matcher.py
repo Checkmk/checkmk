@@ -29,7 +29,7 @@ from cmk.utils.labels import (
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.tags import TagConfig, TagGroupID, TagID
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk import trace
 
@@ -826,23 +826,6 @@ def parse_negated_condition_list(
     if isinstance(entries, list):
         return False, entries
     raise ValueError("unsupported conditions")
-
-
-def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
-    """The old rules only have a list of tags and don't know anything about the
-    tag groups they are coming from. Create a map based on the current tag config
-    """
-    tag_id_to_tag_group_id_map: dict[TagID, TagGroupID] = {}
-
-    for aux_tag in tag_config.aux_tag_list.get_tags():
-        tag_id_to_tag_group_id_map[aux_tag.id] = TagGroupID(aux_tag.id)
-
-    for tag_group in tag_config.tag_groups:
-        for grouped_tag in tag_group.tags:
-            # Do not care for the choices with a None value here. They are not relevant for this map
-            if grouped_tag.id is not None:
-                tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
-    return tag_id_to_tag_group_id_map
 
 
 def matches_host_tags(

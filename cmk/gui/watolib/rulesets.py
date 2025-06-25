@@ -37,7 +37,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
 )
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import get_tag_to_group_map, TagGroupID, TagID
 
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config
@@ -358,7 +358,7 @@ class RulesetCollection:
     def _initialize_rulesets(
         only_varname: RulesetName | None = None,
     ) -> Mapping[RulesetName, Ruleset]:
-        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
+        tag_to_group_map = get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
 
@@ -1629,9 +1629,7 @@ class EnabledDisabledServicesEditor:
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = Ruleset(
-                "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
-            )
+            ruleset = Ruleset("ignored_services", get_tag_to_group_map(active_config.tags))
 
         modified_folders = []
 

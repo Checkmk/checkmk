@@ -21,10 +21,51 @@ from types import TracebackType
 from typing import BinaryIO, override
 
 from omdlib.contexts import SiteContext
+from omdlib.global_options import GlobalOptions
 from omdlib.site_paths import SitePaths
 from omdlib.type_defs import CommandOptions
 
 from cmk.utils.paths import mkbackup_lock_dir
+
+
+def _try_backup_site_to_tarfile(
+    fh: io.BufferedWriter | BinaryIO,
+    tar_mode: str,
+    options: CommandOptions,
+    site: SiteContext,
+    global_opts: GlobalOptions,
+) -> None:
+    if "no-compression" not in options:
+        tar_mode += "gz"
+
+    try:
+        backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
+    except OSError as e:
+        sys.exit("Failed to perform backup: %s" % e)
+
+
+def main_backup(
+    _version_info: object,
+    site: SiteContext,
+    global_opts: GlobalOptions,
+    args: list[str],
+    options: CommandOptions,
+    orig_working_directory: str,
+) -> None:
+    if len(args) == 0:
+        sys.exit(
+            'You need to provide either a path to the destination file or "-" for backup to stdout.'
+        )
+
+    dest = args[0]
+
+    if dest == "-":
+        _try_backup_site_to_tarfile(sys.stdout.buffer, "w|", options, site, global_opts)
+    else:
+        if not (dest_path := Path(dest)).is_absolute():
+            dest_path = orig_working_directory / dest_path
+        with dest_path.open(mode="wb") as fh:
+            _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:

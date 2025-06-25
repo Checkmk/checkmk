@@ -1544,7 +1544,6 @@ class ConfigCache:
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
-        self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
         (
             self._clusters_of_cache,
@@ -1564,7 +1563,7 @@ class ConfigCache:
         self.hosts_config = make_hosts_config(self._loaded_config)
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
-        self._collect_hosttags(tag_to_group_map)
+        self._hosttags = self._collect_hosttags(tag_to_group_map, self._host_paths)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=host_tags,
@@ -2657,36 +2656,41 @@ class ConfigCache:
 
         return self.__snmp_fetch_interval.setdefault(host_name, snmp_fetch_interval_impl())
 
-    def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TagGroupID]) -> None:
+    @staticmethod
+    def _collect_hosttags(
+        tag_to_group_map: Mapping[TagID, TagGroupID], host_paths: Mapping[HostName, str]
+    ) -> Mapping[HostName, Sequence[TagID]]:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
         by the etc/check_mk/conf.d directory that are not managed by WATO. They may use the old style pipe separated
         all_hosts configuration. Detect it and try to be compatible.
         """
+        tags_sequences = dict[HostName, Sequence[TagID]]()
         for tagged_host in all_hosts + list(clusters):
             parts = tagged_host.split("|")
             hostname = parts[0]
 
             if hostname in host_tags:
                 # New dict host_tags are available: only need to compute the tag list
-                self._hosttags[hostname] = ConfigCache._tag_groups_to_tag_list(
-                    self._host_paths.get(hostname, "/"), host_tags[hostname]
+                tags_sequences[hostname] = ConfigCache._tag_groups_to_tag_list(
+                    host_paths.get(hostname, "/"), host_tags[hostname]
                 )
             else:
                 # Only tag list available. Use it and compute the tag groups.
-                self._hosttags[hostname] = tuple(parts[1:])
+                tags_sequences[hostname] = tuple(parts[1:])
                 host_tags[hostname] = ConfigCache._tag_list_to_tag_groups(
-                    tag_to_group_map, self._hosttags[hostname]
+                    tag_to_group_map, tags_sequences[hostname]
                 )
 
         for shadow_host_name, shadow_host_spec in shadow_hosts.items():
-            self._hosttags[shadow_host_name] = tuple(
+            tags_sequences[shadow_host_name] = tuple(
                 set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
             )
             host_tags[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
-                tag_to_group_map, self._hosttags[shadow_host_name]
+                tag_to_group_map, tags_sequences[shadow_host_name]
             )
+        return tags_sequences
 
     @staticmethod
     def _tag_groups_to_tag_list(

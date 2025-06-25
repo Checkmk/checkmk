@@ -165,50 +165,67 @@ function startAjax(): void {
 
 <template>
   <Teleport v-if="showTest" :to="targetElement">
-    <CmkButton v-if="isLoading || isSuccess || isError" type="button">
-      <CmkIcon
-        v-if="isLoading && hostname !== ''"
-        name="load-graph"
-        size="xlarge"
-        :title="tooltipText"
-      />
-
-      <CmkIcon
-        v-else-if="isSuccess && hostname !== ''"
-        name="checkmark"
-        size="large"
-        :title="tooltipText"
-      />
-      <CmkIcon v-else-if="isError" name="cross" size="xlarge" :title="tooltipText" />
-    </CmkButton>
-
     <CmkButton
       v-if="!isLoading && !isSuccess && !isError"
       type="button"
       :title="tooltipText"
+      class="agent-test-button"
       :disabled="hostname === '' && ipV4 === '' && ipV6 === ''"
       @click="startAjax"
     >
-      <CmkIcon name="start" size="xlarge" :title="tooltipText" />
+      <CmkIcon name="connection-tests" size="small" :title="tooltipText" class="button-icon" />
+      {{ t('msg-start-test', 'Test agent connection') }}
     </CmkButton>
 
-    <CmkButton
-      v-if="errorDetails.includes('[Errno 111]')"
-      type="button"
-      :title="t('download-agent-title', 'Download agent')"
-      @click="slideInOpen = true"
-    >
-      {{ t('download-agent-button', 'Download Checkmk agent') }}
-    </CmkButton>
-    <span v-if="isError && !errorDetails.includes('[Errno 111]')" class="error_msg">
-      {{ errorDetails }}
-    </span>
+    <div v-if="isLoading" class="loading-container">
+      <CmkIcon name="load-graph" :title="tooltipText" size="medium" variant="inline" />
+      {{ t('test-agent-loading', 'Testing agent connection ...') }}
+    </div>
+
+    <div v-if="isSuccess" class="success-container">
+      <CmkIcon name="checkmark" :title="tooltipText" size="medium" variant="inline" />
+      {{ t('test-agent-success', 'Successfully connected to agent.') }}
+      <a href="#" @click.prevent="startAjax">{{ t('msg-retest', 'Re-test agent connection') }}</a>
+    </div>
+
+    <div v-if="isError" class="warn-container">
+      <CmkIcon name="validation-error" size="medium" variant="inline" />
+      <div class="warn-txt-container">
+        <h2>{{ t('test-agent-warning-header', 'Failed to connect to the Checkmk agent.') }}</h2>
+        <p>
+          {{
+            t(
+              'test-agent-warning-msg',
+              'This may be because the agent is not installed or not running on the target system.'
+            )
+          }}
+        </p>
+        <div class="warn-button-container">
+          <CmkButton
+            type="button"
+            :title="t('download-agent-title', 'Download % install agent')"
+            class="agent-test-button"
+            @click="slideInOpen = true"
+          >
+            {{ t('download-agent-button', 'Download Checkmk agent') }}
+          </CmkButton>
+          <CmkButton
+            type="button"
+            :title="t('re-test-agent-title', 'Re-test agent connection')"
+            class="agent-test-button"
+            @click="startAjax"
+          >
+            {{ t('re-test-agent-button', 'Re-test agent connection') }}
+          </CmkButton>
+        </div>
+      </div>
+    </div>
+
     <SlideIn
       :open="slideInOpen"
       :header="{ title: i18n.slide_in_title, closeButton: true }"
       @close="slideInOpen = false"
     >
-      <div>{{ t('error', 'Error') }}: {{ errorDetails }}</div>
       <!-- eslint-disable-next-line vue/no-v-html -->
       <div v-html="externalContent"></div>
     </SlideIn>
@@ -217,24 +234,50 @@ function startAjax(): void {
 
 <style scoped>
 button {
-  background-color: transparent;
   border: none;
   margin: 0;
   padding: 0;
 
-  #error {
-    background-color: black;
+  .button-icon {
+    margin-right: var(--spacing-half);
   }
 }
 
-.cmk-button {
-  margin-left: var(--spacing);
-  height: auto;
-  padding: 0;
+.agent-test-button {
+  margin-left: var(--spacing-half);
+  height: 21px;
 }
 
-span.error_msg {
-  margin-left: var(--spacing);
-  color: red;
+.warn-container,
+.loading-container,
+.success-container {
+  display: inline-block;
+  padding: 2px 8px;
+  vertical-align: top;
+  color: var(--font-color);
+
+  /* TODO: Can be removed when CMK-23811 is fixed */
+  .cmk-icon {
+    display: inline-block;
+  }
+}
+
+.warn-container {
+  margin-left: var(--spacing-half);
+  background-color: rgb(from var(--color-warning) r g b / 15%);
+
+  .warn-txt-container {
+    display: inline-block;
+    vertical-align: middle;
+
+    h2,
+    p {
+      margin: 0 0 0 var(--spacing-half);
+    }
+  }
+
+  .warn-button-container {
+    margin-top: var(--spacing-half);
+  }
 }
 </style>

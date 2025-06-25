@@ -50,7 +50,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 
 from cmk.plugins.azure.rulesets import azure  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary
 from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
@@ -135,7 +135,7 @@ def configure_authentication() -> QuickSetupStage:
                         azure.configuration_authentication()
                     ),
                     layout=DictionaryLayout.two_columns,
-                    _prefill_deprecated=DefaultValue({"subscription": ""}),
+                    default_checked=["subscription"],
                 ),
             ),
         ],

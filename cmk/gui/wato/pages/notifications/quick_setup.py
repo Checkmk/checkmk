@@ -271,7 +271,11 @@ def _event_choices(
 
 
 def _validate_at_least_one_event(trigger_events: Mapping) -> None:
-    if not trigger_events:
+    if (
+        not trigger_events["host_events"]
+        and not trigger_events["service_events"]
+        and not trigger_events.get("ec_alerts", False)
+    ):
         raise ValidationError(Message("At least one triggering event must be selected."))
 
 
@@ -289,19 +293,7 @@ def triggering_events() -> QuickSetupStage:
                             title=Title("Specific events"),
                             parameter_form=DictionaryExtended(
                                 layout=DictionaryLayout.two_columns,
-                                _prefill_deprecated=DefaultValue(
-                                    {
-                                        "host_events": [
-                                            ("state_change", (-1, HostState.DOWN)),
-                                            ("state_change", (-1, HostState.UP)),
-                                        ],
-                                        "service_events": [
-                                            ("state_change", (-1, ServiceState.CRIT)),
-                                            ("state_change", (-1, ServiceState.WARN)),
-                                            ("state_change", (-1, ServiceState.OK)),
-                                        ],
-                                    }
-                                ),
+                                default_checked=["host_events", "service_events"],
                                 elements={
                                     "host_events": DictElement(
                                         parameter_form=ListUniqueSelection(
@@ -316,12 +308,16 @@ def triggering_events() -> QuickSetupStage:
                                                 "service filter matches, host events are "
                                                 "still matched by the rule."
                                             ),
-                                            prefill=DefaultValue([]),
+                                            prefill=DefaultValue(
+                                                [
+                                                    ("state_change", (-1, HostState.DOWN)),
+                                                    ("state_change", (-1, HostState.UP)),
+                                                ]
+                                            ),
                                             single_choice_type=CascadingSingleChoice,
                                             cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
                                             elements=_event_choices("host"),
                                             add_element_label=Label("Add event"),
-                                            custom_validate=[_validate_empty_selection],
                                         )
                                     ),
                                     "service_events": DictElement(
@@ -332,12 +328,17 @@ def triggering_events() -> QuickSetupStage:
                                                 "defined by the 'Notified events for "
                                                 "services' ruleset"
                                             ),
-                                            prefill=DefaultValue([]),
+                                            prefill=DefaultValue(
+                                                [
+                                                    ("state_change", (-1, ServiceState.CRIT)),
+                                                    ("state_change", (-1, ServiceState.WARN)),
+                                                    ("state_change", (-1, ServiceState.OK)),
+                                                ]
+                                            ),
                                             single_choice_type=CascadingSingleChoice,
                                             cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
                                             elements=_event_choices("service"),
                                             add_element_label=Label("Add event"),
-                                            custom_validate=[_validate_empty_selection],
                                         )
                                     ),
                                     "ec_alerts": DictElement(
@@ -411,15 +412,6 @@ def custom_recap_formspec_triggering_events(
         site_configs,
         debug=debug,
     )
-
-
-def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:
-    # TODO validation seems not to be possible for a single empty element of
-    # the Tuple
-    if ["", None] in selections or not selections:
-        raise ValidationError(
-            Message("At least one selection is missing."),
-        )
 
 
 def _get_contact_group_users() -> list[tuple[UserId, str]]:

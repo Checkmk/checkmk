@@ -139,7 +139,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                 elements=elements_keyspec,
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
-                layout=self.form_spec.layout,
+                layout=self.form_spec._layout,
                 i18n_base=base_i18n_form_spec(),
             ),
             vue_values,

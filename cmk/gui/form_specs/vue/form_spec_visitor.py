@@ -44,6 +44,7 @@ from cmk.gui.form_specs.private import (
     UnknownFormSpec,
     UserSelection,
 )
+from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
@@ -65,6 +66,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_single_choice,
     recompose_string,
     recompose_time_period,
+    recompose_two_column_dictionary,
     recompose_unknown_form_spec,
     recompose_user_selection,
 )
@@ -224,6 +226,7 @@ def register_form_specs():
     register_recomposer_function(ServiceState, recompose_service_state)
     register_recomposer_function(SingleChoice, recompose_single_choice)
     register_recomposer_function(Levels, recompose_levels)
+    register_recomposer_function(TwoColumnDictionary, recompose_two_column_dictionary)
     register_recomposer_function(SimpleLevels, recompose_levels)
     register_recomposer_function(List, recompose_list)
     register_recomposer_function(Percentage, recompose_percentage)

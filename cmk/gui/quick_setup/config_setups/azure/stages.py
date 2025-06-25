@@ -11,7 +11,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
@@ -51,7 +51,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 from cmk.plugins.azure.rulesets import azure  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary
-from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -130,11 +129,10 @@ def configure_authentication() -> QuickSetupStage:
             ),
             FormSpecWrapper(
                 id=FormSpecId("credentials"),
-                form_spec=DictionaryExtended(
+                form_spec=TwoColumnDictionary(
                     elements=_add_first_level_keys_to_config_dict(
                         azure.configuration_authentication()
                     ),
-                    layout=DictionaryLayout.two_columns,
                     default_checked=["subscription"],
                 ),
             ),
@@ -193,9 +191,8 @@ def _configure() -> Sequence[Widget]:
     return [
         FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),
-            form_spec=DictionaryExtended(
+            form_spec=TwoColumnDictionary(
                 elements=azure.configuration_services(),
-                layout=DictionaryLayout.two_columns,
             ),
         ),
         Collapsible(
@@ -203,11 +200,10 @@ def _configure() -> Sequence[Widget]:
             items=[
                 FormSpecWrapper(
                     id=FormSpecId("configure_advanced"),
-                    form_spec=DictionaryExtended(
+                    form_spec=TwoColumnDictionary(
                         elements=_add_first_level_keys_to_config_dict(
                             azure.configuration_advanced()
                         ),
-                        layout=DictionaryLayout.two_columns,
                     ),
                 ),
             ],

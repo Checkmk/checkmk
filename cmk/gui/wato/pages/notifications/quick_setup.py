@@ -32,6 +32,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+    TwoColumnDictionary,
     World,
 )
 from cmk.gui.form_specs.private.cascading_single_choice_extended import (
@@ -133,7 +134,6 @@ from cmk.shared_typing.vue_formspec_components import (
     CascadingSingleChoiceLayout,
     Condition,
     ConditionGroup,
-    DictionaryLayout,
     ListOfStringsLayout,
 )
 
@@ -291,8 +291,7 @@ def triggering_events() -> QuickSetupStage:
                         CascadingSingleChoiceElement(
                             name="specific_events",
                             title=Title("Specific events"),
-                            parameter_form=DictionaryExtended(
-                                layout=DictionaryLayout.two_columns,
+                            parameter_form=TwoColumnDictionary(
                                 default_checked=["host_events", "service_events"],
                                 elements={
                                     "host_events": DictElement(
@@ -526,8 +525,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                         items=[
                             FormSpecWrapper(
                                 id=FormSpecId("ec_alert_filters"),
-                                form_spec=DictionaryExtended(
-                                    layout=DictionaryLayout.two_columns,
+                                form_spec=TwoColumnDictionary(
                                     elements={
                                         "rule_ids": DictElement(
                                             parameter_form=ListExtended(
@@ -614,8 +612,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 items=[
                     FormSpecWrapper(
                         id=FormSpecId("host_filters"),
-                        form_spec=DictionaryExtended(
-                            layout=DictionaryLayout.two_columns,
+                        form_spec=TwoColumnDictionary(
                             elements={
                                 "host_tags": DictElement(
                                     parameter_form=ConditionChoices(
@@ -720,8 +717,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                             ),
                             FormSpecWrapper(
                                 id=FormSpecId("service_filters"),
-                                form_spec=DictionaryExtended(
-                                    layout=DictionaryLayout.two_columns,
+                                form_spec=TwoColumnDictionary(
                                     elements={
                                         "service_labels": DictElement(
                                             parameter_form=Labels(
@@ -961,8 +957,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 items=[
                     FormSpecWrapper(
                         id=FormSpecId("assignee_filters"),
-                        form_spec=DictionaryExtended(
-                            layout=DictionaryLayout.two_columns,
+                        form_spec=TwoColumnDictionary(
                             elements={
                                 "contact_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
@@ -1033,8 +1028,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 items=[
                     FormSpecWrapper(
                         id=FormSpecId("general_filters"),
-                        form_spec=DictionaryExtended(
-                            layout=DictionaryLayout.two_columns,
+                        form_spec=TwoColumnDictionary(
                             elements={
                                 "service_level": DictElement(
                                     parameter_form=CascadingSingleChoiceExtended(
@@ -1333,8 +1327,7 @@ def notification_method() -> QuickSetupStage:
         return [
             FormSpecWrapper(
                 id=FormSpecId("notification_method"),
-                form_spec=DictionaryExtended(
-                    layout=DictionaryLayout.two_columns,
+                form_spec=TwoColumnDictionary(
                     elements={
                         "notification_effect": DictElement(
                             required=True,
@@ -1722,7 +1715,6 @@ def sending_conditions() -> QuickSetupStage:
             FormSpecWrapper(
                 id=FormSpecId("sending_conditions"),
                 form_spec=DictionaryExtended(
-                    layout=DictionaryLayout.one_column,
                     elements={
                         "frequency_and_timing": DictElement(
                             required=True,
@@ -1862,8 +1854,7 @@ def general_properties() -> QuickSetupStage:
         return [
             FormSpecWrapper(
                 id=FormSpecId("general_properties"),
-                form_spec=DictionaryExtended(
-                    layout=DictionaryLayout.two_columns,
+                form_spec=TwoColumnDictionary(
                     elements={
                         "description": DictElement(
                             required=True,

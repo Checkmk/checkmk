@@ -9,8 +9,8 @@ import cmk.utils.regex
 
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.private.folder import Folder
+from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
@@ -35,7 +35,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 ID_VALIDATION_REGEX = cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII)
 
@@ -46,7 +45,7 @@ def unique_id_formspec_wrapper(
 ) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId(UniqueFormSpecIDStr),
-        form_spec=DictionaryExtended(
+        form_spec=TwoColumnDictionary(
             elements={
                 UniqueBundleIDStr: DictElement(
                     parameter_form=String(
@@ -75,7 +74,6 @@ def unique_id_formspec_wrapper(
                     required=True,
                 )
             },
-            layout=DictionaryLayout.two_columns,
         ),
     )
 
@@ -137,12 +135,11 @@ def host_name_and_host_path_formspec_wrapper(
 ) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId("host_data"),
-        form_spec=DictionaryExtended(
+        form_spec=TwoColumnDictionary(
             elements={
                 QSHostName: _host_name_dict_element(prefill_template=host_prefill_template),
                 QSHostPath: _host_path_dict_element(),
             },
-            layout=DictionaryLayout.two_columns,
         ),
     )
 
@@ -151,7 +148,7 @@ def site_formspec_wrapper() -> FormSpecWrapper:
     site_default_value = site_attribute_default_value()
     return FormSpecWrapper(
         id=FormSpecId("site"),
-        form_spec=DictionaryExtended(
+        form_spec=TwoColumnDictionary(
             elements={
                 QSSiteSelection: DictElement(
                     parameter_form=SingleChoice(
@@ -174,6 +171,5 @@ def site_formspec_wrapper() -> FormSpecWrapper:
                     required=True,
                 )
             },
-            layout=DictionaryLayout.two_columns,
         ),
     )

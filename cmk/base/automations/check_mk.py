@@ -889,6 +889,8 @@ def _execute_autodiscovery(
         # allows to access the lookup faiures.
         error_handler=ip_lookup.CollectFailedHosts(),
     )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
+
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
@@ -908,7 +910,7 @@ def _execute_autodiscovery(
         force_snmp_cache_refresh=False,
         ip_address_of=slightly_different_ip_address_of,
         ip_address_of_mandatory=ip_address_of,
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,
@@ -1059,6 +1061,7 @@ def _execute_autodiscovery(
                     hosts_config,
                     service_name_config,
                     ip_address_of,
+                    ip_address_of_mgmt,
                     core,
                     ab_plugins,
                     locking_mode=config.restart_locking,
@@ -1081,6 +1084,7 @@ def _execute_autodiscovery(
                     hosts_config,
                     service_name_config,
                     ip_address_of,
+                    ip_address_of_mgmt,
                     core,
                     ab_plugins,
                     service_depends_on=config.ServiceDependsOn(
@@ -1300,12 +1304,14 @@ class AutomationRenameHosts(Automation):
                     allow_empty=hosts_config.clusters,
                     error_handler=ip_lookup.CollectFailedHosts(),
                 )
+                ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
                 _execute_silently(
                     config_cache,
                     service_name_config,
                     CoreAction.START,
                     ip_address_of,
+                    ip_address_of_mgmt,
                     hosts_config,
                     loading_result.loaded_config,
                     plugins,
@@ -2266,12 +2272,14 @@ class AutomationRestart(Automation):
             allow_empty=hosts_config.clusters,
             error_handler=ip_lookup.CollectFailedHosts(),
         )
+        ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
         return _execute_silently(
             loading_result.config_cache,
             service_name_config,
             self._mode(),
             ip_address_of,
+            ip_address_of_mgmt,
             hosts_config,
             loading_result.loaded_config,
             plugins,
@@ -2346,6 +2354,7 @@ def _execute_silently(
     service_name_config: PassiveServiceNameConfig,
     action: CoreAction,
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
+    ip_address_of_mgmt: ip_lookup.IPLookup,
     hosts_config: Hosts,
     loaded_config: config.LoadedConfigFragment,
     plugins: AgentBasedPlugins,
@@ -2363,6 +2372,7 @@ def _execute_silently(
                 hosts_config,
                 service_name_config,
                 ip_address_of,
+                ip_address_of_mgmt,
                 create_core(config.monitoring_core),
                 plugins,
                 action=action,

@@ -15,9 +15,9 @@ import livestatus
 
 from cmk.utils import man_pages
 from cmk.utils.licensing.export import (
+    get_licensing_protocol_version,
     LicenseUsageExtensions,
     LicenseUsageSample,
-    LicensingProtocolVersion,
     RawLicenseUsageReport,
 )
 from cmk.utils.licensing.usage import (
@@ -218,7 +218,7 @@ def test_serialize_license_usage_report() -> None:
     )
     assert _serialize_dump(
         RawLicenseUsageReport(
-            VERSION=LicensingProtocolVersion,
+            VERSION=get_licensing_protocol_version(),
             history=history.for_report(),
         )
     ) == (

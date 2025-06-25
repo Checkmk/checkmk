@@ -16,10 +16,10 @@ Most of the plugin APIs (Agent based, Ruleset, Server-side calls and Graphing AP
 This section will cover those APIs.
 The Bakery API has a different logic for now, but will be adapted in the future versions.
 
-The shipped plugins are located under the ``cmk/plugins`` folder, while local third party plugins are placed under the ``local/lib/python3/cmk_addons/plugins`` folder in the site.
+The shipped plugins are located under the ``~/lib/python3/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
-If you want to override the behavior of existing plugins, you can put code under ``local/lib/python3/cmk/plugins``.
+If you want to override the behavior of existing plugins, you can put code under ``~/local/lib/python3/cmk/plugins``.
 Please be aware that you are doing such changes at your own risk and that Checkmk does not offer support for such modifications.
 
 Below the top-level folder, plugins are organized in families, e.g. all plugins concerning cisco devices will be found under the folder named ``cisco``.
@@ -36,7 +36,7 @@ Below the family folder, plugins are categorized into plugin groups:
    * executables (to be run by the code, for instance) go into ``libexec``
 
 In order for Checkmk to load your plugin, you have to follow the folder structure described above.
-Checkmk will load an agent based plugin only if it's located under ``cmk/plugins/{family_name}/agent_based`` or ``cmk_addons/plugins/{family_name}/agent_based`` folder.
+Checkmk will load an agent based plugin only if it's located under ``~/local/lib/python3/cmk/plugins/{family_name}/agent_based`` or ``~/local/lib/python3/cmk_addons/plugins/{family_name}/agent_based`` folder.
 
 Apart from the right location, it's also important to name the variable of a plugin object with the right prefix.
 An agent based plugin is created by instantiating the CheckPlugin object and naming the variable with a ``check_plugin_`` prefix, for example ``check_plugin_aws_status``.

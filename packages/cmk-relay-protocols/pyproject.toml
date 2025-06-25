@@ -1,0 +1,16 @@
+[project]
+name = "cmk-relay-protocols"
+version = "1.0.0"
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.package-data]
+"cmk.crypto" = ["py.typed"]
+
+[tool.bandit]

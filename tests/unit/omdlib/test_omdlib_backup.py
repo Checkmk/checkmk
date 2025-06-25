@@ -24,9 +24,9 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         f.write("uftauftauftata")
 
     tar_path = tmp_path / "backup.tar"
-    with tar_path.open("wb") as backup_tar:
+    with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, backup_tar, mode="w:", options={}, verbose=False
+            site_name, str(site_home), True, tar, options={}, verbose=False
         )
 
     with tar_path.open("rb") as backup_tar:
@@ -49,9 +49,9 @@ def test_backup_site_to_tarfile_broken_link(
     Path(site_home, "link").symlink_to("agag")
 
     tar_path = tmp_path / "backup.tar"
-    with tar_path.open("wb") as backup_tar:
+    with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, backup_tar, mode="w:", options={}, verbose=False
+            site_name, str(site_home), True, tar, options={}, verbose=False
         )
 
     with tar_path.open("rb") as backup_tar:
@@ -86,9 +86,9 @@ def test_backup_site_to_tarfile_vanishing_files(
     monkeypatch.setattr(tarfile.TarFile, "gettarinfo", gettarinfo)
 
     tar_path = tmp_path / "backup.tar"
-    with tar_path.open("wb") as backup_tar_w:
+    with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(
-            site_name, str(site_home), True, backup_tar_w, mode="w:", options={}, verbose=False
+            site_name, str(site_home), True, tar, options={}, verbose=False
         )
 
     assert not test_file.exists()  # check that the monkeypatch worked

@@ -8,7 +8,6 @@
 import contextlib
 import errno
 import fnmatch
-import io
 import os
 import shutil
 import socket
@@ -18,7 +17,7 @@ import tarfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import TracebackType
-from typing import BinaryIO, override
+from typing import override
 
 from omdlib.contexts import SiteContext
 from omdlib.global_options import GlobalOptions
@@ -29,23 +28,18 @@ from cmk.utils.paths import mkbackup_lock_dir
 
 
 def _try_backup_site_to_tarfile(
-    fh: io.BufferedWriter | BinaryIO,
-    tar_mode: str,
+    tar: tarfile.TarFile,
     options: CommandOptions,
     site: SiteContext,
     global_opts: GlobalOptions,
 ) -> None:
-    if "no-compression" not in options:
-        tar_mode += "gz"
-
     try:
         site_home = SitePaths.from_site_name(site.name).home
         _backup_site_to_tarfile(
             site.name,
             site_home,
             site.is_stopped(global_opts.verbose),
-            fh,
-            tar_mode,
+            tar,
             options,
             global_opts.verbose,
         )
@@ -69,12 +63,19 @@ def main_backup(
     dest = args[0]
 
     if dest == "-":
-        _try_backup_site_to_tarfile(sys.stdout.buffer, "w|", options, site, global_opts)
+        with tarfile.open(
+            fileobj=sys.stdout.buffer,
+            mode="w|" if "no-compression" in options else "w|gz",
+        ) as tar:
+            _try_backup_site_to_tarfile(tar, options, site, global_opts)
     else:
         if not (dest_path := Path(dest)).is_absolute():
             dest_path = orig_working_directory / dest_path
-        with dest_path.open(mode="wb") as fh:
-            _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
+        with tarfile.open(
+            dest_path,
+            mode="w:" if "no-compression" in options else "w:gz",
+        ) as tar:
+            _try_backup_site_to_tarfile(tar, options, site, global_opts)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
@@ -90,8 +91,7 @@ def _backup_site_to_tarfile(
     site_name: str,
     site_home: str,
     site_is_stopped: bool,
-    fh: BinaryIO | io.BufferedWriter,
-    mode: str,
+    tar: tarfile.TarFile,
     options: CommandOptions,
     verbose: bool,
 ) -> None:
@@ -108,33 +108,26 @@ def _backup_site_to_tarfile(
         )
 
     with _RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
-        # FIXME: The typing of _backup_site_to_tarfile and its callers is broken: One has to bundle
-        # the fileobj and the mode together in a way that no nonsensical combinations are possible.
-        # Currently they *are* possible, and exactly that makes mypy unhappy.
-        with tarfile.TarFile.open(  # type: ignore[call-overload]
-            fileobj=fh,
-            mode=mode,
-        ) as tar:
-            # Add the version symlink as first file to be able to
-            # check a) the sitename and b) the version before reading
-            # the whole tar archive. Important for streaming.
-            # The file is added twice to get the first for validation
-            # and the second for extraction during restore.
-            _tar_add(
-                rrd_socket,
-                tar,
-                site_home + "/version",
-                site_name + "/version",
-                verbose=verbose,
-            )
-            _tar_add(
-                rrd_socket,
-                tar,
-                site_home,
-                site_name,
-                predicate=accepted_files,
-                verbose=verbose,
-            )
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for extraction during restore.
+        _tar_add(
+            rrd_socket,
+            tar,
+            site_home + "/version",
+            site_name + "/version",
+            verbose=verbose,
+        )
+        _tar_add(
+            rrd_socket,
+            tar,
+            site_home,
+            site_name,
+            predicate=accepted_files,
+            verbose=verbose,
+        )
 
 
 def get_exclude_patterns(options: CommandOptions) -> list[str]:

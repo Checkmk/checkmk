@@ -3975,7 +3975,7 @@ COMMANDS: Final = [
             Option("version", "V", True, "only stop sites having version ARG"),
             Option("parallel", "p", False, "Invoke stop of sites in parallel"),
         ],
-        description="Stop services of site(s)",
+        description="Stop services of site(s) and terminate processes owned by the site user",
         confirm_text="",
     ),
     Command(

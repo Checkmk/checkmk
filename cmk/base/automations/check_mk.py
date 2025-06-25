@@ -313,9 +313,8 @@ class AutomationDiscovery(DiscoveryAutomation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
-        ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -335,7 +334,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -502,9 +500,8 @@ class AutomationDiscoveryPreview(Automation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
-        ip_lookup_config = config_cache.ip_lookup_config()
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
             allow_empty=config_cache.hosts_config.clusters,
             error_handler=handle_ip_lookup_failure,
         )
@@ -519,7 +516,6 @@ class AutomationDiscoveryPreview(Automation):
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -876,8 +872,7 @@ def _execute_autodiscovery(
     autochecks_config = config.AutochecksConfigurer(
         config_cache, ab_plugins.check_plugins, service_name_config
     )
-    ip_lookup_config = config_cache.ip_lookup_config()
-    ip_lookup_func = ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_lookup_func = ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config())
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup_func,
         allow_empty=config_cache.hosts_config.clusters,
@@ -894,7 +889,7 @@ def _execute_autodiscovery(
         logger=logging.getLogger("cmk.base.discovery"),
     )
     slightly_different_ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup_func,
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -905,7 +900,6 @@ def _execute_autodiscovery(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=slightly_different_ip_address_of,
-        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,

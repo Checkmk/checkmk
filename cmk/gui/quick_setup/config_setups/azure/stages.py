@@ -135,7 +135,7 @@ def configure_authentication() -> QuickSetupStage:
                         azure.configuration_authentication()
                     ),
                     layout=DictionaryLayout.two_columns,
-                    prefill=DefaultValue({"subscription": ""}),
+                    _prefill_deprecated=DefaultValue({"subscription": ""}),
                 ),
             ),
         ],

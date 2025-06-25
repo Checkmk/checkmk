@@ -1284,7 +1284,10 @@ def _convert_to_legacy_dictionary(
     required_group_keys = set(grouped_elements_map.keys()) - hidden_group_keys
 
     default_keys: list[str] | None = None
-    if isinstance(to_convert, DictionaryExtended) and (prefill := to_convert.prefill) is not None:
+    if (
+        isinstance(to_convert, DictionaryExtended)
+        and (prefill := to_convert._prefill_deprecated) is not None
+    ):
         default_keys = []
         for key, value in prefill.value.items():
             if not isinstance(value, VueDefaultValue):

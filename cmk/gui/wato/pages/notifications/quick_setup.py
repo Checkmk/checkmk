@@ -289,7 +289,7 @@ def triggering_events() -> QuickSetupStage:
                             title=Title("Specific events"),
                             parameter_form=DictionaryExtended(
                                 layout=DictionaryLayout.two_columns,
-                                prefill=DefaultValue(
+                                _prefill_deprecated=DefaultValue(
                                     {
                                         "host_events": [
                                             ("state_change", (-1, HostState.DOWN)),

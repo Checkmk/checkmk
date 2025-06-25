@@ -14,24 +14,25 @@ T = TypeVar("T")
 
 @dataclass(frozen=True, kw_only=True)
 class DictionaryExtended(Dictionary):
-    """
-    Specifies a (multi-)selection of configuration options.
+    # Never use prefill, it is to be removed as it can lead to undefined
+    # behavior: What if the child element defines a default value itself? Use
+    # default_checked and a prefill in the child element instead.
+    _prefill_deprecated: DefaultValue[Mapping[str, object]] | None = None
 
-    Consumer model:
-    ***************
-    **Type**: ``dict[str, object]``
-    The configured value will be presented as a dictionary consisting of the names of provided
-    configuration options and their respective consumer models.
+    # Usage of default_checked is advised against: if you want an optional
+    # element prefilled with options, reconsider and flip your approach. If
+    # something should be the default, it should not need configuration. Add
+    # complexity (stray from the default) by checking boxes, not unchecking
+    # them. Another approach would be to use a cascading single choice with your
+    # default preselected.
+    default_checked: list[str] | None = None
 
-    Arguments:
-    **********
-    """
-
-    prefill: DefaultValue[Mapping[str, object]] | None = None
     layout: DictionaryLayout = DictionaryLayout.one_column
 
     def __post_init__(self) -> None:
-        pass
+        for checked in self.default_checked or []:
+            if checked not in self.elements:
+                raise ValueError(f"Default checked element '{checked}' is not in elements")
 
 
 @dataclass(frozen=True, kw_only=True)

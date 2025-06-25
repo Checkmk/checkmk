@@ -2011,6 +2011,7 @@ pydantic==2.10.6 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-otel-collector/requirements.in
+    #   -r non-free/packages/cmk-relay-core/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in

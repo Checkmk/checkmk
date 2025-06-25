@@ -184,7 +184,6 @@ include \
     packages/apache-omd/apache-omd.make \
     packages/check_mk/check_mk.make \
     packages/check-cert/check-cert.make \
-    packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
     packages/appliance/appliance.make \
     packages/xmlsec1/xmlsec1.make \

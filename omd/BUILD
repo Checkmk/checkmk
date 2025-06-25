@@ -52,6 +52,7 @@ create_venv(
                "//omd/packages/openssl:openssl_tar_" + edition,
                "//omd/packages/patch",
                "//omd/packages/perl-modules",
+               "//omd/packages/pnp4nagios",
                "//omd/packages/python3-modules:python3-modules.tar",
                "//omd/packages/rabbitmq",
                "//omd/packages/redis",

@@ -12,15 +12,16 @@ filegroup(
 )
 
 configure_make(
-    name = "pnp4nagios",
+    name = "build",
     args = ["-j4"],
     configure_in_place = True,
     configure_options = [
         "-v",
+        "--bindir=$$INSTALLDIR/bin",
         "--sysconfdir=$$INSTALLDIR/etc/pnp4nagios",
         "--libexecdir=$$INSTALLDIR/lib/pnp4nagios",
         "--docdir=$$INSTALLDIR/share/doc/pnp4nagios",
-        "--datarootdir=$$INSTALLDIR/share/pnp4nagios/htdocs",
+        "--datarootdir=$$INSTALLDIR/htdocs",
         "--localstatedir=$$INSTALLDIR/var/pnp4nagios",
         "--with-perfdata-dir=$$INSTALLDIR/var/pnp4nagios/perfdata",
         "--with-perfdata-spool-dir=$$INSTALLDIR/tmp/pnp4nagios/spool",
@@ -29,8 +30,8 @@ configure_make(
         "--with-nagios-group=$$(id -gn)",
         "--with-rrdtool=/bin/true",
         # The perl_lib_path is necessery for performance
-        # we use PLACEHOLDER because OMD_ROOT is not available at this point since it changes daily
-        "--with-perl_lib_path=PLACEHOLDER/lib/perl5/lib/perl5",
+        # we use __OMD_ROOT__ because OMD_ROOT is not available at this point since it changes daily
+        "--with-perl_lib_path=__OMD_ROOT__/lib/perl5/lib/perl5",
         "--with-base-url='/\\#\\#\\#SITE\\#\\#\\#/pnp4nagios'",
     ],
     env = {
@@ -43,104 +44,20 @@ configure_make(
     lib_source = ":all_srcs",
     out_binaries = ["npcd"],
     out_data_dirs = [
-        "share/doc",
-        "share/man",
+        "share",
         "lib",
     ],
     out_headers_only = True,
     postfix_script = """
-        # Fixup wrong man page installation path
-        # (There is a --mandir configure option, but it does not work)
-        mkdir -p $INSTALLDIR/share/man/man8
-        mv $INSTALLDIR/man/man8/npcd.8 $INSTALLDIR/share/man/man8/npcd.8
-        rmdir $INSTALLDIR/man/man8
-        rmdir $INSTALLDIR/man
-
-        # Remove installer
-        rm $INSTALLDIR/share/pnp4nagios/htdocs/install.php
-        rm -rf $INSTALLDIR/etc/pnp4nagios
-        rmdir $INSTALLDIR/etc || true
-        rm -rf $INSTALLDIR/var/pnp4nagios
-        rmdir $INSTALLDIR/var || true
-        rm -rf $INSTALLDIR/tmp/pnp4nagios
-        rmdir $INSTALLDIR/tmp || true
-
-        mkdir -p $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/README  $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/COPYING $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/AUTHORS $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/THANKS  $INSTALLDIR/share/doc/pnp4nagios
-
-        # Do not ship kohana (unused pnp4nagios UI dependency)
-        rm -rf ${INSTALLDIR}/lib/kohana
+        mkdir -p $INSTALLDIR/doc/pnp4nagios
+        install -m 644 $BUILD_TMPDIR/README  $INSTALLDIR/doc/pnp4nagios
+        install -m 644 $BUILD_TMPDIR/COPYING $INSTALLDIR/doc/pnp4nagios
+        install -m 644 $BUILD_TMPDIR/AUTHORS $INSTALLDIR/doc/pnp4nagios
+        install -m 644 $BUILD_TMPDIR/THANKS  $INSTALLDIR/doc/pnp4nagios
     """,
     targets = [
         "all",
         "install",
     ],
     visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/pnp4nagios:skel",
-        "@omd_packages//omd/packages/pnp4nagios:diskspace",
-        "@omd_packages//omd/packages/pnp4nagios:PNP4NAGIOS",
-    ],
-    outs = [
-        "skel/etc/pnp4nagios/rra.cfg-sample",
-        "skel/etc/pnp4nagios/config.d/.gitignore",
-        "skel/etc/pnp4nagios/templates.special/static.php-sample",
-        "skel/etc/pnp4nagios/templates.special/advanced_loop.php-sample",
-        "skel/etc/pnp4nagios/templates.special/README",
-        "skel/etc/pnp4nagios/templates.special/loop.php-sample",
-        "skel/etc/pnp4nagios/pages/web_traffic.cfg-sample",
-        "skel/etc/pnp4nagios/templates/README",
-        "skel/etc/pnp4nagios/npcd.cfg",
-        "skel/etc/pnp4nagios/check_commands/check_nrpe.cfg-sample",
-        "skel/etc/pnp4nagios/check_commands/check_all_local_disks.cfg-sample",
-        "skel/etc/pnp4nagios/check_commands/check_nwstat.cfg-sample",
-        "skel/etc/pnp4nagios/check_commands/check_jmx4perl.cfg",
-        "skel/etc/pnp4nagios/process_perfdata.cfg",
-        "skel/etc/pnp4nagios/background.pdf",
-        "skel/etc/pnp4nagios/nagios_gearman.cfg",
-        "skel/etc/pnp4nagios/nagios_npcd.cfg",
-        "skel/etc/pnp4nagios/nagios_npcdmod.cfg",
-        "skel/etc/init.d/npcd",
-        "skel/etc/init.d/pnp_gearman_worker",
-        "skel/tmp/pnp4nagios/lock/.gitignore",
-        "skel/var/pnp4nagios/stats/.gitignore",
-        "skel/var/pnp4nagios/perfdata/.gitignore",
-        "skel/var/pnp4nagios/log/.gitignore",
-        "skel/var/pnp4nagios/spool/.gitignore",
-        "skel/tmp/pnp4nagios/stats/.gitignore",
-        "skel/tmp/pnp4nagios/run/.gitignore",
-        "share/diskspace/pnp4nagios",
-        "lib/omd/hooks/PNP4NAGIOS",
-    ],
-    cmd = """
-        cp -r --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:skel) $$(realpath $(RULEDIR))
-        find $$(realpath $(RULEDIR)) -name ".gitignore" -delete
-        mkdir -p $$(realpath $(RULEDIR))/share
-        cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/pnp4nagios
-        mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks/
-        cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:PNP4NAGIOS) $$(realpath $(RULEDIR))/lib/omd/hooks/
-        mkdir -p $$(realpath $(RULEDIR))/skel/etc/pnp4nagios/config.d
-        mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/lock
-        mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/run
-        mkdir -p $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/stats
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata
-        mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/spool
-        touch $$(realpath $(RULEDIR))/skel/etc/pnp4nagios/config.d/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/lock/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/run/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/tmp/pnp4nagios/stats/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata/.gitignore
-        touch $$(realpath $(RULEDIR))/skel/var/pnp4nagios/spool/.gitignore
-    """,
 )

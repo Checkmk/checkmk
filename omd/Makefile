@@ -29,8 +29,7 @@ PACKAGES := \
     check_mk \
     check-cert \
     omd \
-    pnp4nagios \
-    xmlsec1 \
+    xmlsec1
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

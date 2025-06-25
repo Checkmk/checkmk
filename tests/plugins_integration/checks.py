@@ -16,9 +16,8 @@ from typing import Any
 
 import pytest
 
-from tests.testlib.agent_dumps import copy_dumps, read_disk_dump, read_piggyback_hosts_from_dump
+from tests.testlib.agent_dumps import copy_dumps
 from tests.testlib.common.repo import qa_test_data_path
-from tests.testlib.dcd import dcd_connector, execute_dcd_cycle
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -333,54 +332,3 @@ def setup_host(
             logger.info('Deleting host "%s"...', host_name)
             site.openapi.hosts.delete(host_name)
             site.activate_changes_and_wait_for_core_reload()
-
-
-@contextmanager
-def setup_source_host_piggyback(
-    site: Site, source_host_name: str, folder_name: str = "/"
-) -> Iterator:
-    logger.info('Creating source host "%s"...', source_host_name)
-    host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
-    site.openapi.hosts.create(
-        hostname=source_host_name,
-        folder=folder_name,
-        attributes=host_attributes,
-        bake_agent=False,
-    )
-
-    logger.info("Injecting agent-output...")
-    dump_path_repo = qa_test_data_path() / "plugins_integration/dumps/piggyback"
-    copy_dumps(site, dump_path_repo, site.path(dump_path_site), source_filename=source_host_name)
-    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True, strict=False)
-
-    logger.info("Running service discovery...")
-    site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)
-
-    with dcd_connector(site, interval=dcd_interval, cleanup=not config.skip_cleanup):
-        pb_hosts_from_dump = read_piggyback_hosts_from_dump(
-            read_disk_dump(source_host_name, config.dump_dir_integration / "piggyback")
-        )
-        piggyback_hosts = None
-        try:
-            execute_dcd_cycle(site, expected_pb_hosts=len(pb_hosts_from_dump))
-            piggyback_hosts = site.openapi.hosts.get_all_names([source_host_name])
-            assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host_name}"'
-
-            for host_name in piggyback_hosts + [source_host_name]:
-                site.reschedule_services(host_name, 3, strict=False)
-
-            yield
-        finally:
-            if not config.skip_cleanup:
-                logger.info('Deleting source host "%s"...', source_host_name)
-                site.openapi.hosts.delete(source_host_name)
-
-                site.run(["rm", "-f", f"{dump_path_site}/{source_host_name}"])
-
-                site.openapi.changes.activate_and_wait_for_completion(
-                    force_foreign_changes=True, strict=False
-                )
-                execute_dcd_cycle(site, expected_pb_hosts=0)
-                assert not site.openapi.hosts.get_all_names([source_host_name]), (
-                    "Piggyback hosts still found: %s" % piggyback_hosts
-                )

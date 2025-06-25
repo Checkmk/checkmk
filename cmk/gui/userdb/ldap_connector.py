@@ -571,7 +571,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return _("LDAP")
 
     @classmethod
-    def get_connection_suffixes(cls):
+    def get_connection_suffixes(cls) -> dict[str, str]:
         return cls.connection_suffixes
 
     @property

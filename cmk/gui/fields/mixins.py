@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
 import itertools
+from collections.abc import Mapping
+from typing import Any
 
 from marshmallow import fields, post_load, pre_dump, ValidationError
 
@@ -11,11 +13,15 @@ from marshmallow import fields, post_load, pre_dump, ValidationError
 class Converter(abc.ABC):
     """A converter class to map values from and to Checkmk"""
 
-    def to_checkmk(self, data):
+    def to_checkmk(self, data: Any) -> object:
         raise NotImplementedError()
 
-    def from_checkmk(self, data):
+    def from_checkmk(self, data: Any) -> object:
         raise NotImplementedError()
+
+
+type _TupleFields = tuple[str | _TupleFields, ...]
+type _ConverterTuple = tuple[Converter | None | _ConverterTuple, ...]
 
 
 class CheckmkTuple:
@@ -42,16 +48,22 @@ class CheckmkTuple:
     """
 
     declared_fields: dict[str, fields.Field]
-    # NOTE: actually recursive, but what can you do: mypy doesn't do recursive yet.
-    tuple_fields: tuple[tuple[str, ...] | str, ...] = ()
-    converter: tuple[tuple[Converter | None, ...] | Converter | None, ...] = ()
+    tuple_fields: _TupleFields = ()
+    converter: _ConverterTuple = ()
 
     @post_load
-    def to_checkmk_tuple(self, data, **kwargs):
-        def _convert_to_tuple(_fields, _converter, _result):
+    def to_checkmk_tuple(self, data: Mapping[str, object], **kwargs: object) -> tuple:
+        def _convert_to_tuple(
+            _fields: _TupleFields, _converter: _ConverterTuple, _result: list
+        ) -> tuple:
             for field, converter in itertools.zip_longest(_fields, _converter, fillvalue=None):
+                if field is None:
+                    raise ValueError("extra converter without field in CheckmkTuple")
                 if isinstance(field, tuple):
-                    _result.append(_convert_to_tuple(field, converter or [], []))
+                    assert converter is None or isinstance(converter, tuple), (
+                        "Converter for nested field must be a tuple of converters"
+                    )
+                    _result.append(_convert_to_tuple(field, converter or tuple(), []))
                 else:
                     try:
                         entry = data[field]
@@ -65,9 +77,14 @@ class CheckmkTuple:
         return _convert_to_tuple(self.tuple_fields, self.converter, [])
 
     @pre_dump
-    def from_checkmk_tuple(self, data, **kwargs):
+    def from_checkmk_tuple(self, data: tuple, **kwargs: object) -> Mapping[str, object]:
         # We use result as the aggregation variable. In this case a dict we pass around everywhere.
-        def _convert_tuple(_fields, _data, _converter, _result):
+        def _convert_tuple(
+            _fields: _TupleFields,
+            _data: tuple | list,
+            _converter: _ConverterTuple,
+            _result: dict[str, object],
+        ) -> dict[str, object]:
             for field, value, converter in itertools.zip_longest(
                 _fields,
                 _data,
@@ -75,8 +92,14 @@ class CheckmkTuple:
                 fillvalue=None,
             ):
                 if isinstance(field, tuple):
+                    assert isinstance(value, tuple | list), (
+                        f"Expected a tuple for field {field!r}, got {value!r}"
+                    )
+                    assert converter is None or isinstance(converter, tuple), (
+                        "Converter for nested field must be a tuple of converters"
+                    )
                     # Recursive call
-                    _convert_tuple(field, value, converter or [], _result)
+                    _convert_tuple(field, value, converter or tuple(), _result)
                 else:
                     if field not in self.declared_fields:
                         raise ValidationError(

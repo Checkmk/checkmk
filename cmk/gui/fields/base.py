@@ -5,9 +5,9 @@
 
 import collections
 import typing
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from functools import cached_property
-from typing import cast, override, Self
+from typing import cast, overload, override, Self
 
 from apispec.ext.marshmallow import common
 from marshmallow import (
@@ -49,17 +49,32 @@ class BaseSchema(Schema):
 
     def __init__(
         self,
-        *args,
-        **kwargs,
-    ):
-        context = kwargs.pop("context", {})
-        super().__init__(*args, **kwargs)
-        self.context = context
+        *,
+        only: types.StrSequenceOrSet | None = None,
+        exclude: types.StrSequenceOrSet = (),
+        many: bool | None = None,
+        context: dict | None = None,
+        load_only: types.StrSequenceOrSet = (),
+        dump_only: types.StrSequenceOrSet = (),
+        partial: bool | types.StrSequenceOrSet | None = None,
+        unknown: str | None = None,
+    ) -> None:
+        super().__init__(
+            only=only,
+            exclude=exclude,
+            many=many,
+            context=context,
+            load_only=load_only,
+            dump_only=dump_only,
+            partial=partial,
+            unknown=unknown,
+        )
+        self.context = context or {}  # TODO: why???
 
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
-    def remove_ordered_dict(self, data, **kwargs):
-        def _remove_ordered_dict(obj):
+    def remove_ordered_dict(self, data: object, **kwargs: object) -> object:
+        def _remove_ordered_dict(obj: object) -> object:
             if self.cast_to_dict and isinstance(obj, collections.OrderedDict):
                 return dict(obj)
             return obj
@@ -72,7 +87,7 @@ class BaseSchema(Schema):
         return _remove_ordered_dict(data)
 
     @pre_dump(pass_many=True)
-    def validate_dump_fields(self, data, **kwargs):
+    def validate_dump_fields(self, data: object, **kwargs: object) -> object:
         if not self.validate_on_dump:
             return data
 
@@ -152,7 +167,9 @@ class ValueTypedDictSchema(BaseSchema):
     def wrap_field(cls, field: ma_fields.Field) -> FieldWrapper:
         return FieldWrapper(field)
 
-    def _convert_with_schema(self, data, schema_func):
+    def _convert_with_schema(
+        self, data: Mapping[str, typing.Any], schema_func: Callable[[typing.Any], object]
+    ) -> Mapping[str, object]:
         result = {}
         for key, value in data.items():
             result[key] = schema_func(value)
@@ -189,10 +206,17 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
     @override
-    def load(self, data, *, many=None, partial=None, unknown=None):
+    def load(
+        self,
+        data: Mapping[str, typing.Any] | typing.Iterable[Mapping[str, typing.Any]],
+        *,
+        many: bool | None = None,
+        partial: bool | types.StrSequenceOrSet | None = None,
+        unknown: str | None = None,
+    ) -> object:
         if self._hooks[PRE_LOAD]:
             data = self._invoke_load_processors(
-                PRE_LOAD, data, many=many, original_data=data, partial=partial
+                PRE_LOAD, data, many=many or self.many, original_data=data, partial=partial
             )
 
         if not isinstance(data, dict):
@@ -229,7 +253,7 @@ class ValueTypedDictSchema(BaseSchema):
             result = self._invoke_load_processors(
                 POST_LOAD,
                 result,
-                many=many,
+                many=many or self.many,
                 original_data=data,
                 partial=partial,
             )
@@ -282,7 +306,17 @@ class LazySequence(Sequence):
         return self._compute_items()
 
     @override
-    def __getitem__(self, i):
+    @overload
+    def __getitem__(self, i: int) -> Schema:
+        return self._items[i]
+
+    @override
+    @overload
+    def __getitem__(self, i: slice) -> Sequence[Schema]:
+        return self._items[i]
+
+    @override
+    def __getitem__(self, i: int | slice) -> Schema | Sequence[Schema]:
         return self._items[i]
 
     @override
@@ -538,7 +572,7 @@ Keys 'optional1', 'required1' occur more than once.
         # idempotent) to get at the original keys. If this is not true, there may be bugs.
         merged: bool = False,
         **kwargs: typing.Any,
-    ):
+    ) -> None:
         super().__init__(default=default, **kwargs)
 
         if unknown is not None:
@@ -615,7 +649,7 @@ Keys 'optional1', 'required1' occur more than once.
         errors: str | list | dict,
     ) -> None:
         if isinstance(errors, dict):
-            error_store.store_error(errors)
+            error_store.store_error(errors)  # type: ignore[no-untyped-call]
         elif isinstance(errors, list):
             error_store.errors.setdefault("_schema", []).extend(errors)
         elif isinstance(errors, str):
@@ -625,7 +659,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     def _dump_schemas(self, scalar: Result) -> Result | list[Result]:
         rv = []
-        error_store = ErrorStore()
+        error_store = ErrorStore()  # type: ignore[no-untyped-call]
         value = dict(scalar)
         value_initially_empty = not value
 
@@ -676,18 +710,23 @@ Keys 'optional1', 'required1' occur more than once.
         obj: typing.Any,
         **kwargs: typing.Any,
     ) -> Result | list[Result]:
-        result: typing.Any
-        error_store = ErrorStore()
+        error_store = ErrorStore()  # type: ignore[no-untyped-call]
 
-        result = []
+        result: list[MultiNested.Result] = []
         if self.many:
             if utils.is_collection(value):
                 for entry in value:
-                    result.extend(self._dump_schemas(entry))
+                    schemas = self._dump_schemas(entry)
+                    assert isinstance(schemas, list), (
+                        f"Expected a collection of schemas, got {schemas!r}"
+                    )
+                    result.extend(schemas)
             else:
-                error_store.store_error(self._make_type_error(value))
+                error_store.store_error(self._make_type_error(value))  # type: ignore[no-untyped-call]
         else:
-            result.extend(self._dump_schemas(value))
+            schemas = self._dump_schemas(value)
+            assert isinstance(schemas, list), f"Expected a collection of schemas, got {schemas!r}"
+            result.extend(schemas)
 
         if error_store.errors:
             raise ValidationError(error_store.errors, data=value)
@@ -711,10 +750,10 @@ Keys 'optional1', 'required1' occur more than once.
         )
 
     def _load_schemas(
-        self, scalar: Result, partial: bool | typing.Sequence[str] | set[str] | None = None
+        self, scalar: Result, partial: bool | types.StrSequenceOrSet | None = None
     ) -> Result:
         rv = {}
-        error_store = ErrorStore()
+        error_store = ErrorStore()  # type: ignore[no-untyped-call]
 
         try:
             value = dict(scalar)

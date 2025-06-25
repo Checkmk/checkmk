@@ -11,6 +11,8 @@ from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.ccc.user import UserId
+
 from cmk.utils.tags import TagGroupID
 
 from cmk.gui import userdb
@@ -75,7 +77,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
     )
 
     @validates_schema
-    def validate_replacement(self, data, **kwargs):
+    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:
         search = re.compile(data["search"])
         replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data["replace_with"])))
         replace_groups.sort()
@@ -146,15 +148,23 @@ class IPNetworkCIDR(String):
     """
 
     @override
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(
+        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
+    ) -> tuple[str, int]:
         try:
-            network, mask = tuple(value.split("/"))
-            return (network, int(mask))
+            network, mask = tuple(str(value).split("/"))
+            return network, int(mask)
         except ValueError:
             raise ValidationError("Expected an IP network in CIDR notation like '192.168.0.0/24'")
 
     @override
-    def _serialize(self, value, attr, obj, **kwargs):
+    def _serialize(
+        self,
+        value: tuple[str, int] | list[str | int],
+        attr: str | None,
+        obj: object,
+        **kwargs: object,
+    ) -> str:
         if isinstance(value, list | tuple) and len(value) == 2:
             return f"{value[0]}/{value[1]}"
         raise ValidationError(
@@ -281,7 +291,7 @@ class IPRange(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):
+    def get_obj_type(self, obj: tuple[str, object]) -> str:
         return {
             "ip_range": "address_range",
             "ip_network": "network_range",
@@ -299,9 +309,11 @@ class IPRangeWithRegexp(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):
+    def get_obj_type(self, obj: tuple[str, object] | dict[str, object]) -> str:
         if isinstance(obj, dict):
-            return obj["type"]
+            type_key = obj["type"]
+            assert isinstance(type_key, str)
+            return type_key
         return {
             "ip_range": "address_range",
             "ip_network": "network_range",
@@ -315,7 +327,7 @@ class DateConverter(Converter):
     # meaning is "the last second/minute of this day", so we replace it with that.
 
     @override
-    def from_checkmk(self, data):
+    def from_checkmk(self, data: tuple[int, int] | list[int]) -> datetime.time:
         """Converts a Checkmk date string to a datetime object
 
         Examples:
@@ -326,12 +338,12 @@ class DateConverter(Converter):
             datetime.time(0, 0)
         """
         if data[0] == 24 and data[1] == 0:  # Checkmk format can be [24, 0] e.g. folder network scan
-            data = 23, 59, 59
+            return datetime.time(23, 59, 59)
 
         return datetime.time(*data)
 
     @override
-    def to_checkmk(self, data):
+    def to_checkmk(self, data: datetime.time) -> tuple[int, int]:
         return data.hour, data.minute
 
 
@@ -362,7 +374,7 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     )
 
 
-def _active_users(user):
+def _active_users(user: UserId) -> None:
     users = userdb.load_users(lock=False)
     if user not in users:
         raise ValidationError(f"User {user!r} is not known.")
@@ -566,7 +578,9 @@ class NetworkScan(BaseSchema):
 
 class NetworkScanResultState(String):
     @override
-    def _serialize(self, value, attr, obj, **kwargs):
+    def _serialize(
+        self, value: object | None, attr: str | None, obj: object, **kwargs: object
+    ) -> str:
         if value is None:
             return "running"
         if value is True:
@@ -716,11 +730,11 @@ class SNMPCommunity(BaseSchema):
     )
 
     @post_load
-    def to_checkmk_str(self, data, **kwargs):
+    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:
         return data["community"]
 
     @pre_dump
-    def from_tuple(self, data, **kwargs):
+    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:
         """
 
         v1 'community'
@@ -904,7 +918,7 @@ class SNMPCredentials(CmkOneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):
+    def get_obj_type(self, obj: str | tuple[str, ...]) -> str:
         if isinstance(obj, str):
             return "v1_v2_community"
         return {
@@ -952,7 +966,9 @@ class HostAttributeManagementBoardField(String):
         )
 
     @override
-    def _deserialize(self, value: object, attr: object, data: object, **kwargs: Any) -> str | None:
+    def _deserialize(
+        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: Any
+    ) -> object:
         # get value from api, convert it to cmk/python
         deserialized = super()._deserialize(value, attr, data, **kwargs)
         if deserialized == "none":
@@ -960,7 +976,7 @@ class HostAttributeManagementBoardField(String):
         return deserialized
 
     @override
-    def _serialize(self, value: str | None, attr: object, obj: object, **kwargs: Any) -> str:
+    def _serialize(self, value: str | None, attr: str | None, obj: object, **kwargs: Any) -> str:
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

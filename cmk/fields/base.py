@@ -7,6 +7,7 @@ from collections.abc import Collection, Hashable, Mapping
 from typing import Any, Protocol
 
 from marshmallow import fields, ValidationError
+from marshmallow.types import StrSequenceOrSet
 
 
 class OpenAPIAttributes:
@@ -120,13 +121,16 @@ The maximum length is 3.
         "minimum": "{value!r} is smaller than the minimum ({minimum}).",
     }
 
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(
+        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
+    ) -> object:
         value = super()._deserialize(value, attr, data)
+        assert isinstance(value, str), f"Expected value to be a string, got {value!r}"
         enum = self.metadata.get("enum")
         if enum and value not in enum:
             raise self.make_error("enum", value=value, enum=enum)
 
-        pattern = self.metadata.get("pattern")
+        pattern: str | None = self.metadata.get("pattern")
         if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
             raise self.make_error("pattern", value=value, pattern=pattern)
 
@@ -182,7 +186,9 @@ class Integer(OpenAPIAttributes, fields.Integer):
         "minimum": "{value!r} is smaller than the minimum ({minimum}).",
     }
 
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(
+        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
+    ) -> int | None:
         value = super()._deserialize(value, attr, data)
 
         enum = self.metadata.get("enum")
@@ -340,20 +346,30 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
 
     def __init__(
         self,
-        *args,
-        **kwargs,
-    ):
-        context = kwargs.pop("context", {})
+        *args: object,
+        context: dict[object, object] | None = None,
+        **kwargs: object,
+    ) -> None:
         super().__init__(*args, **kwargs)
-        self.context = context
+        self.context = context or {}
 
-    def _deserialize(self, value, attr, data=None, partial=None, **kwargs):
+    def _deserialize(
+        self,
+        value: object,
+        attr: str | None,
+        data: Mapping[str, object] | None = None,
+        partial: bool | StrSequenceOrSet | None = None,
+        **kwargs: object,
+    ) -> object:
         self._validate_missing(value)
         if value is fields.missing_:  # type: ignore[attr-defined, unused-ignore]
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)
         if self.many and self.metadata.get("uniqueItems"):
+            assert isinstance(value, Collection), (
+                f"Expected value to be a collection, got {value!r}"
+            )
             self._verify_unique_schema_entries(value, self.schema.fields)
 
         return value
@@ -417,7 +433,9 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
         "minLength": "At least one entry is required",
     }
 
-    def _deserialize(self, value, attr, data, **kwargs):
+    def _deserialize(
+        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: object
+    ) -> list:
         value = super()._deserialize(value, attr, data)
         if self.metadata.get("uniqueItems"):
             if isinstance(self.inner, Nested):

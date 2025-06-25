@@ -340,7 +340,7 @@ class AuxTagIDField(fields.String):
         self.presence = presence
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
         tag_id = TagID(value)
 
@@ -581,7 +581,7 @@ class ServiceLevelField(fields.Integer):
         self.presence = presence
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: int) -> None:
         super()._validate(value)
 
         choices = [int_val for int_val, _str_val in active_config.mkeventd_service_levels]
@@ -620,13 +620,18 @@ class TagGroupIDField(fields.String):
         self.presence = presence
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
+        tag_group_id = TagGroupID(value)
 
-        if self.presence == "should_exist" and not tag_group_exists(value, builtin_included=True):
+        if self.presence == "should_exist" and not tag_group_exists(
+            tag_group_id, builtin_included=True
+        ):
             raise self.make_error("should_exist", name=value)
 
-        if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
+        if self.presence == "should_not_exist" and tag_group_exists(
+            tag_group_id, builtin_included=True
+        ):
             raise self.make_error("should_exist", name=value)
 
 

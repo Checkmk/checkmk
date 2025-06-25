@@ -787,14 +787,11 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
     hosts_config = config_cache.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config()
-
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     all_hosts = {
         hn
@@ -816,7 +813,6 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             plugins,
             hostname,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,
         )
 

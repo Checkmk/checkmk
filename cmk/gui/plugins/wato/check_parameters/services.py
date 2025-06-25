@@ -50,6 +50,7 @@ def _valuespec_inventory_services_rules():
                 DropdownChoice(
                     choices=[
                         ("running", _("Running")),
+                        ("paused", _("Paused")),
                         ("stopped", _("Stopped")),
                     ],
                     title=_("Create check if service is in state"),
@@ -127,6 +128,7 @@ def _parameter_valuespec_services():
                                 choices=[
                                     (None, _("ignore the state")),
                                     ("running", _("running")),
+                                    ("paused", _("paused")),
                                     ("stopped", _("stopped")),
                                 ],
                             ),

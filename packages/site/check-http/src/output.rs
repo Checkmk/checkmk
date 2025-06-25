@@ -220,4 +220,16 @@ mod test_output_format {
             "summary 1, summary 4 | my_metric_1=1;;;; my_metric_2=2;;;;\ndetails 2 (!)\ndetails 3 (!!)"
         );
     }
+
+    #[test]
+    fn test_cleanup_pipe() {
+        let cr1 = summary(State::Ok, "pattern1|pattern2");
+        let cr2 = details(State::Warn, "details 1");
+        let m1 = metric("my_metric_1", 1., None, None, None, None);
+        assert_eq!(
+            format!("{}", Output::from_check_results(vec![cr1, m1, cr2])),
+            // first "pipe" symbol is actually a light vertical bar
+            "pattern1❘pattern2 | my_metric_1=1;;;;\ndetails 1 (!)"
+        );
+    }
 }

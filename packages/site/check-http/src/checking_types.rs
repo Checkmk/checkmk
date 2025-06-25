@@ -194,7 +194,9 @@ impl Display for CheckItem {
         write!(
             f,
             "{}{}",
-            self.text,
+            // The pipe symbol indicates end of service output and start of metrics.
+            // Replace any (e.g. due to the expected regex) in the output by a Unicode "Light vertical bar"
+            self.text.replace('|', "\u{2758}"),
             match self.state {
                 State::Ok => "",
                 State::Warn => " (!)",

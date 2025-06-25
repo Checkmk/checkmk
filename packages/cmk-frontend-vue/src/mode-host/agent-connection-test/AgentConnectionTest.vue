@@ -138,7 +138,7 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
 
     const data: AjaxResponse = await res.json()
 
-    if (data.result_code === 0 && data.result && data.result.status_code === 0) {
+    if (data.result?.status_code === 0) {
       isSuccess.value = true
     } else {
       isError.value = true
@@ -161,6 +161,70 @@ function startAjax(): void {
     method: 'POST'
   })
 }
+
+const reTestAgentTitle = t('re-test-agent-title', 'Re-test agent connection')
+const reTestAgentButton = t('re-test-agent-button', 'Re-test agent connection')
+
+interface ContainerValues {
+  header: string
+  txt: string
+  buttonOneTitle: string
+  buttonOneButton: string
+  buttonTwoTitle: string
+  buttonTwoButton: string
+}
+
+const warnContainerValues = computed<ContainerValues>(() => {
+  let header = t('test-agent-general-header', 'Agent connection failed')
+  let txt = errorDetails.value
+  let buttonOneTitle = reTestAgentTitle
+  let buttonOneButton = reTestAgentButton
+  let buttonTwoTitle = ''
+  let buttonTwoButton = ''
+
+  if (errorDetails.value.includes('[Errno 111]')) {
+    header = t('test-agent-warning-header', 'Failed to connect to the Checkmk agent')
+    txt = t(
+      'test-agent-warning-msg',
+      'This may be because the agent is not installed or not running on the target system.'
+    )
+    buttonOneTitle = t('download-agent-title', 'Download % install agent')
+    buttonOneButton = t('download-agent-button', 'Download Checkmk agent')
+    buttonTwoTitle = reTestAgentTitle
+    buttonTwoButton = reTestAgentButton
+  }
+  if (errorDetails.value.includes('controller not registered')) {
+    header = t('test-agent-not-registered-header', 'Agent not registered')
+    txt = t(
+      'test-agent-not-registered-msg',
+      'The agent has been installed on the target system but has not yet been registered.'
+    )
+    buttonOneTitle = t('register-agent-title', 'Register agent')
+    buttonOneButton = t('register-agent-button', 'Register Checkmk agent')
+    buttonTwoTitle = reTestAgentTitle
+    buttonTwoButton = reTestAgentButton
+  }
+  if (errorDetails.value.includes('is not providing it')) {
+    header = t('test-agent-no-tls-header', 'TLS connection not provided')
+    txt = t(
+      'test-agent-not-registered-msg',
+      'The agent has been installed on the target system but is not providing a TLS connection.'
+    )
+    buttonOneTitle = t('tls-agent-title', 'Provide TLS connection')
+    buttonOneButton = t('tls-agent-button', 'Provide TLS connection')
+    buttonTwoTitle = reTestAgentTitle
+    buttonTwoButton = reTestAgentButton
+  }
+
+  return {
+    header,
+    txt,
+    buttonOneTitle,
+    buttonOneButton,
+    buttonTwoTitle,
+    buttonTwoButton
+  }
+})
 </script>
 
 <template>
@@ -191,31 +255,25 @@ function startAjax(): void {
     <div v-if="isError" class="warn-container">
       <CmkIcon name="validation-error" size="medium" variant="inline" />
       <div class="warn-txt-container">
-        <h2>{{ t('test-agent-warning-header', 'Failed to connect to the Checkmk agent.') }}</h2>
-        <p>
-          {{
-            t(
-              'test-agent-warning-msg',
-              'This may be because the agent is not installed or not running on the target system.'
-            )
-          }}
-        </p>
+        <h2>{{ warnContainerValues.header }}</h2>
+        <p>{{ warnContainerValues.txt }}</p>
         <div class="warn-button-container">
           <CmkButton
             type="button"
-            :title="t('download-agent-title', 'Download % install agent')"
+            :title="warnContainerValues.buttonOneTitle"
             class="agent-test-button"
             @click="slideInOpen = true"
           >
-            {{ t('download-agent-button', 'Download Checkmk agent') }}
+            {{ warnContainerValues.buttonOneButton }}
           </CmkButton>
           <CmkButton
+            v-if="warnContainerValues.buttonTwoTitle"
             type="button"
-            :title="t('re-test-agent-title', 'Re-test agent connection')"
+            :title="warnContainerValues.buttonTwoTitle"
             class="agent-test-button"
             @click="startAjax"
           >
-            {{ t('re-test-agent-button', 'Re-test agent connection') }}
+            {{ warnContainerValues.buttonTwoButton }}
           </CmkButton>
         </div>
       </div>

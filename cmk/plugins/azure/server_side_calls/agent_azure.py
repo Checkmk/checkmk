@@ -5,7 +5,7 @@
 
 
 from collections.abc import Iterable
-from typing import Literal
+from typing import assert_never, Literal
 
 from pydantic import BaseModel
 
@@ -37,7 +37,11 @@ class Config(BaseModel):
 
 class AzureParams(BaseModel):
     authority: str
-    subscription: str | None = None
+    subscription: (
+        tuple[Literal["no_subscriptions"], None]
+        | tuple[Literal["explicit_subscriptions"], list[str]]
+        | tuple[Literal["all_subscriptions"], None]
+    )
     tenant: str
     client: str
     secret: Secret
@@ -86,8 +90,20 @@ def agent_azure_arguments(
             "--authority",
             params.authority if params.authority != "global_" else "global",
         ]
-    if params.subscription:
-        args += ["--subscription", params.subscription]
+
+    if params.subscription[0] == "no_subscriptions":
+        ...
+    elif params.subscription[0] == "explicit_subscriptions":
+        args += [
+            item
+            for subscription in params.subscription[1]
+            for item in ("--subscription", subscription)
+        ]
+    elif params.subscription[0] == "all_subscriptions":
+        args += ["--all-subscriptions"]
+    else:
+        assert_never(params.subscription[0])
+
     if params.piggyback_vms:
         args += ["--piggyback_vms", params.piggyback_vms]
 

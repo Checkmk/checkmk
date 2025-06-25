@@ -21,7 +21,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": "banana",
+                "subscription": ("explicit_subscriptions", ["subscription_1", "subscription_2"]),
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -38,7 +38,9 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--authority",
                 "global",
                 "--subscription",
-                "banana",
+                "subscription_1",
+                "--subscription",
+                "subscription_2",
                 "--services",
                 "users_count",
                 "Microsoft.DBforMySQL/servers",
@@ -50,7 +52,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": "banana",
+                "subscription": ("all_subscriptions", None),
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -69,8 +71,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 Secret(0).unsafe(),
                 "--authority",
                 "global",
-                "--subscription",
-                "banana",
+                "--all-subscriptions",
                 "--explicit-config",
                 "group=my_res_group",
                 "--require-tag",
@@ -83,7 +84,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": "banana",
+                "subscription": ("no_subscriptions", None),
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -106,8 +107,6 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 Secret(0).unsafe(),
                 "--authority",
                 "global",
-                "--subscription",
-                "banana",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",

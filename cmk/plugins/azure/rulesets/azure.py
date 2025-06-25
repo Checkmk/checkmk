@@ -196,8 +196,16 @@ def _migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
 
-    value.pop("sequential", None)
+    if "subscription" not in value:
+        value["subscription"] = ("no_subscriptions", None)
+    elif isinstance(value["subscription"], str):
+        value["subscription"] = ("explicit_subscriptions", [value["subscription"]])
+    elif isinstance(value["subscription"], tuple):
+        ...  # already in the correct format
+    else:
+        raise TypeError("Unexpected type for subscription: %s" % type(value["subscription"]))
 
+    value.pop("sequential", None)
     value.pop("import_tags", None)
     return value
 
@@ -213,10 +221,34 @@ def _migrate_authority(value: object) -> str:
 def configuration_authentication() -> Mapping[str, DictElement]:
     return {
         "subscription": DictElement(
-            parameter_form=String(
-                title=Title("Subscription ID"),
-                custom_validate=(validators.LengthInRange(min_value=1),),
-            )
+            parameter_form=CascadingSingleChoice(
+                title=Title("Subscriptions to monitor"),
+                help_text=Help("Select the subscriptions you want to monitor."),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="no_subscriptions",
+                        title=Title("Do not monitor subscriptions"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="explicit_subscriptions",
+                        title=Title("Explicit list of subscription IDs"),
+                        parameter_form=List(
+                            title=Title("Explicitly specify subscription IDs"),
+                            element_template=String(),
+                            custom_validate=(validators.LengthInRange(min_value=1),),
+                            editable_order=False,
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="all_subscriptions",
+                        title=Title("Monitor all subscriptions"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                ],
+                prefill=DefaultValue("no_subscriptions"),
+            ),
+            required=True,
         ),
         "tenant": DictElement(
             parameter_form=String(

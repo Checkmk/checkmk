@@ -2159,6 +2159,9 @@ def main(argv=None):
         return 0
 
     subscriptions = _get_subscriptions(args)
+    # TODO:
+    # * fix connection test in case of no subscriptions
+    # * make connection test async?
     if args.connection_test:
         return test_connections(args, subscriptions)
 

@@ -133,7 +133,6 @@ def configure_authentication() -> QuickSetupStage:
                     elements=_add_first_level_keys_to_config_dict(
                         azure.configuration_authentication()
                     ),
-                    default_checked=["subscription"],
                 ),
             ),
         ],

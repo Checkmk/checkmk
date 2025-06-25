@@ -32,7 +32,6 @@ from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
-from cmk.gui.site_config import site_is_local
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
@@ -152,9 +151,12 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
+        automation_config = make_automation_config(
+            active_config.sites[self._request.host.site_id()]
+        )
         if request.has_var("_start"):
-            self._start_fetch()
-        self._show_status()
+            self._start_fetch(automation_config)
+        self._show_status(automation_config)
 
         html.footer()
 
@@ -189,8 +191,10 @@ class PageFetchAgentOutput(AgentOutputPage):
                 )
             )
 
-    def _show_status(self) -> None:
-        job_status = self._get_job_status()
+    def _show_status(
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    ) -> None:
+        job_status = self._get_job_status(automation_config)
 
         html.h3(_("Job status"))
         if job_status.is_active:
@@ -199,17 +203,16 @@ class PageFetchAgentOutput(AgentOutputPage):
         job = FetchAgentOutputBackgroundJob.from_api_request(self._request)
         JobRenderer.show_job_details(job.get_job_id(), job_status, job.may_stop(), job.may_delete())
 
-    def _start_fetch(self) -> None:
+    def _start_fetch(
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    ) -> None:
         """Start the job on the site the host is monitored by"""
-        if site_is_local(
-            site_config := active_config.sites[self._request.host.site_id()],
-            self._request.host.site_id(),
-        ):
+        if isinstance(automation_config, LocalAutomationConfig):
             start_fetch_agent_job(self._request)
             return
 
         do_remote_automation(
-            RemoteAutomationConfig.from_site_config(site_config),
+            automation_config,
             "fetch-agent-output-start",
             [
                 ("request", repr(self._request.serialize())),
@@ -217,16 +220,15 @@ class PageFetchAgentOutput(AgentOutputPage):
             debug=active_config.debug,
         )
 
-    def _get_job_status(self) -> JobStatusSpec:
-        if site_is_local(
-            site_config := active_config.sites[self._request.host.site_id()],
-            self._request.host.site_id(),
-        ):
+    def _get_job_status(
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    ) -> JobStatusSpec:
+        if isinstance(automation_config, LocalAutomationConfig):
             return get_fetch_agent_job_status(self._request)
 
         return JobStatusSpec.model_validate(
             do_remote_automation(
-                RemoteAutomationConfig.from_site_config(site_config),
+                automation_config,
                 "fetch-agent-output-get-status",
                 [
                     ("request", repr(self._request.serialize())),
@@ -420,21 +422,24 @@ class PageDownloadAgentOutput(AgentOutputPage):
         file_name = self.file_name(
             self._request.host.site_id(), self._request.host.name(), self._request.agent_type
         )
-        file_content = self._get_agent_output_file()
+        file_content = self._get_agent_output_file(
+            automation_config=make_automation_config(
+                active_config.sites[self._request.host.site_id()]
+            )
+        )
 
         response.set_content_type("text/plain")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, file_name)
         response.set_data(file_content)
 
-    def _get_agent_output_file(self) -> bytes:
-        if site_is_local(
-            site_config := active_config.sites[self._request.host.site_id()],
-            self._request.host.site_id(),
-        ):
+    def _get_agent_output_file(
+        self, automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    ) -> bytes:
+        if isinstance(automation_config, LocalAutomationConfig):
             return get_fetch_agent_output_file(self._request)
 
         raw_response = do_remote_automation(
-            RemoteAutomationConfig.from_site_config(site_config),
+            automation_config,
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),

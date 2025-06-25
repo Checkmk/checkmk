@@ -7,7 +7,7 @@ from cmk.ccc.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.plugins.sftp.rulesets.active_check import rule_spec_active_check_sftp
+from cmk.plugins.collection.rulesets.sftp import rule_spec_active_check_sftp
 
 
 def test_rule_spec_active_check_sftp__migrated_2_3__values_pass_validation() -> None:

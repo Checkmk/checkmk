@@ -3267,19 +3267,19 @@ def _try_backup_site_to_tarfile(
     try:
         omdlib.backup.backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
     except OSError as e:
-        bail_out("Failed to perform backup: %s" % e)
+        sys.exit("Failed to perform backup: %s" % e)
 
 
 def main_backup(
     _version_info: object,
     site: SiteContext,
     global_opts: GlobalOptions,
-    args: Arguments,
+    args: list[str],
     options: CommandOptions,
     orig_working_directory: str,
 ) -> None:
     if len(args) == 0:
-        bail_out(
+        sys.exit(
             'You need to provide either a path to the destination file or "-" for backup to stdout.'
         )
 

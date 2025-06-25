@@ -21,6 +21,7 @@ const props = defineProps<{
   form_keys: ModeHostFormKeys
   sites: Array<ModeHostSite>
   url: string
+  host_name: string
 }>()
 
 const formElement: Ref<HTMLFormElement | null> = ref(null)
@@ -41,6 +42,14 @@ onMounted(() => {
   hostnameInputElement.value = document.querySelector(
     `input.text[name="${props.form_keys.host_name}"]`
   )
+  // Create a fake input element for hostname if it doesn't exist
+  // to also be able to add this component for editing hosts
+  if (!hostnameInputElement.value) {
+    hostnameInputElement.value = document.createElement('input')
+    hostnameInputElement.value.style.display = 'none'
+    hostnameInputElement.value.name = props.form_keys.host_name
+    hostnameInputElement.value.value = props.host_name
+  }
   ipv4InputElement.value = getElementBySelector(
     `input.text[name="${props.form_keys.ipv4_address}"]`
   )

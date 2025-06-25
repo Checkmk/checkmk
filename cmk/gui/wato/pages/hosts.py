@@ -348,6 +348,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         for site_id, _site_name in user_sites.get_activation_site_choices()
                     ],
                     url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),
+                    host_name=self._host.name(),
                 )
             ),
         )

@@ -35,9 +35,9 @@ const slideInOpen = ref(false)
 const externalContent = ref('')
 const showTest = ref(true)
 
-const hostname = ref('')
-const ipV4 = ref('')
-const ipV6 = ref('')
+const hostname = ref(props.hostnameInputElement.value || '')
+const ipV4 = ref(props.ipv4InputElement.value || '')
+const ipV6 = ref(props.ipv6InputElement.value || '')
 const targetElement = ref<HTMLElement>(
   props.changeTagAgent.checked ? (props.tagAgent.parentNode as HTMLElement) : props.tagAgentDefault
 )

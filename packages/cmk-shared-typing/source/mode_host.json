@@ -12,14 +12,16 @@
         },
         "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
         "i18n_agent_connection": { "$ref": "#/$defs/i18n_agent_connection" },
-        "url": { "type": "string" }
+        "url": { "type": "string" },
+        "host_name": { "type": "string" }
     },
     "required": [
         "form_keys",
         "sites",
         "i18n_ping_host",
         "i18n_agent_connection",
-        "url"
+        "url",
+        "host_name"
     ],
     "$defs": {
         "i18n_ping_host": {

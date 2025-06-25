@@ -255,7 +255,15 @@ def main() {
         }();
         print("Found files to upload: ${files_to_upload}");
 
-        files_to_upload.each { filename ->
+        def filtered_files_to_upload = [];
+        files_to_upload.each { item ->
+            if (!item.startsWith(bazel_log_prefix)) {
+                filtered_files_to_upload += item;
+            }
+        }
+        print("Filtered files to upload: ${filtered_files_to_upload}")
+
+        filtered_files_to_upload.each { filename ->
             artifacts_helper.upload_via_rsync(
                 "${WORKSPACE}/deliverables",
                 "${cmk_version_rc_aware}",

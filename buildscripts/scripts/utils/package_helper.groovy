@@ -132,7 +132,7 @@ def provide_agent_binaries(Map args) {
             smart_stage(
                 name: job_name,
                 condition: run_condition,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
@@ -154,7 +154,7 @@ def provide_agent_binaries(Map args) {
             smart_stage(
                 name: "Move artifacts around",
                 condition: run_condition && build_instance,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 dir("${checkout_dir}/${args.artifacts_base_dir}/${job_name}") {
                     sh(details.install_cmd);

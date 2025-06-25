@@ -147,12 +147,11 @@ def main() {
 
     if (!params.FAKE_WINDOWS_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(
-            version,
-            edition,
-            disable_cache,
-            params.CIPARAM_BISECT_COMMENT,
-            safe_branch_name,
-            "tmp_artifacts",
+            version: version,
+            edition: edition,
+            disable_cache: disable_cache,
+            bisect_comment: params.CIPARAM_BISECT_COMMENT,
+            artifacts_base_dir: "tmp_artifacts",
         );
     } else {
         smart_stage(name: 'Fake agent binaries') {

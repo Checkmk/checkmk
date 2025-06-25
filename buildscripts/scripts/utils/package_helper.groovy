@@ -25,7 +25,7 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
-def provide_agent_binaries(version, edition, disable_cache, bisect_comment, safe_branch_name, artifacts_base_dir) {
+def provide_agent_binaries(Map args) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -50,8 +50,8 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment, safe
                 cp *.deb *.rpm ${checkout_dir}/agents/
                 # artifact file flags are not being kept - building a tar would be better..
                 install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
-                if [ "${edition}" != "raw" ]; then
-                    echo "edition is ${edition} => copy Linux agent updaters"
+                if [ "${args.edition}" != "raw" ]; then
+                    echo "edition is ${args.edition} => copy Linux agent updaters"
                     install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/packages/cmk-update-agent/
                 fi
                 """.stripIndent(),
@@ -139,14 +139,14 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment, safe
                     use_upstream_build: true,
                     relative_job_name: details.relative_job_name,
                     build_params: [
-                        VERSION: version,
-                        DISABLE_CACHE: disable_cache,
+                        VERSION: args.version,
+                        DISABLE_CACHE: args.disable_cache,
                     ],
                     build_params_no_check: [
-                        CIPARAM_BISECT_COMMENT: bisect_comment,
+                        CIPARAM_BISECT_COMMENT: args.bisect_comment,
                     ],
                     dependency_paths: details.dependency_paths,
-                    dest: "${artifacts_base_dir}/${job_name}",
+                    dest: "${args.artifacts_base_dir}/${job_name}",
                     no_remove_others: true, // do not delete other files in the dest dir
                 );
             }
@@ -156,7 +156,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment, safe
                 condition: run_condition && build_instance,
                 raiseOnError: false,
             ) {
-                dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {
+                dir("${checkout_dir}/${args.artifacts_base_dir}/${job_name}") {
                     sh(details.install_cmd);
                 }
             }

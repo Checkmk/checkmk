@@ -78,7 +78,6 @@ def test_do_create_config_nagios(
         ip_address_of=ip_lookup.ConfiguredIPLookup(
             lambda *a: None, allow_empty=(), error_handler=ip_lookup.CollectFailedHosts()
         ),
-        ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,
         service_depends_on=lambda *a: (),
         duplicates=(),
@@ -111,7 +110,6 @@ def test_do_create_config_nagios_collects_passwords(
         AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
-        ip_address_of_mgmt=lambda *a: None,
         hosts_to_update=None,
         service_depends_on=lambda *a: (),
         duplicates=(),

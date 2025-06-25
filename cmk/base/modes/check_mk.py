@@ -1476,9 +1476,8 @@ def mode_update() -> None:
     loading_result = load_config(plugins)
 
     hosts_config = loading_result.config_cache.hosts_config
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -1495,7 +1494,6 @@ def mode_update() -> None:
                 plugins=plugins,
                 discovery_rules=loading_result.loaded_config.discovery_rules,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.config_cache.tag_list,
@@ -1551,21 +1549,17 @@ def mode_restart(args: Sequence[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
-
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     cmk.base.core.do_restart(
         loading_result.config_cache,
         hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
-        ip_address_of_mgmt,
         create_core(config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,
@@ -1619,21 +1613,17 @@ def mode_reload(args: Sequence[HostName]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     hosts_config = loading_result.config_cache.hosts_config
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
-
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(loading_result.config_cache.ip_lookup_config()),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     cmk.base.core.do_reload(
         loading_result.config_cache,
         hosts_config,
         loading_result.config_cache.make_passive_service_name_config(),
         ip_address_of,
-        ip_address_of_mgmt,
         create_core(config.monitoring_core),
         plugins,
         hosts_to_update=set(args) if args else None,

@@ -103,6 +103,7 @@ function getElementBySelector<T>(selector: string): T {
     :ipv6-input-element="ipv6InputElement"
     :ipv6-input-button-element="ipv6InputButtonElement"
     :site-select-element="siteSelectElement"
+    :sites="sites"
   ></PingHost>
   <AgentConnectionTest
     v-if="

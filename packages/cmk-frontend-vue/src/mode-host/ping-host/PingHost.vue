@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onMounted, ref, type Ref } from 'vue'
 import axios from 'axios'
 import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
-import { type I18NPingHost } from 'cmk-shared-typing/typescript/mode_host'
+import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 
 const props = defineProps<{
   i18n: I18NPingHost
@@ -21,6 +21,7 @@ const props = defineProps<{
   ipv6InputElement: HTMLInputElement
   ipv6InputButtonElement: HTMLInputElement
   siteSelectElement: HTMLSelectElement
+  sites: Array<ModeHostSite>
 }>()
 
 interface PingHostResponseError {
@@ -160,10 +161,7 @@ async function callAJAX(
     // Wait for the previous request to finish
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
-  const siteId = props.siteSelectElement.value
-    ? encodeURIComponent(props.siteSelectElement.value)
-    : undefined
-
+  const siteId = props.sites.find((site) => site.id_hash === props.siteSelectElement.value)?.site_id
   const currentInput = input ? encodeURIComponent(input) : undefined
 
   if (!currentInput) {
@@ -175,7 +173,7 @@ async function callAJAX(
     .post('ajax_ping_host.py', null, {
       signal: controller.value.signal,
       params: {
-        site_id: siteId,
+        site_id: siteId ? encodeURIComponent(siteId) : undefined,
         ip_or_dns_name: currentInput,
         cmd: cmd
       }

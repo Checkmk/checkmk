@@ -13,7 +13,7 @@ from urllib.parse import unquote
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 
 import cmk.utils.tags
 
@@ -920,13 +920,7 @@ class ModeCreateCluster(CreateHostMode):
 
 class PageAjaxPingHost(AjaxPage):
     def page(self) -> PageResult:
-        site_mapping = {
-            DropdownChoice.option_id(site_id): site_id
-            for site_id, _ in user_sites.get_activation_site_choices()
-        }
-        site_id = site_mapping[
-            request.get_str_input_mandatory("site_id", deflt=DropdownChoice.option_id(omd_site()))
-        ]
+        site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
 

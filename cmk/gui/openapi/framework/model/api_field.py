@@ -26,6 +26,7 @@ def api_field[T](
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
+    discriminator: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -44,6 +45,7 @@ def api_field[T](
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
+    discriminator: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -62,6 +64,7 @@ def api_field(
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
+    discriminator: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -80,6 +83,7 @@ def api_field(
     title: str | None = None,
     example: object | None = None,
     pattern: str | None = None,
+    discriminator: str | None = None,
     init: bool = True,
     repr: bool = True,
     hash: bool | None = None,
@@ -102,6 +106,7 @@ def api_field(
         example: Serialized example value of the field, used for OpenAPI schema generation.
         pattern: Regular expression pattern for the field, used for OpenAPI schema generation
                  and validation.
+        discriminator: Discriminator for tagged unions, improves error responses.
         init: Include the field in the generated __init__ method.
         repr: Include the field in the generated __repr__ method.
         hash: Include the field in the generated __hash__ method. If None, use the compare behavior.
@@ -122,6 +127,8 @@ def api_field(
         metadata["examples"] = [example]
     if pattern:
         metadata["pattern"] = pattern
+    if discriminator:
+        metadata["discriminator"] = discriminator
     if additional_metadata:
         metadata.update(additional_metadata)
     return Field(

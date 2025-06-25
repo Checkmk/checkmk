@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import NotRequired, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
@@ -78,6 +78,35 @@ def test_pattern() -> None:
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         adapter.validate_python({"field": "invalid"})
+
+
+def test_discriminator() -> None:
+    @dataclasses.dataclass(kw_only=True, slots=True)
+    class OptionOne:
+        option_type: Literal["one"] = api_field(description="one")
+        foo: str = api_field(description="foo")
+
+    @dataclasses.dataclass(kw_only=True, slots=True)
+    class OptionTwo:
+        option_type: Literal["two"] = api_field(description="two")
+        bar: int = api_field(description="bar")
+
+    @dataclasses.dataclass
+    class TestModel:
+        field: OptionOne | OptionTwo = api_field(description="test", discriminator="option_type")
+
+    adapter = TypeAdapter(TestModel)  # nosemgrep: type-adapter-detected
+    schema = adapter.json_schema()
+    assert schema["properties"]["field"]["discriminator"]["propertyName"] == "option_type"
+    assert set(schema["properties"]["field"]["discriminator"]["mapping"]) == {"one", "two"}
+
+    with pytest.raises(ValidationError) as exc_info:
+        adapter.validate_python({"field": {"option_type": "one"}})
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["type"] == "missing"
+    assert errors[0]["loc"] == ("field", "one", "foo")
 
 
 def test_metadata() -> None:

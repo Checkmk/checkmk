@@ -55,7 +55,7 @@ from cmk.utils.host_storage import (
     get_host_storage_loaders,
 )
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.ip_lookup import ConfiguredIPLookup, IPLookup, IPStackConfig, make_lookup_ip_address
+from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -1642,12 +1642,9 @@ class ConfigCache:
             ),
         )
 
-    def fetcher_factory(self, service_configurer: ServiceConfigurer) -> FetcherFactory:
-        ip_lookup = ConfiguredIPLookup(
-            make_lookup_ip_address(self.ip_lookup_config()),
-            allow_empty=self.hosts_config.clusters,
-            error_handler=handle_ip_lookup_failure,
-        )
+    def fetcher_factory(
+        self, service_configurer: ServiceConfigurer, ip_lookup: ip_lookup.IPLookup
+    ) -> FetcherFactory:
         return FetcherFactory(self, ip_lookup, self.ruleset_matcher, service_configurer)
 
     def parser_factory(self) -> ParserFactory:
@@ -4093,12 +4090,7 @@ class FetcherFactory:
         program: str,
         stdin: str | None,
     ) -> ProgramFetcher:
-        cmdline = self._make_program_commandline(
-            host_name,
-            ip_address,
-            self._ip_lookup,
-            program,
-        )
+        cmdline = self._make_program_commandline(host_name, ip_address, self._ip_lookup, program)
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
 
     def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:

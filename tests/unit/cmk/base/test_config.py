@@ -287,7 +287,8 @@ def test_host_folder_matching(
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: None,
         )._agent_port(hostname)
         == result
     )
@@ -770,7 +771,8 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: None,
         )._agent_port(hostname)
         == result
     )
@@ -802,7 +804,8 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: None,
         )._tcp_connect_timeout(hostname)
         == result
     )
@@ -835,7 +838,8 @@ def test_encryption_handling(
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: None,
         )._encryption_handling(hostname)
         is result
     )
@@ -868,7 +872,8 @@ def test_symmetric_agent_encryption(
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(
                 {}, config_cache.make_passive_service_name_config()
-            )
+            ),
+            ip_lookup=lambda *a: None,
         )._symmetric_agent_encryption(hostname)
         is result
     )

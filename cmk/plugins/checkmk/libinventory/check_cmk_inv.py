@@ -135,21 +135,23 @@ def inventory_as_check(
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_address_of = ConfiguredIPLookup(
+        make_lookup_ip_address(config_cache.ip_lookup_config()),
+        allow_empty=config_cache.hosts_config.clusters,
+        error_handler=config.handle_ip_lookup_failure,
+    )
     file_cache_options = FileCacheOptions()
 
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(
-            config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
+            config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
+            ip_address_of,
         ),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=ConfiguredIPLookup(
-            make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        ),
+        ip_address_of=ip_address_of,
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

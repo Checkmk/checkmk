@@ -264,11 +264,13 @@ button {
 
 .warn-container {
   margin-left: var(--spacing-half);
+  border-radius: 4px;
   background-color: rgb(from var(--color-warning) r g b / 15%);
 
   .warn-txt-container {
     display: inline-block;
     vertical-align: middle;
+    margin-top: var(--spacing-half);
 
     h2,
     p {
@@ -277,7 +279,7 @@ button {
   }
 
   .warn-button-container {
-    margin-top: var(--spacing-half);
+    margin: var(--spacing-half) 0 var(--spacing-half) 0;
   }
 }
 </style>

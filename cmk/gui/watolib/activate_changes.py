@@ -2207,12 +2207,15 @@ def sync_and_activate(
         )
 
         automation_configs = {
-            site_id: make_automation_config(active_config.sites[site_id])
-            for site_id in site_activation_states
+            site_id: make_automation_config(settings.site_config)
+            for site_id, settings in site_snapshot_settings.items()
         }
+
         for site_id, site_activation_state in site_activation_states.items():
             automation_config = automation_configs[site_id]
+
             if activate_changes.is_sync_needed(site_id):
+                assert isinstance(automation_config, RemoteAutomationConfig)
                 async_result = task_pool.apply_async(
                     func=copy_request_context(fetch_sync_state),
                     args=(
@@ -2406,6 +2409,9 @@ def _handle_active_tasks(
         if (calc_sync_delta_result := async_result.get()) is None:
             return  # exception handling happens in thread
 
+        automation_config = automation_configs[site_id]
+        assert isinstance(automation_config, RemoteAutomationConfig)
+
         sync_delta, activation_state, sync_start_time = calc_sync_delta_result
         active_tasks["synchronize_files"][site_id] = task_pool.apply_async(
             func=copy_request_context(synchronize_files),
@@ -2416,7 +2422,7 @@ def _handle_active_tasks(
                 activation_state,
                 sync_start_time,
                 trace.get_current_span(),
-                automation_configs[site_id],
+                automation_config,
             ),
             error_callback=_error_callback,
         )

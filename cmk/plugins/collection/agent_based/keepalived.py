@@ -4,15 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    exists,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def hex2ip(hexstr):
+def hex2ip(hexstr: str) -> str:
     """
     Can parse strings in this form:
     17 20 16 00 00 01
@@ -23,13 +34,15 @@ def hex2ip(hexstr):
     return ".".join(str(block) for block in int_blocks)
 
 
-def inventory_keepalived(info):
-    for entry in info[0]:
+def inventory_keepalived(section: Sequence[StringTable]) -> DiscoveryResult:
+    for entry in section[0]:
         vrrp_id = entry[0]
-        yield vrrp_id, None
+        yield Service(item=vrrp_id)
 
 
-def check_keepalived(item, params, info):
+def check_keepalived(
+    item: str, params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
     map_state = {
         "0": "init",
         "1": "backup",
@@ -37,25 +50,24 @@ def check_keepalived(item, params, info):
         "3": "fault",
         "4": "unknown",
     }
-    status = 3
+    status = State.UNKNOWN
     infotext = "Item not found in output"
-    for id_, entry in enumerate(info[0]):
+    for id_, entry in enumerate(section[0]):
         vrrp_id = entry[0]
-        address = info[1][id_][0]
+        address = section[1][id_][0]
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
-            status = params[map_state[str(entry[1])]]
+            status = State(params[map_state[str(entry[1])]])
             infotext = f"This node is {map_state[str(entry[1])]}. IP Address: {hex2ip(hexaddr)}"
-    yield status, infotext
+    yield Result(state=status, summary=infotext)
 
 
 def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
 
-check_info["keepalived"] = LegacyCheckDefinition(
+snmp_section_keepalived = SNMPSection(
     name="keepalived",
-    parse_function=parse_keepalived,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
     fetch=[
         SNMPTree(
@@ -67,6 +79,12 @@ check_info["keepalived"] = LegacyCheckDefinition(
             oids=["3"],
         ),
     ],
+    parse_function=parse_keepalived,
+)
+
+
+check_plugin_keepalived = CheckPlugin(
+    name="keepalived",
     service_name="VRRP Instance %s",
     discovery_function=inventory_keepalived,
     check_function=check_keepalived,

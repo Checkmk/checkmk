@@ -719,7 +719,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "juniper_trpz_info",
         "juniper_trpz_mem",
         "juniper_trpz_power",
-        "keepalived",
         "kemp_loadmaster_ha",
         "kentix_amp_sensors",
         "kentix_amp_sensors_humidity",

@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.check_sftp import active_check_sftp
+from cmk.plugins.sftp.server_side_calls.check_sftp import active_check_sftp
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, Secret
 
 HOST_CONFIG = HostConfig(name="hostname")

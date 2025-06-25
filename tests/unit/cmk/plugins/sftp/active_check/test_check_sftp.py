@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from cmk.active_checks.check_sftp import Args, CheckSftp, parse_arguments, SecurityError
+from cmk.plugins.sftp.active_check.check_sftp import Args, CheckSftp, parse_arguments, SecurityError
 
 
 class MockSSHClient(Mock):

@@ -405,13 +405,6 @@ def _site_replication_status_path(site_id: SiteId) -> Path:
     return var_dir / f"replication_status_{site_id}.mk"
 
 
-def _load_replication_status(lock: bool = False) -> dict[SiteId, SiteReplicationStatus]:
-    return {
-        site_id: _load_site_replication_status(site_id, lock=lock)
-        for site_id in active_config.sites
-    }
-
-
 @dataclass
 class PendingChangesInfo:
     number: int
@@ -1052,8 +1045,6 @@ def activate_site_changes(
 
 class ActivateChanges:
     def __init__(self) -> None:
-        self._repstatus: dict[SiteId, SiteReplicationStatus] = {}
-
         # Changes grouped by site
         self._changes_by_site: dict[SiteId, Sequence[ChangeSpec]] = {}
 
@@ -1067,16 +1058,13 @@ class ActivateChanges:
         super().__init__()
 
     def load(self) -> None:
-        self._repstatus = _load_replication_status()
         self._load_changes()
 
-    def _load_changes(self):
+    def _load_changes(self) -> None:
         self._changes_by_site = {}
 
         active_changes: dict[str, ChangeSpec] = {}
         pending_changes: dict[str, ChangeSpec] = {}
-
-        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
 
         for site_id in activation_sites():
             site_changes = SiteChanges(site_id).read()
@@ -1124,7 +1112,6 @@ class ActivateChanges:
     @staticmethod
     def _get_number_of_pending_changes(count_limit: int | None = None) -> int:
         changes_counter = 0
-        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         for site_id in activation_sites():
             changes = SiteChanges(site_id).read()
             changes_counter += len(
@@ -1606,7 +1593,6 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites: list[SiteId]) -> list[SiteId]:
         for site_id in sites:
-            # suppression needed because of pylint bug, see https://github.com/PyCQA/pylint/issues/2296
             if site_id not in activation_sites():
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
 
@@ -2614,12 +2600,6 @@ def get_pending_changes_tooltip(changes_info: PendingChangesInfo | None = None) 
             + _("Click here for details.")
         )
     return _("Click here to see the activation status per site.")
-
-
-def get_number_of_pending_changes() -> int:
-    changes = ActivateChanges()
-    changes.load()
-    return len(changes.grouped_changes())
 
 
 def get_pending_changes() -> dict[str, ActivationChange]:

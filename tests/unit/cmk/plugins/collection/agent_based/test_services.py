@@ -15,6 +15,7 @@ STRING_TABLE = [
     ["WSearch", "stopped/demand", "Windows", "Search"],
     ["wuauserv", "stopped/disabled", "Windows", "Update"],
     ["app", "pending", "Windows App", "Update"],
+    ["app2", "paused/auto", "Paused Windows App", "Update"],
 ]
 
 PARSED = [
@@ -22,6 +23,7 @@ PARSED = [
     services.WinService("WSearch", "stopped", "demand", "Windows Search"),
     services.WinService("wuauserv", "stopped", "disabled", "Windows Update"),
     services.WinService("app", "pending", "unknown", "Windows App Update"),
+    services.WinService("app2", "paused", "auto", "Paused Windows App Update"),
 ]
 
 PARSED_NODE = [
@@ -29,6 +31,7 @@ PARSED_NODE = [
     services.WinService("WSearch", "stopped", "demand", "Windows Search"),
     services.WinService("wuauserv", "stopped", "disabled", "Windows Update"),
     services.WinService("app", "running", "unknown", "Windows App Update"),
+    services.WinService("app2", "paused", "auto", "Paused Windows App Update"),
 ]
 
 PARSED_AUTO = [
@@ -36,6 +39,7 @@ PARSED_AUTO = [
     services.WinService("WSearch", "stopped", "demand", "Windows Search"),
     services.WinService("wuauserv", "stopped", "disabled", "Windows Update"),
     services.WinService("app", "stopped", "auto", "Windows App Update"),
+    services.WinService("app2", "paused", "auto", "Paused Windows App Update"),
 ]
 
 
@@ -84,6 +88,17 @@ def test_parse() -> None:
                 services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [],
+        ),
+        (
+            [
+                {
+                    "services": ["app2"],
+                    "start_mode": "auto",
+                    "state": "paused",
+                },
+                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
+            ],
+            [Service(item="app2")],
         ),
     ],
 )
@@ -163,6 +178,19 @@ def test_discovery_windows_services(
                 Result(state=State.OK, summary="service not found"),
             ],
         ),
+        (
+            "app2",
+            {
+                "states": [("paused", "auto", 1)],
+                "else": 0,
+            },
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Paused Windows App Update: paused (start type is auto)",
+                ),
+            ],
+        ),
     ],
 )
 def test_check_windows_services(
@@ -224,8 +252,8 @@ def test_discovery_services_summary() -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Autostart services: 2",
-                    details="Autostart services: 2\nServices found in total: 4",
+                    summary="Autostart services: 3",
+                    details="Autostart services: 3\nServices found in total: 5",
                 ),
                 Result(
                     state=State.OK,
@@ -239,8 +267,8 @@ def test_discovery_services_summary() -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Autostart services: 2",
-                    details="Autostart services: 2\nServices found in total: 4",
+                    summary="Autostart services: 3",
+                    details="Autostart services: 3\nServices found in total: 5",
                 ),
                 Result(
                     state=State.CRIT,
@@ -254,8 +282,27 @@ def test_discovery_services_summary() -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Autostart services: 2",
-                    details="Autostart services: 2\nServices found in total: 4",
+                    summary="Autostart services: 3",
+                    details="Autostart services: 3\nServices found in total: 5",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Stopped services: 0",
+                    details="Stopped services: 0",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Stopped but ignored: 1",
+                ),
+            ],
+        ),
+        (
+            {"ignored": ["app"]},
+            [
+                Result(
+                    state=State.OK,
+                    summary="Autostart services: 3",
+                    details="Autostart services: 3\nServices found in total: 5",
                 ),
                 Result(
                     state=State.OK,

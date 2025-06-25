@@ -44292,6 +44292,10 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nu este disponibil niciun grafic: %s"
 
+#, fuzzy
+msgid "No graph recipe found"
+msgstr "Nu s-au găsit directoare de teme valide."
+
 #, fuzzy, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nu există niciun grafic cu ID-ul <tt>%s</tt>."
@@ -53000,6 +53004,9 @@ msgstr "Rata de octeți trimiși către conexiunea RRD"
 
 msgid "Rate of change"
 msgstr "Rata de schimbare"
+
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
 
 msgid "Rate of metrics received"
 msgstr "Rata de metrice primite"

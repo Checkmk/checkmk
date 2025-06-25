@@ -43833,6 +43833,10 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Nessun grafico disponibile: %s"
 
+#, fuzzy
+msgid "No graph recipe found"
+msgstr "Non sono state trovate directory di temi valide."
+
 #, fuzzy, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "Nessun grafico con l'ID <tt>%s</tt>"
@@ -52473,6 +52477,9 @@ msgstr "Velocità dei byte inviati alla connessione RRD"
 
 msgid "Rate of change"
 msgstr "Tasso di cambiamento"
+
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
 
 msgid "Rate of metrics received"
 msgstr "Tasso di metriche ricevute"

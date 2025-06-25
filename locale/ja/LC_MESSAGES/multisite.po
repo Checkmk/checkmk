@@ -42299,6 +42299,10 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
+#, fuzzy
+msgid "No graph recipe found"
+msgstr "有効なテーマディレクトリがありません。"
+
 #, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
 msgstr "ユーザー <tt>%s</tt> に対して ID <tt>%s</tt> のグラフが見つかりません"
@@ -50628,6 +50632,10 @@ msgstr "RRDコネクションに送信されたバイトのレート"
 
 msgid "Rate of change"
 msgstr "変化率"
+
+#, fuzzy
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr "ディスクバックエンドバイトの削除または上書き"
 
 msgid "Rate of metrics received"
 msgstr "メトリクスの受信率"

@@ -710,7 +710,7 @@ def create_nagios_servicedefs(
     if not services_ids and not active_checks_rules_exist and not custom_checks:
         ping_services.append("PING")
 
-    if ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
+    if config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
         if config_cache.default_address_family(hostname) is AddressFamily.AF_INET6:
             if "PING IPv4" not in services_ids:
                 ping_services.append("PING IPv4")

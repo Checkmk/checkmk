@@ -175,13 +175,13 @@ def dump_precompiled_hostcheck(
     )
 
     # IP addresses
-    ip_stack_config = ConfigCache.ip_stack_config(hostname)
+    ip_stack_config = config_cache.ip_stack_config(hostname)
     needed_ipaddresses: dict[HostName, HostAddress] = {}
     needed_ipv6addresses: dict[HostName, HostAddress] = {}
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
-            node_ip_stack_config = ConfigCache.ip_stack_config(node)
+            node_ip_stack_config = config_cache.ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
                 needed_ipaddresses[node] = ip_address_of(node, socket.AddressFamily.AF_INET)
 

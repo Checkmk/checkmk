@@ -631,7 +631,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     try:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
-        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ip_stack_config = config_cache.ip_stack_config(hostname)
         ipaddress = (
             None
             if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
@@ -1120,7 +1120,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
-        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+        if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
 
         ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
@@ -1214,7 +1214,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
 
     assert hostnames
     for hostname in (HostName(hn) for hn in hostnames):
-        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+        if config_cache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
             raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
         ipaddress = ip_address_of(hostname, ip_lookup_config.default_address_family(hostname))
         if not ipaddress:

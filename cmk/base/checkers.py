@@ -393,7 +393,7 @@ class CMKFetcher:
             hosts = [
                 (
                     host_name,
-                    (ip_stack_config := ConfigCache.ip_stack_config(host_name)),
+                    (ip_stack_config := self.config_cache.ip_stack_config(host_name)),
                     ip_address
                     or (
                         None
@@ -408,7 +408,7 @@ class CMKFetcher:
             hosts = [
                 (
                     node,
-                    (ip_stack_config := ConfigCache.ip_stack_config(node)),
+                    (ip_stack_config := self.config_cache.ip_stack_config(node)),
                     (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP

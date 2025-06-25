@@ -83,7 +83,7 @@ def is_tag_condition_tag_id(condition: TagCondition) -> TypeGuard[TagID]:
 
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
-TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]]
+type TagsOfHosts = Mapping[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
 LabelGroupsCacheId = tuple[tuple[AndOrNotLiteral, tuple[tuple[AndOrNotLiteral, str], ...]], ...]
 

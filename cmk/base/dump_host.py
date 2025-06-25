@@ -142,7 +142,7 @@ def dump_host(
         add_txt = ""
     print_("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ip_stack_config = ConfigCache.ip_stack_config(hostname)
+    ip_stack_config = config_cache.ip_stack_config(hostname)
     primary_family = config_cache.default_address_family(hostname)
     ipaddress = (
         None if ip_stack_config is IPStackConfig.NO_IP else ip_address_of(hostname, primary_family)
@@ -222,7 +222,7 @@ def dump_host(
             plugins,
             hostname,
             ipaddress,
-            ConfigCache.ip_stack_config(hostname),
+            config_cache.ip_stack_config(hostname),
             fetcher_factory=config_cache.fetcher_factory(
                 config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
                 ip_address_of,

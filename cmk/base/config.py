@@ -1563,10 +1563,12 @@ class ConfigCache:
         self.hosts_config = make_hosts_config(self._loaded_config)
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
-        self._hosttags = self._collect_hosttags(tag_to_group_map, self._host_paths)
+        self._hosttags, self._host_tags_maps = self._collect_hosttags(
+            tag_to_group_map, self._host_paths, host_tags
+        )
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            host_tags=host_tags,
+            host_tags=self._host_tags_maps,
             host_paths=self._host_paths,
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
@@ -1579,7 +1581,7 @@ class ConfigCache:
             ),
         )
         builtin_host_labels = {
-            hostname: get_builtin_host_labels(_site_of_host(hostname))
+            hostname: get_builtin_host_labels(self._site_of_host(hostname))
             for hostname in self.hosts_config
         }
         self.label_manager = LabelManager(
@@ -1660,7 +1662,7 @@ class ConfigCache:
         return ParentScanConfig(
             active=self.is_active(host_name),
             online=self.is_online(host_name),
-            ip_stack_config=ConfigCache.ip_stack_config(host_name),
+            ip_stack_config=self.ip_stack_config(host_name),
             parents=self.parents(host_name),
         )
 
@@ -1676,7 +1678,7 @@ class ConfigCache:
 
     def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
-            ip_stack_config=ConfigCache.ip_stack_config,
+            ip_stack_config=self.ip_stack_config,
             is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
             is_snmp_management=lambda host_name: self.management_protocol(host_name) == "snmp",
             is_use_walk_host=lambda host_name: self.get_snmp_backend(host_name)
@@ -2172,12 +2174,12 @@ class ConfigCache:
             return self.__computed_datasources[host_name]
 
         return self.__computed_datasources.setdefault(
-            host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags(host_name))
+            host_name, cmk.utils.tags.compute_datasources(self.tags(host_name))
         )
 
     def is_piggyback_host(self, host_name: HostName) -> bool:
         def get_is_piggyback_host() -> bool:
-            tag_groups: Final = ConfigCache.tags(host_name)
+            tag_groups: Final = self.tags(host_name)
             if tag_groups[TagGroupID("piggyback")] == TagID("piggyback"):
                 return True
             if tag_groups[TagGroupID("piggyback")] == TagID("no-piggyback"):
@@ -2238,7 +2240,7 @@ class ConfigCache:
             return True
 
         # hosts without a site: tag belong to all sites
-        return _site_of_host(host_name) == distributed_wato_site
+        return self._site_of_host(host_name) == distributed_wato_site
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(
@@ -2624,7 +2626,7 @@ class ConfigCache:
         explicit_command = self.explicit_check_command(host_name)
         if explicit_command is not None:
             return explicit_command
-        if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
+        if self.ip_stack_config(host_name) is IPStackConfig.NO_IP:
             return "ok"
         return default_host_check_command
 
@@ -2658,8 +2660,10 @@ class ConfigCache:
 
     @staticmethod
     def _collect_hosttags(
-        tag_to_group_map: Mapping[TagID, TagGroupID], host_paths: Mapping[HostName, str]
-    ) -> Mapping[HostName, Sequence[TagID]]:
+        tag_to_group_map: Mapping[TagID, TagGroupID],
+        host_paths: Mapping[HostName, str],
+        raw_host_tags: Mapping[HostName, Mapping[TagGroupID, TagID]],
+    ) -> tuple[Mapping[HostName, Sequence[TagID]], Mapping[HostName, Mapping[TagGroupID, TagID]]]:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -2667,19 +2671,20 @@ class ConfigCache:
         all_hosts configuration. Detect it and try to be compatible.
         """
         tags_sequences = dict[HostName, Sequence[TagID]]()
+        tags_maps = {**raw_host_tags}  # dict[HostName, Mapping[TagGroupID, TagID]]()
         for tagged_host in all_hosts + list(clusters):
             parts = tagged_host.split("|")
             hostname = parts[0]
 
-            if hostname in host_tags:
+            if hostname in tags_maps:
                 # New dict host_tags are available: only need to compute the tag list
                 tags_sequences[hostname] = ConfigCache._tag_groups_to_tag_list(
-                    host_paths.get(hostname, "/"), host_tags[hostname]
+                    host_paths.get(hostname, "/"), tags_maps[hostname]
                 )
             else:
                 # Only tag list available. Use it and compute the tag groups.
                 tags_sequences[hostname] = tuple(parts[1:])
-                host_tags[hostname] = ConfigCache._tag_list_to_tag_groups(
+                tags_maps[hostname] = ConfigCache._tag_list_to_tag_groups(
                     tag_to_group_map, tags_sequences[hostname]
                 )
 
@@ -2687,10 +2692,10 @@ class ConfigCache:
             tags_sequences[shadow_host_name] = tuple(
                 set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
             )
-            host_tags[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
+            tags_maps[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
                 tag_to_group_map, tags_sequences[shadow_host_name]
             )
-        return tags_sequences
+        return tags_sequences, tags_maps
 
     @staticmethod
     def _tag_groups_to_tag_list(
@@ -2723,14 +2728,13 @@ class ConfigCache:
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return ConfigCache._tag_groups_to_tag_list("/", ConfigCache.tags(hostname))
+        return ConfigCache._tag_groups_to_tag_list("/", self.tags(hostname))
 
     # TODO: check all call sites and remove this or make it private?
-    @staticmethod
-    def tags(hostname: HostName | HostAddress) -> Mapping[TagGroupID, TagID]:
+    def tags(self, hostname: HostName | HostAddress) -> Mapping[TagGroupID, TagID]:
         """Returns the dict of all configured tag groups and values of a host."""
         with contextlib.suppress(KeyError):
-            return host_tags[hostname]
+            return self._host_tags_maps[hostname]
 
         return cmk.utils.tags.fallback_tags(omd_site())
 
@@ -2999,10 +3003,9 @@ class ConfigCache:
             * 60,
         )
 
-    @staticmethod
-    def ip_stack_config(host_name: HostName | HostAddress) -> IPStackConfig:
+    def ip_stack_config(self, host_name: HostName | HostAddress) -> IPStackConfig:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
-        tag_groups = ConfigCache.tags(host_name)
+        tag_groups = self.tags(host_name)
         if (
             TagGroupID("no-ip") in tag_groups
             or TagID("no-ip") == tag_groups[TagGroupID("address_family")]
@@ -3044,8 +3047,8 @@ class ConfigCache:
 
         def is_ipv6_primary() -> bool:
             # Whether or not the given host is configured to be monitored primarily via IPv6
-            return ConfigCache.ip_stack_config(hostname) is IPStackConfig.IPv6 or (
-                ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK
+            return self.ip_stack_config(hostname) is IPStackConfig.IPv6 or (
+                self.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK
                 and primary_ip_address_family_of() is socket.AF_INET6
             )
 
@@ -3377,7 +3380,7 @@ class ConfigCache:
         if "alias" not in attrs:
             attrs["alias"] = self.alias(hostname)
 
-        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ip_stack_config = self.ip_stack_config(hostname)
 
         v4address = (
             ip_address_of(hostname, socket.AddressFamily.AF_INET)
@@ -3429,7 +3432,7 @@ class ConfigCache:
         attrs = {
             "_NODENAMES": " ".join(sorted_nodes),
         }
-        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ip_stack_config = self.ip_stack_config(hostname)
         node_ips_4 = []
         if IPStackConfig.IPv4 in ip_stack_config:
             family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
@@ -3485,7 +3488,7 @@ class ConfigCache:
         host_name: HostName,
         nodes: Iterable[HostName],
     ) -> None:
-        if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
+        if self.ip_stack_config(host_name) is IPStackConfig.NO_IP:
             cluster_host_family = None
             address_families = []
         else:
@@ -3836,11 +3839,10 @@ class ConfigCache:
             )
         )
 
-
-def _site_of_host(host_name: HostName) -> SiteId:
-    return SiteId(
-        ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site or omd_site())
-    )
+    def _site_of_host(self, host_name: HostName) -> SiteId:
+        return SiteId(
+            self.tags(host_name).get(TagGroupID("site"), distributed_wato_site or omd_site())
+        )
 
 
 def access_globally_cached_config_cache() -> ConfigCache:

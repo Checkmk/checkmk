@@ -39,7 +39,16 @@ def _try_backup_site_to_tarfile(
         tar_mode += "gz"
 
     try:
-        backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
+        site_home = SitePaths.from_site_name(site.name).home
+        _backup_site_to_tarfile(
+            site.name,
+            site_home,
+            site.is_stopped(global_opts.verbose),
+            fh,
+            tar_mode,
+            options,
+            global_opts.verbose,
+        )
     except OSError as e:
         sys.exit("Failed to perform backup: %s" % e)
 
@@ -77,19 +86,6 @@ def ensure_mkbackup_lock_dir_rights() -> None:
         pass
 
 
-def backup_site_to_tarfile(
-    site: SiteContext,
-    fh: BinaryIO | io.BufferedWriter,
-    mode: str,
-    options: CommandOptions,
-    verbose: bool,
-) -> None:
-    site_home = SitePaths.from_site_name(site.name).home
-    _backup_site_to_tarfile(
-        site.name, site_home, site.is_stopped(verbose), fh, mode, options, verbose
-    )
-
-
 def _backup_site_to_tarfile(
     site_name: str,
     site_home: str,
@@ -111,7 +107,7 @@ def _backup_site_to_tarfile(
             for glob_pattern in excludes
         )
 
-    with RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
+    with _RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
         # FIXME: The typing of _backup_site_to_tarfile and its callers is broken: One has to bundle
         # the fileobj and the mode together in a way that no nonsensical combinations are possible.
         # Currently they *are* possible, and exactly that makes mypy unhappy.
@@ -124,14 +120,14 @@ def _backup_site_to_tarfile(
             # the whole tar archive. Important for streaming.
             # The file is added twice to get the first for validation
             # and the second for extraction during restore.
-            tar_add(
+            _tar_add(
                 rrd_socket,
                 tar,
                 site_home + "/version",
                 site_name + "/version",
                 verbose=verbose,
             )
-            tar_add(
+            _tar_add(
                 rrd_socket,
                 tar,
                 site_home,
@@ -191,7 +187,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     return excludes
 
 
-class RRDSocket(contextlib.AbstractContextManager):
+class _RRDSocket(contextlib.AbstractContextManager):
     def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
@@ -298,8 +294,8 @@ class RRDSocket(contextlib.AbstractContextManager):
             self._sock.close()
 
 
-def tar_add(
-    rrd_socket: RRDSocket,
+def _tar_add(
+    rrd_socket: _RRDSocket,
     tar: tarfile.TarFile,
     name: str,
     arcname: str,
@@ -332,7 +328,7 @@ def tar_add(
             if name.endswith("var/mkeventd/history/history.sqlite"):
                 backup_name = f"{name}.backup"
                 try:
-                    backup_sqlite(name, backup_name)
+                    _backup_sqlite(name, backup_name)
                     backup_tarinfo = tar.gettarinfo(backup_name, arcname=arcname)
                     with open(backup_name, "rb") as file:
                         tar.addfile(backup_tarinfo, file)
@@ -354,7 +350,7 @@ def tar_add(
             sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     for filename in directory_files:
-        tar_add(  # recursive call
+        _tar_add(  # recursive call
             rrd_socket,
             tar,
             os.path.join(name, filename),
@@ -387,7 +383,7 @@ def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
     return sitename, version
 
 
-def backup_sqlite(src: str | Path, dst: str | Path) -> None:
+def _backup_sqlite(src: str | Path, dst: str | Path) -> None:
     """Backup sqlite database file.
 
     Uses sqlite3 backup API to create a backup of the database file.

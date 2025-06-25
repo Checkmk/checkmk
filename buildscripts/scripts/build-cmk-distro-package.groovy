@@ -102,8 +102,10 @@ def main() {
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
         }
+    }
 
-        inside_container_minimal(safe_branch_name: safe_branch_name) {
+    def stages = [
+        "Build BOM": {
             def build_instance = null;
             smart_stage(
                 name: "Build BOM",
@@ -140,22 +142,31 @@ def main() {
                     fingerprintArtifacts: true,
                 )
             }
+        },
+    ];
 
-            smart_stage(
-                name: 'Fetch agent binaries',
-                condition: !params.FAKE_WINDOWS_ARTIFACTS,
-                raiseOnError: true,
-            ) {
-                package_helper.provide_agent_binaries(version, edition, disable_cache, params.CIPARAM_BISECT_COMMENT);
-            }
-
-            smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
-                dir("${checkout_dir}") {
-                    sh("scripts/fake-artifacts");
-                }
+    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+        stages += package_helper.provide_agent_binaries(
+            version,
+            edition,
+            disable_cache,
+            params.CIPARAM_BISECT_COMMENT,
+            safe_branch_name,
+            "tmp_artifacts",
+        );
+    } else {
+        smart_stage(name: 'Fake agent binaries') {
+            dir("${checkout_dir}") {
+                sh("scripts/fake-artifacts");
             }
         }
     }
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
     stage("Build package") {
         lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {

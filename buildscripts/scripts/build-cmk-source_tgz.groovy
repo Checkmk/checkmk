@@ -24,6 +24,7 @@ def main() {
     def disable_cache = DISABLE_CACHE;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
@@ -53,40 +54,56 @@ def main() {
         }
     }
 
-    inside_container_minimal(safe_branch_name: safe_branch_name) {
-        stage("Build BOM") {
-            upstream_build(
-                relative_job_name: "${package_helper.branch_base_folder(with_testing_prefix=false)}/builders/build-cmk-bom",
-                build_params: [
-                    /// currently CUSTOM_GIT_REF must match, but in the future
-                    /// we should define dependency paths for build-cmk-distro-package
-                    CUSTOM_GIT_REF: effective_git_ref,
-                    VERSION: version,
-                    EDITION: edition,
-                    DISABLE_CACHE: disable_cache,
-                ],
-                build_params_no_check: [
-                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                ],
-                no_remove_others: true, // do not delete other files in the dest dir
-                no_venv: true,          // run ci-artifacts call without venv
-                omit_build_venv: true,  // do not check or build a venv first
-                dest: "/checkmk/",
-            );
-        }
+    def stages = [
+        "Build BOM": {
+            smart_stage(
+                name: "Build BOM",
+                raiseOnError: true,
+            ) {
+                smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: version,
+                        EDITION: edition,
+                        DISABLE_CACHE: disable_cache,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    dest: "/checkmk/",
+                );
+            }
+        },
+    ];
 
-        smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
-            package_helper.provide_agent_binaries(version, edition, disable_cache, params.CIPARAM_BISECT_COMMENT);
-        }
-
-        smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {
+    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+        stages += package_helper.provide_agent_binaries(
+            version,
+            edition,
+            disable_cache,
+            params.CIPARAM_BISECT_COMMENT,
+            safe_branch_name,
+            "tmp_artifacts",
+        );
+    } else {
+        smart_stage(name: 'Fake agent binaries') {
             dir("${checkout_dir}") {
                 sh("scripts/fake-artifacts");
             }
         }
     }
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
     inside_container(ulimit_nofile: 2048) {
         def source_package_name = {

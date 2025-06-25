@@ -10,6 +10,8 @@
 /// values which should not be here. If that gets on `master`, it should be gotten
 /// rid of as soon as possible
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 /// Returns the Jenkins 'branch folder' of the currently running job, either with or without
 /// the 'Testing/..' prefix
 /// So "Testing/bla.blubb/checkmk/2.4.0/some_job" will result in
@@ -23,7 +25,7 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
-def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
+def provide_agent_binaries(version, edition, disable_cache, bisect_comment, safe_branch_name, artifacts_base_dir) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -118,31 +120,53 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
         ],
     ];
 
-    def artifacts_base_dir = "tmp_artifacts";
+    def stages = upstream_job_details.collectEntries { job_name, details ->
+        [("${job_name}") : {
+            def run_condition = details.get("condition", true);
+            def build_instance = null;
 
-    upstream_job_details.collect { job_name, details ->
-        if ( ! details.get("condition", true) ) {
-            return;
-        }
-        upstream_build(
-            relative_job_name: details.relative_job_name,
-            build_params: [
-                DISABLE_CACHE: disable_cache,
-                VERSION: version,
-            ],
-            build_params_no_check: [
-                CIPARAM_BISECT_COMMENT: bisect_comment,
-            ],
-            dependency_paths: details.dependency_paths,
-            no_venv: true,          // run ci-artifacts call without venv
-            omit_build_venv: true,  // do not check or build a venv first
-            dest: "${artifacts_base_dir}/${job_name}",
-        );
-        dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {
-            sh(details.install_cmd);
-        }
+            if (! run_condition) {
+                Utils.markStageSkippedForConditional("${distro}");
+            }
+
+            smart_stage(
+                name: job_name,
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                build_instance = smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    relative_job_name: details.relative_job_name,
+                    build_params: [
+                        VERSION: version,
+                        DISABLE_CACHE: disable_cache,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_BISECT_COMMENT: bisect_comment,
+                    ],
+                    dependency_paths: details.dependency_paths,
+                    dest: "${artifacts_base_dir}/${job_name}",
+                    no_remove_others: true, // do not delete other files in the dest dir
+                );
+            }
+
+            smart_stage(
+                name: "Move artifacts around",
+                condition: run_condition && build_instance,
+                raiseOnError: false,
+            ) {
+                dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {
+                    sh(details.install_cmd);
+                }
+            }
+        }]
     }
 
+    return stages;
+}
+
+def cleanup_provided_agent_binaries(artifacts_base_dir) {
     /// Cleanup
     sh("""
         # needed only because upstream_build() only downloads relative

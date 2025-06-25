@@ -119,6 +119,7 @@ def test_ldap_user_login_success(
     _, page = new_browser_context_and_page
     login_page = LoginPage(page, test_site.internal_url)
     login_page.login(valid_ldap_credentials)
+    login_page.main_menu.monitor_menu("Problem dashboard").click()
     login_page.main_area.check_page_title("Problem dashboard")
 
 

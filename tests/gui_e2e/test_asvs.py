@@ -39,6 +39,7 @@ def test_v2_1_5(test_site: Site, dashboard_page: Dashboard, credentials: CmkCred
     test_site.reset_admin_password()
 
     login_page.login(credentials)
+    dashboard_page.navigate()
     page.main_area.check_page_title("Main dashboard")
 
 

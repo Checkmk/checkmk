@@ -6,6 +6,7 @@ import logging
 import re
 from re import Pattern
 from typing import override
+from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -43,8 +44,10 @@ class Dashboard(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Main dashboard' page")
-        self.main_menu.main_page.click()
-        self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
+        self.main_menu.monitor_menu("Main dashboard").click()
+        self.page.wait_for_url(
+            url=re.compile(f"{quote_plus('dashboard.py?name=main')}$"), wait_until="load"
+        )
         self.validate_page()
 
     @override

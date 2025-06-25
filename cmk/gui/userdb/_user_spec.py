@@ -27,4 +27,5 @@ def new_user_template(connection_id: str) -> UserSpec:
 
 
 def add_internal_attributes(usr: UserSpec) -> int:
+    usr.setdefault("start_url", "welcome.py")
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)

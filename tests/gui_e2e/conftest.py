@@ -126,7 +126,7 @@ def _navigate_to_dashboard(
         # Log in to the site if not already logged in.
         LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
 
-    return dashboard_type(page, navigate_to_page=False)
+    return dashboard_type(page, navigate_to_page=True)
 
 
 @pytest.fixture(name="new_browser_context_and_page")

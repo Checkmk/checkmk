@@ -1317,4 +1317,4 @@ main() {
 
 }
 
-[ -z "${MK_SOURCE_AGENT}" ] && main "$@"
+[ -n "${MK_SOURCE_AGENT}" ] || main "$@"

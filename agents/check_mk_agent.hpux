@@ -172,4 +172,4 @@ main() {
 
 }
 
-main
+[ -n "${MK_SOURCE_AGENT}" ] || main "$@"

@@ -5,8 +5,7 @@
 
 #NOTE: openvms not supported
 AGENT_OS_TO_TEST=("aix" "freebsd" "hpux" "linux" "macosx" "netbsd" "openbsd" "openwrt" "solaris")
-#NOTE: aix, freebsd, linux, openvms, openwrt and solaris not supported
-AGENT_OS_TO_SOURCE=("hpux" "macosx" "netbsd" "openbsd")
+AGENT_OS_TO_SOURCE=("aix" "freebsd" "hpux" "linux" "macosx" "netbsd" "openbsd" "openwrt" "solaris")
 
 AGENTS_TO_TEST=()
 for agent_ext in "${AGENT_OS_TO_TEST[@]}"; do

@@ -465,7 +465,7 @@ class CMKFetcher:
                     tls_config=tls_config,
                     computed_datasources=self.config_cache.computed_datasources(current_host_name),
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),
-                    tag_list=self.config_cache.tag_list(current_host_name),
+                    tag_list=self.config_cache.host_tags.tag_list(current_host_name),
                     management_ip=self.ip_address_of_mgmt(
                         current_host_name, self.default_address_family(current_host_name)
                     ),

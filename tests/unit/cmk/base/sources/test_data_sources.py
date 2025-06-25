@@ -89,7 +89,7 @@ def _make_sources(
         ),
         computed_datasources=config_cache.computed_datasources(hostname),
         datasource_programs=config_cache.datasource_programs(hostname),
-        tag_list=config_cache.tag_list(hostname),
+        tag_list=config_cache.host_tags.tag_list(hostname),
         management_ip=ipaddress,
         management_protocol=config_cache.management_protocol(hostname),
         special_agent_command_lines=config_cache.special_agent_command_lines(

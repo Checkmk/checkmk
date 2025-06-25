@@ -179,7 +179,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
 
     expected_macros = (
         documented["required"]
-        + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
+        + list(_iter_macros(documented["per_tag"], config_cache.host_tags.tags(host_name).keys()))
         + list(
             _iter_macros(
                 documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()
@@ -232,7 +232,7 @@ def test_special_agent_macros(
 
     expected_macros = (
         documented["required"]
-        + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
+        + list(_iter_macros(documented["per_tag"], config_cache.host_tags.tags(host_name).keys()))
         + list(
             _iter_macros(
                 documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()

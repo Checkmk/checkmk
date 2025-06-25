@@ -458,7 +458,7 @@ def _list_all_hosts_with_tags(
 
     hosts = []
     for h in set(hostnames):
-        if hosttags_match_taglist(config_cache.tag_list(h), tags):
+        if hosttags_match_taglist(config_cache.host_tags.tag_list(h), tags):
             hosts.append(h)
     return hosts
 
@@ -688,7 +688,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
-            tag_list=config_cache.tag_list(hostname),
+            tag_list=config_cache.host_tags.tag_list(hostname),
             management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
@@ -1428,7 +1428,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             error_handler=config.handle_ip_lookup_failure,
         ),
         service_depends_on=config.ServiceDependsOn(
-            tag_list=config_cache.tag_list,
+            tag_list=config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
     )
@@ -1507,7 +1507,7 @@ def mode_update() -> None:
                 ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
-                    tag_list=loading_result.config_cache.tag_list,
+                    tag_list=loading_result.config_cache.host_tags.tag_list,
                     service_dependencies=loading_result.loaded_config.service_dependencies,
                 ),
                 duplicates=sorted(
@@ -1580,7 +1580,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.tag_list,
+            tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
         discovery_rules=loading_result.loaded_config.discovery_rules,
@@ -1648,7 +1648,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.tag_list,
+            tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
         discovery_rules=loading_result.loaded_config.discovery_rules,
@@ -2425,7 +2425,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
         loading_result.config_cache,
         config.make_hosts_config(loading_result.loaded_config),
         config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.tag_list,
+            tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
         options,

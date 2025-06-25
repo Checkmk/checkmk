@@ -172,7 +172,9 @@ def dump_host(
     )
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
+    tags = [
+        (tag_template % ":".join(t)) for t in sorted(config_cache.host_tags.tags(hostname).items())
+    ]
     print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [
@@ -248,7 +250,7 @@ def dump_host(
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
-            tag_list=config_cache.tag_list(hostname),
+            tag_list=config_cache.host_tags.tag_list(hostname),
             management_ip=ip_address_of_mgmt(hostname, primary_family),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(

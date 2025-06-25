@@ -22,7 +22,6 @@ from cmk.utils.ip_lookup import (
     IPLookupConfig,
     IPStackConfig,
     lookup_ip_address,
-    lookup_mgmt_board_ip_address,
     make_lookup_ip_address,
 )
 from cmk.utils.paths import tmp_dir
@@ -133,6 +132,7 @@ def dump_host(
     hostname: HostName,
     *,
     ip_address_of: ip_lookup.IPLookup,
+    ip_address_of_mgmt: ip_lookup.IPLookup,
     simulation_mode: bool,
 ) -> None:
     print_("\n")
@@ -155,10 +155,7 @@ def dump_host(
         None
         if ip_stack_config is IPStackConfig.NO_IP
         else _ip_address_for_dump_host(
-            ip_lookup_config,
-            hosts_config,
-            hostname,
-            family=primary_family,
+            ip_lookup_config, hosts_config, hostname, family=primary_family
         )
     )
 
@@ -270,7 +267,7 @@ def dump_host(
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
             tag_list=config_cache.tag_list(hostname),
-            management_ip=lookup_mgmt_board_ip_address(ip_lookup_config, hostname),
+            management_ip=ip_address_of_mgmt(hostname, primary_family),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
                 hostname,

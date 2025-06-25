@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import {
   type ModeHostFormKeys,
+  type ModeHostSite,
   type I18NPingHost,
   type I18NAgentConnection
 } from 'cmk-shared-typing/typescript/mode_host'
@@ -18,6 +19,7 @@ const props = defineProps<{
   i18n_ping_host: I18NPingHost
   i18n_agent_connection: I18NAgentConnection
   form_keys: ModeHostFormKeys
+  sites: Array<ModeHostSite>
   url: string
 }>()
 
@@ -124,6 +126,7 @@ function getElementBySelector<T>(selector: string): T {
     :site-select-element="siteSelectElement"
     :ip-address-family-select-element="ipAddressFamilySelectElement"
     :i18n="i18n_agent_connection"
+    :sites="sites"
     :url="url"
   ></AgentConnectionTest>
 </template>

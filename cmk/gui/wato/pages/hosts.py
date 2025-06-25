@@ -79,6 +79,7 @@ from cmk.shared_typing.mode_host import (
     I18nPingHost,
     ModeHost,
     ModeHostFormKeys,
+    ModeHostSite,
 )
 
 from ._host_attributes import configure_attributes
@@ -339,6 +340,13 @@ class ABCHostMode(WatoMode, abc.ABC):
                         if not self._is_cluster()
                         else "cb_cluster_change",
                     ),
+                    sites=[
+                        ModeHostSite(
+                            id_hash=DropdownChoice.option_id(site_id),
+                            site_id=site_id,
+                        )
+                        for site_id, _site_name in user_sites.get_activation_site_choices()
+                    ],
                     url=folder_preserving_link([("mode", "agent_of_host"), ("host", "TEST")]),
                 )
             ),

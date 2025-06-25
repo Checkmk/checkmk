@@ -4,11 +4,23 @@
     "title": "mode_host",
     "properties": {
         "form_keys": { "$ref": "#/$defs/mode_host_form_keys" },
+        "sites": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/mode_host_site"
+            }
+        },
         "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
         "i18n_agent_connection": { "$ref": "#/$defs/i18n_agent_connection" },
         "url": { "type": "string" }
     },
-    "required": ["form_keys", "i18n_ping_host", "i18n_agent_connection", "url"],
+    "required": [
+        "form_keys",
+        "sites",
+        "i18n_ping_host",
+        "i18n_agent_connection",
+        "url"
+    ],
     "$defs": {
         "i18n_ping_host": {
             "type": "object",
@@ -84,6 +96,14 @@
                 "tag_agent",
                 "cb_change"
             ]
+        },
+        "mode_host_site": {
+            "type": "object",
+            "properties": {
+                "id_hash": { "type": "string" },
+                "site_id": { "type": "string" }
+            },
+            "required": ["id_hash", "site_id"]
         }
     }
 }

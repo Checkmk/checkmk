@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import { type I18NAgentConnection } from 'cmk-shared-typing/typescript/mode_host'
+import { type I18NAgentConnection, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
 
 const { t } = usei18n('agent_connection_test')
 
@@ -25,6 +25,7 @@ interface Props {
   siteSelectElement: HTMLSelectElement
   ipAddressFamilySelectElement: HTMLSelectElement
   i18n: I18NAgentConnection
+  sites: Array<ModeHostSite>
   url: string
 }
 
@@ -106,14 +107,15 @@ type AjaxOptions = {
 
 async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
   try {
-    const siteId = ref(props.siteSelectElement.textContent ?? '')
+    const siteIdHash = props.siteSelectElement.value
+    const siteId = props.sites.find((site) => site.id_hash === siteIdHash)?.site_id ?? ''
     const postDataRaw = new URLSearchParams({
       host_name: hostname.value ?? '',
       ipaddress: ipV4.value ?? ipV6.value ?? '',
       address_family: props.ipAddressFamilySelectElement.value ?? 'ip-v4-only',
       agent_port: '6556',
       timeout: '5',
-      site_id: siteId.value.split(' - ')[0] ?? ''
+      site_id: siteId
     })
 
     const postData = postDataRaw.toString()

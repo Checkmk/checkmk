@@ -132,7 +132,6 @@ def dump_host(
     plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
-    ip_address_of: ip_lookup.IPLookup,
     simulation_mode: bool,
 ) -> None:
     print_("\n")
@@ -245,8 +244,7 @@ def dump_host(
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
             fetcher_factory=config_cache.fetcher_factory(
-                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-                ip_address_of,
+                config_cache.make_service_configurer(plugins.check_plugins, service_name_config)
             ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(

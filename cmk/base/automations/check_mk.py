@@ -313,11 +313,6 @@ class AutomationDiscovery(DiscoveryAutomation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
 
         results: dict[HostName, DiscoveryReport] = {}
 
@@ -329,11 +324,15 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(service_configurer, ip_address_of),
+            config_cache.fetcher_factory(service_configurer),
             plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
-            ip_address_of=ip_address_of,
+            ip_address_of=ip_lookup.ConfiguredIPLookup(
+                ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+                allow_empty=config_cache.hosts_config.clusters,
+                error_handler=config.handle_ip_lookup_failure,
+            ),
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -430,11 +429,6 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
         try:
@@ -448,7 +442,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.http_proxies,
             )
             fetcher = SpecialAgentFetcher(
-                config_cache.fetcher_factory(service_configurer, ip_address_of),
+                config_cache.fetcher_factory(service_configurer),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
                 file_cache_options=file_cache_options,
@@ -500,22 +494,21 @@ class AutomationDiscoveryPreview(Automation):
         service_configurer = config_cache.make_service_configurer(
             plugins.check_plugins, service_name_config
         )
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=handle_ip_lookup_failure,
-        )
         on_error = OnError.RAISE if raise_errors else OnError.WARN
         file_cache_options = FileCacheOptions(
             use_outdated=prevent_fetching, use_only_cache=prevent_fetching
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(service_configurer, ip_address_of),
+            config_cache.fetcher_factory(service_configurer),
             plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
-            ip_address_of=ip_address_of,
+            ip_address_of=ip_lookup.ConfiguredIPLookup(
+                ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+                allow_empty=config_cache.hosts_config.clusters,
+                error_handler=config.handle_ip_lookup_failure,
+            ),
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -523,8 +516,12 @@ class AutomationDiscoveryPreview(Automation):
             snmp_backend_override=None,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
+        ip_address_of = ip_lookup.ConfiguredIPLookup(
+            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+            allow_empty=config_cache.hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
+        )
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
-        # TODO: see if we can consolidate this with `ip_address_of`
         ip_address = (
             None
             if host_name in hosts_config.clusters
@@ -888,18 +885,17 @@ def _execute_autodiscovery(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    slightly_different_ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-        allow_empty=config_cache.hosts_config.clusters,
-        error_handler=config.handle_ip_lookup_failure,
-    )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(service_configurer, slightly_different_ip_address_of),
+        config_cache.fetcher_factory(service_configurer),
         ab_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
-        ip_address_of=slightly_different_ip_address_of,
+        ip_address_of=ip_lookup.ConfiguredIPLookup(
+            ip_lookup_func,
+            allow_empty=config_cache.hosts_config.clusters,
+            error_handler=config.handle_ip_lookup_failure,
+        ),
         mode=Mode.DISCOVERY,
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,
@@ -2968,11 +2964,6 @@ class AutomationDiagHost(Automation):
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
@@ -2997,7 +2988,7 @@ class AutomationDiagHost(Automation):
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
-            fetcher_factory=config_cache.fetcher_factory(service_configurer, ip_address_of),
+            fetcher_factory=config_cache.fetcher_factory(service_configurer),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -3027,7 +3018,11 @@ class AutomationDiagHost(Automation):
                 ipaddress,
                 password_store_file=pending_passwords_file,
                 passwords=passwords,
-                ip_address_of=ip_address_of,
+                ip_address_of=ip_lookup.ConfiguredIPLookup(
+                    ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+                    allow_empty=config_cache.hosts_config.clusters,
+                    error_handler=handle_ip_lookup_failure,
+                ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
@@ -3469,11 +3464,6 @@ class AutomationGetAgentOutput(Automation):
         hosts_config = config.make_hosts_config(loading_result.loaded_config)
         ip_stack_config = ConfigCache.ip_stack_config(hostname)
         ip_lookup_config = config_cache.ip_lookup_config()
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            allow_empty=config_cache.hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
-        )
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -3511,7 +3501,7 @@ class AutomationGetAgentOutput(Automation):
                     hostname,
                     ipaddress,
                     ip_stack_config,
-                    fetcher_factory=config_cache.fetcher_factory(service_configurer, ip_address_of),
+                    fetcher_factory=config_cache.fetcher_factory(service_configurer),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,
                         selected_sections=NO_SELECTION,
@@ -3541,7 +3531,11 @@ class AutomationGetAgentOutput(Automation):
                         ipaddress,
                         password_store_file=core_password_store_file,
                         passwords=cmk.utils.password_store.load(core_password_store_file),
-                        ip_address_of=ip_address_of,
+                        ip_address_of=ip_lookup.ConfiguredIPLookup(
+                            ip_lookup.make_lookup_ip_address(ip_lookup_config),
+                            allow_empty=hosts_config.clusters,
+                            error_handler=handle_ip_lookup_failure,
+                        ),
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

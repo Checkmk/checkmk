@@ -19,7 +19,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias, TypedDict
 
 import cmk.utils.paths
 
@@ -27,8 +27,16 @@ from cmk.gui.i18n import _u
 from cmk.gui.permissions import declare_permission
 
 
-def load_user_scripts(what: str) -> dict[str, Any]:
-    scripts = _load_user_scripts_from(
+class UserScriptInfo(TypedDict):
+    bulk: bool
+    title: str
+
+
+NotificationUserScripts: TypeAlias = dict[str, UserScriptInfo]
+
+
+def load_user_scripts(what: str) -> NotificationUserScripts:
+    scripts: NotificationUserScripts = _load_user_scripts_from(
         cmk.utils.paths.notifications_dir
         if what == "notifications"
         else (cmk.utils.paths.share_dir / what)
@@ -76,7 +84,7 @@ def _load_user_scripts_from(directory: Path) -> dict[str, Any]:
     return scripts
 
 
-def load_notification_scripts():
+def load_notification_scripts() -> NotificationUserScripts:
     return load_user_scripts("notifications")
 
 

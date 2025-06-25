@@ -219,7 +219,7 @@ class ABCNotificationsMode(ABCEventsMode):
         permissions.load_dynamic_permissions()
 
     @classmethod
-    def _rule_match_conditions(cls):
+    def _rule_match_conditions(cls) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         return (
             cls._generic_rule_match_conditions()
             + cls._event_rule_match_conditions(flavour="notify")
@@ -227,7 +227,7 @@ class ABCNotificationsMode(ABCEventsMode):
         )
 
     @classmethod
-    def _notification_rule_match_conditions(cls):
+    def _notification_rule_match_conditions(cls) -> list[DictionaryEntry]:
         return [
             (
                 "match_escalation",
@@ -303,7 +303,7 @@ class ABCNotificationsMode(ABCEventsMode):
         if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
             return []
 
-        def migrate_ec_rule_id_match(val):
+        def migrate_ec_rule_id_match(val: list[TextInput] | TextInput) -> list[TextInput]:
             if isinstance(val, list):
                 return val
             return [val]
@@ -553,7 +553,7 @@ class ABCNotificationsMode(ABCEventsMode):
             use_git=active_config.wato_use_git,
         )
 
-    def _vs_notification_bulkby(self):
+    def _vs_notification_bulkby(self) -> ListChoice:
         return ListChoice(
             title=_("Create separate notification bulks based on"),
             choices=[
@@ -575,7 +575,7 @@ class ABCNotificationsMode(ABCEventsMode):
             default_value=["host"],
         )
 
-    def _table_title(self, show_title, profilemode, userid):
+    def _table_title(self, show_title: bool, profilemode: bool, userid: str) -> str | HTML:
         if not show_title:
             return ""
         if profilemode:
@@ -988,7 +988,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
                 start_nr += len(user_rules)
 
-    def _vs_notification_scripts(self) -> DropdownChoice:
+    def _vs_notification_scripts(self) -> DropdownChoice[str]:
         return DropdownChoice(
             title=_("Notification Script"),
             choices=notification_script_choices,
@@ -3072,8 +3072,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             validate=self._validate_notification_rule,
         )
 
-    def _notification_script_choices_with_parameters(self):
-        choices = []
+    def _notification_script_choices_with_parameters(self) -> list[tuple[str, str, Alternative]]:
+        choices: list[tuple[str, str, Alternative]] = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
                 plugin = notification_parameter_registry[script_name]
@@ -3460,7 +3460,7 @@ class ModeNotificationParametersOverview(WatoMode):
 
 class ABCNotificationParameterMode(WatoMode):
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "notification_parameter"
 
     @staticmethod

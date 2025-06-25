@@ -113,7 +113,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
         ]
 
     @classmethod
-    def _generic_rule_match_conditions(cls):
+    def _generic_rule_match_conditions(cls) -> list[DictionaryEntry]:
         return _simple_host_rule_match_conditions() + [
             (
                 "match_servicelabels",

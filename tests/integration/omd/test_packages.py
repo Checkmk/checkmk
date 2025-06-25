@@ -113,6 +113,10 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     CheckmkActiveCheck("check_always_crit"),
     CheckmkActiveCheck("check_bi_aggr"),
     CheckmkActiveCheck("check_disk_smb", path="lib/python3/cmk/plugins/smb/libexec"),
+    CheckmkActiveCheck(
+        "check_elasticsearch_query",
+        path="lib/python3/cmk/plugins/elasticsearch/libexec",
+    ),
     CheckmkActiveCheck("check_form_submit"),
     CheckmkActiveCheck("check_httpv2", usage_text="Usage"),
     CheckmkActiveCheck("check_mailboxes", path="lib/python3/cmk/plugins/emailchecks/libexec"),

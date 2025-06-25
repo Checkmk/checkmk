@@ -21,7 +21,7 @@ test_korn_shell() {
     ksh -c "" >/dev/null 2>&1 || startSkipping
 
     for agent_path in "${AGENTS_TO_TEST[@]}"; do
-        ksh "${agent_path}"
+        ksh "${agent_path}" >/dev/null
 
         assertEquals "${agent_path}" "0" "$?"
     done

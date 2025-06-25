@@ -19,7 +19,7 @@ done
 
 test_bourne_again_shell() {
     for agent_path in "${AGENTS_TO_TEST[@]}"; do
-        bash "${agent_path}"
+        bash "${agent_path}" >/dev/null
 
         assertEquals "${agent_path}" "0" "$?"
     done

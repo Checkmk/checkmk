@@ -16,7 +16,7 @@ test_korn_shell_93() {
     ksh93 -c "" >/dev/null 2>&1 || startSkipping
 
     for agent_path in "${AGENTS_TO_TEST[@]}"; do
-        ksh93 "${agent_path}"
+        ksh93 "${agent_path}" >/dev/null
 
         assertEquals "${agent_path}" "0" "$?"
     done

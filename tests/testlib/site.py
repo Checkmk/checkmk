@@ -2144,10 +2144,10 @@ class SiteFactory:
         site.stop()
 
         logger.info(
-            "Updating %s site from %s version to %s version...",
+            "Updating %s site from %s to %s ...",
             site.id,
-            base_package.version,
-            target_package.version_directory(),
+            base_package.omd_version(),
+            target_package.omd_version(),
         )
 
         cmd = [

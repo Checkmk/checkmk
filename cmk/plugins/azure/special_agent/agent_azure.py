@@ -273,7 +273,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="""Send VM piggyback data to group host (default) or the VM iteself""",
     )
 
-    group_subscription = parser.add_mutually_exclusive_group(required=True)
+    group_subscription = parser.add_mutually_exclusive_group(required=False)
     group_subscription.add_argument(
         "--subscription",
         dest="subscriptions",
@@ -2117,18 +2117,24 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     write_remaining_reads(mgmt_client.ratelimit)
 
 
-def _get_all_tenant_subscriptions(args: Args) -> set[str]:
-    api_client = BaseApiClient(
-        _get_mgmt_authority_urls(args.authority, ""),
-        deserialize_http_proxy_config(args.proxy),
-    )
-    api_client.login(args.tenant, args.client, args.secret)
-    response = api_client.request(
-        method="GET",
-        full_uri="https://management.azure.com/subscriptions",
-        params={"api-version": "2022-12-01"},
-    )
-    return {item["subscriptionId"] for item in response.get("value", [])}
+def _get_subscriptions(args: Args) -> set[str]:
+    if args.subscriptions:
+        return set(args.subscriptions)
+
+    if args.all_subscriptions:
+        api_client = BaseApiClient(
+            _get_mgmt_authority_urls(args.authority, ""),
+            deserialize_http_proxy_config(args.proxy),
+        )
+        api_client.login(args.tenant, args.client, args.secret)
+        response = api_client.request(
+            method="GET",
+            full_uri="https://management.azure.com/subscriptions",
+            params={"api-version": "2022-12-01"},
+        )
+        return {item["subscriptionId"] for item in response.get("value", [])}
+
+    return set()  # no subscriptions
 
 
 def test_connections(args: Args, subscriptions: set[str]) -> int:
@@ -2152,7 +2158,7 @@ def main(argv=None):
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
 
-    subscriptions = args.subscriptions or _get_all_tenant_subscriptions(args)
+    subscriptions = _get_subscriptions(args)
     if args.connection_test:
         return test_connections(args, subscriptions)
 

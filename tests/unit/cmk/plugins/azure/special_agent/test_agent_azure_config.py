@@ -46,32 +46,6 @@ ARGV = [
     "testhost",
 ]
 
-ARGV_MISSING_SUBSCRIPTIONS = [
-    "--authority",
-    "global",
-    "--tenant",
-    "tenant-id",
-    "--client",
-    "client-id",
-    "--secret",
-    "secret",
-    "--piggyback_vms",
-    "grouphost",
-    "--services",
-    "Microsoft.Compute/virtualMachines",
-    "Microsoft.Storage/storageAccounts",
-    "--explicit-config",
-    "group=test-group",
-    "resources=Resource1,Resource2",
-    "--require-tag",
-    "tag1",
-    "--require-tag-value",
-    "tag2",
-    "value2",
-    "--cache-id",
-    "testhost",
-]
-
 ARGS = Args(
     debug=False,
     verbose=0,
@@ -136,11 +110,6 @@ def test_parse_arguments(
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args
     assert caplog.messages == expected_log
-
-
-def test_parse_missing_arguments() -> None:
-    with pytest.raises(SystemExit):
-        parse_arguments(ARGV_MISSING_SUBSCRIPTIONS)
 
 
 @pytest.mark.parametrize(

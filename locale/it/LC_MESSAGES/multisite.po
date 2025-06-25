@@ -52092,6 +52092,9 @@ msgstr "Velocità dei byte inviati alla connessione RRD"
 msgid "Rate of change"
 msgstr "Tasso di cambiamento"
 
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
+
 msgid "Rate of metrics received"
 msgstr "Tasso di metriche ricevute"
 

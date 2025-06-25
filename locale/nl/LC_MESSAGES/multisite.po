@@ -52533,6 +52533,9 @@ msgstr "Snelheid van bytes verzonden naar de RRD-verbinding"
 msgid "Rate of change"
 msgstr "Snelheid van verandering"
 
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
+
 msgid "Rate of metrics received"
 msgstr "Percentage ontvangen metriek"
 

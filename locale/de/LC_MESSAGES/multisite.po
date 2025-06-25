@@ -51563,6 +51563,10 @@ msgstr "An die RRD-Verbindung geschickte Byte-Rate"
 msgid "Rate of change"
 msgstr "Änderungsrate"
 
+#, fuzzy
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr "Entfernte oder überschriebene Backend-Bytes auf der Festplatte"
+
 msgid "Rate of metrics received"
 msgstr "Empfangene Rate an Metriken"
 

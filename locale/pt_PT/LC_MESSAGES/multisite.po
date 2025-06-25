@@ -52499,6 +52499,9 @@ msgstr "Taxa de bytes enviados para a ligação RRD"
 msgid "Rate of change"
 msgstr "Taxa de variação"
 
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
+
 msgid "Rate of metrics received"
 msgstr "Taxa de métricas recebidas"
 

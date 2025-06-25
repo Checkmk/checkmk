@@ -52600,6 +52600,9 @@ msgstr "Rata de octeți trimiși către conexiunea RRD"
 msgid "Rate of change"
 msgstr "Rata de schimbare"
 
+msgid "Rate of disk backend bytes removed or overwritten"
+msgstr ""
+
 msgid "Rate of metrics received"
 msgstr "Rata de metrice primite"
 

@@ -49522,6 +49522,12 @@ msgstr ""
 "\"https\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die "
 "Checkmk-Oberfläche über die SSL-Einrichtung zu informieren."
 
+#, fuzzy
+msgid "Please note that your site will be deleted when the trial period ends. "
+msgstr ""
+"Ihr kostenloser Testzeitraum ist aktiv! Bitte beachten Sie, dass Ihre "
+"Instanz am Ende des Testzeitraums gelöscht wird. "
+
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -85150,9 +85156,6 @@ msgstr "Ihre Erweitrungen haben eine Größe von %s."
 msgid "Your filename must not end with a slash."
 msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
 
-msgid "Your free trial is active! "
-msgstr "Ihre kostenlose Testversion ist aktiv! "
-
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
 
@@ -87684,6 +87687,9 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
 
+#~ msgid "Your free trial is active! "
+#~ msgstr "Ihre kostenlose Testversion ist aktiv! "
+
 #~ msgid "Do not query volume performance counters"
 #~ msgstr "Leistungsindikatoren für Volumes nicht abfragen"
 
@@ -87696,14 +87702,6 @@ msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
 
 #~ msgid "Performance improvements"
 #~ msgstr "Performance-Verbesserungen"
-
-#, fuzzy
-#~ msgid ""
-#~ "Please note that your site will be deleted when the trial period ends or "
-#~ "when you activate a license. "
-#~ msgstr ""
-#~ "Ihr kostenloser Testzeitraum ist aktiv! Bitte beachten Sie, dass Ihre "
-#~ "Instanz am Ende des Testzeitraums gelöscht wird. "
 
 #, python-format
 #~ msgid "The list of host tags must be a list, but is %r"

@@ -100,9 +100,9 @@ def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) ->
     )
     assert math.isnan(projection.start_of_focus_range)
     assert math.isnan(projection.end_of_focus_range)
-    assert math.isnan(projection.lower_non_linear_projection(123))
-    assert math.isnan(projection.linear_focus_projection(456))
-    assert math.isnan(projection.upper_non_linear_projection(789))
+    assert math.isnan(projection(projection.start_of_focus_range - 10))
+    assert math.isnan((projection.start_of_focus_range + projection.end_of_focus_range) / 2)
+    assert math.isnan(projection(projection.end_of_focus_range + 10))
 
 
 @pytest.mark.parametrize(

@@ -5,10 +5,10 @@
 
 import abc
 import math
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import repeat
-from typing import Self
+from typing import assert_never, Self
 
 from cmk.gui.config import active_config
 from cmk.gui.log import logger
@@ -271,6 +271,9 @@ class _Linear:
         return self.slope * value + self.intercept
 
 
+class _Cutoff: ...
+
+
 @dataclass(frozen=True, kw_only=True)
 class _ArcTan:
     """
@@ -328,16 +331,38 @@ class _ProjectionFromMetricValueToPerfFillLevel:
 
     start_of_focus_range: float
     end_of_focus_range: float
-    lower_non_linear_projection: Callable[[int | float], float]
-    linear_focus_projection: Callable[[int | float], float]
-    upper_non_linear_projection: Callable[[int | float], float]
+    lower_end_projection: _Cutoff | _ArcTan
+    focus_projection: _Linear
+    upper_end_projection: _Cutoff | _ArcTan
 
     def __call__(self, value: int | float) -> float:
         if value < self.start_of_focus_range:
-            return self.lower_non_linear_projection(value)
+            return self._project_to_upper_or_lower_end(
+                value,
+                self.lower_end_projection,
+                self.start_of_focus_range,
+            )
         if value > self.end_of_focus_range:
-            return self.upper_non_linear_projection(value)
-        return self.linear_focus_projection(value)
+            return self._project_to_upper_or_lower_end(
+                value,
+                self.upper_end_projection,
+                self.end_of_focus_range,
+            )
+        return self.focus_projection(value)
+
+    @staticmethod
+    def _project_to_upper_or_lower_end(
+        value: float | int,
+        projection: _Cutoff | _ArcTan,
+        cutoff_value: float,
+    ) -> float:
+        match projection:
+            case _Cutoff():
+                return cutoff_value
+            case _ArcTan():
+                return projection(value)
+            case _:
+                assert_never(projection)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -388,9 +413,9 @@ def _make_projection(
         return _ProjectionFromMetricValueToPerfFillLevel(
             start_of_focus_range=float("nan"),
             end_of_focus_range=float("nan"),
-            lower_non_linear_projection=lambda v: float("nan"),
-            linear_focus_projection=lambda v: float("nan"),
-            upper_non_linear_projection=lambda v: float("nan"),
+            lower_end_projection=_Cutoff(),
+            focus_projection=_Linear(slope=float("nan"), intercept=float("nan")),
+            upper_end_projection=_Cutoff(),
         )
 
     # Note: if we have closed boundaries and a value exceeds the lower or upper limit then we use
@@ -401,12 +426,12 @@ def _make_projection(
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
-                lower_non_linear_projection=lambda v: lower_x,
-                linear_focus_projection=_Linear.fit_to_two_points(
+                lower_end_projection=_Cutoff(),
+                focus_projection=_Linear.fit_to_two_points(
                     p_1=(lower_x, projection_parameters.perfometer_empty_at),
                     p_2=(upper_x, projection_parameters.perfometer_full_at),
                 ),
-                upper_non_linear_projection=lambda v: upper_x,
+                upper_end_projection=_Cutoff(),
             )
 
         case perfometers_api.Open(), perfometers_api.Closed():
@@ -417,15 +442,15 @@ def _make_projection(
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
-                lower_non_linear_projection=_ArcTan(
+                lower_end_projection=_ArcTan(
                     x_inflection=lower_x,
                     y_inflection=projection_parameters.lower_open_end,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.lower_open_end
                     - projection_parameters.perfometer_empty_at,
                 ),
-                linear_focus_projection=linear,
-                upper_non_linear_projection=lambda v: upper_x,
+                focus_projection=linear,
+                upper_end_projection=_Cutoff(),
             )
 
         case perfometers_api.Closed(), perfometers_api.Open():
@@ -436,9 +461,9 @@ def _make_projection(
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
-                lower_non_linear_projection=lambda v: lower_x,
-                linear_focus_projection=linear,
-                upper_non_linear_projection=_ArcTan(
+                lower_end_projection=_Cutoff(),
+                focus_projection=linear,
+                upper_end_projection=_ArcTan(
                     x_inflection=upper_x,
                     y_inflection=projection_parameters.upper_open_start,
                     slope_inflection=linear.slope,
@@ -455,15 +480,15 @@ def _make_projection(
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
-                lower_non_linear_projection=_ArcTan(
+                lower_end_projection=_ArcTan(
                     x_inflection=lower_x,
                     y_inflection=projection_parameters.lower_open_end,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.lower_open_end
                     - projection_parameters.perfometer_empty_at,
                 ),
-                linear_focus_projection=linear,
-                upper_non_linear_projection=_ArcTan(
+                focus_projection=linear,
+                upper_end_projection=_ArcTan(
                     x_inflection=upper_x,
                     y_inflection=projection_parameters.upper_open_start,
                     slope_inflection=linear.slope,

@@ -211,6 +211,13 @@ def register(
     automation_command_registry.register(AutomationNotificationTest)
 
 
+class NotificationRuleLinks(NamedTuple):
+    delete: str
+    edit: str
+    drag: str
+    clone: str
+
+
 class ABCNotificationsMode(ABCEventsMode):
     def __init__(self) -> None:
         super().__init__()
@@ -624,65 +631,60 @@ class ABCNotificationsMode(ABCEventsMode):
         else:
             mode = "notification_rule_quick_setup"
 
-        back_mode = []
+        back_mode: HTTPVariables = []
         mode_from_vars = request.var("mode")
         if mode_from_vars in ["analyze_notifications", "test_notifications"]:
             back_mode.append(("back_mode", mode_from_vars))
 
-        delete_url = make_confirm_delete_link(
-            url=make_action_link(
-                [
-                    ("mode", listmode),
-                    ("user", userid),
-                    ("_delete", nr),
-                ]
-                + back_mode
-            ),
-            title=_("Delete notification rule #%d") % nr,
-            suffix=rule.get("description", ""),
-        )
-        drag_url = make_action_link(
-            [
+        def _delete_url() -> str:
+            httpvars: HTTPVariables = [
+                ("mode", listmode),
+                ("user", userid),
+                ("_delete", nr),
+            ]
+            return make_confirm_delete_link(
+                url=make_action_link(httpvars + back_mode),
+                title=_("Delete notification rule #%d") % nr,
+                suffix=rule.get("description", ""),
+            )
+
+        def _drag_url() -> str:
+            httpvars: HTTPVariables = [
                 ("mode", listmode),
                 ("analyse", anavar),
                 ("user", userid),
                 ("_move", nr),
             ]
-            + back_mode
-        )
-        edit_url = folder_preserving_link(
-            [
+            return make_action_link(httpvars + back_mode)
+
+        def _edit_url() -> str:
+            httpvars: HTTPVariables = [
                 ("mode", mode),
                 ("edit", nr),
                 ("user", userid),
             ]
-            + back_mode
-        )
-        clone_url = make_confirm_delete_link(
-            url=folder_preserving_link(
-                [
-                    ("mode", mode),
-                    ("clone", nr),
-                    ("user", userid),
-                ]
-                + back_mode
-            ),
-            title=_("Clone & edit notification rule #%d") % nr,
-            suffix=rule.get("description", ""),
-            confirm_button=_("Yes, clone & edit"),
-            cancel_button=_("No, don't clone"),
-        )
+            return folder_preserving_link(httpvars + back_mode)
+
+        def _clone_url() -> str:
+            httpvars: HTTPVariables = [
+                ("mode", mode),
+                ("clone", nr),
+                ("user", userid),
+            ]
+            return make_confirm_delete_link(
+                url=folder_preserving_link(httpvars + back_mode),
+                title=_("Clone & edit notification rule #%d") % nr,
+                suffix=rule.get("description", ""),
+                confirm_button=_("Yes, clone & edit"),
+                cancel_button=_("No, don't clone"),
+            )
 
         return NotificationRuleLinks(
-            delete=delete_url, edit=edit_url, drag=drag_url, clone=clone_url
+            delete=_delete_url(),
+            edit=_edit_url(),
+            drag=_drag_url(),
+            clone=_clone_url(),
         )
-
-
-class NotificationRuleLinks(NamedTuple):
-    delete: str
-    edit: str
-    drag: str
-    clone: str
 
 
 class ModeNotifications(ABCNotificationsMode):

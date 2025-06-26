@@ -350,7 +350,7 @@ def setup_source_host_piggyback(
 
     logger.info("Injecting agent-output...")
     dump_path_repo = qa_test_data_path() / "plugins_integration/dumps/piggyback"
-    copy_dumps(site, dump_path_repo, site.path(dump_path_site), filename=source_host_name)
+    copy_dumps(site, dump_path_repo, site.path(dump_path_site), source_filename=source_host_name)
     site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True, strict=False)
 
     logger.info("Running service discovery...")

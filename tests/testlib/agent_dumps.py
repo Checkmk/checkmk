@@ -122,7 +122,8 @@ def copy_dumps(
     source_dir: Path,
     target_dir: Path,
     prefix: str = "agent-",
-    filename: str | None = None,
+    source_filename: str | None = None,
+    target_filenames: list[str] | None = None,
 ) -> None:
     """Copy SNMP/agent dumps from source dir to target dir, ignoring subdirectories.
 
@@ -131,14 +132,20 @@ def copy_dumps(
         source_dir: The folder to copy the dumps from.
         target_dir: The folder to copy the dumps to.
         prefix: The prefix of the files to copy.
-        filename: The specific file name to copy (optional).
+        source_filename: The specific source file name to copy (optional).
+        target_filenames: The specific target file names to copy the source_filename to (optional).
     """
     logger.info("Injecting agent-output...")
     target_dir = site.path(target_dir)
     if not site.is_dir(target_dir):
         site.makedirs(target_dir)
-    source_path = f"{source_dir.as_posix()}/{(filename if filename else prefix + '*')}"
-    assert run(["bash", "-c", f'cp -f {source_path} "{target_dir}"'], sudo=True).returncode == 0
+    source_path = f"{source_dir}/{(source_filename if source_filename else prefix + '*')}"
+    if source_filename and target_filenames:
+        target_paths = list((target_dir / filename) for filename in target_filenames)
+    else:
+        target_paths = [target_dir]
+    for target_path in target_paths:
+        run(["bash", "-c", f'cp -f {source_path} "{target_path}"'], sudo=True)
 
 
 def inject_dumps(site: Site, dumps_dir: Path, check_dumps_up_to_date: bool = True) -> None:

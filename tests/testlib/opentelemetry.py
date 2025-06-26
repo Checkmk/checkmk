@@ -18,6 +18,8 @@ from tests.testlib.utils import execute
 
 logger = logging.getLogger(__name__)
 
+OPENTELEMETRY_DIR = Path("tmp/check_mk/otel_collector")
+
 
 class ScriptFileName(enum.Enum):
     OTEL_HTTP = "opentelemetry_http.py"
@@ -29,7 +31,9 @@ class ScriptFileName(enum.Enum):
 
 
 @contextmanager
-def opentelemetry_app(script_file_name: ScriptFileName) -> Iterator[subprocess.Popen]:
+def opentelemetry_app(
+    script_file_name: ScriptFileName, additional_args: list[str] | None = None
+) -> Iterator[subprocess.Popen]:
     """Context manager to run an OpenTelemetry application script, handles its lifecycle,
     and raises errors if execution fails."""
     scripts_folder = repo_path() / "tests" / "scripts"
@@ -38,9 +42,13 @@ def opentelemetry_app(script_file_name: ScriptFileName) -> Iterator[subprocess.P
     # by default, OpenTelemetry SDK is disabled in system tests
     env["OTEL_SDK_DISABLED"] = "false"
 
+    command = ["python", str(script_path)]
+    if additional_args:
+        command.extend(additional_args)
+
     logger.info("Starting OpenTelemetry application with script: %s", script_file_name)
     with execute(
-        ["python", str(script_path)],
+        command,
         start_new_session=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -67,10 +75,21 @@ def opentelemetry_app(script_file_name: ScriptFileName) -> Iterator[subprocess.P
 
 
 def wait_for_opentelemetry_data(
-    site: Site, host_name: str, timeout: int = 60, interval: int = 5
+    site: Site, host_name: str, timeout: int = 90, interval: int = 5
 ) -> None:
     """Wait until OpenTelemetry data is available for the specified host."""
-    opentelemetry_data_path = Path(f"tmp/check_mk/otel_collector/host_monitoring/{host_name}")
+    opentelemetry_data_path = OPENTELEMETRY_DIR / f"host_monitoring/{host_name}"
     wait_until(
         lambda: site.file_exists(opentelemetry_data_path), timeout=timeout, interval=interval
     )
+
+
+def delete_opentelemetry_data(site: Site) -> None:
+    """Delete OpenTelemetry data for the site."""
+    host_monitoring_data_path = OPENTELEMETRY_DIR / "host_monitoring"
+    if site.file_exists(host_monitoring_data_path):
+        site.delete_dir(host_monitoring_data_path)
+
+    autocompleter_data_path = OPENTELEMETRY_DIR / "autocompleter"
+    for file in site.listdir(autocompleter_data_path):
+        site.delete_file(autocompleter_data_path / file)

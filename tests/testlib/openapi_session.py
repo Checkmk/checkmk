@@ -128,6 +128,7 @@ class CMKOpenApiSession(requests.Session):
         self.ldap_connection = LDAPConnectionAPI(self)
         self.passwords = PasswordsAPI(self)
         self.license = LicenseAPI(self)
+        self.otel_collector = OtelCollectorAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -1273,3 +1274,47 @@ class LicenseAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return response
+
+
+class OtelCollectorAPI(BaseAPI):
+    def __init__(self, session: CMKOpenApiSession) -> None:
+        super().__init__(session)
+        # Hack to use the "unstable" version of the API endpoint
+        self.base_url = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/unstable"
+
+    def create(
+        self,
+        ident: str,
+        title: str,
+        disabled: bool,
+        receiver_protocol_grpc: dict[str, Any] | None = None,
+        receiver_protocol_http: dict[str, Any] | None = None,
+        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
+    ) -> None:
+        """Create an OpenTelemetry collector via REST API."""
+        body = {
+            "ident": ident,
+            "disabled": disabled,
+            "site": [self.session.site],
+            "title": title,
+        }
+        if receiver_protocol_grpc:
+            body["receiver_protocol_grpc"] = receiver_protocol_grpc
+        if receiver_protocol_http:
+            body["receiver_protocol_http"] = receiver_protocol_http
+        if prometheus_scrape_configs:
+            body["prometheus_scrape_configs"] = prometheus_scrape_configs
+
+        # hack to use the "unstable" version of the API endpoint
+        response = self.session.post(
+            url=self.base_url + "/domain-types/otel_collector_config/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, ident: str) -> None:
+        """Delete an OpenTelemetry collector via REST API."""
+        response = self.session.delete(self.base_url + f"/objects/otel_collector_config/{ident}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)

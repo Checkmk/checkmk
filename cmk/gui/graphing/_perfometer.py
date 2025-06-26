@@ -280,33 +280,26 @@ class _Linear:
         return self.slope * value + self.shift
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _ArcTan:
-    x_shift: float
-    y_shift: float
-    stretch_factor: float
+    """
+    Evaluates the following function:
+    f(x) = (2 / π) * s * atan((π / 2) * (mᵢ / s) * (x - xᵢ)) + yᵢ
+    (xᵢ|yᵢ) is the inflection point.
+    mᵢ is the slope at the inflection point.
+    s is the scale in units of π/2. The range of f is (yᵢ - s, yᵢ + s).
+    """
 
-    @classmethod
-    def from_parameters(
-        cls,
-        lower_x: float,
-        upper_x: float,
-        linear: _Linear,
-        y_shift: float,
-        scale: float,
-    ) -> _ArcTan:
-        return cls(
-            (y_shift - linear.shift) / linear.slope,
-            y_shift,
-            scale * (upper_x - lower_x),
-        )
+    x_inflection: float
+    y_inflection: float
+    slope_inflection: float
+    scale_in_units_of_pi_half: float
 
-    def __call__(self, value: int | float) -> float:
+    def __call__(self, x: int | float) -> float:
+        scale = self.scale_in_units_of_pi_half * 2 / math.pi
         return (
-            30.0
-            / math.pi
-            * math.atan(math.pi / (30.0 * self.stretch_factor) * (value - self.x_shift))
-            + self.y_shift
+            scale * math.atan(self.slope_inflection / scale * (x - self.x_inflection))
+            + self.y_inflection
         )
 
 
@@ -333,11 +326,10 @@ class _ProjectionParameters:
     lower_open: float
     upper_open: float
     upper_closed: float
-    scale: float
 
 
-_PERFOMETER_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 15.0, 85.0, 100.0, 0.15)
-_BIDIRECTIONAL_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 5.0, 45.0, 50.0, 0.03)
+_PERFOMETER_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 15.0, 85.0, 100.0)
+_BIDIRECTIONAL_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 5.0, 45.0, 50.0)
 
 
 def _make_projection(
@@ -387,12 +379,12 @@ def _make_projection(
             return _Projection(
                 lower_x=lower_x,
                 upper_x=upper_x,
-                lower_atan=_ArcTan.from_parameters(
-                    lower_x,
-                    upper_x,
-                    linear,
-                    projection_parameters.lower_open,
-                    projection_parameters.scale,
+                lower_atan=_ArcTan(
+                    x_inflection=lower_x,
+                    y_inflection=projection_parameters.lower_open,
+                    slope_inflection=linear.slope,
+                    scale_in_units_of_pi_half=projection_parameters.lower_open
+                    - projection_parameters.lower_closed,
                 ),
                 focus_linear=linear,
                 upper_atan=lambda v: upper_x,
@@ -411,12 +403,12 @@ def _make_projection(
                 upper_x=upper_x,
                 lower_atan=lambda v: lower_x,
                 focus_linear=linear,
-                upper_atan=_ArcTan.from_parameters(
-                    lower_x,
-                    upper_x,
-                    linear,
-                    projection_parameters.upper_open,
-                    projection_parameters.scale,
+                upper_atan=_ArcTan(
+                    x_inflection=upper_x,
+                    y_inflection=projection_parameters.upper_open,
+                    slope_inflection=linear.slope,
+                    scale_in_units_of_pi_half=projection_parameters.upper_closed
+                    - projection_parameters.upper_open,
                 ),
                 limit=projection_parameters.upper_closed,
             )
@@ -431,20 +423,20 @@ def _make_projection(
             return _Projection(
                 lower_x=lower_x,
                 upper_x=upper_x,
-                lower_atan=_ArcTan.from_parameters(
-                    lower_x,
-                    upper_x,
-                    linear,
-                    projection_parameters.lower_open,
-                    projection_parameters.scale,
+                lower_atan=_ArcTan(
+                    x_inflection=lower_x,
+                    y_inflection=projection_parameters.lower_open,
+                    slope_inflection=linear.slope,
+                    scale_in_units_of_pi_half=projection_parameters.lower_open
+                    - projection_parameters.lower_closed,
                 ),
                 focus_linear=linear,
-                upper_atan=_ArcTan.from_parameters(
-                    lower_x,
-                    upper_x,
-                    linear,
-                    projection_parameters.upper_open,
-                    projection_parameters.scale,
+                upper_atan=_ArcTan(
+                    x_inflection=upper_x,
+                    y_inflection=projection_parameters.upper_open,
+                    slope_inflection=linear.slope,
+                    scale_in_units_of_pi_half=projection_parameters.upper_closed
+                    - projection_parameters.upper_open,
                 ),
                 limit=projection_parameters.upper_closed,
             )

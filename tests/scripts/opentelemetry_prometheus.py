@@ -12,12 +12,23 @@ import time
 
 from prometheus_client import Counter, start_http_server
 
-PROMETHEUS_PORT = 8080
-SLEEP_DURATION = 30
-
 logger = logging.getLogger("otel.prometheus")
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
+
+PROMETHEUS_PORT = 9090
+SLEEP_DURATION = 30
+
+DEFAULT_OTEL_COLLECTOR_PROMETHEUS_METRIC_COUNT = 5  # metrics the site collector adds
+DEFAULT_PROMETHEUS_METRIC_COUNT = 10  # metrics the client sdk adds
+DEFAULT_CMK_SERVICE_COUNT = 2  # Check_MK and Check_MK Discovery
+PROMETHEUS_METRIC_COUNT = 1  # only one Counter metric is used in this script
+EXPECTED_PROMETHEUS_SERVICE_COUNT = (
+    DEFAULT_OTEL_COLLECTOR_PROMETHEUS_METRIC_COUNT
+    + DEFAULT_PROMETHEUS_METRIC_COUNT
+    + DEFAULT_CMK_SERVICE_COUNT
+    + PROMETHEUS_METRIC_COUNT * 2
+)
 
 
 def shutdown_handler(signum: object, frame: object) -> None:

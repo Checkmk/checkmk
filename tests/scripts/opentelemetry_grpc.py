@@ -7,6 +7,7 @@
 It sets up OpenTelemetry providers for metrics and logging, sends logs and metrics to a specified
 endpoint, and handles the shutdown on termination signals."""
 
+import argparse
 import logging
 import signal
 import sys
@@ -31,7 +32,13 @@ SERVICE_NAME = "test-service-grpc"
 LOG_LEVEL = logging.INFO
 SLEEP_DURATION = 30
 
-RESOURCE = Resource.create({"service.name": SERVICE_NAME})
+RESOURCE = Resource.create(
+    {
+        "service.name": SERVICE_NAME,
+        "cmk.test.attribute1": "otel_test",
+        "cmk.test.attribute2": "random_value",
+    }
+)
 
 console_logger = logging.getLogger("console.logger")
 console_logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -64,20 +71,30 @@ def setup_logging():
 
 
 def shutdown_handler(
-    meter_provider: MeterProvider, logger_provider: LoggerProvider
+    meter_provider: MeterProvider,
+    logger_provider: LoggerProvider | None,
 ) -> Callable[[object, object], None]:
     def handler(signum: object, frame: object) -> None:
         console_logger.info("Shutting down OpenTelemetry providers and exiting")
         meter_provider.shutdown()
-        logger_provider.shutdown()
+        if logger_provider:
+            logger_provider.shutdown()
         sys.exit(0)
 
     return handler
 
 
 def main():
+    parser = argparse.ArgumentParser(description="OpenTelemetry GRPC Example")
+    parser.add_argument(
+        "--enable-logs",
+        action="store_true",
+        help="Enable OpenTelemetry logs",
+    )
+    args = parser.parse_args()
+
     meter, meter_provider = setup_metrics()
-    logger, logger_provider = setup_logging()
+    logger, logger_provider = setup_logging() if args.enable_logs else (None, None)
 
     success_shutdown_handler = shutdown_handler(meter_provider, logger_provider)
     signal.signal(signal.SIGINT, success_shutdown_handler)
@@ -89,14 +106,15 @@ def main():
         description="A simple counter for testing",
     )
 
-    console_logger.info("Starting sending logs and metrics to %s", ENDPOINT)
+    console_logger.info("Starting sending data to %s", ENDPOINT)
     counter = 0
 
     while True:
         console_logger.info(f"Counter value is {counter}.")
-        logger.info(f"Test log level INFO #{counter}")
-        logger.warning(f"Test log level WARNING #{counter}")
-        logger.error(f"Test log level ERROR #{counter}")
+        if logger:
+            logger.info(f"Test log level INFO #{counter}")
+            logger.warning(f"Test log level WARNING #{counter}")
+            logger.error(f"Test log level ERROR #{counter}")
         otel_counter.add(1, {"label": "test_label"})
         counter += 1
         time.sleep(SLEEP_DURATION)

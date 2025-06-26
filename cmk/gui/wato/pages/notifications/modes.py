@@ -13,7 +13,7 @@ from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, cast, Literal, NamedTuple, overload, TypedDict
+from typing import Any, cast, Literal, NamedTuple, NotRequired, overload, TypedDict
 
 from livestatus import LivestatusResponse, SiteConfiguration
 
@@ -1536,6 +1536,11 @@ class NotificationTestType(enum.StrEnum):
     service = "svc_test"
 
 
+class AdvancedTestOptions(TypedDict):
+    notification_nr: NotRequired[int]
+    date_and_time: NotRequired[tuple[str, str, str]]
+
+
 class ModeTestNotifications(ModeNotifications):
     def __init__(self) -> None:
         super().__init__()
@@ -1931,7 +1936,7 @@ class ModeTestNotifications(ModeNotifications):
             request.var("host_name"),
             request.var("service_name"),
         )
-        advanced_test_options = ""
+        advanced_test_options: AdvancedTestOptions = {}
         notify_plugin = {}
         if (
             form_submitted := request.var("test_notification")
@@ -2292,9 +2297,9 @@ class ModeTestNotifications(ModeNotifications):
             ],
         )
 
-    def _vs_advanced_test_options(self) -> Foldable:
+    def _vs_advanced_test_options(self) -> Foldable[AdvancedTestOptions]:
         return Foldable(
-            valuespec=Dictionary(
+            valuespec=Dictionary(  # type: ignore[arg-type]
                 title=_("Advanced condition simulation"),
                 elements=[
                     (

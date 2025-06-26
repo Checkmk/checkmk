@@ -27,7 +27,6 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     apache-omd \
     check_mk \
-    check-cert \
     omd \
     xmlsec1
 

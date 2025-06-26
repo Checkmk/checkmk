@@ -41,13 +41,18 @@ def _make_deployable_file_impl(ctx):
         inputs = [ctx.file.src],
         outputs = [out_file],
         command = """
-            cp -r -L {input_dir}/{filename} {file_dir}
+            if [ -d {input_path} ]; then
+                INPUT_FILE_PATH="{input_path}/{filename}"
+            else
+                INPUT_FILE_PATH="{input_path}"
+                # assert: filename must be suffix of input_path
+            fi
+            cp -r -L $INPUT_FILE_PATH {file_dir}
             chmod u+w -R {file_dir}
             file -L  {file_dir} \\
                 | grep ELF | cut -d ':' -f1 \\
                 | xargs patchelf --force-rpath --set-rpath "{rpath}"
-
-        """.format(input_dir = ctx.file.src.path, filename = ctx.attr.out, file_dir = out_file.path, rpath = ctx.attr.rpath),
+        """.format(input_path = ctx.file.src.path, filename = ctx.attr.out, file_dir = out_file.path, rpath = ctx.attr.rpath),
     )
 
     return [DefaultInfo(files = depset([out_file]))]

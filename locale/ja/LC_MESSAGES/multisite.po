@@ -48637,6 +48637,12 @@ msgstr ""
 "set X-Forwarded-Proto \"https\"</tt>を設定する必要があることに注意してくださ"
 "い。"
 
+#, fuzzy
+msgid "Please note that your site will be deleted when the trial period ends. "
+msgstr ""
+"無料トライアル中です！トライアル期間が終了すると、あなたのサイトは削除されま"
+"すのでご注意ください。 "
+
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -83189,9 +83195,6 @@ msgstr "拡張機能のサイズは%sです。"
 msgid "Your filename must not end with a slash."
 msgstr "ファイル名はスラッシュで終わらせてはなりません。"
 
-msgid "Your free trial is active! "
-msgstr ""
-
 msgid "Your host name has an invalid format."
 msgstr "ホスト名の形式が無効です。"
 
@@ -85818,14 +85821,6 @@ msgstr ""
 
 #~ msgid "Update transform"
 #~ msgstr "変換を更新"
-
-#, fuzzy
-#~ msgid ""
-#~ "Please note that your site will be deleted when the trial period ends or "
-#~ "when you activate a license. "
-#~ msgstr ""
-#~ "無料トライアル中です！トライアル期間が終了すると、あなたのサイトは削除され"
-#~ "ますのでご注意ください。 "
 
 #~ msgid ""
 #~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"

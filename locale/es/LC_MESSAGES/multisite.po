@@ -51224,6 +51224,9 @@ msgstr ""
 "\"https\"</tt> en la configuración de su sistema Apache para indicar a la "
 "GUI de Checkmk la configuración SSL."
 
+msgid "Please note that your site will be deleted when the trial period ends. "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -88111,9 +88114,6 @@ msgstr "Sus extensiones tienen un tamaño de %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Su nombre de archivo no debe terminar con una barra."
-
-msgid "Your free trial is active! "
-msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."

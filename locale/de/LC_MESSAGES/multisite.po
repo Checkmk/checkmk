@@ -48725,6 +48725,12 @@ msgstr ""
 "\"https\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die "
 "Checkmk-Oberfläche über die SSL-Einrichtung zu informieren."
 
+#, fuzzy
+msgid "Please note that your site will be deleted when the trial period ends. "
+msgstr ""
+"Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der Testzeitraum "
+"endet oder wenn Sie eine Lizenz aktivieren. "
+
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
 "underscores. If you are unsure about the correct spelling of the name, then "
@@ -84256,9 +84262,6 @@ msgstr "Ihre Erweitrungen haben eine Größe von %s."
 msgid "Your filename must not end with a slash."
 msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
 
-msgid "Your free trial is active! "
-msgstr "Ihre kostenlose Testversion ist aktiv! "
-
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
 
@@ -86730,6 +86733,9 @@ msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
+#~ msgid "Your free trial is active! "
+#~ msgstr "Ihre kostenlose Testversion ist aktiv! "
+
 #~ msgid "Use the default start URL"
 #~ msgstr "Standard-URL benutzen"
 
@@ -86896,13 +86902,6 @@ msgstr ""
 
 #~ msgid "Update transform"
 #~ msgstr "Transformation aktualisieren"
-
-#~ msgid ""
-#~ "Please note that your site will be deleted when the trial period ends or "
-#~ "when you activate a license. "
-#~ msgstr ""
-#~ "Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der "
-#~ "Testzeitraum endet oder wenn Sie eine Lizenz aktivieren. "
 
 #~ msgid ""
 #~ "The URL must begin with <tt>http</tt> or <tt>https</tt> and end with <tt>/"

@@ -50908,6 +50908,9 @@ msgstr ""
 "Proto \"https\"</tt> în configurația sistemului Apache pentru a informa "
 "Checkmk GUI despre configurarea SSL."
 
+msgid "Please note that your site will be deleted when the trial period ends. "
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -87615,9 +87618,6 @@ msgstr "Extensiile dvs. au o dimensiune de %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Numele de fișier nu trebuie să se termine cu o bară oblică."
-
-msgid "Your free trial is active! "
-msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."

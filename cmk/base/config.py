@@ -29,7 +29,6 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
-    Self,
     TypeGuard,
 )
 
@@ -596,6 +595,8 @@ class LoadedConfigFragment:
     ipaddresses: Mapping[HostName, HostAddress]
     ipv6addresses: Mapping[HostName, HostAddress]
     fake_dns: str | None
+    tag_config: cmk.utils.tags.TagConfigSpec
+    host_tags: ruleset_matcher.TagsOfHosts
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -709,6 +710,8 @@ def _perform_post_config_loading_actions(
         ipaddresses=ipaddresses,
         ipv6addresses=ipv6addresses,
         fake_dns=fake_dns,
+        tag_config=tag_config,
+        host_tags=host_tags,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1563,10 +1566,12 @@ class ConfigCache:
 
         self.hosts_config = make_hosts_config(self._loaded_config)
 
-        self.host_tags = HostTags.make(
-            HostTags.get_tag_to_group_map(),  # TODO inline this and pass the loaded tag spec
+        self.host_tags = cmk.utils.tags.HostTags.make(
             self._host_paths,
-            host_tags,
+            self._loaded_config.tag_config,
+            self._loaded_config.host_tags,
+            [*self._loaded_config.all_hosts, *self._loaded_config.clusters],
+            self._loaded_config.shadow_hosts,
         )
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
@@ -3762,101 +3767,6 @@ class ConfigCache:
                 TagGroupID("site"), distributed_wato_site or omd_site()
             )
         )
-
-
-class HostTags:
-    def __init__(
-        self,
-        host_tags_sequences: Mapping[HostName, Sequence[TagID]],
-        host_tags_maps: Mapping[HostName, Mapping[TagGroupID, TagID]],
-    ) -> None:
-        self.host_tags_sequences: Final = host_tags_sequences
-        self.host_tags_maps: Final = host_tags_maps
-
-    @staticmethod
-    def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:
-        tags = cmk.utils.tags.get_effective_tag_config(tag_config)
-        return cmk.utils.tags.get_tag_to_group_map(tags)
-
-    @classmethod
-    def make(
-        cls,
-        tag_to_group_map: Mapping[TagID, TagGroupID],
-        host_paths: Mapping[HostName, str],
-        raw_host_tags: Mapping[HostName, Mapping[TagGroupID, TagID]],
-    ) -> Self:
-        """Calculate the effective tags for all configured hosts
-
-        WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
-        by the etc/check_mk/conf.d directory that are not managed by WATO. They may use the old style pipe separated
-        all_hosts configuration. Detect it and try to be compatible.
-        """
-        tags_sequences = dict[HostName, Sequence[TagID]]()
-        tags_maps = {**raw_host_tags}  # dict[HostName, Mapping[TagGroupID, TagID]]()
-        for tagged_host in all_hosts + list(clusters):
-            parts = tagged_host.split("|")
-            hostname = parts[0]
-
-            if hostname in tags_maps:
-                # New dict host_tags are available: only need to compute the tag list
-                tags_sequences[hostname] = cls._tag_groups_to_tag_list(
-                    host_paths.get(hostname, "/"), tags_maps[hostname]
-                )
-            else:
-                # Only tag list available. Use it and compute the tag groups.
-                tags_sequences[hostname] = tuple(parts[1:])
-                tags_maps[hostname] = cls._tag_list_to_tag_groups(
-                    tag_to_group_map, tags_sequences[hostname]
-                )
-
-        for shadow_host_name, shadow_host_spec in shadow_hosts.items():
-            tags_sequences[shadow_host_name] = tuple(
-                set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
-            )
-            tags_maps[shadow_host_name] = cls._tag_list_to_tag_groups(
-                tag_to_group_map, tags_sequences[shadow_host_name]
-            )
-        return cls(tags_sequences, tags_maps)
-
-    @staticmethod
-    def _tag_groups_to_tag_list(
-        host_path: str, tag_groups: Mapping[TagGroupID, TagID]
-    ) -> Sequence[TagID]:
-        # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
-        # but there was a single tag group added with it's leading tag group id. This
-        # was the internal "site" tag that is created by HostAttributeSite.
-        tags = {v for k, v in tag_groups.items() if k != TagGroupID("site")}
-        tags.add(TagID(host_path))
-        tags.add(TagID(f"site:{tag_groups[TagGroupID('site')]}"))
-        return tuple(tags)
-
-    @staticmethod
-    def _tag_list_to_tag_groups(
-        tag_to_group_map: Mapping[TagID, TagGroupID], tag_list: Iterable[TagID]
-    ) -> Mapping[TagGroupID, TagID]:
-        # This assumes all needed aux tags of grouped are already in the tag_list
-        return {
-            **cmk.utils.tags.fallback_tags(omd_site()),
-            # Assume it's an aux tag in case there is a tag configured without known group
-            **{tag_to_group_map.get(tag_id, TagGroupID(tag_id)): tag_id for tag_id in tag_list},
-        }
-
-    def tag_list(self, hostname: HostName) -> Sequence[TagID]:
-        """Returns the list of all configured tags of a host. In case
-        a host has no tags configured or is not known, it returns an
-        empty list."""
-        if hostname in self.host_tags_sequences:
-            return self.host_tags_sequences[hostname]
-
-        # Handle not existing hosts (No need to performance optimize this)
-        return self._tag_groups_to_tag_list("/", self.tags(hostname))
-
-    def tags(self, hostname: HostName | HostAddress) -> Mapping[TagGroupID, TagID]:
-        """Returns the dict of all configured tag groups and values of a host."""
-        with contextlib.suppress(KeyError):
-            return self.host_tags_maps[hostname]
-
-        return cmk.utils.tags.fallback_tags(omd_site())
 
 
 def access_globally_cached_config_cache() -> ConfigCache:

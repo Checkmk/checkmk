@@ -210,49 +210,6 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     } == {HostName("cluster1"), HostName("cluster3"), HostName("real1"), HostName("real3")}
 
 
-def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.set_option(
-        "tag_config",
-        {
-            "aux_tags": [],
-            "tag_groups": [
-                {
-                    "id": "dingeling",
-                    "title": "Dung",
-                    "tags": [
-                        {"aux_tags": [], "id": TagID("dong"), "title": "ABC"},
-                    ],
-                }
-            ],
-        },
-    )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.host_tags.get_tag_to_group_map() == {
-        TagID("all-agents"): TagGroupID("agent"),
-        TagID("auto-piggyback"): TagGroupID("piggyback"),
-        TagID("cmk-agent"): TagGroupID("agent"),
-        TagID("checkmk-agent"): TagGroupID("checkmk-agent"),
-        TagID("dong"): TagGroupID("dingeling"),
-        TagID("ip-v4"): TagGroupID("ip-v4"),
-        TagID("ip-v4-only"): TagGroupID("address_family"),
-        TagID("ip-v4v6"): TagGroupID("address_family"),
-        TagID("ip-v6"): TagGroupID("ip-v6"),
-        TagID("ip-v6-only"): TagGroupID("address_family"),
-        TagID("no-agent"): TagGroupID("agent"),
-        TagID("no-ip"): TagGroupID("address_family"),
-        TagID("no-piggyback"): TagGroupID("piggyback"),
-        TagID("no-snmp"): TagGroupID("snmp_ds"),
-        TagID("piggyback"): TagGroupID("piggyback"),
-        TagID("ping"): TagGroupID("ping"),
-        TagID("snmp"): TagGroupID("snmp"),
-        TagID("snmp-v1"): TagGroupID("snmp_ds"),
-        TagID("snmp-v2"): TagGroupID("snmp_ds"),
-        TagID("special-agents"): TagGroupID("agent"),
-        TagID("tcp"): TagGroupID("tcp"),
-    }
-
-
 @pytest.mark.parametrize(
     "hostname,host_path,result",
     [

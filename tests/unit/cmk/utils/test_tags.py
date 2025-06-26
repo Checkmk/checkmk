@@ -4,7 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.tags import get_tag_to_group_map, TagConfig, TagGroupID, TagID
+from cmk.utils.tags import (
+    get_effective_tag_config,
+    get_tag_to_group_map,
+    TagConfig,
+    TagConfigSpec,
+    TagGroupID,
+    TagGroupSpec,
+    TagID,
+)
 
 
 def test_get_tag_to_group_map() -> None:
@@ -41,4 +49,45 @@ def test_get_tag_to_group_map() -> None:
         "bla": "bla",
         "lan": "networking",
         "prod": "criticality",
+    }
+
+
+def test_tag_to_group_map() -> None:
+    # Typing forces us to use the TagConfigSpec constructor,
+    # but this is actually the raw configuration
+    tag_config = TagConfigSpec(
+        aux_tags=[],
+        tag_groups=[
+            TagGroupSpec(
+                id=TagGroupID("dingeling"),
+                title="Dung",
+                tags=[
+                    {"aux_tags": [], "id": TagID("dong"), "title": "ABC"},
+                ],
+            )
+        ],
+    )
+
+    assert get_tag_to_group_map(get_effective_tag_config(tag_config)) == {
+        TagID("all-agents"): TagGroupID("agent"),
+        TagID("auto-piggyback"): TagGroupID("piggyback"),
+        TagID("cmk-agent"): TagGroupID("agent"),
+        TagID("checkmk-agent"): TagGroupID("checkmk-agent"),
+        TagID("dong"): TagGroupID("dingeling"),
+        TagID("ip-v4"): TagGroupID("ip-v4"),
+        TagID("ip-v4-only"): TagGroupID("address_family"),
+        TagID("ip-v4v6"): TagGroupID("address_family"),
+        TagID("ip-v6"): TagGroupID("ip-v6"),
+        TagID("ip-v6-only"): TagGroupID("address_family"),
+        TagID("no-agent"): TagGroupID("agent"),
+        TagID("no-ip"): TagGroupID("address_family"),
+        TagID("no-piggyback"): TagGroupID("piggyback"),
+        TagID("no-snmp"): TagGroupID("snmp_ds"),
+        TagID("piggyback"): TagGroupID("piggyback"),
+        TagID("ping"): TagGroupID("ping"),
+        TagID("snmp"): TagGroupID("snmp"),
+        TagID("snmp-v1"): TagGroupID("snmp_ds"),
+        TagID("snmp-v2"): TagGroupID("snmp_ds"),
+        TagID("special-agents"): TagGroupID("agent"),
+        TagID("tcp"): TagGroupID("tcp"),
     }

@@ -34,4 +34,9 @@ EMPTYCONFIG = LoadedConfigFragment(
     ipaddresses={},
     ipv6addresses={},
     fake_dns=None,
+    tag_config={
+        "tag_groups": [],
+        "aux_tags": [],
+    },
+    host_tags={},
 )

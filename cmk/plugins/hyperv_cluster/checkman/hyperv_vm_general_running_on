@@ -1,0 +1,17 @@
+title: Hyper-V VM Running On Information
+agents: windows
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+
+description:
+ This check monitors which Hyper-V cluster node a virtual machine is currently running on.
+
+ The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
+ the current host node for each virtual machine and its state.
+
+item:
+ The name of the virtual machine
+
+inventory:
+ One service per virtual machine is created.

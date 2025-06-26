@@ -2169,8 +2169,10 @@ class ModeTestNotifications(ModeNotifications):
         html.close_tr()
         html.close_table()
 
-    def _notification_script_choices_with_parameters(self):
-        return_choices = []
+    def _notification_script_choices_with_parameters(
+        self,
+    ) -> list[tuple[str, str, DropdownChoice[None]]]:
+        return_choices: list[tuple[str, str, DropdownChoice[None]]] = []
         all_parameters = NotificationParameterConfigFile().load_for_reading()
         for script_name, title in notification_script_choices():
             choices = []
@@ -2183,7 +2185,7 @@ class ModeTestNotifications(ModeNotifications):
                         )
                     )
 
-            vs: DropdownChoice = DropdownChoice(
+            vs: DropdownChoice[None] = DropdownChoice(
                 title=_("Notification parameter"),
                 choices=choices,
                 empty_text=_(

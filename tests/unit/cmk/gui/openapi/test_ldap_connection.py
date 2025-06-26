@@ -126,7 +126,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
                     {
                         "group_cn": "groupcn6",
                         "attribute_to_set": "start_url",
-                        "value": "dashboard.py",
+                        "value": "default_start_url",
                     },
                     {
                         "group_cn": "groupcn7",
@@ -391,3 +391,94 @@ def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
     assert LDAPUserConnector.get_connection_suffixes() == {"suffix_1": "LDAP_1"}
     clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
     assert not LDAPUserConnector.get_connection_suffixes()
+
+
+def test_start_url_values(clients: ClientRegistry) -> None:
+    assert (
+        clients.LdapConnection.create(
+            ldap_data={
+                "general_properties": {"id": "LDAP_1"},
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": "active_directory_manual",
+                        "ldap_server": "10.200.3.32",
+                    },
+                },
+                "sync_plugins": {
+                    "groups_to_custom_user_attributes": {
+                        "state": "enabled",
+                        "groups_to_sync": [
+                            {
+                                "group_cn": "groupcn6",
+                                "attribute_to_set": "start_url",
+                                "value": "default_start_url",
+                            },
+                        ],
+                    },
+                },
+            }
+        ).json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"]["groups_to_sync"][
+            0
+        ]["value"]
+        == "default_start_url"
+    )
+
+    assert (
+        clients.LdapConnection.edit(
+            ldap_connection_id="LDAP_1",
+            ldap_data={
+                "general_properties": {"id": "LDAP_1"},
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": "active_directory_manual",
+                        "ldap_server": "10.200.3.32",
+                    },
+                },
+                "sync_plugins": {
+                    "groups_to_custom_user_attributes": {
+                        "state": "enabled",
+                        "groups_to_sync": [
+                            {
+                                "group_cn": "groupcn6",
+                                "attribute_to_set": "start_url",
+                                "value": "welcome_page",
+                            },
+                        ],
+                    },
+                },
+            },
+        ).json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"]["groups_to_sync"][
+            0
+        ]["value"]
+        == "welcome_page"
+    )
+
+    assert (
+        clients.LdapConnection.edit(
+            ldap_connection_id="LDAP_1",
+            ldap_data={
+                "general_properties": {"id": "LDAP_1"},
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": "active_directory_manual",
+                        "ldap_server": "10.200.3.32",
+                    },
+                },
+                "sync_plugins": {
+                    "groups_to_custom_user_attributes": {
+                        "state": "enabled",
+                        "groups_to_sync": [
+                            {
+                                "group_cn": "groupcn6",
+                                "attribute_to_set": "start_url",
+                                "value": "custom_url",
+                            },
+                        ],
+                    },
+                },
+            },
+        ).json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"]["groups_to_sync"][
+            0
+        ]["value"]
+        == "custom_url"
+    )

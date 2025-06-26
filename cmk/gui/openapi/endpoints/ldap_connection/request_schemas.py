@@ -638,6 +638,15 @@ class LDAPSyncPluginGroupDisableNotificationsRequest(LDAPSyncPluginGroupBaseRequ
     )
 
 
+class LDAPSyncPluginGroupStartURLRequest(LDAPSyncPluginGroupBaseRequest):
+    value = fields.String(
+        description="The URL that the user should be redirected to after login. There is a "
+        "'default_start_url', a 'welcome_page', and any other will be treated as a custom URL",
+        required=True,
+        example="welcome_page",
+    )
+
+
 class LDAPSyncPluginGroupAllOthersRequest(LDAPSyncPluginGroupBaseRequest):
     value = fields.String(
         description="",
@@ -651,12 +660,13 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     type_field_remove = False
     type_schemas = {
         "disable_notifications": LDAPSyncPluginGroupDisableNotificationsRequest,
+        "start_url": LDAPSyncPluginGroupStartURLRequest,
         "all_others": LDAPSyncPluginGroupAllOthersRequest,
     }
 
     def get_data_type(self, data):
         data_type = data.get(self.type_field)
-        if data_type != "disable_notifications":
+        if data_type not in ("start_url", "disable_notifications"):
             return "all_others"
 
         return data_type

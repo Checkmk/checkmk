@@ -479,21 +479,32 @@ class LDAPGroupsToSyncDisableNotifications(LDAPGroupsToSyncBase):
     value = fields.Nested(
         LDAPDisableNotificationsValue,
         description="The value of the attribute to set",
-        example="dashboard.py",
+        example="",
+    )
+
+
+class LDAPGroupsToSyncStartURL(LDAPGroupsToSyncBase):
+    value = fields.String(
+        description="The URL that the user should be redirected to after login. There is a "
+        "'default_start_url', a 'welcome_page', and any other will be treated as a custom URL",
+        example="default_start_url",
     )
 
 
 class LDAPGroupsToSyncAllOthers(LDAPGroupsToSyncBase):
     value = fields.String(
         description="The value of the attribute to set",
-        example="dashboard.py",
+        example="",
     )
 
 
 class LDAPGroupsToSyncSelector(OneOfSchema):
     type_field_remove = False
     type_field = "attribute_to_set"
-    type_schemas = {"disable_notifications": LDAPGroupsToSyncDisableNotifications}
+    type_schemas = {
+        "disable_notifications": LDAPGroupsToSyncDisableNotifications,
+        "start_url": LDAPGroupsToSyncStartURL,
+    }
 
     def get_obj_type(self, obj):
         attribute_to_set = obj.get("attribute_to_set")

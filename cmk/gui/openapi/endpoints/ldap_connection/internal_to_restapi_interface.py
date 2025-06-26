@@ -601,7 +601,7 @@ class APIUISideBarPosition(TypedDict):
 class APIUIStartUrl(TypedDict):
     group_cn: str
     attribute_to_set: Literal["start_url"]
-    value: Literal["default_start_url"] | str
+    value: Literal["default_start_url"] | Literal["welcome_page"] | str
 
 
 class APITempUnit(TypedDict):
@@ -762,11 +762,19 @@ def groups_to_attributes_internal_to_api(
 
             case "start_url":
                 su = cast(START_URL, group["attribute"])
+                match su[1]:
+                    case "welcome.py":
+                        value = "welcome_page"
+                    case str():
+                        value = su[1]
+                    case _:
+                        value = "default_start_url"
+
                 api_groups.append(
                     {
                         "group_cn": group["cn"],
                         "attribute_to_set": su[0],
-                        "value": "default_start_url" if su[1] is None else su[1],
+                        "value": value,
                     }
                 )
 
@@ -930,16 +938,18 @@ def groups_to_attributes_api_to_int(
 
                 case "start_url":
                     starturl = cast(APIUIStartUrl, group)
+                    value: str | None
+                    match start_url := starturl["value"]:
+                        case "welcome_page":
+                            value = "welcome.py"
+                        case "default_start_url":
+                            value = None
+                        case _:
+                            value = start_url
+
                     groups_to_sync = {
                         "cn": starturl["group_cn"],
-                        "attribute": (
-                            "start_url",
-                            (
-                                None
-                                if starturl["value"] == "default_start_url"
-                                else starturl["value"]
-                            ),
-                        ),
+                        "attribute": ("start_url", value),
                     }
 
                 case "temperature_unit":

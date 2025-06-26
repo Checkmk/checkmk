@@ -1104,7 +1104,7 @@ def get_check_table(
             debug=debug,
         )
 
-    sync_changes_before_remote_automation(host.site_id())
+    sync_changes_before_remote_automation(host.site_id(), debug)
 
     return DiscoveryResult.deserialize(
         str(

@@ -234,7 +234,7 @@ def check_mk_remote_automation_serialized(
     indata: object,
     stdin_data: str | None = None,
     timeout: int | None = None,
-    sync: Callable[[SiteId], None],
+    sync: Callable[[SiteId, bool], None],
     non_blocking_http: bool = False,
     debug: bool,
 ) -> SerializedResult:
@@ -245,7 +245,7 @@ def check_mk_remote_automation_serialized(
             "cmk.automation.args": repr(args),
         },
     ):
-        sync(automation_config.site_id)
+        sync(automation_config.site_id, debug)
 
         if non_blocking_http:
             # This will start a background job process on the remote site to execute the automation

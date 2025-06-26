@@ -20,6 +20,7 @@ from dataclasses import asdict
 from typing import Any
 from urllib.parse import urlparse
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -127,7 +128,11 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
         may_fail(MKLicensingError, status=403),
     ):
         activation_response = activate_changes_start(
-            sites, "REST API", force_foreign_changes=body["force_foreign_changes"]
+            sites=sites,
+            source="REST API",
+            comment=None,
+            force_foreign_changes=body["force_foreign_changes"],
+            debug=active_config.debug,
         )
 
     if body["redirect"]:

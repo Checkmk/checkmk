@@ -593,6 +593,7 @@ def _synchronize_site(
         {},
         current_span,
         automation_config,
+        debug=True,
     )
 
     assert fetch_state_result is not None
@@ -617,6 +618,7 @@ def _synchronize_site(
         sync_start,
         current_span,
         automation_config,
+        debug=True,
     )
     assert sync_result is not None
 

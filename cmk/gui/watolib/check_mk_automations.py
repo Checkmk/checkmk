@@ -89,7 +89,7 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
-            sync=sync_changes_before_remote_automation if sync else lambda site_id: None,
+            sync=sync_changes_before_remote_automation if sync else lambda site_id, debug: None,
             non_blocking_http=non_blocking_http,
             debug=debug,
         ),

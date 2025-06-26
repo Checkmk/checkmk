@@ -336,7 +336,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
 
 
 # If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id: SiteId) -> None:
+def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
     manager = ActivateChangesManager()
     manager.load()
 
@@ -346,10 +346,11 @@ def sync_changes_before_remote_automation(site_id: SiteId) -> None:
     logger.info("Syncing %s", site_id)
 
     manager.start(
-        [site_id],
+        sites=[site_id],
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",
+        debug=debug,
     )
 
     # Wait maximum 30 seconds for sync to finish
@@ -680,7 +681,10 @@ def _set_sync_state(
 
 
 def _get_config_sync_state(
-    automation_config: RemoteAutomationConfig, replication_paths: Sequence[ReplicationPath]
+    automation_config: RemoteAutomationConfig,
+    replication_paths: Sequence[ReplicationPath],
+    *,
+    debug: bool,
 ) -> tuple[ConfigSyncFileInfos, int]:
     """Get the config file states from the remote sites
 
@@ -690,7 +694,7 @@ def _get_config_sync_state(
         automation_config,
         "get-config-sync-state",
         [("replication_paths", repr([r.serialize() for r in replication_paths]))],
-        debug=active_config.debug,
+        debug=debug,
     )
 
     assert isinstance(response, tuple)
@@ -704,6 +708,8 @@ def _synchronize_files(
     files_to_delete: list[str],
     remote_config_generation: int,
     site_config_dir: Path,
+    *,
+    debug: bool,
 ) -> None:
     """Pack the files in a simple tar archive and send it to the remote site
 
@@ -722,7 +728,7 @@ def _synchronize_files(
             ("config_generation", "%d" % remote_config_generation),
         ],
         files={"sync_archive": io.BytesIO(sync_archive)},
-        debug=active_config.debug,
+        debug=debug,
     )
 
     if response is not True:
@@ -742,6 +748,7 @@ def fetch_sync_state(
     central_file_infos: ConfigSyncFileInfos,
     origin_span: trace.Span,
     automation_config: RemoteAutomationConfig,
+    debug: bool,
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -757,7 +764,9 @@ def fetch_sync_state(
             site_logger.debug("Starting config sync (%r)", site_activation_state)
 
             remote_file_infos, remote_config_generation = _get_config_sync_state(
-                automation_config, replication_paths
+                automation_config,
+                replication_paths,
+                debug=debug,
             )
             site_logger.debug("Received %d file infos from remote", len(remote_file_infos))
 
@@ -821,6 +830,7 @@ def synchronize_files(
     sync_start: float,
     origin_span: trace.Span,
     automation_config: RemoteAutomationConfig,
+    debug: bool,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -854,6 +864,7 @@ def synchronize_files(
                 sync_delta.to_delete,
                 remote_config_generation,
                 site_config_dir,
+                debug=debug,
             )
             site_logger.debug("Finished config sync")
             return site_activation_state
@@ -926,6 +937,8 @@ def _get_domains_needing_activation(
 
 def _get_omd_domain_background_job_result(
     automation_config: RemoteAutomationConfig,
+    *,
+    debug: bool,
 ) -> Sequence[str]:
     """
     OMD domain needs restart of the whole site so the apache connection gets lost.
@@ -937,7 +950,7 @@ def _get_omd_domain_background_job_result(
                 automation_config,
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
-                debug=active_config.debug,
+                debug=debug,
             )
 
             assert isinstance(raw_omd_response, tuple)
@@ -957,6 +970,8 @@ def _call_activate_changes_automation(
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
+    *,
+    debug: bool,
 ) -> ConfigWarnings:
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
@@ -969,7 +984,7 @@ def _call_activate_changes_automation(
             automation_config,
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
-            debug=active_config.debug,
+            debug=debug,
         )
     except cmk.gui.watolib.automations.MKAutomationException as e:
         if "Invalid automation command: activate-changes" in "%s" % e:
@@ -982,7 +997,7 @@ def _call_activate_changes_automation(
     assert isinstance(response, dict)
     if any(request.name == OMDDomainName and request.settings for request in domain_requests):
         response.setdefault(OMDDomainName, []).extend(
-            _get_omd_domain_background_job_result(automation_config)
+            _get_omd_domain_background_job_result(automation_config, debug=debug)
         )
 
     return response
@@ -993,13 +1008,15 @@ def _do_activate(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     site_changes_activate_until: Sequence[ChangeSpec],
     site_activation_state: SiteActivationState,
+    *,
+    debug: bool,
 ) -> ConfigWarnings:
     _set_result(site_activation_state, PHASE_ACTIVATE, _("Activating"))
 
     start = time.time()
 
     configuration_warnings = _call_activate_changes_automation(
-        site_id, automation_config, site_changes_activate_until
+        site_id, automation_config, site_changes_activate_until, debug=debug
     )
 
     duration = time.time() - start
@@ -1013,6 +1030,7 @@ def activate_site_changes(
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    debug: bool,
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -1034,6 +1052,7 @@ def activate_site_changes(
                         automation_config,
                         site_changes_activate_until,
                         site_activation_state,
+                        debug=debug,
                     )
                 _confirm_activated_changes(site_id, site_changes_activate_until)
 
@@ -1418,6 +1437,8 @@ class ActivateChangesManager(ActivateChanges):
         self,
         sites: list[SiteId],
         source: ActivationSource,
+        *,
+        debug: bool,
         activate_until: str | None = None,
         comment: str | None = None,
         activate_foreign: bool = False,
@@ -1493,10 +1514,10 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         with _debug_log_message("Calling pre-activate changes"):
-            self._pre_activate_changes()
+            self._pre_activate_changes(debug=debug)
 
         with _debug_log_message("Creating snapshots"):
-            self._create_snapshots(activation_features.snapshot_manager_factory)
+            self._create_snapshots(activation_features.snapshot_manager_factory, debug=debug)
         self._save_activation()
 
         with _debug_log_message("Starting activation"):
@@ -1653,13 +1674,13 @@ class ActivateChangesManager(ActivateChanges):
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
-    def _pre_activate_changes(self) -> None:
+    def _pre_activate_changes(self, *, debug: bool) -> None:
         try:
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_all_hosts())
         except Exception as e:
             logger.exception("error calling pre-distribute-changes hook")
-            if active_config.debug:
+            if debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
@@ -1667,6 +1688,8 @@ class ActivateChangesManager(ActivateChanges):
     def _create_snapshots(
         self,
         snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
+        *,
+        debug: bool,
     ) -> None:
         """Creates the needed SyncSnapshots for each applicable site.
 
@@ -1697,7 +1720,7 @@ class ActivateChangesManager(ActivateChanges):
                 secret=backup_snapshots.snapshot_secret(),
                 max_snapshots=active_config.wato_max_snapshots,
                 use_git=active_config.wato_use_git,
-                debug=active_config.debug,
+                debug=debug,
                 parent_span_context=trace.get_current_span().get_span_context(),
             ) as future_backup_snapshot_creation:
                 logger.debug("Start creating config sync snapshots")
@@ -2148,13 +2171,15 @@ def _error_callback(error: BaseException) -> None:
     logger.error(str(error))
 
 
-@tracer.instrument("sync_and_activate")
-def sync_and_activate(
+@tracer.instrument("_sync_and_activate")
+def _sync_and_activate(
     activation_id: str,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     file_filter_func: FileFilterFunc,
     source: ActivationSource,
-    prevent_activate: bool = False,
+    *,
+    debug: bool,
+    prevent_activate: bool,
 ) -> None:
     """
     Realizes the incremental config sync from the central to the remote site
@@ -2197,7 +2222,7 @@ def sync_and_activate(
             site_snapshot_settings,
             task_pool,
             broker_certificate_sync_registry["broker_certificate_sync"],
-            debug=active_config.debug,
+            debug=debug,
         )
         clean_remote_sites_certs(kept_sites=list(get_all_replicated_sites()))
 
@@ -2226,6 +2251,7 @@ def sync_and_activate(
                         site_central_file_infos[site_id],
                         trace.get_current_span(),
                         automation_config,
+                        debug,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2239,6 +2265,7 @@ def sync_and_activate(
                         site_activation_state,
                         trace.get_current_span(),
                         automation_config,
+                        debug,
                     ),
                     error_callback=_error_callback,
                 )
@@ -2265,6 +2292,7 @@ def sync_and_activate(
                 site_snapshot_settings,
                 task_pool,
                 automation_configs,
+                debug=debug,
             )
 
     except Exception:
@@ -2379,6 +2407,8 @@ def _handle_active_tasks(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
     automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
+    *,
+    debug: bool,
 ) -> None:
     for site_id, async_result in list(active_tasks["fetch_sync_state"].items()):
         if not async_result.ready():
@@ -2426,6 +2456,7 @@ def _handle_active_tasks(
                 sync_start_time,
                 trace.get_current_span(),
                 automation_config,
+                debug,
             ),
             error_callback=_error_callback,
         )
@@ -2446,6 +2477,7 @@ def _handle_active_tasks(
                 activation_state,
                 trace.get_current_span(),
                 automation_configs[site_id],
+                debug,
             ),
             error_callback=_error_callback,
         )
@@ -2502,14 +2534,15 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                 with_timestamp=True,
             )
 
-            sync_and_activate(
+            _sync_and_activate(
                 self._activation_id,
                 site_snapshot_settings,
                 activation_features_registry[
                     str(version.edition(paths.omd_root))
                 ].sync_file_filter_func,
                 source,
-                prevent_activate,
+                debug=active_config.debug,
+                prevent_activate=prevent_activate,
             )
             job_interface.send_result_message(_("Activate changes finished"))
 
@@ -3441,10 +3474,12 @@ def _raise_for_license_block() -> None:
 
 
 def activate_changes_start(
+    *,
     sites: list[SiteId],
     source: ActivationSource,
-    comment: str | None = None,
-    force_foreign_changes: bool = False,
+    comment: str | None,
+    force_foreign_changes: bool,
+    debug: bool,
 ) -> ActivationRestAPIResponseExtensions:
     """Start activation of configuration changes on specific or "dirty" sites.
 
@@ -3516,7 +3551,13 @@ def activate_changes_start(
                 status=409,
             )
 
-    manager.start(sites, comment=comment, activate_foreign=force_foreign_changes, source=source)
+    manager.start(
+        sites=sites,
+        comment=comment,
+        activate_foreign=force_foreign_changes,
+        source=source,
+        debug=debug,
+    )
     return activation_attributes_for_rest_api_response(manager)
 
 

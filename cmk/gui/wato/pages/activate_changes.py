@@ -1020,6 +1020,7 @@ class PageAjaxStartActivation(AjaxPage):
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",
+            debug=active_config.debug,
         )
 
         return {

@@ -290,20 +290,49 @@ class _ArcTan:
 
 
 @dataclass(frozen=True, kw_only=True)
-class _Projection:
-    lower_x: float
-    upper_x: float
-    lower_atan: Callable[[int | float], float]
-    focus_linear: Callable[[int | float], float]
-    upper_atan: Callable[[int | float], float]
-    limit: float
+class _ProjectionFromMetricValueToPerfFillLevel:
+    """
+    Map arbitrarily large or small metric values to an interval (lower_limit, upper_limit), which
+    indicates the fill level of a perfometer. lower_limit means that the perfometer is empty.
+    upper_limit means that the perfometer is completely filled. The values of lower_limit and
+    upper_limit depend on the type of the perfometer.
+
+    The idea is to split the interval (lower_limit, upper_limit) into three parts:
+    - A lower non-linear part, which has a lower limit of lower_limit.
+    - A focus part in the middle (linear).
+    - An upper non-linear part which has an upper limit of upper_limit.
+
+    For the non-linear parts, there are currently two options:
+    1) Hard cutoff ("Closed" in terms of graphing API)
+      Values smaller than the lower end of the linear part are simply mapped to lower_limit.
+      Values larger than the upper end of the linear part are simply mapped to upper_limit.
+      In this case, the linear part starts/ends at lower_limit/upper_limit.
+
+    2) Arcus tangent ("Open" in terms of graphing API)
+      We splice the lower and/or upper end of the linear part with an arctan function. The splicing
+      fulfills the following conditions:
+      * At the splicing point, the values of the linear and the arctan function match (continuity).
+      * At the splicing point, the slope of the linear and the arctan function match (continuously differentiable).
+      * The splicing point is the inflection point of the arctan function. Note that there is no
+        obvious reason for this choice, it is just a convenient point to use. Also, we need to make
+        a choice (or two choices, one for the lower and one for the upper non-linear part) to nail
+        down all four parameters of
+        a * atan(b * x + c) + d.
+      In this case, the linear part starts/ends at above/below lower_limit/upper_limit.
+    """
+
+    start_of_focus_range: float
+    end_of_focus_range: float
+    lower_non_linear_projection: Callable[[int | float], float]
+    linear_focus_projection: Callable[[int | float], float]
+    upper_non_linear_projection: Callable[[int | float], float]
 
     def __call__(self, value: int | float) -> float:
-        if value < self.lower_x:
-            return self.lower_atan(value)
-        if value > self.upper_x:
-            return self.upper_atan(value)
-        return self.focus_linear(value)
+        if value < self.start_of_focus_range:
+            return self.lower_non_linear_projection(value)
+        if value > self.end_of_focus_range:
+            return self.upper_non_linear_projection(value)
+        return self.linear_focus_projection(value)
 
 
 @dataclass(frozen=True)
@@ -323,7 +352,7 @@ def _make_projection(
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
     perfometer_name: str,
-) -> _Projection:
+) -> _ProjectionFromMetricValueToPerfFillLevel:
     # TODO At the moment we have a unit conversion only for temperature metrics and we want to have
     # the orig value at the same place as the converted value, eg.:
     #              20 °C
@@ -355,13 +384,12 @@ def _make_projection(
             upper_x,
             perfometer_name,
         )
-        return _Projection(
-            lower_x=float("nan"),
-            upper_x=float("nan"),
-            lower_atan=lambda v: float("nan"),
-            focus_linear=lambda v: float("nan"),
-            upper_atan=lambda v: float("nan"),
-            limit=float("nan"),
+        return _ProjectionFromMetricValueToPerfFillLevel(
+            start_of_focus_range=float("nan"),
+            end_of_focus_range=float("nan"),
+            lower_non_linear_projection=lambda v: float("nan"),
+            linear_focus_projection=lambda v: float("nan"),
+            upper_non_linear_projection=lambda v: float("nan"),
         )
 
     # Note: if we have closed boundaries and a value exceeds the lower or upper limit then we use
@@ -369,18 +397,17 @@ def _make_projection(
     # perfometer is not filled resp. completely filled.
     match focus_range.lower, focus_range.upper:
         case perfometers_api.Closed(), perfometers_api.Closed():
-            return _Projection(
-                lower_x=lower_x,
-                upper_x=upper_x,
-                lower_atan=lambda v: lower_x,
-                focus_linear=_Linear.from_points(
+            return _ProjectionFromMetricValueToPerfFillLevel(
+                start_of_focus_range=lower_x,
+                end_of_focus_range=upper_x,
+                lower_non_linear_projection=lambda v: lower_x,
+                linear_focus_projection=_Linear.from_points(
                     lower_x,
                     projection_parameters.lower_closed,
                     upper_x,
                     projection_parameters.upper_closed,
                 ),
-                upper_atan=lambda v: upper_x,
-                limit=projection_parameters.upper_closed,
+                upper_non_linear_projection=lambda v: upper_x,
             )
 
         case perfometers_api.Open(), perfometers_api.Closed():
@@ -390,19 +417,18 @@ def _make_projection(
                 upper_x,
                 projection_parameters.upper_closed,
             )
-            return _Projection(
-                lower_x=lower_x,
-                upper_x=upper_x,
-                lower_atan=_ArcTan(
+            return _ProjectionFromMetricValueToPerfFillLevel(
+                start_of_focus_range=lower_x,
+                end_of_focus_range=upper_x,
+                lower_non_linear_projection=_ArcTan(
                     x_inflection=lower_x,
                     y_inflection=projection_parameters.lower_open,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.lower_open
                     - projection_parameters.lower_closed,
                 ),
-                focus_linear=linear,
-                upper_atan=lambda v: upper_x,
-                limit=projection_parameters.upper_closed,
+                linear_focus_projection=linear,
+                upper_non_linear_projection=lambda v: upper_x,
             )
 
         case perfometers_api.Closed(), perfometers_api.Open():
@@ -412,19 +438,18 @@ def _make_projection(
                 upper_x,
                 projection_parameters.upper_open,
             )
-            return _Projection(
-                lower_x=lower_x,
-                upper_x=upper_x,
-                lower_atan=lambda v: lower_x,
-                focus_linear=linear,
-                upper_atan=_ArcTan(
+            return _ProjectionFromMetricValueToPerfFillLevel(
+                start_of_focus_range=lower_x,
+                end_of_focus_range=upper_x,
+                lower_non_linear_projection=lambda v: lower_x,
+                linear_focus_projection=linear,
+                upper_non_linear_projection=_ArcTan(
                     x_inflection=upper_x,
                     y_inflection=projection_parameters.upper_open,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.upper_closed
                     - projection_parameters.upper_open,
                 ),
-                limit=projection_parameters.upper_closed,
             )
 
         case perfometers_api.Open(), perfometers_api.Open():
@@ -434,25 +459,24 @@ def _make_projection(
                 upper_x,
                 projection_parameters.upper_open,
             )
-            return _Projection(
-                lower_x=lower_x,
-                upper_x=upper_x,
-                lower_atan=_ArcTan(
+            return _ProjectionFromMetricValueToPerfFillLevel(
+                start_of_focus_range=lower_x,
+                end_of_focus_range=upper_x,
+                lower_non_linear_projection=_ArcTan(
                     x_inflection=lower_x,
                     y_inflection=projection_parameters.lower_open,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.lower_open
                     - projection_parameters.lower_closed,
                 ),
-                focus_linear=linear,
-                upper_atan=_ArcTan(
+                linear_focus_projection=linear,
+                upper_non_linear_projection=_ArcTan(
                     x_inflection=upper_x,
                     y_inflection=projection_parameters.upper_open,
                     slope_inflection=linear.slope,
                     scale_in_units_of_pi_half=projection_parameters.upper_closed
                     - projection_parameters.upper_open,
                 ),
-                limit=projection_parameters.upper_closed,
             )
 
     assert False, focus_range
@@ -465,8 +489,9 @@ def _evaluate_segments(
 
 
 def _project_segments(
-    projection: _Projection,
+    projection: _ProjectionFromMetricValueToPerfFillLevel,
     segments: Sequence[_EvaluatedQuantity],
+    fully_filled_at: float,
     themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
     """Compute which portion of the perfometer needs to be filled with which color.
@@ -494,7 +519,7 @@ def _project_segments(
     ]
     projections.append(
         (
-            round(projection.limit - sum(p[0] for p in projections), 2),
+            round(fully_filled_at - sum(p[0] for p in projections), 2),
             themed_perfometer_bg_color,
         )
     )
@@ -566,6 +591,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.segments,
                 self.translated_metrics,
             ),
+            _PERFOMETER_PROJECTION_PARAMETERS.upper_closed,
             self.themed_perfometer_bg_color,
         ):
             return [projections]
@@ -624,6 +650,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.left.segments,
                 self.translated_metrics,
             ),
+            _BIDIRECTIONAL_PROJECTION_PARAMETERS.upper_closed,
             self.themed_perfometer_bg_color,
         ):
             projections.extend(left_projections[::-1])
@@ -642,6 +669,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.right.segments,
                 self.translated_metrics,
             ),
+            _BIDIRECTIONAL_PROJECTION_PARAMETERS.upper_closed,
             self.themed_perfometer_bg_color,
         ):
             projections.extend(right_projections)

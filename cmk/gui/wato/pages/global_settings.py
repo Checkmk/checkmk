@@ -38,7 +38,6 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import configured_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -422,7 +421,7 @@ class ABCEditGlobalSettingMode(WatoMode):
     ) -> None:
         site_specific_settings = {
             site_id: deepcopy(site_conf.get("globals", {}))
-            for site_id, site_conf in configured_sites().items()
+            for site_id, site_conf in active_config.sites.items()
         }
         global_settings = dict(deepcopy(self._global_settings))
         if (sites := self._affected_sites()) is not None:

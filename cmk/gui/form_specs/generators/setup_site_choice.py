@@ -8,9 +8,9 @@ from typing import TypeVar
 from cmk.ccc.site import omd_site
 
 from cmk.gui import site_config
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.site_config import configured_sites
 from cmk.gui.user_sites import activation_sites, site_choices
 
 from cmk.rulesets.v1 import Help, Label, Title
@@ -27,7 +27,7 @@ def _compute_default_prefill() -> DefaultValue[str]:
 
     if not (
         authorized_site_ids := list(
-            global_user.authorized_sites(unfiltered_sites=configured_sites()).keys()
+            global_user.authorized_sites(unfiltered_sites=active_config.sites).keys()
         )
     ):
         return DefaultValue("")

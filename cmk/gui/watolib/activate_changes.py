@@ -82,7 +82,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.site_config import (
-    configured_sites,
     enabled_sites,
     is_single_local_site,
     is_wato_slave_site,
@@ -1617,7 +1616,7 @@ class ActivateChangesManager(ActivateChanges):
             ):
                 activation_features.distribute_piggyback_hub_configs(
                     load_configuration_settings(),
-                    configured_sites(),
+                    active_config.sites,
                     {site_id for site_id, _site_config in self.dirty_sites()},
                     {
                         host_name: host.site_id()

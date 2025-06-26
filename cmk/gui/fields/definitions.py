@@ -44,7 +44,6 @@ from cmk.gui.fields.utils import edition_field_description, tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.groups_io import load_group_information
@@ -1042,16 +1041,16 @@ class SiteField(base.String):
             return
 
         if self.presence in ["should_exist", "might_not_exist_on_view"]:
-            if value not in configured_sites().keys():
+            if value not in active_config.sites:
                 raise self.make_error("should_exist", site=value)
 
         if self.presence == "should_not_exist":
-            if value in configured_sites().keys():
+            if value in active_config.sites:
                 raise self.make_error("should_not_exist", site=value)
 
     @override
     def _serialize(self, value: str, attr: str | None, obj: object, **kwargs: object) -> str | None:
-        if self.presence == "might_not_exist_on_view" and value not in configured_sites().keys():
+        if self.presence == "might_not_exist_on_view" and value not in active_config.sites:
             return "Unknown Site: " + value
         return super()._serialize(value, attr, obj, **kwargs)
 

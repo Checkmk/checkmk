@@ -43,7 +43,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import configured_sites, is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.html import HTML
@@ -667,7 +667,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         if piggyback_hub_config_var_ident in settings and not custom_site_path:
             site_specific_settings = {
                 site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in configured_sites().items()
+                for site_id, site_conf in active_config.sites.items()
             }
             if site_specific:
                 global_settings = self.load()

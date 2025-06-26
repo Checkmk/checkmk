@@ -27,10 +27,6 @@ def enabled_sites() -> SiteConfigurations:
     )
 
 
-def configured_sites() -> SiteConfigurations:
-    return active_config.sites
-
-
 def has_wato_slave_sites() -> bool:
     return bool(wato_slave_sites())
 

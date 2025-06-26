@@ -58,7 +58,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
-    configured_sites,
     get_replication_site_id,
     has_wato_slave_sites,
     is_replication_enabled,
@@ -1589,7 +1588,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         if varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
             site_specific_settings = {
                 site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in configured_sites().items()
+                for site_id, site_conf in active_config.sites.items()
             }
             site_specific_settings[self._site_id][varname] = new_value
 

@@ -13,7 +13,6 @@ from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._perfometer import (
     _ArcTan,
     _make_projection,
-    _PERFOMETER_PROJECTION_PARAMETERS,
     MetricometerRendererPerfometer,
     MetricometerRendererStacked,
 )
@@ -95,7 +94,7 @@ def test_get_first_matching_perfometer(
 def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) -> None:
     projection = _make_projection(
         focus_range,
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -117,7 +116,7 @@ def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) ->
 def test_perfometer_projection_closed_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -136,7 +135,7 @@ def test_perfometer_projection_closed_closed_exceeds(
 ) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -155,7 +154,7 @@ def test_perfometer_projection_closed_closed_exceeds(
 def test_perfometer_projection_open_closed(value: int | float, result: float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -171,7 +170,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
 def test_perfometer_projection_open_closed_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -190,7 +189,7 @@ def test_perfometer_projection_open_closed_exceeds(value: int | float, result: i
 def test_perfometer_projection_closed_open(value: int | float, result: float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -206,7 +205,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
 def test_perfometer_projection_closed_open_exceeds(value: int | float, result: int | float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )
@@ -226,7 +225,7 @@ def test_perfometer_projection_closed_open_exceeds(value: int | float, result: i
 def test_perfometer_projection_open_open(value: int | float, result: float) -> None:
     projection = _make_projection(
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Open(20)),
-        _PERFOMETER_PROJECTION_PARAMETERS,
+        MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
     )

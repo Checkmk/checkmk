@@ -335,16 +335,12 @@ class _ProjectionFromMetricValueToPerfFillLevel:
         return self.linear_focus_projection(value)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _ProjectionParameters:
-    lower_closed: float
-    lower_open: float
-    upper_open: float
-    upper_closed: float
-
-
-_PERFOMETER_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 15.0, 85.0, 100.0)
-_BIDIRECTIONAL_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 5.0, 45.0, 50.0)
+    perfometer_empty_at: float
+    lower_open_end: float
+    upper_open_start: float
+    perfometer_full_at: float
 
 
 def _make_projection(
@@ -403,9 +399,9 @@ def _make_projection(
                 lower_non_linear_projection=lambda v: lower_x,
                 linear_focus_projection=_Linear.from_points(
                     lower_x,
-                    projection_parameters.lower_closed,
+                    projection_parameters.perfometer_empty_at,
                     upper_x,
-                    projection_parameters.upper_closed,
+                    projection_parameters.perfometer_full_at,
                 ),
                 upper_non_linear_projection=lambda v: upper_x,
             )
@@ -413,19 +409,19 @@ def _make_projection(
         case perfometers_api.Open(), perfometers_api.Closed():
             linear = _Linear.from_points(
                 lower_x,
-                projection_parameters.lower_open,
+                projection_parameters.lower_open_end,
                 upper_x,
-                projection_parameters.upper_closed,
+                projection_parameters.perfometer_full_at,
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
                 lower_non_linear_projection=_ArcTan(
                     x_inflection=lower_x,
-                    y_inflection=projection_parameters.lower_open,
+                    y_inflection=projection_parameters.lower_open_end,
                     slope_inflection=linear.slope,
-                    scale_in_units_of_pi_half=projection_parameters.lower_open
-                    - projection_parameters.lower_closed,
+                    scale_in_units_of_pi_half=projection_parameters.lower_open_end
+                    - projection_parameters.perfometer_empty_at,
                 ),
                 linear_focus_projection=linear,
                 upper_non_linear_projection=lambda v: upper_x,
@@ -434,9 +430,9 @@ def _make_projection(
         case perfometers_api.Closed(), perfometers_api.Open():
             linear = _Linear.from_points(
                 lower_x,
-                projection_parameters.lower_closed,
+                projection_parameters.perfometer_empty_at,
                 upper_x,
-                projection_parameters.upper_open,
+                projection_parameters.upper_open_start,
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
@@ -445,37 +441,37 @@ def _make_projection(
                 linear_focus_projection=linear,
                 upper_non_linear_projection=_ArcTan(
                     x_inflection=upper_x,
-                    y_inflection=projection_parameters.upper_open,
+                    y_inflection=projection_parameters.upper_open_start,
                     slope_inflection=linear.slope,
-                    scale_in_units_of_pi_half=projection_parameters.upper_closed
-                    - projection_parameters.upper_open,
+                    scale_in_units_of_pi_half=projection_parameters.perfometer_full_at
+                    - projection_parameters.upper_open_start,
                 ),
             )
 
         case perfometers_api.Open(), perfometers_api.Open():
             linear = _Linear.from_points(
                 lower_x,
-                projection_parameters.lower_open,
+                projection_parameters.lower_open_end,
                 upper_x,
-                projection_parameters.upper_open,
+                projection_parameters.upper_open_start,
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
                 lower_non_linear_projection=_ArcTan(
                     x_inflection=lower_x,
-                    y_inflection=projection_parameters.lower_open,
+                    y_inflection=projection_parameters.lower_open_end,
                     slope_inflection=linear.slope,
-                    scale_in_units_of_pi_half=projection_parameters.lower_open
-                    - projection_parameters.lower_closed,
+                    scale_in_units_of_pi_half=projection_parameters.lower_open_end
+                    - projection_parameters.perfometer_empty_at,
                 ),
                 linear_focus_projection=linear,
                 upper_non_linear_projection=_ArcTan(
                     x_inflection=upper_x,
-                    y_inflection=projection_parameters.upper_open,
+                    y_inflection=projection_parameters.upper_open_start,
                     slope_inflection=linear.slope,
-                    scale_in_units_of_pi_half=projection_parameters.upper_closed
-                    - projection_parameters.upper_open,
+                    scale_in_units_of_pi_half=projection_parameters.perfometer_full_at
+                    - projection_parameters.upper_open_start,
                 ),
             )
 
@@ -564,6 +560,13 @@ class MetricometerRenderer(abc.ABC):
 
 
 class MetricometerRendererPerfometer(MetricometerRenderer):
+    _PROJECTION_PARAMETERS = _ProjectionParameters(
+        perfometer_empty_at=0.0,
+        lower_open_end=15.0,
+        upper_open_start=85.0,
+        perfometer_full_at=100.0,
+    )
+
     def __init__(
         self,
         perfometer: perfometers_api.Perfometer,
@@ -583,7 +586,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         if projections := _project_segments(
             _make_projection(
                 self.perfometer.focus_range,
-                _PERFOMETER_PROJECTION_PARAMETERS,
+                self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
             ),
@@ -591,7 +594,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.segments,
                 self.translated_metrics,
             ),
-            _PERFOMETER_PROJECTION_PARAMETERS.upper_closed,
+            self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
             return [projections]
@@ -618,6 +621,13 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
 
 class MetricometerRendererBidirectional(MetricometerRenderer):
+    _PROJECTION_PARAMETERS = _ProjectionParameters(
+        perfometer_empty_at=0.0,
+        lower_open_end=5.0,
+        upper_open_start=45.0,
+        perfometer_full_at=50.0,
+    )
+
     def __init__(
         self,
         perfometer: perfometers_api.Bidirectional,
@@ -642,7 +652,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                     perfometers_api.Closed(0),
                     self.perfometer.left.focus_range.upper,
                 ),
-                _BIDIRECTIONAL_PROJECTION_PARAMETERS,
+                self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
             ),
@@ -650,7 +660,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.left.segments,
                 self.translated_metrics,
             ),
-            _BIDIRECTIONAL_PROJECTION_PARAMETERS.upper_closed,
+            self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
             projections.extend(left_projections[::-1])
@@ -661,7 +671,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                     perfometers_api.Closed(0),
                     self.perfometer.right.focus_range.upper,
                 ),
-                _BIDIRECTIONAL_PROJECTION_PARAMETERS,
+                self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
             ),
@@ -669,7 +679,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.right.segments,
                 self.translated_metrics,
             ),
-            _BIDIRECTIONAL_PROJECTION_PARAMETERS.upper_closed,
+            self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
             projections.extend(right_projections)

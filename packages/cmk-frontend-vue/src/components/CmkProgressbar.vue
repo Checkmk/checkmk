@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { cva, type VariantProps } from 'class-variance-authority'
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 const sizes = cva('', {
   variants: {
@@ -59,6 +59,8 @@ const labelString = computed<string>(() => {
   return ''
 })
 const progressRatio = computed(() => (max === 'unknown' ? 0 : value / max))
+
+const cmkProgressbaId = useId()
 </script>
 
 <template>
@@ -68,8 +70,16 @@ const progressRatio = computed(() => (max === 'unknown' ? 0 : value / max))
     :class="sizes({ size })"
     :title="accessibilityLabelString"
     role="progressbar"
+    :aria-valuemax="max"
+    :aria-valuemin="0"
+    :aria-valuenow="value"
+    :aria-labelledby="cmkProgressbaId"
   >
-    <label v-if="label && max !== 'unknown'" class="cmk-progress-label">
+    <label
+      :id="cmkProgressbaId"
+      class="cmk-progress-label"
+      :class="{ visible: label && max !== 'unknown' }"
+    >
       {{ labelString }}
     </label>
     <div
@@ -126,6 +136,11 @@ const progressRatio = computed(() => (max === 'unknown' ? 0 : value / max))
   position: absolute;
   z-index: +1;
   font-size: 8px;
+  visibility: hidden;
+
+  &.visible {
+    visibility: visible;
+  }
 }
 
 .small {

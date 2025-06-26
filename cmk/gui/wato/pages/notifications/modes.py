@@ -3568,7 +3568,7 @@ class ABCNotificationParameterMode(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
-    def _spec(self) -> ValueSpec:
+    def _spec(self) -> ValueSpec[Any]:
         try:
             plugin = notification_parameter_registry[self._method()]
         except KeyError:

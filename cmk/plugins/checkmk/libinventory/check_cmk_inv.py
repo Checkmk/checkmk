@@ -135,8 +135,9 @@ def inventory_as_check(
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ConfiguredIPLookup(
-        make_lookup_ip_address(config_cache.ip_lookup_config()),
+        make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )

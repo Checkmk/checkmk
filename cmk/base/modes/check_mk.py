@@ -2219,8 +2219,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2432,8 +2433,9 @@ def run_checking(
     if len(args) == 2:
         ipaddress = HostAddress(args[1])
 
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2650,8 +2652,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     config_cache = loading_result.config_cache
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     service_name_config = config_cache.make_passive_service_name_config()
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -2925,8 +2928,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     service_name_config = (
         config_cache.make_passive_service_name_config()
     )  # not obvious to me why/if we *really* need this
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )

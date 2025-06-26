@@ -11,21 +11,70 @@ Since this endpoint is public, no authentication is required.
 import re
 import sys
 from collections.abc import Sequence
-from typing import NamedTuple
+from pathlib import Path
+from typing import Any, NamedTuple
 
 import requests
 import urllib3
 
+from cmk.utils.paths import tmp_dir
+from cmk.utils.semantic_version import SemanticVersion
+
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.misc import DataCache
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
 
 
 class Endpoint(NamedTuple):
     name: str
     uri: str
     data_format: str = "text"
+
+
+class VersionCache(DataCache):
+    def __init__(self, *, tags_url: str, interval: int, directory: Path | None = None) -> None:
+        super().__init__(
+            cache_file_dir=directory or (tmp_dir / "agents"),
+            cache_file_name="bazel_cache_version",
+        )
+        self._url = tags_url
+        self._interval = interval
+
+    @property
+    def cache_interval(self) -> int:
+        return self._interval
+
+    def get_validity_from_args(self, *args: Any) -> bool:
+        return True
+
+    def get_live_data(self, commit_hash: str) -> Any:
+        resp = requests.get(self._url, timeout=30)
+        resp.raise_for_status()
+        items = resp.json()
+        versions = {
+            item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items
+        }
+        current_version = versions.get(commit_hash)
+
+        if current_version is not None:
+            newer_versions = {v for k, v in versions.items() if v > current_version}
+            majors = {v for v in newer_versions if v.major > current_version.major}
+            minors = {v for v in newer_versions if v.minor > current_version.minor} - majors
+            patches = (
+                {v for v in newer_versions if v.patch > current_version.patch} - majors - minors
+            )
+            return {
+                "current": str(current_version),
+                "latest": {
+                    "major": str(max(majors, default="")) or None,
+                    "minor": str(max(minors, default="")) or None,
+                    "patch": str(max(patches, default="")) or None,
+                },
+            }
+        return None
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -45,6 +94,17 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         default="https",
         choices=["http", "https"],
         help="Connection protocol to Bazel Cache",
+    )
+    parser.add_argument(
+        "--version-cache",
+        default=DEFAULT_VERSION_CACHE_INTERVAL,
+        type=int,
+        help=f"Cache interval in seconds for Bazel version collection (default: {DEFAULT_VERSION_CACHE_INTERVAL} [8h])",
+    )
+    parser.add_argument(
+        "--bazel-cache-tags-url",
+        default="https://api.github.com/repos/buchgr/bazel-remote/tags",
+        help="GitHub compatible URL to get the tags of the Bazel Remote Cache project discover version information",
     )
 
     return parser.parse_args(argv)
@@ -78,13 +138,12 @@ def handle_requests(args: Args, endpoints: list[Endpoint]) -> int:
 
     if args.no_cert_check:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
     for endpoint in endpoints:
         url = f"{base_url}{'/' if not endpoint.uri.startswith('/') else ''}{endpoint.uri}"
 
         # Get data from endpoint
         try:
-            req = requests.get(
+            res = requests.get(
                 url,
                 auth=auth,
                 timeout=10,
@@ -97,18 +156,18 @@ def handle_requests(args: Args, endpoints: list[Endpoint]) -> int:
             return 1
 
         # Status code should be 200.
-        if not req.status_code == requests.codes.OK:
+        if not res.status_code == requests.codes.OK:
             sys.stderr.write(
-                f"Wrong status code: {req.status_code}. Expected: {requests.codes.OK} \n"
+                f"Wrong status code: {res.status_code}. Expected: {requests.codes.OK} \n"
             )
             return 2
 
         # Check if something is returned at all
-        if not req.content:
+        if not res.content:
             sys.stderr.write(f"No data received from '{endpoint.name}' endpoint\n")
             return 3
 
-        _process_data(req=req, endpoint=endpoint)
+        _process_data(res=res, endpoint=endpoint, args=args)
 
     return 0
 
@@ -117,22 +176,35 @@ def _camel_to_snake(name: str) -> str:
     return CAMEL_PATTERN.sub("_", name).lower()
 
 
-def _process_data(req: requests.Response, endpoint: Endpoint) -> None:
+def _process_data(res: requests.Response, endpoint: Endpoint, args: Args) -> None:
     if endpoint.data_format == "json":
-        data = {_camel_to_snake(key): value for key, value in req.json().items()}
+        data = {_camel_to_snake(key): value for key, value in res.json().items()}
+        if endpoint.name == "status" and "git_commit" in data:
+            try:
+                version_cache = VersionCache(
+                    tags_url=args.bazel_cache_tags_url, interval=args.version_cache
+                )
+                version_data = version_cache.get_data(data["git_commit"])
+
+                if version_data is not None:
+                    with SectionWriter("bazel_cache_version") as writer:
+                        writer.append_json(version_data)
+            except requests.exceptions.RequestException:
+                pass
+
         with SectionWriter(f"bazel_cache_{endpoint.name}") as writer:
             writer.append_json(data)
     else:
-        _process_txt_data(req=req, section_name=endpoint.name)
+        _process_txt_data(res=res, section_name=endpoint.name)
 
 
-def _process_txt_data(req: requests.Response, section_name: str) -> None:
+def _process_txt_data(res: requests.Response, section_name: str) -> None:
     pattern = r'(\w+)="([^"]*)"'
     data = {}
     data_go = {}
     data_grpc = {}
     data_http = {}
-    for line in req.text.splitlines():
+    for line in res.text.splitlines():
         # # TYPE http_request_duration_seconds histogram
         # http_request_duration_seconds_bucket{code="401",handler="OPTIONS",method="OPTIONS",service="",le="0.5"} 2
         if not line.startswith("#"):

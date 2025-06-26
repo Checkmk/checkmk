@@ -13,7 +13,7 @@ from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import Any, cast, Literal, NamedTuple, overload
+from typing import Any, cast, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import LivestatusResponse, SiteConfiguration
 
@@ -2273,7 +2273,7 @@ class ModeTestNotifications(ModeNotifications):
                 ),
             ],
             optional_keys=[],
-            validate=_validate_general_opts,
+            validate=_validate_general_opts,  # type: ignore[arg-type]
         )
 
     def _vs_notify_plugin(self) -> Dictionary:
@@ -2380,14 +2380,24 @@ def _get_resulting_notifications_count(
     return sum(len(value) for value in method_dict.values())
 
 
-def _validate_general_opts(value: dict, varprefix: str) -> None:
-    if not value["on_hostname_hint"]:
+class GeneralTestOptions(TypedDict):
+    on_hostname_hint: str
+    on_service_hint: str
+    simulation_mode: tuple[str, dict[str, list[int]]]
+    plugin_output: str
+
+
+def _validate_general_opts(general_test_options: GeneralTestOptions, varprefix: str) -> None:
+    if not general_test_options["on_hostname_hint"]:
         raise MKUserError(
             f"{varprefix}_p_on_hostname_hint",
             _("Please provide a hostname to test with."),
         )
 
-    if request.has_var("_test_service_notifications") and not value["on_service_hint"]:
+    if (
+        request.has_var("_test_service_notifications")
+        and not general_test_options["on_service_hint"]
+    ):
         raise MKUserError(
             f"{varprefix}_p_on_service_hint",
             _("If you want to test service notifications, please provide a service to test with."),
@@ -3071,7 +3081,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,
-            validate=self._validate_notification_rule,
+            validate=self._validate_notification_rule,  # type: ignore[arg-type]
         )
 
     def _notification_script_choices_with_parameters(self) -> list[tuple[str, str, Alternative]]:
@@ -3107,16 +3117,16 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             choices.append((script_name, title, vs_alternative))
         return choices
 
-    def _validate_notification_rule(self, rule: dict, varprefix: str) -> None:
-        if "bulk" in rule and rule["notify_plugin"][1] is None:
+    def _validate_notification_rule(self, event_rule: EventRule, varprefix: str) -> None:
+        if "bulk" in event_rule and event_rule["notify_plugin"][1] is None:
             raise MKUserError(
                 varprefix + "_p_bulk_USE",
                 _("It does not make sense to add a bulk configuration for cancelling rules."),
             )
 
-        if "bulk" in rule or "bulk_period" in rule:
-            if rule["notify_plugin"][0]:
-                info = load_notification_scripts()[rule["notify_plugin"][0]]
+        if "bulk" in event_rule or "bulk_period" in event_rule:
+            if event_rule["notify_plugin"][0]:
+                info = load_notification_scripts()[event_rule["notify_plugin"][0]]
                 if not info["bulk"]:
                     raise MKUserError(
                         varprefix + "_p_notify_plugin",

@@ -33,6 +33,7 @@ from cmk.utils.notify_types import (
     NotificationParameterGeneralInfos,
     NotificationParameterID,
     NotificationParameterItem,
+    NotificationParameterSpec,
     NotificationParameterSpecs,
     NotificationPluginNameStr,
     NotifyAnalysisInfo,
@@ -3779,8 +3780,8 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
 
     def _render_notification_parameters(
         self,
-        parameters,
-    ):
+        parameters: NotificationParameterSpec,
+    ) -> None:
         spec = self._spec()
         method_name = self._method_name()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
@@ -3803,7 +3804,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 table.cell(_("Method"), method_name)
 
                 table.cell(_("Description"))
-                url = parameter.get("docu_url")
+                url = parameter["general"].get("docu_url")
                 if url:
                     html.icon_button(
                         url,
@@ -3840,7 +3841,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
 
     def _parameter_links(
         self,
-        parameter: dict[str, Any],
+        parameter: NotificationParameterItem,
         parameter_id: NotificationParameterID,
         nr: int,
     ) -> NotificationRuleLinks:
@@ -3861,7 +3862,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 + additional_vars
             ),
             title=_("Delete notification parameter #%d") % nr,
-            suffix=parameter.get("description", ""),
+            suffix=parameter["general"].get("description", ""),
         )
         drag_url = make_action_link(
             [

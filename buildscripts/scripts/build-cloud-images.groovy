@@ -37,6 +37,15 @@ def main() {
     }
     def ami_image_name = build_cloud_images_names(cmk_version)[0];
     def azure_image_name = build_cloud_images_names(cmk_version)[1];
+    print(
+        """
+        |===== VERSIONS =====
+        |cmk_version:..... │${cmk_version}│
+        |ami_image_name:.. │${ami_image_name}│
+        |azure_image_name: │${azure_image_name}│
+        |====================
+        """.stripMargin());
+
     def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name)
     def cloud_targets = ["amazon-ebs", "azure-arm"]
     def build_cloud_images = params.BUILD_CLOUD_IMAGES

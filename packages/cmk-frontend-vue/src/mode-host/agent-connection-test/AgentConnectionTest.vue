@@ -153,7 +153,7 @@ async function callAjax(url: string, { method }: AjaxOptions): Promise<void> {
 }
 
 // Use general way for AjaxCalls if available
-function startAjax(): void {
+const startAjax = (): void => {
   isSuccess.value = false
   isError.value = false
 
@@ -164,14 +164,20 @@ function startAjax(): void {
 
 const reTestAgentTitle = t('re-test-agent-title', 'Re-test agent connection')
 const reTestAgentButton = t('re-test-agent-button', 'Re-test agent connection')
+const reTestAgentClick: () => void = startAjax
+const openSlideoutClick: () => void = () => {
+  slideInOpen.value = true
+}
 
 interface ContainerValues {
   header: string
   txt: string
   buttonOneTitle: string
   buttonOneButton: string
+  buttonOneClick: () => void
   buttonTwoTitle: string
   buttonTwoButton: string
+  buttonTwoClick: () => void
 }
 
 const warnContainerValues = computed<ContainerValues>(() => {
@@ -179,8 +185,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
   let txt = errorDetails.value
   let buttonOneTitle = reTestAgentTitle
   let buttonOneButton = reTestAgentButton
+  let buttonOneClick = reTestAgentClick
   let buttonTwoTitle = ''
   let buttonTwoButton = ''
+  let buttonTwoClick = () => {}
 
   if (errorDetails.value.includes('[Errno 111]')) {
     header = t('test-agent-warning-header', 'Failed to connect to the Checkmk agent')
@@ -190,8 +198,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     )
     buttonOneTitle = t('download-agent-title', 'Download % install agent')
     buttonOneButton = t('download-agent-button', 'Download Checkmk agent')
+    buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
+    buttonTwoClick = reTestAgentClick
   }
   if (errorDetails.value.includes('controller not registered')) {
     header = t('test-agent-not-registered-header', 'Agent not registered')
@@ -201,8 +211,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     )
     buttonOneTitle = t('register-agent-title', 'Register agent')
     buttonOneButton = t('register-agent-button', 'Register Checkmk agent')
+    buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
+    buttonTwoClick = reTestAgentClick
   }
   if (errorDetails.value.includes('is not providing it')) {
     header = t('test-agent-no-tls-header', 'TLS connection not provided')
@@ -212,8 +224,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     )
     buttonOneTitle = t('tls-agent-title', 'Provide TLS connection')
     buttonOneButton = t('tls-agent-button', 'Provide TLS connection')
+    buttonOneClick = openSlideoutClick
     buttonTwoTitle = reTestAgentTitle
     buttonTwoButton = reTestAgentButton
+    buttonTwoClick = reTestAgentClick
   }
 
   return {
@@ -221,8 +235,10 @@ const warnContainerValues = computed<ContainerValues>(() => {
     txt,
     buttonOneTitle,
     buttonOneButton,
+    buttonOneClick,
     buttonTwoTitle,
-    buttonTwoButton
+    buttonTwoButton,
+    buttonTwoClick
   }
 })
 </script>
@@ -262,7 +278,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
             type="button"
             :title="warnContainerValues.buttonOneTitle"
             class="agent-test-button"
-            @click="slideInOpen = true"
+            @click="warnContainerValues.buttonOneClick"
           >
             {{ warnContainerValues.buttonOneButton }}
           </CmkButton>
@@ -271,7 +287,7 @@ const warnContainerValues = computed<ContainerValues>(() => {
             type="button"
             :title="warnContainerValues.buttonTwoTitle"
             class="agent-test-button"
-            @click="startAjax"
+            @click="warnContainerValues.buttonTwoClick"
           >
             {{ warnContainerValues.buttonTwoButton }}
           </CmkButton>
@@ -321,7 +337,6 @@ button {
 }
 
 .warn-container {
-  margin-left: var(--spacing-half);
   border-radius: 4px;
   background-color: rgb(from var(--color-warning) r g b / 15%);
 

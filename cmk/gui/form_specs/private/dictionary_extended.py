@@ -2,11 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
-from cmk.rulesets.v1.form_specs import DefaultValue, DictGroup, Dictionary
+from cmk.rulesets.v1.form_specs import DictGroup, Dictionary
 from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
 T = TypeVar("T")
@@ -14,11 +13,6 @@ T = TypeVar("T")
 
 @dataclass(frozen=True, kw_only=True)
 class DictionaryExtended(Dictionary):
-    # Never use prefill, it is to be removed as it can lead to undefined
-    # behavior: What if the child element defines a default value itself? Use
-    # default_checked and a prefill in the child element instead.
-    _prefill_deprecated: DefaultValue[Mapping[str, object]] | None = None
-
     # Usage of default_checked is advised against: if you want an optional
     # element prefilled with options, reconsider and flip your approach. If
     # something should be the default, it should not need configuration. Add

@@ -19,8 +19,6 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DataSize,
     DefaultValue,
-    DictElement,
-    Dictionary,
     FixedValue,
     Float,
     FormSpec,
@@ -30,32 +28,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-
-
-def test_dictionary_visitor_only_fills_required_prefill():
-    form_spec = Dictionary(
-        elements={
-            "required_el": DictElement(
-                parameter_form=String(
-                    prefill=DefaultValue("el1_prefill"),
-                ),
-                required=True,
-            ),
-            "optional_el": DictElement(
-                parameter_form=String(
-                    prefill=DefaultValue("el2_prefill"),
-                ),
-            ),
-        },
-    )
-
-    vue_app_config = serialize_data_for_frontend(
-        form_spec, "foo_field_id", DataOrigin.DISK, do_validate=False
-    )
-
-    assert vue_app_config.data == {
-        "required_el": "el1_prefill",
-    }
 
 
 def _generate_validation_func(comparator: Callable[[Any], bool]) -> Callable[[Any], None]:

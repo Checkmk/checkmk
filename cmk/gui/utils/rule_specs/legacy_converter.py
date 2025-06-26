@@ -31,7 +31,6 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
     UserSelection,
 )
-from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -1284,17 +1283,8 @@ def _convert_to_legacy_dictionary(
     required_group_keys = set(grouped_elements_map.keys()) - hidden_group_keys
 
     default_keys: list[str] | None = None
-    if (
-        isinstance(to_convert, DictionaryExtended)
-        and (prefill := to_convert._prefill_deprecated) is not None
-    ):
-        default_keys = []
-        for key, value in prefill.value.items():
-            if not isinstance(value, VueDefaultValue):
-                raise ValueError(
-                    "Unable to migrate prefill value. Only able to use Vue-DefaultValue as value for key."
-                )
-            default_keys.append(key)
+    if isinstance(to_convert, DictionaryExtended):
+        default_keys = to_convert.default_checked
 
     return legacy_valuespecs.Transform(
         legacy_valuespecs.Dictionary(

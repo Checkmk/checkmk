@@ -30,14 +30,12 @@ _FrontendModel = Mapping[str, object]
 
 class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _FrontendModel]):
     def _compute_default_values(self) -> _ParsedValueModel:
-        if self.form_spec._prefill_deprecated is None:
-            return {
-                key: DEFAULT_VALUE
-                for key, el in self.form_spec.elements.items()
-                if el.required
-                or (self.form_spec.default_checked and key in self.form_spec.default_checked)
-            }
-        return self.form_spec._prefill_deprecated.value
+        default_values = {
+            k: DEFAULT_VALUE for k, el in self.form_spec.elements.items() if el.required
+        }
+        if self.form_spec.default_checked is not None:
+            default_values.update({k: DEFAULT_VALUE for k in self.form_spec.default_checked})
+        return default_values
 
     def _get_static_elements(self) -> set[str]:
         return set(self.form_spec.ignored_elements or ())

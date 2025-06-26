@@ -32,7 +32,6 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.ip_lookup import (
     IPLookup,
     IPStackConfig,
-    lookup_ip_address,
 )
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
@@ -350,6 +349,7 @@ class CMKFetcher:
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
         ip_address_of: IPLookup,
+        ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookup,
         mode: Mode,
         on_error: OnError,
@@ -360,13 +360,13 @@ class CMKFetcher:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
-        self.ip_lookup_config: Final = config_cache.ip_lookup_config()
         self.default_address_family: Final = config_cache.default_address_family
         self.factory: Final = factory
         self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.ip_address_of: Final = ip_address_of
+        self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
         self.on_error: Final = on_error
@@ -399,7 +399,9 @@ class CMKFetcher:
                     or (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else lookup_ip_address(self.ip_lookup_config, host_name)
+                        else self.ip_address_of_mandatory(
+                            host_name, self.default_address_family(host_name)
+                        )
                     ),
                 )
             ]
@@ -411,7 +413,7 @@ class CMKFetcher:
                     (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else lookup_ip_address(self.ip_lookup_config, node)
+                        else self.ip_address_of_mandatory(node, self.default_address_family(node))
                     ),
                 )
                 for node in self.config_cache.nodes(host_name)

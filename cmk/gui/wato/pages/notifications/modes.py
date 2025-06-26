@@ -2425,7 +2425,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         super().__init__()
         self._start_async_repl = False
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._users = userdb.load_users(
             lock=transactions.is_transaction() or request.has_var("_move")
         )
@@ -2438,7 +2438,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         self._rules = user_spec.setdefault("notification_rules", [])
 
     @abc.abstractmethod
-    def _user_id(self):
+    def _user_id(self) -> UserId:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -2526,8 +2526,10 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(user=self._user_id())
 
-    def _user_id(self):
-        return request.get_str_input("user")
+    def _user_id(self) -> UserId:
+        user_id = request.get_str_input("user")
+        assert user_id is not None, "User ID must not be None"
+        return UserId(user_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -2626,7 +2628,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def _user_id(self):
+    def _user_id(self) -> UserId:
+        assert user.id is not None, "User ID must not be None"
         return user.id
 
     def _add_change(self, *, action_name: str, text: str) -> None:
@@ -2662,7 +2665,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _user_id(self):
+    def _user_id(self) -> UserId | None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -3246,7 +3249,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     def _save_rules(self, rules: list[EventRule]) -> None:
         NotificationRuleConfigFile().save(rules, pprint_value=active_config.wato_pprint_config)
 
-    def _user_id(self):
+    def _user_id(self) -> None:
         return None
 
     def _back_mode(self) -> ActionResult:
@@ -3271,7 +3274,9 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
                 None,
                 _("The user you are trying to edit notification rules for does not exist."),
             )
-        user_spec = self._users[self._user_id()]
+        user_id = self._user_id()
+        assert user_id is not None, "User ID must not be None"
+        user_spec = self._users[user_id]
         return user_spec.setdefault("notification_rules", [])
 
     def _save_rules(self, rules: list[EventRule]) -> None:
@@ -3279,7 +3284,9 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
         # Force selection of our user
-        rule["contact_users"] = [self._user_id()]
+        user_id = self._user_id()
+        assert user_id is not None, "User ID must not be None"
+        rule["contact_users"] = [user_id]
 
         # User rules are always allow_disable
         rule["allow_disable"] = True
@@ -3306,8 +3313,8 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUserNotifications
 
-    def _user_id(self):
-        return request.get_str_input_mandatory("user")
+    def _user_id(self) -> UserId:
+        return UserId(request.get_str_input_mandatory("user"))
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))
@@ -3338,7 +3345,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         super().__init__()
         user.need_permission("general.edit_notifications")
 
-    def _user_id(self):
+    def _user_id(self) -> UserId | None:
         return user.id
 
     def _add_change(self, action_name: str, text: str) -> None:

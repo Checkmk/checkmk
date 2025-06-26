@@ -400,10 +400,10 @@ class CreateUser(CustomUserAttributes):
     )
     start_url = fields.String(
         required=False,
-        load_default="default_dashboard",
+        load_default="default_start_url",
         description="The URL that the user should be redirected to after login. There is a "
-        "'default_dashboard', a 'welcome_page', and any other will be treated as a custom URL",
-        example="default_dashboard",
+        "'default_start_url', a 'welcome_page', and any other will be treated as a custom URL",
+        example="default_start_url",
     )
 
 
@@ -552,6 +552,6 @@ class UpdateUser(CustomUserAttributes):
     start_url = fields.String(
         required=False,
         description="The URL that the user should be redirected to after login. There is a "
-        "'default_dashboard', a 'welcome_page', and any other will be treated as a custom URL",
-        example="default_dashboard",
+        "'default_start_url', a 'welcome_page', and any other will be treated as a custom URL",
+        example="default_start_url",
     )

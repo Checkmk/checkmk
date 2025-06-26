@@ -128,7 +128,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
         },
-        "start_url": "default_dashboard",
+        "start_url": "default_start_url",
     }
 
     resp = clients.User.edit(username=username, customer="provider")
@@ -723,7 +723,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
             "contextual_help_icon": "show_icon",
         },
         "temperature_unit": "fahrenheit",
-        "start_url": "default_dashboard",
+        "start_url": "default_start_url",
     }
 
 
@@ -812,7 +812,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "sidebar_position": "right",
             "contextual_help_icon": "show_icon",
         },
-        "start_url": "default_dashboard",
+        "start_url": "default_start_url",
     }
 
 
@@ -1490,7 +1490,7 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
             username=username,
             fullname="User Test",
         ).json["extensions"]["start_url"]
-        == "default_dashboard"
+        == "default_start_url"
     )
 
     assert (

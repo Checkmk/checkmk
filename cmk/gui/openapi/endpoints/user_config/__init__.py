@@ -306,7 +306,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
     match start_url := api_configurations.get("start_url"):
         case "welcome_page":
             attrs["start_url"] = "welcome.py"
-        case "default_dashboard":
+        case "default_start_url":
             attrs["start_url"] = None
         case str():
             attrs["start_url"] = start_url
@@ -357,7 +357,7 @@ def _internal_to_api_format(
 
     match start_url := internal_attrs.get("start_url"):
         case None:
-            api_attrs["start_url"] = "default_dashboard"
+            api_attrs["start_url"] = "default_start_url"
         case "welcome.py":
             api_attrs["start_url"] = "welcome_page"
         case _:

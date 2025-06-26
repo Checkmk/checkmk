@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import contextlib
+import enum
 import errno
 import fcntl
 import io
@@ -2030,6 +2031,19 @@ def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
 
 
+def _crontab_access() -> bool:
+    return (
+        subprocess.run(
+            ["crontab", "-e"],
+            env={"VISUAL": "true", "EDITOR": "true"},
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    )
+
+
 def main_create(
     version_info: VersionInfo,
     site: SiteContext,
@@ -2215,15 +2229,19 @@ def finalize_site(
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_site_as_user(
+            outcome = finalize_site_as_user(
                 version_info, site, command_type, verbose, ignored_hooks=["TMPFS"]
             )
-            sys.exit(0)
+            sys.exit(outcome.value)
         except Exception as e:
-            bail_out("Failed to finalize site: %s" % e)
+            sys.stderr.write(f"Failed to finalize site: {e}\n")
+            sys.exit(FinalizeOutcome.ABORTED.value)
     else:
         _wpid, status = os.waitpid(pid, 0)
-        if status:
+        if (
+            not os.WIFEXITED(status)
+            or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
+        ):
             bail_out("Error in non-priviledged sub-process.")
 
     # The config changes above, made with the site user, have to be also available for
@@ -2241,6 +2259,13 @@ def finalize_site(
         apache_reload,
         verbose=verbose,
     )
+    sys.exit(outcome.value)
+
+
+class FinalizeOutcome(enum.Enum):
+    OK = 0
+    ABORTED = 1
+    WARN = 2
 
 
 def finalize_site_as_user(
@@ -2249,7 +2274,7 @@ def finalize_site_as_user(
     command_type: CommandType,
     verbose: bool,
     ignored_hooks: Sequence[str],
-) -> None:
+) -> FinalizeOutcome:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
@@ -2270,6 +2295,10 @@ def finalize_site_as_user(
         save_instance_id(file_path=get_instance_id_file_path(Path(site_home)), instance_id=uuid4())
 
     call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
+    if not _crontab_access():
+        sys.stderr.write("Warning: site user cannot access crontab\n")
+        return FinalizeOutcome.WARN
+    return FinalizeOutcome.OK
 
 
 def main_rm(

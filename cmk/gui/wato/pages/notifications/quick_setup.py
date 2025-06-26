@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Mapping, Sequence
-from typing import Any, assert_never, cast, Final, get_args, Literal
+from typing import assert_never, cast, Final, get_args, Literal
 
 from livestatus import SiteConfiguration
 
@@ -85,7 +85,9 @@ from cmk.gui.wato.pages.notifications.migrate import (
     service_event_mapper,
 )
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
+    HostIntState,
     NotificationQuickSetupSpec,
+    ServiceIntState,
 )
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
@@ -95,7 +97,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
-from cmk.gui.watolib.user_scripts import load_notification_scripts
+from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -187,12 +189,12 @@ def _service_to_state_choices() -> Sequence[SingleChoiceElementExtended[int]]:
     ]
 
 
-def _validate_host_state_change(state_change: tuple) -> None:
+def _validate_host_state_change(state_change: tuple[HostIntState, HostIntState]) -> None:
     if host_event_mapper(state_change) not in list(get_args(get_args(HostEventType)[0])):
         raise ValidationError(Message("Invalid state change for host"))
 
 
-def _validate_service_state_change(state_change: tuple) -> None:
+def _validate_service_state_change(state_change: tuple[ServiceIntState, ServiceIntState]) -> None:
     if service_event_mapper(state_change) not in list(get_args(get_args(ServiceEventType)[0])):
         raise ValidationError(Message("Invalid state change for service"))
 
@@ -225,7 +227,7 @@ def _event_choices(
                         ),
                     ],
                     custom_validate=[
-                        _validate_host_state_change
+                        _validate_host_state_change  # type: ignore[list-item]
                         if what == "host"
                         else _validate_service_state_change,
                     ],
@@ -270,7 +272,7 @@ def _event_choices(
     ]
 
 
-def _validate_at_least_one_event(trigger_events: Mapping) -> None:
+def _validate_at_least_one_event(trigger_events: Mapping[str, object]) -> None:
     if (
         not trigger_events["host_events"]
         and not trigger_events["service_events"]
@@ -421,7 +423,7 @@ def _get_contact_group_users() -> list[tuple[UserId, str]]:
     )
 
 
-def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended]:
+def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended[int]]:
     return [
         SingleChoiceElementExtended(
             name=name,
@@ -1124,14 +1126,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
     )
 
 
-def supports_bulk(script_name: str, notification_scripts: dict[str, Any]) -> bool:
+def supports_bulk(script_name: str, notification_scripts: NotificationUserScripts) -> bool:
     if script_name not in notification_scripts:
         return False
     return notification_scripts[script_name].get("bulk", False)
 
 
 def notification_method() -> QuickSetupStage:
-    def bulk_notification_dict_element() -> DictElement:
+    def bulk_notification_dict_element() -> DictElement[tuple[str, object]]:
         return DictElement(
             required=False,
             parameter_form=CascadingSingleChoiceExtended(
@@ -1167,8 +1169,9 @@ def notification_method() -> QuickSetupStage:
         )
 
     def bulk_notification_supported(
-        script_name: str, notification_scripts: dict[str, Any]
-    ) -> dict[str, DictElement]:
+        script_name: str,
+        notification_scripts: NotificationUserScripts,
+    ) -> dict[str, DictElement[tuple[str, object]]]:
         if not supports_bulk(script_name, notification_scripts):
             return {}
         return {

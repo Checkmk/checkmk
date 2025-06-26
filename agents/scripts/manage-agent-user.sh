@@ -76,6 +76,15 @@ _check_user() {
     printf "Note: Using existing agent user %s.\n" "${AGENT_USER}"
 }
 
+_nologin_shell() {
+    # Set nologin as shell if available, otherwise /bin/false
+
+    for s in /sbin/nologin /usr/sbin/nologin /bin/nologin; do
+        [ -x "$s" ] && printf "%s\n" "$s" && return 0
+    done
+    printf "/bin/false\n"
+}
+
 _update_user() {
     # 1. If specified user exists, check if it has the specified uid. Abort if not.
     # 2. Create the specified group with gid and specified agent user name if it doesn't exist.
@@ -100,6 +109,8 @@ _update_user() {
             group_argument="--user-group"
         fi
 
+        usershell="$(_nologin_shell)"
+
         printf "Creating %s user account ...\n" "${AGENT_USER}"
         # shellcheck disable=SC2086
         useradd ${uid_argument} \
@@ -108,7 +119,7 @@ _update_user() {
             --system \
             --home-dir "${HOMEDIR}" \
             --no-create-home \
-            --shell "/bin/false" \
+            --shell "${usershell}" \
             "${AGENT_USER}" || exit 1
     fi
 }
@@ -116,7 +127,8 @@ _update_user() {
 _handle_user_legacy() {
     # add Checkmk agent system user
     printf "Creating/updating %s user account ...\n" "${AGENT_USER}"
-    usershell="/bin/false"
+
+    usershell="$(_nologin_shell)"
 
     if id "${AGENT_USER}" >/dev/null 2>&1; then
         # check that the existing user is as expected

@@ -19,7 +19,11 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.cpu_tracking import CPUTracker
-from cmk.utils.ip_lookup import ConfiguredIPLookup, make_lookup_ip_address
+from cmk.utils.ip_lookup import (
+    ConfiguredIPLookup,
+    make_lookup_ip_address,
+    make_lookup_mgmt_board_ip_address,
+)
 from cmk.utils.log import console
 
 from cmk.fetchers import Mode as FetchMode
@@ -153,6 +157,7 @@ def inventory_as_check(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

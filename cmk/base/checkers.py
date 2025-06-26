@@ -33,7 +33,6 @@ from cmk.utils.ip_lookup import (
     IPLookup,
     IPStackConfig,
     lookup_ip_address,
-    lookup_mgmt_board_ip_address,
 )
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
@@ -351,6 +350,7 @@ class CMKFetcher:
         file_cache_options: FileCacheOptions,
         force_snmp_cache_refresh: bool,
         ip_address_of: IPLookup,
+        ip_address_of_mgmt: IPLookup,
         mode: Mode,
         on_error: OnError,
         password_store_file: Path,
@@ -361,11 +361,13 @@ class CMKFetcher:
     ) -> None:
         self.config_cache: Final = config_cache
         self.ip_lookup_config: Final = config_cache.ip_lookup_config()
+        self.default_address_family: Final = config_cache.default_address_family
         self.factory: Final = factory
         self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.ip_address_of: Final = ip_address_of
+        self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
         self.on_error: Final = on_error
         self.password_store_file: Final = password_store_file
@@ -463,9 +465,8 @@ class CMKFetcher:
                     computed_datasources=self.config_cache.computed_datasources(current_host_name),
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),
                     tag_list=self.config_cache.tag_list(current_host_name),
-                    management_ip=lookup_mgmt_board_ip_address(
-                        self.ip_lookup_config,
-                        current_host_name,
+                    management_ip=self.ip_address_of_mgmt(
+                        current_host_name, self.default_address_family(current_host_name)
                     ),
                     management_protocol=self.config_cache.management_protocol(current_host_name),
                     special_agent_command_lines=self.config_cache.special_agent_command_lines(

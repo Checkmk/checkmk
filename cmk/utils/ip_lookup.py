@@ -73,6 +73,22 @@ class IPLookupConfig:
     use_dns_cache: bool
 
 
+def make_lookup_mgmt_board_ip_address(
+    ip_config: IPLookupConfig,
+) -> Callable[
+    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+    HostAddress | None,
+]:
+    # FIXME: family is ignored
+    def mgmt_board_ip_address(
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ) -> HostAddress | None:
+        return lookup_mgmt_board_ip_address(ip_config, host_name)
+
+    return mgmt_board_ip_address
+
+
 def lookup_mgmt_board_ip_address(
     ip_config: IPLookupConfig, host_name: HostName
 ) -> HostAddress | None:

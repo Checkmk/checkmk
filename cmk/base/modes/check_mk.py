@@ -1925,8 +1925,9 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
     )
+    ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=config_cache.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -1942,6 +1943,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
@@ -2266,6 +2268,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2459,6 +2462,7 @@ def run_checking(
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2693,6 +2697,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
@@ -2951,6 +2956,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=ip_address_of,
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,

@@ -1465,6 +1465,7 @@ def test_openapi_user_dismiss_warning(clients: ClientRegistry) -> None:
     assert user.dismissed_warnings == {"notification_fallback"}
 
 
+@managedtest
 def test_openapi_edit_user_should_not_modify_start_url(clients: ClientRegistry) -> None:
     username = "user_1"
     clients.User.create(
@@ -1481,6 +1482,7 @@ def test_openapi_edit_user_should_not_modify_start_url(clients: ClientRegistry) 
     )
 
 
+@managedtest
 def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
     username = "user_2"
     assert (

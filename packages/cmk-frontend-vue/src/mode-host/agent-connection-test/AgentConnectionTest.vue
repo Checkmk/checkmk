@@ -33,7 +33,17 @@ const props = defineProps<Props>()
 
 const slideInOpen = ref(false)
 const externalContent = ref('')
+
 const showTest = ref(true)
+const switchVisibility = () => {
+  if (props.changeTagAgent.checked) {
+    showTest.value = props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
+  } else {
+    /* TODO: Not the best solution but we have no value here */
+    showTest.value = !props.tagAgentDefault.textContent?.includes('no Checkmk agent')
+  }
+}
+switchVisibility()
 
 const hostname = ref(props.hostnameInputElement.value || '')
 const ipV4 = ref(props.ipv4InputElement.value || '')
@@ -47,8 +57,8 @@ onMounted(() => {
     switch (e.target) {
       case props.formElement:
       case props.changeTagAgent: {
-        showTest.value =
-          props.tagAgent.value === 'all-agents' || props.tagAgent.value === 'cmk-agent'
+        switchVisibility()
+
         targetElement.value = props.changeTagAgent.checked
           ? (props.tagAgent.parentNode as HTMLElement)
           : props.tagAgentDefault

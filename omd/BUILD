@@ -6,6 +6,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
+load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 exports_files([
     "requirements.txt",
@@ -23,6 +24,19 @@ create_venv(
     requirements_txt = ":requirements_lock.txt",
 )
 
+file_from_flag(
+    name = "omd_root_dir",
+    out = "omd_root_dir.txt",
+    content = [
+        "/opt/omd/versions/{cmk_version}.{cmk_edition}",
+        "",
+    ],
+    replace_labels = {
+        "cmk_version": "//bazel/cmk/version",
+        "cmk_edition": "//bazel/cmk/edition",
+    },
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -31,6 +45,7 @@ create_venv(
         "//packages/check-http:check_http_pkg",
     ],
     extension = "tar.gz",
+    package_dir_file = ":omd_root_dir",
     deps = [
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",

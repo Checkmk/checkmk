@@ -37,8 +37,8 @@ $(DEPS_INSTALL_BAZEL):
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION_SHORT)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
-	tar -C $(DESTDIR)$(OMD_ROOT) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
+	$(MKDIR) $(DESTDIR)
+	tar -C $(DESTDIR) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata

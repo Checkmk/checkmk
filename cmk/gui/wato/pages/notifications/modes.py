@@ -219,7 +219,7 @@ class NotificationRuleLinks(NamedTuple):
     clone: str
 
 
-class ABCNotificationsMode(ABCEventsMode):
+class ABCNotificationsMode(ABCEventsMode[EventRule]):
     def __init__(self) -> None:
         super().__init__()
 
@@ -405,14 +405,14 @@ class ABCNotificationsMode(ABCEventsMode):
 
     def _render_notification_rules(
         self,
-        rules,
-        userid="",
-        show_title=False,
-        show_buttons=True,
-        analyse=False,
-        start_nr=0,
-        profilemode=False,
-    ):
+        rules: list[EventRule],
+        userid: str = "",
+        show_title: bool = False,
+        show_buttons: bool = True,
+        analyse: NotifyAnalysisInfo | None = None,
+        start_nr: int = 0,
+        profilemode: bool = False,
+    ) -> None:
         if not rules:
             html.show_message(_("You have not created any rules yet."))
             return
@@ -538,7 +538,9 @@ class ABCNotificationsMode(ABCEventsMode):
                         title=title,
                         indent=False,
                     ):
-                        html.write_text_permissive(vs_match_conditions.value_to_html(rule))
+                        html.write_text_permissive(
+                            vs_match_conditions.value_to_html(cast(dict[str, object], rule))
+                        )
                 else:
                     html.i(_("(no conditions)"))
 
@@ -594,7 +596,7 @@ class ABCNotificationsMode(ABCEventsMode):
             return code + _("Notification rules of user %s") % userid
         return _("Global notification rules")
 
-    def _rule_infos(self, rule):
+    def _rule_infos(self, rule: EventRule) -> list[str]:
         infos = []
         if rule.get("contact_object"):
             infos.append(_("all contacts of the notified object"))
@@ -610,12 +612,18 @@ class ABCNotificationsMode(ABCEventsMode):
             infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
         return infos
 
-    def _actions_allowed(self, rule):
+    def _actions_allowed(self, rule: EventRule) -> bool:
         # In case a notification plug-in does not exist anymore the permission is completely missing.
         permission_name = "notification_plugin.%s" % rule["notify_plugin"][0]
         return permission_name not in permissions.permission_registry or user.may(permission_name)
 
-    def _rule_links(self, rule, nr, profilemode, userid):
+    def _rule_links(
+        self,
+        rule: EventRule,
+        nr: int,
+        profilemode: bool,
+        userid: str,
+    ) -> NotificationRuleLinks:
         anavar = request.var("analyse", "")
 
         if profilemode:
@@ -2696,7 +2704,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification rule")
 
-    def _get_default_notification_rule(self) -> EventRule | dict:
+    def _get_default_notification_rule(self) -> EventRule | dict[str, object]:
         return get_default_notification_rule()
 
     def _valuespec(self) -> Dictionary:
@@ -3356,7 +3364,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
 
-    def _get_default_notification_rule(self) -> EventRule | dict:
+    def _get_default_notification_rule(self) -> EventRule | dict[str, object]:
         # For user notifications, we still need the old way to load the
         # default rule. Parameters are stored within the rule
         # (contacts.mk) so no need for a parameter ID here.

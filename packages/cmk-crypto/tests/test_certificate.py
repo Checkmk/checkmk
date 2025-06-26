@@ -22,7 +22,7 @@ from cmk.crypto.certificate import (
     InvalidExpiryError,
     PersistedCertificateWithPrivateKey,
 )
-from cmk.crypto.keys import InvalidSignatureError, PrivateKey
+from cmk.crypto.keys import InvalidSignatureError, PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.password import Password
 from cmk.crypto.pem import PEMDecodingError
 from cmk.crypto.x509 import (
@@ -155,6 +155,18 @@ def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateK
         .str
         == self_signed_cert.certificate.dump_pem().str
     )
+
+
+def test_loading_parts_from_combined_file_content(
+    self_signed_cert: CertificateWithPrivateKey,
+) -> None:
+    """Check that Certificate.load_pem and PrivateKey.load_pem work on combined files"""
+    key_pem = self_signed_cert.private_key.dump_pem(None).str
+    cert_pem = self_signed_cert.certificate.dump_pem().str
+    combined = key_pem + "\n" + cert_pem
+
+    assert Certificate.load_pem(CertificatePEM(combined)).dump_pem().str == cert_pem
+    assert PrivateKey.load_pem(PlaintextPrivateKeyPEM(combined)).dump_pem(None).str == key_pem
 
 
 def test_verify_is_signed_by() -> None:

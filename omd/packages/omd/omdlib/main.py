@@ -136,7 +136,7 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 
-from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
+from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.resulttype import Error, OK, Result
 
@@ -1423,12 +1423,8 @@ def initialize_site_ca(
     """
     site_home = SitePaths.from_site_name(site.name).home
     ca_path = cert_dir(Path(site_home))
-    ca = omdlib.certs.CertificateAuthority(
-        root_ca=RootCA.load_or_create(
-            root_cert_path(ca_path), CN_TEMPLATE.format(site.name), key_size=root_key_size
-        ),
-        ca_path=ca_path,
-    )
+    ca = omdlib.certs.SiteCA.load_or_create(site.name, ca_path, key_size=root_key_size)
+
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name, key_size=site_key_size)
 

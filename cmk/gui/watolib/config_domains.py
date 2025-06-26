@@ -520,6 +520,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             )
             if (
                 (cns := cert.subject.rfc4514_string())
+                # TODO: use certificate's subject alternative name instead of "parsing" the CN
                 and (site_id := CN_TEMPLATE.extract_site(cns))
             )
         }

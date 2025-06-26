@@ -28,7 +28,6 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
-from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 
 
 class _CNTemplate:
@@ -45,10 +44,8 @@ class _CNTemplate:
         return None if (m := self._match(rfc4514_string)) is None else SiteId(m.group(1))
 
 
+# TODO: remove the use of this in watolib/config_domains, then it can move into omdlib or go away
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
-
-_DEFAULT_VALIDITY = relativedelta(years=10)
-_DEFAULT_KEY_SIZE = 4096
 
 
 class RootCA(CertificateWithPrivateKey):
@@ -65,8 +62,8 @@ class RootCA(CertificateWithPrivateKey):
         cls,
         path: Path,
         name: str,
-        validity: relativedelta = _DEFAULT_VALIDITY,
-        key_size: int = _DEFAULT_KEY_SIZE,
+        validity: relativedelta = relativedelta(years=10),
+        key_size: int = 4096,
     ) -> RootCA:
         try:
             return cls.load(path)
@@ -80,23 +77,6 @@ class RootCA(CertificateWithPrivateKey):
             )
             _save_cert_chain(path, [ca.certificate], ca.private_key)
             return cls(ca.certificate, ca.private_key)
-
-    def issue_and_store_certificate(
-        self,
-        path: Path,
-        common_name: str,
-        validity: relativedelta = _DEFAULT_VALIDITY,
-        key_size: int = _DEFAULT_KEY_SIZE,
-    ) -> None:
-        """Create and sign a new certificate, store the chain to 'path'"""
-        new_cert, new_key = self.issue_new_certificate(
-            common_name=common_name,
-            organization=f"Checkmk Site {omd_site()}",
-            subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(common_name)]),
-            expiry=validity,
-            key_size=key_size,
-        )
-        _save_cert_chain(path, [new_cert, self.certificate], new_key)
 
 
 def cert_dir(site_root_dir: Path) -> Path:

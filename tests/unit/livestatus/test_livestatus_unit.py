@@ -17,9 +17,8 @@ from pytest import MonkeyPatch
 import livestatus
 
 # FIXME: Somehow tools disagree about the order...
-from omdlib.certs import CertificateAuthority
+from omdlib.certs import SiteCA
 
-from cmk.utils.certs import root_cert_path, RootCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
@@ -30,15 +29,13 @@ def prevent_livestatus_connect() -> None:
 
 
 @pytest.fixture
-def ca(tmp_path: Path) -> CertificateAuthority:
+def ca(tmp_path: Path) -> SiteCA:
     p = tmp_path / "etc" / "ssl"
-    ca = CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name", key_size=1024), ca_path=p
-    )
+    ca = SiteCA.load_or_create("test-site", p, key_size=1024)
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
-        f.write((ca._ca_path / "ca.pem").open(encoding="utf-8").read())
+        f.write((ca.root_ca_path).open(encoding="utf-8").read())
     return ca
 
 
@@ -182,12 +179,12 @@ def test_create_socket_create_plain_text_socket() -> None:
 
 
 def test_create_socket_with_verification_using_custom_trust_store(
-    ca: CertificateAuthority,
+    ca: SiteCA,
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
-    ca_file_path = str(Path(ca._ca_path) / "ca.pem")
+    ca_file_path = str(ca.root_ca_path)
 
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=ca_file_path
@@ -197,11 +194,11 @@ def test_create_socket_with_verification_using_custom_trust_store(
 
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == ssl.CERT_REQUIRED
-    assert live.tls_ca_file_path == str(ca_file_path)
+    assert live.tls_ca_file_path == ca_file_path
 
 
 def test_create_socket_with_verification_using_site_trust_store(
-    ca: CertificateAuthority, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ca: SiteCA, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
@@ -213,7 +210,7 @@ def test_create_socket_with_verification_using_site_trust_store(
 
 
 def test_create_socket_without_verification(
-    ca: CertificateAuthority, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ca: SiteCA, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 

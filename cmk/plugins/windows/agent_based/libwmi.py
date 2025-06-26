@@ -148,11 +148,7 @@ class WMITable:
                 self.timed_out = True
 
     def get(
-        self,
-        row: str | int,
-        column: str | int,
-        *,
-        raise_on_timeout: bool = False,
+        self, row: str | int, column: str | int, *, raise_on_timeout: bool = False
     ) -> str | None:
         if raise_on_timeout and self.timed_out:
             raise WMIQueryTimeoutError("WMI query timed out")

@@ -6,12 +6,12 @@
 
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
-    parse_wmi_table,
     wmi_filter_global_only,
     wmi_yield_raw_fraction,
 )
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 check_info = {}
 

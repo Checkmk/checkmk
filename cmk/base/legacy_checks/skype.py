@@ -9,7 +9,6 @@
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     inventory_wmi_table_total,
-    parse_wmi_table,
     wmi_yield_raw_average,
     wmi_yield_raw_average_timer,
     wmi_yield_raw_counter,
@@ -18,7 +17,7 @@ from cmk.base.check_legacy_includes.wmi import (
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.windows.agent_based.libwmi import WMISection
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 check_info = {}
 

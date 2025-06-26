@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.base.check_legacy_includes.wmi import parse_wmi_table, WMITableLegacy
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMITable
 
 
 def test_parse_wmi_table() -> None:
@@ -206,7 +206,7 @@ def test_parse_wmi_table() -> None:
             ],
         ]
     ) == {
-        "system_perf": WMITableLegacy(
+        "system_perf": WMITable(
             "system_perf",
             [
                 "alignmentfixupspersec",
@@ -274,7 +274,7 @@ def test_parse_wmi_table() -> None:
                 ],
             ],
         ),
-        "computer_system": WMITableLegacy(
+        "computer_system": WMITable(
             "computer_system",
             [
                 "adminpasswordstatus",

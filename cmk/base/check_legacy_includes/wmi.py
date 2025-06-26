@@ -7,14 +7,13 @@ from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 from cmk.plugins.windows.agent_based.libwmi import (
     get_wmi_time,
     required_tables_missing,
     WMISection,
     WMITable,
 )
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table as parse_wmi_table_migrated
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -35,31 +34,6 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table as parse_wmi_
 #   |                     |_|   \__,_|_|  |___/\___|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-# TODO(sk): remove this class at all - it breaks OOP rules and adds additional layer of complexity/fragility
-class WMITableLegacy(WMITable):
-    """
-    Do not raise on timeout by default
-    """
-
-    def get(
-        self, row: str | int, column: str | int, *, raise_on_timeout: bool = False
-    ) -> str | None:
-        if raise_on_timeout and self.timed_out:
-            raise IgnoreResultsError("WMI query timed out")
-        return self._get_row_col_value(row, column)
-
-
-def parse_wmi_table(
-    info: StringTable,
-    key: str = "Name",
-) -> WMISection:
-    return parse_wmi_table_migrated(
-        info,
-        key=key,
-        table_type=WMITableLegacy,
-    )
 
 
 # .

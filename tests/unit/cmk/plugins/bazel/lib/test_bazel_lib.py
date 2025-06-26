@@ -166,26 +166,53 @@ process_virtual_memory_bytes 4.2206461952e+10
 process_virtual_memory_max_bytes 1.8446744073709552e+19
 """
 
-STATUS_RESPONSE = {
-    "CurrSize": 283741868032,
-    "UncompressedSize": 668958797824,
-    "ReservedSize": 0,
-    "MaxSize": 483183820800,
-    "NumFiles": 15967454,
-    "ServerTime": 1714376779,
-    "GitCommit": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
-    "NumGoroutines": 9,
-}
-
 
 class MockResponse:
     text = METRICS_RESPONSE
     status_code = 200
     content = "non-empty"
 
+    def __init__(self, json_response):
+        self._response = json_response
+
     @staticmethod
-    def json() -> dict[str, object]:
-        return STATUS_RESPONSE
+    def raise_for_status():
+        pass
+
+    def json(self) -> dict[str, object]:
+        return self._response
+
+
+def default_requests_mock_get(url, **kwargs):
+    if "tags" in url:
+        return MockResponse(
+            [
+                {
+                    "name": "v2.5.1",
+                    "commit": {
+                        "sha": "d0f166cdd973342ec4aa8a51228cfd3a7a205414",
+                    },
+                },
+                {
+                    "name": "v2.5.0",
+                    "commit": {
+                        "sha": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
+                    },
+                },
+            ]
+        )
+    return MockResponse(
+        {
+            "CurrSize": 283741868032,
+            "UncompressedSize": 668958797824,
+            "ReservedSize": 0,
+            "MaxSize": 483183820800,
+            "NumFiles": 15967454,
+            "ServerTime": 1714376779,
+            "GitCommit": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
+            "NumGoroutines": 9,
+        }
+    )
 
 
 def test_parse_minimal_arguments() -> None:
@@ -220,10 +247,7 @@ def test_parse_all_arguments() -> None:
     assert args.no_cert_check
 
 
-@mock.patch(
-    "cmk.plugins.bazel.lib.agent.requests.get",
-    mock.Mock(return_value=MockResponse),
-)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_status_section(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -248,10 +272,162 @@ def test_bazel_cache_agent_output_has_bazel_cache_status_section(
     assert data["uncompressed_size"] == 668958797824
 
 
-@mock.patch(
-    "cmk.plugins.bazel.lib.agent.requests.get",
-    mock.Mock(return_value=MockResponse),
-)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_output_has_bazel_cache_version_section(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    assert "<<<bazel_cache_version:sep(0)>>>" in output
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_output_has_correct_current_version(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    data = json.loads(output[index])
+    assert data["current"] == "2.5.0"
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_output_has_patch_version(capsys: pytest.CaptureFixture[str]) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    data = json.loads(output[index])
+    assert data["latest"]["patch"] == "2.5.1"
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_output_has_no_major_version(capsys: pytest.CaptureFixture[str]) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    data = json.loads(output[index])
+    assert data["latest"]["major"] is None
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_output_has_no_minor_version(capsys: pytest.CaptureFixture[str]) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    data = json.loads(output[index])
+    assert data["latest"]["minor"] is None
+
+
+def only_one_version_mock_get(url, **kwargs):
+    if "tags" in url:
+        return MockResponse(
+            [
+                {
+                    "name": "v2.5.0",
+                    "commit": {
+                        "sha": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
+                    },
+                }
+            ]
+        )
+    return MockResponse(
+        {
+            "CurrSize": 283741868032,
+            "UncompressedSize": 668958797824,
+            "ReservedSize": 0,
+            "MaxSize": 483183820800,
+            "NumFiles": 15967454,
+            "ServerTime": 1714376779,
+            "GitCommit": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
+            "NumGoroutines": 9,
+        }
+    )
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", only_one_version_mock_get)
+def test_bazel_cache_agent_output_has_no_latest_versions(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    data = json.loads(output[index])
+    assert "latest" in data
+    assert data["latest"]["major"] is None
+    assert data["latest"]["minor"] is None
+    assert data["latest"]["patch"] is None
+
+
+def no_version_mock_get(url, **kwargs):
+    if "tags" in url:
+        return MockResponse([])
+    return MockResponse(
+        {
+            "CurrSize": 283741868032,
+            "UncompressedSize": 668958797824,
+            "ReservedSize": 0,
+            "MaxSize": 483183820800,
+            "NumFiles": 15967454,
+            "ServerTime": 1714376779,
+            "GitCommit": "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8",
+            "NumGoroutines": 9,
+        }
+    )
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", no_version_mock_get)
+def test_bazel_cache_agent_output_has_no_version_section(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    arg_list = [
+        "--host",
+        "bazel-cache.tld",
+    ]
+    args = parse_arguments(arg_list)
+    agent_bazel_cache_main(args=args)
+    captured = capsys.readouterr()
+    output = captured.out.rstrip().split("\n")
+    assert "<<<bazel_cache_version:sep(0)>>>" not in output
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_section(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -290,10 +466,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_section(
 
 
 #
-@mock.patch(
-    "cmk.plugins.bazel.lib.agent.requests.get",
-    mock.Mock(return_value=MockResponse),
-)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_go_section(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -334,10 +507,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_go_section(
 
 
 #
-@mock.patch(
-    "cmk.plugins.bazel.lib.agent.requests.get",
-    mock.Mock(return_value=MockResponse),
-)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_grpc_section(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -433,10 +603,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_grpc_section(
     )
 
 
-@mock.patch(
-    "cmk.plugins.bazel.lib.agent.requests.get",
-    mock.Mock(return_value=MockResponse),
-)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_http(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

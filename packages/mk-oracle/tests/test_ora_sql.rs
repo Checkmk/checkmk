@@ -7,12 +7,14 @@ extern crate common;
 #[cfg(not(feature = "build_system_bazel"))]
 mod common;
 
-use mk_oracle::config::ora_sql::{AuthType, Config, EngineTag, Role};
+use mk_oracle::config::authentication::{AuthType, Role};
+use mk_oracle::config::connection::EngineTag;
+use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use crate::common::tools::{SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_BASE};
+use crate::common::tools::{SqlDbEndpoint, ORA_ENDPOINT_ENV_VAR_LOCAL};
 use mk_oracle::types::{Credentials, InstanceName};
 
 static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
@@ -73,6 +75,25 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
+fn make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{}"
+       password: "{}"
+       type: {}
+    connection:
+       hostname: {}
+       timeout: 10
+"#,
+        credentials.user, credentials.password, auth_type, address,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
 #[test]
 fn test_config_to_remove() {
     let config = make_base_config(
@@ -93,12 +114,12 @@ fn test_config_to_remove() {
 #[test]
 #[allow(clippy::const_is_empty)]
 fn test_endpoint() {
-    assert!(!ORA_ENDPOINT_ENV_VAR_BASE.is_empty());
+    assert!(!ORA_ENDPOINT_ENV_VAR_LOCAL.is_empty());
 }
 #[allow(clippy::const_is_empty)]
 #[test]
 fn test_local_connection() {
-    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_BASE);
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
     if r.is_err() {
         println!("Skipping test_local_connection: {}", r.err().unwrap());
         return;
@@ -114,7 +135,7 @@ fn test_local_connection() {
         Some(Role::SysDba),
         &endpoint.host,
         endpoint.port,
-        InstanceName::from(endpoint.point.clone()),
+        InstanceName::from(endpoint.instance.clone()),
     );
 
     change_cwd_to_runtime_path();
@@ -137,7 +158,50 @@ fn test_local_connection() {
     let rows = result.unwrap();
     eprintln!("Rows: {:?}", rows);
     assert!(!rows.is_empty());
-    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.point)));
-    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.point)));
+    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
+    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
+    assert_eq!(rows.len(), 2);
+}
+
+#[test]
+fn test_local_mini_connection() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
+    if r.is_err() {
+        println!("Skipping test_local_connection: {}", r.err().unwrap());
+        return;
+    }
+    let endpoint = r.unwrap();
+
+    let config = make_mini_config(
+        &Credentials {
+            user: "system".into(),
+            password: "Oracle-dba".into(),
+        },
+        AuthType::Standard,
+        &endpoint.host,
+    );
+
+    change_cwd_to_runtime_path();
+
+    let mut task = backend::make_task(&config.endpoint()).unwrap();
+    let r = task.connect();
+    assert!(r.is_ok());
+    let result = task.query(
+        r"
+    select upper(i.INSTANCE_NAME)
+        ||'|'|| 'sys_time_model'
+        ||'|'|| S.STAT_NAME
+        ||'|'|| Round(s.value/1000000)
+    from v$instance i,
+        v$sys_time_model s
+    where s.stat_name in('DB time', 'DB CPU')
+    order by s.stat_name",
+    );
+    assert!(result.is_ok());
+    let rows = result.unwrap();
+    eprintln!("Rows: {:?}", rows);
+    assert!(!rows.is_empty());
+    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
+    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
     assert_eq!(rows.len(), 2);
 }

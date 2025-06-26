@@ -16,7 +16,10 @@ rust_library(
     srcs = [
         "src/args.rs",
         "src/config.rs",
+        "src/config/authentication.rs",
+        "src/config/connection.rs",
         "src/config/defines.rs",
+        "src/config/options.rs",
         "src/config/ora_sql.rs",
         "src/config/section.rs",
         "src/config/system.rs",

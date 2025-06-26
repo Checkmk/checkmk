@@ -3,8 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::{self, Result};
-use mk_oracle::config::ora_sql::Role;
-pub const ORA_ENDPOINT_ENV_VAR_BASE: &str = "CI_ORA1_DB_TEST";
+use mk_oracle::config::authentication::Role;
+
+pub const ORA_ENDPOINT_ENV_VAR_LOCAL: &str = "CI_ORA1_DB_TEST";
 // pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
@@ -15,7 +16,7 @@ pub struct SqlDbEndpoint {
     pub user: String,
     pub pwd: String,
     pub port: u16,
-    pub point: String,
+    pub instance: String,
     pub role: Option<Role>,
 }
 
@@ -34,7 +35,7 @@ impl SqlDbEndpoint {
             port: parts[3]
                 .parse()
                 .map_err(|_| anyhow::anyhow!("Wrong/malformed port number in {}", endpoint_var))?,
-            point: parts[4].to_string(),
+            instance: parts[4].to_string(),
             role: Role::new(parts[5]),
         })
     }

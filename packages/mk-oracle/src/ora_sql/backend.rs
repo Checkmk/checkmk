@@ -3,10 +3,12 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{
-    self, ora_sql::AuthType, ora_sql::Endpoint, ora_sql::EngineTag, ora_sql::Role,
+    authentication::{AuthType, Authentication, Role},
+    connection::EngineTag,
+    ora_sql::Endpoint,
 };
 use crate::ora_sql::types::Target;
-use crate::types::{Credentials, PointName};
+use crate::types::{Credentials, InstanceName};
 use anyhow::Context;
 use anyhow::Result;
 
@@ -173,8 +175,10 @@ impl TaskBuilder {
     pub fn target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
-            point: endpoint.conn().point().clone(),
-            port: endpoint.port().clone(),
+            instance: endpoint.conn().instance().map(|i| i.to_owned()),
+            service_name: endpoint.conn().service_name().map(|n| n.to_owned()),
+            service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
+            port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
         });
         self
@@ -210,16 +214,16 @@ pub fn make_task(endpoint: &Endpoint) -> Result<Task> {
         .build()
 }
 
-pub fn make_custom_task(endpoint: &Endpoint, point_name: &PointName) -> Result<Task> {
+pub fn make_custom_task(endpoint: &Endpoint, instance: &InstanceName) -> Result<Task> {
     make_task(endpoint).map(|mut t| {
-        t.target.point = point_name.clone();
+        t.target.instance = Some(instance.to_owned());
         t
     })
 }
 
-pub fn obtain_config_credentials(auth: &config::ora_sql::Authentication) -> Option<Credentials> {
+pub fn obtain_config_credentials(auth: &Authentication) -> Option<Credentials> {
     match auth.auth_type() {
-        AuthType::Standard | AuthType::Kerberos => Some(Credentials {
+        AuthType::Standard | AuthType::Wallet => Some(Credentials {
             user: auth.username().to_string(),
             password: auth
                 .password()

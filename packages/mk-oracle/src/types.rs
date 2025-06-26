@@ -30,7 +30,7 @@ pub struct InstanceName(String);
 
 impl From<&str> for InstanceName {
     fn from(s: &str) -> Self {
-        InstanceName(s.to_string())
+        Self(s.to_string())
     }
 }
 
@@ -39,14 +39,16 @@ pub struct ServiceName(String);
 
 impl From<&str> for ServiceName {
     fn from(s: &str) -> Self {
-        ServiceName(s.to_string())
+        Self(s.to_string())
     }
 }
 
 #[derive(PartialEq, From, Clone, Debug, Display)]
-pub enum PointName {
-    Service(ServiceName),
-    Instance(InstanceName),
+pub struct ServiceType(String);
+impl From<&str> for ServiceType {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
 }
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default)]

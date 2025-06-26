@@ -19,16 +19,15 @@ pub mod keys {
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";
     pub const INSTANCE: &str = "instance";
-    pub const SERVICE: &str = "service";
-    pub const FAIL_OVER_PARTNER: &str = "failoverpartner";
-    pub const TLS: &str = "tls";
+    pub const SERVICE_NAME: &str = "service_name";
+    pub const SERVICE_TYPE: &str = "service_type";
     pub const PORT: &str = "port";
     pub const SOCKET: &str = "socket";
     pub const TIMEOUT: &str = "timeout";
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
     pub const TRUST_SERVER_CERTIFICATE: &str = "trust_server_certificate";
-    pub const ENGINE_TAG: &str = "engine_tag";
+    pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
     pub const CACHE_AGE: &str = "cache_age";
@@ -59,7 +58,7 @@ pub mod values {
     /// AuthType::Os
     pub const OS: &str = "os";
     /// AuthType::Kerberos
-    pub const KERBEROS: &str = "kerberos";
+    pub const WALLET: &str = "wallet";
 
     /// AuthType::Role
     pub const SYS_DBA: &str = "sysdba";

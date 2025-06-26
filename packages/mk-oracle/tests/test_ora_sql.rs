@@ -116,6 +116,16 @@ fn test_config_to_remove() {
 fn test_endpoint() {
     assert!(!ORA_ENDPOINT_ENV_VAR_LOCAL.is_empty());
 }
+
+#[cfg(windows)]
+#[test]
+fn test_environment() {
+    // it seems we need this flag to properly link openssl on Windows
+    let env_value = std::env::var("CFLAGS")
+        .map_err(|e| anyhow::anyhow!("{e}"))
+        .unwrap();
+    assert_eq!(env_value, "-DNDEBUG");
+}
 #[allow(clippy::const_is_empty)]
 #[test]
 fn test_local_connection() {

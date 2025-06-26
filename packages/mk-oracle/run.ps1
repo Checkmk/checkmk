@@ -203,11 +203,6 @@ try {
     & rustc --target $cargo_target -V
     & cargo -V
 
-    # Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
-    # which is not provided by libucrt. The latter is needed for static linking.
-    # https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables
-    $env:CFLAGS = "-DNDEBUG"
-
     # shorten path
     Start-ShortenPath "$shortenLink" "$shortenPath"
     Update-Dirs

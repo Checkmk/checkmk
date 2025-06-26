@@ -5,8 +5,6 @@ workspace = "../../requirements/rust/host"
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[env.windows]
-CFLAGS = "-DNDEBUG"
 
 [lints.rust]
 unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }

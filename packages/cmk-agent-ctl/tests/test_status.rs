@@ -17,6 +17,16 @@ use common::agent;
 use assert_cmd::prelude::OutputAssertExt;
 use predicates::prelude::*;
 
+#[cfg(windows)]
+#[test]
+fn test_environment() {
+    // it seems we need this flag to properly link openssl on Windows
+    let env_value = std::env::var("CFLAGS")
+        .map_err(|e| anyhow::anyhow!("{e}"))
+        .unwrap();
+    assert_eq!(env_value, "-DNDEBUG");
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_status_ok() {
     if agent::is_elevation_required() {

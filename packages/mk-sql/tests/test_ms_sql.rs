@@ -52,6 +52,16 @@ fn main_instance_name() -> InstanceName {
     InstanceName::from("MSSQLSERVER")
 }
 
+#[cfg(windows)]
+#[test]
+fn test_environment() {
+    // it seems we need this flag to properly link openssl on Windows
+    let env_value = std::env::var("CFLAGS")
+        .map_err(|e| anyhow::anyhow!("{e}"))
+        .unwrap();
+    assert_eq!(env_value, "-DNDEBUG");
+}
+
 #[test]
 fn test_section_select_query() {
     let work_dir = tools::create_temp_process_dir();

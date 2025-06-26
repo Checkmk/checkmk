@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
-
 import abc
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -251,19 +249,26 @@ def _evaluate_quantity(
 MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _Linear:
     slope: float
-    shift: float
+    intercept: float
 
     @classmethod
-    def from_points(cls, lower_x: float, lower_y: float, upper_x: float, upper_y: float) -> _Linear:
-        slope = (upper_y - lower_y) / (upper_x - lower_x)
-        shift = -1.0 * slope * lower_x + lower_y
-        return cls(slope, shift)
+    def fit_to_two_points(
+        cls,
+        *,
+        p_1: tuple[float, float],
+        p_2: tuple[float, float],
+    ) -> Self:
+        slope = (p_2[1] - p_1[1]) / (p_2[0] - p_1[0])
+        return cls(
+            slope=slope,
+            intercept=p_1[1] - slope * p_1[0],
+        )
 
     def __call__(self, value: int | float) -> float:
-        return self.slope * value + self.shift
+        return self.slope * value + self.intercept
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -397,21 +402,17 @@ def _make_projection(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
                 lower_non_linear_projection=lambda v: lower_x,
-                linear_focus_projection=_Linear.from_points(
-                    lower_x,
-                    projection_parameters.perfometer_empty_at,
-                    upper_x,
-                    projection_parameters.perfometer_full_at,
+                linear_focus_projection=_Linear.fit_to_two_points(
+                    p_1=(lower_x, projection_parameters.perfometer_empty_at),
+                    p_2=(upper_x, projection_parameters.perfometer_full_at),
                 ),
                 upper_non_linear_projection=lambda v: upper_x,
             )
 
         case perfometers_api.Open(), perfometers_api.Closed():
-            linear = _Linear.from_points(
-                lower_x,
-                projection_parameters.lower_open_end,
-                upper_x,
-                projection_parameters.perfometer_full_at,
+            linear = _Linear.fit_to_two_points(
+                p_1=(lower_x, projection_parameters.lower_open_end),
+                p_2=(upper_x, projection_parameters.perfometer_full_at),
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
@@ -428,11 +429,9 @@ def _make_projection(
             )
 
         case perfometers_api.Closed(), perfometers_api.Open():
-            linear = _Linear.from_points(
-                lower_x,
-                projection_parameters.perfometer_empty_at,
-                upper_x,
-                projection_parameters.upper_open_start,
+            linear = _Linear.fit_to_two_points(
+                p_1=(lower_x, projection_parameters.perfometer_empty_at),
+                p_2=(upper_x, projection_parameters.upper_open_start),
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
@@ -449,11 +448,9 @@ def _make_projection(
             )
 
         case perfometers_api.Open(), perfometers_api.Open():
-            linear = _Linear.from_points(
-                lower_x,
-                projection_parameters.lower_open_end,
-                upper_x,
-                projection_parameters.upper_open_start,
+            linear = _Linear.fit_to_two_points(
+                p_1=(lower_x, projection_parameters.lower_open_end),
+                p_2=(upper_x, projection_parameters.upper_open_start),
             )
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,

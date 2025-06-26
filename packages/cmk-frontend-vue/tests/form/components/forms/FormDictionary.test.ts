@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, waitFor, render, screen } from '@testing-library/vue'
-import FormDictionary from '@/form/components/forms/FormDictionary.vue'
+import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'

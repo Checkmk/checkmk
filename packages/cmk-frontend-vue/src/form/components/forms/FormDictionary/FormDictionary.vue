@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
-import { ref } from 'vue'
+import { cva } from 'class-variance-authority'
+import { computed, ref } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
@@ -21,14 +21,10 @@ import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import FormIndent from '@/components/CmkIndent.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 
-const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
+import { getElementsInGroupsFromProps, toggleElement, titleRequired } from './_groups'
 
 const dictionaryVariants = cva('', {
   variants: {
-    variant: {
-      one_column: 'form-dictionary--one_column',
-      two_columns: 'form-dictionary--two_columns'
-    },
     group_layout: {
       none: '',
       horizontal: 'horizontal_groups',
@@ -36,43 +32,18 @@ const dictionaryVariants = cva('', {
     }
   },
   defaultVariants: {
-    variant: 'one_column',
     group_layout: 'none'
   }
 })
-type DictionaryVariants = VariantProps<typeof dictionaryVariants>
-
-interface ElementFromProps {
-  dict_config: FormSpec.DictionaryElement
-  is_active: boolean
-}
-
-interface ElementsGroup {
-  groupKey: string
-  title?: string
-  help?: string
-  layout: FormSpec.DictionaryGroupLayout
-  elems: ElementFromProps[]
-}
 
 const props = defineProps<{
   spec: FormSpec.Dictionary
   backendValidation: ValidationMessages
 }>()
 
-const variant: DictionaryVariants['variant'] = 'two_columns'
-
 const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 const validation = ref<ValidationMessages>([])
-
-function getDefaultValue(key: string): unknown {
-  const element = props.spec.elements.find((element) => element.name === key)
-  if (element === undefined) {
-    return undefined
-  }
-  return JSON.parse(JSON.stringify(element.default_value))
-}
 
 immediateWatch(
   () => props.spec.additional_static_elements,
@@ -97,66 +68,12 @@ immediateWatch(
   }
 )
 
-const getGroupKey = (element: FormSpec.DictionaryElement, index: number): string => {
-  return element.group?.key ?? `${DICT_ELEMENT_NO_GROUP}${index}`
-}
-
-const extractGroups = (elements: FormSpec.DictionaryElement[]): ElementsGroup[] => {
-  const groups: ElementsGroup[] = []
-  elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
-    const groupKey = getGroupKey(element, index)
-    if (!groups.some((group) => group.groupKey === groupKey)) {
-      groups.push({
-        groupKey: groupKey,
-        title: element.group?.title || '',
-        help: element.group?.help || '',
-        layout: element.group?.layout || 'horizontal',
-        elems: []
-      })
-    }
-  })
-
-  return groups
-}
-
-function getElementsInGroupsFromProps(): ElementsGroup[] {
-  const groups = extractGroups(props.spec.elements)
-
-  props.spec.elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
-    const isActive = element.name in data.value ? true : element.required
-    if (isActive && data.value[element.name] === undefined) {
-      data.value[element.name] = structuredClone(getDefaultValue(element.name))
-    }
-
-    const groupIndex = groups.findIndex((group) => group.groupKey === getGroupKey(element, index))
-    if (groupIndex === -1) {
-      throw new Error('Group not found')
-    }
-    if (groups[groupIndex]) {
-      groups[groupIndex]!.elems.push({
-        dict_config: element,
-        is_active: isActive
-      })
-    }
-  })
-  return groups
-}
-
-function toggleElement(key: string) {
-  if (key in data.value) {
-    delete data.value[key]
-  } else {
-    data.value[key] = getDefaultValue(key)
-  }
-}
-
 function indentRequired(
   element: FormSpec.DictionaryElement,
   layout: FormSpec.DictionaryGroupLayout
 ): boolean {
   return (
     titleRequired(element) &&
-    variant === 'one_column' &&
     !(element.group && layout === 'horizontal') &&
     !(
       element.parameter_form.type === 'fixed_value' &&
@@ -166,16 +83,7 @@ function indentRequired(
   )
 }
 
-function titleRequired(element: FormSpec.DictionaryElement): boolean {
-  return (
-    (!element.required || element.parameter_form.title !== '') &&
-    !(
-      element.required &&
-      element.parameter_form.title === '' &&
-      element.parameter_form.type === 'boolean_choice'
-    )
-  )
-}
+const groups = computed(() => getElementsInGroupsFromProps(props.spec.elements, data))
 
 const componentId = useId()
 
@@ -187,16 +95,18 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <table
     v-if="props.spec.elements.length > 0"
     class="dictionary"
-    :class="dictionaryVariants({ variant })"
     :aria-label="props.spec.title"
     role="group"
   >
     <tbody>
-      <tr v-for="group in getElementsInGroupsFromProps()" :key="`${componentId}.${group.groupKey}`">
+      <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div :class="dictionaryVariants({ variant, group_layout: group.layout })">
+          <div
+            class="form-dictionary__group-elems"
+            :class="dictionaryVariants({ group_layout: group.layout })"
+          >
             <div
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
@@ -232,7 +142,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   "
                   :label="dict_element.dict_config.parameter_form.title"
                   :help="dict_element.dict_config.parameter_form.help"
-                  @update:model-value="toggleElement(dict_element.dict_config.name)"
+                  @update:model-value="
+                    toggleElement(data, spec.elements, dict_element.dict_config.name)
+                  "
                 />
               </span>
               <FormIndent
@@ -267,14 +179,12 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   font-weight: bold;
   margin: var(--spacing) 0;
 }
+
 tr:first-of-type > td > .form-dictionary__group-title {
-  margin-top: var(--spacing) 0;
+  margin-top: 0;
 }
 
-.form-dictionary--one_column > .form-dictionary__group_elem {
-  margin-bottom: var(--spacing);
-}
-tr:last-of-type > td > .form-dictionary--one_column > .form-dictionary__group_elem:last-of-type {
+tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   margin-bottom: 0;
 }
 
@@ -283,32 +193,15 @@ tr:last-of-type > td > .form-dictionary--one_column > .form-dictionary__group_el
   margin-bottom: var(--spacing-half);
 }
 
-/* Variants */
-.form-dictionary--two_columns > .form-dictionary__group_elem {
-  padding: 8px 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: start;
-
-  > .form-dictionary__group-elem__title {
-    display: inline-block;
-    flex-shrink: 0;
-    width: 180px;
-    margin: 0;
-    padding-top: 0;
-    font-weight: bold;
-    word-wrap: break-word;
-    white-space: normal;
-    min-height: 21px;
-  }
-}
-
-.form-dictionary--one_column {
+.form-dictionary__group-elems {
   flex-direction: row;
   gap: 0.5em;
   &.horizontal_groups {
     display: flex;
   }
+}
+
+.form-dictionary__group_elem {
+  margin-bottom: var(--spacing);
 }
 </style>

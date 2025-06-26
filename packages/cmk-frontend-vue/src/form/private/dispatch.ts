@@ -15,7 +15,7 @@ import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoi
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
 import FormMetric from '../components/forms/FormMetric.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
-import FormDictionary from '@/form/components/forms/FormDictionary.vue'
+import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
@@ -36,7 +36,7 @@ import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
-import FormTwoColumnDictionary from '../components/forms/FormTwoColumnDictionary.vue'
+import FormTwoColumnDictionary from '../components/forms/FormDictionary/FormTwoColumnDictionary.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {

@@ -16,8 +16,6 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
     TableRow,
-    HostLabel,
-    HostLabelGenerator,
 )
 from cmk.plugins.lib.device_types import get_device_type_label
 
@@ -143,19 +141,10 @@ def _get_first_description(string_table: StringTable) -> str:
         return ""
 
 
-def host_label_snmp_extended_info(section: SNMPExtendedInfo) -> HostLabelGenerator:
-    yield from get_device_type_label(section)
-    if section.model:
-        yield HostLabel(
-            name="cmk/device_model",
-            value=section.model,
-        )
-
-
 snmp_section_snmp_extended_info = SimpleSNMPSection(
     name="snmp_extended_info",
     parse_function=parse_snmp_extended_info,
-    host_label_function=host_label_snmp_extended_info,
+    host_label_function=get_device_type_label,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.47.1.1.1.1",
         oids=[

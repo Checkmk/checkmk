@@ -20,7 +20,6 @@ selects.config_setting_group(
     name = "fhs",
     match_any = [
         "//bazel/cmk/distro:almalinux",
-        "//bazel/cmk/distro:cma",
         "//bazel/cmk/distro:sles",
     ],
 )

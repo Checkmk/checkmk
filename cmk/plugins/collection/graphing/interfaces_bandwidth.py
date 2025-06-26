@@ -26,7 +26,7 @@ perfometer_if_bps = perfometers.Bidirectional(
         name="if_in_bps",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(1_000_000_000),
         ),
         segments=["if_in_bps"],
     ),
@@ -34,7 +34,7 @@ perfometer_if_bps = perfometers.Bidirectional(
         name="if_out_bps",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(1_000_000_000),
         ),
         segments=["if_out_bps"],
     ),

@@ -40,7 +40,7 @@ perfometer_if_octets = perfometers.Bidirectional(
         name="if_in_octets",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(125_000_000),
         ),
         segments=["if_in_octets"],
     ),
@@ -48,7 +48,7 @@ perfometer_if_octets = perfometers.Bidirectional(
         name="if_out_octets",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(125_000_000),
         ),
         segments=["if_out_octets"],
     ),
@@ -59,7 +59,7 @@ perfometer_if_unicast_octets = perfometers.Bidirectional(
         name="if_unicast_octets_out",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(125_000_000),
         ),
         segments=[
             metrics.Sum(
@@ -76,7 +76,7 @@ perfometer_if_unicast_octets = perfometers.Bidirectional(
         name="if_in_octets",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(500000),
+            perfometers.Open(125_000_000),
         ),
         segments=["if_in_octets"],
     ),

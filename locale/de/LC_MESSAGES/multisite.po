@@ -24219,8 +24219,8 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
-#, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+#, fuzzy, python-format
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Merkmale %s)"
 
 msgid "Failed index operations"
@@ -86986,6 +86986,10 @@ msgstr "Passwort:"
 
 msgid "path echo"
 msgstr "Pfad Echo"
+
+#, fuzzy
+msgid "paused"
+msgstr "Angehalten"
 
 msgid "pending"
 msgstr "anstehend"

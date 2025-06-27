@@ -24876,7 +24876,7 @@ msgid "Failed get locations requests"
 msgstr "Échec des demandes de localisation (Get Locations)"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Cet hôte a échoué à la condition de balise d'hôte '%s' (il a les balises %s)"
 
@@ -89526,6 +89526,10 @@ msgstr "mot de passe :"
 
 msgid "path echo"
 msgstr "chemin écho"
+
+#, fuzzy
+msgid "paused"
+msgstr "En pause"
 
 msgid "pending"
 msgstr "en attente de"

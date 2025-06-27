@@ -24658,7 +24658,7 @@ msgid "Failed get locations requests"
 msgstr "Mislukte verzoeken om locaties te krijgen"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Deze host is niet geslaagd voor host tag voorwaarde '%s' (hij heeft de tags "
 "%s)"
@@ -88656,6 +88656,10 @@ msgstr "wachtwoord:"
 
 msgid "path echo"
 msgstr "pad-echo"
+
+#, fuzzy
+msgid "paused"
+msgstr "Pauzeer"
 
 msgid "pending"
 msgstr "in afwachting van"

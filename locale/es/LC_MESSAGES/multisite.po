@@ -24846,7 +24846,7 @@ msgid "Failed get locations requests"
 msgstr "Solicitudes fallidas de obtención de ubicaciones"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Este host ha fallado en la condición de etiqueta de host '%s' (tiene las "
 "etiquetas %s)"
@@ -89367,6 +89367,10 @@ msgstr "contraseña:"
 
 msgid "path echo"
 msgstr "eco del camino"
+
+#, fuzzy
+msgid "paused"
+msgstr "En pausa"
 
 msgid "pending"
 msgstr "pendiente"

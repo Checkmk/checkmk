@@ -24704,7 +24704,7 @@ msgid "Failed get locations requests"
 msgstr "Solicitări eșuate de obținere a locațiilor"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
 "%s)"
@@ -88846,6 +88846,10 @@ msgstr "parolă:"
 
 msgid "path echo"
 msgstr "calea eco"
+
+#, fuzzy
+msgid "paused"
+msgstr "Pauză"
 
 msgid "pending"
 msgstr "în așteptare"

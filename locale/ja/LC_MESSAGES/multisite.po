@@ -23629,8 +23629,8 @@ msgstr "失敗したファイル要求"
 msgid "Failed get locations requests"
 msgstr "場所の取得リクエストに失敗しました"
 
-#, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+#, fuzzy, python-format
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr "失敗したホストタグの条件 '%s' (%s のタグを持つ)"
 
 msgid "Failed index operations"
@@ -84603,6 +84603,10 @@ msgstr "パスワード:"
 
 msgid "path echo"
 msgstr "パスエコー"
+
+#, fuzzy
+msgid "paused"
+msgstr "一時停止"
 
 msgid "pending"
 msgstr "保留中"

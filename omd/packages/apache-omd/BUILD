@@ -95,7 +95,6 @@ genrule(
                 mod_setenvif.so \
                 mod_status.so \
                 mod_unixd.so \
-                mod_version.so \
                 mod_proxy.so \
                 mod_proxy_http.so"
             for MODULE_FILE in $$APACHE_MODULES; do

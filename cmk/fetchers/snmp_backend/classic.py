@@ -10,7 +10,6 @@ from typing import assert_never, Literal, TypeAlias
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 
-from cmk.utils.log import VERBOSE
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
@@ -75,13 +74,11 @@ class ClassicSNMPBackend(SNMPBackend):
             error = snmp_process.stderr.read()
 
         if snmp_process.returncode:
-            self._logger.log(
-                VERBOSE, f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}"
-            )
+            self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
             return None
 
         if not line:
-            self._logger.log(VERBOSE, "Error in response to snmpget.")
+            self._logger.debug("Error in response to snmpget.")
             return None
 
         parts = line.split("=", 1)
@@ -143,9 +140,7 @@ class ClassicSNMPBackend(SNMPBackend):
                 raise
 
         if snmp_process.returncode:
-            self._logger.log(
-                VERBOSE, f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}"
-            )
+            self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
             raise MKSNMPError(
                 f"SNMP Error on {ipaddress}: {error.strip()} (Exit-Code: {snmp_process.returncode})"
             )

@@ -13,7 +13,6 @@ from typing import Final
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.log import VERBOSE
 
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import get_messages_for, PiggybackMessage, PiggybackTimeSettings
@@ -73,7 +72,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         self._sources.clear()
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        self._logger.log(VERBOSE, "Get piggybacked data")
+        self._logger.debug("Get piggybacked data")
         return AgentRawData(
             bytes(
                 self._get_main_section()

@@ -58,8 +58,6 @@ from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKFetcherError, MKGeneralException
 
-from cmk.utils.log import VERBOSE
-
 from .._abstract import Mode
 
 __all__ = [
@@ -229,7 +227,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
             self._logger.debug("Not using cache (Empty)")
             return None
 
-        self._logger.log(VERBOSE, "Using data from cache file %s", path)
+        self._logger.debug("Using data from cache file %s", path)
         return self._from_cache_file(cache_file)
 
     def write(self, raw_data: _TRawData, mode: Mode) -> None:

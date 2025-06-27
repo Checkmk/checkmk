@@ -24,7 +24,6 @@ from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 from cmk.ccc.hostaddress import HostAddress
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.log import VERBOSE
 
 from ._abstract import Fetcher, Mode
 
@@ -151,7 +150,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         )
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        self._logger.log(VERBOSE, "Get IPMI data")
+        self._logger.debug("Get IPMI data")
         if self._command is None:
             raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
@@ -225,7 +224,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         try:
             sdr = ipmi_sdr.SDR(self._command)
         except NotImplementedError as e:
-            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
+            self._logger.debug("Failed to fetch sensor data: %r", e)
             self._logger.debug("Exception", exc_info=True)
             return AgentRawData(b"")
 
@@ -263,7 +262,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         except MKTimeout:
             raise
         except Exception as e:
-            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
+            self._logger.debug("Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
             return AgentRawData(b"")
 
@@ -291,7 +290,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         except MKTimeout:
             raise
         except Exception as e:
-            self._logger.log(VERBOSE, "Failed to fetch inventory information: %r", e)
+            self._logger.debug("Failed to fetch inventory information: %r", e)
             self._logger.debug("Exception", exc_info=True)
             # in case of connection problems, we don't want to ignore possible
             # GPU entries

@@ -5,7 +5,7 @@
 from collections.abc import Callable
 from typing import cast, TypeVar
 
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary

@@ -7,7 +7,6 @@ from .catalog import Catalog, Topic
 from .condition_choices import ConditionChoices
 from .definitions import (
     CommentTextArea,
-    LegacyValueSpec,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
     UnknownFormSpec,
@@ -15,6 +14,7 @@ from .definitions import (
 from .dictionary_extended import DictionaryExtended
 from .folder import Folder
 from .labels import Labels, Source, World
+from .legacy_valuespec import LegacyValueSpec
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .list_unique_selection import ListUniqueSelection

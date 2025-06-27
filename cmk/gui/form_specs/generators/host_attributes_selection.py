@@ -5,11 +5,10 @@
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
-from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended, LegacyValueSpec
 from cmk.gui.form_specs.private.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,

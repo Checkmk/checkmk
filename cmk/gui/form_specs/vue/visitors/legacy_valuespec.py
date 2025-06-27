@@ -7,7 +7,7 @@ import uuid
 from typing import Any
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.output_funnel import output_funnel

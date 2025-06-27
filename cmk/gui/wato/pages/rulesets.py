@@ -49,7 +49,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     DisplayMode,
     parse_data_from_frontend,

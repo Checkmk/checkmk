@@ -14,7 +14,6 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     InvalidElementValidator,
 )
-from cmk.rulesets.v1.form_specs._basic import MultilineText
 
 T = TypeVar("T")
 
@@ -35,8 +34,3 @@ class SingleChoiceExtended(Generic[T], FormSpec[T]):
     prefill: DefaultValue[T] | InputHint[Title] = InputHint(Title("Please choose"))
     ignored_elements: tuple[str, ...] = ()
     invalid_element_validation: InvalidElementValidator | None = None
-
-
-@dataclass(frozen=True, kw_only=True)
-class CommentTextArea(MultilineText):
-    pass

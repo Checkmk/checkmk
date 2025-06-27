@@ -55,20 +55,23 @@ class MainMenuRenderer:
         if search_item := main_menu_registry.get("search"):
             if search_item.vue_app and isinstance(search_item.vue_app.data, UnifiedSearchConfig):
                 if mon_item := main_menu_registry.get("monitoring"):
-                    search_item.vue_app.data.providers.monitoring = bool(
+                    search_item.vue_app.data.providers.monitoring.active = bool(
                         mon_item.topics and mon_item.topics()
                     )
+                    search_item.vue_app.data.providers.setup.sort = mon_item.sort_index
 
                 if customize_item := main_menu_registry.get("customize"):
-                    search_item.vue_app.data.providers.customize = bool(
+                    search_item.vue_app.data.providers.customize.active = bool(
                         customize_item.topics and customize_item.topics()
                     )
+                    search_item.vue_app.data.providers.customize.sort = customize_item.sort_index
 
-                if search_item.vue_app.data.providers.setup:
+                if search_item.vue_app.data.providers.setup.active:
                     if setup_item := main_menu_registry.get("setup"):
-                        search_item.vue_app.data.providers.setup = bool(
+                        search_item.vue_app.data.providers.setup.active = bool(
                             setup_item.topics and setup_item.topics()
                         )
+                        search_item.vue_app.data.providers.setup.sort = setup_item.sort_index
 
                 search_item.vue_app.data = asdict(search_item.vue_app.data)
 

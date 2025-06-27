@@ -30,6 +30,8 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
+from cmk.shared_typing.unified_search import UnifiedSearchConfig
+
 
 class MainMenuPopupTrigger(NamedTuple):
     name: str
@@ -43,8 +45,32 @@ class MainMenuRenderer:
 
     def show(self) -> None:
         html.open_ul(id_="main_menu")
+        self._modify_unified_search_config()
         self._show_main_menu_content()
         html.close_ul()
+
+    def _modify_unified_search_config(
+        self,
+    ) -> None:
+        if search_item := main_menu_registry.get("search"):
+            if search_item.vue_app and isinstance(search_item.vue_app.data, UnifiedSearchConfig):
+                if mon_item := main_menu_registry.get("monitoring"):
+                    search_item.vue_app.data.providers.monitoring = bool(
+                        mon_item.topics and mon_item.topics()
+                    )
+
+                if customize_item := main_menu_registry.get("customize"):
+                    search_item.vue_app.data.providers.customize = bool(
+                        customize_item.topics and customize_item.topics()
+                    )
+
+                if search_item.vue_app.data.providers.setup:
+                    if setup_item := main_menu_registry.get("setup"):
+                        search_item.vue_app.data.providers.setup = bool(
+                            setup_item.topics and setup_item.topics()
+                        )
+
+                search_item.vue_app.data = asdict(search_item.vue_app.data)
 
     def _show_main_menu_content(self) -> None:
         for popup_trigger in self._get_main_menu_popup_triggers():

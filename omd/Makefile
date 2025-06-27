@@ -27,8 +27,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     apache-omd \
     check_mk \
-    omd \
-    xmlsec1
+    omd
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

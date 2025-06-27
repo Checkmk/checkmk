@@ -211,7 +211,7 @@ try {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
     if ($packBuild -or $packTest -or - $packOci) {
-        $target = "//omd/packages/oci:all"
+        $target = "//omd/packages/oci:oci_light_win_x86"
         & bazel build $target
         if ($LASTEXITCODE -eq 0) {
             $oci_light_win_x86_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )

@@ -125,7 +125,7 @@ main() {
     parse_options "$@"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build :all
-    test ${RUN_UNIT_TESTS} = yes && bazel test :all
+    test ${RUN_UNIT_TESTS} = yes && bazel build //omd/packages/oci:oci_light_lin_x86 && bazel test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format

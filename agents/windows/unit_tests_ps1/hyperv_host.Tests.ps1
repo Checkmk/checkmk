@@ -3,6 +3,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 BeforeAll {
+    # Dummy functions to be able to mock HyperV system calls when HyperV feature is disabled
+    function Get-VMIntegrationService { return @() }
+    function Get-VMNetworkAdapter { return @() }
+    function Get-VMHardDiskDrive { return @() }
+    function Get-VMMemory { return @() }
+    function Get-VMProcessor { return @() }
+    function Get-VMSnapshot { return @() }
+    function Get-VMReplication { return $null }
+    function Get-VMConnectAccess { return @() }
+    function Get-VHD { return $null }
+    function Get-VMFibreChannelHba { return @() }
+
     $scriptPath = Join-Path $PSScriptRoot "..\plugins\hyperv_host.ps1"
     . $scriptPath
 }
@@ -495,14 +507,14 @@ Context "Hyper-V Host Plugin Tests" {
                 $expectedValue = "Windows Server 2022"
 
                 $xml = @"
-                        <INSTANCE>
-                            <PROPERTY NAME='Name'>
-                                <VALUE>$kvpAttribute</VALUE>
-                            </PROPERTY>
-                            <PROPERTY NAME='Data'>
-                                <VALUE>$expectedValue</VALUE>
-                            </PROPERTY>
-                        </INSTANCE>
+                            <INSTANCE>
+                                <PROPERTY NAME='Name'>
+                                    <VALUE>$kvpAttribute</VALUE>
+                                </PROPERTY>
+                                <PROPERTY NAME='Data'>
+                                    <VALUE>$expectedValue</VALUE>
+                                </PROPERTY>
+                            </INSTANCE>
 "@
                 $mockKvpComponent = [PSCustomObject]@{
                     GuestIntrinsicExchangeItems = @($xml)
@@ -524,14 +536,14 @@ Context "Hyper-V Host Plugin Tests" {
                 $clusterNode = "Node1"
                 $kvpAttribute = "NonExistent"
                 $xml = @"
-                        <INSTANCE>
-                            <PROPERTY NAME='Name'>
-                                <VALUE>OtherAttribute</VALUE>
-                            </PROPERTY>
-                            <PROPERTY NAME='Data'>
-                                <VALUE>SomeValue</VALUE>
-                            </PROPERTY>
-                        </INSTANCE>
+                            <INSTANCE>
+                                <PROPERTY NAME='Name'>
+                                    <VALUE>OtherAttribute</VALUE>
+                                </PROPERTY>
+                                <PROPERTY NAME='Data'>
+                                    <VALUE>SomeValue</VALUE>
+                                </PROPERTY>
+                            </INSTANCE>
 "@
                 $mockKvpComponent = [PSCustomObject]@{
                     GuestIntrinsicExchangeItems = @($xml)
@@ -543,7 +555,6 @@ Context "Hyper-V Host Plugin Tests" {
                 Mock Get-WmiObject { $mockVMWMI }
 
                 $result = Get-VMKVPdata -vm $vm -clusterNode $clusterNode -kvpAttribute $kvpAttribute
-
                 $result | Should -Be $null
             }
         }
@@ -556,7 +567,8 @@ Context "Hyper-V Host Plugin Tests" {
 
                 Mock Get-WmiObject { throw "WMI error" }
 
-                { $result = Get-VMKVPdata -vm $vm -clusterNode $clusterNode -kvpAttribute $kvpAttribute } | Should -Not -Throw
+                { Get-VMKVPdata -vm $vm -clusterNode $clusterNode -kvpAttribute $kvpAttribute } | Should -Not -Throw
+                $result = Get-VMKVPdata -vm $vm -clusterNode $clusterNode -kvpAttribute $kvpAttribute
                 $result | Should -Be $null
             }
         }

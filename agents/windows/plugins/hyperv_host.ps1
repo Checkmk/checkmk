@@ -314,7 +314,7 @@ function Get-VMKVPdata {
     [Object]
     $kvpAttribute
   )
-
+  $VMKVPdata = $null
   $WMIFilter = "ElementName='$vm'"
   $attrName = "/INSTANCE/PROPERTY[@NAME='Name']/VALUE[child::text()='$kvpAttribute']"
 
@@ -350,6 +350,12 @@ function Get-VMInventoryHost() {
 
   if ($Node.Length -eq 0) {
     '<<<hyperv_node>>>'
+    return
+  }
+
+  if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V).State -ne 'Enabled') {
+    '<<<hyperv_node>>>'
+    Write-Output "Hyper-V feature is not enabled on $Node. Exiting."
     return
   }
 

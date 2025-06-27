@@ -164,3 +164,62 @@ def test_delete_host_row(
         message=f"Deleted host: '{host_details.name}' is still visible!",
     ).to_have_count(0)
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+
+
+def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> None:
+    """Validate pinging of a host."""
+    setup_host = SetupHost(dashboard_page.page)
+    main_area = setup_host.main_area.locator()
+    setup_host.add_host.click()
+
+    agent_test_button_default_tag = main_area.locator("#attr_default_tag_agent > button")
+    agent_test_button_entry_tag = main_area.locator("#attr_entry_tag_agent > button")
+    expect(agent_test_button_default_tag).to_be_disabled()
+
+    host_input = main_area.locator("input.text[name='host']")
+    host_input.fill("localhost")
+    expect(agent_test_button_default_tag).not_to_be_disabled()
+
+    agent_test_button_default_tag.click()
+    warning_container = main_area.locator(".warn-container")
+    expect(warning_container).to_be_visible()
+
+    agent_download_button = main_area.locator("div.warn-button-container > button:nth-child(1)")
+    agent_download_button.click()
+    slideout = main_area.locator("div.cmk-vue-app.slide-in__container")
+    expect(slideout).to_be_visible()
+
+    slidout_close_button = main_area.locator(".slide-in__close")
+    slidout_close_button.click()
+
+    host_input.fill("")
+    expect(agent_test_button_default_tag).to_be_visible()
+    expect(agent_test_button_default_tag).to_be_disabled()
+
+    host_input.fill("localhost")
+
+    setup_host.page.pause()
+
+    datasource_checkbox = main_area.get_by_role("cell", name="Checkmk agent / API").locator("label")
+    datasource_checkbox.click()
+
+    main_area.get_by_label("API integrations if").get_by_text("API integrations if").click()
+    main_area.get_by_role("option", name="Configured API integrations and Checkmk agent").click()
+    expect(agent_test_button_entry_tag).to_be_visible()
+    expect(agent_test_button_entry_tag).not_to_be_disabled()
+
+    main_area.get_by_label("Configured API integrations").get_by_text(
+        "Configured API integrations"
+    ).click()
+    main_area.get_by_title("Configured API integrations,").click()
+    expect(agent_test_button_entry_tag).not_to_be_visible()
+
+    main_area.get_by_label("Configured API integrations,").get_by_text(
+        "Configured API integrations,"
+    ).click()
+    main_area.get_by_title("No API integrations, no").click()
+    expect(agent_test_button_entry_tag).not_to_be_visible()
+
+    datasource_checkbox.click()
+    expect(agent_test_button_default_tag).to_be_visible()
+    expect(agent_test_button_default_tag).not_to_be_disabled()

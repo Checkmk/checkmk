@@ -1,4 +1,4 @@
-# Provide git-trackable "Docker Image Aliases" 
+# Provide git-trackable "Docker Image Aliases"
 
 ## Goals
 
@@ -58,7 +58,7 @@ In case of a SUSE image you might need to pull it from the SUSE registry and use
 A directory named after the image alias containing a `Dockerfile` and `meta.yml` gets created.
 `git add` and `commit` them in order to make your image alias official.
 
-You can now output the unique ID of a locally stored image by running 
+You can now output the unique ID of a locally stored image by running
 `buildscripts/docker_image_aliases/resolve.py` providing the alias name:
 
 ```bash
@@ -88,7 +88,7 @@ Dockerfiles which shall be based on an image alias have to reference it using a 
 ```
 ARG IMAGE_CMK_BASE
 # hadolint ignore=DL3006
-FROM ${IMAGE_CMK_BASE} as base
+FROM ${IMAGE_CMK_BASE} AS base
 ```
 
 Note that you can choose a different name for the argument, but for consistancy please use the
@@ -106,7 +106,7 @@ docker build \
 ```
 
 Whereever you `run` (or somehow reference) an image you would have referenced directly you now run
-`resolve.sh` to get the image behind the alias. E.g. in scripts/Makefiles instead of writing 
+`resolve.sh` to get the image behind the alias. E.g. in scripts/Makefiles instead of writing
 
 ```bash
 docker run --rm -i hadolint/hadolint < Dockerfile
@@ -118,7 +118,7 @@ you can now run s.th. like
 docker run --rm -i $$(<PATH_TO>/resolve.sh IMAGE_HADOLINT) < Dockerfile
 ```
 
-You can also use the Dockerfiles contained in the alias directories directly if possible. E.g. in 
+You can also use the Dockerfiles contained in the alias directories directly if possible. E.g. in
 Jenkins/Groovy scripts you write
 
 ```

@@ -13,12 +13,13 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     migrate_to_password,
     Password,
+    ServiceState,
     SingleChoice,
     SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import NetworkPort
-from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, SpecialAgent, Topic
 
 
 def _formspec_bazel_cache() -> Dictionary:
@@ -82,4 +83,36 @@ rule_spec_bazel_cache = SpecialAgent(
     title=Title("Bazel Remote Cache"),
     topic=Topic.APPLICATIONS,
     parameter_form=_formspec_bazel_cache,
+)
+
+rule_spec_check_parameters = CheckParameters(
+    title=Title("Bazel Cache Version"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=lambda: Dictionary(
+        elements={
+            "major": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Alert when a major version release is available"),
+                    help_text=Help("Version will only appear in summary if non-OK state set."),
+                    prefill=DefaultValue(ServiceState.WARN),
+                )
+            ),
+            "minor": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Alert when a minor version release is available"),
+                    help_text=Help("Version will only appear in summary if non-OK state set."),
+                    prefill=DefaultValue(ServiceState.WARN),
+                )
+            ),
+            "patch": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("Alert when a patch version release is available"),
+                    help_text=Help("Version will only appear in summary if non-OK state set."),
+                    prefill=DefaultValue(ServiceState.WARN),
+                )
+            ),
+        },
+    ),
+    name="bazel_version",
+    condition=HostCondition(),
 )

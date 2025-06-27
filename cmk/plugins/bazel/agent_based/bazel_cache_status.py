@@ -5,6 +5,8 @@
 
 import json
 from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -19,21 +21,29 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Mapping[str, int | str]
+CacheSection = Mapping[str, int | str]
+
+type _Updates = Mapping[Literal["major", "minor", "patch"], str | None]
 
 
-def parse_bazel_cache_status(string_table: StringTable) -> Section:
+@dataclass(frozen=True)
+class VersionSection:
+    current: str
+    latest: _Updates | None
+
+
+def parse_bazel_cache_status(string_table: StringTable) -> CacheSection:
     return {
         key: int(value) if not isinstance(value, str) else value
         for key, value in json.loads(string_table[0][0]).items()
     }
 
 
-def discover_bazel_cache_status(section: Section) -> DiscoveryResult:
+def discover_bazel_cache_status(section: CacheSection) -> DiscoveryResult:
     yield Service()
 
 
-def check_bazel_cache_status(section: Section) -> CheckResult:
+def check_bazel_cache_status(section: CacheSection) -> CheckResult:
     if not section:
         yield Result(state=State.UNKNOWN, summary="No Bazel Cache Status")
         return
@@ -80,6 +90,12 @@ def check_bazel_cache_status(section: Section) -> CheckResult:
     )
 
 
+class CheckParams(TypedDict):
+    major: int
+    minor: int
+    patch: int
+
+
 agent_section_bazel_cache_status = AgentSection(
     name="bazel_cache_status",
     parse_function=parse_bazel_cache_status,
@@ -90,4 +106,48 @@ check_plugin_bazel_cache_status = CheckPlugin(
     service_name="Bazel Cache Status",
     discovery_function=discover_bazel_cache_status,
     check_function=check_bazel_cache_status,
+)
+
+
+def parse_bazel_cache_version(string_table: StringTable) -> VersionSection | None:
+    section = {key: value for key, value in json.loads(string_table[0][0]).items()}
+    if "current" not in section:
+        return None
+    return VersionSection(section["current"], section.get("latest"))
+
+
+agent_section_bazel_cache_version = AgentSection(
+    name="bazel_cache_version",
+    parse_function=parse_bazel_cache_version,
+)
+
+
+def check_bazel_cache_version(params: CheckParams, section: VersionSection) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Current: {section.current}")
+
+    if section.latest is None:
+        return
+
+    for release_type, available in section.latest.items():
+        yield (
+            Result(state=State.OK, notice=f"No new {release_type} release available.")
+            if available is None
+            else Result(
+                state=State(params[release_type]),
+                notice=f"Latest {release_type} release: {available}",
+            )
+        )
+
+
+check_plugin_bazel_cache_version = CheckPlugin(
+    name="bazel_cache_version",
+    service_name="Bazel Cache Version",
+    check_ruleset_name="bazel_version",
+    discovery_function=discover_bazel_cache_status,
+    check_function=check_bazel_cache_version,
+    check_default_parameters=CheckParams(
+        major=State.WARN.value,
+        minor=State.WARN.value,
+        patch=State.WARN.value,
+    ),
 )

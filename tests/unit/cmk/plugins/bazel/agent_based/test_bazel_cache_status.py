@@ -10,7 +10,7 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 
 
 @pytest.fixture(scope="module", name="section")
-def _section() -> bcs.Section:
+def _section() -> bcs.CacheSection:
     return bcs.parse_bazel_cache_status(
         [
             [
@@ -20,11 +20,11 @@ def _section() -> bcs.Section:
     )
 
 
-def test_discover_bazel_cache_status(section: bcs.Section) -> None:
+def test_discover_bazel_cache_status(section: bcs.CacheSection) -> None:
     assert list(bcs.discover_bazel_cache_status(section)) == [Service()]
 
 
-def test_check_bazel_cache_status(section: bcs.Section) -> None:
+def test_check_bazel_cache_status(section: bcs.CacheSection) -> None:
     assert list(bcs.check_bazel_cache_status(section)) == [
         Result(state=State.OK, summary="Bazel Cache Status is OK"),
         Result(state=State.OK, summary="Current size: 264 GiB"),

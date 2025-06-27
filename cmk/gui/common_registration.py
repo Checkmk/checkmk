@@ -160,6 +160,8 @@ def register(
     help_learning_entries: Callable[[], MainMenuTopicEntries],
     help_developer_entries: Callable[[], MainMenuTopicEntries],
     help_about_checkmk_entries: Callable[[], MainMenuTopicEntries],
+    *,
+    ignore_duplicate_endpoints: bool = False,
 ) -> None:
     hooks.register_thread_cache_cleanup()
     pagetypes.register(main_menu_registry)
@@ -193,6 +195,7 @@ def register(
         cron_job_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     dashboard_registration.register(
         permission_section_registry,
@@ -258,6 +261,7 @@ def register(
         endpoint_registry,
         command_registry,
         command_group_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)
@@ -294,6 +298,7 @@ def register(
         versioned_endpoint_registry,
         endpoint_family_registry,
         job_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
 
     register_userroles(config_file_registry)

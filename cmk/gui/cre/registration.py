@@ -129,7 +129,7 @@ def register_painters() -> None:
     painter_registry.register(graph.PainterHostPnpgraph)
 
 
-def register(edition: Edition) -> None:
+def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
@@ -187,6 +187,7 @@ def register(edition: Edition) -> None:
         default_learning_entries,
         default_developer_entries,
         default_about_checkmk_entries,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
 
     features_registry.register(
@@ -296,13 +297,14 @@ def register(edition: Edition) -> None:
         endpoint_registry,
         replication_path_registry,
         save_active_config,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     custom_icons_register(
         mode_registry,
         main_module_registry,
         permission_registry,
     )
-    _openapi_registration(ignore_duplicates=False)
+    _openapi_registration(ignore_duplicates=ignore_duplicate_endpoints)
     builtin_dashboard_extender_registry.register(
         BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
     )

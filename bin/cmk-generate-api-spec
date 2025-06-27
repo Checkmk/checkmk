@@ -1,0 +1,2 @@
+#/bin/sh
+python3 "$(bazel info workspace)"/cmk/gui/openapi/spec/spec_generator/generate_api_spec.py "$@"

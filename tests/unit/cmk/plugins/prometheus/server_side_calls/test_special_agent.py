@@ -27,13 +27,39 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', "
                     "'verify_cert': False, 'protocol': 'http', "
                     "'exporter': [], 'promql_checks': [], "
-                    "'host_address': '1.2.3.4', 'host_name': 'host'}",
-                ]
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=[],
+            ),
+            id="minimal configuration",
+        ),
+        pytest.param(
+            {
+                "connection": "$HOSTNAME$",
+                "verify_cert": False,
+                "protocol": "http",
+                "exporter": [],
+                "promql_checks": [],
+            },
+            HostConfig(
+                name="host",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={
+                    "$HOSTNAME$": "prometheus-server",
+                },
+            ),
+            SpecialAgentCommand(
+                stdin=(
+                    "{'connection': 'prometheus-server', "
+                    "'verify_cert': False, 'protocol': 'http', "
+                    "'exporter': [], 'promql_checks': [], "
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=[],
             ),
             id="minimal configuration",
         ),
@@ -58,8 +84,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', "
                     "'verify_cert': True, 'protocol': 'http', "
                     "'exporter': [('node_exporter', {'entities': "
@@ -68,11 +93,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "'my-service', 'metric_components': "
                     "[{'metric_label': 'my-metric', 'promql_query': "
                     "'my-query'}]}], 'host_address': '1.2.3.4', "
-                    "'host_name': 'host'}",
+                    "'host_name': 'host'}"
+                ),
+                command_arguments=[
                     "auth_token",
                     "--token",
                     Secret(0),
-                ]
+                ],
             ),
             id="medium configuration",
         ),
@@ -136,8 +163,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', "
                     "'verify_cert': True, 'protocol': 'https', "
                     "'exporter': [('node_exporter', {'host_mapping': "
@@ -160,13 +186,15 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "{'metric_label': 'l2', 'promql_query': 't.*', "
                     "'levels': {'lower_levels': (0.0, 1.0), "
                     "'upper_levels': (30.0, 40.0)}}]}], "
-                    "'host_address': '1.2.3.4', 'host_name': 'host'}",
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=[
                     "auth_login",
                     "--username",
                     "user",
                     "--password-reference",
-                    Secret(id=0, format="%s", pass_safely=True),
-                ]
+                    Secret(0),
+                ],
             ),
             id="full configuration",
         ),

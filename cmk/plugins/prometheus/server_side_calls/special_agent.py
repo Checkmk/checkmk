@@ -6,9 +6,15 @@
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
-from pydantic import BaseModel, model_serializer
+from pydantic import BaseModel, field_serializer, model_serializer, SerializationInfo
 
-from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    replace_macros,
+    Secret,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 
 
 class AuthLogin(BaseModel, frozen=True):
@@ -91,24 +97,33 @@ class Params(BaseModel, frozen=True):
     ]
     promql_checks: Sequence[PromlQLCheck]
 
+    @field_serializer("connection", when_used="always")
+    def serialize_connection(self, connection: str, info: SerializationInfo) -> str:
+        match info.context:
+            case dict(macros):
+                return replace_macros(connection, macros)
+            case other:
+                raise TypeError(other)
+
 
 def _commands_function(
     params: Params,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
-    args: list[str | Secret] = [
-        "--config",
-        repr(
-            params.model_dump(
-                exclude={"auth_basic"},
-                exclude_unset=True,
-            )
-            | {
-                "host_address": host_config.primary_ip_config.address,
-                "host_name": host_config.name,
-            }
-        ),
-    ]
+    stdin = repr(
+        params.model_dump(
+            exclude={"auth_basic"},
+            exclude_unset=True,
+            context=host_config.macros,
+        )
+        | {
+            "host_address": host_config.primary_ip_config.address,
+            "host_name": host_config.name,
+        }
+    )
+    args: list[str | Secret] = []
+    # the authentication parameters must come last because they are parsed by subparsers that
+    # consume all remaining arguments (and throw errors if they don't recognize them)
     match params.auth_basic:
         case ("auth_login", AuthLogin(username=username, password=password)):
             args += [
@@ -124,7 +139,7 @@ def _commands_function(
                 "--token",
                 token,
             ]
-    yield SpecialAgentCommand(command_arguments=args)
+    yield SpecialAgentCommand(command_arguments=args, stdin=stdin)
 
 
 special_agent_prometheus = SpecialAgentConfig(

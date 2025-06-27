@@ -935,10 +935,13 @@ class ApiError(Exception):
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+    config = sys.stdin.read()
+    if config:
+        argv += ["--config", config]
     args = parse_arguments(argv)
     try:
-        config = ast.literal_eval(args.config)
-        config_args = _extract_config_args(config)
+        parsed_config = ast.literal_eval(args.config)
+        config_args = _extract_config_args(parsed_config)
         session = generate_api_session(
             extract_connection_args(
                 config,

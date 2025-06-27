@@ -321,12 +321,13 @@ class _ProjectionFromMetricValueToPerfFillLevel:
       fulfills the following conditions:
       * At the splicing point, the values of the linear and the arctan function match (continuity).
       * At the splicing point, the slope of the linear and the arctan function match (continuously differentiable).
-      * The splicing point is the inflection point of the arctan function. Note that there is no
-        obvious reason for this choice, it is just a convenient point to use. Also, we need to make
-        a choice (or two choices, one for the lower and one for the upper non-linear part) to nail
-        down all four parameters of
+      * The splicing point is the inflection point of the arctan function. As a consequence, also the
+        second derivatives match at the splicing point, since they both vanish. Note that there is
+        no obvious reason for this choice, it is however a convenient point to use. Also, we need to
+        make a choice (or two choices, one for the lower and one for the upper non-linear part) to
+        nail down all four parameters of
         a * atan(b * x + c) + d.
-      In this case, the linear part starts/ends at above/below lower_limit/upper_limit.
+      In this case, the linear part starts/ends above/below lower_limit/upper_limit.
     """
 
     start_of_focus_range: float

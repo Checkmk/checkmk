@@ -236,14 +236,14 @@ http_archive(
         # in the sandbox confuse the linker.
         # This creates a wrapper for `ld` that removes the `--sysroot` argument.
         "mv x86_64-buildroot-linux-gnu/bin/ld{,.orig}",
-        "echo '%s' > x86_64-buildroot-linux-gnu/bin/ld" % """\\\r
-#!/usr/bin/env bash\r
-\r
-args=("$@")\r
-for ((i = 0; i < $#; i++)); do\r
-    [[ "${args[i]}" == --sysroot=* ]] && unset args[i]\r
-done\r
-exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"\r
+        "echo '%s' > x86_64-buildroot-linux-gnu/bin/ld" % """\
+#!/usr/bin/env bash
+
+args=("$@")
+for ((i = 0; i < $#; i++)); do
+    [[ "${args[i]}" == --sysroot=* ]] && unset args[i]
+done
+exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"
 """,
         "chmod 755 x86_64-buildroot-linux-gnu/bin/ld",
     ],

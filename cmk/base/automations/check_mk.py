@@ -2869,14 +2869,9 @@ class AutomationDiagHost(Automation):
             if ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
                 raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
-                resolved_address = ip_lookup.lookup_ip_address(ip_lookup_config, host_name)
+                ipaddress = ip_lookup.lookup_ip_address(ip_lookup_config, host_name)
             except Exception:
                 raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
-
-            if resolved_address is None:
-                raise MKGeneralException("Cannot resolve host name %s into IP address" % host_name)
-
-            ipaddress = resolved_address
 
         try:
             if test == "ping":

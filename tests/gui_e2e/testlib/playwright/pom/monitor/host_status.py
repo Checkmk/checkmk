@@ -58,7 +58,9 @@ class HostStatus(CmkPage):
         self.page.wait_for_url(url=re.compile(quote_plus("view_name=allhosts")), wait_until="load")
 
         logger.info("Navigate to 'Services of host %s'", self.host_details.name)
-        self.main_area.locator(f"table >> a:has-text('{self.host_details.name}')").click()
+        self.main_area.locator("table.data").get_by_role(
+            "link", name=self.host_details.name, exact=True
+        ).click()
         services_of_host_url_pattern = (
             quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=host")
         )

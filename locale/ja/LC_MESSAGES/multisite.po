@@ -7097,9 +7097,6 @@ msgstr ""
 "いる必要があります(デフォルト: <tt>HTTP/1.</tt>)。指定した場合、他のすべての"
 "ステータスラインロジックをスキップします(例: 3xx、4xx、5xx 処理)"
 
-msgid "At least one selection is missing."
-msgstr "少なくとも1つのセレクションが欠けています。"
-
 msgid "At least one triggering event must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
 
@@ -23689,8 +23686,8 @@ msgstr "失敗したファイル要求"
 msgid "Failed get locations requests"
 msgstr "場所の取得リクエストに失敗しました"
 
-#, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+#, fuzzy, python-format
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr "失敗したホストタグの条件 '%s' (%s のタグを持つ)"
 
 msgid "Failed index operations"
@@ -84989,6 +84986,10 @@ msgstr "パスワード:"
 msgid "path echo"
 msgstr "パスエコー"
 
+#, fuzzy
+msgid "paused"
+msgstr "一時停止"
+
 msgid "pending"
 msgstr "保留中"
 
@@ -85666,6 +85667,9 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "At least one selection is missing."
+#~ msgstr "少なくとも1つのセレクションが欠けています。"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "デフォルトの開始URLを使用する"

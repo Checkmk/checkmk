@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-18 18:35+0000\n"
+"PO-Revision-Date: 2025-06-26 18:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.12.1\n"
+"X-Generator: Weblate 5.12.2\n"
 
 msgid " "
 msgstr " "
@@ -7290,9 +7290,6 @@ msgstr ""
 "Mindestens eine dieser Zeichenketten wird in der 1. Zustandszeile der Server-"
 "Antwort erwartet (Standard: <tt>HTTP/1.</tt>). Wenn definiert, werden alle "
 "anderen Zustandsinformationen übersprungen (z. B. 3xx, 4xx, 5xx Verarbeitung)"
-
-msgid "At least one selection is missing."
-msgstr "Mindestens eine Auswahl fehlt."
 
 msgid "At least one triggering event must be selected."
 msgstr "Es muss mindestens ein auslösendes Ereignis ausgewählt werden."
@@ -16547,9 +16544,8 @@ msgstr "Benutzerseitenleistenelement"
 msgid "Custom sidebar elements"
 msgstr "Benutzerseitenleistenelemente"
 
-#, fuzzy
 msgid "Custom start URL"
-msgstr "Benutzer-URL"
+msgstr "Benutzerdefinierte Start-URL"
 
 msgid "Custom states"
 msgstr "Individuelle Zustände"
@@ -17637,9 +17633,8 @@ msgstr "Standard Berichtszeitraum"
 msgid "Default rule pack"
 msgstr "Standard-Regelpaket"
 
-#, fuzzy
 msgid "Default start URL"
-msgstr "Standardzustand"
+msgstr "Standard-Start-URL"
 
 msgid ""
 "Default state if a tunnel, which is not listed above in this rule, can no "
@@ -24024,8 +24019,8 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
-#, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+#, fuzzy, python-format
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Merkmale %s)"
 
 msgid "Failed index operations"
@@ -86059,6 +86054,10 @@ msgstr "Passwort:"
 msgid "path echo"
 msgstr "Pfad Echo"
 
+#, fuzzy
+msgid "paused"
+msgstr "Angehalten"
+
 msgid "pending"
 msgstr "anstehend"
 
@@ -86732,6 +86731,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "At least one selection is missing."
+#~ msgstr "Mindestens eine Auswahl fehlt."
 
 #~ msgid "Your free trial is active! "
 #~ msgstr "Ihre kostenlose Testversion ist aktiv! "

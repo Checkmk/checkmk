@@ -7483,10 +7483,6 @@ msgstr ""
 "resposta do servidor (padrão: <tt>HTTP/1.</tt>). Se especificado salta todas "
 "as outras lógicas de linha de status (ex: 3xx, 4xx, 5xx processamento)"
 
-#, fuzzy
-msgid "At least one selection is missing."
-msgstr "Indique quando falta o arquivo"
-
 msgid "At least one triggering event must be selected."
 msgstr ""
 
@@ -24832,7 +24828,7 @@ msgid "Failed get locations requests"
 msgstr "Pedidos de localização falhados"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr "Esta condição do host falhou no host tag '%s' (ele tem as tags %s)"
 
 msgid "Failed index operations"
@@ -89136,6 +89132,10 @@ msgstr "senha:"
 msgid "path echo"
 msgstr "eco do caminho"
 
+#, fuzzy
+msgid "paused"
+msgstr "Pausado"
+
 msgid "pending"
 msgstr "pendente"
 
@@ -89823,6 +89823,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one selection is missing."
+#~ msgstr "Indique quando falta o arquivo"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Use a URL de início padrão"

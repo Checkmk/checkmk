@@ -7532,10 +7532,6 @@ msgstr ""
 "se omite toda la lógica de las demás líneas de estado (por ejemplo: ej: 3xx, "
 "4xx, 5xx procesando)"
 
-#, fuzzy
-msgid "At least one selection is missing."
-msgstr "Estado cuando falta el archivo"
-
 msgid "At least one triggering event must be selected."
 msgstr ""
 
@@ -25036,7 +25032,7 @@ msgid "Failed get locations requests"
 msgstr "Solicitudes fallidas de obtención de ubicaciones"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Este host ha fallado en la condición de etiqueta de host '%s' (tiene las "
 "etiquetas %s)"
@@ -89964,6 +89960,10 @@ msgstr "contraseña:"
 msgid "path echo"
 msgstr "eco del camino"
 
+#, fuzzy
+msgid "paused"
+msgstr "En pausa"
+
 msgid "pending"
 msgstr "pendiente"
 
@@ -90655,6 +90655,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one selection is missing."
+#~ msgstr "Estado cuando falta el archivo"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Utilizar la URL de inicio por defecto"

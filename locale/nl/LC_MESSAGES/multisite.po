@@ -7470,10 +7470,6 @@ msgstr ""
 "van het server antwoord (standaard: <tt>HTTP/1.</tt>). Indien gespecificeerd "
 "slaat alle andere statusregel logica over (ex: 3xx, 4xx, 5xx verwerking)"
 
-#, fuzzy
-msgid "At least one selection is missing."
-msgstr "Staat wanneer bestand ontbreekt"
-
 msgid "At least one triggering event must be selected."
 msgstr ""
 
@@ -24838,7 +24834,7 @@ msgid "Failed get locations requests"
 msgstr "Mislukte verzoeken om locaties te krijgen"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Deze host is niet geslaagd voor host tag voorwaarde '%s' (hij heeft de tags "
 "%s)"
@@ -89242,6 +89238,10 @@ msgstr "wachtwoord:"
 msgid "path echo"
 msgstr "pad-echo"
 
+#, fuzzy
+msgid "paused"
+msgstr "Pauzeer"
+
 msgid "pending"
 msgstr "in afwachting van"
 
@@ -89931,6 +89931,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one selection is missing."
+#~ msgstr "Staat wanneer bestand ontbreekt"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Gebruik de standaard start URL"

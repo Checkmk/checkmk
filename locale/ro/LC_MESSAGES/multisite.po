@@ -7486,10 +7486,6 @@ msgstr ""
 "este specificat, sare peste toate celelalte logici ale liniei de stare (ex: "
 "procesarea 3xx, 4xx, 5xx)"
 
-#, fuzzy
-msgid "At least one selection is missing."
-msgstr "Starea când lipsește fișierul"
-
 msgid "At least one triggering event must be selected."
 msgstr ""
 
@@ -24906,7 +24902,7 @@ msgid "Failed get locations requests"
 msgstr "Solicitări eșuate de obținere a locațiilor"
 
 #, fuzzy, python-format
-msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgid "Failed host tag condition (Host tags: %s, Required: %s)"
 msgstr ""
 "Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
 "%s)"
@@ -89458,6 +89454,10 @@ msgstr "parolă:"
 msgid "path echo"
 msgstr "calea eco"
 
+#, fuzzy
+msgid "paused"
+msgstr "Pauză"
+
 msgid "pending"
 msgstr "în așteptare"
 
@@ -90152,6 +90152,10 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one selection is missing."
+#~ msgstr "Starea când lipsește fișierul"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Utilizați URL-ul de pornire implicit"

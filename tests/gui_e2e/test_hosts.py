@@ -223,3 +223,40 @@ def test_agent_connection_test(dashboard_page: Dashboard, test_site: Site) -> No
     datasource_checkbox.click()
     expect(agent_test_button_default_tag).to_be_visible()
     expect(agent_test_button_default_tag).not_to_be_disabled()
+
+
+def test_agent_test(dashboard_page: Dashboard, test_site: Site) -> None:
+    """Validate pinging of a host."""
+    setup_host = SetupHost(dashboard_page.page)
+    main_area = setup_host.main_area.locator()
+    setup_host.add_host.click()
+
+    host_input = main_area.locator("input.text[name='host']")
+    host_input.fill("localhost")
+
+    main_area.locator("#suggestions > td > div:nth-child(1) > a").click()
+
+    agent_download_dialog = main_area.locator(".agent-download-dialog__dialog")
+    expect(agent_download_dialog).to_be_visible()
+
+    agent_download_button = main_area.locator(
+        "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-info"
+    )
+    agent_download_button.click()
+
+    slideout = main_area.locator("div.cmk-vue-app.slide-in__container")
+    expect(slideout).to_be_visible()
+
+    slidout_close_button = main_area.locator(".slide-in__close")
+    slidout_close_button.click()
+
+    with setup_host.page.expect_popup() as popup_info:
+        main_area.locator(
+            "div.cmk-dialog__content > div > button.cmk-button.cmk-button--variant-optional"
+        ).click()
+
+    docs_page = popup_info.value
+
+    expect(docs_page).to_have_url(
+        "https://docs.checkmk.com/latest/en/wato_monitoringagents.html#agents"
+    )

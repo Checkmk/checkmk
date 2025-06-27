@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -17,11 +17,6 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs._basic import MultilineText
 
 T = TypeVar("T")
-
-
-@dataclass(frozen=True, kw_only=True)
-class UnknownFormSpec(FormSpec[Any]):
-    pass
 
 
 @dataclass(frozen=True, kw_only=True)

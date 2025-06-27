@@ -9,7 +9,6 @@ from .definitions import (
     CommentTextArea,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
-    UnknownFormSpec,
 )
 from .dictionary_extended import DictionaryExtended
 from .folder import Folder
@@ -59,7 +58,6 @@ __all__ = [
     "TimeSpecific",
     "TwoColumnDictionary",
     "Topic",
-    "UnknownFormSpec",
     "UserSelection",
     "World",
 ]

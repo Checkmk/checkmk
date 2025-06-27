@@ -5,7 +5,8 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.gui.form_specs.private import UnknownFormSpec
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
@@ -40,7 +41,6 @@ def get_visitor(
     if visitor_class := form_spec_visitor_registry.get(form_spec.__class__):
         return visitor_class(form_spec, options)
 
-    # If the form spec is not known to any registry, convert it to the legacy valuespec visitor
-    unknown_recomposer = form_spec_recomposer_registry[UnknownFormSpec]
-    assert unknown_recomposer is not None
-    return get_visitor(unknown_recomposer(form_spec), options)
+    raise MKGeneralException(
+        f"No visitor found for form spec class: {form_spec.__class__.__name__}"
+    )

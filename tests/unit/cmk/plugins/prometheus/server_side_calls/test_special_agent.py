@@ -27,13 +27,37 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', 'protocol': "
                     "'http', 'exporter': [], 'promql_checks': [], "
-                    "'host_address': '1.2.3.4', 'host_name': 'host'}",
-                    "--disable-cert-verification",
-                ]
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=["--disable-cert-verification"],
+            ),
+            id="minimal configuration",
+        ),
+        pytest.param(
+            {
+                "connection": "$HOSTNAME$",
+                "verify_cert": False,
+                "protocol": "http",
+                "exporter": [],
+                "promql_checks": [],
+            },
+            HostConfig(
+                name="host",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={
+                    "$HOSTNAME$": "prometheus-server",
+                },
+            ),
+            SpecialAgentCommand(
+                stdin=(
+                    "{'connection': 'prometheus-server', 'protocol': "
+                    "'http', 'exporter': [], 'promql_checks': [], "
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=["--disable-cert-verification"],
             ),
             id="minimal configuration",
         ),
@@ -55,8 +79,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             },
             HostConfig(name="host"),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', 'protocol': "
                     "'http', 'exporter': [('node_exporter', "
                     "{'entities': ['df', 'diskstat', 'kernel']})], "
@@ -64,13 +87,15 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "'my-service', 'metric_components': "
                     "[{'metric_label': 'my-metric', 'promql_query': "
                     "'my-query'}]}], 'host_address': None, "
-                    "'host_name': 'host'}",
+                    "'host_name': 'host'}"
+                ),
+                command_arguments=[
                     "--cert-server-name",
                     "host",
                     "auth_token",
                     "--token",
                     Secret(0),
-                ]
+                ],
             ),
             id="medium configuration",
         ),
@@ -134,8 +159,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             SpecialAgentCommand(
-                command_arguments=[
-                    "--config",
+                stdin=(
                     "{'connection': 'prometheus-server', 'protocol': "
                     "'https', 'exporter': [('node_exporter', "
                     "{'host_mapping': 'abc123', 'entities': ['df', "
@@ -158,7 +182,9 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "{'metric_label': 'l2', 'promql_query': 't.*', "
                     "'levels': {'lower_levels': (0.0, 1.0), "
                     "'upper_levels': (30.0, 40.0)}}]}], "
-                    "'host_address': '1.2.3.4', 'host_name': 'host'}",
+                    "'host_address': '1.2.3.4', 'host_name': 'host'}"
+                ),
+                command_arguments=[
                     "--cert-server-name",
                     "host",
                     "auth_login",
@@ -166,7 +192,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "user",
                     "--password-reference",
                     Secret(0),
-                ]
+                ],
             ),
             id="full configuration",
         ),

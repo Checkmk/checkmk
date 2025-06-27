@@ -14,7 +14,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
 
-from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
@@ -173,11 +172,22 @@ def _evaluate_snmp_detection(
             # check for "not_exists"
             return pattern == ".*" and not flag
         # ignore case!
-        return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
+        return bool(_regex_cache(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
 
     return any(
         all(_impl(atom, oid_value_getter) for atom in alternative) for alternative in detect_spec
     )
+
+
+@functools.cache
+def _regex_cache(pattern: str, flags: int) -> re.Pattern[str]:
+    """
+    compiling regex is compute intensive. So in the fetcher we rather cache regex which change rarely.
+    """
+    try:
+        return re.compile(pattern, flags=flags)
+    except Exception as e:
+        raise RuntimeError("Invalid regular expression '%s': %s" % (pattern, e))
 
 
 def _output_snmp_check_plugins(

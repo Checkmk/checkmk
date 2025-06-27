@@ -44,6 +44,7 @@ import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoTypography from './DemoTypography.vue'
+import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 
 interface Route {
   path: string
@@ -72,6 +73,11 @@ const routes: Route[] = [
     path: '/badge',
     name: 'CmkBadge',
     component: DemoCmkBadge
+  },
+  {
+    path: '/linkcard',
+    name: 'CmkLinkCard',
+    component: DemoCmkLinkCard
   },
   {
     path: '/chip',

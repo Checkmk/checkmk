@@ -9,7 +9,7 @@ import cmk.utils.regex
 
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
-from cmk.gui.form_specs.private.folder import Folder
+from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
 from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
@@ -121,7 +121,7 @@ def _host_name_dict_element(
 
 def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
-        parameter_form=Folder(
+        parameter_form=create_full_path_folder_choice(
             title=title,
             help_text=Help("Specify the location where the host will be created."),
             allow_new_folder_creation=True,

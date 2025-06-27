@@ -7,7 +7,6 @@ from .catalog import Catalog, Topic
 from .comment_text_area import CommentTextArea
 from .condition_choices import ConditionChoices
 from .dictionary_extended import DictionaryExtended
-from .folder import Folder
 from .labels import Labels, Source, World
 from .legacy_valuespec import LegacyValueSpec
 from .list_extended import ListExtended
@@ -37,7 +36,6 @@ __all__ = [
     "CommentTextArea",
     "ConditionChoices",
     "DictionaryExtended",
-    "Folder",
     "Labels",
     "LegacyValueSpec",
     "ListExtended",

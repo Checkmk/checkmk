@@ -155,15 +155,16 @@ def _get_container_name(names: object) -> str:
 
 
 def main() -> None:
-    with requests_unixsocket.Session() as session:
-        containers = query_containers(session, DEFAULT_SOCKET_PATH)
-        query_disk_usage(session, DEFAULT_SOCKET_PATH)
-        query_engine(session, DEFAULT_SOCKET_PATH)
-        query_pods(session, DEFAULT_SOCKET_PATH)
+    socket_paths = [DEFAULT_SOCKET_PATH]
 
-        container_to_stats = _container_id_to_stats(
-            query_container_stats(session, DEFAULT_SOCKET_PATH)
-        )
+    for socket_path in socket_paths:
+        with requests_unixsocket.Session() as session:
+            containers = query_containers(session, socket_path)
+            query_disk_usage(session, socket_path)
+            query_engine(session, socket_path)
+            query_pods(session, socket_path)
+
+        container_to_stats = _container_id_to_stats(query_container_stats(session, socket_path))
 
         for container in containers:
             if not (container_id := str(container.get("Id", ""))):
@@ -171,7 +172,7 @@ def main() -> None:
 
             container_name = _get_container_name(container["Names"])
 
-            query_container_inspect(session, DEFAULT_SOCKET_PATH, container_id, container_name)
+            query_container_inspect(session, socket_path, container_id, container_name)
 
             if stats := container_to_stats.get(container_id):
                 write_piggyback_section(

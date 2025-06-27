@@ -129,6 +129,7 @@ from omdlib.version_info import VersionInfo
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.resulttype import Error, OK, Result
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import (
     Edition,
     edition_has_enforced_licensing,
@@ -1416,11 +1417,12 @@ def initialize_site_ca(
     changed for testing purposes.
     """
     site_home = SitePaths.from_site_name(site.name).home
+    site_id = SiteId(site.name)
     ca_path = cert_dir(Path(site_home))
-    ca = SiteCA.load_or_create(site.name, ca_path, key_size=root_key_size)
+    ca = SiteCA.load_or_create(site_id, ca_path, key_size=root_key_size)
 
-    if not ca.site_certificate_exists(ca.cert_dir, site.name):
-        ca.create_site_certificate(site.name, key_size=site_key_size)
+    if not ca.site_certificate_exists(ca.cert_dir, site_id):
+        ca.create_site_certificate(site_id, key_size=site_key_size)
 
 
 def initialize_agent_ca(site: SiteContext) -> None:

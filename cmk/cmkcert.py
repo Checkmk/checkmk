@@ -16,6 +16,7 @@ from typing import Literal
 from dateutil.relativedelta import relativedelta
 
 import cmk.utils.paths
+from cmk.ccc.site import SiteId
 from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
@@ -59,7 +60,7 @@ def _parse_args(args: Sequence[str]) -> Args:
 
 def _certificate_path(
     target_certificate: CertificateType,
-    site_id: str,
+    site_id: SiteId,
     omd_root: Path,
 ) -> Path:
     if target_certificate == "site":
@@ -73,7 +74,7 @@ def _certificate_path(
 
 
 def replace_site_certificate(
-    site_id: str,
+    site_id: SiteId,
     certificate_directory: Path,
     expiry: relativedelta,
     key_size: int = 4096,
@@ -88,7 +89,7 @@ def replace_site_certificate(
 
 
 def replace_site_ca(
-    site_id: str,
+    site_id: SiteId,
     certificate_directory: Path,
     expiry: relativedelta,
     key_size: int = 4096,
@@ -102,7 +103,7 @@ def replace_site_ca(
 
 
 def replace_agent_ca(
-    site_id: str,
+    site_id: SiteId,
     omd_root: Path,
     expiry: relativedelta,
     key_size: int = 4096,
@@ -119,7 +120,7 @@ def replace_agent_ca(
 
 def _run_cmkcert(
     omd_root: Path,
-    site_id: str,
+    site_id: SiteId,
     target_certificate: CertificateType,
     expiry: int,
     replace: bool,
@@ -179,7 +180,7 @@ def main(args: Sequence[str]) -> int:
     try:
         _run_cmkcert(
             omd_root=cmk.utils.paths.omd_root,
-            site_id=site_id,
+            site_id=SiteId(site_id),
             target_certificate=parsed_args.target_certificate,
             expiry=parsed_args.expiry,
             replace=parsed_args.replace,

@@ -147,7 +147,7 @@ class SiteCA:
     @classmethod
     def load_or_create(
         cls,
-        site_id: str,
+        site_id: SiteId,
         certificate_directory: Path,
         expiry: relativedelta = relativedelta(years=10),
         key_size: int = 4096,
@@ -168,7 +168,7 @@ class SiteCA:
     def create(
         cls,
         cert_dir: Path,
-        site_id: str,
+        site_id: SiteId,
         expiry: relativedelta,
         key_size: int,
     ) -> SiteCA:
@@ -208,24 +208,26 @@ class SiteCA:
         return cls.root_ca_path(cert_dir).exists()
 
     @classmethod
-    def site_certificate_path(cls, cert_dir: Path, site_id: str) -> Path:
+    def site_certificate_path(cls, cert_dir: Path, site_id: SiteId) -> Path:
         return (cert_dir / "sites" / site_id).with_suffix(".pem")
 
     @classmethod
-    def site_certificate_exists(cls, cert_dir: Path, site_id: str) -> bool:
+    def site_certificate_exists(cls, cert_dir: Path, site_id: SiteId) -> bool:
         return cls.site_certificate_path(cert_dir, site_id).exists()
 
     def create_site_certificate(
         self,
-        site_id: str,
+        site_id: SiteId,
         expiry: relativedelta = relativedelta(years=10),
         key_size: int = 4096,
     ) -> None:
         """Creates the key / certificate for the given Checkmk site"""
         new_cert, new_key = self.root_ca.issue_new_certificate(
-            common_name=site_id,
+            common_name=str(site_id),
             organization=f"Checkmk Site {site_id}",
-            subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(site_id)]),
+            subject_alternative_names=SubjectAlternativeNames(
+                [SAN.dns_name(site_id), SAN.checkmk_site(site_id)]
+            ),
             expiry=expiry,
             key_size=key_size,
         )

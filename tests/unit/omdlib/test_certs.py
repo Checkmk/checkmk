@@ -9,11 +9,12 @@ from stat import S_IMODE
 
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.utils.certs import SiteCA
 
-SITE_ID = "test-site"
+SITE_ID = SiteId("test_site")
 
 
 @pytest.fixture(name="ca")
@@ -46,6 +47,6 @@ def test_create_site_certificate(ca: SiteCA) -> None:
     certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
     private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
 
-    assert certificate.common_name == SITE_ID
+    assert certificate.common_name == str(SITE_ID)
     assert certificate.public_key == private_key.public_key
     certificate.verify_is_signed_by(ca.root_ca.certificate)

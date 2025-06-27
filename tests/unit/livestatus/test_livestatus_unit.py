@@ -16,6 +16,7 @@ from pytest import MonkeyPatch
 
 import livestatus
 
+from cmk.ccc.site import SiteId
 from cmk.utils.certs import SiteCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -29,7 +30,7 @@ def prevent_livestatus_connect() -> None:
 @pytest.fixture
 def ca(tmp_path: Path) -> SiteCA:
     cert_dir = tmp_path / "etc" / "ssl"
-    ca = SiteCA.load_or_create("test-site", cert_dir, key_size=1024)
+    ca = SiteCA.load_or_create(SiteId("test-site"), cert_dir, key_size=1024)
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:

@@ -40,6 +40,7 @@ def test_builtin_autocompleters_registered() -> None:
     if is_cloud_repo():
         expected += [
             "otel_host_name_computation",
+            "otel_metric_name_autocompleter",
         ]
 
     assert sorted(registered) == sorted(expected)

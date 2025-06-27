@@ -137,8 +137,8 @@ function Invoke-Cargo($cmd) {
     Write-Host "$cmd $package_name" -ForegroundColor White
     & cargo $cmd
 
-    if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to $cmd $package_name with code $LASTEXITCODE" -ErrorAction Stop
     }
 }
 
@@ -146,8 +146,8 @@ function Invoke-Cargo($cmd) {
     Write-Host "$cmd $package_name" -ForegroundColor White
     & cargo $cmd
 
-    if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to $cmd $package_name with code $LASTEXITCODE" -ErrorAction Stop
     }
 }
 
@@ -186,7 +186,7 @@ try {
     $mainStartTime = Get-Date
 
     & rustup --version > nul
-    if ($lastexitcode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop
     }
     &rustup update
@@ -213,14 +213,14 @@ try {
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         &cargo build --release --target $cargo_target
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to build $package_name with code $LASTEXITCODE" -ErrorAction Stop
         }
     }
     if ($packClippy) {
         &cargo clippy --release --target $cargo_target --tests -- --deny warnings
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to clippy $package_name with code $lastexitcode" -ErrorAction Stop
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to clippy $package_name with code $LASTEXITCODE" -ErrorAction Stop
         }
     }
 
@@ -231,7 +231,7 @@ try {
     if ($packCheckFormat) {
         Write-Host "test format $package_name" -ForegroundColor White
         cargo fmt -- --check
-        if ($lastexitcode -ne 0) {
+        if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to test format $package_name" -ErrorAction Stop
         }
     }
@@ -240,7 +240,7 @@ try {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
         cargo test --release --target $cargo_target -- --test-threads=4
-        if ($lastexitcode -ne 0) {
+        if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to test $package_name" -ErrorAction Stop
         }
     }

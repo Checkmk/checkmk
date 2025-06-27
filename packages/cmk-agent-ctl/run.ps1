@@ -151,8 +151,8 @@ function Invoke-Cargo-With-Explicit-Package {
     Write-Host "${package_name}: $cmd --package $package_name $further_args_string" -ForegroundColor White
     & cargo $cmd --package $package_name $further_args
 
-    if ($lastexitcode -ne 0) {
-        Write-Error "${package_name}: Failed to $cmd --package $package_name $further_args_string with code $lastexitcode" -ErrorAction Stop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "${package_name}: Failed to $cmd --package $package_name $further_args_string with code $LASTEXITCODE" -ErrorAction Stop
     }
 }
 
@@ -191,7 +191,7 @@ try {
     $mainStartTime = Get-Date
 
     & rustup --version > nul
-    if ($lastexitcode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Error "rustup not found, please install it and/or add to PATH" -ErrorAction Stop
     }
     &rustup update

@@ -183,12 +183,12 @@ function Build-Agent {
     Write-Host "Used version: $env:wnx_version"
     Write-Host make is $env:make_exe 
     & $env:make_exe install_extlibs
-    if ($lastexitcode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to install extlibs, error code is $LASTEXITCODE" -ErrorAction Stop
     }
     Write-Host "Start build" -ForegroundColor White
     & "$PSScriptRoot\parallel.ps1"
-    if ($lastexitcode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to build Agent, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 

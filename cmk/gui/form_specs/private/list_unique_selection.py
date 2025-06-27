@@ -7,10 +7,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.gui.form_specs.private import SingleChoiceElementExtended
 from cmk.gui.form_specs.private.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
+from cmk.gui.form_specs.private.single_choice_extended import SingleChoiceElementExtended
 from cmk.gui.form_specs.private.validators import ModelT
 
 from cmk.rulesets.v1 import Label, Message, Title

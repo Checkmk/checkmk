@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.form_specs.private.definitions import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.watolib.password_store import passwordstore_choices_without_user
 
 from cmk.rulesets.v1 import Help, Label, Message, Title

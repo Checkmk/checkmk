@@ -331,6 +331,7 @@ def _execute_sync_remote_sites() -> None:
         sites=[
             (site_id, RemoteAutomationConfig.from_site_config(site_config))
             for site_id, site_config in wato_slave_sites().items()
+            if "secret" in site_config
         ],
         debug=active_config.debug,
     )

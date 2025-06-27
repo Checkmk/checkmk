@@ -39,7 +39,6 @@ from uuid import uuid4
 
 import omdlib
 import omdlib.backup
-import omdlib.certs
 import omdlib.utils
 from omdlib.config_hooks import (
     call_hook,
@@ -136,7 +135,7 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 
-from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.resulttype import Error, OK, Result
 
@@ -1423,7 +1422,7 @@ def initialize_site_ca(
     """
     site_home = SitePaths.from_site_name(site.name).home
     ca_path = cert_dir(Path(site_home))
-    ca = omdlib.certs.SiteCA.load_or_create(site.name, ca_path, key_size=root_key_size)
+    ca = SiteCA.load_or_create(site.name, ca_path, key_size=root_key_size)
 
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name, key_size=site_key_size)
@@ -1435,9 +1434,8 @@ def initialize_agent_ca(site: SiteContext) -> None:
     Additional CAs/root certs that may be placed at the agent CA folder shall be used as additional
     root certs for agent receiver certificate verification (either as client or server cert)
     """
-    site_home = SitePaths.from_site_name(site.name).home
-    ca_path = cert_dir(Path(site_home)) / "agents"
-    RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
+    site_home = Path(SitePaths.from_site_name(site.name).home)
+    RootCA.load_or_create(agent_root_ca_path(site_home), f"Site '{site.name}' agent signing CA")
 
 
 def config_change(

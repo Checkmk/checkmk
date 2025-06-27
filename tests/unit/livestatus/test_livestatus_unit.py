@@ -16,9 +16,7 @@ from pytest import MonkeyPatch
 
 import livestatus
 
-# FIXME: Somehow tools disagree about the order...
-from omdlib.certs import SiteCA
-
+from cmk.utils.certs import SiteCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 

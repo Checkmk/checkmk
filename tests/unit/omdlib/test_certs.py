@@ -9,7 +9,7 @@ from stat import S_IMODE
 
 import pytest
 
-from omdlib.certs import SiteCA
+from cmk.utils.certs import SiteCA
 
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey

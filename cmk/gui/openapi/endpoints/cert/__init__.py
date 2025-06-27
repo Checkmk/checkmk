@@ -15,7 +15,7 @@ from typing import Any
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.certs import cert_dir, CertManagementEvent, root_cert_path, RootCA
+from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.paths import omd_root
 
@@ -35,7 +35,7 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
-from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateSigningRequest
+from cmk.crypto.certificate import CertificateSigningRequest
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
@@ -60,16 +60,12 @@ def _user_is_authorized() -> bool:
 
 
 def _get_agent_ca() -> RootCA:
-    return RootCA.load(root_cert_path(cert_dir(omd_root) / "agents"))
+    return RootCA.load(agent_root_ca_path(omd_root))
 
 
 def _serialized_root_cert() -> str:
     # loading and dumping the PEM is needed here to ensure that we don't send the private key along
-    return (
-        Certificate.load_pem(CertificatePEM(root_cert_path(cert_dir(omd_root)).read_bytes()))
-        .dump_pem()
-        .str
-    )
+    return SiteCA.load(cert_dir(omd_root)).root_ca.certificate.dump_pem().str
 
 
 def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:

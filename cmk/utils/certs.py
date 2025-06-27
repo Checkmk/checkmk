@@ -28,6 +28,7 @@ from cmk.crypto.certificate import (
 )
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 
 
 class _CNTemplate:
@@ -44,11 +45,17 @@ class _CNTemplate:
         return None if (m := self._match(rfc4514_string)) is None else SiteId(m.group(1))
 
 
-# TODO: remove the use of this in watolib/config_domains, then it can move into omdlib or go away
+# TODO: remove the use of this in watolib/config_domains, then it can go away
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
 
 class RootCA(CertificateWithPrivateKey):
+    """A generic certificate authority for all our CA needs.
+
+    This class should be replaced by individual classes for each use case, like the SiteCA and
+    message-broker classes below.
+    """
+
     @classmethod
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
@@ -80,11 +87,13 @@ class RootCA(CertificateWithPrivateKey):
 
 
 def cert_dir(site_root_dir: Path) -> Path:
+    # TODO: some places in the code ask this function, some use cmk.utils.paths...
     return site_root_dir / "etc" / "ssl"
 
 
-def root_cert_path(ca_dir: Path) -> Path:
-    return ca_dir / "ca.pem"
+def agent_root_ca_path(site_root_dir: Path) -> Path:
+    # TODO: some places in the code ask this function, some use cmk.utils.paths...
+    return cert_dir(site_root_dir) / "agents" / "ca.pem"
 
 
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
@@ -110,26 +119,6 @@ def _save_cert_chain(
     _set_certfile_permissions(path_pem)
 
 
-def save_single_cert(
-    path_pem: Path,
-    cert: Certificate,
-) -> None:
-    _prepare_certfile_path(path_pem)
-    with path_pem.open(mode="wb") as f:
-        f.write(cert.dump_pem().bytes)
-    _set_certfile_permissions(path_pem)
-
-
-def save_single_key(
-    path_pem: Path,
-    key: PrivateKey,
-) -> None:
-    _prepare_certfile_path(path_pem)
-    with path_pem.open(mode="wb") as f:
-        f.write(key.dump_pem(password=None).bytes)
-    _set_certfile_permissions(path_pem)
-
-
 def _prepare_certfile_path(
     path_pem: Path,
 ) -> None:
@@ -140,6 +129,130 @@ def _set_certfile_permissions(
     path_pem: Path,
 ) -> None:
     path_pem.chmod(mode=0o660)
+
+
+class SiteCA:
+    """Management of the site local CA and certificates issued by it"""
+
+    def __init__(self, certificate_directory: Path, root_ca: CertificateWithPrivateKey) -> None:
+        """Initialize SiteCA with a certificate directory and root CA.
+
+        You should probably use `load_or_create` or `load` instead.
+        """
+        self._cert_dir = certificate_directory
+        self.root_ca = root_ca
+
+    @classmethod
+    def load_or_create(
+        cls,
+        site_id: str,
+        certificate_directory: Path,
+        expiry: relativedelta = relativedelta(years=10),
+        key_size: int = 4096,
+    ) -> SiteCA:
+        """Load an existing CA for the given site or create a new one if it does not exist."""
+        try:
+            return cls.load(certificate_directory)
+
+        except FileNotFoundError:
+            return cls(
+                certificate_directory,
+                cls._create_root_certificate(
+                    certificate_directory,
+                    site_id,
+                    CN_TEMPLATE.format(site=site_id),
+                    expiry,
+                    key_size,
+                ),
+            )
+
+    @classmethod
+    def load(cls, certificate_directory: Path) -> SiteCA:
+        """Load an existing CA for the given site from the given directory."""
+        return cls(
+            certificate_directory,
+            CertificateWithPrivateKey.load_combined_file_content(
+                SiteCA._ca_file(certificate_directory).read_text(), passphrase=None
+            ),
+        )
+
+    @property
+    def root_ca_path(self) -> Path:
+        return self._ca_file(self._cert_dir)
+
+    def _site_certificate_path(self, site_id: str) -> Path:
+        return (self._cert_dir / "sites" / site_id).with_suffix(".pem")
+
+    def site_certificate_exists(self, site_id: str) -> bool:
+        return self._site_certificate_path(site_id).exists()
+
+    def create_site_certificate(
+        self,
+        site_id: str,
+        expiry: relativedelta = relativedelta(years=10),
+        key_size: int = 4096,
+    ) -> None:
+        """Creates the key / certificate for the given Checkmk site"""
+        new_cert, new_key = self.root_ca.issue_new_certificate(
+            common_name=site_id,
+            organization=f"Checkmk Site {site_id}",
+            subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(site_id)]),
+            expiry=expiry,
+            key_size=key_size,
+        )
+
+        self._save_combined_pem(
+            target_file=self._site_certificate_path(site_id),
+            certificate=new_cert,
+            private_key=new_key,
+            issuer=self.root_ca.certificate,
+        )
+
+    @staticmethod
+    def _ca_file(certificate_directory: Path) -> Path:
+        return certificate_directory / "ca.pem"
+
+    @staticmethod
+    def _save_combined_pem(
+        target_file: Path,
+        certificate: Certificate,
+        private_key: PrivateKey,
+        issuer: Certificate | None,
+    ) -> None:
+        target_file.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+
+        with target_file.open(mode="wb") as f:
+            f.write(private_key.dump_pem(password=None).bytes)
+            f.write(certificate.dump_pem().bytes)
+            if issuer is not None:
+                f.write(issuer.dump_pem().bytes)
+
+        target_file.chmod(mode=0o660)
+
+    @staticmethod
+    def _create_root_certificate(
+        cert_dir: Path,
+        site_id: str,
+        common_name: str,
+        expiry: relativedelta,
+        key_size: int,
+    ) -> CertificateWithPrivateKey:
+        ca = CertificateWithPrivateKey.generate_self_signed(
+            common_name=common_name,
+            organization=f"Checkmk Site {site_id}",
+            expiry=expiry,
+            key_size=key_size,
+            is_ca=True,
+        )
+
+        SiteCA._save_combined_pem(
+            target_file=SiteCA._ca_file(cert_dir),
+            certificate=ca.certificate,
+            private_key=ca.private_key,
+            issuer=None,
+        )
+
+        return ca
 
 
 class RemoteSiteCertsStore:
@@ -321,10 +434,13 @@ class LocalBrokerCertificate:
         return Certificate.load_pem(CertificatePEM(self.cert_path.read_bytes()))
 
     def write(self, cert: bytes) -> None:
-        save_single_cert(
-            self.cert_path,
-            Certificate.load_pem(CertificatePEM(cert)),
-        )
+        _prepare_certfile_path(self.cert_path)
+
+        # TODO: Do we load and dump the certificate for validation here, or can we skip that?
+        with self.cert_path.open(mode="wb") as f:
+            f.write(Certificate.load_pem(CertificatePEM(cert)).dump_pem().bytes)
+
+        _set_certfile_permissions(self.cert_path)
 
     def exists(self) -> bool:
         return self.cert_path.exists()

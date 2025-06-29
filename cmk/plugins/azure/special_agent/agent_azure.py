@@ -23,7 +23,7 @@ import string
 import sys
 import time
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from multiprocessing import Lock
 from pathlib import Path
@@ -232,6 +232,7 @@ class FetchedResource(Enum):
     """Available Azure resources, with section name, for API fetching"""
 
     virtual_machines = ("Microsoft.Compute/virtualMachines", "virtualmachines")
+    vaults = ("Microsoft.RecoveryServices/vaults", "vaults")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -246,9 +247,7 @@ class FetchedResource(Enum):
         return self.resource_type
 
 
-# list of metrics type handles within the new async functions
-# not to be gathered with the old methods
-METRICS_GATHERED_ASYNC = {
+BULK_QUERIED_RESOURCES = {
     FetchedResource.virtual_machines.type,
 }
 
@@ -1758,16 +1757,6 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     section.write()
 
 
-async def process_old_metrics(
-    mgmt_client: MgmtApiClient, resources: Sequence[AzureResource], args: Args
-) -> None:
-    resources = [
-        resource for resource in resources if resource.info["type"] not in METRICS_GATHERED_ASYNC
-    ]
-
-    await process_metrics(mgmt_client, resources, args)
-
-
 async def process_metrics(
     mgmt_client: MgmtApiClient, resources: Sequence[AzureResource], args: Args
 ) -> None:
@@ -1799,6 +1788,10 @@ async def _gather_metrics(
 
     for group, resource_ids in grouped_resource_ids.items():
         resource_type, resource_region = group
+
+        if resource_type == FetchedResource.virtual_machines.type:
+            if args.piggyback_vms != "self":
+                continue
 
         metric_definitions = ALL_METRICS.get(resource_type, [])
         for metric_definition in metric_definitions:
@@ -1850,52 +1843,6 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
     labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
     labels_section.add((json.dumps(vm_labels),))
     return labels_section
-
-
-async def process_resource(
-    mgmt_client: MgmtApiClient,
-    resource: AzureResource,
-    args: Args,
-) -> Sequence[Section]:
-    sections: list[Section] = []
-    enabled_services = set(args.services)
-    resource_type = resource.info.get("type")
-    if resource_type not in enabled_services:
-        return sections
-
-    if resource_type in METRICS_GATHERED_ASYNC:
-        return sections
-
-    if resource_type == "Microsoft.Network/applicationGateways":
-        await process_app_gateway(mgmt_client, resource)
-    elif resource_type == "Microsoft.RecoveryServices/vaults":
-        await process_recovery_services_vaults(mgmt_client, resource)
-    elif resource_type == "Microsoft.Network/virtualNetworkGateways":
-        await process_virtual_net_gw(mgmt_client, resource)
-    elif resource_type == "Microsoft.Network/loadBalancers":
-        await process_load_balancer(mgmt_client, resource)
-    elif resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
-        resource.section = "servers"  # use the same section as for single servers
-
-    section = AzureSection(resource.section, resource.piggytargets)
-    section.add(resource.dumpinfo())
-    sections.append(section)
-
-    return sections
-
-
-async def process_resources(
-    mgmt_client: MgmtApiClient,
-    resources: Sequence[AzureResource],
-    args: Args,
-) -> AsyncIterator[Sequence[Section]]:
-    for resource in resources:
-        try:
-            yield await process_resource(mgmt_client, resource, args)
-        except Exception as exc:
-            if args.debug:
-                raise
-            write_exception_to_agent_info_section(exc, "Management client")
 
 
 async def get_group_labels(
@@ -2114,9 +2061,6 @@ async def process_virtual_machines(
         resource.info["specific_info"] = {"statuses": statuses}
         virtual_machines.append(resource)
 
-    if args.piggyback_vms == "self":
-        await process_metrics(api_client, virtual_machines, args)
-
     sections = []
     for resource in virtual_machines:
         if args.piggyback_vms == "self":
@@ -2200,6 +2144,52 @@ def _test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     return 0
 
 
+def get_bulk_tasks(
+    mgmt_client: MgmtApiClient,
+    args: Args,
+    group_labels: GroupLabels,
+    monitored_resources_types: set[str],
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Iterator[asyncio.Task]:
+    if FetchedResource.virtual_machines.type in monitored_resources_types:
+        yield asyncio.create_task(
+            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
+        )
+
+
+async def process_single_resources(
+    mgmt_client: MgmtApiClient,
+    args: Args,
+    monitored_resources_by_id: Mapping[str, AzureResource],
+) -> Sequence[Section]:
+    sections = []
+    for resource_id, resource in monitored_resources_by_id.items():
+        resource_type = resource.info["type"]
+        if resource_type in BULK_QUERIED_RESOURCES:
+            continue
+
+        # TODO: convert to real async:
+        elif resource_type == "Microsoft.Network/applicationGateways":
+            await process_app_gateway(mgmt_client, resource)
+        elif resource_type == "Microsoft.RecoveryServices/vaults":
+            await process_recovery_services_vaults(mgmt_client, resource)
+        elif resource_type == "Microsoft.Network/virtualNetworkGateways":
+            await process_virtual_net_gw(mgmt_client, resource)
+        elif resource_type == "Microsoft.Network/loadBalancers":
+            await process_load_balancer(mgmt_client, resource)
+        # ----
+
+        # simple sections without further processing
+        if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
+            resource.section = "servers"  # use the same section as for single servers
+
+        section = AzureSection(resource.section, resource.piggytargets)
+        section.add(resource.dumpinfo())
+        sections.append(section)
+
+    return sections
+
+
 async def process_resources_async(
     mgmt_client: MgmtApiClient,
     args: Args,
@@ -2213,12 +2203,17 @@ async def process_resources_async(
         if r.info["type"] in monitored_resources_types
     }
 
-    tasks = {process_resource_health(mgmt_client, monitored_resources_by_id)}
-
-    if FetchedResource.virtual_machines.type in monitored_resources_types:
-        tasks.add(
-            process_virtual_machines(mgmt_client, args, group_labels, monitored_resources_by_id)
-        )
+    tasks = {
+        process_resource_health(mgmt_client, monitored_resources_by_id),
+        *get_bulk_tasks(
+            mgmt_client,
+            args,
+            group_labels,
+            monitored_resources_types,
+            monitored_resources_by_id,
+        ),
+        process_single_resources(mgmt_client, args, monitored_resources_by_id),
+    }
 
     for coroutine in asyncio.as_completed(tasks):
         try:
@@ -2259,16 +2254,11 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
     group_labels = await get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
     write_group_info(monitored_groups, selected_resources, group_labels)
 
-    await usage_details(mgmt_client, monitored_groups, args)
-
-    await process_resources_async(mgmt_client, args, group_labels, selected_resources)
-
-    await process_old_metrics(mgmt_client, selected_resources, args)
-
-    all_sections = process_resources(mgmt_client, selected_resources, args)
-    async for resource_sections in all_sections:
-        for section in resource_sections:
-            section.write()
+    await process_metrics(mgmt_client, selected_resources, args)
+    await asyncio.gather(
+        usage_details(mgmt_client, monitored_groups, args),
+        process_resources_async(mgmt_client, args, group_labels, selected_resources),
+    )
 
     write_remaining_reads(mgmt_client.ratelimit)
 

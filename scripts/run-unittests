@@ -42,7 +42,7 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 UVENV="$REPO_PATH/scripts/run-uvenv"
 pushd "$REPO_PATH" >/dev/null
 
-$UVENV python -m pytest -T unit "${TESTFILES[@]}" || (
+$UVENV python -m pytest "${TESTFILES[@]}" || (
     EXIT=$?
     if test $EXIT -eq 5 || test $EXIT -eq 4; then
         # This means no tests have been found.

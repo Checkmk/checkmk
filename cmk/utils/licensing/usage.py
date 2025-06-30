@@ -25,7 +25,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
 from cmk.utils.licensing.export import (
-    get_licensing_protocol_version,
     LicenseUsageExtensions,
     LicenseUsageSample,
     make_parser,
@@ -40,6 +39,7 @@ from cmk.utils.licensing.helper import (
     load_instance_id,
     rot47,
 )
+from cmk.utils.licensing.protocol_version import get_licensing_protocol_version
 from cmk.utils.paths import licensing_dir, omd_root
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}

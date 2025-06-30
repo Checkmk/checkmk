@@ -15,11 +15,11 @@ import livestatus
 
 from cmk.utils import man_pages
 from cmk.utils.licensing.export import (
-    get_licensing_protocol_version,
     LicenseUsageExtensions,
     LicenseUsageSample,
     RawLicenseUsageReport,
 )
+from cmk.utils.licensing.protocol_version import get_licensing_protocol_version
 from cmk.utils.licensing.usage import (
     _load_extensions,
     _parse_extensions,

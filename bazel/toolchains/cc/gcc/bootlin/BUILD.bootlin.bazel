@@ -1,11 +1,11 @@
-# See https://github.com/bazelbuild/rules_cc/tree/main/examples/rule_based_toolchain
-
 load("@bazel_skylib//rules/directory:directory.bzl", "directory")
-load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(glob(["bin/**"]))
+filegroup(
+    name = "all_files",
+    srcs = glob(["**"]),
+)
 
 directory(
     name = "toolchain_root",
@@ -15,67 +15,47 @@ directory(
     ]),
 )
 
-subdirectory(
-    name = "lib-gcc-include",
-    parent = ":toolchain_root",
-    path = "x86_64-buildroot-linux-gnu/include",
-)
-
-subdirectory(
-    name = "include-x86_64-buildroot-linux-gnu",
-    parent = ":toolchain_root",
-    path = "lib/gcc/x86_64-buildroot-linux-gnu/13.3.0/include",
-)
-
-filegroup(
-    name = "builtin_headers",
-    srcs = [
-        ":include-x86_64-buildroot-linux-gnu",
-        ":lib-gcc-include",
-    ],
-)
-
-filegroup(
-    name = "linker_builtins",
-    data = glob([
-        "bin/*ld*",
-        "lib/**/*.a",
-        "lib/**/*.so*",
-        "lib/**/*.o",
-    ]),
-)
-
-filegroup(
-    name = "linker_buildroot",
-    srcs = glob([
-        "x86_64-buildroot-linux-gnu/bin/ld*",
-    ]),
-)
-
-filegroup(
-    name = "multicall_support_files",
-    srcs = glob([
-        "libexec/**/*",
-    ]),
-)
-
 directory(
-    name = "root",
-    srcs = glob(["x86_64-buildroot-linux-gnu/sysroot/**/*"]),
-)
-
-subdirectory(
-    name = "sysroot",
-    parent = ":root",
-    path = "x86_64-buildroot-linux-gnu/sysroot",
+    name = "x86_64-buildroot-linux-gnu",
+    srcs = ["lib/gcc/x86_64-buildroot-linux-gnu/13.3.0"],
 )
 
 filegroup(
-    name = "dynamic_runtime_lib",
-    path = "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libstdc++.so",
+    name = "ar",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-ar"],
 )
 
 filegroup(
-    name = "static_runtime_lib",
-    path = "x86_64-buildroot-linux-gnu/sysroot/usr/lib/libstdc++.a",
+    name = "cpp",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-cpp.br_real"],
+)
+
+filegroup(
+    name = "gcc",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-gcc.br_real"],
+)
+
+filegroup(
+    name = "gcov",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-gcov"],
+)
+
+filegroup(
+    name = "ld",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-ld"],
+)
+
+filegroup(
+    name = "nm",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-nm"],
+)
+
+filegroup(
+    name = "objdump",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-objdump"],
+)
+
+filegroup(
+    name = "strip",
+    srcs = ["bin/x86_64-buildroot-linux-gnu-strip"],
 )

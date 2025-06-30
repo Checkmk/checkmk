@@ -1757,6 +1757,7 @@ async def _gather_metrics(
             resource.info["id"]
         )
 
+    tasks = set()
     for group, resource_ids in grouped_resource_ids.items():
         resource_type, resource_region = group
 
@@ -1774,8 +1775,9 @@ async def _gather_metrics(
                 ref_time=NOW,
                 debug=args.debug,
             )
-            try:
-                metrics = await cache.get_data_async(
+
+            tasks.add(
+                cache.get_data_async(
                     mgmt_client,
                     resource_region,
                     resource_ids,
@@ -1783,21 +1785,25 @@ async def _gather_metrics(
                     err,
                     use_cache=cache.cache_interval > 60,
                 )
+            )
 
-                for resource_id, resource_metrics in metrics.items():
-                    if (metric_resource := resource_dict.get(resource_id)) is not None:
-                        metric_resource.metrics += resource_metrics
-                    else:
-                        LOGGER.info(
-                            "Resource %s found in metrics cache no longer monitored",
-                            resource_id,
-                        )
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for result in results:
+        if isinstance(result, BaseException):
+            if args.debug:
+                raise result
+            err.add("exception", "metric collection", str(result))
+            LOGGER.exception(result)
+            continue
 
-            except ApiError as exc:
-                if args.debug:
-                    raise
-                err.add("exception", "metric collection", str(exc))
-                LOGGER.exception(exc)
+        for resource_id, metrics in result.items():
+            if (resource_metric := resource_dict.get(resource_id)) is not None:
+                resource_metric.metrics += metrics
+            else:
+                LOGGER.info(
+                    "Resource %s found in metrics cache no longer monitored",
+                    resource_id,
+                )
 
     return err
 

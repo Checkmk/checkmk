@@ -65,8 +65,9 @@ inside_container_minimal = {Map arg1=[:], Closure arg2 ->
 
     def run_args_str = "-v ${checkout_dir}:/checkmk";
     def image_name = "minimal-alpine-checkmk-ci-${args.get('safe_branch_name', 'BRANCH')}:latest";
+    def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_12");
     def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
-    def docker_build_args = "-f ${dockerfile} .";
+    def docker_build_args = "--build-arg IMAGE_BASE=${base_image} -f ${dockerfile} .";
 
     // the reference repo dir is required for any git based interactions
     def reference_repo_dir = cmd_output("""

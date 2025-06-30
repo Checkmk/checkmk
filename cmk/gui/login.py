@@ -25,7 +25,7 @@ import cmk.gui.mobile
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -155,7 +155,7 @@ class LoginPage(Page):
         # overridden later after user login
         cmk.gui.i18n.localize(request.var("lang", config.default_language))
 
-        self._do_login()
+        self._do_login(config)
 
         if self._no_html_output:
             raise MKAuthException(_("Invalid login credentials."))
@@ -164,9 +164,9 @@ class LoginPage(Page):
             cmk.gui.mobile.page_login(config)
             return
 
-        self._show_login_page()
+        self._show_login_page(config)
 
-    def _do_login(self) -> None:
+    def _do_login(self, config: Config) -> None:
         """handle the login form"""
         if not request.var("_login"):
             return
@@ -174,14 +174,14 @@ class LoginPage(Page):
         try:
             username: UserId | None = None  # make sure it's defined in the except block
 
-            if not active_config.user_login and not is_site_login():
+            if not config.user_login and not is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
             # Login via the GET method is allowed only after manually
             # enabling the property "Enable login via GET" in the
             # Global Settings. Please refer to the Werk 14261 for
             # more details.
-            if request.request_method != "POST" and not active_config.enable_login_via_get:
+            if request.request_method != "POST" and not config.enable_login_via_get:
                 raise MKUserError(None, _("Method not allowed"))
 
             username_var = request.get_str_input(self._username_varname, "")
@@ -280,10 +280,10 @@ class LoginPage(Page):
             )
             user_errors.add(e)
 
-    def _show_login_page(self) -> None:
+    def _show_login_page(self, config: Config) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
-        make_header(html, get_page_heading(), Breadcrumb())
+        make_header(html, get_page_heading(config), Breadcrumb())
 
         default_origtarget = (
             "index.py"
@@ -377,16 +377,16 @@ class LoginPage(Page):
 
             html.open_div(id_="foot")
 
-            if active_config.login_screen.get("login_message"):
+            if config.login_screen.get("login_message"):
                 html.open_div(id_="login_message")
-                html.show_message(active_config.login_screen["login_message"])
+                html.show_message(config.login_screen["login_message"])
                 html.close_div()
 
             footer: list[HTML] = []
-            for title, url, target in active_config.login_screen.get("footer_links", []):
+            for title, url, target in config.login_screen.get("footer_links", []):
                 footer.append(HTMLWriter.render_a(title, href=url, target=target))
 
-            if "hide_version" not in active_config.login_screen:
+            if "hide_version" not in config.login_screen:
                 footer.append(HTML.with_escaping("Version: %s" % cmk_version.__version__))
 
             footer.append(

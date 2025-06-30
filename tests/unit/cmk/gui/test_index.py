@@ -11,9 +11,8 @@ from collections.abc import Iterator
 import pytest
 from pytest import MonkeyPatch
 
-from tests.unit.cmk.web_test_app import SetConfig
-
 import cmk.gui.main
+from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.session import session
@@ -23,16 +22,18 @@ RequestContextFixture = Iterator[None]
 
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_default() -> None:
-    assert cmk.gui.main._get_start_url() == "dashboard.py"
+    assert cmk.gui.main._get_start_url(Config()) == "dashboard.py"
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_start_url_default_config(set_config: SetConfig) -> None:
-    with set_config(start_url="bla.py"):
-        assert cmk.gui.main._get_start_url() == "bla.py"
+def test_get_start_url_default_config() -> None:
+    config = Config()
+    config.start_url = "bla.py"
+    assert cmk.gui.main._get_start_url(config) == "bla.py"
 
 
-def test_get_start_url_user_config(set_config: SetConfig, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_start_url_user_config() -> None:
     class MockUser:
         ident = id = "17"  # session wants us to have an id to be able to set it there
 
@@ -44,9 +45,10 @@ def test_get_start_url_user_config(set_config: SetConfig, request_context: None)
         def automation_user(self) -> bool:
             return False
 
-    with set_config(start_url="wrong_url.py"):
-        session.user = MockUser()  # type: ignore[assignment]
-        assert cmk.gui.main._get_start_url() == "correct_url.py"
+    config = Config()
+    config.start_url = "wrong_url.py"
+    session.user = MockUser()  # type: ignore[assignment]
+    assert cmk.gui.main._get_start_url(config) == "correct_url.py"
 
 
 @pytest.mark.usefixtures("request_context")
@@ -54,7 +56,7 @@ def test_get_start_url() -> None:
     start_url = "dashboard.py?name=mein_dashboard"
     request.set_var("start_url", start_url)
 
-    assert cmk.gui.main._get_start_url() == start_url
+    assert cmk.gui.main._get_start_url(Config()) == start_url
 
 
 @pytest.mark.parametrize(
@@ -70,11 +72,11 @@ def test_get_start_url() -> None:
 def test_get_start_url_invalid(invalid_url: str) -> None:
     request.set_var("start_url", invalid_url)
 
-    assert cmk.gui.main._get_start_url() == "dashboard.py"
+    assert cmk.gui.main._get_start_url(Config()) == "dashboard.py"
 
 
 @pytest.mark.usefixtures("request_context")
 def test_get_start_url_invalid_config(monkeypatch: MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "attributes", {"start_url": "http://asdasd/"})
-        assert cmk.gui.main._get_start_url() == "dashboard.py"
+        assert cmk.gui.main._get_start_url(Config()) == "dashboard.py"

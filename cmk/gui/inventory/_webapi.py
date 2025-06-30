@@ -15,7 +15,7 @@ from cmk.ccc.site import SiteId
 
 from cmk.utils.structured_data import SDRawTree, serialize_tree
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -92,7 +92,7 @@ def page_host_inv_api(config: Config) -> None:
         resp = {"result_code": 1, "result": "%s" % e}
 
     except Exception as e:
-        if active_config.debug:
+        if config.debug:
             raise
         resp = {"result_code": 1, "result": "%s" % e}
 

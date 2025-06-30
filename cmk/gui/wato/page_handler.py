@@ -11,7 +11,7 @@ from cmk.utils import paths
 from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.customer import customer_api
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
@@ -58,7 +58,7 @@ from .pages.not_implemented import ModeNotImplemented
 def page_handler(config: Config) -> None:
     initialize_wato_html_head()
 
-    if not active_config.wato_enabled:
+    if not config.wato_enabled:
         raise MKGeneralException(
             _(
                 "Setup is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -72,7 +72,7 @@ def page_handler(config: Config) -> None:
     # config.current_customer can not be checked with CRE repos
     if (
         cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
-        and not customer_api().is_provider(active_config.current_customer)
+        and not customer_api().is_provider(config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
@@ -88,12 +88,12 @@ def page_handler(config: Config) -> None:
     # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration(configuration_lockfile):
-            _wato_page_handler(current_mode, mode_instance)
+            _wato_page_handler(config, current_mode, mode_instance)
     else:
-        _wato_page_handler(current_mode, mode_instance)
+        _wato_page_handler(config, current_mode, mode_instance)
 
 
-def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
+def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> None:
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
@@ -109,7 +109,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
-            if active_config.wato_use_git:
+            if config.wato_use_git:
                 do_git_commit()
 
             # Handle two cases:
@@ -150,7 +150,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
         )
 
     # Show content
-    mode.handle_page(active_config)
+    mode.handle_page(config)
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()

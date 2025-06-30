@@ -181,18 +181,19 @@ def main(sys_argv=None):
         for application, types in applications.items():
             for typename, items in types.items():
                 typename = typename.lower().replace(" ", "_")
-                if typename in ["app", "memory", "sessions", "web_container_runtime"]:
-                    sys.stdout.write(
-                        "<<<appdynamics_%s:sep(124)>>>\n" % (typename.replace("_runtime", ""))
-                    )
-                    for item, values in items.items():
-                        if values:
-                            output_items = [application, item]
-                            for name, value in values.items():
-                                if not name:
-                                    output_items.append("%s" % value)
-                                else:
-                                    output_items.append(f"{name}:{value}")
-                            sys.stdout.write("|".join(output_items) + "\n")
+                if typename not in ["app", "memory", "sessions", "web_container_runtime"]:
+                    continue
+                sys.stdout.write(
+                    "<<<appdynamics_%s:sep(124)>>>\n" % (typename.replace("_runtime", ""))
+                )
+                for item, values in items.items():
+                    if values:
+                        output_items = [application, item]
+                        for name, value in values.items():
+                            if not name:
+                                output_items.append("%s" % value)
+                            else:
+                                output_items.append(f"{name}:{value}")
+                        sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
     return None

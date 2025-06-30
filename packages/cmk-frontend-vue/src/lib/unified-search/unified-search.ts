@@ -39,7 +39,8 @@ export abstract class SearchProvider {
   constructor(
     public id: string,
     public title?: string,
-    public sort: number = 0
+    public sort: number = 0,
+    public minInputlength: number = 2
   ) {
     if (!this.title) {
       this.title = this.id
@@ -104,7 +105,12 @@ export class UnifiedSearch {
     for (const provider of this.providers) {
       usr.registerProviderResult({
         provider: provider.id,
-        result: provider.initSearch(input, provider.search.bind(provider))
+        result:
+          input.length >= provider.minInputlength
+            ? provider.initSearch(input, provider.search.bind(provider))
+            : new Promise((resolve) => {
+                resolve(null)
+              })
       })
     }
     return usr
@@ -119,7 +125,7 @@ export class UnifiedSearch {
     const input = e.target as HTMLInputElement
     setTimeout(() => {
       const now = Date.now()
-      if (input.value.length > 1 && now - this.lastSearchInput > 200) {
+      if (now - this.lastSearchInput > 200) {
         if (this.onSearchCallback) {
           this.onSearchCallback(this.search(input.value)) as void
         }

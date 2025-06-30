@@ -2,12 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disable-error-code="no-untyped-call, no-untyped-def"
 
 import datetime
 import time
-from collections.abc import Iterator
-from typing import Any
+from collections.abc import Iterator, Sequence
+from typing import Any, cast
 
 import livestatus
 
@@ -62,10 +61,10 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("logwatch", page_show))
 
 
-def page_show():
-    site = request.var("site")  # optional site hint
-    host_name = request.var("host", "")
-    file_name = request.get_str_input("file", "")
+def page_show() -> None:
+    site = request.get_validated_type_input(SiteId, "site")  # optional site hint
+    host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+    file_name = request.get_str_input_mandatory("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
@@ -85,8 +84,8 @@ def page_show():
         show_host_log_list(site, host_name)
 
 
-# Shows a list of all problematic logfiles grouped by host
-def show_log_list():
+def show_log_list() -> None:
+    """Shows a list of all problematic logfiles grouped by host"""
     title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
     make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
@@ -158,7 +157,7 @@ def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def services_url(site, host_name):
+def services_url(site: SiteId | None, host_name: HostName) -> str:
     return makeuri_contextless(
         request,
         [("view_name", "host"), ("site", site), ("host", host_name)],
@@ -166,7 +165,9 @@ def services_url(site, host_name):
     )
 
 
-def analyse_url(site, host_name, file_name="", match=""):
+def analyse_url(
+    site: SiteId | None, host_name: HostName, file_name: str = "", match: str = ""
+) -> str:
     return makeuri_contextless(
         request,
         [
@@ -180,8 +181,8 @@ def analyse_url(site, host_name, file_name="", match=""):
     )
 
 
-# Shows all problematic logfiles of a host
-def show_host_log_list(site, host_name):
+def show_host_log_list(site: SiteId | None, host_name: HostName) -> None:
+    """Shows all problematic logfiles of a host"""
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
     make_header(html, title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
@@ -204,7 +205,7 @@ def _host_log_list_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
 
 
 def _host_log_list_page_menu(
-    breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName
+    breadcrumb: Breadcrumb, site_id: SiteId | None, host_name: HostName
 ) -> PageMenu:
     return PageMenu(
         dropdowns=[
@@ -264,8 +265,8 @@ def _host_log_list_page_menu(
     )
 
 
-# Displays a table of logfiles
-def list_logs(site, host_name, logfile_names):
+def list_logs(site: SiteId | None, host_name: HostName, logfile_names: Sequence[str]) -> None:
+    """Displays a table of logfiles"""
     with table_element(empty_text=_("No logs found for this host.")) as table:
         for file_name in logfile_names:
             table.row()
@@ -297,7 +298,7 @@ def list_logs(site, host_name, logfile_names):
                 table.cell(_("Entries"), _("Corrupted"))
 
 
-def show_file(site, host_name, file_name):
+def show_file(site: SiteId | None, host_name: HostName, file_name: str) -> None:
     int_filename = form_file_to_int(file_name)
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
@@ -378,7 +379,7 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
 
 
 def _show_file_page_menu(
-    breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName, int_filename: str
+    breadcrumb: Breadcrumb, site_id: SiteId | None, host_name: HostName, int_filename: str
 ) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
@@ -525,10 +526,10 @@ def _page_menu_entry_acknowledge(
     )
 
 
-def do_log_ack(site, host_name, file_name):
+def do_log_ack(site: SiteId | None, host_name: HostName | None, file_name: str | None) -> None:
     sites.live().set_auth_domain("action")
 
-    logs_to_ack = []
+    logs_to_ack: list = []
     if not host_name and not file_name:  # all logs on all hosts
         for this_site, this_host, logs in all_logs():
             for int_filename in logs:
@@ -544,7 +545,7 @@ def do_log_ack(site, host_name, file_name):
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [(site, host_name, int_filename, form_file_to_ext(int_filename))]
 
-    else:
+    elif file_name is not None:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
@@ -596,7 +597,9 @@ def _get_ack_msg(host_name: HostName | None, file_name: str | None) -> str:
     return _("log file %s on all hosts") % file_name
 
 
-def acknowledge_logfile(site, host_name, int_filename, display_name):
+def acknowledge_logfile(
+    site: SiteId, host_name: HostName, int_filename: str, display_name: str
+) -> None:
     if not may_see(site, host_name):
         raise MKAuthException(_("Permission denied."))
 
@@ -617,7 +620,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 #   '----------------------------------------------------------------------'
 
 
-def parse_file(site, host_name, file_name, hidecontext=False):
+def parse_file(
+    site: SiteId | None, host_name: HostName, file_name: str, hidecontext: bool = False
+) -> list[dict[str, Any]] | None:
     log_chunks: list[dict[str, Any]] = []
     try:
         chunk: dict[str, Any] | None = None
@@ -696,7 +701,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
     return log_chunks
 
 
-def get_worst_chunk(log_chunks):
+def get_worst_chunk(log_chunks: Sequence[dict[str, Any]]) -> dict[str, Any]:
     worst_level = 0
     worst_log = log_chunks[0]
 
@@ -709,7 +714,7 @@ def get_worst_chunk(log_chunks):
     return worst_log
 
 
-def get_last_chunk(log_chunks):
+def get_last_chunk(log_chunks: Sequence[dict[str, Any]]) -> dict[str, Any]:
     last_log = None
     last_datetime = None
 
@@ -717,6 +722,9 @@ def get_last_chunk(log_chunks):
         if not last_datetime or chunk["datetime"] > last_datetime:
             last_datetime = chunk["datetime"]
             last_log = chunk
+
+    if last_log is None:
+        raise ValueError("No last log found, this should not happen.")
 
     return last_log
 
@@ -736,7 +744,7 @@ def get_last_chunk(log_chunks):
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,()="
 
 
-def logwatch_level_name(level):
+def logwatch_level_name(level: str) -> str:
     return {
         "O": "OK",
         "W": "WARN",
@@ -745,7 +753,7 @@ def logwatch_level_name(level):
     }[level]
 
 
-def level_name(level):
+def level_name(level: str) -> str:
     if level == "W":
         return "WARN"
     if level == "C":
@@ -755,7 +763,7 @@ def level_name(level):
     return "OK"
 
 
-def level_state(level):
+def level_state(level: str) -> int:
     if level == "W":
         return 1
     if level == "C":
@@ -778,20 +786,20 @@ def level_state(level):
 #   '----------------------------------------------------------------------'
 
 
-def form_level(level):
+def form_level(level: int) -> str:
     levels = ["OK", "WARN", "CRIT", "UNKNOWN"]
     return levels[level]
 
 
-def form_file_to_int(f):
+def form_file_to_int(f: str) -> str:
     return f.replace("/", "\\")
 
 
-def form_file_to_ext(f):
+def form_file_to_ext(f: str) -> str:
     return f.replace("\\", "/")
 
 
-def form_datetime(dt, fmt="%Y-%m-%d %H:%M:%S"):
+def form_datetime(dt: datetime.datetime, fmt: str = "%Y-%m-%d %H:%M:%S") -> str:
     return dt.strftime(fmt)
 
 
@@ -809,32 +817,20 @@ def form_datetime(dt, fmt="%Y-%m-%d %H:%M:%S"):
 #   '----------------------------------------------------------------------'
 
 
-def logfiles_of_host(site, host_name):
+def logfiles_of_host(site: SiteId | None, host_name: HostName) -> list[str]:
     if site:  # Honor site hint if available
         sites.live().set_only_sites([site])
-    file_names = sites.live().query_value(
+    file_names: list[str] = sites.live().query_value(
         "GET hosts\n"
         "Columns: mk_logwatch_files\n"
         "Filter: name = %s\n" % livestatus.lqencode(host_name)
     )
     if site:  # Honor site hint if available
         sites.live().set_only_sites(None)
-    if file_names is None:  # Not supported by that Livestatus version
-        raise MKGeneralException(
-            _(
-                "The monitoring core of the target site '%s' has the version '%s'. That "
-                "does not support fetching logfile information. Please upgrade "
-                "to a newer version."
-            )
-            % (
-                site,
-                sites.states().get(site, sites.SiteStatus({})).get("program_version", "???"),
-            )
-        )
     return file_names
 
 
-def get_logfile_lines(site, host_name, file_name):
+def get_logfile_lines(site: SiteId | None, host_name: HostName, file_name: str) -> list[str] | None:
     if site:  # Honor site hint if available
         sites.live().set_only_sites([site])
     query = "GET hosts\nColumns: mk_logwatch_file:file:{}/{}\nFilter: name = {}\n".format(
@@ -850,38 +846,33 @@ def get_logfile_lines(site, host_name, file_name):
     return [line.decode("utf-8") for line in file_content.splitlines()]
 
 
-def all_logs():
+def all_logs() -> list[tuple[SiteId, HostName, list[str]]]:
     sites.live().set_prepend_site(True)
     rows = sites.live().query("GET hosts\nColumns: name mk_logwatch_files\n")
     sites.live().set_prepend_site(False)
-    return rows
+    return cast(list[tuple[SiteId, HostName, list[str]]], rows)
 
 
-def may_see(site, host_name):
+def may_see(site: SiteId | None, host_name: HostName) -> bool:
     if user.may("general.see_all"):
         return True
 
-    host_found = False
     try:
         if site:
             sites.live().set_only_sites([site])
         # Note: This query won't work in a distributed setup and no site given as argument
         # livestatus connection is setup with AuthUser
-        host_found = (
-            sites.live().query_value(
-                "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
-            )
-            > 0
+        num_hosts: int = sites.live().query_value(
+            "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
         )
+        return num_hosts > 0
     finally:
         sites.live().set_only_sites(None)
-
-    return host_found
 
 
 # Tackle problem, where some characters are missing in the service
 # description
-def find_matching_logfile(site, host_name, file_name):
+def find_matching_logfile(site: SiteId | None, host_name: HostName, file_name: str) -> str:
     existing_files = logfiles_of_host(site, host_name)
     if file_name in existing_files:
         return file_name  # Most common case
@@ -894,5 +885,5 @@ def find_matching_logfile(site, host_name, file_name):
     return file_name
 
 
-def remove_illegal_service_characters(file_name):
+def remove_illegal_service_characters(file_name: str) -> str:
     return "".join([c for c in file_name if c not in nagios_illegal_chars])

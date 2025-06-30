@@ -14,6 +14,13 @@ from typing import Any
 
 from cmk.utils.password_store import replace_passwords
 
+_SECTION_HEADER_MAP = {
+    "app": "<<<appdynamics_app:sep(124)>>>",
+    "memory": "<<<appdynamics_memory:sep(124)>>>",
+    "sessions": "<<<appdynamics_sessions:sep(124)>>>",
+    "web_container_runtime": "<<<appdynamics_web_container:sep(124)>>>",
+}
+
 
 def usage():
     sys.stderr.write(
@@ -181,11 +188,9 @@ def main(sys_argv=None):
         for application, types in applications.items():
             for typename, items in types.items():
                 typename = typename.lower().replace(" ", "_")
-                if typename not in ["app", "memory", "sessions", "web_container_runtime"]:
+                if (header := _SECTION_HEADER_MAP.get(typename)) is None:
                     continue
-                sys.stdout.write(
-                    "<<<appdynamics_%s:sep(124)>>>\n" % (typename.replace("_runtime", ""))
-                )
+                sys.stdout.write(f"{header}\n")
                 for item, values in items.items():
                     if values:
                         output_items = [application, item]

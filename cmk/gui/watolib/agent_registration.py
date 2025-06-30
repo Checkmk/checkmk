@@ -4,35 +4,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
 
 from cmk.utils.agent_registration import get_uuid_link_manager
 
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger
-from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    LocalAutomationConfig,
+    RemoteAutomationConfig,
+)
 
 
 def remove_tls_registration(
-    hosts_by_site: Mapping[SiteId, Sequence[HostName]], *, debug: bool
+    hosts_by_site: Sequence[
+        tuple[LocalAutomationConfig | RemoteAutomationConfig, Sequence[HostName]]
+    ],
+    *,
+    debug: bool,
 ) -> None:
-    for site_id, host_names in hosts_by_site.items():
+    for automation_config, host_names in hosts_by_site:
         if not host_names:
             continue
 
-        if site_is_local(site_config := active_config.sites[site_id], site_id):
+        if isinstance(automation_config, LocalAutomationConfig):
             _remove_tls_registration(host_names)
             continue
 
         do_remote_automation(
-            RemoteAutomationConfig.from_site_config(site_config),
+            automation_config,
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
             debug=debug,

@@ -516,7 +516,13 @@ class ModeEditHost(ABCHostMode):
 
         if request.var("_remove_tls_registration"):
             remove_tls_registration(
-                {self._host.site_id(): [self._host.name()]}, debug=active_config.debug
+                [
+                    (
+                        make_automation_config(active_config.sites[self._host.site_id()]),
+                        [self._host.name()],
+                    )
+                ],
+                debug=active_config.debug,
             )
             return None
 

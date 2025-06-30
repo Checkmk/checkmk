@@ -77,6 +77,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
@@ -637,7 +638,12 @@ class ModeFolder(WatoMode):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(
-                self._folder.get_hosts_by_site(list(self._folder.hosts())),
+                [
+                    (make_automation_config(active_config.sites[site_id]), hosts)
+                    for site_id, hosts in self._folder.get_hosts_by_site(
+                        list(self._folder.hosts())
+                    ).items()
+                ],
                 debug=active_config.debug,
             )
             return None
@@ -722,7 +728,13 @@ class ModeFolder(WatoMode):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(
-                self._folder.get_hosts_by_site(selected_host_names), debug=active_config.debug
+                [
+                    (make_automation_config(active_config.sites[site_id]), hosts)
+                    for site_id, hosts in self._folder.get_hosts_by_site(
+                        selected_host_names
+                    ).items()
+                ],
+                debug=active_config.debug,
             )
 
         return None

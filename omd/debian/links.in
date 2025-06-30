@@ -1,1 +1,1 @@
-opt/omd/versions/###OMD_VERSION###/lib/nagios/plugins/check_icmp opt/omd/versions/###OMD_VERSION###/lib/nagios/plugins/check_host
+opt/omd/versions/{CMK_VERSION}.{CMK_EDITION}/lib/nagios/plugins/check_icmp opt/omd/versions/{CMK_VERSION}.{CMK_EDITION}/lib/nagios/plugins/check_host

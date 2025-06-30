@@ -24,14 +24,14 @@ set -e
 
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 APACHE_OMD_EMPTY_CONF="/opt/omd/apache/empty.conf"
-OMD="omd-###OMD_VERSION###"
+OMD="omd-{CMK_VERSION}.{CMK_EDITION}"
 
 case "$1" in
     upgrade)
     ;;
 
     remove|failed-upgrade|abort-install|abort-upgrade|disappear)
-      # update-alternatives --remove  omd /omd/versions/###OMD_VERSION###
+      # update-alternatives --remove  omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
     ;;
 
     purge)

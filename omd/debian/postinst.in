@@ -9,7 +9,7 @@
 
 set -e
 
-BASE_PATH="/omd/versions/###OMD_VERSION###"
+BASE_PATH="/omd/versions/{CMK_VERSION}.{CMK_EDITION}"
 CAP_PROGRAMS="bin/mkeventd_open514 lib/nagios/plugins/check_icmp lib/nagios/plugins/check_dhcp lib/cmc/icmpsender lib/cmc/icmpreceiver"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
@@ -48,11 +48,11 @@ case "$1" in
         mkdir /etc/bash_completion.d
     fi
     update-alternatives --install /omd/versions/default \
-       omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
-       --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
-       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/bash_completion \
+       omd /omd/versions/{CMK_VERSION}.{CMK_EDITION} 38 \
+       --slave /usr/bin/omd omd.bin /omd/versions/{CMK_VERSION}.{CMK_EDITION}/bin/omd \
+       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/{CMK_VERSION}.{CMK_EDITION}/lib/omd/bash_completion \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
+               /omd/versions/{CMK_VERSION}.{CMK_EDITION}/share/man/man8/omd.8.gz
 
     # -- looking for group nagios, create it, if not exist
     if ! getent group omd > /dev/null ; then
@@ -113,8 +113,8 @@ case "$1" in
        a2enmod rewrite
     fi
 
-    echo "New default version is ###OMD_VERSION###."
-    update-alternatives --set omd /omd/versions/###OMD_VERSION###
+    echo "New default version is {CMK_VERSION}.{CMK_EDITION}."
+    update-alternatives --set omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
 
     DEFAULT=/etc/default/omd
 

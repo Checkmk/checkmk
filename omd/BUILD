@@ -2,11 +2,13 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 
 exports_files([
     "requirements.txt",
@@ -247,3 +249,68 @@ pkg_tar(
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",
 )
+
+editions = {
+    "cce": "cloud",
+    "cee": "enterprise",
+    "cme": "managed",
+    "cre": "raw",
+    "cse": "saas",
+}
+
+[pkg_name_info(
+    name = "cmk_pkg_variables_" + edition,
+    architecture = "amd64",
+    cmk_version = "//bazel/cmk/version",
+    package = "check-mk-" + editions[edition],
+    version = select({
+        "@//bazel/cmk/distro:almalinux-8": "el8-38",
+        "@//bazel/cmk/distro:almalinux-9": "el9-38",
+        "@//bazel/cmk/distro:debian-11": "0.bullseye",
+        "@//bazel/cmk/distro:debian-12": "0.bookworm",
+        "@//bazel/cmk/distro:sles-15sp3": "sles15sp3",
+        "@//bazel/cmk/distro:sles-15sp4": "sles15sp4",
+        "@//bazel/cmk/distro:sles-15sp5": "sles15sp5",
+        "@//bazel/cmk/distro:sles-15sp6": "sles15sp6",
+        "@//bazel/cmk/distro:ubuntu-22.04": "0.jammy",
+        "@//bazel/cmk/distro:ubuntu-24.04": "0.noble",
+    }),
+) for edition in [
+    "cre",
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]
+
+[pkg_deb(
+    name = "deb_" + edition,
+    architecture = "amd64",
+    changelog = ":changelog_" + edition,
+    config = "//omd/debian:config",
+    #control = "//omd/debian:control", Field does not exist, do we need it?
+    data = "deps_install_" + edition,
+    #data = "//omd/packages/heirloom-mailx",
+    depends_file = "//omd/distros:dependencies",
+    description = "Checkmk - Best-in-class infrastructure & application monitoring",
+    homepage = "https://checkmk.com",
+    maintainer = "Checkmk team <feedback@checkmk.com>",
+    # check-mk-enterprise-2.5.0-2025.06.26_0.noble_amd64.deb
+    package = "check-mk-" + editions[edition],
+    package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
+    package_variables = ":cmk_pkg_variables_" + edition,
+    postinst = "//omd/debian:postinst",
+    postrm = "//omd/debian:postrm",
+    preinst = "//omd/debian:preinst",
+    prerm = "//omd/debian:prerm",
+    priority = "optional",
+    section = "admin",
+    templates = "//omd/debian:templates",
+    version_file = "//omd/distros:distro_version_file",
+) for edition in [
+    "cre",
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]

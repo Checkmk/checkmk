@@ -67,16 +67,15 @@ install:
             fi \
 	done
 
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
-	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \
+	sed -e 's/{CMK_VERSION}.{CMK_EDITION}/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/postinst.in > $(_PWD)/debian/postinst
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	sed -e 's/{CMK_VERSION}.{CMK_EDITION}/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/preinst.in > $(_PWD)/debian/preinst
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	sed -e 's/{CMK_VERSION}.{CMK_EDITION}/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/prerm.in > $(_PWD)/debian/prerm
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	sed -e 's/{CMK_VERSION}.{CMK_EDITION}/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/postrm.in > $(_PWD)/debian/postrm
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	sed -e 's/{CMK_VERSION}.{CMK_EDITION}/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/links.in > $(_PWD)/debian/links
 
 binary-indep:

@@ -27,7 +27,7 @@ case "$1" in
       do
           target=$(readlink $link 2>/dev/null) || continue
           version=${target##*/}
-          if [ "$version" = "###OMD_VERSION###" ]
+          if [ "$version" = "{CMK_VERSION}.{CMK_EDITION}" ]
           then
               site=${link#/omd/sites/}
               site=${site%/version}
@@ -54,6 +54,6 @@ esac
 
 #DEBHELPER#
 
-update-alternatives --remove  omd /omd/versions/###OMD_VERSION###
+update-alternatives --remove  omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
 
 exit 0

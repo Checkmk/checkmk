@@ -341,7 +341,6 @@ module = [
   "cmk.gui.utils.*",
   "cmk.gui.valuespec.*",
   "cmk.gui.mobile.*",
-  "cmk.gui.openapi.spec.spec_generator.*",
   "cmk.gui.views.*",
   "cmk.gui.views.command.*",
   "cmk.gui.views.icon.*",

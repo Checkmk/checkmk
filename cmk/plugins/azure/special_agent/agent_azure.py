@@ -1962,7 +1962,7 @@ def write_usage_section(
         section.write()
 
 
-async def usage_details(
+async def process_usage_details(
     mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args
 ) -> None:
     if "usage_details" not in args.services:
@@ -2223,7 +2223,7 @@ async def process_single_resources(
     return sections
 
 
-async def process_resources_async(
+async def process_resources(
     mgmt_client: MgmtApiClient,
     args: Args,
     group_labels: GroupLabels,
@@ -2289,8 +2289,8 @@ async def main_subscription(args: Args, selector: Selector, subscription: str) -
 
     await process_metrics(mgmt_client, selected_resources, args)
     await asyncio.gather(
-        usage_details(mgmt_client, monitored_groups, args),
-        process_resources_async(mgmt_client, args, group_labels, selected_resources),
+        process_usage_details(mgmt_client, monitored_groups, args),
+        process_resources(mgmt_client, args, group_labels, selected_resources),
     )
 
     write_remaining_reads(mgmt_client.ratelimit)

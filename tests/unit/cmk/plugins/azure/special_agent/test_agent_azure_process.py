@@ -24,10 +24,10 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     GroupLabels,
     LabelsSection,
     MgmtApiClient,
+    process_usage_details,
     ResourceHealth,
     Section,
     TagsImportPatternOption,
-    usage_details,
     write_group_info,
     write_remaining_reads,
     write_section_ad,
@@ -742,7 +742,7 @@ async def test_usage_details(
     )
     monitored_groups = ["test1", "test2"]
 
-    await usage_details(mgmt_client, monitored_groups, args)
+    await process_usage_details(mgmt_client, monitored_groups, args)
 
     captured = capsys.readouterr()
     assert captured.out == expected_result

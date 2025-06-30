@@ -96,6 +96,12 @@ def _fake_version_and_paths() -> None:
         "local_dashboards_dir",
         "local_views_dir",
         "local_reports_dir",
+        # This starts with /etc and will not be changed by the code below
+        "cse_config_dir",
+        # these start with /opt and will not be changed in the code below
+        "rrd_multiple_dir",
+        "rrd_single_dir",
+        "mkbackup_lock_dir",
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
@@ -108,6 +114,7 @@ def _fake_version_and_paths() -> None:
         if name.startswith("_") or not isinstance(value, str | Path) or name in unpatched_paths:
             continue
 
+        assert Path(value).is_relative_to(original_omd_root)
         try:
             monkeypatch.setattr(
                 f"cmk.utils.paths.{name}",

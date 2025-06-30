@@ -10,7 +10,6 @@ from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
 from .metric import recompose as recompose_metric
 from .monitored_host import recompose as recompose_monitored_host
-from .monitored_host_extended import recompose as recompose_monitored_host_extended
 from .monitored_service import recompose as recompose_monitored_service
 from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
@@ -30,7 +29,6 @@ __all__ = [
     "recompose_levels",
     "recompose_list",
     "recompose_metric",
-    "recompose_monitored_host_extended",
     "recompose_monitored_host",
     "recompose_monitored_service",
     "recompose_multiple_choice",

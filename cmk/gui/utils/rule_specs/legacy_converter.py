@@ -27,7 +27,6 @@ from cmk.gui.form_specs.private import (
     LegacyValueSpec,
     ListExtended,
     ListOfStrings,
-    MonitoredHostExtended,
     SingleChoiceExtended,
     StringAutocompleter,
     UserSelection,
@@ -800,7 +799,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.MonitoredHost() | MonitoredHostExtended():
+        case ruleset_api_v1.form_specs.MonitoredHost():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MonitoredService():
@@ -2276,7 +2275,7 @@ def _convert_to_legacy_metric_name(
 
 
 def _convert_to_legacy_monitored_host_name(
-    to_convert: ruleset_api_v1.form_specs.MonitoredHost | MonitoredHostExtended,
+    to_convert: ruleset_api_v1.form_specs.MonitoredHost,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredHostname:
     converted_kwargs: dict[str, Any] = {
@@ -2294,9 +2293,6 @@ def _convert_to_legacy_monitored_host_name(
     if (title := _localize_optional(to_convert.title, localizer)) is None:
         title = ruleset_api_v1.Title("Host name").localize(localizer)
     converted_kwargs["title"] = title
-    if isinstance(to_convert, MonitoredHostExtended):
-        converted_kwargs["default_value"] = to_convert.prefill.value
-
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
 
 

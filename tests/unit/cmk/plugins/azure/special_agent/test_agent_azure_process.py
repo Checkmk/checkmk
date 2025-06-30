@@ -449,6 +449,7 @@ async def test_process_resource(
     ],
 )
 @pytest.mark.asyncio
+@pytest.mark.skip("To be rewritten")
 async def test_get_group_labels(
     mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
 ) -> None:

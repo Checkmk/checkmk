@@ -883,14 +883,6 @@ class MgmtApiClient(BaseAsyncApiClient):
 
         return ",".join(sorted(retry_names))
 
-    async def resourcegroups(self):
-        return await self.get_async(
-            "resourcegroups", key="value", params={"api-version": "2019-05-01"}
-        )
-
-    async def resources(self):
-        return await self.get_async("resources", key="value", params={"api-version": "2019-05-01"})
-
     async def app_gateway_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/applicationGateways/{}"
         return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -1799,7 +1791,11 @@ async def get_group_labels(
 ) -> GroupLabels:
     group_labels: dict[str, dict[str, str]] = {}
 
-    for group in await mgmt_client.resourcegroups():
+    resource_groups = await mgmt_client.get_async(
+        "resourcegroups", key="value", params={"api-version": "2019-05-01"}
+    )
+
+    for group in resource_groups:
         name = group["name"].lower()
 
         if tag_key_pattern == TagsImportPatternOption.ignore_all:
@@ -2250,6 +2246,26 @@ async def process_resources(
             write_exception_to_agent_info_section(e, "Management client (async)")
 
 
+async def _collect_resources(
+    mgmt_client: MgmtApiClient, args: Args, selector: Selector
+) -> tuple[Sequence[AzureResource], list[str]]:
+    resources = await mgmt_client.get_async(
+        "resources", key="value", params={"api-version": "2019-05-01"}
+    )
+
+    all_resources = (AzureResource(r, args.tag_key_pattern) for r in resources)
+
+    # Selected resources are all the resources that match the selector.
+    # They are NOT the "monitored resources", which also depend on the *services* selected via command line call.
+    # Here, we need all these resources to be able to create the `monitored_groups` sections.
+    # -> I don't know if this is actually intended (we are populating the agent information `monitored-resources`
+    #    with resources not really monitored), but the agent behaved like this before.
+    selected_resources = [r for r in all_resources if selector.do_monitor(r)]
+    monitored_groups = sorted({r.info["group"] for r in selected_resources})
+
+    return selected_resources, monitored_groups
+
+
 async def main_subscription(
     args: Args, selector: Selector, subscription: str, monitored_services: set[str]
 ) -> None:
@@ -2261,17 +2277,8 @@ async def main_subscription(
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
-        all_resources = (
-            AzureResource(r, args.tag_key_pattern) for r in await mgmt_client.resources()
-        )
+        selected_resources, monitored_groups = await _collect_resources(mgmt_client, args, selector)
 
-        # selected_resources are all the resources that match the selector
-        # they are NOT the "monitored resources" which also depend on the *services* selected
-        # here we need all these resources to ne able to create the monitored_groups sections
-        # -> I dont' know if this is actually intended (we are populating the agent information monitored-resources
-        #    with resources not really monitored"), but the agent behaved like this before
-        selected_resources = [r for r in all_resources if selector.do_monitor(r)]
-        monitored_groups = sorted({r.info["group"] for r in selected_resources})
     except Exception as exc:
         if args.debug:
             raise

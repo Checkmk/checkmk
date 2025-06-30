@@ -959,12 +959,6 @@ class MgmtApiClient(BaseAsyncApiClient):
         url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
         return await self.get_async(url.format(group, name), params={"api-version": "2022-01-01"})
 
-    async def backup_containers_view(self, group, name):
-        url = (
-            "resourceGroups/{}/providers/Microsoft.RecoveryServices/vaults/{}/backupProtectedItems"
-        )
-        return await self.get_async(url.format(group, name), params={"api-version": "2022-05-01"})
-
     async def vnet_peering_view(self, group, providers, vnet_id, vnet_peering_id):
         url = "resourceGroups/{}/providers/{}/virtualNetworks/{}/virtualNetworkPeerings/{}"
         return await self.get_async(
@@ -1596,29 +1590,6 @@ async def process_virtual_net_gw(mgmt_client: MgmtApiClient, resource: AzureReso
     resource.info["properties"]["health"] = await get_vnet_gw_health(mgmt_client, gw_view)
 
 
-async def process_recovery_services_vaults(
-    mgmt_client: MgmtApiClient, resource: AzureResource
-) -> None:
-    backup_keys = (
-        "friendlyName",
-        "backupManagementType",
-        "protectedItemType",
-        "lastBackupTime",
-        "lastBackupStatus",
-        "protectionState",
-        "protectionStatus",
-        "policyName",
-        "isArchiveEnabled",
-    )
-    backup_view = await mgmt_client.backup_containers_view(
-        resource.info["group"], resource.info["name"]
-    )
-
-    backup_containers = [filter_keys(b["properties"], backup_keys) for b in backup_view["value"]]
-    resource.info["properties"] = {}
-    resource.info["properties"]["backup_containers"] = backup_containers
-
-
 class MetricCache(DataCache):
     def __init__(
         self,
@@ -2077,6 +2048,50 @@ async def process_virtual_machines(
     return sections
 
 
+async def process_vault(
+    api_client: MgmtApiClient,
+    resource: AzureResource,
+) -> AzureSection:
+    vault_properties = (
+        "friendlyName",
+        "backupManagementType",
+        "protectedItemType",
+        "lastBackupTime",
+        "lastBackupStatus",
+        "protectionState",
+        "protectionStatus",
+        "policyName",
+        "isArchiveEnabled",
+    )
+
+    response = await api_client.get_async(
+        f"resourceGroups/{resource.info['group']}/providers/Microsoft.RecoveryServices/vaults/{resource.info['name']}/backupProtectedItems",
+        params={
+            "api-version": "2025-02-01",
+        },
+        key="value",
+    )
+
+    try:
+        properties = filter_keys(response[0]["properties"], vault_properties)
+    except KeyError:
+        write_exception_to_agent_info_section(
+            ApiErrorMissingData("Vault properties must be present"), "Vaults"
+        )
+        raise ApiErrorMissingData("Vault properties must be present")
+
+    resource.info["properties"] = {}
+    resource.info["properties"]["backup_containers"] = [properties]
+
+    section = AzureSection(
+        FetchedResource.vaults.section,
+        resource.piggytargets,
+    )
+    section.add(resource.dumpinfo())
+
+    return section
+
+
 class ResourceHealth(TypedDict, total=False):
     id: Required[str]
     properties: Required[Mapping[str, str]]
@@ -2163,6 +2178,7 @@ async def process_single_resources(
     monitored_resources_by_id: Mapping[str, AzureResource],
 ) -> Sequence[Section]:
     sections = []
+    tasks = set()
     for resource_id, resource in monitored_resources_by_id.items():
         resource_type = resource.info["type"]
         if resource_type in BULK_QUERIED_RESOURCES:
@@ -2171,21 +2187,32 @@ async def process_single_resources(
         # TODO: convert to real async:
         elif resource_type == "Microsoft.Network/applicationGateways":
             await process_app_gateway(mgmt_client, resource)
-        elif resource_type == "Microsoft.RecoveryServices/vaults":
-            await process_recovery_services_vaults(mgmt_client, resource)
         elif resource_type == "Microsoft.Network/virtualNetworkGateways":
             await process_virtual_net_gw(mgmt_client, resource)
         elif resource_type == "Microsoft.Network/loadBalancers":
             await process_load_balancer(mgmt_client, resource)
         # ----
 
-        # simple sections without further processing
-        if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
-            resource.section = "servers"  # use the same section as for single servers
+        if resource_type == FetchedResource.vaults.type:
+            tasks.add(process_vault(mgmt_client, resource))
+        else:
+            # simple sections without further processing
+            if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
+                resource.section = "servers"  # use the same section as for single servers
 
-        section = AzureSection(resource.section, resource.piggytargets)
-        section.add(resource.dumpinfo())
-        sections.append(section)
+            section = AzureSection(resource.section, resource.piggytargets)
+            section.add(resource.dumpinfo())
+            sections.append(section)
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for section_async in results:
+        if isinstance(section_async, BaseException):
+            if args.debug:
+                raise section_async
+            write_exception_to_agent_info_section(section_async, "Process single resources (async)")
+            continue
+
+        sections.append(section_async)
 
     return sections
 

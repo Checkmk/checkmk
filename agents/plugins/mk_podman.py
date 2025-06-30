@@ -4,12 +4,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+import os
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never
+from pathlib import Path
+
+DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
+
+
+def _load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> Mapping[str, str]:
+    if not cfg_file_path.is_file():
+        return {}
+    try:
+        return json.loads(cfg_file_path.read_text())
+    except Exception as e:
+        write_section(
+            Error(
+                "config",
+                f"Failed to load config file {cfg_file_path}: {e}. Using 'auto' method as default.",
+            )
+        )
+        return {}
+
+
+def _find_user_sockets() -> Sequence[str]:
+    run_user_dir = "/run/user"
+
+    if not os.path.isdir(run_user_dir):
+        return []
+
+    return [
+        os.path.join(run_user_dir, entry, "podman", "podman.sock")
+        for entry in os.listdir(run_user_dir)
+        if os.path.exists(os.path.join(run_user_dir, entry, "podman", "podman.sock"))
+    ]
+
+
+def _get_socket_paths(config: Mapping[str, str]) -> Sequence[str]:
+    method = config.get("method", "auto")
+    if method == "auto":
+        socket_paths = [DEFAULT_SOCKET_PATH]
+        socket_paths.extend(_find_user_sockets())
+        return socket_paths
+
+    elif method == "only_root_socket":
+        return [DEFAULT_SOCKET_PATH]
+
+    elif method == "only_user_sockets":
+        return _find_user_sockets()
+
+    elif method == "manual":
+        return config.get("value", [])
+
+    return []
 
 
 @dataclass(frozen=True)
@@ -25,15 +75,12 @@ class Error:
 
 
 def write_section(section: JSONSection | Error) -> None:
-    match section:
-        case JSONSection():
-            _write_serialized_section(section.name, section.content)
-        case Error():
-            _write_serialized_section(
-                "errors", json.dumps({"endpoint": section.label, "message": section.message})
-            )
-        case _:
-            assert_never(section)
+    if isinstance(section, JSONSection):
+        _write_serialized_section(section.name, section.content)
+    elif isinstance(section, Error):
+        _write_serialized_section(
+            "errors", json.dumps({"endpoint": section.label, "message": section.message})
+        )
 
 
 def _write_serialized_section(name: str, json_content: str) -> None:
@@ -79,6 +126,7 @@ def query_containers(
         output = response.json()
     except Exception as e:
         write_section(Error(_build_url_human_readable(socket_path, endpoint), str(e)))
+        return []
     write_section(JSONSection("containers", json.dumps(output)))
     return output
 
@@ -90,6 +138,7 @@ def query_disk_usage(session: requests_unixsocket.Session, socket_path: str) -> 
         response.raise_for_status()
     except Exception as e:
         write_section(Error(_build_url_human_readable(socket_path, endpoint), str(e)))
+        return
     write_section(JSONSection("disk_usage", json.dumps(response.json())))
 
 
@@ -100,6 +149,7 @@ def query_engine(session: requests_unixsocket.Session, socket_path: str) -> None
         response.raise_for_status()
     except Exception as e:
         write_section(Error(_build_url_human_readable(socket_path, endpoint), str(e)))
+        return
     write_section(JSONSection("engine", json.dumps(response.json())))
 
 
@@ -110,6 +160,7 @@ def query_pods(session: requests_unixsocket.Session, socket_path: str) -> None:
         response.raise_for_status()
     except Exception as e:
         write_section(Error(_build_url_human_readable(socket_path, endpoint), str(e)))
+        return
     write_section(JSONSection("pods", json.dumps(response.json())))
 
 
@@ -155,7 +206,7 @@ def _get_container_name(names: object) -> str:
 
 
 def main() -> None:
-    socket_paths = [DEFAULT_SOCKET_PATH]
+    socket_paths = _get_socket_paths(_load_cfg())
 
     for socket_path in socket_paths:
         with requests_unixsocket.Session() as session:

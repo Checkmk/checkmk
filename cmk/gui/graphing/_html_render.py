@@ -564,7 +564,7 @@ class AjaxGraph(cmk.gui.pages.Page):
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-            if active_config.debug:
+            if config.debug:
                 raise
             response.set_data("ERROR: %s" % e)
         return None
@@ -952,17 +952,18 @@ class AjaxGraphHover(cmk.gui.pages.Page):
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
             hover_time = request.get_integer_input_mandatory("hover_time")
-            response_data = _render_ajax_graph_hover(context, hover_time, metrics_from_api)
+            response_data = _render_ajax_graph_hover(config, context, hover_time, metrics_from_api)
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-            if active_config.debug:
+            if config.debug:
                 raise
             response.set_data("ERROR: %s" % e)
         return None
 
 
 def _render_ajax_graph_hover(
+    config: Config,
     context: Mapping[str, Any],
     hover_time: int,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -984,7 +985,7 @@ def _render_ajax_graph_hover(
                 user_specific_unit(
                     graph_recipe.unit_spec,
                     user,
-                    active_config,
+                    config,
                 ).formatter.render,
                 hover_time,
             )

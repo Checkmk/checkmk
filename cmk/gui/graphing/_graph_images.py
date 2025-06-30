@@ -20,7 +20,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 
 from cmk.gui import pdf
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
@@ -65,12 +65,13 @@ class AjaxGraphImagesForNotifications(Page):
             # Now we use the SiteInternalSecret for this.
             raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
-        _answer_graph_image_request(metrics_from_api, graphs_from_api)
+        _answer_graph_image_request(metrics_from_api, graphs_from_api, config.debug)
 
 
 def _answer_graph_image_request(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    debug: bool,
 ) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -91,7 +92,7 @@ def _answer_graph_image_request(
                 host_name,
                 service_description,
             )
-            if active_config.debug:
+            if debug:
                 raise
             return
 
@@ -137,7 +138,7 @@ def _answer_graph_image_request(
         logger.error(
             "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
         )
-        if active_config.debug:
+        if debug:
             raise
 
 

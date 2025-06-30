@@ -722,7 +722,7 @@ class AjaxFoldSnapin(AjaxPage):
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
-        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config = UserSidebarConfig(user, config.sidebar)
         user_config.folded = request.var("fold") == "yes"
         user_config.save()
         return None
@@ -747,7 +747,7 @@ class AjaxOpenCloseSnapin(AjaxPage):
         ]:
             raise MKUserError("state", "Invalid state: %s" % state)
 
-        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config = UserSidebarConfig(user, config.sidebar)
 
         try:
             snapin = user_config.get_snapin(snapin_id)
@@ -811,7 +811,7 @@ def page_add_snapin(config: Config) -> None:
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_customize(), title)
     make_header(html, title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
-    used_snapins = _used_snapins()
+    used_snapins = _used_snapins(config)
 
     html.open_div(class_=["add_snapin"])
     for name, snapin_class in sorted(all_snapins().items()):
@@ -855,8 +855,8 @@ def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def _used_snapins() -> list[Any]:
-    user_config = UserSidebarConfig(user, active_config.sidebar)
+def _used_snapins(config: Config) -> list[Any]:
+    user_config = UserSidebarConfig(user, config.sidebar)
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
 
@@ -871,10 +871,10 @@ class AjaxAddSnapin(AjaxPage):
         if addname is None or addname not in all_snapins():
             raise MKUserError(None, _("Invalid sidebar element %s") % addname)
 
-        if addname in _used_snapins():
+        if addname in _used_snapins(config):
             raise MKUserError(None, _("Element %s is already enabled") % addname)
 
-        user_config = UserSidebarConfig(user, active_config.sidebar)
+        user_config = UserSidebarConfig(user, config.sidebar)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname)
         user_config.add_snapin(snapin)
         user_config.save()

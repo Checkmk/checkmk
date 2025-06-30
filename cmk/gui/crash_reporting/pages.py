@@ -28,7 +28,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -140,7 +140,7 @@ class PageCrash(ABCCrashReportPage):
             return
 
         if request.has_var("_report") and transactions.check_transaction():
-            details = self._handle_report_form()
+            details = self._handle_report_form(config.crash_report_target, config.crash_report_url)
         else:
             details = ReportSubmitDetails(name="", mail="")
 
@@ -230,7 +230,9 @@ class PageCrash(ABCCrashReportPage):
         renderer = self._crash_type_renderer(crash_info["crash_type"])
         yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
 
-    def _handle_report_form(self) -> ReportSubmitDetails:
+    def _handle_report_form(
+        self, crash_report_target: str, crash_report_url: str
+    ) -> ReportSubmitDetails:
         details = ReportSubmitDetails(name="", mail="")
         try:
             vs = self._vs_crash_report()
@@ -281,18 +283,18 @@ class PageCrash(ABCCrashReportPage):
                 [
                     ("subject", "Checkmk Crash Report - " + self._get_version()),
                 ],
-                filename="mailto:" + self._get_crash_report_target(),
+                filename="mailto:" + crash_report_target,
             )
             html.show_error(
                 _(
                     "Failed to send the crash report. Please download it manually and send it "
                     'to <a href="%s">%s</a> or try again later.'
                 )
-                % (report_url, self._get_crash_report_target())
+                % (report_url, crash_report_target)
             )
             html.close_div()
             html.javascript(
-                f"cmk.transfer.submit_crash_report({json.dumps(active_config.crash_report_url)}, {json.dumps(url_encoded_params)});"
+                f"cmk.transfer.submit_crash_report({json.dumps(crash_report_url)}, {json.dumps(url_encoded_params)});"
             )
         except MKUserError as e:
             user_errors.add(e)
@@ -301,9 +303,6 @@ class PageCrash(ABCCrashReportPage):
 
     def _get_version(self) -> str:
         return cmk_version.__version__
-
-    def _get_crash_report_target(self) -> str:
-        return active_config.crash_report_target
 
     def _vs_crash_report(self):
         return Dictionary(

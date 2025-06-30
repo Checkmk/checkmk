@@ -83,7 +83,6 @@ py_test(
         include = [
             # canned data
             "**/_check_form_submit_response",
-            "**/_innovaphone_vcrtrace",
             "**/test-files/**",
             "**/tree_test_data/**",
             "**/*.json",

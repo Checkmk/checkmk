@@ -102,32 +102,47 @@ REQUIRED_EXTERNAL_DEPS = [
     "werkzeug",
 ]
 
-CRE_PY = glob([
-    "**/cre/**/*.py",
-    "**/cre.py",
-    "**/raw/**/*.py",
-    "**/raw.py",
-])
+CRE_PY = glob(
+    [
+        "**/cre/**/*.py",
+        "**/cre.py",
+        "**/raw/**/*.py",
+        "**/raw.py",
+    ],
+    allow_empty = True,
+)
 
-CCE_PY = glob([
-    "**/cce/**/*.py",
-    "**/cce.py",
-])
+CCE_PY = glob(
+    [
+        "**/cce/**/*.py",
+        "**/cce.py",
+    ],
+    allow_empty = True,
+)
 
-CEE_PY = glob([
-    "**/cee/**/*.py",
-    "**/cee.py",
-])
+CEE_PY = glob(
+    [
+        "**/cee/**/*.py",
+        "**/cee.py",
+    ],
+    allow_empty = True,
+)
 
-CME_PY = glob([
-    "**/cme/**/*.py",
-    "**/cme.py",
-])
+CME_PY = glob(
+    [
+        "**/cme/**/*.py",
+        "**/cme.py",
+    ],
+    allow_empty = True,
+)
 
-CSE_PY = glob([
-    "**/cse/**/*.py",
-    "**/cse.py",
-])
+CSE_PY = glob(
+    [
+        "**/cse/**/*.py",
+        "**/cse.py",
+    ],
+    allow_empty = True,
+)
 
 CMK_PACKAGES = [
     "//packages/cmk-shared-typing:cmk_shared_typing_py",

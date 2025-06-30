@@ -30,10 +30,7 @@ json2typescript(
     name = "generated_ts_files",
     srcs = SOURCES_COMMON + SOURCES_SPECIAL_DATACLASSES,
     chdir = package_name(),
-    data = glob([
-        "source/**/*.json",
-        "header*_ts.txt",
-    ]),
+    data = glob(["source/**/*.json"]),
     header_txt = """/**
  * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and

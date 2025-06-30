@@ -277,7 +277,7 @@ http_archive(
 )
 
 http_archive(
-    name = "oci-basic-light-win-x86",
+    name = "oci-basic-light-win-x64",
     build_file_content = """
 filegroup(
     name = "srcs",
@@ -285,10 +285,10 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "9a9d0a40b230eea8a308422ab4b2fd36f2cafb7cb2102a0c4a0a22242aca2126",
+    sha256 = "fddc4c0eb1bf3c7dc3b29f2d4570aed07d707cec6917ab5f09635fc67cb02708",
     urls = [
-        "https://download.oracle.com/otn_software/nt/instantclient/2118000/instantclient-basiclite-nt-21.18.0.0.0dbru.zip",
-        UPSTREAM_MIRROR_URL + "/instantclient-basiclite-nt-21.18.0.0.0dbru.zip",
+        "https://download.oracle.com/otn_software/nt/instantclient/2118000/instantclient-basiclite-windows.x64-21.18.0.0.0dbru.zip",
+        UPSTREAM_MIRROR_URL + "/instantclient-basiclite-windows.x64-21.18.0.0.0dbru.zip",
     ],
 )
 

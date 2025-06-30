@@ -24,7 +24,7 @@ $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
-$cargo_target = "i686-pc-windows-msvc"
+$cargo_target = "x86_64-pc-windows-msvc"
 
 $packBuild = $false
 $packClippy = $false
@@ -152,7 +152,7 @@ function Invoke-Cargo-With-Explicit-Package {
     )
     $further_args_string = $further_args -join ' '
     Write-Host "${package_name}: $cmd --package $package_name $further_args_string" -ForegroundColor White
-    & cargo $cmd --package $package_name $further_args
+    & cargo $cmd  --package $package_name $further_args
 
     if ($LASTEXITCODE -ne 0) {
         Write-Error "${package_name}: Failed to $cmd --package $package_name $further_args_string with code $LASTEXITCODE" -ErrorAction Stop
@@ -211,23 +211,24 @@ try {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
     if ($packBuild -or $packTest -or - $packOci) {
-        $target = "//omd/packages/oci:oci_light_win_x86"
+        $target = "//omd/packages/oci:oci_light_win_x64"
         & bazel build $target
         if ($LASTEXITCODE -eq 0) {
-            $oci_light_win_x86_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )
-            $packaged = Split-Path "$oci_light_win_x86_zip" -leaf
-            Write-Host "Oracle runtime light/win/x86: $oci_light_win_x86_zip with name $packaged" -ForegroundColor Green
-            Copy-Item -Path "$root_dir/$oci_light_win_x86_zip" -Destination "$arte_dir/" -Force -ErrorAction Stop
+            $oci_light_win_x64_zip = (& bazel cquery $target --output=starlark  --starlark:expr='target.files.to_list()[0].path' )
+            $packaged = Split-Path "$oci_light_win_x64_zip" -leaf
+            Write-Host "Oracle runtime light/win/x64: $oci_light_win_x64_zip with name $packaged" -ForegroundColor Green
+            Copy-Item -Path "$root_dir/$oci_light_win_x64_zip" -Destination "$arte_dir/" -Force -ErrorAction Stop
             $source_hash = (Get-FileHash "$arte_dir/$packaged" -Algorithm SHA256).Hash
             & mkdir "runtimes/$packaged" -ErrorAction SilentlyContinue | Out-Null
             if (!(Test-Path "runtimes/$packaged/.hash") -or
                 ((Get-Content "runtimes/$packaged/.hash" -ErrorAction Stop) -ne $source_hash)) {
-                Write-Host "Oracle runtime light/win/x86: hash updated $source_hash" -ForegroundColor Green
+                Write-Host "Oracle runtime light/win/x64: hash updated $source_hash" -ForegroundColor Green
                 Set-Content "runtimes/$packaged/.hash" $source_hash -ErrorAction Stop
             }
+            Expand-Archive -Path "$arte_dir/$packaged" -DestinationPath "runtimes/$packaged" -Force -ErrorAction Stop
         }
         else {
-            Write-Host "Failed Oracle runtime light/win/x86: $oci_light_win_x86" -ForegroundColor Red
+            Write-Host "Failed Oracle runtime light/win/x64: $oci_light_win_x64" -ForegroundColor Red
             exit(1)
         }
     }
@@ -239,15 +240,15 @@ try {
         Invoke-Cargo-With-Explicit-Package "build" "--release" "--target" $cargo_target
     }
     if ($packClippy) {
-        Invoke-Cargo-With-Explicit-Package "clippy" "--release" "--target" $cargo_target "--tests" "--" "--deny" "warnings"
+        Invoke-Cargo-With-Explicit-Package "clippy" "--release" "--tests" "--" "--deny" "warnings"
     }
 
     if ($packFormat) {
-        Invoke-Cargo-With-Explicit-Package "fmt"
+        & Invoke-Cargo-With-Explicit-Package  "fmt"
     }
 
     if ($packCheckFormat) {
-        Invoke-Cargo-With-Explicit-Package "fmt" "--" "--check"
+        & Invoke-Cargo-With-Explicit-Package  "fmt" "--" "--check"
     }
     if ($packTest) {
         if (-not (Test-Administrator)) {
@@ -255,7 +256,7 @@ try {
         }
         # TODO(timi): move it to CI
         .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
-        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {
         $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target" "release"

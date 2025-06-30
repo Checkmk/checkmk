@@ -2,12 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Iterable
 
 import pytest
 
 from cmk.ccc.resulttype import Error, OK, Result
+
+
+class NoInEqual:
+    pass
 
 
 class TestOk:
@@ -67,6 +70,13 @@ class TestOk:
         assert other > result
         assert other >= result
         assert other >= OK(other.ok)
+
+        a: Result[NoInEqual, str] = OK(NoInEqual())
+        b: Result[NoInEqual, str] = OK(NoInEqual())
+        with pytest.raises(TypeError):
+            a < b
+        with pytest.raises(TypeError):
+            a > b
 
     def test_cmp_err(self, result: Result[int, object], value: int) -> None:
         other: Result[int, object] = Error(value)
@@ -193,6 +203,13 @@ class TestError:
         assert other > result
         assert other >= result
         assert other >= Error(other.error)
+
+        a: Result[str, NoInEqual] = Error(NoInEqual())
+        b: Result[str, NoInEqual] = Error(NoInEqual())
+        with pytest.raises(TypeError):
+            a < b
+        with pytest.raises(TypeError):
+            a > b
 
     def test_cmp_ok(self, result: Result[object, int], value: int) -> None:
         other: Result[object, int] = OK(value)

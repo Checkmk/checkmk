@@ -1,3 +1,4 @@
+load("@aspect_rules_js//js:defs.bzl", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm_cmk_frontend_vue//:defs.bzl", "npm_link_all_packages")
@@ -89,16 +90,13 @@ vue_tsc_bin.vue_tsc_test(
     include_types = True,
 )
 
-# this rule exposes the `vite` binary - for development purposes only
-vite_bin.vite_binary(
+vite_bin.vite_binary(name = "vite_server")
+
+js_run_devserver(
     name = "vite",
     chdir = package_name(),
     data = SRCS,
-    # The `ibazel_notify_changes` tag must not be provided since it would keep ibazel from
-    # re-starting the dev-server on changes. The `ibazel_notify_changes` protocol can be
-    # implemented manually but currently the `vite` wrapper doesn't support it per se
-    #   see https://github.com/bazelbuild/examples/tree/main/frontend/vue
-    # tags = ["ibazel_notify_changes"],
+    tool = ":vite_server",
 )
 
 # this rule exposes the `vitest` binary - for development purposes only
